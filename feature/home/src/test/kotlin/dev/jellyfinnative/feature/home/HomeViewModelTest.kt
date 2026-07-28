@@ -7,7 +7,10 @@ import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.userdata.UserDataChange
+import dev.jellyfinnative.data.userdata.UserDataEventBus
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -32,6 +35,7 @@ import org.junit.jupiter.api.Test
 class HomeViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
+    private val eventBus = UserDataEventBus()
 
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
     private val shows = LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
@@ -51,7 +55,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
 
             viewModel.uiState.value.isLoading shouldBe true
         }
@@ -69,7 +73,7 @@ class HomeViewModelTest {
             coEvery { repository.getLatestMedia("lib-movies", any()) } returns AppResult.Success(listOf(movie))
             coEvery { repository.getLatestMedia("lib-shows", any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -89,7 +93,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
 
-            HomeViewModel(repository)
+            HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { repository.getLatestMedia("lib-movies", any()) }
@@ -102,7 +106,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
 
             viewModel.uiState.test {
                 awaitItem().isLoading shouldBe true
@@ -119,7 +123,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -133,7 +137,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Unauthorized())
 
-            HomeViewModel(repository)
+            HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { repository.getResumeItems(any()) }
@@ -149,7 +153,7 @@ class HomeViewModelTest {
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -163,7 +167,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
             advanceUntilIdle()
 
             viewModel.uiState.value.isEmpty shouldBe true
@@ -174,7 +178,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository)
+            val viewModel = HomeViewModel(repository, eventBus)
             advanceUntilIdle()
             viewModel.uiState.value.errorMessage!! shouldContain "server"
 
@@ -189,6 +193,82 @@ class HomeViewModelTest {
             state.isRefreshing shouldBe false
             state.libraries shouldContainExactly listOf(movies)
             coVerify(exactly = 2) { repository.getUserViews() }
+        }
+
+    // ---- M4: user-data event bus --------------------------------------------------------------
+
+    @Test
+    fun `patches a loaded row when user data changes elsewhere, without refetching`() =
+        runTest(dispatcher) {
+            val resumeItem = episode("e1", "Trompe L'Oeil")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(resumeItem))
+
+            val viewModel = HomeViewModel(repository, eventBus)
+            advanceUntilIdle()
+            viewModel.uiState.value.resume
+                .single()
+                .userData.played shouldBe false
+
+            eventBus.emit(UserDataChange("e1", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.resume
+                .single()
+                .userData.played shouldBe true
+            // The whole point: no second round-trip for any row.
+            coVerify(exactly = 1) { repository.getUserViews() }
+            coVerify(exactly = 1) { repository.getResumeItems(any()) }
+        }
+
+    @Test
+    fun `patches the same item across every row it appears in`() =
+        runTest(dispatcher) {
+            val nextUpItem = episode("e2", "Chestnut")
+            val movie = movie("m1", "Dune")
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(nextUpItem))
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
+            coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus)
+            advanceUntilIdle()
+
+            eventBus.emit(UserDataChange("e2", UserData(isFavorite = true)))
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.resume
+                .single()
+                .userData.isFavorite shouldBe true
+            state.nextUp
+                .single()
+                .userData.isFavorite shouldBe true
+            // An untouched row keeps its identity so Compose can skip it entirely.
+            state.latest
+                .single()
+                .items
+                .single()
+                .userData.isFavorite shouldBe false
+        }
+
+    @Test
+    fun `ignores a change for an item no row is showing`() =
+        runTest(dispatcher) {
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus)
+            advanceUntilIdle()
+            val before = viewModel.uiState.value
+
+            eventBus.emit(UserDataChange("somewhere-else", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.uiState.value shouldBe before
         }
 
     private fun stubEverythingEmpty() {

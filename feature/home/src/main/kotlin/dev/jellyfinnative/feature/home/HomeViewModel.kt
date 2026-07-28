@@ -9,6 +9,7 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.userdata.UserDataEventBus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +39,7 @@ class HomeViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
+        private val userDataEvents: UserDataEventBus,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
 
@@ -46,6 +48,21 @@ class HomeViewModel
 
         init {
             load(isRefresh = false)
+            observeUserDataChanges()
+        }
+
+        /**
+         * Patches the loaded rows in place whenever user data changes anywhere in the app.
+         *
+         * Deliberately not a refresh: M4's definition of done is that marking an item watched on
+         * its detail page updates the home row **without a refetch** (docs/PLAN.md, "Data layer").
+         */
+        private fun observeUserDataChanges() {
+            viewModelScope.launch {
+                userDataEvents.changes.collect { change ->
+                    _uiState.update { it.withUserData(change.itemId, change.userData) }
+                }
+            }
         }
 
         /** Re-fetches every row; called by pull-to-refresh and by the error state's retry button. */

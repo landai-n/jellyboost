@@ -6,9 +6,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataEventBus
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -40,15 +42,35 @@ class HomeViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val userDataEvents: UserDataEventBus,
+        private val downloads: DownloadRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
 
         /** The single source of truth for [HomeScreen]. */
         val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+        /** Last download-state map seen, re-applied whenever a load replaces the rows. */
+        private var downloadStates: Map<String, DownloadState> = emptyMap()
+
         init {
             load(isRefresh = false)
             observeUserDataChanges()
+            observeDownloadStates()
+        }
+
+        /**
+         * Keeps the `DownloadBadge` on every home card current (M7).
+         *
+         * One subscription for the whole screen: the home rows can hold sixty cards between them,
+         * and the badge map re-emits on every throttled progress write.
+         */
+        private fun observeDownloadStates() {
+            viewModelScope.launch {
+                downloads.observeStates().collect { states ->
+                    downloadStates = states
+                    _uiState.update { it.withDownloadStates(states) }
+                }
+            }
         }
 
         /**
@@ -94,15 +116,16 @@ class HomeViewModel
         private suspend fun emitRows(libraries: List<LibraryView>) {
             val rows = fetchRows(libraries)
             _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    libraries = libraries,
-                    resume = rows.resume,
-                    nextUp = rows.nextUp,
-                    latest = rows.latest,
-                    errorMessage = null,
-                )
+                it
+                    .copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        libraries = libraries,
+                        resume = rows.resume,
+                        nextUp = rows.nextUp,
+                        latest = rows.latest,
+                        errorMessage = null,
+                    ).withDownloadStates(downloadStates)
             }
         }
 

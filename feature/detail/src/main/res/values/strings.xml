@@ -5,6 +5,9 @@
     <string name="detail_play">Play</string>
     <string name="detail_resume">Resume</string>
     <string name="detail_download">Download</string>
+    <string name="detail_download_cancel">Cancel</string>
+    <string name="detail_download_remove">Remove</string>
+    <string name="detail_download_retry">Retry</string>
     <string name="detail_play_episode">Play this episode</string>
     <string name="detail_mark_watched">Mark watched</string>
     <string name="detail_mark_unwatched">Mark unwatched</string>
@@ -33,6 +36,9 @@
 
     <!-- States and messages -->
     <string name="detail_empty">This item is no longer available.</string>
-    <string name="detail_message_download_unavailable">Downloads arrive in M7.</string>
+    <string name="detail_message_download_queued">Added to downloads.</string>
+    <string name="detail_message_download_failed">Couldn\'t start that download.</string>
+    <string name="detail_message_download_deleted">Removed from this device.</string>
+    <string name="detail_message_download_delete_failed">Couldn\'t remove that download.</string>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 </resources>

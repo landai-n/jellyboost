@@ -7,9 +7,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -40,6 +42,7 @@ class ItemDetailViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val userDataRepository: UserDataRepository,
+        private val downloads: DownloadRepository,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         /**
@@ -53,12 +56,36 @@ class ItemDetailViewModel
 
         private val _uiState = MutableStateFlow(ItemDetailUiState())
 
+        /** Last download-state map seen, re-applied whenever the loaded items are replaced. */
+        private var downloadStates: Map<String, DownloadState> = emptyMap()
+
         /** The single source of truth for [ItemDetailScreen]. */
         val uiState: StateFlow<ItemDetailUiState> = _uiState.asStateFlow()
 
         init {
             load(isRefresh = false)
             observeUserDataChanges()
+            observeDownloadState()
+        }
+
+        /**
+         * Keeps the Download button — and the badge on every season, episode and related card —
+         * in step with the pipeline.
+         *
+         * One subscription to the whole map rather than one per visible item: an episode list can
+         * hold forty rows, and forty Room Flows re-emitting on every throttled progress write is
+         * exactly the cost `observeStates()` exists to avoid.
+         */
+        private fun observeDownloadState() {
+            viewModelScope.launch {
+                downloads.observeStates().collect { states ->
+                    // Held so that a later load — which replaces every item in the state — can
+                    // re-apply them. `observeStates()` is distinct-until-changed and would not
+                    // re-emit just because this screen refetched.
+                    downloadStates = states
+                    _uiState.update { it.withDownloadStates(states) }
+                }
+            }
         }
 
         /** Re-fetches the item and its rows; backs pull-to-refresh and the error state's retry. */
@@ -82,9 +109,55 @@ class ItemDetailViewModel
             }
         }
 
-        /** Download. The download pipeline is M7. */
+        /**
+         * The Download button. One button, two meanings, decided by the current state:
+         *
+         * - not on the device → enqueue it (M7's pipeline takes it from there);
+         * - failed → put it back in the queue, which resumes from the bytes already on disk rather
+         *   than starting the transfer over;
+         * - anything else (queued, downloading, paused, downloaded) → remove it.
+         *
+         * A separate "delete" affordance next to it would be dead most of the time, and "tap again
+         * to undo" is what the same button already means everywhere else on this screen (watched,
+         * favourite).
+         */
         fun onDownloadClick() {
-            _uiState.update { it.copy(userMessage = UserMessage.DownloadNotAvailableYet) }
+            val item = _uiState.value.item ?: return
+
+            viewModelScope.launch {
+                when (_uiState.value.downloadState) {
+                    is DownloadState.NotDownloaded ->
+                        reportDownload(
+                            downloads.enqueue(item.id),
+                            success = UserMessage.DownloadQueued,
+                            failure = UserMessage.DownloadFailed,
+                        )
+
+                    is DownloadState.Failed ->
+                        reportDownload(
+                            downloads.resume(item.id),
+                            success = UserMessage.DownloadQueued,
+                            failure = UserMessage.DownloadFailed,
+                        )
+
+                    else ->
+                        reportDownload(
+                            downloads.delete(item.id),
+                            success = UserMessage.DownloadDeleted,
+                            failure = UserMessage.DownloadDeleteFailed,
+                        )
+                }
+            }
+        }
+
+        private fun reportDownload(
+            result: AppResult<*>,
+            success: UserMessage,
+            failure: UserMessage,
+        ) {
+            _uiState.update {
+                it.copy(userMessage = if (result is AppResult.Success) success else failure)
+            }
         }
 
         /** Clears the one-shot message once the snackbar has shown it. */
@@ -130,16 +203,17 @@ class ItemDetailViewModel
         private suspend fun emitDetail(item: JellyfinItem) {
             val related = fetchRelated(item)
             _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    isRefreshing = false,
-                    item = item,
-                    seasons = related.seasons,
-                    episodes = related.episodes,
-                    nextUp = related.nextUp,
-                    similar = related.similar,
-                    errorMessage = null,
-                )
+                it
+                    .copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        item = item,
+                        seasons = related.seasons,
+                        episodes = related.episodes,
+                        nextUp = related.nextUp,
+                        similar = related.similar,
+                        errorMessage = null,
+                    ).withDownloadStates(downloadStates)
             }
         }
 

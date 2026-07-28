@@ -98,19 +98,30 @@ class ItemEntityMapper
             entity: ItemEntity,
             userData: UserDataEntity? = null,
         ): JellyfinItem? {
-            val dto =
-                try {
-                    json.decodeFromString(BaseItemDto.serializer(), entity.dto)
-                } catch (
-                    @Suppress("TooGenericExceptionCaught") error: Exception,
-                ) {
-                    Timber.w(error, "Unreadable cached item %s; treating it as not cached", entity.id)
-                    return null
-                }
-
+            val dto = toDtoOrNull(entity) ?: return null
             val item = itemMapper.toDomain(dto)
             return if (userData == null) item else item.copy(userData = userData.toDomain())
         }
+
+        /**
+         * Reads the stored blob back as the SDK type it was written from, or `null` when it cannot
+         * be decoded.
+         *
+         * Almost everything wants [toDomainOrNull] instead — the whole point of this class is that
+         * `BaseItemDto` does not cross a repository boundary. The download pipeline (M7) is the one
+         * exception: its file plan is built from `mediaSources`, `mediaStreams`, `trickplay` and
+         * the image tags, which are SDK-shaped details deliberately absent from `JellyfinItem`. It
+         * consumes them inside `:data:downloads` and hands the UI domain models like everyone else.
+         */
+        fun toDtoOrNull(entity: ItemEntity): BaseItemDto? =
+            try {
+                json.decodeFromString(BaseItemDto.serializer(), entity.dto)
+            } catch (
+                @Suppress("TooGenericExceptionCaught") error: Exception,
+            ) {
+                Timber.w(error, "Unreadable cached item %s; treating it as not cached", entity.id)
+                null
+            }
 
         /** Maps a whole page, dropping rows whose blob is unreadable. */
         fun toDomain(

@@ -1,6 +1,7 @@
 package dev.jellyfinnative.feature.search
 
 import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 
 /**
@@ -26,4 +27,27 @@ data class SearchUiState(
     /** `true` when the search ran and matched nothing. */
     val hasNoResults: Boolean
         get() = movies.isEmpty() && series.isEmpty() && episodes.isEmpty()
+}
+
+/**
+ * Stamps the app-wide download-state map onto every result card (M7).
+ *
+ * `:core:ui`'s cards render their `DownloadBadge` from `JellyfinItem.downloadState`, so this is all
+ * search has to do to show which of its results are already on the device.
+ */
+internal fun SearchUiState.withDownloadStates(states: Map<String, DownloadState>): SearchUiState =
+    copy(
+        movies = movies.withDownloadStates(states),
+        series = series.withDownloadStates(states),
+        episodes = episodes.withDownloadStates(states),
+    )
+
+/** Identity is preserved when nothing changed, so Compose skips the untouched sections. */
+private fun List<JellyfinItem>.withDownloadStates(states: Map<String, DownloadState>): List<JellyfinItem> {
+    val patched =
+        map { item ->
+            val next = states[item.id] ?: DownloadState.NotDownloaded
+            if (next == item.downloadState) item else item.copy(downloadState = next)
+        }
+    return if (patched.indices.all { patched[it] === this[it] }) this else patched
 }

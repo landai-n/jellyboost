@@ -17,6 +17,7 @@ import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.feature.auth.LoginScreen
 import dev.jellyfinnative.feature.auth.ServerSetupScreen
 import dev.jellyfinnative.feature.detail.ItemDetailScreen
+import dev.jellyfinnative.feature.downloads.DownloadsScreen
 import dev.jellyfinnative.feature.library.LibraryGridScreen
 import dev.jellyfinnative.feature.library.libraries.LibrariesScreen
 import dev.jellyfinnative.feature.search.SearchScreen
@@ -87,6 +88,10 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
             )
+        }
+
+        composable<Routes.Downloads> {
+            DownloadsScreen(viewModel = hiltViewModel())
         }
 
         composable<Routes.LibraryGrid> {

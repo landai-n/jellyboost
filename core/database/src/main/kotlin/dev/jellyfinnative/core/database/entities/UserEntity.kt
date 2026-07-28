@@ -1,0 +1,39 @@
+package dev.jellyfinnative.core.database.entities
+
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import java.util.UUID
+
+/**
+ * A Jellyfin user that has signed in on this device, scoped to its owning [ServerEntity].
+ *
+ * IMPORTANT: this entity intentionally has NO access-token column. docs/PLAN.md mandates that
+ * tokens live only in `:core:datastore`'s `SecureCredentialStore` (EncryptedSharedPreferences),
+ * never in Room — verified at M1 via `run-as` inspection of the database file. Session restore
+ * pairs a row here with the token looked up separately from `SecureCredentialStore`.
+ *
+ * Rows are deleted automatically (`CASCADE`) when their owning [ServerEntity] is removed.
+ */
+@Entity(
+    tableName = "users",
+    foreignKeys = [
+        ForeignKey(
+            entity = ServerEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["serverId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [
+        Index(value = ["serverId"]),
+    ],
+)
+data class UserEntity(
+    @PrimaryKey
+    val id: UUID,
+    val serverId: UUID,
+    val name: String,
+    val primaryImageTag: String?,
+)

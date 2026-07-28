@@ -1,10 +1,13 @@
 # STATUS
 
-## Current milestone: M0 — Bootstrap + quality infrastructure (DONE, tagged m0)
+## Current milestone: M1 — Auth & session
 
-**Definition of done:** `./gradlew assembleDebug detekt` green; app installs and shows dark
-themed empty screen; hooks fire; skills invocable; all VERIFY versions resolved and recorded
-in DECISIONS.md.
+**Definition of done:** server discovery (UDP broadcast + manual URL with address-candidate
+scoring), password + Quick Connect login, access token stored ONLY in
+EncryptedSharedPreferences (never Room), session restore on app start, sign-out.
+Verify on device: `run-as` inspection shows no token in the DB; session appears in server
+Dashboard→Devices. Also confirm server version (10.11.x expected) and the user's download
+policy (risk #4).
 
 ### Done
 - Repo initialized, governance files (PLAN/DECISIONS/STATUS/CLAUDE) in place.
@@ -25,11 +28,23 @@ in DECISIONS.md.
   (screenshot-verified). An earlier `INSTALL_FAILED_USER_RESTRICTED` was transient —
   "Install via USB" is enabled and working on this device.
 
+### Done (M1 so far)
+- `:core:database`: session schema — ServerEntity, ServerAddressEntity (multi-URL, CASCADE),
+  UserEntity (NO token column), upsert DAOs, JellyfinDatabase v1 (schema exported),
+  UuidConverter + unit tests, Hilt module.
+- `:core:datastore`: SecureCredentialStore interface + EncryptedSharedPreferences impl
+  (AES256_GCM/SIV, IO-dispatched, corrupt-keyset recreate-once recovery), StoredSession
+  (serverId+userId+token as one atomic record), Hilt binding.
+
 ### Next
-- **Restart Claude Code from this directory** (`jellyfin-native/`) so the hooks and skills
-  actually load — they are inert in sessions started from the parent directory.
-- M1: Auth & session (discovery UDP+manual, password + Quick Connect, tokens only in
-  EncryptedSharedPreferences, session restore; confirm server version + download policy).
+- `:core:network`: ApiClientProvider (SDK wiring), ServerDiscoveryRepository (UDP 7359 +
+  manual URL candidates, reference jellyfin-android ConnectionHelper.kt), AuthRepository
+  (password + Quick Connect initiate/poll/authenticate), SessionRepository (restore, sign-out).
+- `:feature:auth`: ServerSetup + Login screens/ViewModels; wire NavHost in `:app`
+  (auth flow vs. placeholder home based on session state).
+- Unit tests for repositories/ViewModels (JUnit5 + MockK + Turbine).
+- On-device DoD walk: run-as DB inspection, Dashboard→Devices session, server version +
+  download policy confirmation.
 
 ### Known issues
 - (none)

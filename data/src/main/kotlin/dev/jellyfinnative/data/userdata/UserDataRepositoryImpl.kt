@@ -9,6 +9,7 @@ import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.runCatchingApi
+import dev.jellyfinnative.data.toSdkDateTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,8 +23,6 @@ import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
 import timber.log.Timber
 import java.time.Clock
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -83,7 +82,7 @@ class UserDataRepositoryImpl
                         apiClient.playStateApi.markPlayedItem(
                             itemId = row.itemId,
                             userId = row.userId,
-                            datePlayed = row.lastPlayedDate?.utcDateTime(),
+                            datePlayed = row.lastPlayedDate?.toSdkDateTime(),
                         )
                     } else {
                         apiClient.playStateApi.markUnplayedItem(itemId = row.itemId, userId = row.userId)
@@ -130,7 +129,7 @@ class UserDataRepositoryImpl
                                 playbackPositionTicks = row.playbackPositionTicks,
                                 played = row.played,
                                 isFavorite = row.isFavorite,
-                                lastPlayedDate = row.lastPlayedDate?.utcDateTime(),
+                                lastPlayedDate = row.lastPlayedDate?.toSdkDateTime(),
                             ),
                     )
                 },
@@ -216,6 +215,3 @@ class UserDataRepositoryImpl
     }
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
-
-/** Jellyfin expects wall-clock UTC in its date fields, not an offset-carrying timestamp. */
-private fun java.time.Instant.utcDateTime(): LocalDateTime = LocalDateTime.ofInstant(this, ZoneOffset.UTC)

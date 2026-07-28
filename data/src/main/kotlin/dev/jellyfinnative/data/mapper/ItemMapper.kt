@@ -7,13 +7,13 @@ import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.Person
 import dev.jellyfinnative.core.common.model.PersonKind
 import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.data.toSdkInstant
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.BaseItemPerson
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.UserItemDataDto
-import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
@@ -60,7 +60,7 @@ class ItemMapper
                 // straight onto the domain defaults — no branching needed here.
                 taglines = dto.taglines.orEmpty(),
                 childCount = dto.childCount,
-                premiereDate = dto.premiereDate?.toInstant(ZoneOffset.UTC),
+                premiereDate = dto.premiereDate?.toSdkInstant(),
                 studios = dto.studios.orEmpty().mapNotNull { it.name },
                 people = dto.people.orEmpty().map { it.toDomain() },
                 userData = dto.userData.toDomain(),
@@ -156,7 +156,8 @@ class ItemMapper
         }
     }
 
-private fun BaseItemKind.toItemType(): ItemType =
+/** Internal so the Room cache mapper folds `BaseItemKind` exactly the same way (M6). */
+internal fun BaseItemKind.toItemType(): ItemType =
     when (this) {
         BaseItemKind.MOVIE -> ItemType.MOVIE
         BaseItemKind.SERIES -> ItemType.SERIES
@@ -195,6 +196,6 @@ private fun UserItemDataDto?.toDomain(): UserData =
             playbackPositionTicks = playbackPositionTicks,
             playedPercentage = playedPercentage,
             playCount = playCount,
-            lastPlayedDate = lastPlayedDate?.toInstant(ZoneOffset.UTC),
+            lastPlayedDate = lastPlayedDate?.toSdkInstant(),
         )
     }

@@ -1,0 +1,221 @@
+package dev.jellyfinnative.data.userdata
+
+import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.database.dao.UserDataDao
+import dev.jellyfinnative.core.database.entities.UserDataEntity
+import dev.jellyfinnative.core.network.SessionRepository
+import dev.jellyfinnative.core.network.di.IoDispatcher
+import dev.jellyfinnative.core.network.model.SessionState
+import dev.jellyfinnative.data.runCatchingApi
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.playStateApi
+import org.jellyfin.sdk.api.client.extensions.userLibraryApi
+import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
+import timber.log.Timber
+import java.time.Clock
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Local-first [UserDataRepository] (docs/PLAN.md, "Data layer").
+ *
+ * Every write follows the same four steps, in this order:
+ *
+ * 1. upsert the Room row with `toBeSynced = true` and a fresh `updatedAt`;
+ * 2. publish the new value on [UserDataEventBus] — this is what patches the screens;
+ * 3. push to the server;
+ * 4. on success clear `toBeSynced`; on failure leave it set and enqueue [UserDataSyncWorker].
+ *
+ * Steps 1 and 2 are the contract. Steps 3 and 4 are best effort: a failing push is a logged
+ * warning and a scheduled retry, never a failed operation, because the change is already durable
+ * and already on screen.
+ */
+@Singleton
+class UserDataRepositoryImpl
+    @Inject
+    constructor(
+        private val userDataDao: UserDataDao,
+        private val apiClient: ApiClient,
+        private val sessionRepository: SessionRepository,
+        private val eventBus: UserDataEventBus,
+        private val syncScheduler: UserDataSyncScheduler,
+        private val clock: Clock,
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    ) : UserDataRepository {
+        override val changes: SharedFlow<UserDataChange> get() = eventBus.changes
+
+        override fun observe(itemId: String): Flow<UserData?> {
+            val userId = currentUserId() ?: return emptyFlow()
+            val id = itemId.toUuidOrNull() ?: return emptyFlow()
+            return userDataDao.observeUserData(id, userId).map { it?.toDomain() }
+        }
+
+        override suspend fun setPlayed(
+            itemId: String,
+            played: Boolean,
+        ): AppResult<UserData> =
+            write(
+                itemId = itemId,
+                edit = { current ->
+                    current.copy(
+                        played = played,
+                        // The server clears the resume position when an item is marked watched;
+                        // not mirroring that would leave a progress bar on a watched card until
+                        // the next sync overwrote it.
+                        playbackPositionTicks = if (played) 0L else current.playbackPositionTicks,
+                        lastPlayedDate = if (played) clock.instant() else current.lastPlayedDate,
+                    )
+                },
+                push = { row ->
+                    if (row.played) {
+                        apiClient.playStateApi.markPlayedItem(
+                            itemId = row.itemId,
+                            userId = row.userId,
+                            datePlayed = row.lastPlayedDate?.utcDateTime(),
+                        )
+                    } else {
+                        apiClient.playStateApi.markUnplayedItem(itemId = row.itemId, userId = row.userId)
+                    }
+                },
+            )
+
+        override suspend fun setFavorite(
+            itemId: String,
+            favorite: Boolean,
+        ): AppResult<UserData> =
+            write(
+                itemId = itemId,
+                edit = { current -> current.copy(isFavorite = favorite) },
+                push = { row ->
+                    if (row.isFavorite) {
+                        apiClient.userLibraryApi.markFavoriteItem(itemId = row.itemId, userId = row.userId)
+                    } else {
+                        apiClient.userLibraryApi.unmarkFavoriteItem(itemId = row.itemId, userId = row.userId)
+                    }
+                },
+            )
+
+        override suspend fun setPosition(
+            itemId: String,
+            positionTicks: Long,
+        ): AppResult<UserData> =
+            write(
+                itemId = itemId,
+                edit = { current ->
+                    current.copy(
+                        playbackPositionTicks = positionTicks.coerceAtLeast(0L),
+                        lastPlayedDate = clock.instant(),
+                    )
+                },
+                push = { row ->
+                    apiClient.itemsApi.updateItemUserData(
+                        itemId = row.itemId,
+                        userId = row.userId,
+                        // The full desired state, not just the position: the endpoint merges what
+                        // it is given, so sending a partial DTO would risk resetting the rest.
+                        data =
+                            UpdateUserItemDataDto(
+                                playbackPositionTicks = row.playbackPositionTicks,
+                                played = row.played,
+                                isFavorite = row.isFavorite,
+                                lastPlayedDate = row.lastPlayedDate?.utcDateTime(),
+                            ),
+                    )
+                },
+            )
+
+        /**
+         * The local-first write path shared by all three operations.
+         *
+         * @param edit applies the operation to the current row (or to a fresh, empty one).
+         * @param push delivers the resulting row to the server.
+         */
+        private suspend fun write(
+            itemId: String,
+            edit: (UserDataEntity) -> UserDataEntity,
+            push: suspend (UserDataEntity) -> Unit,
+        ): AppResult<UserData> {
+            val userId = currentUserId() ?: return AppResult.Failure(AppError.Unauthorized())
+            val id = itemId.toUuidOrNull() ?: return AppResult.Failure(AppError.NotFound(itemId))
+
+            val stored =
+                when (val result = storeLocally(id, userId, edit)) {
+                    is AppResult.Failure -> return result
+                    is AppResult.Success -> result.value
+                }
+
+            // Publish before touching the network: this is the whole point of local-first.
+            eventBus.emit(UserDataChange(itemId = itemId, userData = stored.toDomain()))
+
+            pushToServer(stored, push)
+
+            return AppResult.Success(stored.toDomain())
+        }
+
+        private suspend fun storeLocally(
+            id: UUID,
+            userId: UUID,
+            edit: (UserDataEntity) -> UserDataEntity,
+        ): AppResult<UserDataEntity> =
+            withContext(ioDispatcher) {
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    val current =
+                        userDataDao.getUserData(id, userId)
+                            ?: UserDataEntity(itemId = id, userId = userId, updatedAt = clock.instant())
+                    val next = edit(current).copy(toBeSynced = true, updatedAt = clock.instant())
+                    userDataDao.upsert(next)
+                    AppResult.Success(next)
+                } catch (error: Exception) {
+                    Timber.e(error, "Could not write user data for %s", id)
+                    AppResult.Failure(AppError.Storage(error))
+                }
+            }
+
+        private suspend fun pushToServer(
+            row: UserDataEntity,
+            push: suspend (UserDataEntity) -> Unit,
+        ) {
+            val pushed = withContext(ioDispatcher) { runCatchingApi { push(row) } }
+
+            when (pushed) {
+                is AppResult.Success -> clearPendingFlag(row)
+                is AppResult.Failure -> {
+                    Timber.w("User data for %s stays pending: %s", row.itemId, pushed.error)
+                    syncScheduler.enqueue()
+                }
+            }
+        }
+
+        private suspend fun clearPendingFlag(row: UserDataEntity) {
+            withContext(ioDispatcher) {
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    // Guarded on `updatedAt`: if the user toggled again while the push was in
+                    // flight, the newer row keeps its flag instead of being declared synced.
+                    userDataDao.clearPendingSync(row.itemId, row.userId, row.updatedAt)
+                } catch (error: Exception) {
+                    Timber.w(error, "Could not clear the pending flag for %s", row.itemId)
+                }
+            }
+        }
+
+        private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
+    }
+
+private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()
+
+/** Jellyfin expects wall-clock UTC in its date fields, not an offset-carrying timestamp. */
+private fun java.time.Instant.utcDateTime(): LocalDateTime = LocalDateTime.ofInstant(this, ZoneOffset.UTC)

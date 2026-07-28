@@ -6,10 +6,10 @@
 delete frees bytes.
 
 ### Next
-- Bugfix agent: server reads must refresh local `user_data` rows when `toBeSynced=false`
-  (see Known issues — playback currently resurrects stale local played/favorite state).
 - M7 agent: full download pipeline per docs/PLAN.md; merge, review, gate, device DoD,
   tag m7.
+- Done meanwhile: user-data read-refresh fix merged and device-verified (see Known
+  issues — struck through).
 
 ## Previous milestone: M5 — Playback (online) (DONE, tagged m5)
 
@@ -157,16 +157,14 @@ which is what Dashboard renders):
   timestamps as the instant the server expects`). The SDK's `DateTimeSerializer` is
   zone-aware in *both* directions, so `ItemMapper`'s read path was corrected too; see
   DECISIONS.md 2026-07-28 "M6: the `datePlayed` timezone fix also corrects the read path".
-- **Stale local user-data rows corrupt server state on playback** (found in the M5
-  walk): `setPosition` deliberately sends the item's full desired state, but it builds
-  it from the local Room row — which is only ever written by local writes and never
-  refreshed from server reads. Repro: mark played in-app (row: played=true), unmark in
-  jellyfin-web (server: false, row still true), play the item in-app → the 5 s position
-  writes silently re-mark it played on the server (observed with Citizen Vigilante,
-  whose row retained the old M4 test write). Fix underway: server reads refresh
-  `user_data` rows when `toBeSynced=false` (server is authoritative unless a local
-  write is pending). The device's rows for Citizen Vigilante / 28 Ans plus tard are
-  stale right now; server state was restored (played=false, pos 0) after the walk.
+- ~~**Stale local user-data rows corrupt server state on playback**~~ — **FIXED**
+  (`fix(data): refresh local user_data from server reads unless pending`, merged
+  2026-07-28): `BrowseCacheWriter` now adopts the server's `userData` into `user_data`
+  rows that are absent or `toBeSynced=false`; pending rows untouched (M8 reconciles).
+  Device-verified: after a `getItem` read of the previously-stale Citizen Vigilante
+  row, 15 s of playback left the server at `Played=False` (previously re-marked within
+  5 s), and exit reset position server-side. +11 tests incl. an end-to-end regression
+  pair (401 total).
 - HEVC files transcode with `TranscodeReasons=[VideoProfileNotSupported]` even though
   the Helio G100 decodes HEVC Main/Main 10 — the device profile's HEVC CodecProfile
   conditions likely don't match what the decoder probe reports on this device.

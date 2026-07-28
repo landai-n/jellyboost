@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Jellyfin</string>
+
+    <!-- Temporary M1 signed-in screen; replaced by :feature:home in M2. -->
+    <string name="home_placeholder_signed_in">Signed in as %1$s on %2$s (%3$s)</string>
+    <string name="home_placeholder_signed_in_unknown">Signed in.</string>
+    <string name="home_placeholder_unknown_version">version unknown</string>
+    <string name="home_placeholder_sign_out">Sign out</string>
 </resources>

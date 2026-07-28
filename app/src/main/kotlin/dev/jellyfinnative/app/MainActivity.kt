@@ -4,54 +4,61 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.core.ui.theme.JellyfinTheme
 
 /**
  * Single activity hosting the whole app.
  *
- * The NavHost, bottom navigation bar and offline banner land here in M2; for now it only proves
- * that the theme, Hilt and Compose wiring are alive.
+ * It holds the splash screen until session restore has answered, then hands the resulting
+ * [SessionState] to [JellyfinNativeApp], which picks the start destination from it. The bottom
+ * navigation bar and the offline banner join the NavHost in M2/M6.
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val viewModel: MainViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+        splashScreen.setKeepOnScreenCondition { viewModel.sessionState.value is SessionState.Unknown }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         setContent {
             JellyfinTheme {
-                JellyfinNativeApp()
+                val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
+                JellyfinNativeApp(sessionState = sessionState, onSignOut = viewModel::signOut)
             }
         }
     }
 }
 
+/**
+ * Root composable: nothing is drawn while the session is still [SessionState.Unknown] (the
+ * splash screen is up at that point), after which the NavHost is created with a start
+ * destination that matches the session.
+ */
 @Composable
-private fun JellyfinNativeApp() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "jellyfin-native",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-    }
+internal fun JellyfinNativeApp(
+    sessionState: SessionState,
+    onSignOut: () -> Unit,
+) {
+    if (sessionState is SessionState.Unknown) return
+
+    // Captured once: the start destination must not change under a live NavHost when the session
+    // later flips — sign-out is handled by navigating, not by rebuilding the graph.
+    val startsSignedIn = remember { sessionState is SessionState.LoggedIn }
+
+    JellyfinNavHost(
+        startsSignedIn = startsSignedIn,
+        sessionState = sessionState,
+        onSignOut = onSignOut,
+    )
 }

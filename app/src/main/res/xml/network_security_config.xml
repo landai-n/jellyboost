@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Self-hosted Jellyfin servers are routinely reached over plain HTTP on a LAN, or over HTTPS
+    with a certificate signed by a CA the user installed themselves. Both are refused by the
+    platform defaults from API 28 on, which makes every such server unreachable.
+
+    This mirrors jellyfin-android's own configuration
+    (app/src/main/res/xml/network_security_config.xml).
+-->
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config
+        cleartextTrafficPermitted="true"
+        tools:ignore="InsecureBaseConfiguration">
+        <trust-anchors>
+            <!-- Pre-installed CAs. -->
+            <certificates src="system" />
+            <!-- CAs the user installed, so a self-signed server certificate can be trusted. -->
+            <certificates
+                src="user"
+                tools:ignore="AcceptsUserCertificates" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

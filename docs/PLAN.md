@@ -1,0 +1,125 @@
+# Plan: jellyfin-native — fully native Android Jellyfin client
+
+## Context
+The official jellyfin-android app is a WebView wrapper around jellyfin-web with some native pieces. We are building **jellyfin-native**: a brand-new, 100% native Android app (zero WebView) with a UI similar to jellyfin-web, whose differentiator is **seamless online/offline integration in one UI** — downloaded media visible and playable in the same home/library/detail screens, in-app download tracking (progress, queue), and downloaded-media management (list, storage used, delete, storage location). Designed for long autonomous development with enforced quality gates.
+
+## Confirmed decisions
+- **v1 scope:** Movies & TV shows only. Extras: Quick Connect login. NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI, transcoded downloads, Android TV.
+- **Location:** standalone Gradle project `.` (sibling of jellyfin-android), own git repo.
+- **Stack:** Jetpack Compose + Material 3 (dark, jellyfin-web palette), Hilt, multi-module Findroid-style, Room, Media3/ExoPlayer + jellyfin ffmpeg decoder, jellyfin-sdk-kotlin **1.8.12** (pinned; 1.9.x = Jellyfin 12 renames, migrate later), Coil 3, WorkManager, OkHttp.
+- **App ID / root package:** `dev.jellyfinnative.app` / `dev.jellyfinnative`.
+- **Offline browse scope:** downloaded items only (cached parents of downloaded items still open, e.g. series page of a downloaded episode).
+- **User-data sync conflict:** most-recent-wins — compare `lastPlayedDate` before pushing; keep newer position.
+- **Navigation:** bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar.
+- **minSdk 26, compile/targetSdk 36**, Java toolchain 21 (env: `source "../env.sh"`), desugaring on.
+- jellyfin-android code is **reference only** (esp. DeviceProfileBuilder, download engine, MediaSourceResolver quirks) — reimplemented in the new architecture, not ported wholesale.
+
+## Governance: plan adherence & divergence log (HARD REQUIREMENT)
+Every agent working on implementation MUST check each non-trivial decision against this plan (copied into the repo as `docs/PLAN.md`) before acting. Any divergence MUST be recorded **before or with** the diverging change in `DECISIONS.md` at the repo root with: **date (YYYY-MM-DD), scope (files/feature), what the plan said, what was done instead, reason**. No silent divergence. Design choices already marked [D] below are pre-approved and seeded into DECISIONS.md at M0.
+
+## Quality infrastructure (built in M0, lives in the jellyfin-native repo)
+**Governance files:** `docs/PLAN.md` (this plan), `DECISIONS.md` (divergence log + template), `STATUS.md` (current milestone, done/next, known issues), `CLAUDE.md` (governance rules, pointers, build commands, skill expectations).
+
+**Hooks** (`.claude/settings.json` + `.claude/hooks/*.sh`; state markers in gitignored `.claude/state/`):
+1. `SessionStart → session-start.sh`: print governance reminder, current milestone from STATUS.md, `git log -1`, verify-marker staleness.
+2. `PostToolUse (Edit|Write on *.kt/*.kts) → post-edit.sh`: mark verify stale; run ktlint on the edited file (warning only).
+3. `PreToolUse (Bash matching git commit) → pre-commit-gate.sh`: deny commit if verify marker stale ("run /verify first") or message lacks conventional-commit prefix (feat/fix/refactor/test/docs/chore/build).
+4. `Stop → stop-gate.sh` (exit 2, respect `stop_hook_active`): block turn end when uncommitted Kotlin/doc changes + stale verify (→ /verify then /checkpoint), or dirty tree older than ~45 min since last commit (→ /checkpoint).
+
+**Skills** (`.claude/skills/<name>/SKILL.md`):
+- `/verify` — `./gradlew ktlintCheck detekt testDebugUnitTest assembleDebug`; fix failures, never weaken tests to pass (use /diverge if a test is wrong); touch `.claude/state/last-verify` on green.
+- `/checkpoint` — /verify → KDoc new/changed public APIs → update `docs/features/<feature>.md` + STATUS.md → small conventional commit.
+- `/diverge` — append DECISIONS.md entry BEFORE the diverging change.
+- `/milestone` — start: restate DoD into STATUS.md; finish: full manual DoD verification on device (adb), /verify, docs, commit + `git tag m<N>`.
+- `/document-feature` — create/update `docs/features/<name>.md` (what, key classes, endpoints, offline behavior) and `docs/ARCHITECTURE.md`.
+
+**Testing:** unit tests accompany every repository/ViewModel/mapper (JUnit5 + MockK + Turbine); densest coverage on download pipeline + offline sync. `testDebugUnitTest` runs in every /verify.
+
+## Project skeleton
+Modules (Findroid-spirit; features never depend on each other; cross-feature nav via routes in `:core:common`). `build-logic/convention/` plugins (`jellyfinnative.android.application|library|library.compose|feature|hilt|room`, `.kotlin.library`, `.detekt`):
+
+| Module | Responsibility |
+|---|---|
+| `:app` | Application (Hilt, WorkManager config), MainActivity, NavHost, AppScaffold (bottom nav + OfflineBanner) |
+| `:core:common` | Pure Kotlin: domain models (`JellyfinItem`, `UserData`, `ItemQuery`, `FilterOptions`, `DownloadState`), Result/AppError, @Serializable nav routes |
+| `:core:ui` | Theme (`#101010` bg, `#202020` surface, `#00A4DC` primary, `#AA5CC3→#00A4DC` gradient), `PosterCard` (2:3), `ThumbCard` (16:9), `MediaRow`, `BackdropHeader`, `DownloadBadge`, `OfflineBanner`, `JellyfinAsyncImage` |
+| `:core:network` | SDK wiring (`ApiClientProvider`), OkHttp, `ServerDiscoveryRepository`, `AuthRepository`, `SessionRepository`, `ConnectivityMonitor`, `ServerReachabilityProbe`, `ConnectionStateProvider` |
+| `:core:database` | Room `JellyfinDatabase`, entities, DAOs, converters |
+| `:core:datastore` | `AppPreferences` (DataStore), `SecureCredentialStore` (EncryptedSharedPreferences — tokens ONLY here, never DB) |
+| `:data` | `JellyfinRepository` + Online/Offline/Delegating impls, `UserDataRepository`, mappers, `ItemPagingSource`, `UserDataEventBus`, `UserDataSyncWorker` |
+| `:data:downloads` | `DownloadRepository`, `DownloadQueue`, `DownloadWorker`, `FileDownloader`, `DownloadNotifier`, `DownloadStorage` (File/SAF), `StorageLocationManager` |
+| `:player` | DeviceProfileBuilder, `PlaybackInfoResolver`, `LocalPlaybackResolver`, `ExoMediaSourceFactory`, `PlaybackReporter`, `TrackSelectionController`, `DecoderFallbackHandler`, trickplay, segments, `PlayerScreen`/`PlayerViewModel`, `PlaybackService : MediaSessionService` |
+| `:feature:auth` `:feature:home` `:feature:library` `:feature:detail` `:feature:search` `:feature:downloads` `:feature:settings` | Screens + ViewModels |
+
+Key versions (verify exact patches at M0 via a real dependency resolution; record deltas in DECISIONS.md): AGP 9.3.1, Kotlin 2.4.10 + matching KSP, Hilt ~2.58+, Room 2.8.4, Media3 1.10.1 **iff** `org.jellyfin.media3:media3-ffmpeg-decoder` has a matching build — otherwise pin Media3 down to the newest version with a matching decoder (jellyfin-android uses 1.8.0+1), `org.jellyfin.sdk:jellyfin-core:1.8.12`, Coil 3.4.0, Compose BOM current, detekt + ktlint, JUnit5/Kotest/MockK/Turbine.
+
+## Data layer
+**Room entities:** `ServerEntity` (UUID pk, name, version); `ServerAddressEntity` (multi-URL per server — schema ready for multi-server later); `UserEntity` (NO token column); `LibraryViewEntity`; **`ItemEntity`** [D: single table, not Findroid's 4 typed tables] — structured columns for list/sort/filter (type, name, sortName, year, parentId/seriesId/seasonId, indexNumbers, image tags, genres…) + full `BaseItemDto` JSON blob (mediaSources/streams/chapters/trickplay/people) + `source: BROWSE_CACHE|DOWNLOAD` (DOWNLOAD rows never evicted) + `cachedAt`; `UserDataEntity` (pk itemId+userId: played, isFavorite, playbackPositionTicks, lastPlayedDate, **toBeSynced**, updatedAt); `DownloadEntity` (pk itemId [D], status QUEUED/DOWNLOADING/PAUSED/DOWNLOADED/ERROR/CANCELLED, mediaSourceId, bytesDownloaded/Total, queuePosition); `DownloadFileEntity` (type MEDIA/SUBTITLE/IMAGE_*/TRICKPLAY_TILE, streamIndex/tileIndex, uri, size, status).
+
+**Repositories:** UI never sees `BaseItemDto`/`ItemEntity` — both online and offline paths produce identical `JellyfinItem` domain models (this is the mechanism for one seamless UI).
+- `OnlineJellyfinRepository` — SDK calls, write-through to Room (`source=BROWSE_CACHE`).
+- `OfflineJellyfinRepository` — Room only; home/library/search = downloaded items; `getItem` also serves cached rows; never throws for missing items (returns `available=false`).
+- `DelegatingJellyfinRepository` (bound as `JellyfinRepository`) — per call: online when `ConnectionState==ONLINE && !forceOffline`; transport failures (IOException/timeout/502-503) → `reportFailure()` + fall back to offline; 401 → session layer re-login.
+- `UserDataRepositoryImpl` — **local-first always**: upsert Room (`toBeSynced=true`) → emit on `UserDataEventBus` (SharedFlow; every list ViewModel patches in-memory items instantly, Swiftfin pattern) → if online push `itemsApi.updateItemUserData(UpdateUserItemDataDto(...))`, clear flag on success; else/on failure enqueue `UserDataSyncWorker` (unique work, NetworkType.CONNECTED, backoff). Sync conflict: **most-recent-wins** — worker fetches server userData, compares `lastPlayedDate` vs local `updatedAt`, pushes only if local is newer, otherwise adopts server value and clears flag.
+
+**Connectivity:** `ConnectivityMonitor` (registerDefaultNetworkCallback) + `ServerReachabilityProbe` (3s `getPublicSystemInfo` on network change/app resume/reported failure; rotates `ServerAddressEntity` candidates) → `ConnectionStateProvider: StateFlow<ONLINE|OFFLINE_NO_NETWORK|OFFLINE_SERVER_UNREACHABLE|OFFLINE_FORCED>` → drives repository delegation + the single app-wide `OfflineBanner` in `AppScaffold`. No separate "offline app mode".
+
+## Screens (type-safe Navigation Compose routes in `:core:common`)
+| Screen | Key calls |
+|---|---|
+| ServerSetup | `discoverLocalServers()` (UDP 7359) live list; manual URL → `getAddressCandidates` + `getRecommendedServers` (reference jellyfin-android `setup/ConnectionHelper.kt` scoring/error copy) |
+| Login | `getPublicUsers`, `getBrandingOptions` (disclaimer), `getQuickConnectEnabled`; password: `authenticateUserByName`; Quick Connect: `initiate` → show code → poll `getQuickConnectState` 5s (5-min cap) → `authenticateWithQuickConnect`; then `getCurrentUser` |
+| Home | `getUserViews` (MOVIES/TVSHOWS only), `getResumeItems(limit=20)`, `getNextUp(limit=20)`, `getLatestMedia(parentId, 16)` per library. Offline: rows from Room (resume=downloads w/ position>0; next-up=next downloaded episode per series; latest=recent downloads) |
+| LibraryGrid | Paging 3 over `getItems(parentId, includeItemTypes, recursive, sortBy/Order, filters, genres, years, startIndex, limit=50, imageTypeLimit=1, fields=[PRIMARY_IMAGE_ASPECT_RATIO])`; filter sheet `getQueryFilters`. Offline: `ItemDao.pagingDownloaded` behind same Pager. `LazyVerticalGrid(Adaptive(110.dp))` |
+| ItemDetail (Movie/Series/Season) | full `getItem` re-fetch w/ fields incl. MEDIA_SOURCES/STREAMS/CHAPTERS/TRICKPLAY (Swiftfin pattern: lists are minimal, detail/playback full); `getSeasons`/`getEpisodes`/`getNextUp(seriesId)`; `getSimilarItems`; Play/Resume, Download, Mark played, Favorite |
+| Search | 500ms debounce → `getItems(searchTerm, types=[MOVIE,SERIES,EPISODE], limit=50)` sectioned; offline `ItemDao.searchDownloaded` |
+| Downloads | Room-only: *Downloaded* tab (grouped, sizes, delete) + *Queue* tab (progress %, speed, pause/resume/cancel, reorder); header storage used/free |
+| Settings | prefs, account, storage location picker, sign out (clears SecureCredentialStore, optional delete downloads) |
+
+Every item card shows `DownloadBadge` from `DownloadDao.observeStatusMap()` — the one visual marker distinguishing downloaded items.
+
+## Download pipeline — OkHttp + WorkManager + Room [D: not system DownloadManager]
+Why: SAF/SD-card targets, per-byte progress for live UI, multi-file items (media+subs+images+trickplay), pause/resume/reorder, auth headers. Proven by jellyfin-android's own migration off DownloadManager (`downloads/FileDownloader.kt` w/ HTTP Range resume — use as reference).
+- **Enqueue:** `getItems(ids=[itemId], fields=[MEDIA_SOURCES, MEDIA_STREAMS, PATH, OVERVIEW, GENRES, CHAPTERS, TRICKPLAY, PEOPLE,…])`; upsert `ItemEntity(source=DOWNLOAD)` for item AND its series/season parents (offline upward nav); insert `DownloadEntity(QUEUED)`; `enqueueUniqueWork("downloads", KEEP)` with constraints from prefs (UNMETERED if Wi-Fi-only, storageNotLow).
+- **File plan** per item dir (`Series - S01E02 - Title/` or `Movie (Year)/`): primary image first (queue artwork), then MEDIA via `libraryApi.getDownloadUrl(itemId)` (fallback `getVideoStreamUrl(static=true)` if download policy denied), then backdrop/series-primary images, external text subtitles (`getSubtitleUrl` for srt/ass/ssa/ttml/vtt), trickplay tiles (`getTrickplayTileImageUrl` per tile → offline scrubbing). Essential-file failure → item ERROR; optional-file failure → file ERROR, item still playable.
+- **Progress:** `FileDownloader` callback per 64KB → throttled Room writes (500ms or 1%) → Room Flows drive queue tab, app-wide badges, foreground notification (pause/cancel actions). Room = single source of truth.
+- **Delete cascade:** cancel active job if needed → delete files + dir → DB rows (FK cascade) → prune `ItemEntity(source=DOWNLOAD)` orphans incl. parents → keep `UserDataEntity` only if `toBeSynced`.
+- **Storage:** default `getExternalFilesDir(null)/downloads` [D]; optional SAF tree or secondary `getExternalFilesDirs` volume (SD). `DownloadStorage` interface hides File vs DocumentFile. v1: location change only when no downloads exist (or "delete all and switch") [D]; `MoveStorageWorker` deferred.
+
+## Playback pipeline
+- **DeviceProfileBuilder**: reimplement jellyfin-android's `player/deviceprofile/DeviceProfileBuilder.kt` (MediaCodecList probe → DirectPlay/Container/Codec profiles, ffmpeg-extension forced audio codecs, ASS/SSA toggle, ts/mkv h264 TranscodingProfiles, maxStreaming 120Mbps). @Singleton, built once. [D: drop external-player/web-codec bits; bitrate overridable from quality picker. Deliberately NOT Findroid's "direct play all" profile.]
+- **Online:** `PlaybackInfoResolver` → `getPostedPlaybackInfo(itemId, PlaybackInfoDto(mediaSourceId = id-dashless quirk (verified `MediaSourceResolver.kt:58`), deviceProfile, maxStreamingBitrate, startTimeTicks, stream indices))` → playMethod from `transcodingUrl`/`supportsDirectPlay`. `ExoMediaSourceFactory`: DIRECT_PLAY → `getVideoStreamUrl(static=true,…)`; DIRECT_STREAM → `getVideoStreamByContainerUrl`; TRANSCODE → HLS `createUrl(transcodingUrl)`; external subs as `SubtitleConfiguration` with `"external:<index>"` ids for Jellyfin↔Exo track mapping.
+- **Player:** ExoPlayer w/ `DefaultRenderersFactory(EXTENSION_RENDERER_MODE_PREFER).setEnableDecoderFallback(true)`, OkHttpDataSource w/ Authorization header; hosted in `PlaybackService : MediaSessionService` (background/PiP/notification), Compose `PlayerScreen` via MediaController.
+- **Reporting** (5s ticker + state edges; reference `PlayerViewModel.kt:410-556`): `reportPlaybackStart/Progress/Stopped`, `markPlayedItem` on ENDED, `stopEncodingProcess(deviceId, playSessionId)` when transcoding; stop-report on detached SupervisorJob scope (viewModelScope may be cancelled). **Always also** `userDataRepository.setPosition(...)` locally — makes resume identical online/offline.
+- **DecoderFallbackHandler:** renderer error → re-resolve with direct play/stream disabled (force transcode) + snackbar; source error while transcoding → retry once at lower bitrate.
+- **Offline:** `LocalPlaybackResolver` — `ItemEntity.dto.mediaSources[0]` + `DownloadFileEntity` URIs (media, subs, trickplay tiles), DIRECT_PLAY, zero network, positions via `toBeSynced=true`. Same `PlaybackMediaSource` sealed type → player UI byte-identical online/offline.
+- Media segments (M9): `getItemSegments(INTRO/OUTRO)` → skip button; per-type pref; server-only.
+
+## Milestones (each: /milestone DoD verification on device + green /verify + tagged commit)
+- **M0 Bootstrap + quality infra:** git init, 16 modules + build-logic, version catalog (resolve all VERIFY versions — esp. ffmpeg-decoder↔Media3 pairing), Hilt/Room/Compose wired, themed empty MainActivity, detekt/ktlint, **hooks + skills + CLAUDE.md/DECISIONS.md/STATUS.md/docs/PLAN.md**. DoD: `assembleDebug detekt` green, installs, dark screen, hooks fire, skills invocable.
+- **M1 Auth & session:** discovery (UDP + manual), password + Quick Connect login, token in EncryptedSharedPreferences only, session restore, sign-out. Verify: `run-as` inspection shows no token in DB; session in server Dashboard→Devices. Also confirm server version (10.11.x expected) + user's download policy here.
+- **M2 Design system + Home (online).** Verify: side-by-side vs jellyfin-web home — same rows/items/order.
+- **M3 Library grid + Search** (Paging 3, sort/filter). Verify: >500-item library scrolls clean, one request per page.
+- **M4 Item detail + user data** (local-first writes + EventBus; sync worker stubbed). Verify: mark played → appears in jellyfin-web; home row patches without refetch.
+- **M5 Playback (online).** Verify: direct-play + forced transcode (Dashboard shows method), track switching, resume, no orphaned ffmpeg after exit.
+- **M6 Offline read path** (Room cache, connectivity monitor, delegating repo, banner, force-offline setting). Verify: airplane-mode toggle swaps app within ~1s, no crashes; server-down (Wi-Fi up) degrades without 30s hang.
+- **M7 Downloads** (full pipeline + UI + badges + storage mgmt). Verify: 2GB movie resumes from byte offset after app kill; Wi-Fi-only honored; delete frees bytes.
+- **M8 Offline playback + sync** (LocalPlaybackResolver, offline home/library/search, UserDataSyncWorker most-recent-wins, offline trickplay). Verify: airplane-mode playback to 50% → reconnect → server shows 50% resume.
+- **M9 Polish:** trickplay scrubber, segment skip, PiP, gestures, speed/quality, full settings, tablet/landscape.
+- **M10 Release hardening:** R8 rules (SDK serializers/Room/Hilt/Media3), baseline profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8 verification on minified build.
+
+## Reference files (read before implementing the matching milestone)
+- `jellyfin-android/app/src/main/java/org/jellyfin/mobile/player/deviceprofile/DeviceProfileBuilder.kt` (M5)
+- `.../player/source/MediaSourceResolver.kt` (dashless mediaSourceId quirk, line 58) (M5)
+- `.../player/queue/QueueManager.kt` (URL construction + external-sub MediaItems) (M5)
+- `.../player/PlayerViewModel.kt:410-562` (reporting triad + stopEncodingProcess) (M5)
+- `.../downloads/DownloadQueue.kt`, `FileDownloader.kt` (Range-resume engine) (M7)
+- `.../setup/ConnectionHelper.kt` (discovery scoring/errors) (M1)
+- `jellyfin-android/gradle/libs.versions.toml` (version baseline) (M0)
+
+## Risks
+1. **ffmpeg-decoder ↔ Media3 version pairing** — resolve first thing in M0; pin Media3 down if needed (DECISIONS.md).
+2. Hilt/KSP/Kotlin 2.4.x alignment — M0; fallback KAPT-for-Hilt (log via /diverge).
+3. `security-crypto` maintenance status — isolated behind `SecureCredentialStore`; Keystore AES-GCM swap is one file.
+4. Server on Jellyfin 12 or download policy disabled would force SDK migration / download fallback — checked at M1.
+5. OEM decoder quirks during M5 — DecoderFallbackHandler is the mitigation.

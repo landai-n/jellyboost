@@ -3,13 +3,32 @@
 # conventional-commit message. A bug in this script must never hard-block unrelated Bash
 # calls -- any parsing failure falls through to a silent allow (exit 0, no output).
 
-REPO_ROOT="${CLAUDE_PROJECT_DIR:-}"
+INPUT="$(cat)"
+
+# Resolve the repo root of the checkout the command actually runs in: for a worktree-isolated
+# agent that is the worktree (with its own gitignored .claude/state), while CLAUDE_PROJECT_DIR
+# always names the main checkout — trusting it there gates commits on another agent's state.
+HOOK_CWD="$(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("")
+    sys.exit(0)
+print(data.get("cwd", "") or "")
+' 2>/dev/null)"
+
+REPO_ROOT=""
+if [ -n "$HOOK_CWD" ]; then
+  REPO_ROOT="$(git -C "$HOOK_CWD" rev-parse --show-toplevel 2>/dev/null)"
+fi
+if [ -z "$REPO_ROOT" ]; then
+  REPO_ROOT="${CLAUDE_PROJECT_DIR:-}"
+fi
 if [ -z "$REPO_ROOT" ]; then
   REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 fi
 cd "$REPO_ROOT" 2>/dev/null || exit 0
-
-INPUT="$(cat)"
 
 COMMAND="$(printf '%s' "$INPUT" | python3 -c '
 import json, sys

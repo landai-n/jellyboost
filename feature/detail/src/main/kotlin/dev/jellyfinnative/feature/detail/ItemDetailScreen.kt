@@ -158,7 +158,12 @@ private fun DetailSections(
         }
 
         item(key = SECTION_HEADER) {
-            DetailHeader(item = detail, isWide = isWide, actions = actions)
+            DetailHeader(
+                item = detail,
+                isWide = isWide,
+                downloadState = state.downloadState,
+                actions = actions,
+            )
         }
 
         state.nextUp?.let { next ->
@@ -221,7 +226,10 @@ private fun SectionTitle(
 
 private fun UserMessage.textRes(): Int =
     when (this) {
-        UserMessage.DownloadNotAvailableYet -> R.string.detail_message_download_unavailable
+        UserMessage.DownloadQueued -> R.string.detail_message_download_queued
+        UserMessage.DownloadFailed -> R.string.detail_message_download_failed
+        UserMessage.DownloadDeleted -> R.string.detail_message_download_deleted
+        UserMessage.DownloadDeleteFailed -> R.string.detail_message_download_delete_failed
         UserMessage.UserDataWriteFailed -> R.string.detail_message_user_data_failed
     }
 

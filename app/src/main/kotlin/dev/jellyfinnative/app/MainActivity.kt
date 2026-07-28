@@ -1,13 +1,21 @@
 package dev.jellyfinnative.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,10 +41,36 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             JellyfinTheme {
+                NotificationPermissionRequest()
                 val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
                 JellyfinNativeApp(sessionState = sessionState, onSignOut = viewModel::signOut)
             }
         }
+    }
+}
+
+/**
+ * Asks once for `POST_NOTIFICATIONS` on API 33+.
+ *
+ * The download queue runs as foreground work and its notification is the only place a transfer can
+ * be paused or cancelled from outside the app (docs/PLAN.md, "Download pipeline"). Without the
+ * permission the work still runs — the promotion is what keeps it alive, not the notification being
+ * *visible* — but the user loses that control surface, so it is worth one dialog.
+ *
+ * Declining is final and harmless: nothing here re-asks, and nothing depends on the answer.
+ */
+@Composable
+private fun NotificationPermissionRequest() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    LaunchedEffect(Unit) {
+        val granted =
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+        if (!granted) launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }
 

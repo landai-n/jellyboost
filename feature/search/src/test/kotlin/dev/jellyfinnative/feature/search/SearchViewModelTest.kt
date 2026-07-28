@@ -3,10 +3,12 @@ package dev.jellyfinnative.feature.search
 import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -14,9 +16,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -39,6 +43,13 @@ import org.junit.jupiter.api.Test
 class SearchViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
+
+    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads =
+        mockk<DownloadRepository> {
+            every { observeStates() } returns downloadStates
+        }
 
     private val queries = mutableListOf<ItemQuery>()
 
@@ -269,10 +280,43 @@ class SearchViewModelTest {
 
     /** Builds the ViewModel and lets its debounce collector start before the test types. */
     private fun TestScope.startedViewModel(): SearchViewModel {
-        val viewModel = SearchViewModel(repository)
+        val viewModel = SearchViewModel(repository, downloads)
         runCurrent()
         return viewModel
     }
+
+    // ---- M7: download badges -------------------------------------------------------------------
+
+    @Test
+    fun `download state reaches the result cards`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+
+            downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+            advanceUntilIdle()
+
+            viewModel.uiState.value.movies
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
+    fun `a download state that arrived before the search survives it`() =
+        runTest(dispatcher) {
+            downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+            coEvery { repository.getItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+
+            viewModel.uiState.value.movies
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
 
     private fun movie(
         id: String,

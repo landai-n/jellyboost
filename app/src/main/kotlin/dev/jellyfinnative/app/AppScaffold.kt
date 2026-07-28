@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -33,10 +34,10 @@ import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.core.ui.component.OfflineBanner
 
 /**
- * The app's outer frame: the [JellyfinNavHost], a Material 3 bottom navigation bar for the three
+ * The app's outer frame: the [JellyfinNavHost], a Material 3 bottom navigation bar for the four
  * top-level destinations, and the single app-wide [OfflineBanner] (docs/PLAN.md, "Confirmed
- * decisions" — "bottom nav bar Home / Libraries / Search / Downloads"; the Downloads tab is
- * deferred to M7, see DECISIONS.md 2026-07-28 "Downloads tab deferred to M7").
+ * decisions" — "bottom nav bar Home / Libraries / Search / Downloads"). The Downloads tab landed
+ * with the pipeline behind it at M7, closing DECISIONS.md 2026-07-28 "Downloads tab deferred to M7".
  *
  * The banner sits **above the navigation bar** rather than at the top of the screen. Every screen
  * already draws (and insets) its own `TopAppBar`, so a top-anchored banner would either hide under
@@ -133,11 +134,12 @@ private fun ConnectionBanner(
     )
 }
 
-/** The three destinations the bar can switch between; hidden everywhere else. */
+/** The four destinations the bar can switch between; hidden everywhere else. */
 private fun NavDestination?.isTopLevel(): Boolean =
     this?.hasRoute<Routes.Home>() == true ||
         this?.hasRoute<Routes.Libraries>() == true ||
-        this?.hasRoute<Routes.Search>() == true
+        this?.hasRoute<Routes.Search>() == true ||
+        this?.hasRoute<Routes.Downloads>() == true
 
 @Composable
 private fun AppNavigationBar(
@@ -162,6 +164,12 @@ private fun AppNavigationBar(
             icon = Icons.Filled.Search,
             label = stringResource(R.string.nav_search),
             onClick = { navController.navigateToTab(Routes.Search) },
+        )
+        AppTab(
+            selected = currentDestination?.hasRoute<Routes.Downloads>() == true,
+            icon = Icons.Filled.Download,
+            label = stringResource(R.string.nav_downloads),
+            onClick = { navController.navigateToTab(Routes.Downloads) },
         )
     }
 }

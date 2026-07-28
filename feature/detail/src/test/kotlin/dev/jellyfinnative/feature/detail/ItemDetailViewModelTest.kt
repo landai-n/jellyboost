@@ -3,10 +3,12 @@ package dev.jellyfinnative.feature.detail
 import androidx.lifecycle.SavedStateHandle
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -23,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -40,6 +43,13 @@ class ItemDetailViewModelTest {
     private val userDataRepository = mockk<UserDataRepository>()
     private val changes =
         MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads =
+        mockk<DownloadRepository> {
+            every { observeStates() } returns downloadStates
+        }
 
     private val movie =
         JellyfinItem(id = ITEM_ID, name = "Arrival", type = ItemType.MOVIE, productionYear = 2016)
@@ -359,24 +369,124 @@ class ItemDetailViewModelTest {
             model.uiState.value.playTarget shouldBe next
         }
 
-    // ---- not-yet-built actions ----------------------------------------------------------------
+    // ---- M7: the Download button ----------------------------------------------------------------
 
     @Test
-    fun `download is honest about the pipeline landing in M7`() =
+    fun `download enqueues an item that is not on the device`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify { downloads.enqueue(ITEM_ID) }
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadQueued
+        }
+
+    @Test
+    fun `download deletes an item that is already on the device`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { downloads.delete(ITEM_ID) } returns AppResult.Success(0L)
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            // One button, two meanings — the same "tap again to undo" the watched and favourite
+            // buttons already use.
+            coVerify { downloads.delete(ITEM_ID) }
+            coVerify(exactly = 0) { downloads.enqueue(any()) }
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
+        }
+
+    @Test
+    fun `download retries a failed item instead of deleting it`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { downloads.resume(ITEM_ID) } returns AppResult.Success(Unit)
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Failed)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            // Resuming picks up from the bytes already on disk; deleting would throw them away.
+            coVerify { downloads.resume(ITEM_ID) }
+            coVerify(exactly = 0) { downloads.delete(any()) }
+        }
+
+    @Test
+    fun `a failed enqueue says so`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Failure(AppError.Network())
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadFailed
+        }
+
+    @Test
+    fun `the download state tracks the pipeline`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
 
             val model = viewModel()
             advanceUntilIdle()
-            model.onDownloadClick()
+            model.uiState.value.downloadState shouldBe DownloadState.NotDownloaded
 
-            model.uiState.value.userMessage shouldBe UserMessage.DownloadNotAvailableYet
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloading(progress = 0.5f))
+            advanceUntilIdle()
+
+            model.uiState.value.downloadState shouldBe DownloadState.Downloading(progress = 0.5f)
+        }
+
+    @Test
+    fun `download badges reach the season, episode and related cards`() =
+        runTest(dispatcher) {
+            val related = JellyfinItem(id = "m2", name = "Sicario", type = ItemType.MOVIE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { repository.getSimilarItems(ITEM_ID, any()) } returns AppResult.Success(listOf(related))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            downloadStates.value = mapOf("m2" to DownloadState.Downloaded)
+            advanceUntilIdle()
+
+            model.uiState.value.similar
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
+    fun `a download state that arrived before the item survives the load`() =
+        runTest(dispatcher) {
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.refresh()
+            advanceUntilIdle()
+
+            model.uiState.value.downloadState shouldBe DownloadState.Downloaded
         }
 
     private fun viewModel() =
         ItemDetailViewModel(
             repository = repository,
             userDataRepository = userDataRepository,
+            downloads = downloads,
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 

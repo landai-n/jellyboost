@@ -40,10 +40,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.network.model.DiscoveredServer
+import dev.jellyfinnative.core.ui.theme.Dimens
+import dev.jellyfinnative.core.ui.theme.JellyfinGradients
 import kotlinx.coroutines.flow.Flow
 
 /** Widest the auth forms grow to; keeps them readable on the tablet the project targets. */
 internal val AuthContentMaxWidth = 460.dp
+
+/**
+ * Top/bottom breathing room for [AuthScreenScaffold]'s content column — deliberately roomier than
+ * [Dimens.SpaceExtraLarge] (the design system's largest spacing token) so the form doesn't feel
+ * flush against the status/gesture bars on a phone.
+ */
+private val AuthContentVerticalPadding = 32.dp
 
 /**
  * First screen of the app: pick a Jellyfin server, either from the local-network announcements or
@@ -83,8 +92,7 @@ private fun ServerSetupContent(
     AuthScreenScaffold(modifier = modifier) {
         Text(
             text = stringResource(R.string.auth_app_name),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.titleMedium.copy(brush = JellyfinGradients.Accent),
         )
         Text(
             text = stringResource(R.string.server_setup_title),
@@ -147,7 +155,7 @@ private fun ServerSetupContent(
 
         state.error?.let { error -> AuthErrorBlock(message = error) }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
     }
 }
 
@@ -157,7 +165,7 @@ private fun DiscoveredServersSection(
     isDiscovering: Boolean,
     onServerClick: (DiscoveredServer) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
         Text(
             text = stringResource(R.string.server_setup_discovered_title),
             style = MaterialTheme.typography.titleSmall,
@@ -189,7 +197,7 @@ private fun DiscoveredServerRow(
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium)) {
             Text(
                 text = server.name,
                 style = MaterialTheme.typography.titleMedium,
@@ -213,7 +221,7 @@ private fun HintRow(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         if (showSpinner) {
             CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
@@ -253,8 +261,8 @@ internal fun AuthScreenScaffold(
                         .widthIn(max = AuthContentMaxWidth)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                        .padding(horizontal = Dimens.SpaceExtraLarge, vertical = AuthContentVerticalPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
                 content = content,
             )
         }

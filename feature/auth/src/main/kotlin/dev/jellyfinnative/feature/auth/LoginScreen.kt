@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.network.model.PublicUserInfo
+import dev.jellyfinnative.core.ui.theme.Dimens
+import dev.jellyfinnative.core.ui.theme.JellyfinGradients
 
 private val AvatarSize = 56.dp
 
@@ -141,7 +143,7 @@ private fun LoginContent(
             ) {
                 Text(
                     text = disclaimer,
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(Dimens.SpaceLarge),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -210,7 +212,7 @@ private fun LoginContent(
         ) {
             if (state.isSigningIn) {
                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
             }
             Text(text = stringResource(R.string.login_sign_in))
         }
@@ -239,7 +241,7 @@ private fun LoginContent(
             Text(text = stringResource(R.string.login_change_server))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
     }
 
     state.quickConnect?.let { quickConnect ->
@@ -252,7 +254,7 @@ private fun PublicUsersRow(
     users: List<PublicUserInfo>,
     onUserSelected: (PublicUserInfo) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
         Text(
             text = stringResource(R.string.login_public_users_title),
             style = MaterialTheme.typography.titleSmall,
@@ -260,7 +262,7 @@ private fun PublicUsersRow(
         )
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         ) {
             users.forEach { user ->
                 PublicUserAvatar(user = user, onClick = { onUserSelected(user) })
@@ -282,7 +284,7 @@ private fun PublicUserAvatar(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
         Surface(
             onClick = onClick,
@@ -322,7 +324,7 @@ private fun QuickConnectDialog(
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
@@ -335,13 +337,13 @@ private fun QuickConnectDialog(
                         MaterialTheme.typography.displaySmall.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 8.sp,
+                            brush = JellyfinGradients.Accent,
                         ),
-                    color = MaterialTheme.colorScheme.primary,
                 )
                 if (state.isWaiting) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         Text(

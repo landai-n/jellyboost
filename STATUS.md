@@ -1,6 +1,6 @@
 # STATUS
 
-## Current milestone: M0 — Bootstrap + quality infrastructure (code-complete)
+## Current milestone: M0 — Bootstrap + quality infrastructure (DONE, tagged m0)
 
 **Definition of done:** `./gradlew assembleDebug detekt` green; app installs and shows dark
 themed empty screen; hooks fire; skills invocable; all VERIFY versions resolved and recorded
@@ -21,18 +21,15 @@ in DECISIONS.md.
   (/verify /checkpoint /diverge /milestone /document-feature) created and smoke-tested,
   incl. deny paths and stop_hook_active loop guard.
 - Test device documented in CLAUDE.md: test tablet ([redacted]), Android 16 / API 36, via adb.
+- On-device DoD check passed: `installDebug` OK, app launches with dark #101010 screen
+  (screenshot-verified). An earlier `INSTALL_FAILED_USER_RESTRICTED` was transient —
+  "Install via USB" is enabled and working on this device.
 
 ### Next
-- **Enable "Install via USB" in the OEM ROM/the OEM ROM developer settings on the test tablet**
-  (requires physical interaction) — installs currently fail with
-  `INSTALL_FAILED_USER_RESTRICTED`. Then `./gradlew installDebug`, confirm dark empty
-  screen, and `git tag m0`.
 - **Restart Claude Code from this directory** (`jellyfin-native/`) so the hooks and skills
   actually load — they are inert in sessions started from the parent directory.
-- Then M1: Auth & session (discovery UDP+manual, password + Quick Connect, tokens only in
+- M1: Auth & session (discovery UDP+manual, password + Quick Connect, tokens only in
   EncryptedSharedPreferences, session restore; confirm server version + download policy).
 
 ### Known issues
-- On-device install blocked by the OEM ROM "Install via USB" restriction (device-side setting,
-  not a build problem). APK manifest verified via aapt as a substitute; m0 tag deferred
-  until the on-device check passes.
+- (none)

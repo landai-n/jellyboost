@@ -4,15 +4,19 @@ import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.core.common.model.Person
+import dev.jellyfinnative.core.common.model.PersonKind
 import dev.jellyfinnative.core.common.model.UserData
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.BaseItemPerson
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 
 /**
  * Turns the SDK's `BaseItemDto` into the domain models the rest of the app uses.
@@ -52,6 +56,13 @@ class ItemMapper
                 thumbImageUrl = dto.thumbImageUrl(),
                 logoImageUrl = dto.logoImageUrl(),
                 primaryImageAspectRatio = dto.primaryImageAspectRatio,
+                // Detail-only fields (M4). A lean list request leaves them null/empty, which maps
+                // straight onto the domain defaults — no branching needed here.
+                taglines = dto.taglines.orEmpty(),
+                childCount = dto.childCount,
+                premiereDate = dto.premiereDate?.toInstant(ZoneOffset.UTC),
+                studios = dto.studios.orEmpty().mapNotNull { it.name },
+                people = dto.people.orEmpty().map { it.toDomain() },
                 userData = dto.userData.toDomain(),
             )
 
@@ -78,6 +89,21 @@ class ItemMapper
 
         /** Maps `getUserViews` results, dropping every library kind v1 does not support. */
         fun toLibraryViews(dtos: List<BaseItemDto>): List<LibraryView> = dtos.mapNotNull(::toLibraryView)
+
+        // ---- people (M4) --------------------------------------------------------------------
+
+        /**
+         * Maps one credit. Kept here rather than as a file-level function because a person's
+         * headshot needs the same [ImageUrlFactory] the artwork chain uses.
+         */
+        private fun BaseItemPerson.toDomain(): Person =
+            Person(
+                id = id.toString(),
+                name = name.orEmpty(),
+                role = role?.takeIf { it.isNotBlank() },
+                kind = type.toPersonKind(),
+                primaryImageUrl = imageUrls.imageUrl(id, ImageKind.PRIMARY, primaryImageTag, POSTER_WIDTH),
+            )
 
         // ---- artwork ------------------------------------------------------------------------
 
@@ -139,6 +165,17 @@ private fun BaseItemKind.toItemType(): ItemType =
         BaseItemKind.COLLECTION_FOLDER, BaseItemKind.USER_VIEW -> ItemType.COLLECTION_FOLDER
         BaseItemKind.FOLDER -> ItemType.FOLDER
         else -> ItemType.UNKNOWN
+    }
+
+private fun SdkPersonKind?.toPersonKind(): PersonKind =
+    when (this) {
+        SdkPersonKind.ACTOR -> PersonKind.ACTOR
+        SdkPersonKind.DIRECTOR -> PersonKind.DIRECTOR
+        SdkPersonKind.WRITER -> PersonKind.WRITER
+        SdkPersonKind.PRODUCER -> PersonKind.PRODUCER
+        SdkPersonKind.GUEST_STAR -> PersonKind.GUEST_STAR
+        // Composer, lyricist, penciller … — real credit kinds, none of them in v1's scope.
+        else -> PersonKind.OTHER
     }
 
 private fun CollectionType?.toCollectionKind(): CollectionKind =

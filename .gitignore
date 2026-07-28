@@ -11,3 +11,4 @@ captures/
 !debug.keystore
 .kotlin/
 .claude/state/
+.claude/worktrees/

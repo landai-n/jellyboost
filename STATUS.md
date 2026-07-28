@@ -35,11 +35,17 @@ policy (risk #4).
 - `:core:datastore`: SecureCredentialStore interface + EncryptedSharedPreferences impl
   (AES256_GCM/SIV, IO-dispatched, corrupt-keyset recreate-once recovery), StoredSession
   (serverId+userId+token as one atomic record), Hilt binding.
+- `:core:network`: ApiClientProvider (createJellyfin + single mutable ApiClient),
+  ServerDiscoveryRepository (UDP discovery Flow + address-candidate scoring),
+  AuthRepository (password + Quick Connect w/ 5s-poll/5-min-cap Flow; download policy
+  logged per risk #4), SessionRepository (local-only restore, best-effort sign-out),
+  SessionStateHolder, JellyfinApiFacade (testability seam), AppError.ServerResolution.
+  29 unit tests (token-hygiene, poll timing on virtual clock, restore/sign-out paths).
+  2 DECISIONS entries (no getCurrentUser round-trip; sign-out keeps Room rows).
 
 ### Next
-- `:core:network`: ApiClientProvider (SDK wiring), ServerDiscoveryRepository (UDP 7359 +
-  manual URL candidates, reference jellyfin-android ConnectionHelper.kt), AuthRepository
-  (password + Quick Connect initiate/poll/authenticate), SessionRepository (restore, sign-out).
+- `:feature:auth`: ServerSetup + Login screens/ViewModels (+ tests); NavHost wiring in
+  `:app` (session-state-driven start destination, temporary sign-out on placeholder home).
 - `:feature:auth`: ServerSetup + Login screens/ViewModels; wire NavHost in `:app`
   (auth flow vs. placeholder home based on session state).
 - Unit tests for repositories/ViewModels (JUnit5 + MockK + Turbine).

@@ -47,4 +47,17 @@ object Routes {
         val itemId: String,
         val startPositionTicks: Long = 0L,
     )
+
+    // M3 — library & search
+    //
+    // Search reuses the top-level [Search] destination declared above; only the grid needs a new
+    // route, because it carries the library name for its top bar (a second `getUserViews` round
+    // trip just to render a title would be wasteful, and the name is already on screen when the
+    // user taps through).
+
+    @Serializable
+    data class LibraryGrid(
+        val libraryId: String,
+        val libraryName: String,
+    )
 }

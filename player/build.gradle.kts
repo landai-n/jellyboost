@@ -23,7 +23,12 @@ dependencies {
     implementation(libs.androidx.media3.ui.compose)
     implementation(libs.jellyfin.media3.ffmpeg.decoder)
 
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.okhttp)
+    implementation(libs.timber)
 }

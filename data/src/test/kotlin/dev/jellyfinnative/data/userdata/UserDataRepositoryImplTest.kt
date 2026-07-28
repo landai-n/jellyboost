@@ -41,7 +41,10 @@ import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
+import java.util.TimeZone
 import java.util.UUID
 
 /**
@@ -79,8 +82,13 @@ class UserDataRepositoryImplTest {
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 
+    private val originalTimeZone: TimeZone = TimeZone.getDefault()
+
     @BeforeEach
     fun setUp() {
+        // The SDK serialises its date fields as `value.atZone(systemDefault())`, so a non-UTC
+        // default zone is what makes a wrong conversion visible (see `SdkDateTime.kt`).
+        TimeZone.setDefault(TimeZone.getTimeZone(TEST_ZONE))
         mockkStatic("org.jellyfin.sdk.api.client.extensions.ApiClientExtensionsKt")
         every { apiClient.playStateApi } returns playStateApi
         every { apiClient.userLibraryApi } returns userLibraryApi
@@ -102,6 +110,7 @@ class UserDataRepositoryImplTest {
     @AfterEach
     fun tearDown() {
         unmockkAll()
+        TimeZone.setDefault(originalTimeZone)
     }
 
     // ---- local-first ordering ---------------------------------------------------------------
@@ -206,18 +215,36 @@ class UserDataRepositoryImplTest {
             coVerify(exactly = 0) { playStateApi.markPlayedItem(any(), any(), any()) }
         }
 
+    /**
+     * Regression test for STATUS.md's "Known issues": `datePlayed` used to be built as UTC
+     * wall-clock time, which the SDK then stamped the *device's* offset onto — a 10:00Z event went
+     * out as `10:00+02:00` and the server stored it two hours early. The value on the wire must be
+     * local wall-clock time so that the instant survives the round trip.
+     */
     @Test
-    fun `sends the played date to the server as wall-clock UTC`() =
+    fun `sends the played date so the server receives the correct instant`() =
         runTest {
+            val sent = slot<LocalDateTime>()
+            coEvery { playStateApi.markPlayedItem(any(), any(), capture(sent)) } returns userDataResponse()
+
             repository.setPlayed(itemId, played = true)
 
-            coVerify {
-                playStateApi.markPlayedItem(
-                    itemUuid,
-                    userId,
-                    java.time.LocalDateTime.ofInstant(now, ZoneOffset.UTC),
-                )
-            }
+            sent.captured shouldBe LocalDateTime.ofInstant(now, ZoneId.of(TEST_ZONE))
+            // What the SDK will actually put on the wire resolves back to the instant we stored.
+            sent.captured.atZone(ZoneId.of(TEST_ZONE)).toInstant() shouldBe now
+        }
+
+    @Test
+    fun `sends the position write's last-played date as the same instant`() =
+        runTest {
+            val pushed = slot<UpdateUserItemDataDto>()
+            coEvery { itemsApi.updateItemUserData(any(), any(), capture(pushed)) } returns userDataResponse()
+
+            repository.setPosition(itemId, positionTicks = 5L)
+
+            pushed.captured.lastPlayedDate
+                ?.atZone(ZoneId.of(TEST_ZONE))
+                ?.toInstant() shouldBe now
         }
 
     // ---- setFavorite ------------------------------------------------------------------------
@@ -362,6 +389,11 @@ class UserDataRepositoryImplTest {
         playbackPositionTicks = playbackPositionTicks,
         updatedAt = now.minusSeconds(60),
     )
+
+    private companion object {
+        /** A fixed non-UTC zone with a non-zero offset all year round. */
+        const val TEST_ZONE = "Europe/Paris"
+    }
 
     private fun userDataResponse() =
         Response(

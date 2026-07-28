@@ -15,9 +15,13 @@ import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.UserItemDataDto
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.ZoneId
+import java.util.TimeZone
 import java.util.UUID
 import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 
@@ -28,6 +32,23 @@ class ItemMapperTest {
     private val movieId = UUID.fromString("11111111-1111-1111-1111-111111111111")
     private val seriesId = UUID.fromString("22222222-2222-2222-2222-222222222222")
     private val parentId = UUID.fromString("33333333-3333-3333-3333-333333333333")
+
+    private val originalTimeZone: TimeZone = TimeZone.getDefault()
+
+    /**
+     * The SDK's date serializer reads and writes `LocalDateTime` in the *device's* zone, so every
+     * date assertion here is only meaningful under a zone that is not UTC — pinning one is what
+     * makes the M4 timezone regression (dates off by the local offset) visible to these tests.
+     */
+    @BeforeEach
+    fun pinTimeZone() {
+        TimeZone.setDefault(TimeZone.getTimeZone(TEST_ZONE))
+    }
+
+    @AfterEach
+    fun restoreTimeZone() {
+        TimeZone.setDefault(originalTimeZone)
+    }
 
     @Test
     fun `maps the scalar fields of a movie`() {
@@ -216,7 +237,7 @@ class ItemMapperTest {
         userData.isFavorite shouldBe true
         userData.played shouldBe false
         userData.playedPercentage shouldBe 20.0
-        userData.lastPlayedDate shouldBe lastPlayed.toInstant(ZoneOffset.UTC)
+        userData.lastPlayedDate shouldBe lastPlayed.atZone(ZoneId.of(TEST_ZONE)).toInstant()
         userData.isResumable shouldBe true
     }
 
@@ -275,7 +296,7 @@ class ItemMapperTest {
 
         item.taglines shouldContainExactly listOf("Why are they here?")
         item.childCount shouldBe 4
-        item.premiereDate shouldBe premiere.toInstant(ZoneOffset.UTC)
+        item.premiereDate shouldBe premiere.atZone(ZoneId.of(TEST_ZONE)).toInstant()
         item.studios shouldContainExactly listOf("Paramount")
     }
 
@@ -365,6 +386,26 @@ class ItemMapperTest {
             .shouldBeNull()
     }
 
+    // ---- M6: timezone regression --------------------------------------------------------------
+
+    /**
+     * Regression test for the M4 bug in STATUS.md's "Known issues": SDK date fields are *local*
+     * wall-clock time (its serializer applies `ZoneId.systemDefault()`), so reading one as UTC
+     * shifted every timestamp by the device's offset — two hours on the test device.
+     */
+    @Test
+    fun `reads an SDK date field as local wall-clock time, not as UTC`() {
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MOVIE,
+                premiereDate = LocalDateTime.of(2016, 11, 11, 14, 30),
+            )
+
+        // 14:30 in Europe/Paris on 11 Nov is 13:30Z — reading it as UTC would have produced 14:30Z.
+        mapper.toDomain(dto).premiereDate shouldBe Instant.parse("2016-11-11T13:30:00Z")
+    }
+
     private fun library(
         id: UUID,
         name: String,
@@ -375,4 +416,9 @@ class ItemMapperTest {
         name = name,
         collectionType = collectionType,
     )
+
+    private companion object {
+        /** A fixed non-UTC zone with a non-zero offset all year round. */
+        const val TEST_ZONE = "Europe/Paris"
+    }
 }

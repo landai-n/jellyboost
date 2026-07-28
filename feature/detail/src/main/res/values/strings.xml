@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation / actions -->
+    <string name="detail_back">Back</string>
+    <string name="detail_play">Play</string>
+    <string name="detail_resume">Resume</string>
+    <string name="detail_download">Download</string>
+    <string name="detail_mark_watched">Mark watched</string>
+    <string name="detail_mark_unwatched">Mark unwatched</string>
+    <string name="detail_add_favorite">Add to favourites</string>
+    <string name="detail_remove_favorite">Remove from favourites</string>
+
+    <!-- Section titles -->
+    <string name="detail_section_seasons">Seasons</string>
+    <string name="detail_section_next_up">Next up</string>
+    <string name="detail_section_episodes">Episodes</string>
+    <string name="detail_section_similar">More like this</string>
+    <string name="detail_section_cast">Cast &amp; crew</string>
+
+    <!-- Metadata -->
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min left</string>
+    <string name="detail_directed_by">Directed by %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d season</item>
+        <item quantity="other">%1$d seasons</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+
+    <!-- States and messages -->
+    <string name="detail_empty">This item is no longer available.</string>
+    <string name="detail_message_playback_unavailable">Playback arrives in M5.</string>
+    <string name="detail_message_download_unavailable">Downloads arrive in M7.</string>
+    <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
+</resources>

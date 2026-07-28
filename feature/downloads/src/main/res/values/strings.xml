@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_title">Downloads</string>
+    <string name="downloads_tab_downloaded">Downloaded</string>
+    <string name="downloads_tab_queue">Queue</string>
+    <string name="downloads_wifi_only">Wi‑Fi only</string>
+
+    <!-- Storage header -->
+    <string name="downloads_storage_summary">%1$s used · %2$s free</string>
+
+    <!-- Row actions -->
+    <string name="downloads_action_delete">Delete download</string>
+    <string name="downloads_action_cancel">Cancel download</string>
+    <string name="downloads_action_pause">Pause download</string>
+    <string name="downloads_action_resume">Resume download</string>
+    <string name="downloads_action_move_up">Move up the queue</string>
+    <string name="downloads_action_move_down">Move down the queue</string>
+
+    <!-- Queue row status line -->
+    <string name="downloads_progress_of">%1$s of %2$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_status_queued">Waiting</string>
+    <string name="downloads_status_paused">Paused</string>
+    <string name="downloads_status_failed">Download failed</string>
+    <string name="downloads_status_failed_reason">Download failed: %1$s</string>
+
+    <!-- Empty states and messages -->
+    <string name="downloads_empty_downloaded">Nothing downloaded yet. Tap Download on a film or episode to keep it on this device.</string>
+    <string name="downloads_empty_queue">The download queue is empty.</string>
+    <string name="downloads_message_delete_failed">Couldn\'t delete that download.</string>
+    <string name="downloads_message_action_failed">Couldn\'t update the queue.</string>
+</resources>

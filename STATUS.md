@@ -104,13 +104,15 @@ Quality gate verified green on the branch by the orchestrator (full `--rerun-tas
   loading/error/empty states.
 - Unit tests: `JellyfinItemTest` (13), `ItemMapperTest` (13), `OnlineJellyfinRepositoryTest` (9),
   `HomeViewModelTest` (9) — 44 new tests, all green.
+- Integration (orchestrator): `:core:network` provides `org.jellyfin.sdk.api.client.ApiClient` to
+  the Hilt graph (`di/NetworkModule.kt`, `ApiClientModule`); `HomeViewModel` is now `@HiltViewModel`;
+  `Routes.Home` in the `:app` NavHost renders a new `HomeRoute` (`Scaffold` + `TopAppBar` with a
+  sign-out action) hosting `HomeScreen(viewModel = hiltViewModel(), …)`, replacing the M1
+  `HomePlaceholderScreen` (deleted). Bottom nav + `OfflineBanner` (`AppScaffold`) are not part of
+  this pass — they arrive with the milestones that need them.
 
-**Next (integration, orchestrator)**
-- Provide `org.jellyfin.sdk.api.client.ApiClient` from `:core:network` (M1), then add
-  `@HiltViewModel` to `HomeViewModel` (see DECISIONS.md 2026-07-28).
-- Wire `Routes.Home` → `HomeScreen(viewModel = hiltViewModel(), …)` into the `:app` NavHost,
-  together with `AppScaffold` (bottom nav + `OfflineBanner`).
-- Then run the M2 DoD: side-by-side vs jellyfin-web home on the test tablet — same rows, items and
+**Next**
+- Run the M2 DoD: side-by-side vs jellyfin-web home on the test tablet — same rows, items and
   order.
 
 **Known issues (M2)**

@@ -30,7 +30,8 @@ import dev.jellyfinnative.core.ui.theme.JellyfinTheme
  * side-by-side comparison shows the same sections, items and ordering (the M2 definition of done).
  *
  * The [HomeViewModel] is passed in rather than resolved here so that `:app` owns the
- * `hiltViewModel()` call together with the rest of the navigation graph wiring.
+ * `hiltViewModel()` call together with the rest of the navigation graph wiring — see
+ * `HomeRoute` in `:app`.
  */
 @Composable
 fun HomeScreen(

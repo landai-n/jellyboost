@@ -8,8 +8,14 @@ import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.core.network.ApiClientProvider
 import dev.jellyfinnative.core.network.JellyfinApiFacade
 import dev.jellyfinnative.core.network.SdkJellyfinApiFacade
+import dev.jellyfinnative.core.network.connectivity.AndroidConnectivityMonitor
+import dev.jellyfinnative.core.network.connectivity.ConnectivityMonitor
+import dev.jellyfinnative.core.network.connectivity.SdkServerProbeApi
+import dev.jellyfinnative.core.network.connectivity.ServerProbeApi
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.jellyfin.sdk.api.client.ApiClient
 import javax.inject.Singleton
 
@@ -26,9 +32,19 @@ internal interface NetworkModule {
     @Binds
     @Singleton
     fun bindJellyfinApiFacade(impl: SdkJellyfinApiFacade): JellyfinApiFacade
+
+    /** Binds the connectivity monitor to its `ConnectivityManager` implementation (M6). */
+    @Binds
+    @Singleton
+    fun bindConnectivityMonitor(impl: AndroidConnectivityMonitor): ConnectivityMonitor
+
+    /** Binds the reachability probe's single SDK call (M6). */
+    @Binds
+    @Singleton
+    fun bindServerProbeApi(impl: SdkServerProbeApi): ServerProbeApi
 }
 
-/** Provides the dispatchers `:core:network` runs its blocking work on. */
+/** Provides the dispatchers and scopes `:core:network` runs its background work on. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkDispatchersModule {
@@ -36,6 +52,20 @@ internal object NetworkDispatchersModule {
     @Provides
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    /**
+     * The process-lifetime scope for work that outlives any screen: the connectivity monitor, the
+     * reachability probe loop, and the fire-and-forget browse-cache write-through.
+     *
+     * A [SupervisorJob] so one failing child cannot take the app's connectivity monitoring down
+     * with it. Never cancelled — it dies with the process.
+     */
+    @Provides
+    @Singleton
+    @ApplicationScope
+    fun provideApplicationScope(
+        @IoDispatcher dispatcher: CoroutineDispatcher,
+    ): CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
 }
 
 /**

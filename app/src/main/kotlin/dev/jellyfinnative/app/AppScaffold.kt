@@ -1,5 +1,6 @@
 package dev.jellyfinnative.app
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -24,22 +28,26 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.jellyfinnative.core.common.Routes
+import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.model.SessionState
+import dev.jellyfinnative.core.ui.component.OfflineBanner
 
 /**
- * The app's outer frame: the [JellyfinNavHost] plus a Material 3 bottom navigation bar for the
- * three top-level destinations (docs/PLAN.md, "Confirmed decisions" — "bottom nav bar Home /
- * Libraries / Search / Downloads"; the Downloads tab is deferred to M7, see DECISIONS.md
- * 2026-07-28 "Downloads tab deferred to M7").
+ * The app's outer frame: the [JellyfinNavHost], a Material 3 bottom navigation bar for the three
+ * top-level destinations, and the single app-wide [OfflineBanner] (docs/PLAN.md, "Confirmed
+ * decisions" — "bottom nav bar Home / Libraries / Search / Downloads"; the Downloads tab is
+ * deferred to M7, see DECISIONS.md 2026-07-28 "Downloads tab deferred to M7").
  *
- * The offline banner (also an `AppScaffold` responsibility per the plan) arrives with M6's
- * connectivity monitor.
+ * The banner sits **above the navigation bar** rather than at the top of the screen. Every screen
+ * already draws (and insets) its own `TopAppBar`, so a top-anchored banner would either hide under
+ * the status bar or push a second status-bar padding down onto the screen below it; the bottom slot
+ * has no such interaction and keeps the notice visible on every destination, bar or no bar.
  *
  * `contentWindowInsets = WindowInsets(0)` is deliberate: every screen already manages its own
  * status-bar insets (`AuthScreenScaffold.safeDrawingPadding()`, the per-screen `Scaffold`s in
  * `:feature:home`/`:feature:library`/`:feature:detail`). Letting this outer `Scaffold` also
- * consume system-bar insets would pad those screens twice; this one only reserves space for the
- * bottom bar it actually draws — zero when it is hidden, its measured height when it is shown.
+ * consume system-bar insets would pad those screens twice; this one only reserves space for what
+ * it actually draws.
  */
 @Composable
 internal fun AppScaffold(
@@ -50,11 +58,28 @@ internal fun AppScaffold(
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
 
+    val connectionViewModel: ConnectionViewModel = hiltViewModel()
+    val connectionState by connectionViewModel.connectionState.collectAsStateWithLifecycle()
+
+    // Coming back to the app is the other moment the plan wants a reachability probe: the network
+    // may well have changed while we were not listening (docs/PLAN.md, "Connectivity").
+    LifecycleResumeEffect(Unit) {
+        connectionViewModel.refresh()
+        onPauseOrDispose { }
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            if (currentDestination.isTopLevel()) {
-                AppNavigationBar(currentDestination = currentDestination, navController = navController)
+            Column {
+                ConnectionBanner(
+                    state = connectionState,
+                    onRetry = connectionViewModel::refresh,
+                    onLeaveOfflineMode = { connectionViewModel.setForceOffline(false) },
+                )
+                if (currentDestination.isTopLevel()) {
+                    AppNavigationBar(currentDestination = currentDestination, navController = navController)
+                }
             }
         },
     ) { innerPadding ->
@@ -66,6 +91,46 @@ internal fun AppScaffold(
             modifier = Modifier.padding(innerPadding),
         )
     }
+}
+
+/**
+ * The offline notice, with copy and an action chosen by *why* the app is offline — the three
+ * reasons call for three different things from the user.
+ *
+ * @param onRetry re-probes the server; only offered when there is something to retry.
+ * @param onLeaveOfflineMode turns the force-offline preference back off.
+ */
+@Composable
+private fun ConnectionBanner(
+    state: ConnectionState,
+    onRetry: () -> Unit,
+    onLeaveOfflineMode: () -> Unit,
+) {
+    val message =
+        when (state) {
+            ConnectionState.ONLINE -> null
+            ConnectionState.OFFLINE_NO_NETWORK -> R.string.offline_no_network
+            ConnectionState.OFFLINE_SERVER_UNREACHABLE -> R.string.offline_server_unreachable
+            ConnectionState.OFFLINE_FORCED -> R.string.offline_forced
+        }
+
+    OfflineBanner(
+        visible = message != null,
+        // Held over during the collapse animation so the text does not blank out mid-transition.
+        message = stringResource(message ?: R.string.offline_no_network),
+        actionLabel =
+            when (state) {
+                ConnectionState.OFFLINE_SERVER_UNREACHABLE -> stringResource(R.string.offline_retry)
+                ConnectionState.OFFLINE_FORCED -> stringResource(R.string.offline_go_online)
+                else -> null
+            },
+        onAction =
+            when (state) {
+                ConnectionState.OFFLINE_SERVER_UNREACHABLE -> onRetry
+                ConnectionState.OFFLINE_FORCED -> onLeaveOfflineMode
+                else -> null
+            },
+    )
 }
 
 /** The three destinations the bar can switch between; hidden everywhere else. */

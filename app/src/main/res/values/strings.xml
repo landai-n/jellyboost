@@ -2,11 +2,20 @@
 <resources>
     <string name="app_name">Jellyfin</string>
 
-    <!-- Temporary home top-bar action; moves to Settings at M9. -->
+    <!-- Temporary home top-bar actions; move to Settings at M9. -->
     <string name="home_sign_out">Sign out</string>
+    <string name="home_more_options">More options</string>
+    <string name="settings_offline_mode">Offline mode</string>
 
     <!-- Bottom navigation bar (M3/M4 integration) -->
     <string name="nav_home">Home</string>
     <string name="nav_libraries">Libraries</string>
     <string name="nav_search">Search</string>
+
+    <!-- Offline banner (M6) -->
+    <string name="offline_no_network">No network — showing downloaded media</string>
+    <string name="offline_server_unreachable">Can\'t reach the server — showing downloaded media</string>
+    <string name="offline_forced">Offline mode is on — showing downloaded media</string>
+    <string name="offline_retry">Retry</string>
+    <string name="offline_go_online">Go online</string>
 </resources>

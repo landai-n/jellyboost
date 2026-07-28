@@ -134,6 +134,23 @@ disagree with the bytes on disk.
 Cancelling (pause, a lost network, a killed process) leaves the partial file exactly where it is and
 puts the row back to `QUEUED`. Nothing in the engine ever deletes a file.
 
+Two things make the resume actually land on the *same* file after a process death:
+
+- **The file plan is persisted, not re-derived.** When `download_files` rows exist for an item, the
+  queue reuses their `fileName` and identity and rebuilds only the URL (the base address rotates
+  between LAN and remote). Re-planning from the DTO is reserved for a first attempt, because
+  `DownloadPaths.mediaFileName` prefers the server's own filename from `BaseItemDto.path` and that
+  field is not present in every shape of the cached DTO — a retry that re-planned once renamed a
+  1.38 GB partial from `Backrooms.2026…-BATGirl.mkv` to `Backrooms (2026).mkv` and started over.
+  Room holds the plan; Room wins.
+- **The session is restored before the first URL is built.** `DownloadSessionGate` runs at the top
+  of every drain: on a cold start WorkManager beats the UI to it, and without the gate the SDK threw
+  `Required value baseUrl is null` and the item went `ERROR`. No session at all → `Result.retry()`,
+  rows left `QUEUED` ("Waiting"), nothing marked failed.
+
+An `ERROR` row's message is user copy from `DownloadErrorCopy` (mapped through `AppError`), never an
+exception's text.
+
 Progress: `FileDownloader` reports every 64 KB of *accumulated* bytes (OkHttp hands back 8 KB
 segments, so the callback counts bytes rather than reads), and `ProgressThrottle` lets through a
 Room write every 500 ms **or** 1 %. Room is the single source of truth; the queue tab, the badges
@@ -229,7 +246,9 @@ delete do not.
 | `DownloadFilePlannerTest` | plan order, essential split, subtitle/trickplay selection, the 403 fallback URL |
 | `FileDownloaderTest` | `200` / `206` / `416` / error, the `Range` header, the auth header, resume offsets, cancellation leaving the partial file |
 | `ProgressThrottleTest` | the 500 ms-or-1 % rule, unknown totals |
-| `DownloadQueueTest` | status machine, essential vs optional failure, the 403 retry, cancellation re-queue, plan reconciliation |
+| `DownloadQueueTest` | status machine, essential vs optional failure, the 403 retry, cancellation re-queue, plan reuse across retries, the session gate, deletion mid-transfer |
+| `DownloadSessionGateTest` | cold-start restore, no-session parking, a token-less client |
+| `DownloadErrorCopyTest` | every failure maps to user copy; SDK internals never reach the row |
 | `DownloadEnqueuerTest` | full re-fetch, parent caching, `source = DOWNLOAD`, queue position, re-enqueue |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |

@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.FilterFacets
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
@@ -105,7 +106,7 @@ class OfflineJellyfinRepository
             onIo {
                 val library = parentId.toUuidOrNull() ?: return@onIo emptyList()
                 itemDao
-                    .latestDownloaded(ItemSource.DOWNLOAD, LIST_ITEM_TYPES, library, limit)
+                    .latestDownloaded(ItemSource.DOWNLOAD, typesOf(library, LIST_ITEM_TYPES), limit)
                     .withLocalUserData(currentUserId())
             }
 
@@ -131,16 +132,17 @@ class OfflineJellyfinRepository
 
         override suspend fun getItems(query: ItemQuery): AppResult<List<JellyfinItem>> =
             onIo {
-                val types = query.itemTypes.ifEmpty { LIST_ITEM_TYPES }
+                val requested = query.itemTypes.ifEmpty { LIST_ITEM_TYPES }
                 val term = query.searchTerm?.trim()
                 val rows =
                     if (!term.isNullOrEmpty()) {
-                        itemDao.searchDownloaded(ItemSource.DOWNLOAD, types, term, query.limit)
+                        // Search is deliberately library-wide: offline there are a handful of items
+                        // and finding one you downloaded matters more than which grid you were in.
+                        itemDao.searchDownloaded(ItemSource.DOWNLOAD, requested, term, query.limit)
                     } else {
                         itemDao.pagingDownloaded(
                             source = ItemSource.DOWNLOAD,
-                            types = types,
-                            parentId = query.parentId?.toUuidOrNull(),
+                            types = typesOf(query.parentId?.toUuidOrNull(), requested),
                             descending = query.sortOrder == SortOrder.DESCENDING,
                             limit = query.limit,
                             offset = query.startIndex,
@@ -177,7 +179,7 @@ class OfflineJellyfinRepository
             onIo {
                 val series = seriesId.toUuidOrNull() ?: return@onIo emptyList()
                 itemDao
-                    .childrenOf(ItemSource.DOWNLOAD, ItemType.SEASON, series)
+                    .seasonsOfSeries(ItemSource.DOWNLOAD, series, ItemType.SEASON)
                     .withLocalUserData(currentUserId())
             }
 
@@ -236,6 +238,43 @@ class OfflineJellyfinRepository
             return mapper.toDomain(this, userData)
         }
 
+        /**
+         * Which item kinds a library's offline list may contain.
+         *
+         * This is how an offline row is attributed to a library, and it replaces the parent-id
+         * linkage the queries used to filter on. A downloaded row's `parentId` is its containing
+         * *folder* — when the server sends one at all; the M7 device walk found downloaded films
+         * stored with `parentId NULL` — and a folder is not the library-view id the grid asks
+         * about, so the predicate could only ever be empty (DECISIONS.md 2026-07-28).
+         *
+         * Type is exact for the libraries v1 supports: a downloaded film belongs to the movie
+         * library, a downloaded series or episode to the TV one. It is *not* a general rule (two
+         * movie libraries would share their downloads), which is why it is a documented v1
+         * simplification rather than a new invariant.
+         *
+         * An unknown library id — one not in the cached `library_views` — narrows nothing, so a
+         * grid still lists what was asked for rather than nothing at all.
+         */
+        private suspend fun typesOf(
+            libraryId: UUID?,
+            requested: List<ItemType>,
+        ): List<ItemType> {
+            val id = libraryId ?: return requested
+            val kind =
+                libraryViewDao
+                    .getAll()
+                    .firstOrNull { it.id == id }
+                    ?.let { view -> CollectionKind.entries.firstOrNull { it.name == view.collectionType } }
+
+            val allowed =
+                when (kind) {
+                    CollectionKind.MOVIES -> MOVIE_LIBRARY_TYPES
+                    CollectionKind.TVSHOWS -> TV_LIBRARY_TYPES
+                    else -> return requested
+                }
+            return requested.filter { it in allowed }.ifEmpty { allowed }
+        }
+
         private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
 
         /**
@@ -261,6 +300,12 @@ class OfflineJellyfinRepository
         private companion object {
             /** The item kinds any offline list can contain; seasons and folders are navigated to. */
             val LIST_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+
+            /** What a movie library's offline lists may show. */
+            val MOVIE_LIBRARY_TYPES = listOf(ItemType.MOVIE)
+
+            /** What a TV library's offline lists may show — the grid asks for series, Latest also episodes. */
+            val TV_LIBRARY_TYPES = listOf(ItemType.SERIES, ItemType.EPISODE)
         }
     }
 

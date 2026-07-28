@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads
 
+import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
@@ -66,6 +67,26 @@ class DownloadDeleterTest {
             coVerifyOrder {
                 storage.deleteItemDirectory(any())
                 downloadDao.delete(uuid(1))
+            }
+        }
+
+    @Test
+    fun `cancelling a half-downloaded item removes its files, its rows and its metadata`() =
+        runTest {
+            // The whole cascade in one test, for the case the Queue tab's Cancel action produces:
+            // a row that is still transferring, with a multi-gigabyte partial file on disk.
+            coEvery { downloadDao.get(uuid(1)) } returns
+                download(status = DownloadStatus.DOWNLOADING, bytesDownloaded = 2_400_000_000L)
+            every { storage.deleteItemDirectory("Arrival (2016)") } returns 2_400_000_000L
+
+            deleter().delete(uuid(1)) shouldBe 2_400_000_000L
+
+            coVerifyOrder {
+                storage.deleteItemDirectory("Arrival (2016)")
+                // `download_files` follows through the foreign key.
+                downloadDao.delete(uuid(1))
+                itemDao.deleteDownloadsNotIn(any(), ItemSource.DOWNLOAD)
+                downloadDao.deleteSyncedUserData(uuid(1))
             }
         }
 

@@ -1,6 +1,6 @@
 # STATUS
 
-## Current milestone: M7 — Downloads (starting; opus-subagent worktree) + user-data stale-row bugfix (parallel worktree)
+## Current milestone: M7 — Downloads (pipeline built on a worktree branch, awaiting merge + device DoD) + user-data stale-row bugfix (parallel worktree)
 
 **DoD (M7):** 2GB movie resumes from byte offset after app kill; Wi-Fi-only honored;
 delete frees bytes.
@@ -371,3 +371,50 @@ switching, resume, no orphaned ffmpeg after exit.
   permission denied playback continues but the media notification is invisible. M9.
 
 <!-- END M5 (playback) -->
+
+<!-- BEGIN M7 (downloads) — appended by the M7 worktree; keep as one block when merging -->
+
+### M7 — Downloads (built on a parallel worktree branch, awaiting device DoD)
+
+**DoD (M7):** a 2 GB movie resumes from its byte offset after an app kill; Wi-Fi-only is
+honoured; delete frees bytes.
+
+**Done**
+- `:data:downloads` built out: `DownloadRepository`/`Impl`, `DownloadEnqueuer`,
+  `DownloadDeleter`, `DownloadApi`, `plan/` (`DownloadFilePlanner`, `DownloadUrlFactory`,
+  `DownloadPaths`), `engine/` (`FileDownloader` with HTTP Range resume, `DownloadQueue`,
+  `ProgressThrottle`), `storage/` (`DownloadStorage` + `FileDownloadStorage`), `work/`
+  (`DownloadWorker`, `DownloadScheduler`, `DownloadNotifier`, `DownloadActionReceiver`),
+  plus its own `AndroidManifest.xml` and `strings.xml` so `:app`'s manifest is untouched.
+- Room **v4**: `DownloadEntity` (`downloads`) + `DownloadFileEntity` (`download_files`,
+  FK cascade) + `DownloadDao`, via a purely additive `@AutoMigration(3, 4)`; schema
+  exported to `core/database/schemas/…/4.json`. `DownloadStatus` / `DownloadFileType`
+  moved to `:core:common`.
+- `AppPreferences.downloadOverWifiOnly` (defaults **on**) → WorkManager `UNMETERED` +
+  `storageNotLow` constraints.
+- `:feature:downloads`: *Downloaded* (grouped, sizes, delete) and *Queue* (progress,
+  speed, pause/resume/cancel/reorder) tabs, storage header, Wi-Fi-only toggle.
+- Fourth bottom-nav tab + `Routes.Downloads` NavHost entry (closes the M3/M4 entry
+  "Downloads tab deferred to M7"); `POST_NOTIFICATIONS` requested once at startup
+  (closes an M5 known issue).
+- Badges wired app-wide: one `observeStates()` subscription each in home, library, search
+  and detail, stamped onto `JellyfinItem.downloadState` — `:core:ui`'s cards unchanged.
+- `:feature:detail`'s Download button is live (enqueue / cancel / remove / retry), closing
+  the M4 stub.
+- **+145 unit tests** (106 in `:data:downloads`, 22 in `:feature:downloads`, +6 detail,
+  +4 datastore, +3 home, +2 search, +2 library); project total **551**.
+- 10 DECISIONS entries; `docs/features/downloads.md` + a delimited ARCHITECTURE section.
+
+**Next**
+- Device DoD walk by the orchestrator after merge — see the merge report for the exact
+  adb/Room/logcat commands (watch `bytesDownloaded`, kill mid-transfer, relaunch, confirm
+  the `Range` header; toggle Wi-Fi-only on cellular; measure a delete).
+
+**Known issues (M7)**
+- SAF / secondary-volume (SD card) storage is not implemented and there is no storage
+  location picker; `DownloadStorage` is the seam it goes behind (DECISIONS.md).
+- Downloaded items still play through the **online** path — `LocalPlaybackResolver` is M8.
+- Trickplay tiles are downloaded but nothing renders them yet (M9's scrubber).
+- The queue runs one item at a time by design; there is no concurrency setting.
+
+<!-- END M7 (downloads) -->

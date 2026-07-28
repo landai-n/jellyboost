@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.network.di.IoDispatcher
+import dev.jellyfinnative.data.cache.BrowseCacheWriter
 import dev.jellyfinnative.data.mapper.ItemMapper
 import dev.jellyfinnative.data.mapper.toBaseItemKind
 import dev.jellyfinnative.data.mapper.toGetItemsRequest
@@ -49,9 +50,9 @@ import javax.inject.Singleton
  * the plan takes from Swiftfin: list calls are minimal, detail and playback calls fetch everything
  * (docs/PLAN.md, "Screens" → ItemDetail).
  *
- * **Not implemented here, by design:** write-through caching into Room with
- * `source = BROWSE_CACHE`. The Room browse cache and the offline/delegating repositories arrive in
- * M6 (docs/PLAN.md, "Data layer"); until then this class is purely a network reader.
+ * Every successful read is **written through** to Room with `source = BROWSE_CACHE` (M6,
+ * docs/PLAN.md "Data layer"). That write is fire-and-forget — see [BrowseCacheWriter] — so this
+ * class still behaves like a pure network reader from the caller's point of view.
  */
 @Singleton
 class OnlineJellyfinRepository
@@ -59,11 +60,13 @@ class OnlineJellyfinRepository
     constructor(
         private val apiClient: ApiClient,
         private val mapper: ItemMapper,
+        private val browseCache: BrowseCacheWriter,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : JellyfinRepository {
         override suspend fun getUserViews(): AppResult<List<LibraryView>> =
             onIo {
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
+                browseCache.cacheViews(response.content.items)
                 // The mapper drops everything outside v1 scope (music, live TV, photos, …).
                 mapper.toLibraryViews(response.content.items)
             }
@@ -84,6 +87,7 @@ class OnlineJellyfinRepository
                             mediaTypes = listOf(MediaType.VIDEO),
                         ),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 
@@ -105,6 +109,7 @@ class OnlineJellyfinRepository
                             nextUpDateCutoff = LocalDateTime.now().minusDays(NEXT_UP_WINDOW_DAYS),
                         ),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 
@@ -124,6 +129,7 @@ class OnlineJellyfinRepository
                             enableUserData = true,
                         ),
                     )
+                browseCache.cacheItems(response.content)
                 mapper.toDomain(response.content)
             }
 
@@ -155,6 +161,7 @@ class OnlineJellyfinRepository
                     apiClient.itemsApi.getItems(
                         query.toGetItemsRequest(fields = CARD_FIELDS, imageTypes = CARD_IMAGE_TYPES),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 
@@ -191,6 +198,9 @@ class OnlineJellyfinRepository
         override suspend fun getItem(id: String): AppResult<JellyfinItem> =
             onIo {
                 val response = apiClient.userLibraryApi.getItem(itemId = UUID.fromString(id))
+                // The one call that returns the *complete* DTO, so this is the write that makes a
+                // cached item worth opening offline.
+                browseCache.cacheItems(listOf(response.content))
                 mapper.toDomain(response.content)
             }
 
@@ -209,6 +219,7 @@ class OnlineJellyfinRepository
                             isMissing = false,
                         ),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 
@@ -231,6 +242,7 @@ class OnlineJellyfinRepository
                             isMissing = false,
                         ),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 
@@ -266,6 +278,7 @@ class OnlineJellyfinRepository
                             fields = CARD_FIELDS,
                         ),
                     )
+                browseCache.cacheItems(response.content.items)
                 mapper.toDomain(response.content.items)
             }
 

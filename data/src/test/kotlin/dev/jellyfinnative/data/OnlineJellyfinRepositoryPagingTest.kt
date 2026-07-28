@@ -60,7 +60,12 @@ class OnlineJellyfinRepositoryPagingTest {
     private val filterApi = mockk<FilterApi>()
 
     private val repository =
-        OnlineJellyfinRepository(apiClient, ItemMapper(FakeImageUrlFactory()), UnconfinedTestDispatcher())
+        OnlineJellyfinRepository(
+            apiClient = apiClient,
+            mapper = ItemMapper(FakeImageUrlFactory()),
+            browseCache = mockk(relaxed = true),
+            ioDispatcher = UnconfinedTestDispatcher(),
+        )
 
     private val moviesLibraryId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 

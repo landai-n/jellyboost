@@ -9,6 +9,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.core.database.DatabaseConstants
 import dev.jellyfinnative.core.database.JellyfinDatabase
+import dev.jellyfinnative.core.database.dao.ItemDao
+import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.ServerDao
 import dev.jellyfinnative.core.database.dao.UserDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
@@ -42,4 +44,12 @@ object DatabaseModule {
     /** Exposes [JellyfinDatabase.userDataDao] for injection (M4). */
     @Provides
     fun provideUserDataDao(database: JellyfinDatabase): UserDataDao = database.userDataDao()
+
+    /** Exposes [JellyfinDatabase.itemDao] for injection (M6). */
+    @Provides
+    fun provideItemDao(database: JellyfinDatabase): ItemDao = database.itemDao()
+
+    /** Exposes [JellyfinDatabase.libraryViewDao] for injection (M6). */
+    @Provides
+    fun provideLibraryViewDao(database: JellyfinDatabase): LibraryViewDao = database.libraryViewDao()
 }

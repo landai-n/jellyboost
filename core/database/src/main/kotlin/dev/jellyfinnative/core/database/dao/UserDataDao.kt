@@ -39,6 +39,18 @@ interface UserDataDao {
         userId: UUID,
     ): Flow<List<UserDataEntity>>
 
+    /**
+     * One-shot counterpart of [observeUserDataFor] (M6).
+     *
+     * The offline repository overlays local playback state onto a page of cached items it has just
+     * read; a Flow there would mean a second subscription per page for a value it reads once.
+     */
+    @Query("SELECT * FROM user_data WHERE userId = :userId AND itemId IN (:itemIds)")
+    suspend fun getUserDataFor(
+        itemIds: List<UUID>,
+        userId: UUID,
+    ): List<UserDataEntity>
+
     /** Every row still waiting to reach the server, oldest first — the sync worker's work list. */
     @Query("SELECT * FROM user_data WHERE toBeSynced = 1 ORDER BY updatedAt ASC")
     suspend fun getPendingSync(): List<UserDataEntity>

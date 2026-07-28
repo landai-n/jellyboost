@@ -82,14 +82,6 @@ class ItemDetailViewModel
             }
         }
 
-        /**
-         * Play / Resume. Playback is M5, so this is honest about not being wired up yet rather
-         * than silently doing nothing.
-         */
-        fun onPlayClick() {
-            _uiState.update { it.copy(userMessage = UserMessage.PlaybackNotAvailableYet) }
-        }
-
         /** Download. The download pipeline is M7. */
         fun onDownloadClick() {
             _uiState.update { it.copy(userMessage = UserMessage.DownloadNotAvailableYet) }

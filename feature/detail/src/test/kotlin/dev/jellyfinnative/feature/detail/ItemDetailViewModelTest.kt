@@ -1,7 +1,6 @@
 package dev.jellyfinnative.feature.detail
 
 import androidx.lifecycle.SavedStateHandle
-import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.ItemType
@@ -287,25 +286,80 @@ class ItemDetailViewModelTest {
             coVerify(exactly = 0) { userDataRepository.setPlayed(any(), any()) }
         }
 
-    // ---- not-yet-built actions ----------------------------------------------------------------
+    // ---- what Play actually plays ---------------------------------------------------------------
 
     @Test
-    fun `play is honest about playback landing in M5`() =
+    fun `a movie plays itself, from the start when it was never watched`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
 
             val model = viewModel()
             advanceUntilIdle()
 
-            model.uiState.test {
-                awaitItem().userMessage.shouldBeNull()
-                model.onPlayClick()
-                awaitItem().userMessage shouldBe UserMessage.PlaybackNotAvailableYet
-                model.consumeMessage()
-                awaitItem().userMessage.shouldBeNull()
-                cancelAndIgnoreRemainingEvents()
-            }
+            val target = model.uiState.value.playTarget
+            target!!.id shouldBe ITEM_ID
+            playbackStartTicks(target) shouldBe 0L
         }
+
+    @Test
+    fun `a partly watched movie resumes where it was left`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns
+                AppResult.Success(movie.copy(userData = UserData(playbackPositionTicks = 600L)))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playbackStartTicks(model.uiState.value.playTarget!!) shouldBe 600L
+        }
+
+    @Test
+    fun `a watched movie starts again from the beginning`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns
+                AppResult.Success(movie.copy(userData = UserData(played = true, playbackPositionTicks = 600L)))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playbackStartTicks(model.uiState.value.playTarget!!) shouldBe 0L
+        }
+
+    @Test
+    fun `a series plays the episode the server calls next up`() =
+        runTest(dispatcher) {
+            val next = JellyfinItem(id = "e5", name = "Trompe L'Oeil", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(series)
+            coEvery { repository.getNextUpForSeries(ITEM_ID) } returns AppResult.Success(next)
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.playTarget shouldBe next
+        }
+
+    @Test
+    fun `a season plays its first unwatched episode`() =
+        runTest(dispatcher) {
+            val watched =
+                JellyfinItem(
+                    id = "e1",
+                    name = "The Original",
+                    type = ItemType.EPISODE,
+                    userData = UserData(played = true),
+                )
+            val next = JellyfinItem(id = "e2", name = "Chestnut", type = ItemType.EPISODE)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
+            coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
+                AppResult.Success(listOf(watched, next))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.playTarget shouldBe next
+        }
+
+    // ---- not-yet-built actions ----------------------------------------------------------------
 
     @Test
     fun `download is honest about the pipeline landing in M7`() =

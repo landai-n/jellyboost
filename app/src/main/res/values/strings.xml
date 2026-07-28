@@ -4,4 +4,9 @@
 
     <!-- Temporary home top-bar action; moves to Settings at M9. -->
     <string name="home_sign_out">Sign out</string>
+
+    <!-- Bottom navigation bar (M3/M4 integration) -->
+    <string name="nav_home">Home</string>
+    <string name="nav_libraries">Libraries</string>
+    <string name="nav_search">Search</string>
 </resources>

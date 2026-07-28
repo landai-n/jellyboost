@@ -149,6 +149,12 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Done instead:** Adds `Person` and `PersonKind`, plus five detail-only fields on `JellyfinItem` (`taglines`, `childCount`, `premiereDate`, `studios`, `people`) and two derived properties (`runtimeMinutes`, `remainingMinutes`).
 - **Reason:** The detail screen the plan specifies needs the `PEOPLE` and `TAGLINES` item fields the plan also specifies, and the hard rule is that no `BaseItemDto` crosses a repository boundary — so the credits need a domain type. Everything added is additive with defaults, so no existing call site changes. The model list in the plan is illustrative rather than exhaustive (it already omits `LibraryView`, added at M2).
 
+## 2026-07-28 — Downloads tab deferred to M7; bottom nav bar ships with three tabs
+- **Scope:** `:app` (`AppScaffold`)
+- **Plan said:** "Navigation: bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar."
+- **Done instead:** The M3/M4 integration pass wires `AppScaffold`'s `NavigationBar` with only Home, Libraries and Search. `Routes.Downloads` already exists in `:core:common` (seeded at M0) but is not added as a tab.
+- **Reason:** `:feature:downloads` and the download pipeline it renders are M7 scope and do not exist yet; a fourth tab pointing at nothing would either crash or need a placeholder screen nobody asked for. Adding the tab is a one-line change in `AppScaffold` once M7 lands — `Routes.Downloads` is already there waiting for it.
+
 ## 2026-07-28 — M4: Play and Download buttons raise a message instead of acting
 - **Scope:** `:feature:detail` (`ItemDetailViewModel`, `res/values/strings.xml`)
 - **Plan said:** ItemDetail carries "Play/Resume, Download, Mark played, Favorite".

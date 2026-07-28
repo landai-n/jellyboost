@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.feature.home.HomeScreen
 
 /**
@@ -21,13 +23,18 @@ import dev.jellyfinnative.feature.home.HomeScreen
  * Hosts a bare-bones [Scaffold] with a title bar and a sign-out action — a temporary home for
  * sign-out until it moves to Settings at M9, mirroring the note the deleted `HomePlaceholderScreen`
  * carried (see DECISIONS.md, 2026-07-28, "temporary Home placeholder with sign-out lives in
- * `:app`"). Bottom navigation and the offline banner (`AppScaffold`) are not built here; they land
- * with the milestones that need them.
+ * `:app`"). The bottom navigation bar and the offline banner (`AppScaffold`) live one level up, in
+ * `MainActivity`.
+ *
+ * @param onItemClick a row item was tapped — pushes `Routes.ItemDetail`.
+ * @param onLibraryClick a *My Media* card was tapped — pushes `Routes.LibraryGrid`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeRoute(
     onSignOut: () -> Unit,
+    onItemClick: (JellyfinItem) -> Unit,
+    onLibraryClick: (LibraryView) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -48,9 +55,8 @@ internal fun HomeRoute(
     ) { innerPadding ->
         HomeScreen(
             viewModel = hiltViewModel(),
-            // Item detail (M4) and the library grid (M3) do not exist yet.
-            onItemClick = {},
-            onLibraryClick = {},
+            onItemClick = onItemClick,
+            onLibraryClick = onLibraryClick,
             modifier = Modifier.padding(innerPadding),
         )
     }

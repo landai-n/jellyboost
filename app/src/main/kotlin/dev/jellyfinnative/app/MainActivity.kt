@@ -42,8 +42,8 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Root composable: nothing is drawn while the session is still [SessionState.Unknown] (the
- * splash screen is up at that point), after which the NavHost is created with a start
- * destination that matches the session.
+ * splash screen is up at that point), after which [AppScaffold] (NavHost + bottom navigation bar)
+ * is created with a start destination that matches the session.
  */
 @Composable
 internal fun JellyfinNativeApp(
@@ -56,7 +56,7 @@ internal fun JellyfinNativeApp(
     // later flips — sign-out is handled by navigating, not by rebuilding the graph.
     val startsSignedIn = remember { sessionState is SessionState.LoggedIn }
 
-    JellyfinNavHost(
+    AppScaffold(
         startsSignedIn = startsSignedIn,
         sessionState = sessionState,
         onSignOut = onSignOut,

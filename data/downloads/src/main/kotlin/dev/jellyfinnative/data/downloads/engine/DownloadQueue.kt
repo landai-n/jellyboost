@@ -12,6 +12,7 @@ import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import dev.jellyfinnative.data.downloads.work.DownloadSessionGate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
@@ -37,6 +38,31 @@ interface DownloadQueueListener {
 }
 
 /**
+ * How a drain ended.
+ *
+ * The distinction the worker cares about is [NO_SESSION] versus the other two: a queue that could
+ * not run is not a queue that ran badly, and it must be re-tried rather than reported.
+ */
+enum class DrainOutcome {
+    /** Everything runnable finished. */
+    COMPLETED,
+
+    /** The queue ran, and at least one item failed; its row carries the reason. */
+    INCOMPLETE,
+
+    /**
+     * Nothing was attempted because this device has no usable session. No row was touched, so no
+     * item is left claiming a failure it never had.
+     */
+    NO_SESSION,
+}
+
+/** An item whose cached `BaseItemDto` is gone — the file plan cannot be built without it. */
+internal class MissingMetadataException(
+    itemId: UUID,
+) : IllegalStateException("No cached metadata for $itemId")
+
+/**
  * Runs the download queue: one item at a time, in `queuePosition` order, until nothing runnable is
  * left (docs/PLAN.md, "Download pipeline").
  *
@@ -56,6 +82,11 @@ interface DownloadQueueListener {
  * is going away) leaves the partial file exactly where it is and the row back in
  * [DownloadStatus.QUEUED]. The next run resumes it from its byte offset, which is the property the
  * milestone's definition of done measures.
+ *
+ * ### The session
+ * Nothing here can build a URL until the API client knows its server, and on a cold start this
+ * runs before the UI has restored anything — see [DownloadSessionGate]. The gate is consulted once
+ * per drain, before any row is touched.
  */
 @Singleton
 class DownloadQueue
@@ -67,20 +98,29 @@ class DownloadQueue
         private val planner: DownloadFilePlanner,
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
+        private val sessionGate: DownloadSessionGate,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
          * Drains the queue.
          *
-         * @return `true` when everything runnable completed, `false` when the queue stopped with
-         *   work left (an item errored, or storage disappeared) — the worker turns that into a
-         *   retry rather than a success.
+         * @return [DrainOutcome.COMPLETED] when everything runnable finished,
+         *   [DrainOutcome.INCOMPLETE] when an item failed (its row says why), or
+         *   [DrainOutcome.NO_SESSION] when there is nothing to run *with* — the worker retries that
+         *   instead of leaving items marked failed.
          */
-        suspend fun drain(listener: DownloadQueueListener): Boolean {
+        suspend fun drain(listener: DownloadQueueListener): DrainOutcome {
             // A row left DOWNLOADING belongs to a process that no longer exists. Putting it back in
-            // the queue is what lets `nextRunnable` tell "mine" from "someone else's".
+            // the queue is what lets `nextRunnable` tell "mine" from "someone else's" — and it runs
+            // before the session gate so that a parked queue still reads as "Waiting" rather than
+            // showing a transfer that no process is performing.
             downloadDao.requeueInterrupted(clock.instant())
+
+            if (!sessionGate.ensureSession()) {
+                listener.onIdle()
+                return DrainOutcome.NO_SESSION
+            }
 
             var allSucceeded = true
             while (true) {
@@ -88,7 +128,7 @@ class DownloadQueue
                 allSucceeded = process(next, listener) && allSucceeded
             }
             listener.onIdle()
-            return allSucceeded
+            return if (allSucceeded) DrainOutcome.COMPLETED else DrainOutcome.INCOMPLETE
         }
 
         private suspend fun process(
@@ -99,10 +139,13 @@ class DownloadQueue
             downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADING, clock.instant())
 
             return try {
-                val dto = loadDto(download) ?: error("No cached metadata for ${download.itemId}")
+                val dto = loadDto(download) ?: throw MissingMetadataException(download.itemId)
                 val files = reconcile(download, dto, queued.files)
-                transfer(download, dto, files, listener)
-                downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADED, clock.instant())
+                // `false` means the row was deleted underneath us (the user cancelled): the item is
+                // gone, not finished, and writing a status for it would only resurrect nothing.
+                if (transfer(download, dto, files, listener)) {
+                    downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADED, clock.instant())
+                }
                 true
             } catch (cancellation: CancellationException) {
                 // Not a failure: put the row back so the next run resumes it, then let the
@@ -121,7 +164,9 @@ class DownloadQueue
                     itemId = download.itemId,
                     status = DownloadStatus.ERROR,
                     updatedAt = clock.instant(),
-                    errorMessage = error.message ?: error::class.simpleName,
+                    // Deliberately not `error.message`: that string is rendered to the user, and
+                    // exception text is written for a log file (see [DownloadErrorCopy]).
+                    errorMessage = DownloadErrorCopy.forFailure(error),
                 )
                 false
             }
@@ -135,13 +180,31 @@ class DownloadQueue
          * Brings the stored file rows in line with a freshly-built plan, and returns them in plan
          * order.
          *
-         * Re-planning on every run rather than trusting the stored rows is deliberate: the URLs
-         * embed the server's base address, and `ServerReachabilityProbe` rotates that between LAN
-         * and remote. A row queued at home and run on mobile data must be fetched from the address
-         * that answers *now*.
+         * ### What is re-planned, and what is not
+         * The URL is rebuilt on every run: it embeds the server's base address, and
+         * `ServerReachabilityProbe` rotates that between LAN and remote, so a row queued at home and
+         * run on mobile data must be fetched from the address that answers *now*.
          *
-         * Existing rows are matched on (type, stream, tile) and updated in place, so the bytes
-         * already on disk keep their row — and therefore their resume offset.
+         * The **file name is not**. When a row already exists it keeps the name it was created
+         * with, because that name *is* the partial file on disk and the plan cannot be trusted to
+         * produce it twice: `DownloadPaths.mediaFileName` prefers the server's own filename from
+         * `BaseItemDto.path`, and `path` is only returned to users allowed to see it and is absent
+         * from some cached shapes of the DTO. On the M7 device walk that difference renamed a
+         * half-finished 1.38 GB film from `Backrooms.2026…-BATGirl.mkv` to `Backrooms (2026).mkv`
+         * on the retry, orphaning the partial file and restarting the transfer from zero — the
+         * opposite of the milestone's resume guarantee. Room holds the file plan; Room wins
+         * (docs/PLAN.md, "Room = single source of truth").
+         *
+         * ### When a genuine re-plan happens
+         * Only when there are no rows: a first attempt, or an item re-enqueued after a delete (the
+         * cascade removes `download_files` through the foreign key *and* the directory, so there is
+         * no file left for a stale name to point at). Re-planning is therefore free precisely when
+         * it is safe.
+         *
+         * Rows are matched on (type, stream, tile) — the same key as the table's unique index — and
+         * updated in place, so the bytes already on disk keep their row and its resume offset. A
+         * stored row the new plan no longer contains (a subtitle track removed on the server) is
+         * left alone: it is not downloaded again, and the delete cascade will collect it.
          */
         private suspend fun reconcile(
             download: DownloadEntity,
@@ -156,28 +219,46 @@ class DownloadQueue
                     existing.firstOrNull {
                         it.type == file.type && it.streamIndex == file.streamIndex && it.tileIndex == file.tileIndex
                     }
-                val path = storage.resolve(download.directoryName, file.fileName).absolutePath
 
                 if (previous == null) {
+                    val path = storage.resolve(download.directoryName, file.fileName).absolutePath
                     val row = file.toEntity(download.itemId, path)
                     row.copy(id = downloadDao.insertFile(row))
                 } else {
-                    val row = previous.copy(fileName = file.fileName, path = path, url = file.url)
+                    // The name comes from the row, the address from the plan. The path is
+                    // re-resolved from the *stored* name so that a change of storage root still
+                    // takes effect without renaming the file.
+                    val path = storage.resolve(download.directoryName, previous.fileName).absolutePath
+                    val row = previous.copy(path = path, url = file.url)
                     downloadDao.updateFile(row)
                     row
                 }
             }
         }
 
+        /**
+         * Fetches an item's files in plan order.
+         *
+         * @return `false` when the item's row disappeared mid-transfer. The delete cascade runs
+         *   while this coroutine may still be alive (WorkManager's cancellation is asynchronous),
+         *   and `FileDownloader` re-creates the item directory for every file it opens — so without
+         *   this check a cancel landing between two files would leave a freshly-written directory
+         *   that no Room row points at, which is unreachable from the UI and therefore leaked.
+         */
         private suspend fun transfer(
             download: DownloadEntity,
             dto: BaseItemDto,
             files: List<DownloadFileEntity>,
             listener: DownloadQueueListener,
-        ) {
+        ): Boolean {
             val progress = ItemProgress(files)
 
             for (file in files) {
+                if (downloadDao.get(download.itemId) == null) {
+                    Timber.i("%s was removed while it was downloading; stopping", download.itemName)
+                    return false
+                }
+
                 if (file.type.essential) {
                     downloadEssential(download, dto, file, progress, listener)
                 } else {
@@ -188,6 +269,7 @@ class DownloadQueue
                         }
                 }
             }
+            return true
         }
 
         /**

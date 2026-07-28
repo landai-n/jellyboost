@@ -72,6 +72,12 @@ class OfflineJellyfinRepositoryTest {
     @BeforeEach
     fun setUp() {
         every { sessionRepository.sessionState } returns MutableStateFlow(loggedIn())
+        // Every list scoped to a library resolves that library's kind, so the cache is always read.
+        coEvery { libraryViewDao.getAll() } returns
+            listOf(
+                libraryRow(MOVIES_LIBRARY, "Films", CollectionKind.MOVIES, sortIndex = 0),
+                libraryRow(SHOWS_LIBRARY, "Séries", CollectionKind.TVSHOWS, sortIndex = 1),
+            )
         coEvery { userDataDao.getUserDataFor(any(), any()) } returns emptyList()
         coEvery { userDataDao.getUserData(any(), any()) } returns null
     }
@@ -173,7 +179,7 @@ class OfflineJellyfinRepositoryTest {
     fun `latest lists the most recent downloads of one library`() =
         runTest {
             coEvery {
-                itemDao.latestDownloaded(ItemSource.DOWNLOAD, any(), MOVIES_LIBRARY, 16)
+                itemDao.latestDownloaded(ItemSource.DOWNLOAD, any(), 16)
             } returns listOf(entity(movieDto(uuid(1), "Dune")), entity(movieDto(uuid(2), "Arrival")))
 
             repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
@@ -186,6 +192,33 @@ class OfflineJellyfinRepositoryTest {
             repository.getLatestMedia("not-a-uuid", limit = 16).getOrNull()!!.shouldBeEmpty()
         }
 
+    @Test
+    fun `latest shows a downloaded film that has no parent linkage at all`() =
+        runTest {
+            // The M7 device bug: both downloaded films were stored with `parentId NULL`, and the
+            // row's library was decided by a `parentId = <library>` predicate, so the offline home
+            // had no Latest row at all.
+            val types = mutableListOf<List<ItemType>>()
+            coEvery { itemDao.latestDownloaded(ItemSource.DOWNLOAD, capture(types), 16) } returns
+                listOf(entity(movieDto(uuid(1), "The Body", parentId = null)))
+
+            repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
+                listOf("The Body")
+            // A film library's Latest row is scoped by kind instead.
+            types.single() shouldContainExactly listOf(ItemType.MOVIE)
+        }
+
+    @Test
+    fun `a TV library's latest row is scoped to shows and episodes`() =
+        runTest {
+            val types = mutableListOf<List<ItemType>>()
+            coEvery { itemDao.latestDownloaded(ItemSource.DOWNLOAD, capture(types), 16) } returns emptyList()
+
+            repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16)
+
+            types.single() shouldContainExactly listOf(ItemType.SERIES, ItemType.EPISODE)
+        }
+
     // ---- library grid & search ----------------------------------------------------------------
 
     @Test
@@ -195,7 +228,6 @@ class OfflineJellyfinRepositoryTest {
                 itemDao.pagingDownloaded(
                     source = ItemSource.DOWNLOAD,
                     types = listOf(ItemType.MOVIE),
-                    parentId = MOVIES_LIBRARY,
                     descending = true,
                     limit = 50,
                     offset = 100,
@@ -217,6 +249,67 @@ class OfflineJellyfinRepositoryTest {
         }
 
     @Test
+    fun `the films grid lists a downloaded film whose parentId is NULL`() =
+        runTest {
+            // "Nothing to show here." on a device with a fully downloaded film was the symptom.
+            val types = mutableListOf<List<ItemType>>()
+            coEvery {
+                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
+            } returns listOf(entity(movieDto(uuid(1), "The Body", parentId = null)))
+
+            val result =
+                repository.getItems(
+                    ItemQuery(
+                        parentId = MOVIES_LIBRARY.toString(),
+                        itemTypes = listOf(ItemType.MOVIE, ItemType.SERIES),
+                        limit = 50,
+                    ),
+                )
+
+            result.getOrNull()!! shouldHaveNames listOf("The Body")
+            // The grid asks for both kinds whatever the library; a film library shows films.
+            types.single() shouldContainExactly listOf(ItemType.MOVIE)
+        }
+
+    @Test
+    fun `a TV library's grid is narrowed to shows`() =
+        runTest {
+            val types = mutableListOf<List<ItemType>>()
+            coEvery {
+                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
+            } returns emptyList()
+
+            repository.getItems(
+                ItemQuery(
+                    parentId = SHOWS_LIBRARY.toString(),
+                    itemTypes = listOf(ItemType.MOVIE, ItemType.SERIES),
+                    limit = 50,
+                ),
+            )
+
+            types.single() shouldContainExactly listOf(ItemType.SERIES)
+        }
+
+    @Test
+    fun `an unknown library narrows nothing rather than showing nothing`() =
+        runTest {
+            val types = mutableListOf<List<ItemType>>()
+            coEvery {
+                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
+            } returns emptyList()
+
+            repository.getItems(
+                ItemQuery(
+                    parentId = uuid(77).toString(),
+                    itemTypes = listOf(ItemType.MOVIE, ItemType.SERIES),
+                    limit = 50,
+                ),
+            )
+
+            types.single() shouldContainExactly listOf(ItemType.MOVIE, ItemType.SERIES)
+        }
+
+    @Test
     fun `a search term routes to the downloaded-items search instead of the grid query`() =
         runTest {
             coEvery {
@@ -227,7 +320,7 @@ class OfflineJellyfinRepositoryTest {
                 listOf("Arrival")
 
             coVerify(exactly = 0) {
-                itemDao.pagingDownloaded(any(), any(), any(), any(), any(), any())
+                itemDao.pagingDownloaded(any(), any(), any(), any(), any())
             }
         }
 
@@ -236,7 +329,7 @@ class OfflineJellyfinRepositoryTest {
         runTest {
             val types = mutableListOf<List<ItemType>>()
             coEvery {
-                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any(), any())
+                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
             } returns emptyList()
 
             repository.getItems(ItemQuery(limit = 50))
@@ -338,7 +431,7 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `seasons and episodes come from the downloaded rows`() =
         runTest {
-            coEvery { itemDao.childrenOf(ItemSource.DOWNLOAD, ItemType.SEASON, uuid(10)) } returns
+            coEvery { itemDao.seasonsOfSeries(ItemSource.DOWNLOAD, uuid(10), ItemType.SEASON) } returns
                 listOf(entity(seasonDto(uuid(11), "Season 1", uuid(10), 1)))
             coEvery { itemDao.episodesOfSeason(ItemSource.DOWNLOAD, uuid(11), ItemType.EPISODE) } returns
                 listOf(entity(episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1)))

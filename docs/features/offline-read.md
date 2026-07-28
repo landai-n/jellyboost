@@ -89,10 +89,20 @@ Scope, from the plan's "Confirmed decisions": **downloaded items only**, with on
 | My Media | cached `library_views`, in the server's own order |
 | Continue watching | downloads this device has a resume position for, most recent first |
 | Next up | first unwatched downloaded episode of each series |
-| Latest *library* | most recently downloaded items of that library |
-| Library grid | downloaded items, name-ordered (DECISIONS.md) |
+| Latest *library* | most recently downloaded items of that library's **kinds** |
+| Library grid | downloaded items of that library's **kinds**, name-ordered (DECISIONS.md) |
 | Search | name / series-name `LIKE` over downloaded items |
 | Item detail | any cached row; `getSimilarItems` is empty offline |
+
+**Which library an offline row belongs to is decided by its type, not by `parentId`.** A downloaded
+row is stored with `parentId NULL` (the enqueue-time DTO carries no usable `ParentId`), and even
+when a server sends one it is the item's containing *folder*, not the library-view id the grid asks
+about — so the old `parentId = <library>` predicate matched nothing and the offline Films grid was
+empty next to a downloaded film. `OfflineJellyfinRepository` resolves the library's `CollectionKind`
+from the cached `library_views` and narrows the item types instead (movies → `MOVIE`, TV → `SERIES`,
+plus `EPISODE` for Latest). Exact for the movie/TV libraries v1 supports; a documented v1
+simplification otherwise (DECISIONS.md 2026-07-28). Series → season → episode navigation is
+unaffected — it runs on `seriesId`/`seasonId`, which the DTOs do carry.
 
 **It never throws and never reports a missing item as an error.** `getItem` answers with a
 placeholder carrying `available = false` — `JellyfinItem`'s own vocabulary for "known of, but not

@@ -246,6 +246,39 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
+    fun `cancelling the item that is downloading runs the same cascade as a delete`() =
+        runTest {
+            // *Cancel* in the Queue tab, *Delete* in the Downloaded list and *Cancel* on the
+            // notification are one operation; this pins that an in-flight item is no exception —
+            // its files must not survive the row.
+            coEvery { downloadDao.get(uuid(1)) } returns download(status = DownloadStatus.DOWNLOADING)
+            coEvery { deleter.delete(uuid(1)) } returns 1_400_000_000L
+
+            repository().delete(uuid(1).toString()) shouldBe AppResult.Success(1_400_000_000L)
+
+            coVerifyOrder {
+                // Stop first: the transfer must not be holding a handle to a file we unlink.
+                scheduler.stop()
+                deleter.delete(uuid(1))
+                // Something else may still be queued behind the cancelled item.
+                scheduler.ensureRunning()
+            }
+        }
+
+    @Test
+    fun `cancelling a merely queued item runs the cascade too`() =
+        runTest {
+            // A queued item can still have bytes on disk: it was interrupted mid-transfer and put
+            // back in the queue, which is precisely the resume case.
+            coEvery { downloadDao.get(uuid(1)) } returns download(status = DownloadStatus.QUEUED)
+            coEvery { deleter.delete(uuid(1)) } returns 900_000L
+
+            repository().delete(uuid(1).toString()) shouldBe AppResult.Success(900_000L)
+
+            coVerify(exactly = 1) { deleter.delete(uuid(1)) }
+        }
+
+    @Test
     fun `a failing delete is a Storage failure, not an exception`() =
         runTest {
             coEvery { deleter.delete(any()) } throws IllegalStateException("volume ejected")

@@ -15,6 +15,35 @@ interface UserDataDao {
     @Upsert
     suspend fun upsert(userData: UserDataEntity)
 
+    /**
+     * Batch counterpart of [upsert] — one statement for a whole page of server-refreshed rows.
+     *
+     * Deliberately *not* an overload of [upsert]: `upsert(any())` appears all over the existing
+     * tests and would become ambiguous, which is a poor trade for a shared name.
+     *
+     * Callers refreshing rows from a server read **must** filter the list against
+     * [getPendingSyncIds] first: this replaces rows unconditionally, and overwriting a
+     * `toBeSynced = true` row would drop a local change the server has never seen.
+     */
+    @Upsert
+    suspend fun upsertAll(userData: List<UserDataEntity>)
+
+    /**
+     * Of [itemIds], the ones whose row still holds an unpushed local change.
+     *
+     * This is the guard the browse-cache refresh reads before adopting server user data: a pending
+     * row is the only copy of that change, so the server's (older) value must not land on top of it
+     * — see `BrowseCacheWriter`.
+     */
+    @Query(
+        "SELECT itemId FROM user_data " +
+            "WHERE userId = :userId AND itemId IN (:itemIds) AND toBeSynced = 1",
+    )
+    suspend fun getPendingSyncIds(
+        itemIds: List<UUID>,
+        userId: UUID,
+    ): List<UUID>
+
     /** Returns the stored row for one item, or `null` when this device has never written one. */
     @Query("SELECT * FROM user_data WHERE itemId = :itemId AND userId = :userId")
     suspend fun getUserData(

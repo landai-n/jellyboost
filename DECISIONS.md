@@ -256,3 +256,47 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** The stub's subject no longer exists, so the test asserting the stub could not be kept. Recorded rather than done silently because the governance rule forbids deleting tests. Coverage went **up**, not down: five new tests in `ItemDetailViewModelTest` pin what Play actually plays for a movie, a partly-watched movie, a watched movie, a series and a season. The *Download* stub is untouched and still says "Downloads arrive in M7."
 
 <!-- END M5 (playback) -->
+
+## 2026-07-28 — Server reads refresh `user_data` rows that are not pending sync
+
+- **Scope:** `:data` (`cache/BrowseCacheWriter`, `userdata/UserDataMapper`), `:core:database`
+  (`UserDataDao` — two new queries, **no schema change**)
+- **Plan said:** "`UserDataRepositoryImpl` — **local-first always**: upsert Room
+  (`toBeSynced=true`) → emit on `UserDataEventBus` (SharedFlow; …) → if online push
+  `itemsApi.updateItemUserData(UpdateUserItemDataDto(...))`, clear flag on success; else/on failure
+  enqueue `UserDataSyncWorker` … Sync conflict: **most-recent-wins** — worker fetches server
+  userData, compares `lastPlayedDate` vs local `updatedAt`, pushes only if local is newer, otherwise
+  adopts server value and clears flag." The read path is described only as "`OnlineJellyfinRepository`
+  — SDK calls, write-through to Room (`source=BROWSE_CACHE`)" — i.e. item metadata, with all
+  `user_data` reconciliation left to M8's worker.
+- **Done instead:** `BrowseCacheWriter.writeItems`, which every successful online read already goes
+  through, now also adopts each DTO's `userData` block into the `user_data` table — but **only** for
+  rows that do not exist or have `toBeSynced = false`. A pending row is left byte-for-byte alone.
+  The write path is not touched at all: it is still local-first always.
+- **Reason:** This is the fix for the corruption bug in STATUS.md's "Known issues". `setPosition`
+  deliberately pushes the item's *full* desired state (DECISIONS.md, 2026-07-28, "M4: dedicated
+  mark-played / favourite endpoints"), built from the local row — and that row was only ever written
+  by local writes, never by reads. It therefore went stale the instant the same user changed the
+  item from another client, and the player's 5-second position writes pushed the stale state back:
+  confirmed on the test server, an item unmarked via the API came back `Played=true` after a few
+  seconds of in-app playback. Sending the full state is right (the endpoint merges what it is
+  given), so the row it is built from has to be honest — and the only place the app ever learns the
+  truth is a read.
+
+  Deferring this to M8's worker was the alternative and is wrong on two counts: the worker only ever
+  looks at `toBeSynced = 1` rows, so it would never visit a stale *synced* row at all; and the app
+  already holds the authoritative answer in every response it parses, so spending a round trip to
+  re-ask for it would be worse in every respect. Nothing here pre-empts M8 — reconciling a *pending*
+  row against the server is still most-recent-wins in the worker, and this refresh is defined to
+  leave those rows untouched precisely so that it cannot.
+- **Timestamp semantics when adopting server state** (the judgment call inside this decision):
+  `lastPlayedDate` is copied from the server verbatim, `null` included — it is the *server* half of
+  most-recent-wins and must never be fabricated from the read time. `updatedAt` is set to the moment
+  of the refresh; it is the *local* half, and it can only mislead a comparison on a
+  `toBeSynced = true` row, which a refresh never produces (and any later local write re-stamps it
+  from the clock anyway). `toBeSynced` is always `false`: an adopted row is a copy of server state,
+  not a debt the server owes.
+- **Known limitation:** the check-then-write is not atomic against a concurrent local write — the
+  window is one Room read wide, both writes are already fire-and-forget, and the worst case is a
+  refreshed row that the next read corrects. No server-side change can be lost that way, because a
+  local write that reached the server has by definition already reached it.

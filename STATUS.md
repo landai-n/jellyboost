@@ -1,14 +1,40 @@
 # STATUS
 
-## Current milestone: M5 — Playback (online) (built in an opus-subagent worktree; merge + device DoD pending)
+## Current milestone: M7 — Downloads (starting; opus-subagent worktree) + user-data stale-row bugfix (parallel worktree)
 
-**DoD (M5):** direct-play + forced transcode (Dashboard shows method), track switching,
-resume, no orphaned ffmpeg after exit.
+**DoD (M7):** 2GB movie resumes from byte offset after app kill; Wi-Fi-only honored;
+delete frees bytes.
 
 ### Next
-- Merge `worktree-agent-a3b9ec9b13a95b1f8`, orchestrator review + full gate, device DoD
-  walk (quality picker forces transcode; check Dashboard → Sessions and server ffmpeg
-  processes), tag m5.
+- Bugfix agent: server reads must refresh local `user_data` rows when `toBeSynced=false`
+  (see Known issues — playback currently resurrects stale local played/favorite state).
+- M7 agent: full download pipeline per docs/PLAN.md; merge, review, gate, device DoD,
+  tag m7.
+
+## Previous milestone: M5 — Playback (online) (DONE, tagged m5)
+
+**DoD walk on test tablet (2026-07-28), all pass** (server evidence via `/Sessions`,
+which is what Dashboard renders):
+- **Direct play:** "28 Ans plus tard" (h264) → `PlayMethod=DirectPlay`, no
+  TranscodingInfo; player badge "Direct play".
+- **Forced transcode:** Quality → *Lowest — 720 kbps* on the direct-playing item →
+  method flips to `Transcode` at the same position (server transcoding at 592 kbps);
+  badge flips to "Transcoding". Also organic transcode: Citizen Vigilante (HEVC) →
+  `Transcode`, reason `VideoProfileNotSupported` (see Known issues).
+- **Track switching:** subtitle dialog (Off/English/French) → French SRT side-loaded and
+  **visually rendered** ("Merci." on screen), session `SubtitleStreamIndex=3`; audio
+  dialog (3 tracks) → English Atmos switched **instantly in-stream** (no re-resolve,
+  still DirectPlay, session `AudioStreamIndex=3`).
+- **Resume:** exit at ~35 min → detail button becomes *Resume* with "80 min left"
+  (event-bus patch, no refetch) → resume starts at 35.0 min server-side.
+- **No orphaned ffmpeg:** every stop/re-resolve fires `DELETE /Videos/ActiveEncodings`
+  with the right playSessionId (logcat) — after exit, `/Sessions` shows no NowPlaying
+  and no TranscodingInfo (checked after both transcode sessions).
+- **Reporting triad:** `Sessions/Playing` start/progress (5 s)/stopped all observed,
+  plus the local-first `POST /UserItems/{id}/UserData` position writes alongside.
+- **Timezone fix verified on a real write:** `LastPlayedDate` stored ≈30 s before "now"
+  (UTC-correct) — the M6 fix works end-to-end.
+- Seek-bar drag, ±10/30 s skips, pause/play, immersive landscape all fine.
 
 ## Previous milestone: M6 — Offline read path (DONE, tagged m6)
 
@@ -131,6 +157,24 @@ resume, no orphaned ffmpeg after exit.
   timestamps as the instant the server expects`). The SDK's `DateTimeSerializer` is
   zone-aware in *both* directions, so `ItemMapper`'s read path was corrected too; see
   DECISIONS.md 2026-07-28 "M6: the `datePlayed` timezone fix also corrects the read path".
+- **Stale local user-data rows corrupt server state on playback** (found in the M5
+  walk): `setPosition` deliberately sends the item's full desired state, but it builds
+  it from the local Room row — which is only ever written by local writes and never
+  refreshed from server reads. Repro: mark played in-app (row: played=true), unmark in
+  jellyfin-web (server: false, row still true), play the item in-app → the 5 s position
+  writes silently re-mark it played on the server (observed with Citizen Vigilante,
+  whose row retained the old M4 test write). Fix underway: server reads refresh
+  `user_data` rows when `toBeSynced=false` (server is authoritative unless a local
+  write is pending). The device's rows for Citizen Vigilante / 28 Ans plus tard are
+  stale right now; server state was restored (played=false, pos 0) after the walk.
+- HEVC files transcode with `TranscodeReasons=[VideoProfileNotSupported]` even though
+  the Helio G100 decodes HEVC Main/Main 10 — the device profile's HEVC CodecProfile
+  conditions likely don't match what the decoder probe reports on this device.
+  Playback still works (graceful transcode); investigate the built profile vs
+  `MediaCodecList` output before M10.
+- Backgrounding the app pauses playback: `POST_NOTIFICATIONS` is declared but never
+  requested (M9), so the media notification can't show; background-continue +
+  notification permission flow are M9 scope (background playback is not in the M5 DoD).
 - Screens loaded while offline keep their offline data after connectivity returns until
   the user re-enters them (e.g. Home shows only cached My Media after a reconnect; a
   killed/relaunched app is fine). The delegating repository is per-call, but ViewModels

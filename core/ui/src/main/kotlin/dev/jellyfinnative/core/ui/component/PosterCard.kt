@@ -1,0 +1,97 @@
+package dev.jellyfinnative.core.ui.component
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import dev.jellyfinnative.core.common.model.DownloadState
+import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.ui.theme.Dimens
+import dev.jellyfinnative.core.ui.theme.JellyfinTheme
+import dev.jellyfinnative.core.ui.theme.POSTER_ASPECT_RATIO
+
+/**
+ * A 2:3 poster card — the default card for movies, series and seasons, matching the poster shape
+ * jellyfin-web uses on its home and library screens.
+ *
+ * Shows the item's primary artwork with the resume progress bar, watched tick and
+ * [dev.jellyfinnative.core.common.model.DownloadState] badge overlaid, plus title and subtitle
+ * underneath.
+ */
+@Composable
+fun PosterCard(
+    item: JellyfinItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = Dimens.PosterWidth,
+    showTitle: Boolean = true,
+) {
+    Column(
+        modifier =
+            modifier
+                .width(width)
+                .clickable(onClick = onClick),
+    ) {
+        MediaCardArtwork(
+            imageUrl = item.primaryImageUrl,
+            contentDescription = item.displayTitle,
+            aspectRatio = POSTER_ASPECT_RATIO,
+            downloadState = item.downloadState,
+            played = item.userData.played,
+            progress = item.playbackProgress,
+            placeholderIcon = Icons.Outlined.Movie,
+        )
+
+        if (showTitle) {
+            Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
+            Text(
+                text = item.displayTitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            item.displaySubtitle?.let { subtitle ->
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "PosterCard", showBackground = true, backgroundColor = 0xFF101010)
+@Composable
+private fun PosterCardPreview() {
+    JellyfinTheme {
+        PosterCard(
+            item =
+                JellyfinItem(
+                    id = "1",
+                    name = "Arrival",
+                    type = ItemType.MOVIE,
+                    productionYear = 2016,
+                    runTimeTicks = 60_000_000_000L,
+                    userData = UserData(playbackPositionTicks = 18_000_000_000L),
+                    downloadState = DownloadState.Downloaded,
+                ),
+            onClick = {},
+        )
+    }
+}

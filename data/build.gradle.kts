@@ -14,10 +14,13 @@ dependencies {
     implementation(projects.core.network)
     // The SDK types appear in this module's own (internal) API surface — repositories and mappers.
     api(libs.jellyfin.sdk)
-    implementation(libs.androidx.paging.runtime)
+    // `PagingData` appears in JellyfinRepository's signature (M3 library grid), so it is api.
+    api(libs.androidx.paging.runtime)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.timber)
     ksp(libs.androidx.hilt.compiler)
+
+    testImplementation(libs.androidx.paging.testing)
 }

@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "dev.jellyfinnative.feature.search"
 }
+
+dependencies {
+    implementation(projects.data)
+}

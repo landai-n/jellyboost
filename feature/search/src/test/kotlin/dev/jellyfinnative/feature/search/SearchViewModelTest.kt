@@ -1,0 +1,296 @@
+package dev.jellyfinnative.feature.search
+
+import app.cash.turbine.test
+import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.ItemQuery
+import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.data.JellyfinRepository
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+/**
+ * Unit tests for [SearchViewModel].
+ *
+ * The debounce is exercised on virtual time, which is the only way to assert "one request per
+ * pause in typing" rather than "a request eventually happens".
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class SearchViewModelTest {
+    private val dispatcher = StandardTestDispatcher()
+    private val repository = mockk<JellyfinRepository>()
+
+    private val queries = mutableListOf<ItemQuery>()
+
+    @BeforeEach
+    fun setUp() {
+        Dispatchers.setMain(dispatcher)
+        coEvery { repository.getItems(capture(queries)) } returns AppResult.Success(emptyList())
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    // ---- debounce ---------------------------------------------------------------------------
+
+    @Test
+    fun `does not search before the debounce elapses`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("westworld")
+            advanceTimeBy(SearchViewModel.DEBOUNCE_MILLIS - 1)
+            runCurrent()
+
+            coVerify(exactly = 0) { repository.getItems(any()) }
+        }
+
+    @Test
+    fun `searches once the debounce elapses`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("westworld")
+            advanceTimeBy(SearchViewModel.DEBOUNCE_MILLIS + 1)
+            runCurrent()
+
+            coVerify(exactly = 1) { repository.getItems(any()) }
+            queries.single().searchTerm shouldBe "westworld"
+        }
+
+    @Test
+    fun `typing a whole word costs a single request`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            "west".forEachIndexed { index, _ ->
+                viewModel.onQueryChange("west".take(index + 1))
+                advanceTimeBy(TYPING_INTERVAL_MILLIS)
+                runCurrent()
+            }
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { repository.getItems(any()) }
+            queries.single().searchTerm shouldBe "west"
+        }
+
+    @Test
+    fun `a pause mid-typing costs a second request`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("west")
+            advanceTimeBy(SearchViewModel.DEBOUNCE_MILLIS + 1)
+            runCurrent()
+            viewModel.onQueryChange("westworld")
+            advanceUntilIdle()
+
+            queries.map { it.searchTerm } shouldContainExactly listOf("west", "westworld")
+        }
+
+    @Test
+    fun `whitespace-only input never reaches the server`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("   ")
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { repository.getItems(any()) }
+            viewModel.uiState.value.hasSearched shouldBe false
+        }
+
+    @Test
+    fun `clearing the field empties the results without waiting`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+            viewModel.uiState.value.movies
+                .map { it.name } shouldContainExactly listOf("Dune")
+
+            viewModel.clearQuery()
+            runCurrent()
+
+            val state = viewModel.uiState.value
+            state.query shouldBe ""
+            state.movies.shouldBeEmpty()
+            state.hasSearched shouldBe false
+        }
+
+    // ---- the request ------------------------------------------------------------------------
+
+    @Test
+    fun `asks for the three types the plan lists, capped at fifty`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+
+            val query = queries.single()
+            query.itemTypes shouldContainExactly
+                listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+            query.recursive shouldBe true
+            query.limit shouldBe 50
+        }
+
+    @Test
+    fun `trims the term before sending it`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("  dune  ")
+            advanceUntilIdle()
+
+            queries.single().searchTerm shouldBe "dune"
+        }
+
+    // ---- results ----------------------------------------------------------------------------
+
+    @Test
+    fun `splits one response into the three sections the screen draws`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie("m1", "Westward"),
+                        series("s1", "Westworld"),
+                        episode("e1", "The Original"),
+                        movie("m2", "West Side Story"),
+                    ),
+                )
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("west")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.movies.map { it.name } shouldContainExactly listOf("Westward", "West Side Story")
+            state.series.map { it.name } shouldContainExactly listOf("Westworld")
+            state.episodes.map { it.name } shouldContainExactly listOf("The Original")
+            state.submittedQuery shouldBe "west"
+            state.hasSearched shouldBe true
+            state.isSearching shouldBe false
+        }
+
+    @Test
+    fun `reports an empty result set as a completed search`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("zzzz")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.hasSearched shouldBe true
+            state.hasNoResults shouldBe true
+            state.error.shouldBeNull()
+        }
+
+    @Test
+    fun `shows the searching state while a request is in flight`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+
+            viewModel.uiState.test {
+                awaitItem().isSearching shouldBe false
+                viewModel.onQueryChange("dune")
+                awaitItem().query shouldBe "dune"
+                advanceTimeBy(SearchViewModel.DEBOUNCE_MILLIS + 1)
+                runCurrent()
+                awaitItem().isSearching shouldBe true
+                advanceUntilIdle()
+                awaitItem().isSearching shouldBe false
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    // ---- failures ---------------------------------------------------------------------------
+
+    @Test
+    fun `surfaces a failure and drops stale results`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns AppResult.Failure(AppError.Network())
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.error.shouldBeInstanceOf<AppError.Network>()
+            state.isSearching shouldBe false
+            state.hasNoResults shouldBe true
+        }
+
+    @Test
+    fun `retry re-runs the current search and clears the error`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns AppResult.Failure(AppError.Server(503))
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+            val failed = viewModel.uiState.value
+            failed.error.shouldBeInstanceOf<AppError.Server>()
+
+            coEvery { repository.getItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+            viewModel.retry()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.error.shouldBeNull()
+            state.movies.map { it.name } shouldContainExactly listOf("Dune")
+        }
+
+    // ---- helpers ----------------------------------------------------------------------------
+
+    /** Builds the ViewModel and lets its debounce collector start before the test types. */
+    private fun TestScope.startedViewModel(): SearchViewModel {
+        val viewModel = SearchViewModel(repository)
+        runCurrent()
+        return viewModel
+    }
+
+    private fun movie(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.MOVIE)
+
+    private fun series(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.SERIES)
+
+    private fun episode(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.EPISODE, seriesName = "Westworld")
+
+    private companion object {
+        /** Fast typing: well inside the debounce window. */
+        const val TYPING_INTERVAL_MILLIS = 80L
+    }
+}

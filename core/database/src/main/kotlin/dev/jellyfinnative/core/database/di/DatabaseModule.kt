@@ -1,0 +1,40 @@
+package dev.jellyfinnative.core.database.di
+
+import android.content.Context
+import androidx.room.Room
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import dev.jellyfinnative.core.database.DatabaseConstants
+import dev.jellyfinnative.core.database.JellyfinDatabase
+import dev.jellyfinnative.core.database.dao.ServerDao
+import dev.jellyfinnative.core.database.dao.UserDao
+import javax.inject.Singleton
+
+/** Provides the singleton [JellyfinDatabase] and its DAOs to the rest of the app. */
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    /** Builds the single [JellyfinDatabase] instance used across the app's lifetime. */
+    @Provides
+    @Singleton
+    fun provideJellyfinDatabase(
+        @ApplicationContext context: Context,
+    ): JellyfinDatabase =
+        Room
+            .databaseBuilder(
+                context,
+                JellyfinDatabase::class.java,
+                DatabaseConstants.DATABASE_NAME,
+            ).build()
+
+    /** Exposes [JellyfinDatabase.serverDao] for injection. */
+    @Provides
+    fun provideServerDao(database: JellyfinDatabase): ServerDao = database.serverDao()
+
+    /** Exposes [JellyfinDatabase.userDao] for injection. */
+    @Provides
+    fun provideUserDao(database: JellyfinDatabase): UserDao = database.userDao()
+}

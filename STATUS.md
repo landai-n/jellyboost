@@ -1,11 +1,39 @@
 # STATUS
 
-## Current milestones: M5 — Playback (online, building in an opus-subagent worktree), and M6 — Offline read path (merged; device DoD in progress)
+## Current milestone: M5 — Playback (online) (built in an opus-subagent worktree; merge + device DoD pending)
 
 **DoD (M5):** direct-play + forced transcode (Dashboard shows method), track switching,
 resume, no orphaned ffmpeg after exit.
-**DoD (M6):** airplane-mode toggle swaps app within ~1s, no crashes; server-down
-(Wi-Fi up) degrades without 30s hang.
+
+### Next
+- Merge `worktree-agent-a3b9ec9b13a95b1f8`, orchestrator review + full gate, device DoD
+  walk (quality picker forces transcode; check Dashboard → Sessions and server ffmpeg
+  processes), tag m5.
+
+## Previous milestone: M6 — Offline read path (DONE, tagged m6)
+
+**DoD walk on test tablet (2026-07-28), all pass:**
+- Force-offline: overflow-menu toggle on/off and the banner's *Go online* action all
+  fire and persist (log-verified handler + DataStore write; survives force-stop).
+  Repeated `input tap` drops made this look broken at first — it is the documented the OEM ROM
+  injection flakiness, worse in same-coordinate bursts; log-verified single taps work.
+- Forced-offline browsing: Libraries serves the cached view list, grid/search show
+  graceful empty states ("Nothing to show here." / "Nothing matched"), **zero** network
+  requests fired (logcat), no crashes.
+- Airplane mode: banner ("No network — showing downloaded media") already present on
+  the first UI dump after enabling (~1s swap after callback; 2.8s wall-clock including
+  dump overhead); navigation while offline crash-free; recovery ~5s after disabling
+  (Wi-Fi reassociation + probe).
+- Server-down, Wi-Fi up (simulated with a blackhole HTTP proxy at a non-routable
+  address + cold start so no pooled connections): session restore 21:50:30.1 → probe
+  verdict 21:50:33.2 = **3.06 s** to the "Can't reach the server" banner with cached
+  My Media rendered — no 30 s hang; *Retry* recovers once the proxy is cleared.
+- Landscape: banner renders correctly above the nav bar (screenshot-verified).
+- Room v2→v3 auto-migration ran in place on the existing device install (no crash, data
+  intact).
+- Note: a warm OkHttp connection pool ignores a newly-set system proxy — the first
+  simulation attempt failed because of connection reuse; cold start fixed it (test
+  methodology, not an app bug).
 
 ### Done (M6, worktree branch `worktree-agent-a25cf3584ae0036b2`, merged to main)
 - `:core:database` schema **v3** (`@AutoMigration(2, 3)`, additive, schema exported):
@@ -63,8 +91,9 @@ resume, no orphaned ffmpeg after exit.
   button flips; revert sent `DELETE` → server `False` (user data left as found).
 - M4 landscape: series/season/episode detail rendered correctly (walk performed in
   landscape; portrait re-verified after rotating back).
-- UI polish note: the grid's sort/filter icon buttons have no content descriptions
-  (found while driving via uiautomator) — accessibility gap to fix by M9 polish.
+- UI polish note (corrected during the M6 walk): the grid's sort/filter icons DO have
+  content descriptions ("Sort"/"Filter") — they sit on the inner icon nodes, which the
+  first uiautomator pass missed. No accessibility gap.
 
 ### Done (this session, 2026-07-28)
 - M3 and M4 built in parallel opus-subagent worktrees, merged to main (conflicts in the
@@ -102,6 +131,11 @@ resume, no orphaned ffmpeg after exit.
   timestamps as the instant the server expects`). The SDK's `DateTimeSerializer` is
   zone-aware in *both* directions, so `ItemMapper`'s read path was corrected too; see
   DECISIONS.md 2026-07-28 "M6: the `datePlayed` timezone fix also corrects the read path".
+- Screens loaded while offline keep their offline data after connectivity returns until
+  the user re-enters them (e.g. Home shows only cached My Media after a reconnect; a
+  killed/relaunched app is fine). The delegating repository is per-call, but ViewModels
+  don't re-fetch on connection regain — wire a refresh-on-reconnect (or pull-to-refresh)
+  by M9.
 - the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
   scripts must delete the file first and re-verify the screen before every tap (a stale
   dump caused stray taps this session — see incident note).

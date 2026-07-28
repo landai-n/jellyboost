@@ -8,6 +8,7 @@ import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -30,7 +31,11 @@ class ConnectionViewModel
 
         /** Turns forced offline mode on or off (persisted; survives a restart). */
         fun setForceOffline(enabled: Boolean) {
-            viewModelScope.launch { appPreferences.setForceOffline(enabled) }
+            Timber.i("Force-offline toggled to %s", enabled)
+            viewModelScope.launch {
+                appPreferences.setForceOffline(enabled)
+                Timber.i("Force-offline=%s persisted", enabled)
+            }
         }
 
         /**

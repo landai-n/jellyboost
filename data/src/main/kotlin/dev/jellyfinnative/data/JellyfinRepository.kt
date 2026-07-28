@@ -1,8 +1,13 @@
 package dev.jellyfinnative.data
 
+import androidx.paging.PagingData
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.FilterFacets
+import dev.jellyfinnative.core.common.model.ItemQuery
+import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The one media-browsing surface the UI talks to.
@@ -57,4 +62,39 @@ interface JellyfinRepository {
         /** Row size jellyfin-web uses for the per-library *Latest* rows. */
         const val DEFAULT_LATEST_LIMIT = 16
     }
+
+    // ---- M3 — library & search ---------------------------------------------------------------
+
+    /**
+     * A paged stream of the items matching [query] — the library grid's source.
+     *
+     * The paging configuration (page size, prefetch distance, placeholders) belongs to the
+     * implementation, not to the caller: the offline implementation pages Room behind the same
+     * `Pager` in M6 and must be free to configure it differently.
+     *
+     * @param query everything the grid can vary: library, item types, sort and filters.
+     *   [ItemQuery.startIndex] and [ItemQuery.limit] are overridden per page and can be left at
+     *   their defaults.
+     */
+    fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>>
+
+    /**
+     * One unpaged page of items — the search screen's source.
+     *
+     * Search deliberately does not page: a single capped request (50 results, split into type
+     * sections) is what jellyfin-web's search does, and it keeps the debounced typing path to one
+     * in-flight request.
+     */
+    suspend fun getItems(query: ItemQuery): AppResult<List<JellyfinItem>>
+
+    /**
+     * The values a library can be filtered by — what the filter sheet lists.
+     *
+     * @param parentId library to describe, or `null` for the whole user root.
+     * @param itemTypes the item kinds the grid is showing; the facets are computed over those only.
+     */
+    suspend fun getFilterFacets(
+        parentId: String?,
+        itemTypes: List<ItemType>,
+    ): AppResult<FilterFacets>
 }

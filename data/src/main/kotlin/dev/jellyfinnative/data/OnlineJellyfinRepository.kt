@@ -1,13 +1,24 @@
 package dev.jellyfinnative.data
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.FilterFacets
+import dev.jellyfinnative.core.common.model.ItemQuery
+import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.data.mapper.ItemMapper
+import dev.jellyfinnative.data.mapper.toBaseItemKind
+import dev.jellyfinnative.data.mapper.toGetItemsRequest
+import dev.jellyfinnative.data.paging.ItemPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.filterApi
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
@@ -112,6 +123,58 @@ class OnlineJellyfinRepository
                 mapper.toDomain(response.content)
             }
 
+        // ---- M3 — library & search ----------------------------------------------------------
+
+        override fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>> =
+            Pager(
+                config =
+                    PagingConfig(
+                        pageSize = ItemQuery.DEFAULT_PAGE_SIZE,
+                        // Pinned to the page size so the very first load is one `limit=50` request
+                        // like every other page, instead of Paging's default 3×.
+                        initialLoadSize = ItemQuery.DEFAULT_PAGE_SIZE,
+                        prefetchDistance = PREFETCH_DISTANCE,
+                        // The grid never draws placeholder cells, and turning them off is what
+                        // lets the request skip the server-side total record count.
+                        enablePlaceholders = false,
+                    ),
+                pagingSourceFactory = {
+                    ItemPagingSource(pageSize = ItemQuery.DEFAULT_PAGE_SIZE) { startIndex, limit ->
+                        getItems(query.copy(startIndex = startIndex, limit = limit))
+                    }
+                },
+            ).flow
+
+        override suspend fun getItems(query: ItemQuery): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.itemsApi.getItems(
+                        query.toGetItemsRequest(fields = CARD_FIELDS, imageTypes = CARD_IMAGE_TYPES),
+                    )
+                mapper.toDomain(response.content.items)
+            }
+
+        override suspend fun getFilterFacets(
+            parentId: String?,
+            itemTypes: List<ItemType>,
+        ): AppResult<FilterFacets> =
+            onIo {
+                val response =
+                    apiClient.filterApi.getQueryFiltersLegacy(
+                        parentId = parentId?.let(UUID::fromString),
+                        includeItemTypes = itemTypes.mapNotNull { it.toBaseItemKind() },
+                    )
+                FilterFacets(
+                    genres = response.content.genres.orEmpty(),
+                    // Newest first: the years a user filters by are almost always recent ones.
+                    years =
+                        response.content.years
+                            .orEmpty()
+                            .sortedDescending(),
+                    officialRatings = response.content.officialRatings.orEmpty(),
+                )
+            }
+
         /**
          * Runs an SDK call off the caller's dispatcher.
          *
@@ -134,5 +197,13 @@ class OnlineJellyfinRepository
 
             /** jellyfin-web's default "Days in Next Up" user setting. */
             const val NEXT_UP_WINDOW_DAYS = 365L
+
+            /**
+             * How close to the end of the loaded list the user has to scroll before the next page
+             * is fetched. Deliberately far below Paging's default (which equals the page size and
+             * would queue page 2 the moment page 1 renders): the M3 definition of done is one
+             * request per screenful, not a read-ahead race.
+             */
+            const val PREFETCH_DISTANCE = 10
         }
     }

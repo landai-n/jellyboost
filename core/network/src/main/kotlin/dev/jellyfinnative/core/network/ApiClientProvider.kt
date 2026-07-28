@@ -71,6 +71,18 @@ class ApiClientProvider
             apiClient.update(baseUrl = baseUrl, accessToken = accessToken)
         }
 
+        /**
+         * Re-points the client at [baseUrl] **keeping the current credentials**.
+         *
+         * Used by `ServerReachabilityProbe` when the server answered on a different one of its
+         * known addresses (LAN ↔ remote). Distinct from [useServer], which drops the token because
+         * it is used when switching to a different *server*.
+         */
+        fun useAddress(baseUrl: String) {
+            Timber.d("Re-pointing API client at %s, keeping the session", baseUrl)
+            apiClient.update(baseUrl = baseUrl)
+        }
+
         /** Drops the access token, keeping the current base URL. Used on sign-out. */
         fun clearSession() {
             apiClient.update(accessToken = null)

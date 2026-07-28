@@ -129,3 +129,11 @@ so nothing is lost at M4.
 Already correct: the write path never requires a network. With no connectivity the Room row is
 written, the UI patches, the push fails, the flag stays set and the worker is enqueued behind
 `NetworkType.CONNECTED`. What is missing until M8 is the drain itself.
+
+## Verification
+
+M4 DoD walked on the test tablet (2026-07-28): mark-watched sent
+`POST /UserPlayedItems/{id}`, jellyfin-web-visible (`Played=True` server-side), and the
+home card patched via the event bus with zero network requests; favorite toggle
+round-tripped `POST`/`DELETE /UserFavoriteItems/{id}` with server state confirmed both
+ways. All test toggles were reverted.

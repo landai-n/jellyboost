@@ -42,9 +42,18 @@ object Routes {
         val itemId: String,
     )
 
+    /**
+     * The full-screen video player (M5).
+     *
+     * @param mediaSourceId which of the item's media sources to play; `null` lets the server pick
+     *   the default one (see `PlaybackInfoResolver`'s dash-less media-source-id quirk).
+     * @param startPositionTicks where playback starts, in Jellyfin ticks — the item's
+     *   `playbackPositionTicks` for Resume, `0` for Play from the beginning.
+     */
     @Serializable
     data class Player(
         val itemId: String,
+        val mediaSourceId: String? = null,
         val startPositionTicks: Long = 0L,
     )
 

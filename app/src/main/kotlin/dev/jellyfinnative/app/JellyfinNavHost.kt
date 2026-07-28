@@ -20,6 +20,7 @@ import dev.jellyfinnative.feature.detail.ItemDetailScreen
 import dev.jellyfinnative.feature.library.LibraryGridScreen
 import dev.jellyfinnative.feature.library.libraries.LibrariesScreen
 import dev.jellyfinnative.feature.search.SearchScreen
+import dev.jellyfinnative.player.ui.PlayerScreen
 
 /**
  * The app's navigation graph.
@@ -100,6 +101,18 @@ internal fun JellyfinNavHost(
             ItemDetailScreen(
                 viewModel = hiltViewModel(),
                 onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                onPlay = { itemId, startPositionTicks ->
+                    navController.navigate(
+                        Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
+                    )
+                },
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<Routes.Player> {
+            PlayerScreen(
+                viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
             )
         }

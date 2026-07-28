@@ -42,15 +42,29 @@ policy (risk #4).
   SessionStateHolder, JellyfinApiFacade (testability seam), AppError.ServerResolution.
   29 unit tests (token-hygiene, poll timing on virtual clock, restore/sign-out paths).
   2 DECISIONS entries (no getCurrentUser round-trip; sign-out keeps Room rows).
+- `:feature:auth`: ServerSetupScreen/ViewModel (live UDP list + manual URL, jellyfin-android
+  error copy) and LoginScreen/ViewModel (public users, disclaimer, password, Quick Connect
+  dialog); resolved server handed over via a feature-internal `PendingServerStore`.
+  20 unit tests. Strings in `feature/auth/res/values/strings.xml`; plain Material 3 only —
+  `:core:ui` untouched (design system is on the parallel M2 branch).
+- `:app`: MainViewModel (restore once, splash held while `SessionState.Unknown`),
+  JellyfinNavHost (ServerSetup → Login → Home, logout redirect driven by session state),
+  temporary HomePlaceholderScreen with sign-out. 3 unit tests.
+- Runtime fixes found by running on the tablet: SLF4J binding for the SDK (UDP discovery
+  crashed without it) and a network-security-config permitting cleartext + user CAs
+  (targetSdk 36 blocked plain-HTTP LAN servers). Both in DECISIONS.md.
 
 ### Next
-- `:feature:auth`: ServerSetup + Login screens/ViewModels (+ tests); NavHost wiring in
-  `:app` (session-state-driven start destination, temporary sign-out on placeholder home).
-- `:feature:auth`: ServerSetup + Login screens/ViewModels; wire NavHost in `:app`
-  (auth flow vs. placeholder home based on session state).
-- Unit tests for repositories/ViewModels (JUnit5 + MockK + Turbine).
-- On-device DoD walk: run-as DB inspection, Dashboard→Devices session, server version +
-  download policy confirmation.
+- **Blocked:** on-device DoD walk (run-as DB inspection, Dashboard→Devices session,
+  download-policy confirmation) needs a server the pinned SDK accepts — see Known issues.
+- `/document-feature auth` + `docs/ARCHITECTURE.md` refresh.
+- Restyle the auth screens onto `:core:ui` when the M2 design system lands.
 
 ### Known issues
-- (none)
+- **The test server is Jellyfin 10.10.7; jellyfin-sdk 1.8.12 requires ≥ 10.11.0.** The
+  server on the LAN (`test-server`, `http://192.168.1.10:8096`) is discovered and reachable,
+  but `getRecommendedServers` scores it below GOOD (`UnsupportedServerVersion`), so the
+  ServerSetup screen correctly refuses it with "unsupported version or product" — the same
+  behaviour jellyfin-android has (GREAT/GOOD only). M1's DoD cannot be walked until either
+  the server is upgraded to 10.11.x (docs/PLAN.md's stated expectation) or a decision is
+  logged to accept `OK`-scored servers / pin an older SDK. This is docs/PLAN.md risk #4.

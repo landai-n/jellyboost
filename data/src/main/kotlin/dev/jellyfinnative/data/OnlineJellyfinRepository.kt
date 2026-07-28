@@ -3,7 +3,10 @@ package dev.jellyfinnative.data
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.data.mapper.ItemMapper
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
@@ -39,16 +42,17 @@ class OnlineJellyfinRepository
     constructor(
         private val apiClient: ApiClient,
         private val mapper: ItemMapper,
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : JellyfinRepository {
         override suspend fun getUserViews(): AppResult<List<LibraryView>> =
-            runCatchingApi {
+            onIo {
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
                 // The mapper drops everything outside v1 scope (music, live TV, photos, …).
                 mapper.toLibraryViews(response.content.items)
             }
 
         override suspend fun getResumeItems(limit: Int): AppResult<List<JellyfinItem>> =
-            runCatchingApi {
+            onIo {
                 val response =
                     apiClient.itemsApi.getResumeItems(
                         GetResumeItemsRequest(
@@ -64,7 +68,7 @@ class OnlineJellyfinRepository
             }
 
         override suspend fun getNextUp(limit: Int): AppResult<List<JellyfinItem>> =
-            runCatchingApi {
+            onIo {
                 val response =
                     apiClient.tvShowsApi.getNextUp(
                         GetNextUpRequest(
@@ -83,7 +87,7 @@ class OnlineJellyfinRepository
             parentId: String,
             limit: Int,
         ): AppResult<List<JellyfinItem>> =
-            runCatchingApi {
+            onIo {
                 val response =
                     apiClient.userLibraryApi.getLatestMedia(
                         GetLatestMediaRequest(
@@ -97,6 +101,16 @@ class OnlineJellyfinRepository
                     )
                 mapper.toDomain(response.content)
             }
+
+        /**
+         * Runs an SDK call off the caller's dispatcher.
+         *
+         * The SDK's OkHttp backend reads response bodies on the calling thread, so a call
+         * launched from `viewModelScope` (main) dies with `NetworkOnMainThreadException`
+         * unless it is hopped onto [ioDispatcher] first.
+         */
+        private suspend fun <T> onIo(block: suspend () -> T): AppResult<T> =
+            withContext(ioDispatcher) { runCatchingApi { block() } }
 
         private companion object {
             /**

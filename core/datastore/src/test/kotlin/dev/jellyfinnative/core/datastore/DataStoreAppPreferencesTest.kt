@@ -78,4 +78,53 @@ class DataStoreAppPreferencesTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    // ---- M7: Wi-Fi-only downloads ----------------------------------------------------------------
+
+    @Test
+    fun `Wi-Fi-only downloads default to on`() =
+        runTest {
+            // The one preference in this file that does not default to `false`: a multi-gigabyte
+            // film pulled over a metered connection is a mistake the user cannot undo.
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.downloadOverWifiOnly.first() shouldBe true
+        }
+
+    @Test
+    fun `turning Wi-Fi-only off survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setDownloadOverWifiOnly(false)
+
+            DataStoreAppPreferences(store).downloadOverWifiOnly.first() shouldBe false
+        }
+
+    @Test
+    fun `the two preferences do not interfere with each other`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.setDownloadOverWifiOnly(false)
+            preferences.setForceOffline(true)
+
+            preferences.downloadOverWifiOnly.first() shouldBe false
+            preferences.forceOffline.first() shouldBe true
+        }
+
+    @Test
+    fun `emits every Wi-Fi-only change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.downloadOverWifiOnly.test {
+                awaitItem() shouldBe true
+
+                preferences.setDownloadOverWifiOnly(false)
+                awaitItem() shouldBe false
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

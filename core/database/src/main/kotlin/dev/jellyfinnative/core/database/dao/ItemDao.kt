@@ -220,4 +220,26 @@ interface ItemDao {
         cutoff: Instant,
         browseCache: ItemSource,
     ): Int
+
+    // ---- M7 — download-delete cascade ----------------------------------------------------------
+
+    /**
+     * Drops the [ItemSource.DOWNLOAD] rows that no download points at any more.
+     *
+     * [keep] is the whole reason this takes a list rather than a single id: deleting one episode
+     * must not remove the series and season rows its *siblings* still need in order to open
+     * offline. `:data:downloads`' `DownloadDeleter` computes the surviving set (every remaining
+     * download plus each one's series and season) and hands it in.
+     *
+     * A row that is still worth caching is not lost by this — it is simply no longer *guaranteed*:
+     * the browse cache re-creates it as [ItemSource.BROWSE_CACHE] the next time the user browses
+     * past it.
+     *
+     * @return how many rows were dropped.
+     */
+    @Query("DELETE FROM items WHERE source = :download AND id NOT IN (:keep)")
+    suspend fun deleteDownloadsNotIn(
+        keep: List<UUID>,
+        download: ItemSource,
+    ): Int
 }

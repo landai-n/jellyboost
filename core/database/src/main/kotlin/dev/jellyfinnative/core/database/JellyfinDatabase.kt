@@ -4,16 +4,21 @@ import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import dev.jellyfinnative.core.database.converters.DownloadFileTypeConverter
+import dev.jellyfinnative.core.database.converters.DownloadStatusConverter
 import dev.jellyfinnative.core.database.converters.InstantConverter
 import dev.jellyfinnative.core.database.converters.ItemSourceConverter
 import dev.jellyfinnative.core.database.converters.ItemTypeConverter
 import dev.jellyfinnative.core.database.converters.StringListConverter
 import dev.jellyfinnative.core.database.converters.UuidConverter
+import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.ServerDao
 import dev.jellyfinnative.core.database.dao.UserDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
+import dev.jellyfinnative.core.database.entities.DownloadEntity
+import dev.jellyfinnative.core.database.entities.DownloadFileEntity
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.LibraryViewEntity
 import dev.jellyfinnative.core.database.entities.ServerAddressEntity
@@ -24,12 +29,13 @@ import dev.jellyfinnative.core.database.entities.UserEntity
 /**
  * The app's single Room database.
  *
- * Entities land incrementally per milestone (session schema at M1; `user_data` at M4; `items` +
- * `library_views` at M6; the download schema follows at M7 per docs/PLAN.md's "Data layer"
- * section — bump [DatabaseConstants.DATABASE_VERSION] and add a migration when it does).
+ * Entities land incrementally per milestone: session schema at M1; `user_data` at M4; `items` +
+ * `library_views` at M6; `downloads` + `download_files` at M7.
  *
  * Schemas are exported to `core/database/schemas/`, which is what lets each version bump be an
- * `@AutoMigration` instead of hand-written SQL as long as the change is purely additive.
+ * `@AutoMigration` instead of hand-written SQL as long as the change is purely additive. Every
+ * version so far has been — v4 only adds two tables, so an existing install keeps its cached items
+ * and its pending user-data rows across the upgrade.
  */
 @Database(
     entities = [
@@ -39,6 +45,8 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         UserDataEntity::class,
         ItemEntity::class,
         LibraryViewEntity::class,
+        DownloadEntity::class,
+        DownloadFileEntity::class,
     ],
     version = DatabaseConstants.DATABASE_VERSION,
     exportSchema = true,
@@ -47,6 +55,8 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         AutoMigration(from = 1, to = 2),
         // v2 → v3 adds the `items` and `library_views` tables only; again purely additive.
         AutoMigration(from = 2, to = 3),
+        // v3 → v4 adds `downloads` and `download_files`; nothing existing is touched.
+        AutoMigration(from = 3, to = 4),
     ],
 )
 @TypeConverters(
@@ -55,6 +65,8 @@ import dev.jellyfinnative.core.database.entities.UserEntity
     ItemTypeConverter::class,
     ItemSourceConverter::class,
     StringListConverter::class,
+    DownloadStatusConverter::class,
+    DownloadFileTypeConverter::class,
 )
 abstract class JellyfinDatabase : RoomDatabase() {
     /** DAO for [ServerEntity] and [ServerAddressEntity]. */
@@ -71,4 +83,7 @@ abstract class JellyfinDatabase : RoomDatabase() {
 
     /** DAO for [LibraryViewEntity] — the cached library list (M6). */
     abstract fun libraryViewDao(): LibraryViewDao
+
+    /** DAO for [DownloadEntity] and [DownloadFileEntity] — the download pipeline (M7). */
+    abstract fun downloadDao(): DownloadDao
 }

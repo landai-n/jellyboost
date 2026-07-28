@@ -1,0 +1,49 @@
+# detekt configuration for jellyfin-native.
+# `buildUponDefaultConfig = true`, so this file only holds deviations from the defaults.
+# Formatting is owned by ktlint (see .editorconfig); detekt covers correctness/complexity smells.
+
+build:
+  maxIssues: 0
+
+comments:
+  # Comments are always appreciated, even on private members.
+  CommentOverPrivateFunction:
+    active: false
+  CommentOverPrivateProperty:
+    active: false
+
+complexity:
+  # Repositories and DAOs legitimately grow large.
+  TooManyFunctions:
+    thresholdInInterfaces: 20
+    thresholdInClasses: 20
+    ignoreAnnotatedFunctions: ['Composable']
+  LongParameterList:
+    ignoreAnnotated: ['Composable', 'Inject']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+
+naming:
+  InvalidPackageDeclaration:
+    active: false
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Za-z0-9]*'
+
+style:
+  # TODO / FIXME are allowed while the app is under construction; STOPSHIP is not.
+  ForbiddenComment:
+    comments:
+      - reason: 'STOPSHIP markers must never reach a commit.'
+        value: 'STOPSHIP:'
+  ReturnCount:
+    max: 6
+  MaxLineLength:
+    maxLineLength: 120
+  MagicNumber:
+    ignoreAnnotated: ['Composable']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']

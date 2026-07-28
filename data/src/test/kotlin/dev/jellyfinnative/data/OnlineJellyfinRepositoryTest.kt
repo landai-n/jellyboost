@@ -6,10 +6,12 @@ import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.data.mapper.FakeImageUrlFactory
 import dev.jellyfinnative.data.mapper.ItemMapper
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -23,10 +25,12 @@ import org.jellyfin.sdk.api.client.Response
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.exception.TimeoutException
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.api.operations.ItemsApi
+import org.jellyfin.sdk.api.operations.LibraryApi
 import org.jellyfin.sdk.api.operations.TvShowsApi
 import org.jellyfin.sdk.api.operations.UserLibraryApi
 import org.jellyfin.sdk.api.operations.UserViewsApi
@@ -36,9 +40,12 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.MediaType
+import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
+import org.jellyfin.sdk.model.api.request.GetSeasonsRequest
+import org.jellyfin.sdk.model.api.request.GetSimilarItemsRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -59,6 +66,7 @@ class OnlineJellyfinRepositoryTest {
     private val itemsApi = mockk<ItemsApi>()
     private val tvShowsApi = mockk<TvShowsApi>()
     private val userLibraryApi = mockk<UserLibraryApi>()
+    private val libraryApi = mockk<LibraryApi>()
 
     private val repository =
         OnlineJellyfinRepository(apiClient, ItemMapper(FakeImageUrlFactory()), UnconfinedTestDispatcher())
@@ -72,6 +80,7 @@ class OnlineJellyfinRepositoryTest {
         every { apiClient.itemsApi } returns itemsApi
         every { apiClient.tvShowsApi } returns tvShowsApi
         every { apiClient.userLibraryApi } returns userLibraryApi
+        every { apiClient.libraryApi } returns libraryApi
     }
 
     @AfterEach
@@ -228,6 +237,113 @@ class OnlineJellyfinRepositoryTest {
             val result = repository.getLatestMedia(parentId = "not-a-uuid")
 
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Unknown>()
+        }
+
+    // ---- M4: item detail --------------------------------------------------------------------
+
+    @Test
+    fun `getItem re-fetches the single item and maps it`() =
+        runTest {
+            coEvery { userLibraryApi.getItem(any(), any()) } returns
+                Response(
+                    content = itemDto(BaseItemKind.MOVIE, "Arrival"),
+                    status = 200,
+                    headers = emptyMap(),
+                )
+
+            val result = repository.getItem(moviesLibraryId.toString())
+
+            (result as AppResult.Success).value.name shouldBe "Arrival"
+            coVerify(exactly = 1) { userLibraryApi.getItem(moviesLibraryId, any()) }
+        }
+
+    @Test
+    fun `getItem reports a malformed id as an Unknown failure`() =
+        runTest {
+            val result = repository.getItem("not-a-uuid")
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Unknown>()
+        }
+
+    @Test
+    fun `getSeasons scopes the request to the series and drops missing seasons`() =
+        runTest {
+            val request = slot<GetSeasonsRequest>()
+            coEvery { tvShowsApi.getSeasons(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.SEASON, "Season 1")))
+
+            val result = repository.getSeasons(moviesLibraryId.toString())
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Season 1")
+            request.captured.seriesId shouldBe moviesLibraryId
+            request.captured.isMissing shouldBe false
+            request.captured.enableUserData shouldBe true
+        }
+
+    @Test
+    fun `getEpisodes filters the series request down to one season and asks for overviews`() =
+        runTest {
+            val seasonId = UUID.randomUUID()
+            val request = slot<GetEpisodesRequest>()
+            coEvery { tvShowsApi.getEpisodes(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.EPISODE, "The Original")))
+
+            val result = repository.getEpisodes(moviesLibraryId.toString(), seasonId.toString())
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("The Original")
+            request.captured.seriesId shouldBe moviesLibraryId
+            request.captured.seasonId shouldBe seasonId
+            request.captured.fields!! shouldContainExactly
+                listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO, ItemFields.OVERVIEW)
+            request.captured.enableUserData shouldBe true
+        }
+
+    @Test
+    fun `getNextUpForSeries asks for a single episode of that series`() =
+        runTest {
+            val request = slot<GetNextUpRequest>()
+            coEvery { tvShowsApi.getNextUp(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.EPISODE, "Chestnut")))
+
+            val result = repository.getNextUpForSeries(moviesLibraryId.toString())
+
+            (result as AppResult.Success).value!!.name shouldBe "Chestnut"
+            request.captured.seriesId shouldBe moviesLibraryId
+            request.captured.limit shouldBe 1
+        }
+
+    @Test
+    fun `getNextUpForSeries returns null for a fully watched series`() =
+        runTest {
+            coEvery { tvShowsApi.getNextUp(any<GetNextUpRequest>()) } returns queryResponse(emptyList())
+
+            val result = repository.getNextUpForSeries(moviesLibraryId.toString())
+
+            (result as AppResult.Success).value.shouldBeNull()
+        }
+
+    @Test
+    fun `getSimilarItems forwards the limit`() =
+        runTest {
+            val request = slot<GetSimilarItemsRequest>()
+            coEvery { libraryApi.getSimilarItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.MOVIE, "Sicario")))
+
+            val result = repository.getSimilarItems(moviesLibraryId.toString(), limit = 5)
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Sicario")
+            request.captured.itemId shouldBe moviesLibraryId
+            request.captured.limit shouldBe 5
+        }
+
+    @Test
+    fun `getSimilarItems maps a transport failure onto Network`() =
+        runTest {
+            coEvery { libraryApi.getSimilarItems(any<GetSimilarItemsRequest>()) } throws IOException("reset")
+
+            val result = repository.getSimilarItems(moviesLibraryId.toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
     // ---- helpers ----------------------------------------------------------------------------

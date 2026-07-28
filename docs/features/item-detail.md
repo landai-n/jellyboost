@@ -50,9 +50,9 @@ badge are byte-identical to the ones the home rows show.
 
 ## Actions
 
-| Button | M4 behaviour |
+| Button | Behaviour |
 |---|---|
-| Play / Resume | Snackbar: "Playback arrives in M5." |
+| Play / Resume | Live from M5 — navigates to `Routes.Player`; see docs/features/playback.md |
 | Download | Snackbar: "Downloads arrive in M7." |
 | Mark watched | Live — `UserDataRepository.setPlayed` |
 | Favourite | Live — `UserDataRepository.setFavorite` |

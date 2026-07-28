@@ -1,13 +1,29 @@
 # STATUS
 
-## Current milestone: M1 — Auth & session
+## Current milestone: M2 — Design system + Home (online) (in progress on a parallel branch)
 
-**Definition of done:** server discovery (UDP broadcast + manual URL with address-candidate
-scoring), password + Quick Connect login, access token stored ONLY in
-EncryptedSharedPreferences (never Room), session restore on app start, sign-out.
-Verify on device: `run-as` inspection shows no token in the DB; session appears in server
-Dashboard→Devices. Also confirm server version (10.11.x expected) and the user's download
-policy (risk #4).
+**Definition of done (M2):** design system in `:core:ui` + Home screen (online);
+verify side-by-side vs jellyfin-web home — same rows/items/order.
+Note: `:core:ui` was frozen during the tail of M1 (DECISIONS.md 2026-07-28); the auth
+screens must be restyled onto the design system at M2 integration.
+
+## Previous milestone: M1 — Auth & session (DONE, tagged m1)
+
+**DoD walk on test tablet (2026-07-28), all pass:**
+- UDP discovery: "Servers on this network" lists test-server (screenshot-verified).
+- Manual/candidate resolution: `Resolved http://192.168.1.10:8096 (score GREAT,
+  version 10.11.11)`.
+- Password login (fresh install) and Quick Connect login (code approved in web UI,
+  signed in as approving user) both land on Home.
+- Token hygiene via `run-as`: DB schema/WAL contain no token column and no token-shaped
+  strings; `secure_credentials.xml` fully encrypted (Tink AES-SIV keys / AES-GCM values).
+- Session restore: force-stop → relaunch → straight to signed-in Home
+  (`Restored session for 'Alex' on 'test-server'`), no network.
+- Sign-out: credential entries wiped (only keyset metadata remains), app returns to
+  ServerSetup; server/user Room rows kept per DECISIONS.md.
+- Dashboard→Devices: user confirmed "jellyfin-native 0.1.0" session in web UI.
+- Server version 10.11.11 (upgraded from 10.10.7 during M1); download policy
+  `enableContentDownloading=true` — risk #4 cleared, download pipeline (M7) unblocked.
 
 ### Done
 - Repo initialized, governance files (PLAN/DECISIONS/STATUS/CLAUDE) in place.
@@ -55,16 +71,9 @@ policy (risk #4).
   (targetSdk 36 blocked plain-HTTP LAN servers). Both in DECISIONS.md.
 
 ### Next
-- **Blocked:** on-device DoD walk (run-as DB inspection, Dashboard→Devices session,
-  download-policy confirmation) needs a server the pinned SDK accepts — see Known issues.
-- `/document-feature auth` + `docs/ARCHITECTURE.md` refresh.
-- Restyle the auth screens onto `:core:ui` when the M2 design system lands.
+- M2 (parallel branch): design system in `:core:ui`, Home screen, restyle auth screens
+  onto the design system at integration.
 
 ### Known issues
-- **The test server is Jellyfin 10.10.7; jellyfin-sdk 1.8.12 requires ≥ 10.11.0.** The
-  server on the LAN (`test-server`, `http://192.168.1.10:8096`) is discovered and reachable,
-  but `getRecommendedServers` scores it below GOOD (`UnsupportedServerVersion`), so the
-  ServerSetup screen correctly refuses it with "unsupported version or product" — the same
-  behaviour jellyfin-android has (GREAT/GOOD only). M1's DoD cannot be walked until either
-  the server is upgraded to 10.11.x (docs/PLAN.md's stated expectation) or a decision is
-  logged to accept `OK`-scored servers / pin an older SDK. This is docs/PLAN.md risk #4.
+- adb `input tap` injection is flaky on the test tablet (the OEM ROM): roughly one tap in two is
+  silently dropped — retry loops with logcat confirmation needed when driving the UI.

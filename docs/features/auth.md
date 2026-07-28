@@ -90,5 +90,6 @@ polling/timing matters):
 
 Known gaps: DAO queries and `EncryptedSecureCredentialStore` are Android-framework-bound
 and have no JVM tests (no Robolectric in the stack); compose UI is untested (no screenshot/
-instrumented UI tests in v1 scope); the on-device M1 DoD walk is blocked pending the
-server-version decision (STATUS.md → Known issues).
+instrumented UI tests in v1 scope). The full M1 DoD was walked manually on the test tablet
+against Jellyfin 10.11.11 on 2026-07-28 (see STATUS.md) — discovery, both login paths,
+token hygiene via `run-as`, restore, sign-out, Dashboard→Devices all passed.

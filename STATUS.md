@@ -194,3 +194,43 @@ Quality gate verified green on the branch by the orchestrator (full `--rerun-tas
 - Write-through Room caching (`source=BROWSE_CACHE`) is intentionally absent; it is M6 scope.
 - `DownloadBadge` always renders `NotDownloaded` until the M7 download pipeline supplies real
   states.
+
+---
+
+<!-- BEGIN M5 (playback) — appended by the M5 worktree; keep as one block when merging -->
+
+### M5 — Playback (online) (built on a parallel worktree branch, awaiting device DoD)
+
+**DoD (M5):** direct-play + forced transcode (server dashboard shows the method), track
+switching, resume, no orphaned ffmpeg after exit.
+
+**Done**
+- `:player` built out: `DeviceProfileBuilder` (+ `MediaCodecProbe` seam, `CodecHelpers`),
+  `PlaybackInfoResolver` (dash-less media-source-id quirk, play-method decision),
+  `ExoMediaSourceFactory`, `PlaybackReporter` (5 s ticker, start/progress/stop,
+  `stopEncodingProcess`, always-local `setPosition`), `DecoderFallbackHandler`,
+  `PlayerHandle`/`ExoPlayerHandle`, `TrackSelectionController`,
+  `PlaybackService : MediaSessionService`, `JellyfinAuthInterceptor`, `PlayerViewModel` +
+  Compose player UI (play/pause, seek bar, audio/subtitle pickers, quality picker,
+  immersive landscape).
+- `:player/src/main/AndroidManifest.xml` declares the service and the
+  foreground-service-media-playback permissions, so `:app`'s manifest is untouched.
+- Wiring: `Routes.Player(itemId, mediaSourceId?, startPositionTicks)`, NavHost entry in
+  `:app`, `:feature:detail` Play/Resume and per-episode play buttons navigate for real
+  (the M4 snackbar stub is gone).
+- 90 new unit tests in `:player`, 5 new in `:feature:detail`.
+- 6 DECISIONS entries (MediaController divergence, markPlayed via `UserDataRepository`,
+  profile toggles as parameters, `PlaybackMediaItemSpec`, Play-on-a-container semantics,
+  the resolved M4 stub).
+
+**Next**
+- Device DoD walk by the orchestrator after merge: direct play, forced transcode via the
+  quality picker at *Lowest*, audio/subtitle switching, resume, and `ps | grep ffmpeg`
+  on the server after leaving the player.
+
+**Known issues (M5)**
+- No persisted preference for default quality or the ASS/SSA toggle — M9 settings.
+- `POST_NOTIFICATIONS` is declared but never requested at runtime; on API 33+ with the
+  permission denied playback continues but the media notification is invisible. M9.
+
+<!-- END M5 (playback) -->

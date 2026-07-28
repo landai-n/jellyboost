@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "dev.jellyfinnative.feature.detail"
 }
+
+dependencies {
+    implementation(projects.data)
+}

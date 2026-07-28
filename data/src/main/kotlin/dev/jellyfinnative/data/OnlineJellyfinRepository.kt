@@ -20,15 +20,19 @@ import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.filterApi
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.MediaType
+import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
+import org.jellyfin.sdk.model.api.request.GetSeasonsRequest
+import org.jellyfin.sdk.model.api.request.GetSimilarItemsRequest
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -175,6 +179,98 @@ class OnlineJellyfinRepository
                 )
             }
 
+        // ---- M4 — item detail ---------------------------------------------------------------
+
+        /**
+         * Note there is no `fields` argument to pass here: `/Users/{userId}/Items/{itemId}` is the
+         * one endpoint that always serialises the **complete** field set (media sources, streams,
+         * chapters, trickplay, people, taglines, genres, overview). That is exactly the "detail is
+         * full" half of the Swiftfin pattern, and it is the same call jellyfin-web makes when you
+         * open an item.
+         */
+        override suspend fun getItem(id: String): AppResult<JellyfinItem> =
+            onIo {
+                val response = apiClient.userLibraryApi.getItem(itemId = UUID.fromString(id))
+                mapper.toDomain(response.content)
+            }
+
+        override suspend fun getSeasons(seriesId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.tvShowsApi.getSeasons(
+                        GetSeasonsRequest(
+                            seriesId = UUID.fromString(seriesId),
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                            // jellyfin-web hides "Specials" placeholders that have no episodes on
+                            // disk; missing seasons would render as dead cards.
+                            isMissing = false,
+                        ),
+                    )
+                mapper.toDomain(response.content.items)
+            }
+
+        override suspend fun getEpisodes(
+            seriesId: String,
+            seasonId: String,
+        ): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.tvShowsApi.getEpisodes(
+                        GetEpisodesRequest(
+                            seriesId = UUID.fromString(seriesId),
+                            seasonId = UUID.fromString(seasonId),
+                            // The episode list is the one place a synopsis is worth the payload:
+                            // it is drawn directly under each row.
+                            fields = EPISODE_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                            isMissing = false,
+                        ),
+                    )
+                mapper.toDomain(response.content.items)
+            }
+
+        override suspend fun getNextUpForSeries(seriesId: String): AppResult<JellyfinItem?> =
+            onIo {
+                val response =
+                    apiClient.tvShowsApi.getNextUp(
+                        GetNextUpRequest(
+                            seriesId = UUID.fromString(seriesId),
+                            limit = 1,
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                            enableTotalRecordCount = false,
+                        ),
+                    )
+                response.content.items
+                    .firstOrNull()
+                    ?.let(mapper::toDomain)
+            }
+
+        override suspend fun getSimilarItems(
+            id: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.libraryApi.getSimilarItems(
+                        GetSimilarItemsRequest(
+                            itemId = UUID.fromString(id),
+                            limit = limit,
+                            fields = CARD_FIELDS,
+                        ),
+                    )
+                mapper.toDomain(response.content.items)
+            }
+
+        // ---- end M4 -------------------------------------------------------------------------
+
         /**
          * Runs an SDK call off the caller's dispatcher.
          *
@@ -205,5 +301,11 @@ class OnlineJellyfinRepository
              * request per screenful, not a read-ahead race.
              */
             const val PREFETCH_DISTANCE = 10
+
+            /**
+             * Episode rows draw a synopsis under the title, so the season list is the one list
+             * request that pays for `OVERVIEW` (M4).
+             */
+            val EPISODE_FIELDS = listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO, ItemFields.OVERVIEW)
         }
     }

@@ -1,5 +1,7 @@
 package dev.jellyfinnative.core.common.model
 
+import java.time.Instant
+
 /**
  * The single item model the UI ever sees.
  *
@@ -34,6 +36,22 @@ data class JellyfinItem(
     val thumbImageUrl: String? = null,
     val logoImageUrl: String? = null,
     val primaryImageAspectRatio: Double? = null,
+    /**
+     * Short marketing line(s) shown under the title on a detail page.
+     *
+     * Detail-only (M4), like the four fields below it: they are populated by the full `getItem`
+     * re-fetch the detail screen performs, and a lean list request leaves them at their defaults
+     * (docs/PLAN.md, "Screens" → ItemDetail).
+     */
+    val taglines: List<String> = emptyList(),
+    /** Season count for a series, episode count for a season. Detail-only. */
+    val childCount: Int? = null,
+    /** Original release date. Detail-only. */
+    val premiereDate: Instant? = null,
+    /** Production companies. Detail-only. */
+    val studios: List<String> = emptyList(),
+    /** Cast and crew. Detail-only. */
+    val people: List<Person> = emptyList(),
     val userData: UserData = UserData(),
     val downloadState: DownloadState = DownloadState.NotDownloaded,
     /**
@@ -72,4 +90,21 @@ data class JellyfinItem(
     /** Playback progress in `0f..1f`, or `null` when the item was never started. */
     val playbackProgress: Float?
         get() = userData.progress(runTimeTicks)
+
+    /** Runtime rounded to whole minutes, or `null` when the server reports no runtime. */
+    val runtimeMinutes: Int?
+        get() = runTimeTicks?.takeIf { it > 0L }?.let { (it / TICKS_PER_MINUTE).toInt() }
+
+    /** Remaining runtime in whole minutes for a partially-watched item, `null` otherwise. */
+    val remainingMinutes: Int?
+        get() {
+            val total = runTimeTicks?.takeIf { it > 0L } ?: return null
+            if (!userData.isResumable) return null
+            return ((total - userData.playbackPositionTicks).coerceAtLeast(0L) / TICKS_PER_MINUTE).toInt()
+        }
+
+    private companion object {
+        /** Jellyfin measures durations in 100-nanosecond ticks. */
+        const val TICKS_PER_MINUTE = 600_000_000L
+    }
 }

@@ -126,6 +126,41 @@ class JellyfinItemTest {
         DownloadState.Downloading(0.5f).isActive shouldBe true
     }
 
+    // ---- M4: detail metadata ------------------------------------------------------------------
+
+    @Test
+    fun `converts a tick runtime into whole minutes`() {
+        // 116 minutes: Jellyfin counts in 100-nanosecond ticks.
+        val movie = JellyfinItem(id = "1", name = "Arrival", type = ItemType.MOVIE, runTimeTicks = 69_600_000_000L)
+
+        movie.runtimeMinutes shouldBe 116
+    }
+
+    @Test
+    fun `reports no runtime when the server reports none or zero`() {
+        JellyfinItem(id = "1", name = "x", type = ItemType.MOVIE).runtimeMinutes.shouldBeNull()
+        JellyfinItem(id = "1", name = "x", type = ItemType.MOVIE, runTimeTicks = 0L).runtimeMinutes.shouldBeNull()
+    }
+
+    @Test
+    fun `reports the remaining minutes only while an item is resumable`() {
+        val runtime = 60_000_000_000L
+        val halfway =
+            JellyfinItem(
+                id = "1",
+                name = "x",
+                type = ItemType.MOVIE,
+                runTimeTicks = runtime,
+                userData = UserData(playbackPositionTicks = runtime / 2),
+            )
+
+        halfway.remainingMinutes shouldBe 50
+
+        // Watched and never-started items have nothing left to report.
+        halfway.copy(userData = UserData(played = true)).remainingMinutes.shouldBeNull()
+        halfway.copy(userData = UserData()).remainingMinutes.shouldBeNull()
+    }
+
     @Test
     fun `filter options count their active facets`() {
         FilterOptions().isEmpty shouldBe true

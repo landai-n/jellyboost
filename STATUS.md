@@ -1,6 +1,42 @@
 # STATUS
 
-## Current milestones: M3 — Library grid + Search, and M4 — Item detail + user data (built, DoD walk in progress)
+## M6 — Offline read path (built on a parallel worktree branch; device DoD pending)
+
+**DoD (M6):** Room cache, connectivity monitor, delegating repo, banner, force-offline
+setting. Airplane-mode toggle swaps the app within ~1s with no crashes; server-down
+(Wi-Fi up) degrades without a 30s hang.
+
+### Done (worktree branch `worktree-agent-a25cf3584ae0036b2`)
+- `:core:database` schema **v3** (`@AutoMigration(2, 3)`, additive, schema exported):
+  `ItemEntity` (single table, structured columns + full `BaseItemDto` JSON blob +
+  `source: BROWSE_CACHE|DOWNLOAD` + `cachedAt`), `LibraryViewEntity`, `ItemDao`,
+  `LibraryViewDao`, enum/list converters, `UserDataDao.getUserDataFor`.
+- `:core:datastore`: `AppPreferences`/`DataStoreAppPreferences` (`forceOffline`) + the
+  singleton preferences `DataStore`.
+- `:core:network` `connectivity/`: `ConnectivityMonitor` (default-network callback),
+  `ServerReachabilityProbe` (3 s `getPublicSystemInfo`, rotates `ServerAddressEntity`
+  candidates and re-points the client), `ConnectionStateProvider` (conflated probe queue
+  with a 2 s debounce). Plus `@ApplicationScope` and `ApiClientProvider.useAddress`.
+- `:data`: write-through caching on every `OnlineJellyfinRepository` read
+  (`BrowseCacheWriter`, never downgrades a `DOWNLOAD` row and never bumps its `cachedAt`),
+  `OfflineJellyfinRepository` (Room-only; downloaded-items-only lists, `getItem` also
+  serves cached parents, `available=false` instead of throwing),
+  `DelegatingJellyfinRepository` **now bound as `JellyfinRepository`**.
+- `:app`: `ConnectionViewModel`, app-wide `OfflineBanner` in `AppScaffold` (distinct copy
+  per reason + Retry / Go online), force-offline toggle in the home overflow menu, probe
+  refresh on app resume.
+- Bug fix: `datePlayed`/`lastPlayedDate` timezone (see "Known issues" below).
+- 86 new unit tests (317 total, 0 failures); full gate green in one run
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- Docs: `docs/features/offline-read.md`, `docs/ARCHITECTURE.md`; 8 DECISIONS entries.
+
+### Next (M6)
+- Device DoD by the orchestrator after merge: airplane-mode swap ~1 s, server-down
+  degradation, tablet/landscape check on the banner + overflow menu.
+- Offline lists are empty in practice until M7 writes `source = DOWNLOAD` rows; correctness
+  is pinned by unit tests that seed Room.
+
+## Previous milestones: M3 — Library grid + Search, and M4 — Item detail + user data (built, DoD walk in progress)
 
 **DoD (M3):** Paging 3 library grid with sort/filter + debounced search;
 >500-item library scrolls clean, one request per page.
@@ -39,10 +75,11 @@ without refetch.
 - Then `/milestone finish M3` and `finish M4` (tags m3, m4).
 
 ### Known issues (new)
-- `datePlayed`/`lastPlayedDate` sent to the server carry UTC wall-clock time with the
-  device's local offset appended (observed `17:22:57+02:00` for a 17:22 UTC event → the
-  server stores it 2h early). Harmless for played/favorite state, but must be fixed
-  before M8's most-recent-wins sync compares timestamps.
+- ~~`datePlayed`/`lastPlayedDate` sent to the server carry UTC wall-clock time with the
+  device's local offset appended~~ — **fixed on the M6 branch** (`fix(data): send user-data
+  timestamps as the instant the server expects`). The SDK's `DateTimeSerializer` is
+  zone-aware in *both* directions, so `ItemMapper`'s read path was corrected too; see
+  DECISIONS.md 2026-07-28 "M6: the `datePlayed` timezone fix also corrects the read path".
 - the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
   scripts must delete the file first and re-verify the screen before every tap (a stale
   dump caused stray taps this session — see incident note).

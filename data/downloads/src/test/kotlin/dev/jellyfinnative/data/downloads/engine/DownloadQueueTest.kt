@@ -1,0 +1,341 @@
+package dev.jellyfinnative.data.downloads.engine
+
+import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadStatus
+import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.database.dao.DownloadDao
+import dev.jellyfinnative.core.database.dao.ItemDao
+import dev.jellyfinnative.core.database.entities.DownloadEntity
+import dev.jellyfinnative.core.database.entities.DownloadFileEntity
+import dev.jellyfinnative.core.database.entities.DownloadWithFiles
+import dev.jellyfinnative.core.database.entities.ItemEntity
+import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
+import dev.jellyfinnative.data.downloads.DownloadFixtures.download
+import dev.jellyfinnative.data.downloads.DownloadFixtures.file
+import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
+import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
+import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
+import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.slot
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.io.File
+import java.io.IOException
+import java.time.Clock
+import java.time.ZoneOffset
+
+/**
+ * Unit tests for [DownloadQueue] — the state machine the whole milestone hangs off.
+ *
+ * The properties worth protecting are the ones a user notices when they break: an item that fails
+ * on its poster must still be playable, an item that fails on its media file must not claim to be
+ * downloaded, and a killed process must leave a row the next run can resume rather than one stuck
+ * in `DOWNLOADING` forever.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class DownloadQueueTest {
+    private val downloadDao = mockk<DownloadDao>(relaxUnitFun = true)
+    private val itemDao = mockk<ItemDao>()
+    private val itemMapper = mockk<ItemEntityMapper>()
+    private val storage = mockk<DownloadStorage>()
+    private val downloader = mockk<FileDownloader>()
+    private val urls = mockk<DownloadUrlFactory>(relaxed = true)
+    private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
+    private val listener = RecordingListener()
+
+    private var nextFileId = 1L
+
+    @BeforeEach
+    fun setUp() {
+        every { storage.prepareItemDirectory(any()) } returns File("/tmp/downloads")
+        every { storage.resolve(any(), any()) } answers { File("/tmp/downloads/${secondArg<String>()}") }
+        coEvery { downloadDao.insertFile(any()) } answers { nextFileId++ }
+        coEvery { itemDao.getItem(any()) } returns ITEM_ENTITY
+        every { itemMapper.toDtoOrNull(any()) } returns movie()
+        every { urls.mediaUrl(any()) } returns "https://server/download"
+        every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
+        coEvery { downloader.download(any(), any(), any(), any()) } returns 100L
+    }
+
+    // ---- the happy path -------------------------------------------------------------------------
+
+    @Test
+    fun `a drained item ends up DOWNLOADED`() =
+        runTest {
+            queueWith(download())
+
+            queue().drain(listener) shouldBe true
+
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADING, NOW, null) }
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
+        }
+
+    @Test
+    fun `interrupted rows are put back in the queue before anything else runs`() =
+        runTest {
+            // A row still marked DOWNLOADING belongs to a process that no longer exists; without
+            // this the queue could not tell it from the item it is running right now.
+            queueWith()
+
+            queue().drain(listener)
+
+            coVerify(exactly = 1) { downloadDao.requeueInterrupted(NOW) }
+        }
+
+    @Test
+    fun `the queue keeps taking items until nothing is runnable`() =
+        runTest {
+            val first = download(itemId = uuid(1))
+            val second = download(itemId = uuid(2), queuePosition = 1)
+            coEvery { downloadDao.nextRunnable() } returnsMany
+                listOf(withFiles(first), withFiles(second), null)
+
+            queue().drain(listener)
+
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
+            coVerify { downloadDao.setStatus(uuid(2), DownloadStatus.DOWNLOADED, NOW, null) }
+        }
+
+    @Test
+    fun `the item's progress is the sum of its files, not the current one's`() =
+        runTest {
+            // Otherwise a 2 GB film would jump to 100 % while its 40 KB poster finished.
+            queueWith(download())
+            coEvery { downloader.download(any(), any(), any(), any()) } returns 500L
+
+            queue().drain(listener)
+
+            val (bytes, _) = listener.progress.last()
+            bytes shouldBe 1_000L
+        }
+
+    // ---- essential vs optional ------------------------------------------------------------------
+
+    @Test
+    fun `a failing media file marks the item ERROR`() =
+        runTest {
+            queueWith(download())
+            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any()) } throws
+                IOException("connection reset")
+
+            queue().drain(listener) shouldBe false
+
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, "connection reset") }
+        }
+
+    @Test
+    fun `a failing poster leaves the item DOWNLOADED`() =
+        runTest {
+            // The plan's optional-file rule: the file row goes ERROR, the item stays playable.
+            queueWith(download())
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any()) } throws
+                IOException("404")
+
+            queue().drain(listener) shouldBe true
+
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
+        }
+
+    @Test
+    fun `a failing file is recorded on its own row`() =
+        runTest {
+            queueWith(download())
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any()) } throws
+                IOException("404")
+
+            queue().drain(listener)
+
+            coVerify { downloadDao.setFileStatus(any(), DownloadStatus.ERROR) }
+        }
+
+    @Test
+    fun `a denied download policy retries the media file on the video stream`() =
+        runTest {
+            queueWith(download())
+            every { urls.videoStreamUrl(any(), any()) } returns "https://server/videos/stream"
+            coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
+                DownloadHttpException(code = 403, url = "https://server/download")
+
+            queue().drain(listener) shouldBe true
+
+            // Same bytes, a route the server does not gate on `enableContentDownloading`.
+            coVerify { downloader.download("https://server/videos/stream", any(), any(), any()) }
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
+        }
+
+    @Test
+    fun `a non-403 error on the media file is not retried`() =
+        runTest {
+            queueWith(download())
+            coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
+                DownloadHttpException(code = 500, url = "https://server/download")
+
+            queue().drain(listener) shouldBe false
+
+            coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
+        }
+
+    // ---- cancellation ---------------------------------------------------------------------------
+
+    @Test
+    fun `cancellation puts the row back in the queue rather than failing it`() =
+        runTest {
+            queueWith(download())
+            coEvery { downloader.download(any(), any(), any(), any()) } throws CancellationException("paused")
+
+            runCatching { queue().drain(listener) }
+
+            // This is what makes the next run resume from the byte offset instead of restarting.
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.QUEUED, NOW, null) }
+            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
+        }
+
+    // ---- the file plan --------------------------------------------------------------------------
+
+    @Test
+    fun `planned files are inserted in plan order`() =
+        runTest {
+            val inserted = mutableListOf<DownloadFileEntity>()
+            coEvery { downloadDao.insertFile(capture(inserted)) } answers { nextFileId++ }
+            queueWith(download())
+
+            queue().drain(listener)
+
+            inserted.map { it.type } shouldContainExactly
+                listOf(DownloadFileType.IMAGE_PRIMARY, DownloadFileType.MEDIA)
+        }
+
+    @Test
+    fun `an existing file row is reused so its bytes on disk keep their resume offset`() =
+        runTest {
+            val existing =
+                file(id = 42L, type = DownloadFileType.MEDIA, bytesDownloaded = 900_000L)
+            queueWith(download(), files = listOf(existing))
+            val updated = slot<DownloadFileEntity>()
+            coEvery { downloadDao.updateFile(capture(updated)) } just Runs
+
+            queue().drain(listener)
+
+            updated.captured.id shouldBe 42L
+            coVerify(exactly = 1) { downloadDao.insertFile(match { it.type == DownloadFileType.IMAGE_PRIMARY }) }
+        }
+
+    @Test
+    fun `URLs are rebuilt on every run, not read back from the row`() =
+        runTest {
+            // `ServerReachabilityProbe` rotates the base URL between LAN and remote; a row queued
+            // at home and run on mobile data must be fetched from the address that answers now.
+            val stale = file(id = 42L, type = DownloadFileType.MEDIA, url = "https://old-address/download")
+            queueWith(download(), files = listOf(stale))
+
+            queue().drain(listener)
+
+            coVerify { downloader.download("https://server/download", any(), any(), any()) }
+        }
+
+    @Test
+    fun `an item with no cached metadata fails rather than downloading nothing`() =
+        runTest {
+            queueWith(download())
+            coEvery { itemDao.getItem(any()) } returns null
+
+            queue().drain(listener) shouldBe false
+
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, any()) }
+        }
+
+    @Test
+    fun `the queue reports idle once it drains`() =
+        runTest {
+            queueWith(download())
+
+            queue().drain(listener)
+
+            listener.idleCount shouldBe 1
+        }
+
+    @Test
+    fun `progress is written to Room, which is the single source of truth`() =
+        runTest {
+            queueWith(download())
+
+            queue().drain(listener)
+
+            coVerify(atLeast = 1) { downloadDao.updateProgress(uuid(1), any(), any(), NOW) }
+            listener.progress.shouldNotBeEmpty()
+        }
+
+    // ---- helpers --------------------------------------------------------------------------------
+
+    private fun queue() =
+        DownloadQueue(
+            downloadDao = downloadDao,
+            itemDao = itemDao,
+            itemMapper = itemMapper,
+            planner = DownloadFilePlanner(urls),
+            storage = storage,
+            downloader = downloader,
+            clock = clock,
+            ioDispatcher = UnconfinedTestDispatcher(),
+        )
+
+    private fun queueWith(
+        vararg downloads: DownloadEntity,
+        files: List<DownloadFileEntity> = emptyList(),
+    ) {
+        val queued = downloads.map { withFiles(it, files) }
+        coEvery { downloadDao.nextRunnable() } returnsMany (queued + null)
+    }
+
+    private fun withFiles(
+        download: DownloadEntity,
+        files: List<DownloadFileEntity> = emptyList(),
+    ) = DownloadWithFiles(download = download, files = files)
+
+    /** Records what the worker would have shown in its notification. */
+    private class RecordingListener : DownloadQueueListener {
+        val progress = mutableListOf<Pair<Long, Long>>()
+        var idleCount = 0
+
+        override suspend fun onProgress(
+            download: DownloadEntity,
+            bytesDownloaded: Long,
+            bytesTotal: Long,
+        ) {
+            progress += bytesDownloaded to bytesTotal
+        }
+
+        override suspend fun onIdle() {
+            idleCount++
+        }
+    }
+
+    private companion object {
+        val ITEM_ENTITY =
+            ItemEntity(
+                id = uuid(1),
+                name = "Arrival",
+                sortName = "Arrival",
+                type = ItemType.MOVIE,
+                source = ItemSource.DOWNLOAD,
+                cachedAt = NOW,
+                dto = "{}",
+            )
+    }
+}

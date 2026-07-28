@@ -5,18 +5,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.FilterOptions
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -49,6 +53,7 @@ class LibraryViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
+        private val downloads: DownloadRepository,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val libraryId: String = savedStateHandle.get<String>(KEY_LIBRARY_ID).orEmpty()
@@ -61,13 +66,26 @@ class LibraryViewModel
         /** Sort, filters and sheet state. */
         val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
-        /** The grid's paged content. */
+        /**
+         * The grid's paged content, with each card's download badge stamped on.
+         *
+         * `cachedIn` comes **before** the download-state combine on purpose: it caches the pages, so
+         * a badge changing re-maps the already-loaded pages in place instead of re-fetching them
+         * from the server. Putting the combine upstream of `cachedIn` would make every progress
+         * write a full reload of the grid.
+         */
         val items: Flow<PagingData<JellyfinItem>> =
             _uiState
                 .map { it.toQuery(libraryId) }
                 .distinctUntilChanged()
                 .flatMapLatest { repository.getItemsPaged(it) }
                 .cachedIn(viewModelScope)
+                .combine(downloads.observeStates()) { paging, states ->
+                    paging.map { item ->
+                        val next = states[item.id] ?: DownloadState.NotDownloaded
+                        if (next == item.downloadState) item else item.copy(downloadState = next)
+                    }
+                }
 
         /** Applies a sort key; picking the key that is already active flips the direction. */
         fun selectSort(sortBy: SortBy) {

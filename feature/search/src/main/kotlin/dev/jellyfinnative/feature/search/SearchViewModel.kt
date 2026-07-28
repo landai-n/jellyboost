@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +42,7 @@ class SearchViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
+        private val downloads: DownloadRepository,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
 
@@ -47,6 +50,9 @@ class SearchViewModel
         val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
         private val typedQuery = MutableStateFlow("")
+
+        /** Last download-state map seen, re-applied whenever a search replaces the results. */
+        private var downloadStates: Map<String, DownloadState> = emptyMap()
 
         init {
             viewModelScope.launch {
@@ -56,6 +62,13 @@ class SearchViewModel
                     .debounce { term -> if (term.isEmpty()) 0L else DEBOUNCE_MILLIS }
                     .distinctUntilChanged()
                     .collectLatest { term -> search(term) }
+            }
+            // One subscription for the whole screen — see `HomeViewModel.observeDownloadStates`.
+            viewModelScope.launch {
+                downloads.observeStates().collect { states ->
+                    downloadStates = states
+                    _uiState.update { it.withDownloadStates(states) }
+                }
             }
         }
 
@@ -106,15 +119,16 @@ class SearchViewModel
             _uiState.update { state ->
                 when (result) {
                     is AppResult.Success ->
-                        state.copy(
-                            submittedQuery = term,
-                            isSearching = false,
-                            hasSearched = true,
-                            movies = result.value.ofType(ItemType.MOVIE),
-                            series = result.value.ofType(ItemType.SERIES),
-                            episodes = result.value.ofType(ItemType.EPISODE),
-                            error = null,
-                        )
+                        state
+                            .copy(
+                                submittedQuery = term,
+                                isSearching = false,
+                                hasSearched = true,
+                                movies = result.value.ofType(ItemType.MOVIE),
+                                series = result.value.ofType(ItemType.SERIES),
+                                episodes = result.value.ofType(ItemType.EPISODE),
+                                error = null,
+                            ).withDownloadStates(downloadStates)
 
                     is AppResult.Failure ->
                         state.copy(

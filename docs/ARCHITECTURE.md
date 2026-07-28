@@ -115,3 +115,65 @@ screen's watched tick flip without a refetch.
 
 See `docs/features/playback.md` for the pipeline itself.
 <!-- END: Playback (M5) -->
+
+<!-- BEGIN: Downloads (M7) -->
+## Downloads (M7)
+
+Full detail: [`docs/features/downloads.md`](features/downloads.md).
+
+**The rule the architecture enforces:** Room is the single source of truth for download state.
+Nothing caches progress in memory, so every surface — the queue tab, the badge on every card, the
+foreground notification — is a projection of the database and is correct across a process death by
+construction.
+
+### Module additions
+
+| module | added at M7 |
+|---|---|
+| `:core:common` | `DownloadStatus` and `DownloadFileType` (moved up from `:data:downloads`, since `:core:database` persists them). |
+| `:core:database` | `DownloadEntity` (`downloads`), `DownloadFileEntity` (`download_files`, FK-cascading), `DownloadWithFiles`, `DownloadProgress`, `DownloadDao`, two enum converters. Schema **v4** via `@AutoMigration(3, 4)` (purely additive, exported). `ItemDao.deleteDownloadsNotIn` for the cascade. |
+| `:core:datastore` | `AppPreferences.downloadOverWifiOnly` (defaults **on**). |
+| `:data:downloads` | The pipeline — see the table in the feature doc. Own `AndroidManifest.xml` (foreground-service permissions, the `dataSync` service-type override, the action receiver) and own `strings.xml`, so `:app`'s manifest stays untouched. |
+| `:data` | `ItemEntityMapper.toDtoOrNull`; `runCatchingApi` / `toAppError` widened from `internal` to public. |
+| `:feature:downloads` | `DownloadsScreen`, `DownloadsViewModel`, `DownloadSpeedTracker`, the two tab renderers. |
+| `:feature:detail` | The Download button is live: enqueue / cancel / remove / retry, with live state. |
+| `:feature:home` `:feature:library` `:feature:search` | One `observeStates()` subscription each, stamped onto their items. |
+| `:app` | The fourth bottom-nav tab, the `Routes.Downloads` NavHost entry, and the one-shot `POST_NOTIFICATIONS` request. |
+
+### Layering
+
+```
+:feature:downloads ──► DownloadRepository (interface, :data:downloads)
+:feature:detail    ──►        ▲
+:feature:home      ──►        │ @Binds
+:feature:library   ──►  DownloadRepositoryImpl
+:feature:search    ──►    ├── DownloadEnqueuer ──► DownloadApi ──► jellyfin-sdk
+                          ├── DownloadDeleter  ──► DownloadStorage + Room
+                          ├── DownloadScheduler ──► WorkManager ──► DownloadWorker
+                          │                                            └── DownloadQueue
+                          │                                                  ├── DownloadFilePlanner
+                          │                                                  └── FileDownloader (OkHttp)
+                          └── DownloadDao (Flows) ──────────────────────────────────► every badge
+```
+
+`:data:downloads` sits **above** `:data` (it reuses `ItemDao`, `ItemEntityMapper` and the error
+taxonomy) and below the features. Home, library and search depend on it read-only, for
+`observeStates()` alone; only `:feature:downloads` and `:feature:detail` mutate anything.
+
+### Cross-cutting mechanisms introduced
+
+- **`observeStates(): Flow<Map<String, DownloadState>>`** — one subscription per screen rather than
+  one per card. It is `distinctUntilChanged`, so the twice-a-second progress writes only reach the
+  UI when a badge actually changes. Each ViewModel also *holds* the last map, because a later load
+  replaces its items and the Flow would not re-emit just because a screen refetched.
+- **Two types for one concept.** `DownloadStatus` (persistence) and `DownloadState` (UI) are
+  deliberately separate: the UI's `Downloading` carries a progress fraction and has no use for
+  `CANCELLED`. `DownloadRepositoryImpl` is the single place they meet.
+- **Seams for testability**, the same pattern `:player` uses: `DownloadApi`, `DownloadUrlFactory`,
+  `DownloadStorage` and `DownloadScheduler` are interfaces because a real `ApiClient`, filesystem
+  or WorkManager cannot be exercised on the JVM — which leaves the file plan, the resume logic, the
+  status machine and the delete cascade as plain unit tests.
+- **A download-only `OkHttpClient`** (`@DownloadHttpClient`), with no read timeout (a healthy
+  multi-gigabyte transfer holds one response open for an hour) and redirects followed. Separate
+  from the SDK's client and from `:player`'s.
+<!-- END: Downloads (M7) -->

@@ -47,6 +47,12 @@ class ConnectionStateProviderTest {
             override suspend fun setForceOffline(enabled: Boolean) {
                 forceOfflineFlow.value = enabled
             }
+
+            // M7's download preference is irrelevant to connectivity; it is here only because the
+            // interface every module sees now declares it.
+            override val downloadOverWifiOnly: Flow<Boolean> = MutableStateFlow(true)
+
+            override suspend fun setDownloadOverWifiOnly(enabled: Boolean) = Unit
         }
 
     private var applicationScope: CoroutineScope? = null

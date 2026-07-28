@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      The download queue runs as WorkManager foreground work: without the foreground promotion a
+      multi-gigabyte transfer would hit WorkManager's 10-minute execution limit and be killed as
+      soon as the app left the screen (docs/PLAN.md, "Download pipeline").
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <!--
+          API 34+ refuses a foreground promotion whose service does not declare a matching type.
+          WorkManager's own service is declared without one, so it is merged with `dataSync` here —
+          the type the platform defines for "transferring data the user asked for".
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
+
+        <!-- Backs the Pause / Cancel actions on the download notification. -->
+        <receiver
+            android:name=".work.DownloadActionReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

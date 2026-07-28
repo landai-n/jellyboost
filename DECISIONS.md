@@ -300,3 +300,67 @@ Seeded from the approved plan; listed for traceability, no divergence:
   window is one Room read wide, both writes are already fire-and-forget, and the worst case is a
   refreshed row that the next read corrects. No server-side change can be lost that way, because a
   local write that reached the server has by definition already reached it.
+
+<!-- BEGIN M7 (downloads) — appended by the M7 worktree; keep as one block when merging -->
+
+## 2026-07-28 — M7: `DownloadStatus` and `DownloadFileType` live in `:core:common`
+- **Scope:** `:core:common` (`model/DownloadStatus.kt`, `model/DownloadFileType.kt`), `:data:downloads` (the M0 `DownloadStatus` stub deleted)
+- **Plan said:** `:data:downloads` owns "`DownloadRepository`, `DownloadQueue`, `DownloadWorker`, …"; M0 seeded `DownloadStatus` there, and `:core:common` is described as holding "domain models (`JellyfinItem`, `UserData`, `ItemQuery`, `FilterOptions`, `DownloadState`)".
+- **Done instead:** Both enums live in `:core:common`; `:data:downloads`'s stub file is deleted.
+- **Reason:** `:core:database` persists both (they are `DownloadEntity.status` and `DownloadFileEntity.type`, with Room converters) and it sits **below** `:data:downloads` in the module graph, so it cannot see them there. The alternatives were storing the columns as bare strings and converting in `:data:downloads` — which throws away Room's type safety and makes every DAO predicate a magic literal — or duplicating the enums. `:core:common` is where every module can see a type, which is exactly the situation. `DownloadState` (the UI type) already lived there, and the two are now neighbours, which makes their deliberate separation visible.
+
+## 2026-07-28 — M7: the download-policy fallback triggers on a 403, not on a policy flag
+- **Scope:** `:data:downloads` (`engine/DownloadQueue.downloadEssential`, `engine/FileDownloader.DownloadHttpException`, `plan/DownloadFilePlanner.plan(downloadAllowed = …)`)
+- **Plan said:** File plan — "then MEDIA via `libraryApi.getDownloadUrl(itemId)` (fallback `getVideoStreamUrl(static=true)` **if download policy denied**)".
+- **Done instead:** The plan is always built with the download endpoint. If the server answers `403` for the media file, that one file is re-planned onto `getVideoStreamUrl(static = true)` and retried once. The planner's `downloadAllowed` parameter exists and is unit-tested, but the queue derives it from the response rather than from `UserDto.policy.enableContentDownloading`.
+- **Reason:** The policy flag is a *snapshot* — it is read at sign-in (M1) and `SessionState` does not carry it, so plumbing it through would mean either widening the session model or re-fetching the user on every enqueue. The server's `403` is the authoritative and current answer to the same question, it costs nothing when the policy is on (which it is for this project's account, checked at M1), and it also covers the cases a policy flag would miss: an admin revoking downloads while items sit in the queue, or a per-library restriction. The plan's *behaviour* — the same bytes over the stream route — is unchanged.
+
+## 2026-07-28 — M7: SAF and secondary-volume storage deferred; `DownloadStorage` ships File-only
+- **Scope:** `:data:downloads` (`storage/DownloadStorage.kt`, `storage/FileDownloadStorage`), `:core:datastore` (`DOWNLOAD_STORAGE_URI` still unused)
+- **Plan said:** Storage — "default `getExternalFilesDir(null)/downloads` [D]; **optional SAF tree or secondary `getExternalFilesDirs` volume (SD)**. `DownloadStorage` interface hides File vs DocumentFile."
+- **Done instead:** The `DownloadStorage` interface exists and everything in the pipeline goes through it, but the only implementation is `FileDownloadStorage` over the plan's default location. There is no storage-location picker, and `PreferenceKeys.DOWNLOAD_STORAGE_URI` stays unread. The interface's currency is `java.io.File`.
+- **Reason:** The plan marks the alternative locations "optional", and the seam — the part that is expensive to add later — is in place: swapping in a `DocumentFile`-backed implementation touches one class plus its binding. Shipping the picker as well would have meant the "location change only when no downloads exist" rule, a SAF permission-persistence path and a second set of storage tests, none of which the M7 definition of done exercises. The `File` currency is a real (small) constraint on that future implementation: it would have to materialise a path, or the interface would gain a handle type. Recorded so a reader who expects `DocumentFile` behind this interface knows why it is absent.
+
+## 2026-07-28 — M7: the delete cascade's user-data query lives in `DownloadDao`
+- **Scope:** `:core:database` (`dao/DownloadDao.deleteSyncedUserData`); `dao/UserDataDao` untouched
+- **Plan said:** Delete cascade — "keep `UserDataEntity` only if `toBeSynced`"; `UserDataDao` is the DAO for that table.
+- **Done instead:** `DELETE FROM user_data WHERE itemId = :itemId AND toBeSynced = 0` is declared on `DownloadDao`, not on `UserDataDao` (which has a per-*user* `deleteSynced` from M4, but nothing per-item).
+- **Reason:** M7 was built on a worktree branch alongside a bugfix branch that owns `UserDataDao`, and adding a method there would have collided at merge over a one-line query. It is also defensible on its own terms: the rule belongs to *this* cascade, nothing else uses it, and a Room DAO is free to query any table. Worth folding into `UserDataDao` at the next touch of that file.
+
+## 2026-07-28 — M7: the Wi-Fi-only toggle lives in the Downloads top bar
+- **Scope:** `:feature:downloads` (`DownloadsScreen`); `:app`'s home overflow menu untouched
+- **Plan said:** Settings holds "prefs, account, storage location picker…"; M6 put the *Offline mode* toggle in the home top-bar overflow menu as an interim home (DECISIONS.md 2026-07-28).
+- **Done instead:** *Wi-Fi only* is a `Switch` in the Downloads screen's `TopAppBar`, not in the home overflow menu next to *Offline mode*.
+- **Reason:** It is a download setting, this is the download screen, and the consequence of flipping it — the queue stopping or starting — is visible in the list directly underneath. Grouping it with *Offline mode* would have put a download control on a screen with no downloads on it. Both move to Settings at M9; this one has a natural home in the meantime, which the offline toggle did not.
+
+## 2026-07-28 — M7: `DownloadEntity` carries denormalised item metadata
+- **Scope:** `:core:database` (`entities/DownloadEntity`)
+- **Plan said:** "`DownloadEntity` (pk itemId [D], status …, mediaSourceId, bytesDownloaded/Total, queuePosition)".
+- **Done instead:** Also `userId`, `directoryName`, `itemName`, `seriesName`, `errorMessage`, `createdAt`, `updatedAt`.
+- **Reason:** Each earns its place at a moment when the matching `ItemEntity` is not available or not cheap: the queue tab renders a row before the cache write is visible (`itemName`/`seriesName`), the delete cascade has to find the files **after** the item row is pruned (`directoryName`), the cascade needs the owner to decide which user-data row to drop (`userId`), the queue tab has to say *why* an item failed (`errorMessage`), and the *Downloaded* list orders by when the user asked (`createdAt`). Reading them off the item row instead would mean decoding a multi-kilobyte `BaseItemDto` blob on every progress emission. The plan's column list reads as the essential set rather than an exhaustive one.
+
+## 2026-07-28 — M7: the M4 Download stub is resolved, and its test replaced
+- **Scope:** `:feature:detail` (`ItemDetailViewModel.onDownloadClick`, `UserMessage`, `res/values/strings.xml`, `ItemDetailViewModelTest`)
+- **Plan said:** n/a — this closes the M4 entry "Play and Download buttons raise a message instead of acting".
+- **Done instead:** `UserMessage.DownloadNotAvailableYet`, the string `detail_message_download_unavailable` and the test `download is honest about the pipeline landing in M7` are deleted. The button now enqueues (or cancels / removes / retries, depending on state) through `DownloadRepository`, and four new messages replace the one stub message.
+- **Reason:** The stub's subject no longer exists, so the test asserting it could not be kept. Recorded rather than done silently because the governance rule forbids deleting tests. Coverage went **up**: seven new tests in `ItemDetailViewModelTest` pin what the button does in each download state, that a failure is reported, and that badges reach the season / episode / related cards.
+
+## 2026-07-28 — M7: one Download button with four meanings, and Retry resumes rather than deletes
+- **Scope:** `:feature:detail` (`ItemDetailHeader.DownloadButton`, `ItemDetailViewModel.onDownloadClick`)
+- **Plan said:** ItemDetail carries "Play/Resume, Download, Mark played, Favorite" — one Download affordance, behaviour unspecified.
+- **Done instead:** The single button reads *Download* → *Cancel* (queued/downloading/paused) → *Remove* (downloaded) → *Retry* (failed), and *Retry* calls `resume`, not `delete`-then-`enqueue`.
+- **Reason:** A separate delete affordance would be dead most of the time, and "tap again to undo" is what the watched and favourite buttons on the same row already mean. *Retry* resuming matters more than it looks: the partial file is still on disk, so resuming costs only the missing bytes, whereas a delete-and-re-enqueue would throw away a possibly-multi-gigabyte transfer that failed at 95 %.
+
+## 2026-07-28 — M7: no Room migration test (still no instrumented-test infrastructure)
+- **Scope:** `:core:database` (schema v4, `@AutoMigration(3, 4)`)
+- **Plan said:** "unit tests accompany every repository/ViewModel/mapper"; migrations are implied to be exercised.
+- **Done instead:** v4 is a purely additive `@AutoMigration` with its schema exported to `core/database/schemas/…/4.json` and validated by Room at compile time; there is no `MigrationTestHelper` test.
+- **Reason:** Unchanged from the M6 entry of the same name — no module has an `androidTest` source set and `MigrationTestHelper` only runs on a device. The additive-only shape of v1→v2→v3→v4 is exactly what Room's auto-migration verifies. Still worth revisiting at M10.
+
+## 2026-07-28 — M7: `POST_NOTIFICATIONS` is requested from `MainActivity`
+- **Scope:** `:app` (`MainActivity.NotificationPermissionRequest`); closes an M5 known issue
+- **Plan said:** Nothing about runtime permissions; M5's STATUS entry logged "`POST_NOTIFICATIONS` is declared but never requested at runtime… M9".
+- **Done instead:** On API 33+ the app asks once, on first composition, and ignores the answer.
+- **Reason:** The download notification is the *only* way to pause or cancel a transfer from outside the app, which makes it part of M7's surface rather than polish. The work itself is unaffected either way — the foreground promotion keeps it alive, not the notification being visible — so a declined permission degrades nothing. Ten lines in `:app` rather than a Settings screen that does not exist yet; M9 can move it into a proper onboarding flow.
+
+<!-- END M7 (downloads) -->

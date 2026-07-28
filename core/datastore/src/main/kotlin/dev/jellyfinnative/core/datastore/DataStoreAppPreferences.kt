@@ -27,22 +27,37 @@ class DataStoreAppPreferences
     constructor(
         private val dataStore: DataStore<Preferences>,
     ) : AppPreferences {
-        override val forceOffline: Flow<Boolean> =
-            dataStore.data
-                .catch { error ->
-                    if (error is IOException) {
-                        Timber.w(error, "Could not read app preferences; falling back to defaults")
-                        emit(emptyPreferences())
-                    } else {
-                        throw error
-                    }
-                }.map { it[FORCE_OFFLINE] == true }
+        /** The stored preferences, with a read failure degraded to "no preferences set". */
+        private val preferences: Flow<Preferences> =
+            dataStore.data.catch { error ->
+                if (error is IOException) {
+                    Timber.w(error, "Could not read app preferences; falling back to defaults")
+                    emit(emptyPreferences())
+                } else {
+                    throw error
+                }
+            }
+
+        override val forceOffline: Flow<Boolean> = preferences.map { it[FORCE_OFFLINE] == true }
 
         override suspend fun setForceOffline(enabled: Boolean) {
             dataStore.edit { it[FORCE_OFFLINE] = enabled }
         }
 
+        // `?: true` rather than `== true`: an unset Wi-Fi-only preference means "on", which is the
+        // one default in this file that is not simply `false` (see AppPreferences' KDoc).
+        override val downloadOverWifiOnly: Flow<Boolean> =
+            preferences.map { it[DOWNLOAD_OVER_WIFI_ONLY] ?: DEFAULT_WIFI_ONLY }
+
+        override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
+            dataStore.edit { it[DOWNLOAD_OVER_WIFI_ONLY] = enabled }
+        }
+
         private companion object {
             val FORCE_OFFLINE = booleanPreferencesKey(PreferenceKeys.FORCE_OFFLINE)
+            val DOWNLOAD_OVER_WIFI_ONLY = booleanPreferencesKey(PreferenceKeys.DOWNLOAD_OVER_WIFI_ONLY)
+
+            /** Downloads are Wi-Fi-only until the user says otherwise. */
+            const val DEFAULT_WIFI_ONLY = true
         }
     }

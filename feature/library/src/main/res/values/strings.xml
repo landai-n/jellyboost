@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Libraries tab (integration) -->
+    <string name="libraries_title">Libraries</string>
+    <string name="libraries_empty">No libraries yet. Add one on the server.</string>
+
     <!-- Top bar -->
     <string name="library_back">Back</string>
     <string name="library_sort">Sort</string>

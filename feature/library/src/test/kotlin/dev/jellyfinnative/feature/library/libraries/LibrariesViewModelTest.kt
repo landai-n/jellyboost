@@ -1,0 +1,133 @@
+package dev.jellyfinnative.feature.library.libraries
+
+import app.cash.turbine.test
+import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.CollectionKind
+import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.data.JellyfinRepository
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+/** Unit tests for [LibrariesViewModel]'s load, failure and refresh behaviour. */
+@OptIn(ExperimentalCoroutinesApi::class)
+class LibrariesViewModelTest {
+    private val dispatcher = StandardTestDispatcher()
+    private val repository = mockk<JellyfinRepository>()
+
+    private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
+    private val shows = LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
+
+    @BeforeEach
+    fun setUp() {
+        Dispatchers.setMain(dispatcher)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `starts in the loading state`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
+
+            val viewModel = LibrariesViewModel(repository)
+
+            viewModel.uiState.value.isLoading shouldBe true
+        }
+
+    @Test
+    fun `loads the user's libraries`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
+
+            val viewModel = LibrariesViewModel(repository)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.isLoading shouldBe false
+            state.error.shouldBeNull()
+            state.libraries shouldContainExactly listOf(movies, shows)
+        }
+
+    @Test
+    fun `emits loading then loaded`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+
+            val viewModel = LibrariesViewModel(repository)
+
+            viewModel.uiState.test {
+                awaitItem().isLoading shouldBe true
+                advanceUntilIdle()
+                val loaded = awaitItem()
+                loaded.isLoading shouldBe false
+                loaded.libraries shouldContainExactly listOf(movies)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `surfaces an error when the call fails`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
+
+            val viewModel = LibrariesViewModel(repository)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.isLoading shouldBe false
+            state.error.shouldBeInstanceOf<AppError.Network>()
+            state.libraries.shouldBeEmpty()
+        }
+
+    @Test
+    fun `reports an empty state when the server has no libraries`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
+
+            val viewModel = LibrariesViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.uiState.value.isEmpty shouldBe true
+        }
+
+    @Test
+    fun `refresh re-fetches and clears a previous error`() =
+        runTest(dispatcher) {
+            coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
+
+            val viewModel = LibrariesViewModel(repository)
+            advanceUntilIdle()
+            val failed = viewModel.uiState.value
+            failed.error.shouldBeInstanceOf<AppError.Network>()
+
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.error.shouldBeNull()
+            state.libraries shouldContainExactly listOf(movies)
+            coVerify(exactly = 2) { repository.getUserViews() }
+        }
+}

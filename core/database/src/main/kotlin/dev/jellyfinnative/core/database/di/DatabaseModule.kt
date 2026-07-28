@@ -11,6 +11,7 @@ import dev.jellyfinnative.core.database.DatabaseConstants
 import dev.jellyfinnative.core.database.JellyfinDatabase
 import dev.jellyfinnative.core.database.dao.ServerDao
 import dev.jellyfinnative.core.database.dao.UserDao
+import dev.jellyfinnative.core.database.dao.UserDataDao
 import javax.inject.Singleton
 
 /** Provides the singleton [JellyfinDatabase] and its DAOs to the rest of the app. */
@@ -37,4 +38,8 @@ object DatabaseModule {
     /** Exposes [JellyfinDatabase.userDao] for injection. */
     @Provides
     fun provideUserDao(database: JellyfinDatabase): UserDao = database.userDao()
+
+    /** Exposes [JellyfinDatabase.userDataDao] for injection (M4). */
+    @Provides
+    fun provideUserDataDao(database: JellyfinDatabase): UserDataDao = database.userDataDao()
 }

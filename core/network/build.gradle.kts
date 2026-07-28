@@ -11,7 +11,10 @@ dependencies {
     api(projects.core.common)
     api(libs.jellyfin.sdk)
     api(libs.okhttp)
+    implementation(projects.core.database)
+    implementation(projects.core.datastore)
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.timber)
 }

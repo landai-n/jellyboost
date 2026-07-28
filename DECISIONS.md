@@ -50,3 +50,15 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - Offline browse scope: downloaded items only (cached parents of downloaded items still open).
 - User-data sync conflict: most-recent-wins (compare `lastPlayedDate`/`updatedAt`).
 - Navigation: bottom nav bar (Home / Libraries / Search / Downloads), Settings behind avatar.
+
+## 2026-07-28 — no `getCurrentUser` round-trip after authentication
+- **Scope:** `:core:network` (`AuthRepository.loginWithPassword` / `loginWithQuickConnect`)
+- **Plan said:** Login screen: "password: `authenticateUserByName`; Quick Connect: … `authenticateWithQuickConnect`; **then `getCurrentUser`**".
+- **Done instead:** The user is taken straight from `AuthenticationResult.user` (a full `UserDto`, including `policy`); `getCurrentUser` is not called.
+- **Reason:** In SDK 1.8.12 `AuthenticationResult` already carries the complete `UserDto` — id, name, `primaryImageTag` and `policy.enableContentDownloading`, which is the one field M1's DoD needs (risk #4). A second call would return the same object at the cost of a round-trip on the slowest screen in the app (first contact with a possibly-remote server). `getCurrentUser` stays available for later refreshes (e.g. re-checking policy at session restore).
+
+## 2026-07-28 — sign-out keeps server/user rows in Room
+- **Scope:** `:core:network` (`SessionRepository.signOut`)
+- **Plan said:** Settings: "sign out (clears SecureCredentialStore, optional delete downloads)".
+- **Done instead:** Sign-out reports the session ended to the server (best effort), clears `SecureCredentialStore`, drops the token from the `ApiClient` and sets `SessionState.LoggedOut`. `ServerEntity` / `ServerAddressEntity` / `UserEntity` rows are left in place.
+- **Reason:** The plan only mandates clearing the credential store, and those rows hold no secrets (`UserEntity` has no token column by design). Keeping them means re-signing-in on the same server skips discovery entirely, and keeps any `DOWNLOAD`-sourced item rows' foreign keys intact for the "optional delete downloads" path. Session restore treats a stored token whose rows are missing as inconsistent and discards the token, so the reverse case is still safe.

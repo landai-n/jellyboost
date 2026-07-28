@@ -43,11 +43,16 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  *
  * @param onItemClick a season, episode or related item was tapped — the caller pushes another
  *   `Routes.ItemDetail` for it.
+ * @param onPlay play was requested for an item, at the given position in Jellyfin ticks — the
+ *   caller pushes `Routes.Player`. Resolving *which* item a Play tap means (a series plays its
+ *   next-up episode) happens here rather than in the caller, because only this screen knows the
+ *   rows it loaded.
  */
 @Composable
 fun ItemDetailScreen(
     viewModel: ItemDetailViewModel,
     onItemClick: (JellyfinItem) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -67,9 +72,10 @@ fun ItemDetailScreen(
             state = state,
             onRetry = viewModel::refresh,
             onItemClick = onItemClick,
+            onPlay = onPlay,
             actions =
                 DetailActionHandlers(
-                    onPlay = viewModel::onPlayClick,
+                    onPlay = { state.playTarget?.let { target -> onPlay(target.id, playbackStartTicks(target)) } },
                     onDownload = viewModel::onDownloadClick,
                     onToggleWatched = viewModel::toggleWatched,
                     onToggleFavorite = viewModel::toggleFavorite,
@@ -101,6 +107,7 @@ fun ItemDetailContent(
     state: ItemDetailUiState,
     onRetry: () -> Unit,
     onItemClick: (JellyfinItem) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
 ) {
@@ -121,6 +128,7 @@ fun ItemDetailContent(
                     detail = detail,
                     isWide = maxWidth >= WIDE_BREAKPOINT,
                     onItemClick = onItemClick,
+                    onPlay = onPlay,
                     actions = actions,
                 )
             }
@@ -133,6 +141,7 @@ private fun DetailSections(
     detail: JellyfinItem,
     isWide: Boolean,
     onItemClick: (JellyfinItem) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     actions: DetailActionHandlers,
 ) {
     LazyColumn(
@@ -177,7 +186,11 @@ private fun DetailSections(
                 SectionTitle(text = stringResource(R.string.detail_section_episodes))
             }
             items(items = state.episodes, key = JellyfinItem::id) { episode ->
-                EpisodeRow(episode = episode, onClick = { onItemClick(episode) })
+                EpisodeRow(
+                    episode = episode,
+                    onClick = { onItemClick(episode) },
+                    onPlay = { onPlay(episode.id, playbackStartTicks(episode)) },
+                )
             }
         }
 
@@ -208,7 +221,6 @@ private fun SectionTitle(
 
 private fun UserMessage.textRes(): Int =
     when (this) {
-        UserMessage.PlaybackNotAvailableYet -> R.string.detail_message_playback_unavailable
         UserMessage.DownloadNotAvailableYet -> R.string.detail_message_download_unavailable
         UserMessage.UserDataWriteFailed -> R.string.detail_message_user_data_failed
     }

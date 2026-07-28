@@ -1,12 +1,43 @@
 # STATUS
 
-## Current milestones: M3 — Library grid + Search, and M4 — Item detail + user data (built, DoD walk in progress)
+## Current milestones: M5 — Playback (online), and M6 — Offline read path (building in parallel opus-subagent worktrees)
 
-**DoD (M3):** Paging 3 library grid with sort/filter + debounced search;
->500-item library scrolls clean, one request per page.
-**DoD (M4):** item detail (movie/series/season) with local-first user-data writes +
-EventBus (sync worker stubbed); mark played → appears in jellyfin-web; home row patches
-without refetch.
+**DoD (M5):** direct-play + forced transcode (Dashboard shows method), track switching,
+resume, no orphaned ffmpeg after exit.
+**DoD (M6):** airplane-mode toggle swaps app within ~1s, no crashes; server-down
+(Wi-Fi up) degrades without 30s hang.
+
+### Next
+- Merge the two worktree branches when the agents report, orchestrator-review + full
+  gate, integration pass, then device DoD walks and tags m5/m6.
+- M6 branch also carries the datePlayed timezone bugfix (was a known issue from M4).
+
+## Previous milestones: M3 — Library grid + Search, and M4 — Item detail + user data (DONE, tagged m3/m4)
+
+**DoD walk completed on test tablet, 2026-07-28 (second half; first half recorded below):**
+- M3 sort round-trip: selecting *Date added* re-queried at `startIndex=0` with
+  `sortBy=DateCreated&sortOrder=Descending` (auto-flips direction for date sorts, like
+  web) and the grid re-rendered accordingly (logcat + UI verified).
+- M3 filter sheet: facets fetched via `/Items/Filters` — Watched (Any/Watched/Unwatched),
+  real server genres, real library years; applying *Watched* re-queried with
+  `isPlayed=true` and the grid showed watched-only titles; *Clear all* restored the
+  unfiltered query while keeping the sort selection.
+- M3 search: typing "house" produced **exactly one** debounced request
+  (`searchTerm=house&limit=50`, types Movie/Series/Episode) with results sectioned
+  Movies / Shows.
+- M3 landscape: search + grid render correctly (8 adaptive poster columns).
+- M3 >500-item scale: no such library exists on test-server — verified at 184 items on
+  device + 520 items in `OnlineJellyfinRepositoryPagingTest` (see DECISIONS.md
+  2026-07-28 entry).
+- M4 series walk: series → *Saison 3* → 4 episodes → episode detail, each screen firing
+  the expected requests once (`/Items/{id}`, `/Shows/{id}/Seasons`,
+  `/Shows/{seriesId}/Episodes?seasonId=`, `/Shows/NextUp?seriesId=`, `/Similar`).
+- M4 favorite toggle: `POST /UserFavoriteItems/{id}` → server `IsFavorite=True` →
+  button flips; revert sent `DELETE` → server `False` (user data left as found).
+- M4 landscape: series/season/episode detail rendered correctly (walk performed in
+  landscape; portrait re-verified after rotating back).
+- UI polish note: the grid's sort/filter icon buttons have no content descriptions
+  (found while driving via uiautomator) — accessibility gap to fix by M9 polish.
 
 ### Done (this session, 2026-07-28)
 - M3 and M4 built in parallel opus-subagent worktrees, merged to main (conflicts in the

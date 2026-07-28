@@ -18,8 +18,8 @@ import dev.jellyfinnative.feature.auth.ServerSetupScreen
 /**
  * The app's navigation graph.
  *
- * Three destinations for M1: the two auth screens and a placeholder Home. Everything else in
- * `Routes` arrives with its milestone (docs/PLAN.md, "Screens").
+ * Three destinations so far: the two auth screens and Home (`:feature:home`, M2). Everything
+ * else in `Routes` arrives with its milestone (docs/PLAN.md, "Screens").
  *
  * @param startsSignedIn whether the session existed when the graph was first built.
  * @param sessionState live session; a flip to [SessionState.LoggedOut] from outside the auth
@@ -52,10 +52,7 @@ internal fun JellyfinNavHost(
         }
 
         composable<Routes.Home> {
-            HomePlaceholderScreen(
-                session = sessionState as? SessionState.LoggedIn,
-                onSignOut = onSignOut,
-            )
+            HomeRoute(onSignOut = onSignOut)
         }
     }
 }

@@ -2,6 +2,7 @@ package dev.jellyfinnative.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
@@ -28,12 +29,11 @@ import javax.inject.Inject
  * is nothing to render. An individual row that fails is left empty, matching jellyfin-web, which
  * simply omits a section it could not load instead of blanking the page.
  *
- * **Integration note (M2 → M1).** The constructor is `@Inject`-annotated but the class is
- * deliberately *not* `@HiltViewModel` yet: that annotation makes the ViewModel reachable from the
- * `:app` Hilt graph, which then requires the `org.jellyfin.sdk.api.client.ApiClient` binding that
- * lives in `:core:network` (M1 scope). Add `@HiltViewModel` together with the NavHost wiring once
- * that binding exists — see DECISIONS.md, 2026-07-28 "HomeViewModel not @HiltViewModel yet".
+ * `@HiltViewModel` makes this reachable from the `:app` Hilt graph via `hiltViewModel()` in the
+ * NavHost; it requires the `org.jellyfin.sdk.api.client.ApiClient` binding `:core:network`
+ * provides (see its `di/NetworkModule.kt`, `ApiClientModule`).
  */
+@HiltViewModel
 class HomeViewModel
     @Inject
     constructor(

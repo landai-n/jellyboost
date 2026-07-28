@@ -160,3 +160,43 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Plan said:** ItemDetail carries "Play/Resume, Download, Mark played, Favorite".
 - **Done instead:** *Mark played* and *Favorite* are fully live. *Play/Resume* and *Download* are drawn and enabled, and show a snackbar ("Playback arrives in M5." / "Downloads arrive in M7.").
 - **Reason:** The milestone list puts playback in M5 and the download pipeline in M7; neither exists yet. A disabled button reads as "broken" and a silent no-op is worse, so the buttons say what is actually true. The two handlers are one line each to repoint once `:player` and `:data:downloads` land.
+
+<!-- BEGIN M5 (playback) — appended by the M5 worktree; keep as one block when merging -->
+
+## 2026-07-28 — M5: the player UI drives the shared ExoPlayer directly, not a MediaController
+- **Scope:** `:player` (`session/ExoPlayerHandle`, `session/PlaybackService`, `ui/PlayerViewModel`)
+- **Plan said:** "hosted in `PlaybackService : MediaSessionService` (background/PiP/notification), Compose `PlayerScreen` **via MediaController**".
+- **Done instead:** `ExoPlayerHandle` is a `@Singleton` owning one `ExoPlayer`. `PlaybackService : MediaSessionService` wraps *that same instance* in a `MediaSession` — so background playback, the media notification, media buttons and audio focus are all still the service's job, exactly as planned. What changed is the UI side: `PlayerViewModel` talks to the player in-process through the `PlayerHandle` seam instead of connecting a `MediaController` to the session.
+- **Reason:** `MediaItem.toBundle()` deliberately omits `localConfiguration` — the URI, the MIME type and the subtitle configurations. A `MediaController` therefore cannot be handed a resolved Jellyfin stream; the supported pattern is to resolve inside `MediaSession.Callback.onSetMediaItems` and push everything the UI needs (play method, track lists, quality) back out over custom commands and session extras. For Jellyfin that is a large amount of extra surface, because *every* track switch, quality change and decoder fallback is a fresh `PlaybackInfo` round trip whose result the UI has to render. Sharing the player instance is legitimate for a single-process app and keeps the milestone's riskiest logic in one testable place. **Revisit at M9/M10** if PiP, Android Auto or a second player host makes a real controller boundary worth the cost; the `PlayerHandle` interface is the seam that change would go behind.
+
+## 2026-07-28 — M5: finishing an item marks it played through `UserDataRepository`
+- **Scope:** `:player` (`report/PlaybackReporter`, `api/PlayerApi`)
+- **Plan said:** "`reportPlaybackStart/Progress/Stopped`, **`markPlayedItem` on ENDED**, `stopEncodingProcess(...)` when transcoding".
+- **Done instead:** `PlaybackReporter.reportStop` calls `userDataRepository.setPlayed(itemId, true)` when the item ended; `PlayerApi` has no `markPlayed` at all.
+- **Reason:** `UserDataRepositoryImpl.setPlayed` already *is* `markPlayedItem` — plus the local Room write, the `UserDataEventBus` emission that flips the detail screen's watched tick without a refetch, and the `toBeSynced` retry when the push fails. Calling both would send the same request twice; calling only the bare endpoint would leave the local row stale until the next sync, contradicting the plan's own "**Always also** `userDataRepository.setPosition(...)` locally" rule for the neighbouring case. Same server call, strictly more correct local state.
+
+## 2026-07-28 — M5: the ASS/SSA toggle and the bitrate cap are parameters, not stored preferences
+- **Scope:** `:player` (`deviceprofile/DeviceProfileBuilder`), `:core:datastore` (untouched)
+- **Plan said:** DeviceProfileBuilder reimplements jellyfin-android's, which reads `appPreferences.exoPlayerDirectPlayAss`; "[D: … bitrate overridable from quality picker]".
+- **Done instead:** `getDeviceProfile(maxStreamingBitrate, directPlayAss)` takes both as arguments, defaulting to `null` (the profile's own 120 Mbps ceiling) and `true`. Nothing is persisted. The quality picker holds the bitrate for the session; ASS/SSA is not user-visible yet.
+- **Reason:** The settings screen is M9, and `:core:datastore` is owned by the parallel M6 branch — adding a preference key here would conflict at merge for no behaviour gained. The plumbing is one argument away: M9 reads the preference and passes it in. Recorded because a reader who knows the reference implementation would expect a preference read.
+
+## 2026-07-28 — M5: `ExoMediaSourceFactory` returns a description, not a `MediaSource`
+- **Scope:** `:player` (`resolve/ExoMediaSourceFactory`, `model/PlaybackMediaItemSpec`, `session/MediaItems`)
+- **Plan said:** "`ExoMediaSourceFactory`: DIRECT_PLAY → …; TRANSCODE → HLS `createUrl(transcodingUrl)`; external subs as `SubtitleConfiguration` …" — i.e. the factory produces Media3 objects.
+- **Done instead:** The factory produces a plain `PlaybackMediaItemSpec` (URL, MIME type, list of subtitle descriptors carrying the `external:<index>` ids). A one-function extension, `PlaybackMediaItemSpec.toMediaItem()`, converts it; the player then hands the `MediaItem` to an `ExoPlayer` configured with a `DefaultMediaSourceFactory`, which selects the HLS or progressive source itself.
+- **Reason:** `MediaItem.Builder.setUri` goes through `android.net.Uri.parse`, a throwing stub in local unit tests — the URL-selection table, which is the single most breakage-prone piece of this milestone, would have been untestable without an emulator. The decision table and the `external:<index>` convention are byte-identical to the plan; only the type crossing the boundary changed. `DeviceProfileBuilder`'s `MediaCodecProbe` seam exists for exactly the same reason.
+
+## 2026-07-28 — M5: Play on a series or season resolves to an episode
+- **Scope:** `:feature:detail` (`ItemDetailUiState.playTarget`, `playbackStartTicks`)
+- **Plan said:** ItemDetail carries "Play/Resume"; which item a container plays is unspecified.
+- **Done instead:** A movie or episode plays itself. A **series** plays its *Next up* episode, falling back to the first episode the page loaded. A **season** plays its first unwatched episode, falling back to its first. Playback starts at the target's `playbackPositionTicks` when it is resumable, otherwise at 0.
+- **Reason:** Play on a container has to mean something, and this is the order jellyfin-web uses. Resolving it in the detail screen rather than in the navigation callback is deliberate: only that screen knows which rows it loaded.
+
+## 2026-07-28 — M5: the M4 Play/Resume stub is resolved, and its test removed
+- **Scope:** `:feature:detail` (`ItemDetailViewModel.onPlayClick`, `UserMessage.PlaybackNotAvailableYet`, `detail_message_playback_unavailable`, `ItemDetailViewModelTest`)
+- **Plan said:** n/a — this closes the M4 entry "Play and Download buttons raise a message instead of acting".
+- **Done instead:** `onPlayClick`, the `PlaybackNotAvailableYet` message, its string resource and the test `play is honest about playback landing in M5` are all deleted. The Play/Resume button now navigates to `Routes.Player`, and episode rows gained their own play button.
+- **Reason:** The stub's subject no longer exists, so the test asserting the stub could not be kept. Recorded rather than done silently because the governance rule forbids deleting tests. Coverage went **up**, not down: five new tests in `ItemDetailViewModelTest` pin what Play actually plays for a movie, a partly-watched movie, a watched movie, a series and a season. The *Download* stub is untouched and still says "Downloads arrive in M7."
+
+<!-- END M5 (playback) -->

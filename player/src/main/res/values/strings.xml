@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Close player</string>
+    <string name="player_play">Play</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_rewind">Skip back 10 seconds</string>
+    <string name="player_forward">Skip forward 30 seconds</string>
+    <string name="player_retry">Try again</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Subtitles</string>
+    <string name="player_subtitles_off">Off</string>
+    <string name="player_quality">Quality</string>
+
+    <string name="player_quality_auto">Auto</string>
+    <string name="player_quality_high">High — 20 Mbps</string>
+    <string name="player_quality_medium">Medium — 8 Mbps</string>
+    <string name="player_quality_low">Low — 3 Mbps</string>
+    <string name="player_quality_lowest">Lowest — 720 kbps</string>
+
+    <string name="player_method_direct_play">Direct play</string>
+    <string name="player_method_direct_stream">Direct stream</string>
+    <string name="player_method_transcode">Transcoding</string>
+
+    <string name="player_message_transcode">Your device couldn\'t decode this file, so the server is transcoding it.</string>
+    <string name="player_message_lower_quality">The stream stalled — retrying at a lower quality.</string>
+    <string name="player_message_track_restart">The server had to re-encode the stream for that track.</string>
+    <string name="player_message_failed">Playback failed.</string>
+</resources>

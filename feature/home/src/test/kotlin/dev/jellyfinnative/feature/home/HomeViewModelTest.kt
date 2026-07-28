@@ -4,11 +4,13 @@ import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.CollectionKind
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataEventBus
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -18,9 +20,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +40,13 @@ class HomeViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
     private val eventBus = UserDataEventBus()
+
+    /** The badge source (M7). Most tests do not care, so it emits an empty map and stays quiet. */
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads =
+        mockk<DownloadRepository> {
+            every { observeStates() } returns downloadStates
+        }
 
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
     private val shows = LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
@@ -55,7 +66,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
 
             viewModel.uiState.value.isLoading shouldBe true
         }
@@ -73,7 +84,7 @@ class HomeViewModelTest {
             coEvery { repository.getLatestMedia("lib-movies", any()) } returns AppResult.Success(listOf(movie))
             coEvery { repository.getLatestMedia("lib-shows", any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -93,7 +104,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
 
-            HomeViewModel(repository, eventBus)
+            HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { repository.getLatestMedia("lib-movies", any()) }
@@ -106,7 +117,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
 
             viewModel.uiState.test {
                 awaitItem().isLoading shouldBe true
@@ -123,7 +134,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -137,7 +148,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Unauthorized())
 
-            HomeViewModel(repository, eventBus)
+            HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { repository.getResumeItems(any()) }
@@ -153,7 +164,7 @@ class HomeViewModelTest {
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -167,7 +178,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             viewModel.uiState.value.isEmpty shouldBe true
@@ -178,7 +189,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
             viewModel.uiState.value.errorMessage!! shouldContain "server"
 
@@ -205,7 +216,7 @@ class HomeViewModelTest {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
             coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(resumeItem))
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
             viewModel.uiState.value.resume
                 .single()
@@ -232,7 +243,7 @@ class HomeViewModelTest {
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
 
             eventBus.emit(UserDataChange("e2", UserData(isFavorite = true)))
@@ -261,7 +272,7 @@ class HomeViewModelTest {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
 
-            val viewModel = HomeViewModel(repository, eventBus)
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
             advanceUntilIdle()
             val before = viewModel.uiState.value
 
@@ -269,6 +280,72 @@ class HomeViewModelTest {
             advanceUntilIdle()
 
             viewModel.uiState.value shouldBe before
+        }
+
+    // ---- M7: download badges -------------------------------------------------------------------
+
+    @Test
+    fun `download state reaches every card that shows the item`() =
+        runTest(dispatcher) {
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
+            coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            advanceUntilIdle()
+
+            downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.resume.single().downloadState shouldBe DownloadState.Downloaded
+            state.latest
+                .single()
+                .items
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
+    fun `a download state that arrives before the rows survives the load`() =
+        runTest(dispatcher) {
+            // `observeStates()` is distinct-until-changed, so it does not re-emit just because the
+            // screen refetched; the badge would vanish on every refresh if the state were not held.
+            downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getLatestMedia(any(), any()) } returns
+                AppResult.Success(listOf(movie("m1", "Dune")))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            advanceUntilIdle()
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.latest
+                .single()
+                .items
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
+    fun `an item with no download row keeps the not-downloaded badge`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            advanceUntilIdle()
+            downloadStates.value = mapOf("somewhere-else" to DownloadState.Downloaded)
+            advanceUntilIdle()
+
+            viewModel.uiState.value.resume
+                .single()
+                .downloadState shouldBe DownloadState.NotDownloaded
         }
 
     private fun stubEverythingEmpty() {

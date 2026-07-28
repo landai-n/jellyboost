@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.home
 
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.UserData
@@ -70,3 +71,31 @@ private fun List<JellyfinItem>.patch(
     } else {
         map { if (it.id == itemId) it.copy(userData = userData) else it }
     }
+
+/**
+ * Stamps the app-wide download-state map onto every card the home screen holds (M7).
+ *
+ * `:core:ui`'s cards render their `DownloadBadge` from `JellyfinItem.downloadState`, so this one
+ * function is the whole of "every item card shows a download badge" for this screen — the cards
+ * themselves need no change.
+ */
+internal fun HomeUiState.withDownloadStates(states: Map<String, DownloadState>): HomeUiState =
+    copy(
+        resume = resume.withDownloadStates(states),
+        nextUp = nextUp.withDownloadStates(states),
+        latest =
+            latest.map { section ->
+                val patched = section.items.withDownloadStates(states)
+                if (patched === section.items) section else section.copy(items = patched)
+            },
+    )
+
+/** Identity is preserved when nothing changed, so Compose skips the untouched rows entirely. */
+private fun List<JellyfinItem>.withDownloadStates(states: Map<String, DownloadState>): List<JellyfinItem> {
+    val patched =
+        map { item ->
+            val next = states[item.id] ?: DownloadState.NotDownloaded
+            if (next == item.downloadState) item else item.copy(downloadState = next)
+        }
+    return if (patched.indices.all { patched[it] === this[it] }) this else patched
+}

@@ -7,20 +7,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Downloading
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -31,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.PersonKind
@@ -50,6 +57,7 @@ import java.util.Locale
 internal fun DetailHeader(
     item: JellyfinItem,
     isWide: Boolean,
+    downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
 ) {
@@ -59,11 +67,17 @@ internal fun DetailHeader(
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
         ) {
             DetailPoster(item = item, modifier = Modifier.width(WIDE_POSTER_WIDTH))
-            DetailFacts(item = item, actions = actions, modifier = Modifier.weight(1f))
+            DetailFacts(
+                item = item,
+                downloadState = downloadState,
+                actions = actions,
+                modifier = Modifier.weight(1f),
+            )
         }
     } else {
         DetailFacts(
             item = item,
+            downloadState = downloadState,
             actions = actions,
             modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
         )
@@ -97,6 +111,7 @@ private fun DetailPoster(
 @Composable
 private fun DetailFacts(
     item: JellyfinItem,
+    downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
 ) {
@@ -129,7 +144,7 @@ private fun DetailFacts(
             )
         }
 
-        DetailActions(item = item, actions = actions)
+        DetailActions(item = item, downloadState = downloadState, actions = actions)
 
         item.taglines.firstOrNull()?.let { tagline ->
             Text(
@@ -197,6 +212,7 @@ private fun MetadataLine(
 @Composable
 private fun DetailActions(
     item: JellyfinItem,
+    downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
 ) {
@@ -244,14 +260,75 @@ private fun DetailActions(
             )
         }
 
-        OutlinedButton(onClick = actions.onDownload) {
-            Icon(
-                imageVector = Icons.Outlined.Download,
-                contentDescription = stringResource(R.string.detail_download),
-            )
-        }
+        DownloadButton(state = downloadState, onClick = actions.onDownload)
     }
 }
+
+/**
+ * The Download button, which is really four buttons wearing one coat.
+ *
+ * Its icon and its label say what tapping it does *now*: download, or remove what is already there
+ * (or being fetched). A downloading item shows the same determinate ring the cards' `DownloadBadge`
+ * draws, so the two agree at a glance.
+ */
+@Composable
+private fun DownloadButton(
+    state: DownloadState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(onClick = onClick, modifier = modifier) {
+        when (state) {
+            is DownloadState.Downloading ->
+                CircularProgressIndicator(
+                    progress = { state.progress },
+                    modifier = Modifier.size(Dimens.BadgeSize),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp,
+                )
+
+            else ->
+                Icon(
+                    imageVector = state.icon(),
+                    contentDescription = null,
+                    tint =
+                        if (state is DownloadState.Downloaded) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            LocalContentColor.current
+                        },
+                )
+        }
+        Text(
+            text = stringResource(state.labelRes()),
+            modifier = Modifier.padding(start = Dimens.SpaceSmall),
+        )
+    }
+}
+
+private fun DownloadState.icon() =
+    when (this) {
+        is DownloadState.NotDownloaded -> Icons.Outlined.Download
+        is DownloadState.Downloaded -> Icons.Filled.DownloadDone
+        is DownloadState.Failed -> Icons.Outlined.ErrorOutline
+        else -> Icons.Outlined.Downloading
+    }
+
+/**
+ * The label says what a tap *does*, not what the state is — the state is already the icon.
+ *
+ * Cancelling a queued, running or paused download and deleting a finished one are the same
+ * operation with different words for it, which is why they share a handler.
+ */
+private fun DownloadState.labelRes(): Int =
+    when (this) {
+        is DownloadState.NotDownloaded -> R.string.detail_download
+        is DownloadState.Queued, is DownloadState.Downloading, is DownloadState.Paused ->
+            R.string.detail_download_cancel
+
+        is DownloadState.Downloaded -> R.string.detail_download_remove
+        is DownloadState.Failed -> R.string.detail_download_retry
+    }
 
 @Composable
 private fun accent(active: Boolean) =

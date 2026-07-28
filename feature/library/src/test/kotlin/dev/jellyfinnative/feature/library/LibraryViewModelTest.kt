@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.FilterFacets
 import dev.jellyfinnative.core.common.model.FilterOptions
 import dev.jellyfinnative.core.common.model.ItemQuery
@@ -12,6 +13,8 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.downloads.DownloadRepository
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -22,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -39,6 +43,13 @@ import org.junit.jupiter.api.Test
 class LibraryViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
+
+    /** The badge source (M7); emits an empty map unless a test says otherwise. */
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads =
+        mockk<DownloadRepository> {
+            every { observeStates() } returns downloadStates
+        }
 
     /** Every query the grid asked the repository for, in order. */
     private val queries = mutableListOf<ItemQuery>()
@@ -277,11 +288,45 @@ class LibraryViewModelTest {
             state.facets.genres shouldContainExactly listOf("Drama")
         }
 
+    // ---- M7: download badges -------------------------------------------------------------------
+
+    @Test
+    fun `a download state change re-maps the loaded pages without re-querying the server`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                queries.clear()
+                downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+                advanceUntilIdle()
+
+                // `cachedIn` sits upstream of the badge combine on purpose: otherwise every
+                // throttled progress write would reload the whole grid from the server.
+                queries.shouldBeEmpty()
+            }
+        }
+
+    @Test
+    fun `the grid still asks the server exactly once per query`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                downloadStates.value = mapOf("m1" to DownloadState.Queued)
+                advanceUntilIdle()
+                downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
+                advanceUntilIdle()
+
+                queries.size shouldBe 1
+            }
+        }
+
     // ---- helpers ----------------------------------------------------------------------------
 
     private fun viewModel() =
         LibraryViewModel(
             repository = repository,
+            downloads = downloads,
             savedStateHandle =
                 SavedStateHandle(
                     mapOf("libraryId" to LIBRARY_ID, "libraryName" to "Movies"),

@@ -12,6 +12,8 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(projects.core.network)
+    // The SDK types appear in this module's own (internal) API surface — repositories and mappers.
+    api(libs.jellyfin.sdk)
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)

@@ -77,3 +77,43 @@ screens must be restyled onto the design system at M2 integration.
 ### Known issues
 - adb `input tap` injection is flaky on the test tablet (the OEM ROM): roughly one tap in two is
   silently dropped — retry loops with logcat confirmation needed when driving the UI.
+
+---
+
+### M2 (built on parallel worktree branch, now merged)
+
+Built in parallel with M1 on `worktree-agent-ae7ad42c50e2b31bd`, merged after M1 completed.
+Quality gate verified green on the branch by the orchestrator (full `--rerun-tasks` run):
+`./gradlew ktlintCheck detekt testDebugUnitTest assembleDebug`.
+
+**Done**
+- `:core:common` — domain models: `JellyfinItem`, `UserData`, `ItemType`, `DownloadState`,
+  `LibraryView`/`CollectionKind`, `ItemQuery`/`SortBy`/`SortOrder`, `FilterOptions`.
+  Plus a `testDebugUnitTest` alias so this pure-JVM module joins the gate (see DECISIONS.md).
+- `:core:ui` — design system on the existing `#101010`/`#202020`/`#00A4DC` theme:
+  `JellyfinGradients` (`#AA5CC3 → #00A4DC` accent, backdrop scrim, image placeholder), `Dimens`,
+  `JellyfinAsyncImage` (Coil 3), `PosterCard` (2:3), `ThumbCard` (16:9), `LibraryCard`, `MediaRow`,
+  `BackdropHeader`, `DownloadBadge`, `OfflineBanner`, `LoadingState`/`ErrorState`/`EmptyState`.
+  Compose previews on every component.
+- `:data` — `JellyfinRepository` (home-scope surface) + `OnlineJellyfinRepository` on
+  jellyfin-sdk 1.8.12, `ItemMapper` (`BaseItemDto` → domain, with the jellyfin-web artwork fallback
+  chain), `ImageUrlFactory`/`SdkImageUrlFactory`, `ApiErrorMapper` (SDK exceptions → `AppError`),
+  Hilt `@Binds` module.
+- `:feature:home` — `HomeScreen`/`HomeContent` + `HomeViewModel` + `HomeUiState`, rows in
+  jellyfin-web order (My Media → Continue Watching → Next Up → Latest &lt;library&gt;), with
+  loading/error/empty states.
+- Unit tests: `JellyfinItemTest` (13), `ItemMapperTest` (13), `OnlineJellyfinRepositoryTest` (9),
+  `HomeViewModelTest` (9) — 44 new tests, all green.
+
+**Next (integration, orchestrator)**
+- Provide `org.jellyfin.sdk.api.client.ApiClient` from `:core:network` (M1), then add
+  `@HiltViewModel` to `HomeViewModel` (see DECISIONS.md 2026-07-28).
+- Wire `Routes.Home` → `HomeScreen(viewModel = hiltViewModel(), …)` into the `:app` NavHost,
+  together with `AppScaffold` (bottom nav + `OfflineBanner`).
+- Then run the M2 DoD: side-by-side vs jellyfin-web home on the test tablet — same rows, items and
+  order.
+
+**Known issues (M2)**
+- Write-through Room caching (`source=BROWSE_CACHE`) is intentionally absent; it is M6 scope.
+- `DownloadBadge` always renders `NotDownloaded` until the M7 download pipeline supplies real
+  states.

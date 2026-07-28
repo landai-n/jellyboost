@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.detail
 
+import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
 
@@ -30,7 +31,28 @@ data class ItemDetailUiState(
 ) {
     /** `true` once the item is loaded and can be rendered. */
     val isLoaded: Boolean get() = !isLoading && item != null
+
+    /**
+     * What the Play / Resume button actually plays.
+     *
+     * A movie or episode plays itself, but a series or season is a container: tapping Play on
+     * *Westworld* has to resolve to an episode, and the one the user expects is the one the server
+     * already calls "next up". A season falls back to its first unfinished episode, then to its
+     * first episode — the same order jellyfin-web uses.
+     */
+    val playTarget: JellyfinItem?
+        get() =
+            when (item?.type) {
+                null -> null
+                ItemType.SERIES -> nextUp ?: episodes.firstOrNull()
+                ItemType.SEASON -> episodes.firstOrNull { !it.userData.played } ?: episodes.firstOrNull()
+                else -> item
+            }
 }
+
+/** Where playback should start for [item]: its resume position, or the beginning. */
+fun playbackStartTicks(item: JellyfinItem): Long =
+    if (item.userData.isResumable) item.userData.playbackPositionTicks else 0L
 
 /**
  * The one-shot messages the detail screen can raise.
@@ -39,9 +61,6 @@ data class ItemDetailUiState(
  * `strings.xml` where it can be translated.
  */
 enum class UserMessage {
-    /** Play / Resume was tapped; playback lands in M5. */
-    PlaybackNotAvailableYet,
-
     /** Download was tapped; the download pipeline lands in M7. */
     DownloadNotAvailableYet,
 

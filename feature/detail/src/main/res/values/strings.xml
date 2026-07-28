@@ -5,6 +5,7 @@
     <string name="detail_play">Play</string>
     <string name="detail_resume">Resume</string>
     <string name="detail_download">Download</string>
+    <string name="detail_play_episode">Play this episode</string>
     <string name="detail_mark_watched">Mark watched</string>
     <string name="detail_mark_unwatched">Mark unwatched</string>
     <string name="detail_add_favorite">Add to favourites</string>
@@ -32,7 +33,6 @@
 
     <!-- States and messages -->
     <string name="detail_empty">This item is no longer available.</string>
-    <string name="detail_message_playback_unavailable">Playback arrives in M5.</string>
     <string name="detail_message_download_unavailable">Downloads arrive in M7.</string>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 </resources>

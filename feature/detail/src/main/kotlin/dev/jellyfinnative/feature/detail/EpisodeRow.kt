@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,11 +28,17 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  *
  * Reusing `ThumbCard` for the artwork is deliberate — the watched indicator and download badge an
  * episode shows here have to be the exact same ones the home rows show.
+ *
+ * @param onClick opens the episode's own detail page.
+ * @param onPlay starts playback directly. Worth its own button: from a season page the thing a
+ *   user wants is almost always "play this one", and making them go through the episode page
+ *   first adds a screen and a request for nothing.
  */
 @Composable
 internal fun EpisodeRow(
     episode: JellyfinItem,
     onClick: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -75,6 +85,14 @@ internal fun EpisodeRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+        }
+
+        IconButton(onClick = onPlay) {
+            Icon(
+                imageVector = Icons.Filled.PlayArrow,
+                contentDescription = stringResource(R.string.detail_play_episode),
+                tint = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }

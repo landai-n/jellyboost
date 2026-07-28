@@ -42,6 +42,48 @@ favourite is logged in `DECISIONS.md` (2026-07-28).
 Marking watched clears the resume position locally because the server does the same — not
 mirroring it would leave a progress bar on a watched card until the next sync overwrote it.
 
+## Reads refresh the mirror — the other half of the contract
+
+`setPosition` sends the item's **full** desired state (position, played, favourite,
+`lastPlayedDate`), because `POST /UserItems/{id}/UserData` merges what it is given and a partial DTO
+would risk resetting the rest. That is only safe if the local row it is built from is honest.
+
+It was not. Rows were written *only* by local writes, so a row went stale the moment the same user
+changed the item from another client, and the next five seconds of playback pushed the stale state
+back — an item unwatched in jellyfin-web came back watched (STATUS.md, "Known issues").
+
+So the read path now maintains the mirror too. `BrowseCacheWriter.writeItems` — which every
+successful `OnlineJellyfinRepository` read already funnels through — adopts each DTO's `userData`
+block into `user_data`:
+
+| Local row | What a server read does |
+|---|---|
+| absent | creates it from `dto.userData` |
+| `toBeSynced = false` | overwrites it — **the server is authoritative** |
+| `toBeSynced = true` | **nothing at all** — the pending local write wins until it drains |
+| any, but `dto.userData == null` | nothing — silence is not "unwatched, not favourite" |
+| any, but signed out | nothing — there is no `userId` to key rows on |
+
+The pending case is the whole subtlety: that row is the only copy of a change the server has not
+seen, and reconciling the two versions is most-recent-wins in `UserDataSyncWorker` (M8), not a cache
+write's business.
+
+Timestamps when adopting server state (`UserItemDataDto.toEntity`):
+
+- `lastPlayedDate` — the server's value **verbatim**, `null` included. It is the *server* half of
+  most-recent-wins; inventing one from the read time would make an unplayed item look freshly
+  watched.
+- `updatedAt` — the moment this device learned the server's state. It is the *local* half, and it
+  only ever decides anything for a `toBeSynced = true` row, which a refresh never produces (the
+  worker's work list is `toBeSynced = 1`, and any later local write re-stamps it from the clock).
+  So it records when the mirror was refreshed without ever claiming the local row is newer than the
+  server's.
+- `toBeSynced` — always `false`: an adopted row is a copy of server state, not a debt the server
+  owes.
+
+The write path is untouched: `UserDataRepositoryImpl` is still local-first always. See
+`DECISIONS.md`, 2026-07-28 "server reads refresh `user_data` rows that are not pending sync".
+
 ## Room: `user_data` (schema v2)
 
 Composite primary key `(itemId, userId)` — multi-user ready without a separate scoping mechanism.
@@ -66,6 +108,11 @@ every other entity in `:core:database`, there is **no token column** anywhere �
 `UserDataDao.clearPendingSync` is guarded on the timestamp
 (`WHERE … AND updatedAt <= :syncedAt`): if the user toggled the same item again while the push was
 in flight, the newer row keeps its flag instead of being declared synced.
+
+`UserDataDao.getPendingSyncIds` + `upsertAll` are the pair the read refresh below uses: ask which of
+a page's items still owe the server a write, then batch-write the rest. The filtering itself lives
+in `BrowseCacheWriter` rather than in a `@Transaction` DAO method, for the same reason the
+download-demotion rule does — so it is JVM-unit-testable instead of device-only.
 
 ## `UserDataEventBus` — patch, never refetch
 
@@ -123,6 +170,7 @@ so nothing is lost at M4.
 | `UserDataSyncWorker` | `:data` | Drains pending rows (stub until M8) |
 | `UserDataEntity` / `UserDataDao` | `:core:database` | The `user_data` table |
 | `InstantConverter` | `:core:database` | `Instant` ↔ epoch millis |
+| `BrowseCacheWriter` | `:data` | Refreshes non-pending rows from every server read |
 
 ## Offline behaviour
 

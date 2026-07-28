@@ -14,9 +14,11 @@ import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,6 +64,9 @@ class OnlineJellyfinRepository
                             imageTypeLimit = 1,
                             enableUserData = true,
                             enableTotalRecordCount = false,
+                            // jellyfin-web's "Continue Watching" only lists video; without this an
+                            // in-progress audiobook/track would appear here but not on the web home.
+                            mediaTypes = listOf(MediaType.VIDEO),
                         ),
                     )
                 mapper.toDomain(response.content.items)
@@ -78,6 +83,11 @@ class OnlineJellyfinRepository
                             imageTypeLimit = 1,
                             enableUserData = true,
                             enableTotalRecordCount = false,
+                            // Mirror jellyfin-web's home: episodes with playback progress live in
+                            // Continue Watching only, and series untouched for over a year drop out
+                            // (web's "Days in Next Up" user setting, default 365).
+                            enableResumable = false,
+                            nextUpDateCutoff = LocalDateTime.now().minusDays(NEXT_UP_WINDOW_DAYS),
                         ),
                     )
                 mapper.toDomain(response.content.items)
@@ -121,5 +131,8 @@ class OnlineJellyfinRepository
 
             /** Artwork the cards can actually draw — anything else is wasted server work. */
             val CARD_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP, ImageType.THUMB)
+
+            /** jellyfin-web's default "Days in Next Up" user setting. */
+            const val NEXT_UP_WINDOW_DAYS = 365L
         }
     }

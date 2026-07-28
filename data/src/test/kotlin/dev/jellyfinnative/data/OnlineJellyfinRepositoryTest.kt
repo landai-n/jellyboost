@@ -6,6 +6,7 @@ import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.data.mapper.FakeImageUrlFactory
 import dev.jellyfinnative.data.mapper.ItemMapper
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -34,6 +35,7 @@ import org.jellyfin.sdk.model.api.BaseItemDtoQueryResult
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
@@ -41,6 +43,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import java.time.LocalDateTime
 import java.util.UUID
 
 /**
@@ -152,6 +155,7 @@ class OnlineJellyfinRepositoryTest {
             request.captured.imageTypeLimit shouldBe 1
             request.captured.enableTotalRecordCount shouldBe false
             request.captured.fields shouldContainExactly listOf(ItemFields.PRIMARY_IMAGE_ASPECT_RATIO)
+            request.captured.mediaTypes shouldContainExactly listOf(MediaType.VIDEO)
         }
 
     @Test
@@ -178,6 +182,24 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Chestnut")
             request.captured.limit shouldBe 7
             request.captured.enableUserData shouldBe true
+        }
+
+    @Test
+    fun `getNextUp mirrors the jellyfin-web home filters`() =
+        runTest {
+            val request = slot<GetNextUpRequest>()
+            coEvery { tvShowsApi.getNextUp(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.EPISODE, "Chestnut")))
+
+            repository.getNextUp()
+
+            // In-progress episodes belong to Continue Watching, not Next Up.
+            request.captured.enableResumable shouldBe false
+            // Series untouched for over a year drop out (web's default "Days in Next Up").
+            val cutoff = request.captured.nextUpDateCutoff.shouldNotBeNull()
+            val expected = LocalDateTime.now().minusDays(365)
+            cutoff.isAfter(expected.minusHours(1)) shouldBe true
+            cutoff.isBefore(expected.plusHours(1)) shouldBe true
         }
 
     // ---- getLatestMedia ---------------------------------------------------------------------

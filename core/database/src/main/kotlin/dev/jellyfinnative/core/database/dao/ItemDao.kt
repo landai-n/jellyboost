@@ -47,11 +47,15 @@ interface ItemDao {
     suspend fun getItems(ids: List<UUID>): List<ItemEntity>
 
     /**
-     * One page of the offline library grid.
+     * One page of the offline library grid: every downloaded item of the given kinds.
      *
-     * The `parentId` predicate walks one level of the hierarchy on purpose: a movie's parent *is*
-     * the library, but a downloaded episode's parent is its season, so a library also owns every
-     * item whose series it owns.
+     * **There is deliberately no library predicate.** It used to filter on
+     * `parentId = <library id>` (plus `seriesId IN (children of the library)`), and on a real device
+     * that returned nothing: a downloaded row's `parentId` is its *containing folder* — when the
+     * server sends one at all; the M7 walk found both downloaded films stored with `parentId NULL` —
+     * and a folder is not the library-view id the grid filters by. Which library an offline row
+     * belongs to is decided by its **type** instead, in `OfflineJellyfinRepository`, which is exact
+     * for the movie/TV libraries v1 supports (DECISIONS.md 2026-07-28).
      *
      * @param descending `true` sorts Z→A; the two `CASE` arms are how one statement serves both
      *   directions (SQLite cannot bind a sort direction).
@@ -61,24 +65,15 @@ interface ItemDao {
         SELECT * FROM items
         WHERE source = :source
           AND type IN (:types)
-          AND (
-            :parentId IS NULL
-            OR parentId = :parentId
-            OR seriesId IN (SELECT id FROM items WHERE parentId = :parentId)
-          )
         ORDER BY
           CASE WHEN :descending = 0 THEN sortName END COLLATE NOCASE ASC,
           CASE WHEN :descending = 1 THEN sortName END COLLATE NOCASE DESC
         LIMIT :limit OFFSET :offset
         """,
     )
-    // SQLite binds parameters positionally; a query with six filters simply has six of them, and
-    // wrapping them in a value class would only move the list one call further away.
-    @Suppress("LongParameterList")
     suspend fun pagingDownloaded(
         source: ItemSource,
         types: List<ItemType>,
-        parentId: UUID?,
         descending: Boolean,
         limit: Int,
         offset: Int,
@@ -152,17 +147,16 @@ interface ItemDao {
         seriesId: UUID?,
     ): List<ItemEntity>
 
-    /** The offline *Latest* row for one library: its most recently downloaded items. */
+    /**
+     * The offline *Latest* row: the most recently downloaded items of the given kinds.
+     *
+     * Scoped by type rather than by library id, for the reason [pagingDownloaded] documents.
+     */
     @Query(
         """
         SELECT * FROM items
         WHERE source = :source
           AND type IN (:types)
-          AND (
-            :parentId IS NULL
-            OR parentId = :parentId
-            OR seriesId IN (SELECT id FROM items WHERE parentId = :parentId)
-          )
         ORDER BY cachedAt DESC
         LIMIT :limit
         """,
@@ -170,22 +164,30 @@ interface ItemDao {
     suspend fun latestDownloaded(
         source: ItemSource,
         types: List<ItemType>,
-        parentId: UUID?,
         limit: Int,
     ): List<ItemEntity>
 
-    /** Children of one parent (a series' seasons, a season's episodes), in server order. */
+    /**
+     * A downloaded series' seasons, in server order.
+     *
+     * Matches on `seriesId` **or** `parentId` because only the first is reliable: a season's
+     * `ParentId` is not always present on the cached DTO (the same gap that made the library grid
+     * empty — see [pagingDownloaded]), while `SeriesId` is what identifies a season's show and is
+     * what the episode rows already join on.
+     */
     @Query(
         """
         SELECT * FROM items
-        WHERE source = :source AND type = :type AND parentId = :parentId
+        WHERE source = :source
+          AND type = :seasonType
+          AND (seriesId = :seriesId OR parentId = :seriesId)
         ORDER BY indexNumber ASC, sortName COLLATE NOCASE ASC
         """,
     )
-    suspend fun childrenOf(
+    suspend fun seasonsOfSeries(
         source: ItemSource,
-        type: ItemType,
-        parentId: UUID,
+        seriesId: UUID,
+        seasonType: ItemType,
     ): List<ItemEntity>
 
     /** A season's downloaded episodes, in broadcast order. */

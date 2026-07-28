@@ -19,9 +19,11 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import dev.jellyfinnative.data.downloads.work.DownloadSessionGate
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotContain
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -56,6 +58,7 @@ class DownloadQueueTest {
     private val storage = mockk<DownloadStorage>()
     private val downloader = mockk<FileDownloader>()
     private val urls = mockk<DownloadUrlFactory>(relaxed = true)
+    private val sessionGate = mockk<DownloadSessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
 
@@ -66,11 +69,13 @@ class DownloadQueueTest {
         every { storage.prepareItemDirectory(any()) } returns File("/tmp/downloads")
         every { storage.resolve(any(), any()) } answers { File("/tmp/downloads/${secondArg<String>()}") }
         coEvery { downloadDao.insertFile(any()) } answers { nextFileId++ }
+        coEvery { downloadDao.get(any()) } returns download()
         coEvery { itemDao.getItem(any()) } returns ITEM_ENTITY
         every { itemMapper.toDtoOrNull(any()) } returns movie()
         every { urls.mediaUrl(any()) } returns "https://server/download"
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
         coEvery { downloader.download(any(), any(), any(), any()) } returns 100L
+        coEvery { sessionGate.ensureSession() } returns true
     }
 
     // ---- the happy path -------------------------------------------------------------------------
@@ -80,7 +85,7 @@ class DownloadQueueTest {
         runTest {
             queueWith(download())
 
-            queue().drain(listener) shouldBe true
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADING, NOW, null) }
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
@@ -125,6 +130,50 @@ class DownloadQueueTest {
             bytes shouldBe 1_000L
         }
 
+    // ---- the session gate (cold start) ------------------------------------------------------------
+
+    @Test
+    fun `a cold start restores the session before the queue needs a URL`() =
+        runTest {
+            // WorkManager restarts this worker the moment the process comes up, before anything in
+            // the UI has restored anything.
+            queueWith(download())
+
+            queue().drain(listener)
+
+            coVerify(exactly = 1) { sessionGate.ensureSession() }
+        }
+
+    @Test
+    fun `no session parks the queue instead of failing the item`() =
+        runTest {
+            // The regression this pins: the item used to go ERROR with the SDK's own
+            // "Required value baseUrl is null" text, and the user had to press Retry on a download
+            // that was never broken.
+            coEvery { sessionGate.ensureSession() } returns false
+            queueWith(download())
+
+            queue().drain(listener) shouldBe DrainOutcome.NO_SESSION
+
+            coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.ERROR, any(), any()) }
+            coVerify(exactly = 0) { downloadDao.nextRunnable() }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `a parked queue still puts interrupted rows back to Waiting`() =
+        runTest {
+            // Otherwise a row left DOWNLOADING by the killed process would render as a transfer
+            // that no process is performing until a session appears.
+            coEvery { sessionGate.ensureSession() } returns false
+            queueWith(download())
+
+            queue().drain(listener)
+
+            coVerify(exactly = 1) { downloadDao.requeueInterrupted(NOW) }
+            listener.idleCount shouldBe 1
+        }
+
     // ---- essential vs optional ------------------------------------------------------------------
 
     @Test
@@ -134,9 +183,36 @@ class DownloadQueueTest {
             coEvery { downloader.download(match { it.contains("download") }, any(), any(), any()) } throws
                 IOException("connection reset")
 
-            queue().drain(listener) shouldBe false
+            queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
-            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, "connection reset") }
+            // The stored message is user copy, not the exception's text — see DownloadErrorCopy.
+            coVerify {
+                downloadDao.setStatus(
+                    uuid(1),
+                    DownloadStatus.ERROR,
+                    NOW,
+                    "Couldn't reach your server. The download will retry.",
+                )
+            }
+        }
+
+    @Test
+    fun `a failure never shows the user the exception's own text`() =
+        runTest {
+            // The device walk found a queue row reading "Download failed: Required value baseUrl is
+            // null. Provide it by setting ApiClient.baseUrl." — SDK internals on screen.
+            queueWith(download())
+            coEvery { downloader.download(any(), any(), any(), any()) } throws
+                IllegalStateException("Required value baseUrl is null. Provide it by setting ApiClient.baseUrl.")
+            val message = slot<String>()
+            coEvery {
+                downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, capture(message))
+            } just Runs
+
+            queue().drain(listener)
+
+            message.captured shouldNotContain "baseUrl"
+            message.captured shouldNotContain "ApiClient"
         }
 
     @Test
@@ -147,7 +223,7 @@ class DownloadQueueTest {
             coEvery { downloader.download(match { it.contains("image") }, any(), any(), any()) } throws
                 IOException("404")
 
-            queue().drain(listener) shouldBe true
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
         }
@@ -172,7 +248,7 @@ class DownloadQueueTest {
             coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
                 DownloadHttpException(code = 403, url = "https://server/download")
 
-            queue().drain(listener) shouldBe true
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             // Same bytes, a route the server does not gate on `enableContentDownloading`.
             coVerify { downloader.download("https://server/videos/stream", any(), any(), any()) }
@@ -186,7 +262,7 @@ class DownloadQueueTest {
             coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
                 DownloadHttpException(code = 500, url = "https://server/download")
 
-            queue().drain(listener) shouldBe false
+            queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
             coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
         }
@@ -237,6 +313,56 @@ class DownloadQueueTest {
         }
 
     @Test
+    fun `a retry targets the same file names as the first attempt`() =
+        runTest {
+            // The M7 regression, end to end: attempt one plans the media file from the DTO's `path`
+            // (`Backrooms…-BATGirl.mkv`), the retry runs from a DTO with no `path` and would plan
+            // `Backrooms (2026).mkv` — orphaning 1.38 GB and restarting the transfer from zero.
+            val rows = mutableListOf<DownloadFileEntity>()
+            coEvery { downloadDao.insertFile(capture(rows)) } answers { nextFileId++ }
+            every { itemMapper.toDtoOrNull(any()) } returns
+                movie(name = "Backrooms", year = 2026, path = "/media/Backrooms.2026.MULTi-BATGirl.mkv")
+            queueWith(download())
+
+            queue().drain(listener)
+            val firstPlan = rows.toList()
+            firstPlan.first { it.type == DownloadFileType.MEDIA }.fileName shouldBe
+                "Backrooms.2026.MULTi-BATGirl.mkv"
+
+            // Second run: the persisted rows exist, and the DTO no longer carries a path.
+            every { itemMapper.toDtoOrNull(any()) } returns movie(name = "Backrooms", year = 2026, path = null)
+            val stored = firstPlan.mapIndexed { index, row -> row.copy(id = index + 1L) }
+            queueWith(download(), files = stored)
+            val updated = mutableListOf<DownloadFileEntity>()
+            coEvery { downloadDao.updateFile(capture(updated)) } just Runs
+
+            queue().drain(listener)
+
+            // Same rows, same names, same files on disk — so the byte offset still means something.
+            updated.map { it.fileName } shouldContainExactly stored.map { it.fileName }
+            updated.map { it.id } shouldContainExactly stored.map { it.id }
+            // Nothing new was inserted: the second run re-used every row the first one wrote.
+            rows.size shouldBe firstPlan.size
+            val target = File("/tmp/downloads/Backrooms.2026.MULTi-BATGirl.mkv")
+            coVerify { downloader.download(any(), target, any(), any()) }
+        }
+
+    @Test
+    fun `a first attempt with no rows plans freely`() =
+        runTest {
+            // The re-plan path is only reachable when nothing is on disk: a re-enqueue after a
+            // delete has no `download_files` rows *and* no directory, so a fresh name is safe.
+            every { itemMapper.toDtoOrNull(any()) } returns movie(name = "Backrooms", year = 2026, path = null)
+            val rows = mutableListOf<DownloadFileEntity>()
+            coEvery { downloadDao.insertFile(capture(rows)) } answers { nextFileId++ }
+            queueWith(download())
+
+            queue().drain(listener)
+
+            rows.first { it.type == DownloadFileType.MEDIA }.fileName shouldBe "Arrival (2016).mkv"
+        }
+
+    @Test
     fun `URLs are rebuilt on every run, not read back from the row`() =
         runTest {
             // `ServerReachabilityProbe` rotates the base URL between LAN and remote; a row queued
@@ -249,13 +375,31 @@ class DownloadQueueTest {
             coVerify { downloader.download("https://server/download", any(), any(), any()) }
         }
 
+    // ---- deletion while downloading ---------------------------------------------------------------
+
+    @Test
+    fun `an item deleted mid-transfer stops instead of re-creating its directory`() =
+        runTest {
+            // WorkManager's cancellation is asynchronous, so the delete cascade can unlink the
+            // files while this loop is still between two of them; `FileDownloader` re-creates the
+            // item directory for every file it opens, which would leave files no row points at.
+            queueWith(download())
+            coEvery { downloadDao.get(uuid(1)) } returns null
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any()) }
+            // Nothing is "downloaded": the item is gone, not finished.
+            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, any(), any()) }
+        }
+
     @Test
     fun `an item with no cached metadata fails rather than downloading nothing`() =
         runTest {
             queueWith(download())
             coEvery { itemDao.getItem(any()) } returns null
 
-            queue().drain(listener) shouldBe false
+            queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, any()) }
         }
@@ -291,6 +435,7 @@ class DownloadQueueTest {
             planner = DownloadFilePlanner(urls),
             storage = storage,
             downloader = downloader,
+            sessionGate = sessionGate,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

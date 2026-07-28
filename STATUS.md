@@ -11,6 +11,27 @@ delete frees bytes.
 - Done meanwhile: user-data read-refresh fix merged and device-verified (see Known
   issues — struck through).
 
+### M7 device-walk bugfixes (worktree branch, awaiting re-walk)
+Four findings from the DoD walk, all fixed with unit coverage; **the kill-resume walk
+must be re-run on the tablet** (this branch had no device):
+- **A — cold start raced session restore.** WorkManager started the worker before the UI
+  restored the session, so the first URL threw the SDK's `Required value baseUrl is null`
+  and the item went ERROR. `DownloadSessionGate` now restores it inside the drain; no
+  session at all → `Result.retry()` with rows left "Waiting", never ERROR. Row error copy
+  is now mapped (`DownloadErrorCopy`) so SDK internals cannot reach the screen.
+- **B — retry re-planned the media filename.** A retry whose DTO had no `path` renamed the
+  1.38 GB partial and restarted from zero. The queue now reuses the persisted
+  `download_files` rows (names + identity) and rebuilds only URLs; re-planning happens
+  only when no rows exist.
+- **C — "queue-cancel leaks files" not reproduced.** The row was `DOWNLOADED` at cancel
+  time (the transfer had just finished), so the files were legitimate. All three cancel
+  paths already share the delete cascade; that is now pinned by tests. The queue also
+  aborts an item whose row disappears mid-transfer, so a cancel landing between two files
+  cannot re-create the directory.
+- **D — downloads invisible in offline grids / Latest.** Offline library scoping moved off
+  `parentId` (stored NULL, and a folder id even when present) onto the library's item
+  kinds (DECISIONS.md). Season lookup moved to `seasonsOfSeries` (`seriesId OR parentId`).
+
 ## Previous milestone: M5 — Playback (online) (DONE, tagged m5)
 
 **DoD walk on test tablet (2026-07-28), all pass** (server evidence via `/Sessions`,

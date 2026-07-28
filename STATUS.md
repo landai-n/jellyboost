@@ -1,11 +1,32 @@
 # STATUS
 
-## Current milestone: M2 — Design system + Home (online) (in progress on a parallel branch)
+## Current milestones: M3 — Library grid + Search, and M4 — Item detail + user data (parallel worktrees)
 
-**Definition of done (M2):** design system in `:core:ui` + Home screen (online);
-verify side-by-side vs jellyfin-web home — same rows/items/order.
-Note: `:core:ui` was frozen during the tail of M1 (DECISIONS.md 2026-07-28); the auth
-screens must be restyled onto the design system at M2 integration.
+**DoD (M3):** Paging 3 library grid with sort/filter + debounced search;
+>500-item library scrolls clean, one request per page.
+**DoD (M4):** item detail (movie/series/season) with local-first user-data writes +
+EventBus (sync worker stubbed); mark played → appears in jellyfin-web; home row patches
+without refetch.
+
+## Previous milestone: M2 — Design system + Home (online) (DONE, tagged m2)
+
+**DoD walk on test tablet (2026-07-28), side-by-side vs jellyfin-web as the same user
+('Alex'), all rows compared item-by-item to the end via UI-dump row walks — pass:**
+- My Media: Films, Séries (web also shows Musique — excluded by v1 scope, pre-approved).
+- Continue Watching: 12/12 items identical, same order (Sans un bruit : Jour 1 → Wonder Man).
+- Next Up: 9/9 identical, same order (House of the Dragon S3:E1 → Zero Day S1:E5).
+- Latest Films: 16/16 identical, same order (Backrooms → Big World).
+- Latest Séries: 16/16 identical, same order (House of the Dragon → Wonder Man).
+- Landscape sanity check on the tablet: rows/cards render correctly.
+- Found and fixed during the walk (DECISIONS.md 2026-07-28 "Home row limits and filters"):
+  the app's raw `getResumeItems`/`getNextUp` calls did not match jellyfin-web's requests —
+  web sends `mediaTypes=Video`, `enableResumable=false`, a 365-day next-up cutoff, and
+  limits 12/24 (not the plan's 20/20). Next Up wrongly showed in-progress episodes
+  (Malcolm S1:E2, Emily in Paris S5:E1) and stale series (Key & Peele, Squid Game), and
+  Continue Watching showed 8 extra items until aligned.
+- Verification note: comparing as the same user matters — the app had been left signed in
+  as 'admin' from M1 testing and its home legitimately differed from web-as-Alex;
+  re-login via Quick Connect (code approved by an authenticated web session) fixed that.
 
 ## Previous milestone: M1 — Auth & session (DONE, tagged m1)
 
@@ -120,8 +141,8 @@ Quality gate verified green on the branch by the orchestrator (full `--rerun-tas
   that falls into the `Unknown` bucket.
 
 **Next**
-- Finish the M2 DoD: user eyeballs the side-by-side vs jellyfin-web home (rows/items/order
-  already match by construction and on-device inspection), then `/milestone finish M2` (tag m2).
+- M3 (parallel worktree): `:feature:library` grid (Paging 3, sort/filter) + `:feature:search`.
+- M4 (parallel worktree): `:feature:detail` + user-data repository (local-first + EventBus).
 
 **Known issues (M2)**
 - Write-through Room caching (`source=BROWSE_CACHE`) is intentionally absent; it is M6 scope.

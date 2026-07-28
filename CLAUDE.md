@@ -18,6 +18,25 @@ scope, and milestones.
 - Build: `./gradlew assembleDebug` • Quality: `./gradlew ktlintCheck detekt testDebugUnitTest`
 - Install: `./gradlew installDebug` (device/emulator via adb).
 
+## Test device
+A tablet is connected via adb and available for installs, instrumented tests, and
+milestone DoD verification: **test tablet** (model [redacted-model], codename `[redacted]`),
+Android 16 / API 36, serial `[redacted-serial]`. Use it for `installDebug`,
+`connectedDebugAndroidTest`, and manual playback/download checks. Being a tablet,
+also sanity-check tablet/landscape layouts when touching UI.
+
+## Subagent delegation (DEFAULT)
+Implementation work is delegated to cheaper-model subagents by default (user directive,
+usage optimization); the main (Fable) context orchestrates, reviews, and verifies.
+- `model: "opus"` — fiddly/iterative work: build system changes, tricky debugging,
+  complex features (player, download pipeline, sync logic).
+- `model: "sonnet"` — mechanical work from a precise spec: boilerplate, DAOs/entities,
+  tests from templates, UI from an established design system, docs.
+- Every subagent prompt must include the governance rules above (check `docs/PLAN.md`,
+  log divergences in `DECISIONS.md`, never weaken tests) and the build-env note.
+- The orchestrator independently verifies results (`/verify`) before committing —
+  never trust an agent's green-build claim.
+
 ## Workflow expectations
 - `/verify` before every commit (the pre-commit hook enforces it).
 - `/checkpoint` at least once per completed sub-task: verify → docs → small conventional commit

@@ -111,9 +111,17 @@ Quality gate verified green on the branch by the orchestrator (full `--rerun-tas
   `HomePlaceholderScreen` (deleted). Bottom nav + `OfflineBanner` (`AppScaffold`) are not part of
   this pass — they arrive with the milestones that need them.
 
+- On-device check (test tablet, 2026-07-28): home renders real test-server data — My Media
+  (Films/Séries), Continue Watching with progress bars, Next Up, Latest Films/Séries — in
+  portrait and landscape, no errors logged. Found and fixed en route: `OnlineJellyfinRepository`
+  ran SDK calls on the caller's dispatcher, so loads from `viewModelScope` died with
+  `NetworkOnMainThreadException` (invisible to JVM unit tests — no StrictMode); it now hops to
+  the injected `@IoDispatcher` like the M1 repositories, and `ApiErrorMapper` logs any exception
+  that falls into the `Unknown` bucket.
+
 **Next**
-- Run the M2 DoD: side-by-side vs jellyfin-web home on the test tablet — same rows, items and
-  order.
+- Finish the M2 DoD: user eyeballs the side-by-side vs jellyfin-web home (rows/items/order
+  already match by construction and on-device inspection), then `/milestone finish M2` (tag m2).
 
 **Known issues (M2)**
 - Write-through Room caching (`source=BROWSE_CACHE`) is intentionally absent; it is M6 scope.

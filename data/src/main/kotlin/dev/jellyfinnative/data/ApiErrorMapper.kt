@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.exception.SecureConnectionException
 import org.jellyfin.sdk.api.client.exception.TimeoutException
+import timber.log.Timber
 import java.io.IOException
 
 private const val HTTP_UNAUTHORIZED = 401
@@ -45,5 +46,11 @@ internal fun Throwable.toAppError(): AppError =
             }
 
         is TimeoutException, is SecureConnectionException, is IOException -> AppError.Network(this)
-        else -> AppError.Unknown(this)
+        else -> {
+            // An exception outside the known taxonomy is always worth a log line: it is either a
+            // transport type this mapper should learn about or a real bug (e.g. a response the
+            // SDK's serializers reject), and the Unknown error state hides it from the UI.
+            Timber.e(this, "API error outside the known taxonomy")
+            AppError.Unknown(this)
+        }
     }

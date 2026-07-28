@@ -18,5 +18,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.timber)
     ksp(libs.androidx.hilt.compiler)
 }

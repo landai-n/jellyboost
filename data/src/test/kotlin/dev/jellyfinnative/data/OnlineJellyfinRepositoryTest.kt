@@ -14,6 +14,8 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.Response
@@ -47,6 +49,7 @@ import java.util.UUID
  * The SDK exposes its operation groups as extension properties on `ApiClient`, so the extension
  * file's static holder is mocked to hand back stubbed operation objects.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class OnlineJellyfinRepositoryTest {
     private val apiClient = mockk<ApiClient>()
     private val userViewsApi = mockk<UserViewsApi>()
@@ -54,7 +57,8 @@ class OnlineJellyfinRepositoryTest {
     private val tvShowsApi = mockk<TvShowsApi>()
     private val userLibraryApi = mockk<UserLibraryApi>()
 
-    private val repository = OnlineJellyfinRepository(apiClient, ItemMapper(FakeImageUrlFactory()))
+    private val repository =
+        OnlineJellyfinRepository(apiClient, ItemMapper(FakeImageUrlFactory()), UnconfinedTestDispatcher())
 
     private val moviesLibraryId = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 

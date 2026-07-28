@@ -1,12 +1,58 @@
 # STATUS
 
-## Current milestones: M3 — Library grid + Search, and M4 — Item detail + user data (parallel worktrees)
+## Current milestones: M3 — Library grid + Search, and M4 — Item detail + user data (built, DoD walk in progress)
 
 **DoD (M3):** Paging 3 library grid with sort/filter + debounced search;
 >500-item library scrolls clean, one request per page.
 **DoD (M4):** item detail (movie/series/season) with local-first user-data writes +
 EventBus (sync worker stubbed); mark played → appears in jellyfin-web; home row patches
 without refetch.
+
+### Done (this session, 2026-07-28)
+- M3 and M4 built in parallel opus-subagent worktrees, merged to main (conflicts in the
+  shared append-only sections of `JellyfinRepository`/`OnlineJellyfinRepository`/
+  `DECISIONS.md` resolved by keeping both sections). Orchestrator-verified full gate:
+  231 unit tests, 0 failures, `ktlintCheck detekt testDebugUnitTest assembleDebug` green.
+- Integration pass (sonnet subagent): bottom nav (Home/Libraries/Search; Downloads
+  deferred to M7 per DECISIONS), `LibrariesScreen` + tests, NavHost wiring for
+  LibraryGrid/Search/ItemDetail, home click-through, auth screens restyled onto
+  `:core:ui`. WorkManager/Hilt in `:app` was already wired at M0.
+- Device DoD walked so far (test tablet, signed in as Alex):
+  - M3 paging: Films grid (184 items) scrolls to the bottom cleanly with exactly one
+    request per page — offsets 0/50/100/150, each requested once (logcat-verified).
+    Note: no library on test-server exceeds 500 top-level items (Films 184, Séries 28);
+    the >500 scale is pinned by `OnlineJellyfinRepositoryPagingTest` (520 items → exactly
+    11 requests). Sort menu renders (Name/Date added/Release date/Community rating/
+    Runtime/Random + Ascending).
+  - M4: card → detail navigation works (`/Items/{id}` + `/Similar` fire once); "Mark
+    watched" on Citizen Vigilante flipped the button label, sent `POST /UserPlayedItems`,
+    server showed `Played=true` (jellyfin-web reads this same user data); back on Home
+    the card's watched badge appeared via the event bus with **zero** network requests
+    (logcat-verified) — then the toggle was reverted to leave user data as found.
+
+### Remaining before tagging m3/m4
+- M3: sort/filter round-trip on device (menu opens; selection re-query not yet
+  verified), filter sheet contents, Search screen walk, tablet/landscape pass,
+  DECISIONS note for the >500-item verification adaptation.
+- M4: series → seasons → episodes detail walk, favorite toggle, optional visual check
+  in jellyfin-web UI, landscape pass.
+- Then `/milestone finish M3` and `finish M4` (tags m3, m4).
+
+### Known issues (new)
+- `datePlayed`/`lastPlayedDate` sent to the server carry UTC wall-clock time with the
+  device's local offset appended (observed `17:22:57+02:00` for a 17:22 UTC event → the
+  server stores it 2h early). Harmless for played/favorite state, but must be fixed
+  before M8's most-recent-wins sync compares timestamps.
+- the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
+  scripts must delete the file first and re-verify the screen before every tap (a stale
+  dump caused stray taps this session — see incident note).
+- Incident (resolved): stray automation taps marked "Sans un bruit : Jour 1" played,
+  clearing its real resume position. Restored from a pre-incident screenshot
+  measurement: `played=false`, position 47531078400 ticks (~78% of runtime,
+  bar-verified on device after relaunch). Citizen Vigilante's test toggle likewise
+  reverted (`played=false`, pos 0). The app's local `user_data` rows for these two items
+  retain the test writes (`toBeSynced=false`, so they will never push); server state is
+  authoritative for reads today.
 
 ## Previous milestone: M2 — Design system + Home (online) (DONE, tagged m2)
 

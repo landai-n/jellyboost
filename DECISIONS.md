@@ -160,3 +160,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Plan said:** ItemDetail carries "Play/Resume, Download, Mark played, Favorite".
 - **Done instead:** *Mark played* and *Favorite* are fully live. *Play/Resume* and *Download* are drawn and enabled, and show a snackbar ("Playback arrives in M5." / "Downloads arrive in M7.").
 - **Reason:** The milestone list puts playback in M5 and the download pipeline in M7; neither exists yet. A disabled button reads as "broken" and a silent no-op is worse, so the buttons say what is actually true. The two handlers are one line each to repoint once `:player` and `:data:downloads` land.
+
+## 2026-07-28 — M3 DoD: >500-item paging verified at 184 items on device + 520 items by unit test
+- **Scope:** M3 milestone verification (no code change)
+- **Plan said:** "**M3 Library grid + Search** (Paging 3, sort/filter). Verify: >500-item library scrolls clean, one request per page."
+- **Done instead:** The scroll-clean/one-request-per-page property was walked on the device against the largest library the test server has — Films, 184 items (test-server' Séries library has 28 top-level items): full scroll to the bottom produced exactly one request per page at offsets 0/50/100/150, each requested once (logcat-verified). The >500-item scale itself is pinned by `OnlineJellyfinRepositoryPagingTest`, which drives the same `ItemPagingSource`/`Pager` configuration through a fake 520-item library and asserts exactly 11 page requests with no duplicates.
+- **Reason:** No library with more than 500 top-level items exists on the only available server, and inflating the user's real library with dummy media to satisfy the letter of the DoD would mutate their data (out of bounds for verification). The device walk proves the end-to-end request discipline; the unit test proves the same code path holds at the DoD's scale.

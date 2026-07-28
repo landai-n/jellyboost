@@ -2,19 +2,24 @@ package dev.jellyfinnative.data.mapper
 
 import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.common.model.PersonKind
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.BaseItemPerson
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
 
 /** Unit tests for [ItemMapper] — the `BaseItemDto` → domain boundary. */
 class ItemMapperTest {
@@ -248,6 +253,116 @@ class ItemMapperTest {
         val dtos = ids.map { BaseItemDto(id = it, type = BaseItemKind.MOVIE) }
 
         mapper.toDomain(dtos).map { it.id } shouldContainExactly ids.map { it.toString() }
+    }
+
+    // ---- M4: detail-only fields ---------------------------------------------------------------
+
+    @Test
+    fun `maps the detail-only fields a full item carries`() {
+        val premiere = LocalDateTime.of(2016, 11, 11, 0, 0)
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MOVIE,
+                name = "Arrival",
+                taglines = listOf("Why are they here?"),
+                childCount = 4,
+                premiereDate = premiere,
+                studios = listOf(NameGuidPair(name = "Paramount", id = UUID.randomUUID())),
+            )
+
+        val item = mapper.toDomain(dto)
+
+        item.taglines shouldContainExactly listOf("Why are they here?")
+        item.childCount shouldBe 4
+        item.premiereDate shouldBe premiere.toInstant(ZoneOffset.UTC)
+        item.studios shouldContainExactly listOf("Paramount")
+    }
+
+    @Test
+    fun `leaves the detail fields empty for a lean list item`() {
+        val item = mapper.toDomain(BaseItemDto(id = movieId, type = BaseItemKind.MOVIE))
+
+        item.taglines.shouldBeEmpty()
+        item.studios.shouldBeEmpty()
+        item.people.shouldBeEmpty()
+        item.childCount.shouldBeNull()
+        item.premiereDate.shouldBeNull()
+    }
+
+    @Test
+    fun `maps credits, including the character an actor plays and their headshot`() {
+        val actorId = UUID.fromString("44444444-4444-4444-4444-444444444444")
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MOVIE,
+                people =
+                    listOf(
+                        BaseItemPerson(
+                            id = actorId,
+                            name = "Amy Adams",
+                            role = "Louise Banks",
+                            type = SdkPersonKind.ACTOR,
+                            primaryImageTag = "headshot",
+                        ),
+                        BaseItemPerson(
+                            id = UUID.randomUUID(),
+                            name = "Denis Villeneuve",
+                            type = SdkPersonKind.DIRECTOR,
+                        ),
+                    ),
+            )
+
+        val people = mapper.toDomain(dto).people
+
+        people.map { it.name } shouldContainExactly listOf("Amy Adams", "Denis Villeneuve")
+        people.first().kind shouldBe PersonKind.ACTOR
+        people.first().role shouldBe "Louise Banks"
+        people.first().primaryImageUrl!! shouldContain actorId.toString()
+        people.last().kind shouldBe PersonKind.DIRECTOR
+        people.last().role.shouldBeNull()
+        people.last().primaryImageUrl.shouldBeNull()
+    }
+
+    @Test
+    fun `folds credit kinds outside v1's scope into OTHER`() {
+        fun kindOf(kind: SdkPersonKind) =
+            mapper
+                .toDomain(
+                    BaseItemDto(
+                        id = movieId,
+                        type = BaseItemKind.MOVIE,
+                        people = listOf(BaseItemPerson(id = movieId, name = "X", type = kind)),
+                    ),
+                ).people
+                .single()
+                .kind
+
+        kindOf(SdkPersonKind.ACTOR) shouldBe PersonKind.ACTOR
+        kindOf(SdkPersonKind.DIRECTOR) shouldBe PersonKind.DIRECTOR
+        kindOf(SdkPersonKind.WRITER) shouldBe PersonKind.WRITER
+        kindOf(SdkPersonKind.PRODUCER) shouldBe PersonKind.PRODUCER
+        kindOf(SdkPersonKind.GUEST_STAR) shouldBe PersonKind.GUEST_STAR
+        kindOf(SdkPersonKind.COMPOSER) shouldBe PersonKind.OTHER
+    }
+
+    @Test
+    fun `treats a blank role as no role at all`() {
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MOVIE,
+                people =
+                    listOf(BaseItemPerson(id = movieId, name = "X", role = "  ", type = SdkPersonKind.ACTOR)),
+            )
+
+        mapper
+            .toDomain(dto)
+            .people
+            .single()
+            .role
+            .shouldBeNull()
     }
 
     private fun library(

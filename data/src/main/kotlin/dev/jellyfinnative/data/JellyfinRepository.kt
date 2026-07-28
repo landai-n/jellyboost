@@ -47,6 +47,48 @@ interface JellyfinRepository {
         limit: Int = DEFAULT_LATEST_LIMIT,
     ): AppResult<List<JellyfinItem>>
 
+    // ---- M4 — item detail -------------------------------------------------------------------
+
+    /**
+     * Re-fetches one item in full — overview, taglines, genres, people, media sources, streams,
+     * chapters and trickplay.
+     *
+     * Detail screens deliberately do not reuse the lean item a list handed them: the plan follows
+     * Swiftfin here, where lists are minimal and the detail/playback path fetches everything
+     * (docs/PLAN.md, "Screens" → ItemDetail).
+     */
+    suspend fun getItem(id: String): AppResult<JellyfinItem>
+
+    /** The seasons of a series, in server order — the seasons row on a series detail page. */
+    suspend fun getSeasons(seriesId: String): AppResult<List<JellyfinItem>>
+
+    /**
+     * The episodes of one season, in server order.
+     *
+     * [seriesId] is not redundant: the server's episode endpoint is rooted at the series
+     * (`/Shows/{seriesId}/Episodes`) and treats the season as a filter. A season item always
+     * carries its `seriesId`, so callers have it.
+     */
+    suspend fun getEpisodes(
+        seriesId: String,
+        seasonId: String,
+    ): AppResult<List<JellyfinItem>>
+
+    /**
+     * The next unwatched episode of one series, or `null` when the series is fully watched.
+     *
+     * Distinct from [getNextUp], which spans every series for the home row.
+     */
+    suspend fun getNextUpForSeries(seriesId: String): AppResult<JellyfinItem?>
+
+    /** Server-recommended related items — the *More like this* row. */
+    suspend fun getSimilarItems(
+        id: String,
+        limit: Int = DEFAULT_SIMILAR_LIMIT,
+    ): AppResult<List<JellyfinItem>>
+
+    // ---- end M4 ------------------------------------------------------------------------------
+
     companion object {
         /** Row size jellyfin-web uses for *Continue watching* (DECISIONS.md 2026-07-28). */
         const val DEFAULT_RESUME_LIMIT = 12
@@ -58,3 +100,13 @@ interface JellyfinRepository {
         const val DEFAULT_LATEST_LIMIT = 16
     }
 }
+
+// ---- M4 — item detail ------------------------------------------------------------------------
+
+/**
+ * Row size for the detail page's *More like this* row.
+ *
+ * Declared at file scope rather than inside [JellyfinRepository.Companion] so that the M4 surface
+ * stays one append-only block while M3 extends the same file in parallel.
+ */
+const val DEFAULT_SIMILAR_LIMIT = 12

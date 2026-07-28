@@ -100,3 +100,10 @@ None yet. M4 is still online-only: `getItem` and friends are pure network reads.
 serving cached rows (and returning `available = false` instead of throwing) arrives with
 `OfflineJellyfinRepository` in M6. The user-data half of this screen, by contrast, already works
 with no network at all.
+
+## Verification
+
+M4 DoD walked on the test tablet (2026-07-28): movie and episode detail from grid/home
+cards; series → season → episodes chain firing each expected request exactly once
+(`/Items/{id}`, `/Shows/{id}/Seasons`, `/Shows/{seriesId}/Episodes?seasonId=`,
+`/Shows/NextUp?seriesId=`, `/Items/{id}/Similar`); landscape and portrait passes.

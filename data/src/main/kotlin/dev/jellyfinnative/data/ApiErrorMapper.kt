@@ -18,8 +18,12 @@ private const val HTTP_NOT_FOUND = 404
  *
  * Coroutine cancellation is deliberately re-thrown: swallowing it into an [AppResult.Failure]
  * would leave a cancelled ViewModel scope rendering a bogus error state.
+ *
+ * Public rather than module-internal since M7: `:data:downloads` issues one SDK call of its own
+ * (the full-fields re-fetch behind an enqueue) and must fold its failures into the *same* taxonomy,
+ * not a parallel one.
  */
-internal inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
+inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
     try {
         AppResult.Success(block())
     } catch (cancellation: CancellationException) {
@@ -36,7 +40,7 @@ internal inline fun <T> runCatchingApi(block: () -> T): AppResult<T> =
  * The transport-failure cases (network, timeout, TLS) are the ones the delegating repository
  * treats as "fall back to offline" in M6, so they are kept distinct from server-side errors.
  */
-internal fun Throwable.toAppError(): AppError =
+fun Throwable.toAppError(): AppError =
     when (this) {
         is InvalidStatusException ->
             when (status) {

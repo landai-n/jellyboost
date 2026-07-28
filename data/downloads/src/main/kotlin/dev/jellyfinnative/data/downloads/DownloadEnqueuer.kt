@@ -1,0 +1,128 @@
+package dev.jellyfinnative.data.downloads
+
+import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadStatus
+import dev.jellyfinnative.core.database.dao.DownloadDao
+import dev.jellyfinnative.core.database.dao.ItemDao
+import dev.jellyfinnative.core.database.entities.DownloadEntity
+import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.plan.DownloadPaths
+import org.jellyfin.sdk.model.api.BaseItemDto
+import timber.log.Timber
+import java.time.Clock
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Turns "the user tapped Download" into rows Room can hand to the queue (docs/PLAN.md, "Download
+ * pipeline" → Enqueue).
+ *
+ * Four things happen, in this order, and the order is the point:
+ *
+ * 1. **A full re-fetch.** The item the user tapped came from a lean list request; the file plan
+ *    needs `mediaSources`, `mediaStreams`, `trickplay` and the image tags, which only the full
+ *    field set carries.
+ * 2. **The parents too.** An episode's series and season are fetched and cached alongside it, so
+ *    that offline the user can walk *up* from the downloaded episode to its show — the plan's
+ *    "cached parents of downloaded items still open".
+ * 3. **`ItemEntity(source = DOWNLOAD)`.** This is the row that makes the item appear in the offline
+ *    home, library and search (M6's `OfflineJellyfinRepository` reads exactly this), and the row a
+ *    later browse write-through is forbidden from demoting.
+ * 4. **`DownloadEntity(QUEUED)`** at the end of the queue.
+ *
+ * Steps 1–3 are all-or-nothing: enqueueing a download whose metadata we failed to store would
+ * produce files on disk that no screen can ever show.
+ */
+@Singleton
+class DownloadEnqueuer
+    @Inject
+    constructor(
+        private val api: DownloadApi,
+        private val itemDao: ItemDao,
+        private val downloadDao: DownloadDao,
+        private val mapper: ItemEntityMapper,
+        private val clock: Clock,
+    ) {
+        /**
+         * Enqueues one item.
+         *
+         * @param userId owner of the download — the delete cascade needs it.
+         * @return the created row, or a failure describing why nothing was written.
+         */
+        suspend fun enqueue(
+            itemId: UUID,
+            userId: UUID,
+        ): AppResult<DownloadEntity> {
+            val fetched =
+                when (val result = api.getFullItems(listOf(itemId))) {
+                    is AppResult.Failure -> return result
+                    is AppResult.Success -> result.value.firstOrNull()
+                } ?: return AppResult.Failure(AppError.NotFound(itemId.toString()))
+
+            val parents = fetchParents(fetched)
+            val now = clock.instant()
+
+            @Suppress("TooGenericExceptionCaught")
+            return try {
+                // The item and its parents in one upsert: a partially-cached hierarchy is the state
+                // that makes offline navigation dead-end halfway up.
+                itemDao.upsert((listOf(fetched) + parents).map { mapper.toEntity(it, ItemSource.DOWNLOAD, now) })
+
+                val row = fetched.toDownloadRow(userId, now)
+                downloadDao.upsert(row)
+                AppResult.Success(row)
+            } catch (error: Exception) {
+                Timber.e(error, "Could not enqueue %s", itemId)
+                AppResult.Failure(AppError.Storage(error))
+            }
+        }
+
+        /**
+         * The series and season of an episode, best effort.
+         *
+         * A failure here is deliberately *not* fatal: the download itself is perfectly usable
+         * without its parents cached, it only means the offline series page is missing until the
+         * user next browses to it online.
+         */
+        private suspend fun fetchParents(item: BaseItemDto): List<BaseItemDto> {
+            val parentIds = listOfNotNull(item.seriesId, item.seasonId).filter { it != item.id }.distinct()
+            if (parentIds.isEmpty()) return emptyList()
+
+            return when (val result = api.getFullItems(parentIds)) {
+                is AppResult.Success -> result.value
+                is AppResult.Failure -> {
+                    Timber.w("Could not cache the parents of %s: %s", item.id, result.error)
+                    emptyList()
+                }
+            }
+        }
+
+        private suspend fun BaseItemDto.toDownloadRow(
+            userId: UUID,
+            now: java.time.Instant,
+        ): DownloadEntity {
+            val existing = downloadDao.get(id)
+            val position = existing?.queuePosition ?: ((downloadDao.maxQueuePosition() ?: 0) + 1)
+
+            return DownloadEntity(
+                itemId = id,
+                userId = userId,
+                status = DownloadStatus.QUEUED,
+                mediaSourceId = mediaSources?.firstOrNull()?.id,
+                // The row starts at zero downloaded but with the size the server reported, so the
+                // queue tab can show a meaningful percentage before the first byte arrives.
+                bytesDownloaded = existing?.bytesDownloaded ?: 0L,
+                bytesTotal = mediaSources?.firstOrNull()?.size ?: existing?.bytesTotal ?: 0L,
+                queuePosition = position,
+                directoryName = DownloadPaths.itemDirectoryName(this),
+                itemName = name.orEmpty().ifBlank { id.toString() },
+                seriesName = seriesName,
+                errorMessage = null,
+                createdAt = existing?.createdAt ?: now,
+                updatedAt = now,
+            )
+        }
+    }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel -->
+    <string name="downloads_channel_name">Downloads</string>
+    <string name="downloads_channel_description">Progress of media downloading to this device.</string>
+
+    <!-- Foreground notification -->
+    <string name="downloads_notification_preparing">Preparing downloads…</string>
+    <string name="downloads_notification_downloading">Downloading…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_action_pause">Pause</string>
+    <string name="downloads_action_cancel">Cancel</string>
+</resources>

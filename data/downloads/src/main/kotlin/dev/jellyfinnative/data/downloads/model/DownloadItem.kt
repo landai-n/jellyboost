@@ -28,8 +28,13 @@ data class DownloadItem(
     val progress: Float
         get() = if (bytesTotal <= 0L) 0f else (bytesDownloaded.toFloat() / bytesTotal).coerceIn(0f, 1f)
 
-    /** What the *Downloaded* tab groups by: the show for an episode, the item itself otherwise. */
-    val groupKey: String get() = seriesName?.takeIf { it.isNotBlank() } ?: title
+    /**
+     * What the *Downloaded* tab groups by: the show an episode belongs to, or `null` for a film.
+     *
+     * `null` rather than falling back to [title]: a film has nothing to be grouped *with*, and a
+     * heading is only worth its line when it says something the rows underneath do not.
+     */
+    val seriesKey: String? get() = seriesName?.takeIf { it.isNotBlank() }
 }
 
 /**

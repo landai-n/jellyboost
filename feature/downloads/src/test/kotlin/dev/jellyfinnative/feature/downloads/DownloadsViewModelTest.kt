@@ -101,6 +101,43 @@ class DownloadsViewModelTest {
         }
 
     @Test
+    fun `a film gets no heading of its own name`() =
+        runTest(dispatcher) {
+            // The M9 bug (docs/POLISH.md): every film was drawn under a group header reading its
+            // own title, so the name appeared twice, one line apart.
+            items.value =
+                listOf(
+                    item("1", "Dune", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val groups = model.uiState.value.downloaded
+            groups.single { it.title == "Dune" }.isSeries shouldBe false
+            groups.single { it.title == "Westworld" }.isSeries shouldBe true
+        }
+
+    @Test
+    fun `two films sharing a title stay two rows`() =
+        runTest(dispatcher) {
+            // Grouping by title would have merged the 1984 and the 2021 Dune into one heading with
+            // two identical rows under it.
+            items.value =
+                listOf(
+                    item("1", "Dune", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Dune", status = DownloadStatus.DOWNLOADED),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.downloaded
+                .map { it.items.single().itemId } shouldContainExactly listOf("1", "2")
+        }
+
+    @Test
     fun `a group reports the bytes its items occupy on disk`() =
         runTest(dispatcher) {
             items.value =

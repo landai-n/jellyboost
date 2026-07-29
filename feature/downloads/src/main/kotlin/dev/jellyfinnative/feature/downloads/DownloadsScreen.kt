@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -21,11 +22,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -153,19 +157,68 @@ private fun DownloadedTab(
         return
     }
 
+    // Which delete the user has asked for but not yet confirmed. Local to the list on purpose: it
+    // is a question the screen is asking, not something the ViewModel or Room knows about.
+    var pendingDelete by remember { mutableStateOf<DownloadItem?>(null) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
     ) {
         groups.forEach { group ->
-            item(key = "header-${group.title}") {
-                GroupHeader(group = group)
+            // A film's heading would only repeat the title of the single row under it.
+            if (group.isSeries) {
+                item(key = "header-${group.title}") {
+                    GroupHeader(group = group)
+                }
             }
             items(items = group.items, key = { it.itemId }) { item ->
-                DownloadedRow(item = item, onDelete = { onDelete(item) })
+                DownloadedRow(item = item, onDelete = { pendingDelete = item })
             }
         }
     }
+
+    pendingDelete?.let { item ->
+        DeleteDownloadDialog(
+            item = item,
+            onDismiss = { pendingDelete = null },
+            onConfirm = {
+                pendingDelete = null
+                onDelete(item)
+            },
+        )
+    }
+}
+
+/**
+ * Confirms a delete from the *Downloaded* tab.
+ *
+ * Only here, and deliberately not on the queue tab's *Cancel*: this button destroys a finished
+ * transfer — a film that may have taken an hour of a metered connection — and its icon sits one
+ * row away from the next item's. Cancelling something still downloading costs the bytes not yet
+ * spent, and is undone by pressing Download again.
+ */
+@Composable
+private fun DeleteDownloadDialog(
+    item: DownloadItem,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.downloads_delete_dialog_title, item.rowTitle())) },
+        text = { Text(text = stringResource(R.string.downloads_delete_dialog_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.downloads_delete_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.downloads_delete_dialog_cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -259,6 +312,9 @@ private fun WifiOnlyToggle(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        // The label and the switch are one control, but they must not touch: the same gap the
+        // settings rows put between a label and its switch (`SettingsRows.SettingsSwitchRow`).
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         modifier =
             Modifier
                 .defaultMinSize(minHeight = 48.dp)

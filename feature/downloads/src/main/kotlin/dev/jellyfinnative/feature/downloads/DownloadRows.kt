@@ -192,7 +192,7 @@ private fun RowArtwork(
 }
 
 /** `Westworld · S1:E2 · Chestnut` for an episode, the plain title otherwise. */
-private fun DownloadItem.rowTitle(): String =
+internal fun DownloadItem.rowTitle(): String =
     listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(" · ")
 
 /** The second line under a queue row's progress bar. */

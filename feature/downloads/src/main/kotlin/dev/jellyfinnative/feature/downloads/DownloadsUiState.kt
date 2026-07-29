@@ -14,14 +14,22 @@ enum class DownloadsTab {
 }
 
 /**
- * A group of finished downloads under one heading.
+ * A run of finished downloads that belong together.
  *
- * Grouping is by series for episodes and by title for films, which is how a user thinks about what
- * is on the device: *three episodes of Westworld*, not *three files*.
+ * Episodes are gathered under their series, which is how a user thinks about what is on the device:
+ * *three episodes of Westworld*, not *three files*. A film is a group of one and is drawn without a
+ * heading — see [isSeries].
  */
 data class DownloadGroup(
     val title: String,
     val items: List<DownloadItem>,
+    /**
+     * `true` when [title] is a series name, and therefore worth a heading over the rows.
+     *
+     * A film's heading would repeat its own row's title verbatim ("Dune" over "Dune"), which the
+     * M9 device walk found on every film on the screen (docs/POLISH.md).
+     */
+    val isSeries: Boolean = false,
 ) {
     /** Bytes this group occupies on disk. */
     val bytesOnDisk: Long get() = items.sumOf { it.bytesOnDisk }
@@ -64,12 +72,25 @@ enum class DownloadsMessage {
  * Both tabs come from **one** Room query rather than two: a download moves between them by changing
  * status, and two independent queries would let the UI briefly show an item in neither tab (or in
  * both) while they settled.
+ *
+ * Series and films are ordered together alphabetically rather than in two blocks: the list is short
+ * and read by title, and a user looking for *Dune* should not first have to work out whether the
+ * app filed it as a series.
  */
-internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> =
-    filter { it.status == DownloadStatus.DOWNLOADED }
-        .groupBy { it.groupKey }
-        .map { (title, items) -> DownloadGroup(title = title, items = items.sortedBy { it.title }) }
+internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
+    val (episodes, films) =
+        filter { it.status == DownloadStatus.DOWNLOADED }.partition { it.seriesKey != null }
+
+    val series =
+        episodes
+            .groupBy { requireNotNull(it.seriesKey) }
+            .map { (name, items) ->
+                DownloadGroup(title = name, items = items.sortedBy { it.title }, isSeries = true)
+            }
+
+    return (series + films.map { DownloadGroup(title = it.title, items = listOf(it)) })
         .sortedBy { it.title.lowercase() }
+}
 
 /** The queue tab's contents: everything not finished, in queue order. */
 internal fun List<DownloadItem>.toQueue(): List<DownloadItem> =

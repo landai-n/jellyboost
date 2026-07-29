@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.LibraryView
@@ -105,8 +104,20 @@ private fun LibrariesGrid(
     }
 }
 
-/** Minimum grid column width — landscape library tiles read best a little wider than posters. */
-private val MIN_CELL_WIDTH = 160.dp
+/**
+ * Minimum grid column width.
+ *
+ * This screen has no spec in docs/PLAN.md (only `LibraryGrid` — the paged item grid *inside* a
+ * library — does), so 160dp was a screen-local guess. It read smaller than Home's *My Media* row,
+ * which draws the same 16:9 library-tile shape at a fixed [Dimens.ThumbWidth] (210dp): on the test tablet, `Adaptive(160.dp)` settles at 4 portrait columns of ~161dp and 6 landscape columns of
+ * ~174dp — both below Home's 210dp card, and portrait in particular is barely off the 160dp floor.
+ * Anchoring the floor to [Dimens.ThumbWidth] itself (the same token Home's row uses) gives 3
+ * portrait columns of ~218dp and 5 landscape columns of ~212dp — both now at or above the home
+ * card width (`Adaptive` always grows cells to ≥ minSize) — and the widest of those, ~218dp, still
+ * sits under `ArtworkRequestWidths.THUMB_DP` (224dp), so the artwork request size doesn't need to
+ * change.
+ */
+private val MIN_CELL_WIDTH = Dimens.ThumbWidth
 
 private const val LIBRARY_CELL_CONTENT_TYPE = "library-card"
 

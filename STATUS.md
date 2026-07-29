@@ -152,6 +152,15 @@ movies unchanged. Gate: **1094 tests, 0 failures** (1082 → 1094).
   target predicates; DownloadsMessage enum → sealed interface (logged).
 Gate after the batch: **1114 tests, 0 failures** (1094 → 1114).
 
+Round 2 of the "library tab items smaller than Home" report: the poster-grid fix
+above didn't address it — the user meant the Libraries tab itself (the "Films"/
+"Séries" category tiles, `LibrariesScreen.kt`), a different screen with its own
+`MIN_CELL_WIDTH = 160.dp`. Anchored to `Dimens.ThumbWidth` (210dp, same token
+Home's *My Media* row uses): test tablet portrait 4×~161dp → 3×~218dp, landscape
+6×~174dp → 5×~212dp — both now at/above Home's 210dp card (DECISIONS: Libraries
+tab category tiles minimum cell width raised to Dimens.ThumbWidth). Code-only,
+no Compose-UI harness in the repo to add a test to.
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +28,10 @@ import dev.jellyfinnative.core.ui.theme.POSTER_ASPECT_RATIO
  * Shows the item's primary artwork with the resume progress bar, watched tick and
  * [dev.jellyfinnative.core.common.model.DownloadState] badge overlaid, plus title and subtitle
  * underneath.
+ *
+ * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
+ *   width instead, which is what an adaptive grid cell wants (and saves the caller a
+ *   `BoxWithConstraints` per cell).
  */
 @Composable
 fun PosterCard(
@@ -41,7 +44,7 @@ fun PosterCard(
     Column(
         modifier =
             modifier
-                .width(width)
+                .cardWidth(width)
                 .clickable(onClick = onClick),
     ) {
         MediaCardArtwork(

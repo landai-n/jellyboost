@@ -32,6 +32,9 @@ import dev.jellyfinnative.core.ui.theme.JellyfinTheme
  *
  * @param key stable identity per item so the row survives recomposition and in-place user-data
  *   patches (the `UserDataEventBus` pattern from docs/PLAN.md).
+ * @param contentType what kind of card [itemContent] draws. Every item in one row draws the same
+ *   kind, so declaring it lets the `LazyRow` reuse a scrolled-off node instead of composing a fresh
+ *   one; without it a lazy layout assumes every item may be different and reuses nothing.
  */
 @Composable
 fun <T> MediaRow(
@@ -39,6 +42,7 @@ fun <T> MediaRow(
     items: List<T>,
     key: (T) -> Any,
     modifier: Modifier = Modifier,
+    contentType: Any = DEFAULT_CARD_CONTENT_TYPE,
     onSeeAll: (() -> Unit)? = null,
     itemContent: @Composable (T) -> Unit,
 ) {
@@ -74,10 +78,15 @@ fun <T> MediaRow(
             contentPadding = PaddingValues(horizontal = Dimens.ScreenPadding),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         ) {
-            items(items = items, key = key) { item -> itemContent(item) }
+            items(items = items, key = key, contentType = { contentType }) { item ->
+                itemContent(item)
+            }
         }
     }
 }
+
+/** Rows that do not say what they draw still reuse within themselves, just not across kinds. */
+private const val DEFAULT_CARD_CONTENT_TYPE = "media-card"
 
 @Preview(name = "MediaRow", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)
 @Composable

@@ -1,7 +1,6 @@
 package dev.jellyfinnative.feature.library
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,11 +35,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.ui.component.EmptyState
@@ -198,18 +199,20 @@ private fun ItemGrid(
         items(
             count = items.itemCount,
             key = items.itemKey { it.id },
+            // Every cell is the same kind of node, so the grid can reuse one that scrolled off
+            // instead of composing a new one — the single cheapest thing a lazy layout can be told.
+            contentType = items.itemContentType { POSTER_CELL_CONTENT_TYPE },
         ) { index ->
             val item = items[index]
             if (item != null) {
-                // `PosterCard` takes a fixed width; measuring the cell here is what makes the card
-                // fill its column instead of overflowing a narrow one or leaving a gap in a wide one.
-                BoxWithConstraints {
-                    PosterCard(
-                        item = item,
-                        onClick = { onItemClick(item) },
-                        width = maxWidth,
-                    )
-                }
+                // `Dp.Unspecified` makes the card fill its column instead of taking a fixed width,
+                // which is what a `GridCells.Adaptive` cell needs. It replaces a per-cell
+                // `BoxWithConstraints`, i.e. one subcomposition per poster on every scroll.
+                PosterCard(
+                    item = item,
+                    onClick = { onItemClick(item) },
+                    width = Dp.Unspecified,
+                )
             }
         }
 
@@ -283,3 +286,5 @@ private fun FilterAction(
 private val MIN_CELL_WIDTH = 110.dp
 
 private const val APPEND_KEY = "library-append-state"
+
+private const val POSTER_CELL_CONTENT_TYPE = "poster-card"

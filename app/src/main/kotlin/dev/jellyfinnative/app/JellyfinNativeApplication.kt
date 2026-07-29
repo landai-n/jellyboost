@@ -3,6 +3,13 @@ package dev.jellyfinnative.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.memory.MemoryCache
+import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
 import dev.jellyfinnative.data.userdata.UserDataSyncTrigger
 import timber.log.Timber
@@ -11,13 +18,15 @@ import javax.inject.Inject
 /**
  * Application entry point.
  *
- * Owns Hilt's object graph and provides the WorkManager configuration used by the download and
- * user-data sync workers (docs/PLAN.md, ":app").
+ * Owns Hilt's object graph, provides the WorkManager configuration used by the download and
+ * user-data sync workers (docs/PLAN.md, ":app"), and configures the one Coil image loader every
+ * `JellyfinAsyncImage` in the app draws through.
  */
 @HiltAndroidApp
 class JellyfinNativeApplication :
     Application(),
-    Configuration.Provider {
+    Configuration.Provider,
+    SingletonImageLoader.Factory {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
@@ -38,11 +47,48 @@ class JellyfinNativeApplication :
                 .setWorkerFactory(workerFactory)
                 .build()
 
+    /**
+     * The app-wide Coil image loader.
+     *
+     * Coil 3 gives a hand-built loader **no** disk cache and no transition unless it is told to, and
+     * the app had been running on the bare defaults: every poster that scrolled out of the memory
+     * cache was re-fetched over the network, and each one popped in. Both are felt on the home
+     * screen and in the library grid, which are nothing but images (POLISH.md, "media list
+     * scrolling").
+     *
+     * Sizes are deliberately modest: artwork is requested at fixed widths by
+     * `SdkImageUrlFactory`, so the entries are small, and 25 % of the app's heap holds a screenful
+     * of a grid several times over on the test tablet.
+     */
+    override fun newImageLoader(context: PlatformContext): ImageLoader =
+        ImageLoader
+            .Builder(context)
+            .memoryCache {
+                MemoryCache
+                    .Builder()
+                    .maxSizePercent(context, MEMORY_CACHE_HEAP_FRACTION)
+                    .build()
+            }.diskCache {
+                DiskCache
+                    .Builder()
+                    .directory(context.cacheDir.resolve(IMAGE_CACHE_DIRECTORY))
+                    .maxSizeBytes(DISK_CACHE_MAX_BYTES)
+                    .build()
+            }.crossfade(CROSSFADE_MILLIS)
+            .build()
+
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
         userDataSyncTrigger.start()
+    }
+
+    private companion object {
+        const val MEMORY_CACHE_HEAP_FRACTION = 0.25
+        const val DISK_CACHE_MAX_BYTES = 256L * 1024 * 1024
+        const val CROSSFADE_MILLIS = 150
+        const val IMAGE_CACHE_DIRECTORY = "image_cache"
     }
 }

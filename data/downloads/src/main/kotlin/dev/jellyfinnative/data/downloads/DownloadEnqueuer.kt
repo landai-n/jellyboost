@@ -292,13 +292,21 @@ class DownloadEnqueuer
          *
          * For [DownloadQuality.ORIGINAL] the server already knows: `mediaSources[0].size` is the
          * file on disk, exactly. For a transcode it does not — it has not encoded the file yet, and
-         * it will not send a `Content-Length` either — so the size is `runtime × bitrate`, which is
-         * within a few per cent for constrained H.264 and is the difference between a queue row
-         * showing "43 % of ~4.2 GB" and an indeterminate bar for two hours (DECISIONS.md,
-         * 2026-07-29).
+         * it will not send a `Content-Length` either — so the size is `runtime × bitrate`.
+         *
+         * The bitrate used is the *effective* one, not just the quality tier's cap: a transcode can
+         * never need more bits per second than the source already uses, so when
+         * `mediaSources[0].bitrate` is known and below the cap, that — not the cap — is what the
+         * server will actually produce. Most sources (especially HEVC) sit well under a tier's cap,
+         * so estimating from the cap alone overstates the download by a large margin (a LOW-quality
+         * episode estimated 552 MB and landed at 232 MB — DECISIONS.md, 2026-07-29). When the source
+         * bitrate is missing or zero, the cap is the only number left and the estimate falls back to
+         * it.
          */
         private fun BaseItemDto.expectedBytes(quality: DownloadQuality): Long? {
-            val bitRate = quality.totalBitRate ?: return mediaSources?.firstOrNull()?.size
+            val cap = quality.totalBitRate ?: return mediaSources?.firstOrNull()?.size
+            val sourceBitRate = mediaSources?.firstOrNull()?.bitrate?.takeIf { it > 0 }
+            val bitRate = if (sourceBitRate != null) minOf(cap, sourceBitRate) else cap
             val ticks = runTimeTicks?.takeIf { it > 0L } ?: return null
             val seconds = ticks.toDouble() / TICKS_PER_SECOND
             return (seconds * bitRate / Byte.SIZE_BITS).toLong()

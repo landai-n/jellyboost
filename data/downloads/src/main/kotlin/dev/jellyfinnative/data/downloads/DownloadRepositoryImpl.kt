@@ -69,6 +69,10 @@ class DownloadRepositoryImpl
             downloadDao
                 .observeAll()
                 .map(::toDownloadItems)
+                // `observeAll` is a `@Transaction` over two tables, so one throttled progress
+                // update re-emits it two or three times — once for the file row, once for the item
+                // row. Only the emissions that actually changed something are worth a recomposition.
+                .distinctUntilChanged()
                 .flowOn(ioDispatcher)
 
         override fun observeStorage(): Flow<StorageUsage> =

@@ -35,3 +35,7 @@ decisions are logged in DECISIONS.md; per-feature details in docs/features/.
 
 # Remaining
 - Re-sign in on the tablet — the stored server token was revoked server-side, so every authenticated call currently 401s. Once signed in, device-check the size estimate on a fresh enqueue and the partial-season cancel.
+
+# New run
+- The top back arrow is too close to the system icon
+- The storage path should be configurable (e.g., to an SD card)

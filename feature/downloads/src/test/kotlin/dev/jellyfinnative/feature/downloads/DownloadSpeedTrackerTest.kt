@@ -11,9 +11,10 @@ import org.junit.jupiter.api.Test
  * Unit tests for [DownloadSpeedTracker].
  *
  * The tracker exists because the pipeline deliberately stores no speed column; it derives one from
- * two samples of `bytesDownloaded`. That makes two edge cases worth pinning: a *first* sample has
- * nothing to compare against, and a resumed transfer whose server ignored the `Range` header can
- * produce a negative delta.
+ * two samples of `bytesDownloaded`. That makes three edge cases worth pinning: a *first* sample has
+ * nothing to compare against, a resumed transfer whose server ignored the `Range` header can
+ * produce a negative delta, and — the M9 bug — Room emits the same throttled progress update two or
+ * three times milliseconds apart, which must not be read as bytes moving that fast.
  */
 class DownloadSpeedTrackerTest {
     /** Smoothing of 1 makes each sample the whole answer, so the arithmetic is checkable. */
@@ -36,12 +37,30 @@ class DownloadSpeedTrackerTest {
     }
 
     @Test
-    fun `a half-second window is extrapolated to a second`() {
+    fun `samples inside the window are accumulated, not extrapolated`() {
+        // Half a second of bytes divided by half a second is arithmetically right and practically
+        // useless: the emissions are not evenly spaced, so the short windows are the ones that land
+        // between two halves of a single write. They are held instead until a full window is up.
         tracker.update(listOf(downloading("1", bytes = 0L)), nowMillis = 0L)
 
-        val speeds = tracker.update(listOf(downloading("1", bytes = 1_000L)), nowMillis = 500L)
+        tracker.update(listOf(downloading("1", bytes = 1_000L)), nowMillis = 500L).shouldBeEmpty()
 
-        speeds["1"] shouldBe 2_000L
+        // The bytes were not thrown away: they count towards the first full-window measurement.
+        tracker.update(listOf(downloading("1", bytes = 2_000L)), nowMillis = 1_000L)["1"] shouldBe 2_000L
+    }
+
+    @Test
+    fun `a burst of emissions milliseconds apart cannot inflate the speed`() {
+        // The M9 bug (docs/POLISH.md): `DownloadDao.observeAll` is a transaction over `downloads`
+        // and `download_files`, and the queue writes the file's bytes then the item's back to back.
+        // Dividing a 500 ms window's bytes by the 1 ms between those two writes reported 100–180
+        // MB/s for a transfer running at 8.
+        tracker.update(listOf(downloading("1", bytes = 0L)), nowMillis = 0L)
+        tracker.update(listOf(downloading("1", bytes = 8_000_000L)), nowMillis = 1_000L)["1"] shouldBe 8_000_000L
+
+        val burst = tracker.update(listOf(downloading("1", bytes = 8_400_000L)), nowMillis = 1_001L)
+
+        burst["1"] shouldBe 8_000_000L
     }
 
     @Test

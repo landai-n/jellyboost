@@ -324,6 +324,23 @@ class ItemDetailViewModelTest {
         }
 
     @Test
+    fun `a position written while offline turns the button into Resume, with no refetch`() =
+        runTest(dispatcher) {
+            // The offline half of the M8 chain: the player writes the position locally on every
+            // tick and publishes it, and this screen is where the user sees it — a downloaded film
+            // watched in airplane mode offers Resume at the right place with no server involved.
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            changes.emit(UserDataChange(ITEM_ID, UserData(playbackPositionTicks = 36_000_000_000L)))
+            advanceUntilIdle()
+
+            playbackStartTicks(model.uiState.value.playTarget!!) shouldBe 36_000_000_000L
+            coVerify(exactly = 1) { repository.getItem(ITEM_ID) }
+        }
+
+    @Test
     fun `a watched movie starts again from the beginning`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns

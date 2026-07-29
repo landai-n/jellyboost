@@ -181,7 +181,15 @@ class PlaybackInfoResolver
         }
     }
 
-private fun MediaStream.toTrack(defaultIndex: Int?): PlaybackTrack =
+/**
+ * One stream as the pickers see it.
+ *
+ * `internal` rather than file-private since M8: [LocalPlaybackResolver] builds its track lists from
+ * the very same `MediaStream` shape (read out of the cached item blob instead of off a
+ * `PlaybackInfo` response), and the two must agree label for label — that identity is what makes
+ * the player UI the same online and offline.
+ */
+internal fun MediaStream.toTrack(defaultIndex: Int?): PlaybackTrack =
     PlaybackTrack(
         index = index,
         label = displayTitle ?: title ?: language ?: codec.orEmpty(),

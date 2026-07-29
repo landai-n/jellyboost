@@ -1,9 +1,11 @@
 package dev.jellyfinnative.player.report
 
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.api.PlayerApi
 import dev.jellyfinnative.player.di.DetachedPlayerScope
+import dev.jellyfinnative.player.model.PlaybackMediaSource
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import kotlinx.coroutines.CoroutineScope
@@ -30,8 +32,24 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Modelled on jellyfin-android's `PlayerViewModel.kt:410-562`, with one addition the plan
  * requires: every position that goes to the server is **also** written locally through
- * [UserDataRepository], so resume behaves identically whether the item was streamed or (from M8)
- * played from a download.
+ * [UserDataRepository], so resume behaves identically whether the item was streamed or played from
+ * a download.
+ *
+ * ### The offline half (M8)
+ * The server half of every method is skipped entirely when there is nothing to tell —
+ * see [reportsToServer]. Two situations qualify, and they are one rule:
+ *
+ * - the source is a [dev.jellyfinnative.player.model.LocalPlaybackMediaSource]: it has no
+ *   `playSessionId`, so a start/progress/stop triad keyed on it would be meaningless even if the
+ *   server were reachable, and there is no encoder to kill;
+ * - [ConnectionStateProvider] says we are offline: every call would burn a connect timeout per
+ *   five-second tick before failing, filling the log with warnings for reports the server will
+ *   never see anyway.
+ *
+ * The **local** write is not conditional. `UserDataRepository.setPosition` stores the row with
+ * `toBeSynced = true` regardless of the network (it only clears the flag on a successful push), so
+ * an airplane-mode session accumulates exactly the pending rows `UserDataSyncWorker` drains on
+ * reconnect. That is the mechanism behind the milestone's definition of done.
  */
 @Singleton
 class PlaybackReporter
@@ -39,27 +57,30 @@ class PlaybackReporter
     constructor(
         private val api: PlayerApi,
         private val userDataRepository: UserDataRepository,
+        private val connectionState: ConnectionStateProvider,
         @DetachedPlayerScope private val detachedScope: CoroutineScope,
     ) {
         /** Playback started (or restarted after a re-resolve). */
         suspend fun reportStart(
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
+            val remote = source.reportsToServer() ?: return
+
             runReport("start") {
                 api.reportPlaybackStart(
                     PlaybackStartInfo(
-                        itemId = source.itemId,
-                        playMethod = source.playMethod.toSdk(),
-                        playSessionId = source.playSessionId,
-                        liveStreamId = source.liveStreamId,
-                        mediaSourceId = source.mediaSourceId,
-                        audioStreamIndex = source.selectedAudioIndex,
-                        subtitleStreamIndex = source.selectedSubtitleIndex,
+                        itemId = remote.itemId,
+                        playMethod = remote.playMethod.toSdk(),
+                        playSessionId = remote.playSessionId,
+                        liveStreamId = remote.liveStreamId,
+                        mediaSourceId = remote.mediaSourceId,
+                        audioStreamIndex = remote.selectedAudioIndex,
+                        subtitleStreamIndex = remote.selectedSubtitleIndex,
                         isPaused = !snapshot.isPlaying,
                         isMuted = false,
                         canSeek = true,
-                        positionTicks = source.startPositionTicks,
+                        positionTicks = remote.startPositionTicks,
                         repeatMode = RepeatMode.REPEAT_NONE,
                         playbackOrder = PlaybackOrder.DEFAULT,
                     ),
@@ -70,33 +91,35 @@ class PlaybackReporter
         /**
          * One progress tick.
          *
-         * The local write happens even when the server call fails — an unreachable server must not
-         * cost the user their place in the film.
+         * The local write happens even when the server call fails, is skipped, or could not have
+         * been made — an unreachable server must not cost the user their place in the film.
          */
         suspend fun reportProgress(
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
             if (snapshot.hasEnded) return
 
-            runReport("progress") {
-                api.reportPlaybackProgress(
-                    PlaybackProgressInfo(
-                        itemId = source.itemId,
-                        playMethod = source.playMethod.toSdk(),
-                        playSessionId = source.playSessionId,
-                        liveStreamId = source.liveStreamId,
-                        mediaSourceId = source.mediaSourceId,
-                        audioStreamIndex = source.selectedAudioIndex,
-                        subtitleStreamIndex = source.selectedSubtitleIndex,
-                        isPaused = !snapshot.isPlaying,
-                        isMuted = false,
-                        canSeek = true,
-                        positionTicks = snapshot.positionTicks,
-                        repeatMode = RepeatMode.REPEAT_NONE,
-                        playbackOrder = PlaybackOrder.DEFAULT,
-                    ),
-                )
+            source.reportsToServer()?.let { remote ->
+                runReport("progress") {
+                    api.reportPlaybackProgress(
+                        PlaybackProgressInfo(
+                            itemId = remote.itemId,
+                            playMethod = remote.playMethod.toSdk(),
+                            playSessionId = remote.playSessionId,
+                            liveStreamId = remote.liveStreamId,
+                            mediaSourceId = remote.mediaSourceId,
+                            audioStreamIndex = remote.selectedAudioIndex,
+                            subtitleStreamIndex = remote.selectedSubtitleIndex,
+                            isPaused = !snapshot.isPlaying,
+                            isMuted = false,
+                            canSeek = true,
+                            positionTicks = snapshot.positionTicks,
+                            repeatMode = RepeatMode.REPEAT_NONE,
+                            playbackOrder = PlaybackOrder.DEFAULT,
+                        ),
+                    )
+                }
             }
 
             userDataRepository.setPosition(source.itemId.toString(), snapshot.positionTicks)
@@ -107,26 +130,30 @@ class PlaybackReporter
          *
          * Finishing the item marks it watched through [UserDataRepository] rather than through a
          * bare `markPlayedItem` call, so the local row, the event bus and the server all agree
-         * without a second round trip. A transcode additionally has its encoding process killed —
-         * skipping that is what leaves stray ffmpeg processes on the server.
+         * without a second round trip — and offline it is the *only* thing that happens, which is
+         * exactly what leaves a pending row for the sync worker. A transcode additionally has its
+         * encoding process killed; skipping that is what leaves stray ffmpeg processes on the
+         * server.
          */
         suspend fun reportStop(
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
             val positionTicks = if (snapshot.hasEnded) source.runTimeTicks else snapshot.positionTicks
 
-            runReport("stop") {
-                api.reportPlaybackStopped(
-                    PlaybackStopInfo(
-                        itemId = source.itemId,
-                        positionTicks = positionTicks,
-                        playSessionId = source.playSessionId,
-                        liveStreamId = source.liveStreamId,
-                        mediaSourceId = source.mediaSourceId,
-                        failed = false,
-                    ),
-                )
+            source.reportsToServer()?.let { remote ->
+                runReport("stop") {
+                    api.reportPlaybackStopped(
+                        PlaybackStopInfo(
+                            itemId = remote.itemId,
+                            positionTicks = positionTicks,
+                            playSessionId = remote.playSessionId,
+                            liveStreamId = remote.liveStreamId,
+                            mediaSourceId = remote.mediaSourceId,
+                            failed = false,
+                        ),
+                    )
+                }
             }
 
             stopTranscoding(source)
@@ -143,25 +170,28 @@ class PlaybackReporter
          *
          * `viewModelScope` is already cancelled by the time `onCleared` runs, so a stop report
          * launched there would be dropped — and with it the resume position and the ffmpeg kill.
-         * The detached [SupervisorJob][DetachedPlayerScope] scope is the whole point.
+         * The detached [SupervisorJob][DetachedPlayerScope] scope is the whole point, and it matters
+         * just as much offline: the local position write is the only record of where the user got to.
          */
         fun reportStopDetached(
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
             detachedScope.launch { reportStop(source, snapshot) }
         }
 
         /** Kills the server-side encoder if, and only if, this source is being transcoded. */
-        suspend fun stopTranscoding(source: RemotePlaybackMediaSource) {
-            if (source.playMethod != PlayMethod.TRANSCODE) return
+        suspend fun stopTranscoding(source: PlaybackMediaSource) {
+            val remote = source.reportsToServer() ?: return
+            if (remote.playMethod != PlayMethod.TRANSCODE) return
+
             val deviceId = api.deviceId
             if (deviceId == null) {
-                Timber.w("No device id; cannot stop the encoding process for %s", source.playSessionId)
+                Timber.w("No device id; cannot stop the encoding process for %s", remote.playSessionId)
                 return
             }
             runReport("stopEncoding") {
-                api.stopEncodingProcess(deviceId = deviceId, playSessionId = source.playSessionId)
+                api.stopEncodingProcess(deviceId = deviceId, playSessionId = remote.playSessionId)
             }
         }
 
@@ -174,7 +204,7 @@ class PlaybackReporter
          */
         fun startReporting(
             scope: CoroutineScope,
-            currentSource: () -> RemotePlaybackMediaSource?,
+            currentSource: () -> PlaybackMediaSource?,
             snapshot: () -> PlaybackSnapshot,
         ): Job =
             scope.launch {
@@ -184,6 +214,25 @@ class PlaybackReporter
                     reportProgress(source, snapshot())
                 }
             }
+
+        /**
+         * The source as something worth telling the server about, or `null` when it is not.
+         *
+         * Returning the narrowed type rather than a boolean is what lets every call site reach
+         * `playSessionId` without a second cast — and makes it impossible to build a report for a
+         * source that has none.
+         */
+        private fun PlaybackMediaSource.reportsToServer(): RemotePlaybackMediaSource? {
+            if (this !is RemotePlaybackMediaSource) {
+                Timber.d("Playing %s locally; nothing to report to the server", itemId)
+                return null
+            }
+            if (!connectionState.state.value.isOnline) {
+                Timber.d("Offline; skipping the server report for %s", itemId)
+                return null
+            }
+            return this
+        }
 
         /** Reporting is best effort: a failed report must never surface as a playback failure. */
         @Suppress("TooGenericExceptionCaught")

@@ -169,16 +169,42 @@ object DownloadFixtures {
         bytesDownloaded: Long = 0L,
         bytesTotal: Long = 0L,
         status: DownloadStatus = DownloadStatus.QUEUED,
+        path: String = "/tmp/$fileName",
+        streamIndex: Int? = null,
+        tileIndex: Int? = null,
+        tileWidth: Int? = null,
     ): DownloadFileEntity =
         DownloadFileEntity(
             id = id,
             itemId = itemId,
             type = type,
+            streamIndex = streamIndex,
+            tileIndex = tileIndex,
+            tileWidth = tileWidth,
             fileName = fileName,
-            path = "/tmp/$fileName",
+            path = path,
             url = url,
             bytesDownloaded = bytesDownloaded,
             bytesTotal = bytesTotal,
             status = status,
+        )
+
+    /** The server's trickplay description for one thumbnail width (M8 offline trickplay). */
+    fun trickplayInfo(
+        width: Int = 320,
+        height: Int = 180,
+        tileWidth: Int = 10,
+        tileHeight: Int = 10,
+        thumbnailCount: Int = 250,
+        interval: Int = 10_000,
+    ): TrickplayInfoDto =
+        TrickplayInfoDto(
+            width = width,
+            height = height,
+            tileWidth = tileWidth,
+            tileHeight = tileHeight,
+            thumbnailCount = thumbnailCount,
+            interval = interval,
+            bandwidth = 0,
         )
 }

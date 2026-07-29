@@ -1,18 +1,68 @@
 # STATUS
 
-## Current milestone: M9 — Polish (next up)
+## Current milestone: M10 — Release hardening (next up)
 
-**DoD (M9, docs/PLAN.md):** trickplay scrubber, segment skip, PiP, gestures,
-speed/quality, full settings, tablet/landscape.
+**DoD (M10, docs/PLAN.md):** R8 rules (SDK serializers/Room/Hilt/Media3), baseline
+profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8
+verification on the minified build.
 
 ### Next
-- Launch the M9 worktree agent. Beyond the plan line, fold in the accumulated
-  known-issue backlog that is M9 scope: background playback + notification-permission
-  flow, refresh-on-reconnect for offline-loaded screens, Wi-Fi-only/offline-mode toggle
-  hit targets, settings home for the download/offline preferences, and the per-tick
-  doomed position-push while offline (gate `UserDataRepositoryImpl` pushes on
-  connection state).
-- M9 touches `:player` heavily — run it sequentially, not in parallel with M10.
+- Launch the M10 agent. Also on the M10 list from Known issues: the HEVC
+  `VideoProfileNotSupported` investigation (device profile CodecProfile conditions
+  vs `MediaCodecList` on the Helio G100).
+- Note: the repo has no GitHub remote — CI can be authored but not exercised.
+
+## Previous milestone: M9 — Polish (DONE, tagged m9)
+
+Built in two sequential worktree passes (player polish, then settings + app-wide),
+orchestrator-merged and gated: **748 tests, 0 failures** (forced rerun; 645 → 714 →
+748 across the two merges).
+
+**DoD walk on test tablet (2026-07-29), all drivable checks pass:**
+- **Speed:** sheet 0.5×–2×; 1.5× measured for real — 45 s of media in 30 s of wall
+  clock; indicator in the top bar; resets on exit by design.
+- **Gestures:** double-tap thirds seek exactly +30 s / −10 s (verified via
+  `dumpsys media_session` position deltas); vertical swipes drive volume (overlay,
+  stream 15/15) and brightness (overlay, window attribute) on the correct halves.
+- **PiP:** Home during playback floats the video at the film's aspect ratio, no
+  controls, still playing; Home from a non-player screen floats nothing; exiting
+  the player releases the session.
+- **Background playback (M5 known issue closed):** root cause was that no
+  `MediaController` ever connects (UI drives ExoPlayer directly), so the session was
+  never *added* to `PlaybackService` and Media3 never promoted it. `addSession()` in
+  `onCreate` fixed it: `isForeground=true` (mediaPlayback type), media3 transport
+  notification, session `active=true` with a launch intent.
+- **Server-source regression:** `PlaybackInfo` + full reporting triad unchanged;
+  `MediaSegments` (Intro/Outro) fetched once → "Loaded 0 media segment(s)", no button.
+- **Settings screen:** all four sections render (portrait + landscape, content capped
+  ~640 dp); every pref row is whole-row tappable (verified by tapping labels, not
+  controls: segment-skip radios + PiP switch); storage line + fixed location shown;
+  Account shows Alex / test-server; sign-out dialog opens with the
+  "Also delete downloads" checkbox — **cancelled, not confirmed** (signing out would
+  strand the session; the flow below the dialog is pinned by `coVerifyOrder` tests).
+- **Hit-target fixes (M7 note closed):** Downloads Wi-Fi-only row toggles from a tap
+  on its *label*, first attempt, both directions.
+- **Offline push gate (M8 note closed):** ~30 s of offline local playback produced
+  7 debug "stays pending (offline, not pushing)" lines and **zero** doomed HTTP
+  POSTs / warning stacks (was one per 5 s tick).
+- **Refresh-on-reconnect (M6 known issue closed):** on the airplane-off edge, with no
+  input, live screens re-fetched themselves (logcat: `UserViews`, the open item +
+  `/Similar`) and the pending user-data row drained in ~1 s; the detail screen
+  visibly gained its full online content without re-entry. One refresh per edge, no
+  storm.
+
+**Not device-verifiable on this setup** (recorded, pinned by unit tests instead):
+- Trickplay scrubber *positive* path: test-server has trickplay generated for zero
+  items, and Alex's token is not admin (403 on `/ScheduledTasks`), so tiles
+  cannot be generated. Absence path verified live (plain bar, no crash);
+  tile-selection math pinned by `TrickplayResolverTest`/`TrickplayTiles` tests.
+- Segment-skip *positive* path (button/auto-skip): no intro-detection plugin on the
+  server. Graceful absence verified live; controller pinned by
+  `SegmentSkipControllerTest` (incl. the seek-back anti-loop rule).
+- Headphone-pull pause (becoming-noisy): no wired headphones on the test bench.
+
+Server user data restored (Ouistreham + 28 Ans plus tard: pos 0, unplayed, count 0);
+the four downloads remain on the tablet.
 
 ## Previous milestone: M8 — Offline playback + sync (DONE, tagged m8)
 

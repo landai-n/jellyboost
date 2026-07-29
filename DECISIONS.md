@@ -928,6 +928,29 @@ Seeded from the approved plan; listed for traceability, no divergence:
 
 <!-- END -->
 
+<!-- BEGIN Libraries tab (category tiles) minimum cell width raised to Dimens.ThumbWidth -->
+
+## 2026-07-29 — Libraries tab category tiles minimum cell width raised to Dimens.ThumbWidth (210dp)
+- **Scope:** `feature/library/.../libraries/LibrariesScreen.kt`
+- **Plan said:** docs/PLAN.md, "Screens" has no entry for this screen at all — only `LibraryGrid` (the paged
+  item grid *inside* a library) specifies a grid, and that one was already fixed above. The Libraries tab
+  (the "Films"/"Séries" category picker, `LibrariesScreen.kt`'s own `MIN_CELL_WIDTH = 160.dp`) was a
+  screen-local constant with no plan basis either way.
+- **Done instead:** `Adaptive(Dimens.ThumbWidth)` (210dp), the same token Home's *My Media* row uses for the
+  same 16:9 library-tile shape (`LibraryCard`'s default `width` parameter).
+- **Reason:** round 2 of the same user report ("library tab items are smaller than Home") — round 1 (the
+  entry above) fixed the poster grid *inside* a library, but the user meant the Libraries tab itself, whose
+  category tiles are a different screen with their own `MIN_CELL_WIDTH`. On the test tablet, `Adaptive(160.dp)`
+  settles at 4 portrait columns of ~161dp and 6 landscape columns of ~174dp — both below Home's fixed 210dp
+  card (portrait was sitting barely off the 160dp floor). Anchoring the floor to `Dimens.ThumbWidth` gives 3
+  portrait columns of ~218dp and 5 landscape columns of ~212dp — both now at or above Home's card width
+  (`Adaptive` always grows cells to ≥ minSize), reading as the same product in both orientations. Artwork
+  request sizing unaffected: the widest new cell (~218dp) stays under `ArtworkRequestWidths.THUMB_DP`'s 224dp
+  bucket, which was already sized with this headroom in mind.
+- **Tests:** view-layer sizing with no Compose-UI harness in the repo — code-only change; full gate green.
+
+<!-- END -->
+
 <!-- BEGIN the Downloaded tab gathers films under a shared Movies heading -->
 
 ## 2026-07-29 — the Downloaded tab gathers films under a shared Movies heading, after every series group

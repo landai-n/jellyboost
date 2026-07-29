@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +57,9 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  *   caller pushes `Routes.Player`. Resolving *which* item a Play tap means (a series plays its
  *   next-up episode) happens here rather than in the caller, because only this screen knows the
  *   rows it loaded.
+ * @param onBack pops one entry — the plain back affordance.
+ * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
+ *   `AppScaffold.navigateHome`.
  */
 @Composable
 fun ItemDetailScreen(
@@ -62,6 +67,7 @@ fun ItemDetailScreen(
     onItemClick: (JellyfinItem) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,20 +97,31 @@ fun ItemDetailScreen(
         )
 
         // This screen is a pushed destination, so per `AppScaffold`'s inset contract it gets none
-        // of its own — the inset has to live on the button rather than the surrounding `Box`,
+        // of its own — the inset has to live on the overlay rather than the surrounding `Box`,
         // since the backdrop behind it is meant to draw edge-to-edge under the status bar.
-        IconButton(
-            onClick = onBack,
+        //
+        // Home sits beside Back because a detail chain is the one place in the app that gets deep:
+        // series → season → episode → "More like this" → … with no app bar to escape through, so
+        // the only way out used to be tapping Back once per hop.
+        Row(
             modifier =
                 Modifier
                     .align(Alignment.TopStart)
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(Dimens.SpaceSmall),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.detail_back),
-            )
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.detail_back),
+                )
+            }
+            IconButton(onClick = onHome) {
+                Icon(
+                    imageVector = Icons.Filled.Home,
+                    contentDescription = stringResource(R.string.detail_home),
+                )
+            }
         }
 
         SnackbarHost(

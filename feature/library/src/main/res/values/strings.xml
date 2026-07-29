@@ -6,6 +6,7 @@
 
     <!-- Top bar -->
     <string name="library_back">Back</string>
+    <string name="library_home">Home</string>
     <string name="library_sort">Sort</string>
     <string name="library_filter">Filter</string>
 

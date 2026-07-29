@@ -2,6 +2,7 @@
 <resources>
     <string name="settings_title">Settings</string>
     <string name="settings_back">Back</string>
+    <string name="settings_home">Home</string>
 
     <!-- Playback -->
     <string name="settings_section_playback">Playback</string>

@@ -8,11 +8,11 @@ import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.DownloadFileEntity
 import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.network.di.IoDispatcher
+import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
-import dev.jellyfinnative.data.downloads.work.DownloadSessionGate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
@@ -85,8 +85,8 @@ internal class MissingMetadataException(
  *
  * ### The session
  * Nothing here can build a URL until the API client knows its server, and on a cold start this
- * runs before the UI has restored anything — see [DownloadSessionGate]. The gate is consulted once
- * per drain, before any row is touched.
+ * runs before the UI has restored anything — see [SessionGate]. The gate is consulted once per
+ * drain, before any row is touched.
  */
 @Singleton
 class DownloadQueue
@@ -98,7 +98,7 @@ class DownloadQueue
         private val planner: DownloadFilePlanner,
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
-        private val sessionGate: DownloadSessionGate,
+        private val sessionGate: SessionGate,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {

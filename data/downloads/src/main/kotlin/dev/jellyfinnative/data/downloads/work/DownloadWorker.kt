@@ -26,7 +26,7 @@ import timber.log.Timber
  * failure of the *machinery* — storage vanishing, a Room error — is retried.
  *
  * The one other retry is [DrainOutcome.NO_SESSION]: on a cold start WorkManager can run this before
- * anything has restored the session, and `DownloadSessionGate` could not restore one either (the
+ * anything has restored the session, and `SessionGate` could not restore one either (the
  * user is signed out, or the credential store was unreadable). Nothing was attempted, so nothing is
  * reported; WorkManager's exponential backoff re-runs the job, and the next attempt after a sign-in
  * picks the queue up exactly where it was. The rows stay `QUEUED` — "Waiting" in the Queue tab —

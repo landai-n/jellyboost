@@ -6,6 +6,9 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.model.MediaSegmentKind
+import dev.jellyfinnative.core.common.model.SegmentSkipMode
+import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.PlayerFixtures
@@ -13,13 +16,20 @@ import dev.jellyfinnative.player.fallback.DecoderFallbackHandler
 import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
+import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.PlaybackTrack
+import dev.jellyfinnative.player.model.TrickplayTiles
+import dev.jellyfinnative.player.pip.PipController
 import dev.jellyfinnative.player.report.PlaybackReporter
 import dev.jellyfinnative.player.resolve.ExoMediaSourceFactory
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
 import dev.jellyfinnative.player.resolve.PlaybackSourceResolver
+import dev.jellyfinnative.player.segments.MediaSegment
+import dev.jellyfinnative.player.segments.MediaSegmentLoader
 import dev.jellyfinnative.player.session.FakePlayerHandle
 import dev.jellyfinnative.player.session.PlayerEvent
+import dev.jellyfinnative.player.trickplay.TrickplayResolver
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -33,9 +43,11 @@ import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -57,6 +69,17 @@ class PlayerViewModelTest {
     private val mediaSourceFactory = mockk<ExoMediaSourceFactory>()
     private val reporter = mockk<PlaybackReporter>(relaxed = true)
     private val playerHandle = FakePlayerHandle()
+    private val trickplayResolver = mockk<TrickplayResolver>()
+    private val segmentLoader = mockk<MediaSegmentLoader>()
+    private val pipController = PipController()
+
+    /** The M9 preferences at their defaults; individual tests override what they exercise. */
+    private val preferences =
+        mockk<AppPreferences> {
+            every { introSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
+            every { outroSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
+            every { pipOnLeave } returns flowOf(true)
+        }
 
     private val source =
         PlayerFixtures.remoteSource(
@@ -80,6 +103,8 @@ class PlayerViewModelTest {
         coEvery { resolver.resolve(any()) } returns AppResult.Success(source)
         every { mediaSourceFactory.create(any()) } returns spec
         every { reporter.startReporting(any(), any(), any()) } returns Job()
+        coEvery { trickplayResolver.resolve(any(), any()) } returns null
+        coEvery { segmentLoader.load(any()) } returns emptyList()
     }
 
     @AfterEach
@@ -456,6 +481,176 @@ class PlayerViewModelTest {
             requests.last().maxStreamingBitrate.shouldBeNull()
         }
 
+    // ---- M9: speed ----------------------------------------------------------------------------
+
+    @Test
+    fun `applies a chosen playback rate to the player`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectSpeed(PlaybackSpeed.ONE_AND_HALF)
+
+            playerHandle.playbackSpeeds shouldContainExactly listOf(1.5f)
+            model.uiState.value.speed shouldBe PlaybackSpeed.ONE_AND_HALF
+        }
+
+    @Test
+    fun `re-applies the session's speed after a re-resolve`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            model.selectSpeed(PlaybackSpeed.DOUBLE)
+
+            // A quality change rebuilds the media item, which starts at 1x again.
+            model.selectQuality(PlaybackQuality.LOW)
+            advanceUntilIdle()
+
+            playerHandle.playbackSpeeds shouldContainExactly listOf(2f, 2f)
+        }
+
+    @Test
+    fun `does not touch the player when the chosen rate is the current one`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectSpeed(PlaybackSpeed.NORMAL)
+
+            playerHandle.playbackSpeeds.shouldBeEmpty()
+        }
+
+    // ---- M9: trickplay ------------------------------------------------------------------------
+
+    @Test
+    fun `publishes the scrubbing thumbnails once they resolve`() =
+        runTest(dispatcher) {
+            coEvery { trickplayResolver.resolve(any(), any()) } returns tiles
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.trickplay shouldBe tiles
+        }
+
+    @Test
+    fun `an item without thumbnails leaves the scrubber plain`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.trickplay
+                .shouldBeNull()
+        }
+
+    // ---- M9: media segments -------------------------------------------------------------------
+
+    @Test
+    fun `offers a skip while playback is inside an intro`() =
+        runTest(dispatcher) {
+            coEvery { segmentLoader.load(any()) } returns listOf(intro)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onTick(PlaybackSnapshot(positionMs = 60_000L))
+
+            model.uiState.value.skippableSegment shouldBe intro
+        }
+
+    @Test
+    fun `the skip button seeks to the end of the segment and then withdraws the offer`() =
+        runTest(dispatcher) {
+            coEvery { segmentLoader.load(any()) } returns listOf(intro)
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onTick(PlaybackSnapshot(positionMs = 60_000L))
+
+            model.skipCurrentSegment()
+
+            playerHandle.snapshot.positionMs shouldBe intro.endMs
+            model.uiState.value.skippableSegment
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `auto-skip seeks past the intro without waiting to be asked`() =
+        runTest(dispatcher) {
+            every { preferences.introSkipMode } returns flowOf(SegmentSkipMode.AUTO_SKIP)
+            coEvery { segmentLoader.load(any()) } returns listOf(intro)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onTick(PlaybackSnapshot(positionMs = 35_000L))
+
+            playerHandle.snapshot.positionMs shouldBe intro.endMs
+            model.uiState.value.skippableSegment
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `a downloaded item is never offered a skip`() =
+        runTest(dispatcher) {
+            // The loader is server-only and answers empty for a local source; the ViewModel must
+            // then draw nothing rather than reusing the previous item's segments.
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
+            coEvery { segmentLoader.load(any()) } returns emptyList()
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onTick(PlaybackSnapshot(positionMs = 60_000L))
+
+            model.uiState.value.skippableSegment
+                .shouldBeNull()
+        }
+
+    // ---- M9: picture-in-picture ---------------------------------------------------------------
+
+    @Test
+    fun `arms picture-in-picture only while the screen is up and something is playing`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            pipController.state.value.canEnter shouldBe false
+
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(true))
+            playerHandle.emit(PlayerEvent.VideoSizeChanged(1920, 1080))
+            runCurrent()
+            model.setScreenPresent(true)
+
+            pipController.state.value.canEnter shouldBe true
+            pipController.state.value.aspectRatio shouldBe (1920 to 1080)
+        }
+
+    @Test
+    fun `disarms picture-in-picture when the preference is off`() =
+        runTest(dispatcher) {
+            every { preferences.pipOnLeave } returns flowOf(false)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(true))
+            runCurrent()
+            model.setScreenPresent(true)
+
+            pipController.state.value.canEnter shouldBe false
+        }
+
+    @Test
+    fun `disarms picture-in-picture when the player screen goes away`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(true))
+            runCurrent()
+            model.setScreenPresent(true)
+            pipController.state.value.canEnter shouldBe true
+
+            model.releaseSession()
+
+            pipController.state.value.canEnter shouldBe false
+        }
+
     private fun viewModel() =
         PlayerViewModel(
             repository = repository,
@@ -464,6 +659,10 @@ class PlayerViewModelTest {
             playerHandle = playerHandle,
             reporter = reporter,
             fallback = DecoderFallbackHandler(),
+            trickplayResolver = trickplayResolver,
+            segmentLoader = segmentLoader,
+            preferences = preferences,
+            pipController = pipController,
             savedStateHandle =
                 SavedStateHandle(
                     mapOf(
@@ -472,6 +671,20 @@ class PlayerViewModelTest {
                         PlayerViewModel.ARG_START_TICKS to RESUME_TICKS,
                     ),
                 ),
+        )
+
+    /** An intro from 30 s to 2 min — long enough to be worth a button. */
+    private val intro = MediaSegment(MediaSegmentKind.INTRO, startMs = 30_000L, endMs = 120_000L)
+
+    private val tiles =
+        TrickplayTiles(
+            thumbnailWidth = 320,
+            thumbnailHeight = 180,
+            columns = 10,
+            rows = 10,
+            thumbnailCount = 250,
+            intervalMs = 10_000,
+            tileUris = listOf("https://server/t.0.jpg"),
         )
 
     private companion object {

@@ -11,6 +11,10 @@
     <string name="player_subtitles">Subtitles</string>
     <string name="player_subtitles_off">Off</string>
     <string name="player_quality">Quality</string>
+    <string name="player_speed">Speed</string>
+
+    <string name="player_skip_intro">Skip intro</string>
+    <string name="player_skip_outro">Skip outro</string>
 
     <string name="player_quality_auto">Auto</string>
     <string name="player_quality_high">High — 20 Mbps</string>

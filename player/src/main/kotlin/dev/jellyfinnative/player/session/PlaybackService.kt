@@ -1,6 +1,8 @@
 package dev.jellyfinnative.player.session
 
+import android.app.PendingIntent
 import android.content.Intent
+import androidx.annotation.RequiresApi
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -19,10 +21,23 @@ import javax.inject.Inject
  * It deliberately does *not* own the player — the same instance is driven directly by
  * `PlayerViewModel` (DECISIONS.md, 2026-07-28). Consequently the session is a thin wrapper and
  * this class has no playback logic of its own.
+ *
+ * ### Why [addSession] is called explicitly (M9)
+ * Media3 only starts managing a session — posting the notification, promoting the service to the
+ * foreground — once the session has been *added* to the service. In the canonical sample that
+ * happens implicitly, because the UI reaches the player through a `MediaController` and connecting
+ * one is what triggers [onGetSession] and the add. This app deliberately drives the shared
+ * `ExoPlayer` directly instead, so no controller ever connects, so nothing ever added the session:
+ * the service stayed an ordinary background service with no notification, and the first time the
+ * app left the foreground the platform stopped it and playback with it. That is the root cause of
+ * the "backgrounding the app pauses playback" issue carried since M5 — not the notification
+ * permission, which only decides whether the notification is *visible*.
  */
 @UnstableApi
 @AndroidEntryPoint
-class PlaybackService : MediaSessionService() {
+class PlaybackService :
+    MediaSessionService(),
+    MediaSessionService.Listener {
     @Inject
     internal lateinit var playerHandle: ExoPlayerHandle
 
@@ -30,10 +45,47 @@ class PlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        mediaSession = MediaSession.Builder(this, playerHandle.requirePlayer()).build()
+        val session =
+            MediaSession
+                .Builder(this, playerHandle.requirePlayer())
+                .apply { launchIntent()?.let(::setSessionActivity) }
+                .build()
+        mediaSession = session
+        // The line that keeps playback alive in the background — see the class documentation.
+        addSession(session)
+        setListener(this)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+
+    /**
+     * Tapping the media notification comes back to the app.
+     *
+     * Built from the launcher intent rather than from a direct `MainActivity` reference so that
+     * `:player` keeps no dependency on `:app`; the activity is `singleTop`, so this re-uses the
+     * running task and the player screen is still on it, at the position playback has reached.
+     */
+    private fun launchIntent(): PendingIntent? =
+        packageManager.getLaunchIntentForPackage(packageName)?.let { intent ->
+            PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        }
+
+    /**
+     * The system refused the foreground promotion (API 31+).
+     *
+     * Rare — it needs the app to have been backgrounded before playback was ever started — but the
+     * default behaviour is an uncaught exception, and a crash is a far worse outcome than a session
+     * that plays without a notification.
+     */
+    @RequiresApi(android.os.Build.VERSION_CODES.S)
+    override fun onForegroundServiceStartNotAllowedException() {
+        Timber.w("Android refused to promote the playback service to the foreground")
+    }
 
     /**
      * The user swiped the app away while nothing was playing.
@@ -50,7 +102,11 @@ class PlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")
-        mediaSession?.release()
+        clearListener()
+        mediaSession?.let { session ->
+            removeSession(session)
+            session.release()
+        }
         mediaSession = null
         super.onDestroy()
     }

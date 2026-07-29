@@ -7,6 +7,7 @@ import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -80,6 +81,10 @@ internal class ExoPlayerHandle
                     _events.tryEmit(PlayerEvent.TracksChanged)
                 }
 
+                override fun onVideoSizeChanged(videoSize: VideoSize) {
+                    _events.tryEmit(PlayerEvent.VideoSizeChanged(videoSize.width, videoSize.height))
+                }
+
                 override fun onPlayerError(error: PlaybackException) {
                     Timber.w(error, "Playback error %d", error.errorCode)
                     _events.tryEmit(PlayerEvent.Error(error.errorCode, error.message))
@@ -117,6 +122,13 @@ internal class ExoPlayerHandle
                         // handleAudioFocus =
                         true,
                     )
+                    // Headphones pulled out, or a Bluetooth speaker walked away from: pause rather
+                    // than blare the film out of the device speaker (M9).
+                    setHandleAudioBecomingNoisy(true)
+                    // Playback continues once the screen is off or the app is backgrounded, and
+                    // both a partial wake lock and a Wi-Fi lock are needed for a *streamed* item to
+                    // survive that — without them the device sleeps mid-buffer.
+                    setWakeMode(C.WAKE_MODE_NETWORK)
                 }
         }
 
@@ -166,6 +178,10 @@ internal class ExoPlayerHandle
             jellyfinIndex: Int?,
         ): Boolean = TrackSelectionController(requirePlayer()).selectSubtitle(source, jellyfinIndex)
 
+        override fun setPlaybackSpeed(speed: Float) {
+            requirePlayer().setPlaybackSpeed(speed)
+        }
+
         override fun stop() {
             exoPlayer?.run {
                 stop()
@@ -177,6 +193,11 @@ internal class ExoPlayerHandle
         /**
          * Brings up the media session service so playback survives the screen being left and gets
          * a notification with transport controls.
+         *
+         * `startService` rather than a bind: Media3 only promotes a *started* service to the
+         * foreground, and that promotion is what keeps playback alive once the app is backgrounded
+         * ([PlaybackService], M9). It is always called from a foreground activity, which is what
+         * makes the background-start restriction irrelevant here.
          */
         private fun startPlaybackService() {
             context.startService(Intent(context, PlaybackService::class.java))

@@ -12,6 +12,40 @@ verification on the minified build.
   vs `MediaCodecList` on the Helio G100).
 - Note: the repo has no GitHub remote — CI can be authored but not exercised.
 
+## Post-M9 polish stream — docs/POLISH.md punch list (2026-07-29, DONE)
+
+All 14 punch-list items plus 4 bugs found along the way, built in six parallel/serial
+worktree passes, orchestrator-merged and gated. Final forced-rerun gate on the merged
+tree: **858 tests, 0 failures** (748 → 858 across the stream). Two device-verification
+walks on the test tablet, second walk all-pass, no regressions, device left clean.
+
+Highlights (details in DECISIONS.md and docs/features/):
+- **Downloads:** real pause; truthful speed (≥1 s windows, validated against byte
+  counts); quality setting Original/High/Medium/Low — transcodes are bitrate-capped
+  H.264/AAC in **MKV** (schema v5, quality stamped per row; streamed mp4 was
+  unplayable); season/series taps expand into per-episode rows (folder-item guard,
+  legacy stuck rows self-clean); delete confirmations everywhere.
+- **Offline:** refresh fires on both connectivity edges (Home switches content the
+  moment you go offline); downloaded items' rich metadata is protected from lean
+  browse writes, repaired by full fetches, and kept current by a standing
+  once-per-online-stretch sync (`DownloadedMetadataRefresher`).
+- **Chrome:** one combined top bar replaces bottom nav + per-screen top bars
+  (~140 dp reclaimed); offline banner → status icon + timed snackbar; search inset
+  bug fixed by construction; system-bar icons pinned light for the dark-only theme
+  (incl. splash).
+- **Performance:** contentType, no per-cell subcomposition, Coil memory+disk caches,
+  artwork requested at display resolution. Measured on-device at 90 Hz on a
+  ~500-poster grid: release 0.49 % janky / 7 ms median (meets target pre-R8);
+  debug ~4 % — perceived scroll lag is debug-build overhead. Release build is
+  debug-signed as a local measurement aid; real signing/R8/baseline profiles stay M10.
+
+### Known issues / carried forward (also in docs/POLISH.md "Todo next run")
+- Transcode size estimates use the bitrate cap → far above real output (552 MB
+  est. vs 232 MB actual on a LOW episode).
+- Portrait detail banner leaves empty space at the bottom.
+- Season-level Cancel silently deletes already-completed episodes (no confirmation).
+- Series detail page has no aggregate download-button state (logged in DECISIONS.md).
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

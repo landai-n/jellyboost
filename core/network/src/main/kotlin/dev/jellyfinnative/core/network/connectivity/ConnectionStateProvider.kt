@@ -2,7 +2,9 @@ package dev.jellyfinnative.core.network.connectivity
 
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.network.ConnectionState
+import dev.jellyfinnative.core.network.SessionStateHolder
 import dev.jellyfinnative.core.network.di.ApplicationScope
+import dev.jellyfinnative.core.network.model.SessionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -10,9 +12,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,12 +43,16 @@ import javax.inject.Singleton
  * Probes are requested, never run inline. A conflated channel feeds a single consumer that runs one
  * probe at a time and then waits [PROBE_DEBOUNCE_MS] — so a screenful of ViewModels all reporting
  * the same failed request produces exactly one `getPublicSystemInfo`, not twelve.
+ *
+ * A probe is requested on a usable network, on a reported transport failure, on app resume or a
+ * *Retry* tap, and **on every change of session** — see [probeOnSessionChange].
  */
 @Singleton
 class ConnectionStateProvider
     @Inject
     internal constructor(
         connectivityMonitor: ConnectivityMonitor,
+        sessionStateHolder: SessionStateHolder,
         private val probe: ServerReachabilityProbe,
         appPreferences: AppPreferences,
         @ApplicationScope private val scope: CoroutineScope,
@@ -75,6 +85,7 @@ class ConnectionStateProvider
         init {
             scope.launch { consumeProbeRequests() }
             scope.launch { probeOnNetworkChange(connectivityMonitor) }
+            scope.launch { probeOnSessionChange(sessionStateHolder) }
         }
 
         /**
@@ -112,6 +123,40 @@ class ConnectionStateProvider
                 }
             }
         }
+
+        /**
+         * Re-probes whenever *who we are signed in as* changes.
+         *
+         * [ServerReachabilityProbe] derives the addresses it tries from the current session, so a
+         * verdict reached under one session says nothing about the next one. Without this, the very
+         * first sign-in after a fresh install stayed offline for the rest of the app run: the launch
+         * probe ran before there was any session, correctly answered "no server to probe", and
+         * nothing re-asked once the user signed in. The offline→online edge this produces is wanted
+         * — it is what makes the screens fetch (`ConnectivityRefresher`).
+         *
+         * Signing out re-probes too, so the state reflects "no server" rather than the last
+         * session's verdict.
+         *
+         * Session changes are rare and a probe never writes one back, so there is no loop; probes
+         * are still spaced by [PROBE_DEBOUNCE_MS], and mapping to the identity means a session
+         * re-published unchanged (or with only a refreshed server version) costs nothing.
+         */
+        private suspend fun probeOnSessionChange(sessionStateHolder: SessionStateHolder) {
+            sessionStateHolder.state
+                // Launch's `Unknown` is not a session change — the app has not decided yet, and the
+                // network-available probe already covers start-up.
+                .filter { it != SessionState.Unknown }
+                .map(::sessionIdentity)
+                .distinctUntilChanged()
+                .collect {
+                    Timber.d("Session changed; queueing a reachability probe")
+                    refresh()
+                }
+        }
+
+        /** Who the probe would be probing for: `null` once signed out. */
+        private fun sessionIdentity(session: SessionState): Pair<UUID, UUID>? =
+            (session as? SessionState.LoggedIn)?.let { it.serverId to it.userId }
 
         companion object {
             /**

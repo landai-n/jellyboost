@@ -38,6 +38,19 @@ import java.util.UUID
  *   quality and the partial file is the resume bookmark: a plan rebuilt at a different quality
  *   mid-transfer would append incompatible bytes (DECISIONS.md, 2026-07-29). Column default
  *   `ORIGINAL`, which is what every row written before schema v5 was.
+ * @property projectedBytes what the finished file is now *expected* to weigh, as opposed to
+ *   [bytesTotal], which is the ceiling it is promised not to exceed (schema v6). `null` means
+ *   "nothing better than the ceiling to say", which is the permanent state of an `ORIGINAL`
+ *   download (its total is already exact) and the opening state of a transcoded one. It is filled
+ *   from two independent sources and never overwrites [bytesTotal]: at enqueue, from finished
+ *   episodes of the same series at the same quality (`DownloadEnqueuer`), and in flight, from the
+ *   media time the arriving Matroska stream has delivered (`TranscodeSizeProjector`). Cleared when
+ *   the media file finishes, because at that point the real size is simply known.
+ * @property sizeIsExact `true` when [bytesTotal] is the size the file will actually be rather than
+ *   an upper bound (schema v6) — the server reported it (`ORIGINAL`), or the transcode request will
+ *   be answered with a video stream copy, which is predictable to within the audio track. It is
+ *   what decides between the Downloads screen's *"X"*, *"~X"* and *"up to X"* wordings. Column
+ *   default `0`, which is the honest reading of every row written before v6: unknown means capped.
  * @property queuePosition ordering key for the queue tab; the queue always takes the pending row
  *   with the lowest value. Reordering rewrites this column and nothing else.
  * @property errorMessage last failure, kept so the queue tab can say *why* an item is in
@@ -62,6 +75,9 @@ data class DownloadEntity(
     val quality: DownloadQuality = DownloadQuality.ORIGINAL,
     val bytesDownloaded: Long = 0L,
     val bytesTotal: Long = 0L,
+    val projectedBytes: Long? = null,
+    @ColumnInfo(defaultValue = "0")
+    val sizeIsExact: Boolean = false,
     val queuePosition: Int = 0,
     /** Directory name under the storage root, e.g. `Westworld - S01E02 - Chestnut`. */
     val directoryName: String,

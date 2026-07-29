@@ -62,6 +62,10 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         // v4 → v5 adds `downloads.quality`, a NOT NULL column with the SQL default `ORIGINAL`, so
         // every row an older build wrote reads back as the behaviour that build had (M9).
         AutoMigration(from = 4, to = 5),
+        // v5 → v6 adds `downloads.projectedBytes` (nullable, so it needs no default) and
+        // `downloads.sizeIsExact` (NOT NULL, SQL default `0`). Both are additive, and both read
+        // back on an older row as "no projection, size is a ceiling" — what that row always meant.
+        AutoMigration(from = 5, to = 6),
     ],
 )
 @TypeConverters(

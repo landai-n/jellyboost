@@ -14,6 +14,7 @@ import dev.jellyfinnative.data.downloads.plan.DownloadPaths
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.MediaStreamType
 import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
@@ -243,6 +244,7 @@ class DownloadEnqueuer
                 val rows =
                     targets.map { dto ->
                         val existing = downloadDao.get(dto.id)
+                        val estimate = dto.sizeEstimate(quality)
                         val row =
                             dto.toDownloadRow(
                                 userId = userId,
@@ -250,6 +252,12 @@ class DownloadEnqueuer
                                 now = now,
                                 existing = existing,
                                 position = existing?.queuePosition ?: nextPosition++,
+                                estimate = estimate,
+                                // The seed is read per row, after the ones before it were written,
+                                // so the second episode of a season enqueued in one go is seeded
+                                // from whatever finished *before* the tap — never from a sibling
+                                // this same expansion queued and has not downloaded yet.
+                                projected = dto.siblingSeed(quality, estimate),
                             )
                         downloadDao.upsert(row)
                         row
@@ -261,12 +269,15 @@ class DownloadEnqueuer
             }
         }
 
+        @Suppress("LongParameterList")
         private fun BaseItemDto.toDownloadRow(
             userId: UUID,
             quality: DownloadQuality,
             now: java.time.Instant,
             existing: DownloadEntity?,
             position: Int,
+            estimate: SizeEstimate,
+            projected: Long?,
         ): DownloadEntity =
             DownloadEntity(
                 itemId = id,
@@ -277,7 +288,9 @@ class DownloadEnqueuer
                 // The row starts at zero downloaded but with the size the server reported, so the
                 // queue tab can show a meaningful percentage before the first byte arrives.
                 bytesDownloaded = existing?.bytesDownloaded ?: 0L,
-                bytesTotal = expectedBytes(quality) ?: existing?.bytesTotal ?: 0L,
+                bytesTotal = estimate.bytes ?: existing?.bytesTotal ?: 0L,
+                projectedBytes = projected,
+                sizeIsExact = estimate.exact,
                 queuePosition = position,
                 directoryName = DownloadPaths.itemDirectoryName(this),
                 itemName = name.orEmpty().ifBlank { id.toString() },
@@ -288,28 +301,148 @@ class DownloadEnqueuer
             )
 
         /**
-         * How big the media file is expected to be, or `null` when there is nothing to go on.
+         * How big the media file is expected to be, and whether that figure is the size the file
+         * will *be* or merely a size it will not exceed.
          *
-         * For [DownloadQuality.ORIGINAL] the server already knows: `mediaSources[0].size` is the
-         * file on disk, exactly. For a transcode it does not — it has not encoded the file yet, and
-         * it will not send a `Content-Length` either — so the size is `runtime × bitrate`.
+         * Three answers, in the order they are tried:
          *
-         * The bitrate used is the *effective* one, not just the quality tier's cap: a transcode can
-         * never need more bits per second than the source already uses, so when
-         * `mediaSources[0].bitrate` is known and below the cap, that — not the cap — is what the
-         * server will actually produce. Most sources (especially HEVC) sit well under a tier's cap,
-         * so estimating from the cap alone overstates the download by a large margin (a LOW-quality
-         * episode estimated 552 MB and landed at 232 MB — DECISIONS.md, 2026-07-29). When the source
-         * bitrate is missing or zero, the cap is the only number left and the estimate falls back to
-         * it.
+         * 1. **[DownloadQuality.ORIGINAL]** — `mediaSources[0].size`, the file on disk, exact.
+         * 2. **A stream copy** — see [remuxBytes]. The server will pass the video track through
+         *    untouched, so the output is the source's video bytes plus one re-encoded AAC track:
+         *    predictable, and marked exact.
+         * 3. **A real transcode** — `runtime × min(cap, source bitrate)`, a deterministic upper
+         *    bound and nothing more (DECISIONS.md, 2026-07-29). The bitrate is the *effective* one
+         *    because a transcode can never need more bits per second than the source already
+         *    carries; most sources sit well under a tier's cap, and estimating from the cap alone
+         *    overstates the download by a large margin (a LOW episode estimated 552 MB and landed
+         *    at 232 MB). When the source bitrate is missing or zero, the cap is the only number
+         *    left.
+         *
+         * @return `bytes = null` when there is nothing at all to go on — a transcode of an item
+         *   with no runtime. Reporting the *source's* size there would promise a number for a file
+         *   the user is not going to receive.
          */
-        private fun BaseItemDto.expectedBytes(quality: DownloadQuality): Long? {
-            val cap = quality.totalBitRate ?: return mediaSources?.firstOrNull()?.size
+        private fun BaseItemDto.sizeEstimate(quality: DownloadQuality): SizeEstimate {
+            val cap =
+                quality.totalBitRate
+                    ?: return SizeEstimate(mediaSources?.firstOrNull()?.size, exact = true)
+
+            val ticks = runTimeTicks?.takeIf { it > 0L } ?: return SizeEstimate(null, exact = false)
+            val seconds = ticks.toDouble() / TICKS_PER_SECOND
+
+            remuxBytes(quality, seconds)?.let { return SizeEstimate(it, exact = true) }
+
             val sourceBitRate = mediaSources?.firstOrNull()?.bitrate?.takeIf { it > 0 }
             val bitRate = if (sourceBitRate != null) minOf(cap, sourceBitRate) else cap
-            val ticks = runTimeTicks?.takeIf { it > 0L } ?: return null
-            val seconds = ticks.toDouble() / TICKS_PER_SECOND
-            return (seconds * bitRate / Byte.SIZE_BITS).toLong()
+            return SizeEstimate((seconds * bitRate / Byte.SIZE_BITS).toLong(), exact = false)
+        }
+
+        /**
+         * The size of a transcode the server will answer by **copying** the video stream, or `null`
+         * when this is not one.
+         *
+         * `DownloadUrlFactory.transcodedVideoUrl` sends `allowVideoStreamCopy=true`, which means the
+         * server re-encodes only what it has to. When it copies the video track the output is
+         * arithmetic rather than a guess: the source's own video bytes, plus the one AAC track we
+         * always ask for at [DownloadQuality.AUDIO_BITRATE] (`allowAudioStreamCopy=false`, so audio
+         * is re-encoded whatever the source was). Matroska's own overhead is well under a percent.
+         *
+         * ### The conditions, and how far they are verified
+         * Checked against `EncodingHelper.CanStreamCopyVideo` in jellyfin `release-10.11.z` (the
+         * method runs ~a dozen gates in sequence; any one failing forces a re-encode):
+         * - **codec**: `SupportedVideoCodecs` is populated straight from our `videoCodec=h264`, and
+         *   the test is a case-insensitive exact match against the source stream's `Codec`.
+         * - **height**: fails on `Height > MaxHeight` **or on a null `Height`**, so an unknown
+         *   height is a re-encode, not a free pass.
+         * - **bitrate**: fails on `BitRate > VideoBitRate` **or on a null `BitRate`** (there is a
+         *   `LiveStreamId` escape hatch, and a download has none). This is the trap worth knowing:
+         *   plenty of MKVs carry no per-stream bitrate, and those transcode however small they are.
+         *   Requiring the value to be present is therefore not merely conservative — it is the
+         *   server's own rule, and it is why this deliberately does **not** fall back to deriving
+         *   video bytes from the source's total size.
+         * - **input container**: an `avi` source has a special case in the same method that can
+         *   force a re-encode, so one is never claimed as a copy.
+         *
+         * The remaining gates (profile, level, bit depth, ref frames, HDR range, framerate, max
+         * width, anamorphic, subtitle burn-in) are each enforced *only* when the matching query
+         * parameter is present, and this client sends none of them; the interlacing gate needs a
+         * `deInterlace` request we also never send. So for **our** URL these four checks are the
+         * whole of it. Should the URL ever grow one of those parameters, this comment is the
+         * warning that it also grows a gate.
+         */
+        @Suppress("ReturnCount")
+        private fun BaseItemDto.remuxBytes(
+            quality: DownloadQuality,
+            runtimeSeconds: Double,
+        ): Long? {
+            val source = mediaSources?.firstOrNull() ?: return null
+            if (source.container.equals(AVI_CONTAINER, ignoreCase = true)) return null
+
+            val video =
+                source.mediaStreams?.firstOrNull { it.type == MediaStreamType.VIDEO } ?: return null
+            if (!video.codec.equals(DownloadQuality.VIDEO_CODEC, ignoreCase = true)) return null
+
+            val maxHeight = quality.maxHeight ?: return null
+            val height = video.height ?: return null
+            if (height > maxHeight) return null
+
+            val videoCap = quality.videoBitRate ?: return null
+            val videoBitRate = video.bitRate?.takeIf { it > 0 } ?: return null
+            if (videoBitRate > videoCap) return null
+
+            val bits = runtimeSeconds * (videoBitRate.toLong() + DownloadQuality.AUDIO_BITRATE)
+            return (bits / Byte.SIZE_BITS).toLong()
+        }
+
+        /**
+         * What this item is likely to weigh, judged from episodes of the same show already on the
+         * device at the same quality — or `null` when there is nothing to judge from.
+         *
+         * The ceiling is deterministic but generous, and it stays generous for the whole of the
+         * first minute of a download. Finished siblings are *measured*: a completed row's
+         * `bytesDownloaded` is the real file, and the item cache still holds its runtime, so
+         * `bytes / runtime` is the bitrate this server's encoder actually produced for this show at
+         * this quality. The **median** of those rates, not the mean: one episode that happened to
+         * be a clip show should move the estimate, not define it.
+         *
+         * This is emphatically not the global observed-ratio store rejected in DECISIONS.md
+         * (2026-07-29) — it is conditioned on the show and the quality, computed from rows the user
+         * can see on the Downloads screen, and it is clamped by the same ceiling as before, so it
+         * can only ever move the figure *down* from a number that was already an upper bound.
+         *
+         * Films get `null`: there are no siblings, and a director's other work is not evidence.
+         */
+        @Suppress("ReturnCount")
+        private suspend fun BaseItemDto.siblingSeed(
+            quality: DownloadQuality,
+            estimate: SizeEstimate,
+        ): Long? {
+            if (!quality.isTranscoded || estimate.exact) return null
+            val ceiling = estimate.bytes?.takeIf { it > 0L } ?: return null
+            val series = seriesName?.takeIf { it.isNotBlank() } ?: return null
+            val runtimeMillis = runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return null
+
+            val siblings =
+                downloadDao
+                    .completedSiblings(series, quality, SIBLING_SAMPLE)
+                    .filter { it.itemId != id && it.bytesDownloaded > 0L }
+            if (siblings.isEmpty()) return null
+
+            val runtimes =
+                itemDao
+                    .getItems(siblings.map { it.itemId })
+                    .mapNotNull { entity -> entity.runTimeTicks?.takeIf { it > 0L }?.let { entity.id to it } }
+                    .toMap()
+
+            val rates =
+                siblings
+                    .mapNotNull { row ->
+                        val millis = runtimes[row.itemId]?.div(TICKS_PER_MILLI)?.takeIf { it > 0L }
+                        millis?.let { row.bytesDownloaded.toDouble() / it }
+                    }.sorted()
+            if (rates.isEmpty()) return null
+
+            return (rates.median() * runtimeMillis).toLong().coerceIn(0L, ceiling)
         }
 
         /**
@@ -323,5 +456,39 @@ class DownloadEnqueuer
         private companion object {
             /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
             const val TICKS_PER_SECOND = 10_000_000.0
+
+            /** The same tick, per millisecond. */
+            const val TICKS_PER_MILLI = 10_000L
+
+            /**
+             * How many finished siblings the seed is taken from.
+             *
+             * Newest first, so a show re-encoded at a new quality converges on its recent
+             * behaviour; small enough that the extra `getItems` stays one cheap query.
+             */
+            const val SIBLING_SAMPLE = 8
+
+            /** The one input container `CanStreamCopyVideo` has a special case for. */
+            const val AVI_CONTAINER = "avi"
         }
     }
+
+/**
+ * The enqueue-time size prediction, and whether it is a figure or a ceiling.
+ *
+ * The two travel together because every caller needs both: the number goes in `bytesTotal` and the
+ * flag in `sizeIsExact`, and computing one without the other is what would let a stream copy be
+ * presented as *"up to"*.
+ *
+ * @property bytes the predicted size, or `null` when nothing could be predicted at all.
+ * @property exact `true` when [bytes] is what the file will weigh (the server reported it, or the
+ *   request will be answered with a video stream copy), `false` when it is an upper bound.
+ */
+internal data class SizeEstimate(
+    val bytes: Long?,
+    val exact: Boolean,
+)
+
+/** The middle rate, averaging the two middles for an even sample. Input must be sorted. */
+private fun List<Double>.median(): Double =
+    if (size % 2 == 1) this[size / 2] else (this[size / 2 - 1] + this[size / 2]) / 2.0

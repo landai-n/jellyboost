@@ -258,7 +258,13 @@ class DownloadQueue
             files: List<DownloadFileEntity>,
             listener: DownloadQueueListener,
         ): Boolean {
-            val progress = ItemProgress(files, estimatedTotal = download.bytesTotal)
+            val progress =
+                ItemProgress(
+                    files,
+                    estimatedTotal = download.bytesTotal,
+                    seededProjection = download.projectedBytes,
+                )
+            val projector = projectorFor(download, dto)
 
             for (file in files) {
                 if (downloadDao.get(download.itemId) == null) {
@@ -266,10 +272,13 @@ class DownloadQueue
                     return false
                 }
 
+                // Only the media file is Matroska, and only it is worth projecting: everything else
+                // in the plan is artwork and subtitles whose sizes the server does declare.
+                val fileProjector = projector.takeIf { file.type == DownloadFileType.MEDIA }
                 if (file.type.essential) {
-                    downloadEssential(download, dto, file, progress, listener)
+                    downloadEssential(download, dto, file, progress, fileProjector, listener)
                 } else {
-                    runCatching { downloadOne(download, file, progress, listener) }
+                    runCatching { downloadOne(download, file, progress, fileProjector, listener) }
                         .onFailure { error ->
                             if (error is CancellationException) throw error
                             Timber.w(error, "Optional file %s failed; item stays playable", file.fileName)
@@ -277,6 +286,28 @@ class DownloadQueue
                 }
             }
             return true
+        }
+
+        /**
+         * The live size projection for this item's media file, or `null` when there is nothing to
+         * project.
+         *
+         * Three ways to get `null`, and each is a case where the projection would be worse than
+         * what the row already says:
+         * - **`ORIGINAL`** — the total is the server's own file size, exact, already.
+         * - **`sizeIsExact`** — the enqueue step recognised the request as a video stream copy, so
+         *   `bytesTotal` is a prediction of the actual file rather than a ceiling. Letting the
+         *   scanner second-guess it would flip a plain figure to an approximate one mid-transfer for
+         *   no gain.
+         * - **no runtime** — there is nothing to extrapolate the observed bitrate *to*.
+         */
+        private fun projectorFor(
+            download: DownloadEntity,
+            dto: BaseItemDto,
+        ): TranscodeSizeProjector? {
+            if (!download.quality.isTranscoded || download.sizeIsExact) return null
+            val runtimeMillis = dto.runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return null
+            return TranscodeSizeProjector(runtimeMillis = runtimeMillis, ceilingBytes = download.bytesTotal)
         }
 
         /**
@@ -290,15 +321,17 @@ class DownloadQueue
          * `/Items/{id}/Download` in the first place, so a `403` on one is a real refusal and
          * re-planning would only re-issue the identical URL.
          */
+        @Suppress("LongParameterList")
         private suspend fun downloadEssential(
             download: DownloadEntity,
             dto: BaseItemDto,
             file: DownloadFileEntity,
             progress: ItemProgress,
+            projector: TranscodeSizeProjector?,
             listener: DownloadQueueListener,
         ) {
             try {
-                downloadOne(download, file, progress, listener)
+                downloadOne(download, file, progress, projector, listener)
             } catch (error: DownloadHttpException) {
                 if (error.code != HTTP_FORBIDDEN || download.quality.isTranscoded) throw error
 
@@ -309,7 +342,7 @@ class DownloadQueue
                         .first { it.type == DownloadFileType.MEDIA }
                 val retried = file.copy(url = fallback.url)
                 downloadDao.updateFile(retried)
-                downloadOne(download, retried, progress, listener)
+                downloadOne(download, retried, progress, projector, listener)
             }
         }
 
@@ -317,25 +350,34 @@ class DownloadQueue
             download: DownloadEntity,
             file: DownloadFileEntity,
             progress: ItemProgress,
+            projector: TranscodeSizeProjector?,
             listener: DownloadQueueListener,
         ) {
             val target = storage.resolve(download.directoryName, file.fileName)
             downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADING)
             val throttle = ProgressThrottle()
+            val sink = projector?.let { MediaChunkSink(it::consume) }
 
             try {
                 val written =
-                    downloader.download(file.url, target, ioDispatcher) { bytes, total ->
+                    downloader.download(file.url, target, ioDispatcher, sink) { bytes, total ->
                         progress.update(file.id, bytes, total)
                         val now = clock.millis()
                         if (throttle.shouldWrite(bytes, total, now)) {
                             throttle.recordWrite(bytes, now)
+                            // Recomputed on the existing throttle cadence, not per 64 KB callback:
+                            // the projection is only as fresh as the row it is written to.
+                            // A `null` here means "no cluster yet" and must not wipe a seed.
+                            projector?.project(bytes)?.let { progress.mediaProjection = it }
                             downloadDao.updateFileProgress(file.id, bytes, total)
                             publish(download, progress, listener)
                         }
                     }
 
                 progress.update(file.id, written, written)
+                // The file is whole, so its size is no longer a question: drop the projection and
+                // let the exact sum of real sizes speak.
+                if (projector != null) progress.mediaProjection = null
                 downloadDao.updateFileProgress(file.id, written, written)
                 downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADED)
                 publish(download, progress, listener)
@@ -360,6 +402,7 @@ class DownloadQueue
                 itemId = download.itemId,
                 bytesDownloaded = progress.bytesDownloaded,
                 bytesTotal = progress.bytesTotal,
+                projectedBytes = progress.projectedBytes,
                 updatedAt = clock.instant(),
             )
             listener.onProgress(download, progress.bytesDownloaded, progress.bytesTotal)
@@ -381,6 +424,9 @@ class DownloadQueue
 
         private companion object {
             const val HTTP_FORBIDDEN = 403
+
+            /** A `runTimeTicks` tick is 100 ns, so there are ten thousand of them in a millisecond. */
+            const val TICKS_PER_MILLI = 10_000L
         }
     }
 
@@ -398,13 +444,40 @@ class DownloadQueue
  *   read 100 % from the first chunk (DECISIONS.md, 2026-07-29). Once every file has reported a real
  *   size — the ordinary end of an `ORIGINAL` download — the estimate is dropped and the exact sum
  *   wins, so an estimate that was too generous cannot leave a finished item short of 100 %.
+ * @param seededProjection the projection already on the row when the transfer started — for an
+ *   episode, what its finished siblings at the same quality suggest it will weigh. It holds the
+ *   line until the scanner has read a cluster of its own, so the very first sample of a seeded
+ *   download does not blank the figure the user was already shown.
  */
 private class ItemProgress(
     files: List<DownloadFileEntity>,
     private val estimatedTotal: Long,
+    seededProjection: Long? = null,
 ) {
     private val downloaded = files.associate { it.id to it.bytesDownloaded }.toMutableMap()
     private val totals = files.associate { it.id to it.bytesTotal }.toMutableMap()
+
+    /**
+     * The media file's projected finished size, or `null` for "no better answer than the ceiling".
+     *
+     * Written by the queue on the throttle's cadence and cleared when the media file completes.
+     * Deliberately *not* folded into [bytesTotal]: the ceiling is a promise the enqueue step made
+     * and the projection is evidence arriving afterwards, and conflating them would let a mid-flight
+     * guess overwrite the only deterministic number on the row.
+     */
+    var mediaProjection: Long? = seededProjection
+
+    /**
+     * What the whole item is projected to weigh, or `null` when nothing is projecting it.
+     *
+     * The media file's own entry in [totals] is still `0` while its length is unknown, so that sum
+     * is exactly the item's *other* files — artwork and subtitles, a rounding error next to the
+     * video, added for completeness rather than for accuracy. Clamped into
+     * `[bytesDownloaded, bytesTotal]` so a projection can never claim less than what has landed nor
+     * more than the ceiling.
+     */
+    val projectedBytes: Long?
+        get() = mediaProjection?.let { (it + totals.values.sum()).coerceIn(bytesDownloaded, bytesTotal) }
 
     fun update(
         fileId: Long,

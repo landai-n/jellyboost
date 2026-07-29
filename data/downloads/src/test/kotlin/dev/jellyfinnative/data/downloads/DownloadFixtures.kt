@@ -41,6 +41,7 @@ object DownloadFixtures {
         sourceBitRate: Int? = null,
         runTimeTicks: Long? = null,
         streams: List<MediaStream> = emptyList(),
+        sourceContainer: String? = "mkv",
         primaryTag: String? = "primary-tag",
         backdropTag: String? = null,
         trickplay: Map<String, Map<String, TrickplayInfoDto>>? = null,
@@ -58,10 +59,19 @@ object DownloadFixtures {
             trickplay = trickplay,
             mediaSources =
                 mediaSourceId?.let {
-                    listOf(mediaSource(id = it, size = sizeBytes, bitrate = sourceBitRate, streams = streams))
+                    listOf(
+                        mediaSource(
+                            id = it,
+                            size = sizeBytes,
+                            bitrate = sourceBitRate,
+                            streams = streams,
+                            container = sourceContainer,
+                        ),
+                    )
                 },
         )
 
+    @Suppress("LongParameterList")
     fun episode(
         id: UUID = uuid(2),
         seriesId: UUID? = uuid(10),
@@ -71,6 +81,10 @@ object DownloadFixtures {
         episodeNumber: Int? = 2,
         name: String = "Chestnut",
         seriesPrimaryImageTag: String? = "series-tag",
+        runTimeTicks: Long? = null,
+        sizeBytes: Long? = 1_000L,
+        sourceBitRate: Int? = null,
+        streams: List<MediaStream> = emptyList(),
     ): BaseItemDto =
         BaseItemDto(
             id = id,
@@ -84,8 +98,12 @@ object DownloadFixtures {
             seriesPrimaryImageTag = seriesPrimaryImageTag,
             path = "/media/tv/Westworld/S01/Westworld.S01E02.mkv",
             container = "mkv",
+            runTimeTicks = runTimeTicks,
             imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
-            mediaSources = listOf(mediaSource(id = "source-2", size = 1_000L)),
+            mediaSources =
+                listOf(
+                    mediaSource(id = "source-2", size = sizeBytes, bitrate = sourceBitRate, streams = streams),
+                ),
         )
 
     /**
@@ -132,11 +150,13 @@ object DownloadFixtures {
         size: Long?,
         bitrate: Int? = null,
         streams: List<MediaStream> = emptyList(),
+        container: String? = "mkv",
     ): MediaSourceInfo =
         MediaSourceInfo(
             id = id,
             size = size,
             bitrate = bitrate,
+            container = container,
             mediaStreams = streams,
             type = MediaSourceType.DEFAULT,
             protocol = MediaProtocol.FILE,
@@ -156,6 +176,35 @@ object DownloadFixtures {
             supportsProbing = true,
             hasSegments = false,
             transcodingSubProtocol = MediaStreamProtocol.HTTP,
+        )
+
+    /**
+     * A source video track — what the remux check reads (`DownloadEnqueuer.remuxBytes`).
+     *
+     * The three fields that matter each default to a value that *passes* the check at `HIGH`, so a
+     * test that wants a condition to fail names only the one field it is failing.
+     */
+    fun videoStream(
+        index: Int = 0,
+        codec: String? = "h264",
+        height: Int? = 1080,
+        width: Int? = 1920,
+        bitRate: Int? = 6_000_000,
+    ): MediaStream =
+        MediaStream(
+            index = index,
+            type = MediaStreamType.VIDEO,
+            codec = codec,
+            height = height,
+            width = width,
+            bitRate = bitRate,
+            isExternal = false,
+            isInterlaced = false,
+            isDefault = true,
+            isForced = false,
+            isHearingImpaired = false,
+            isTextSubtitleStream = false,
+            supportsExternalStream = false,
         )
 
     fun subtitleStream(
@@ -184,10 +233,13 @@ object DownloadFixtures {
         queuePosition: Int = 0,
         bytesDownloaded: Long = 0L,
         bytesTotal: Long = 0L,
+        projectedBytes: Long? = null,
+        sizeIsExact: Boolean = false,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
         directoryName: String = "Arrival (2016)",
         itemName: String = "Arrival",
         seriesName: String? = null,
+        updatedAt: Instant = NOW,
     ): DownloadEntity =
         DownloadEntity(
             itemId = itemId,
@@ -197,12 +249,14 @@ object DownloadFixtures {
             quality = quality,
             bytesDownloaded = bytesDownloaded,
             bytesTotal = bytesTotal,
+            projectedBytes = projectedBytes,
+            sizeIsExact = sizeIsExact,
             queuePosition = queuePosition,
             directoryName = directoryName,
             itemName = itemName,
             seriesName = seriesName,
             createdAt = NOW,
-            updatedAt = NOW,
+            updatedAt = updatedAt,
         )
 
     fun file(

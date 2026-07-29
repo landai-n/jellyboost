@@ -24,12 +24,37 @@ data class DownloadItem(
     val queuePosition: Int,
     /** The download quality stamped on this row at enqueue time (schema v5). */
     val quality: DownloadQuality = DownloadQuality.ORIGINAL,
+    /**
+     * What the finished file is now expected to weigh, against [bytesTotal]'s "will not exceed"
+     * (schema v6); `null` when the ceiling is still the best answer available.
+     */
+    val projectedBytes: Long? = null,
+    /** `true` when [bytesTotal] is the size the file will be, not an upper bound (schema v6). */
+    val sizeIsExact: Boolean = false,
     val errorMessage: String? = null,
     val item: JellyfinItem? = null,
 ) {
+    /**
+     * The denominator to show and to divide by: the projection when there is one, the ceiling
+     * otherwise.
+     *
+     * The projection is clamped into `[bytesDownloaded, bytesTotal]` here as well as where it is
+     * written, because the two arrive from Room in the same row but not necessarily from the same
+     * instant — a progress write and a projection write can interleave, and a denominator below the
+     * numerator would draw a progress bar past its own end.
+     */
+    val displayTotalBytes: Long
+        get() {
+            val ceiling = maxOf(bytesTotal, bytesDownloaded)
+            return projectedBytes?.coerceIn(bytesDownloaded, ceiling) ?: bytesTotal
+        }
+
     /** Transfer progress in `0f..1f`; `0f` while the total size is unknown. */
     val progress: Float
-        get() = if (bytesTotal <= 0L) 0f else (bytesDownloaded.toFloat() / bytesTotal).coerceIn(0f, 1f)
+        get() =
+            displayTotalBytes.takeIf { it > 0L }?.let {
+                (bytesDownloaded.toFloat() / it).coerceIn(0f, 1f)
+            } ?: 0f
 
     /**
      * What the *Downloaded* tab groups by: the show an episode belongs to, or `null` for a film.
@@ -40,15 +65,38 @@ data class DownloadItem(
     val seriesKey: String? get() = seriesName?.takeIf { it.isNotBlank() }
 
     /**
-     * `true` when [bytesTotal] is an upper bound rather than an exact figure.
+     * How much the size on this row can be trusted, which is what decides how it is worded.
      *
-     * For [DownloadQuality.ORIGINAL] the server already reported the real file size
-     * (`mediaSources[0].size`). For a transcoded step `DownloadEnqueuer.expectedBytes` can only
-     * estimate from the source's runtime and bitrate cap — a correct ceiling, but one the encoder
-     * routinely undershoots on easy content, so it must never be presented as an exact figure
-     * (DECISIONS.md, 2026-07-29).
+     * The three cases are three genuinely different things, and collapsing them is what made a
+     * finished 232 MB episode spend its whole download claiming 552 MB:
+     * - [SizeCertainty.EXACT] — the server reported the size ([DownloadQuality.ORIGINAL]) or the
+     *   transcode is a video stream copy, whose output is arithmetic. Say the number plainly.
+     * - [SizeCertainty.APPROXIMATE] — a projection exists: measured from the media time the stream
+     *   has actually delivered, or seeded from finished episodes of the same show at the same
+     *   quality. It is the app's best guess and it will move, so it is hedged rather than promised.
+     * - [SizeCertainty.CEILING] — nothing but the enqueue-time bound, `runtime × min(cap, source
+     *   bitrate)`. The encoder routinely undershoots it on easy content (DECISIONS.md,
+     *   2026-07-29), so it can only honestly be stated as a limit.
      */
-    val isSizeCapped: Boolean get() = quality.isTranscoded
+    val sizeCertainty: SizeCertainty
+        get() =
+            when {
+                !quality.isTranscoded || sizeIsExact -> SizeCertainty.EXACT
+                projectedBytes != null -> SizeCertainty.APPROXIMATE
+                else -> SizeCertainty.CEILING
+            }
+}
+
+/** How well the size on a [DownloadItem] is known; see [DownloadItem.sizeCertainty]. */
+enum class SizeCertainty {
+    /** The figure is what the file will weigh. */
+    EXACT,
+
+    /** A live or seeded projection — close, and still moving. */
+    APPROXIMATE,
+
+    /** An upper bound and nothing more. */
+    CEILING,
 }
 
 /**

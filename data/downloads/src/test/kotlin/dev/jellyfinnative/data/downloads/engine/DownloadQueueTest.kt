@@ -21,9 +21,11 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
 import io.mockk.Runs
@@ -67,8 +69,14 @@ class DownloadQueueTest {
 
     private var nextFileId = 1L
 
+    /** Every value written to `downloads.projectedBytes`, in order — `null` included. */
+    private val projections = mutableListOf<Long?>()
+
     @BeforeEach
     fun setUp() {
+        coEvery { downloadDao.updateProgress(any(), any(), any(), any(), any()) } answers {
+            projections += arg<Long?>(3)
+        }
         every { storage.prepareItemDirectory(any()) } returns File("/tmp/downloads")
         every { storage.resolve(any(), any()) } answers { File("/tmp/downloads/${secondArg<String>()}") }
         coEvery { downloadDao.insertFile(any()) } answers { nextFileId++ }
@@ -77,7 +85,7 @@ class DownloadQueueTest {
         every { itemMapper.toDtoOrNull(any()) } returns movie()
         every { urls.mediaUrl(any()) } returns "https://server/download"
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
-        coEvery { downloader.download(any(), any(), any(), any()) } returns 100L
+        coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
     }
 
@@ -125,7 +133,7 @@ class DownloadQueueTest {
         runTest {
             // Otherwise a 2 GB film would jump to 100 % while its 40 KB poster finished.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any()) } returns 500L
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 500L
 
             queue().drain(listener)
 
@@ -160,7 +168,7 @@ class DownloadQueueTest {
 
             coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.ERROR, any(), any()) }
             coVerify(exactly = 0) { downloadDao.nextRunnable() }
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -183,7 +191,7 @@ class DownloadQueueTest {
     fun `a failing media file marks the item ERROR`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any()) } throws
                 IOException("connection reset")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
@@ -205,7 +213,7 @@ class DownloadQueueTest {
             // The device walk found a queue row reading "Download failed: Required value baseUrl is
             // null. Provide it by setting ApiClient.baseUrl." — SDK internals on screen.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any()) } throws
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws
                 IllegalStateException("Required value baseUrl is null. Provide it by setting ApiClient.baseUrl.")
             val message = slot<String>()
             coEvery {
@@ -223,7 +231,7 @@ class DownloadQueueTest {
         runTest {
             // The plan's optional-file rule: the file row goes ERROR, the item stays playable.
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any()) } throws
                 IOException("404")
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
@@ -235,7 +243,7 @@ class DownloadQueueTest {
     fun `a failing file is recorded on its own row`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any()) } throws
                 IOException("404")
 
             queue().drain(listener)
@@ -248,13 +256,13 @@ class DownloadQueueTest {
         runTest {
             queueWith(download())
             every { urls.videoStreamUrl(any(), any()) } returns "https://server/videos/stream"
-            coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
+            coEvery { downloader.download("https://server/download", any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 403, url = "https://server/download")
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             // Same bytes, a route the server does not gate on `enableContentDownloading`.
-            coVerify { downloader.download("https://server/videos/stream", any(), any(), any()) }
+            coVerify { downloader.download("https://server/videos/stream", any(), any(), any(), any()) }
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
         }
 
@@ -262,7 +270,7 @@ class DownloadQueueTest {
     fun `a non-403 error on the media file is not retried`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download("https://server/download", any(), any(), any()) } throws
+            coEvery { downloader.download("https://server/download", any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 500, url = "https://server/download")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
@@ -293,7 +301,7 @@ class DownloadQueueTest {
             // hand the user the original file they asked the server to shrink.
             queueWith(download(quality = DownloadQuality.LOW))
             every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
-            coEvery { downloader.download("https://server/videos/stream.mkv", any(), any(), any()) } throws
+            coEvery { downloader.download("https://server/videos/stream.mkv", any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 403, url = "https://server/videos/stream.mkv")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
@@ -309,9 +317,9 @@ class DownloadQueueTest {
             // bytes and the queue tab would read 100 % from the first chunk.
             queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
             every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
-            coEvery { downloader.download(any(), any(), any(), any()) } coAnswers {
-                // The third argument, not the last: MockK hands a suspending call its continuation.
-                arg<ProgressCallback>(3).onProgress(300L, 0L)
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } coAnswers {
+                // The fifth argument, not the last: MockK hands a suspending call its continuation.
+                arg<ProgressCallback>(4).onProgress(300L, 0L)
                 300L
             }
 
@@ -328,11 +336,103 @@ class DownloadQueueTest {
             // Every file has reported a real size by the end, so the estimate is dropped and the
             // exact sum wins — a download that ends at 90 % of a guess is worse than no guess.
             queueWith(download(bytesTotal = 10_000L))
-            coEvery { downloader.download(any(), any(), any(), any()) } returns 100L
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
 
             queue().drain(listener)
 
             listener.progress.last() shouldBe (200L to 200L)
+        }
+
+    // ---- the live size projection (schema v6) ---------------------------------------------------
+
+    @Test
+    fun `a projection over the ceiling is clamped to the ceiling the enqueue step promised`() =
+        runTest {
+            givenTranscodeOfAnHour(ceiling = 10_000_000L)
+            // 2 000 bytes bought only 100 ms — all container header, the state of every transcode
+            // in its opening moment. Extrapolated that is 72 MB, which is not a promise to make.
+            givenMediaStream(clusterMillis = 100L, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            projections shouldContain 10_000_000L
+        }
+
+    @Test
+    fun `a projection well under the ceiling is the one the row ends up carrying`() =
+        runTest {
+            givenTranscodeOfAnHour(ceiling = 10_000_000L)
+            // 2 000 bytes bought an hour of media — an encoder producing a tiny file.
+            givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            // The projection is the media file's 2 000 bytes plus the poster's known 400.
+            projections shouldContain 2_400L
+        }
+
+    @Test
+    fun `the projection is cleared once the media file is whole`() =
+        runTest {
+            givenTranscodeOfAnHour(ceiling = 10_000_000L)
+            givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            // At that point the size is not projected, it is measured — and `bytesTotal` snaps to
+            // the sum of real sizes, which is the number the row should be divided by.
+            projections.last().shouldBeNull()
+        }
+
+    @Test
+    fun `an original download never projects anything`() =
+        runTest {
+            queueWith(download(bytesTotal = 10_000L))
+
+            queue().drain(listener)
+
+            // Its total is the server's own file size; there is nothing to improve on.
+            projections.filterNotNull().shouldBeEmpty()
+        }
+
+    @Test
+    fun `a row the enqueue step marked exact is not second-guessed by the scanner`() =
+        runTest {
+            // A stream copy: `bytesTotal` predicts the actual file, so flipping the row to an
+            // approximate figure mid-transfer would be a downgrade, not a refinement.
+            givenTranscodeOfAnHour(ceiling = 10_000_000L, sizeIsExact = true)
+            givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            projections.filterNotNull().shouldBeEmpty()
+        }
+
+    @Test
+    fun `a seeded projection holds until the stream has a cluster of its own to offer`() =
+        runTest {
+            givenTranscodeOfAnHour(ceiling = 10_000_000L, seed = 3_000_000L)
+            // Bytes arrive, but not one cluster header among them, so there is nothing to measure.
+            givenMediaStream(clusterMillis = null, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            // The seed from the show's finished episodes is still the best answer available, and
+            // blanking it would make the row's wording flap from "~3,0 MB" back to "up to 10,0 MB".
+            projections shouldContain 3_000_000L + 400L
+        }
+
+    @Test
+    fun `a transcode of an item with no runtime has nothing to extrapolate to`() =
+        runTest {
+            every { itemMapper.toDtoOrNull(any()) } returns movie(runTimeTicks = null)
+            queueWith(download(quality = DownloadQuality.LOW, bytesTotal = 10_000_000L))
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
+            givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            projections.filterNotNull().shouldBeEmpty()
         }
 
     // ---- cancellation ---------------------------------------------------------------------------
@@ -341,7 +441,7 @@ class DownloadQueueTest {
     fun `cancellation puts the row back in the queue rather than failing it`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any()) } throws CancellationException("paused")
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("paused")
 
             runCatching { queue().drain(listener) }
 
@@ -359,7 +459,7 @@ class DownloadQueueTest {
             // `nextRunnable` picked the item straight back up — pause looked like it did nothing.
             // The status test lives in the statement (`requeueIfDownloading`) so it cannot race.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any()) } throws CancellationException("paused")
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("paused")
 
             runCatching { queue().drain(listener) }
 
@@ -428,7 +528,7 @@ class DownloadQueueTest {
             // Nothing new was inserted: the second run re-used every row the first one wrote.
             rows.size shouldBe firstPlan.size
             val target = File("/tmp/downloads/Backrooms.2026.MULTi-BATGirl.mkv")
-            coVerify { downloader.download(any(), target, any(), any()) }
+            coVerify { downloader.download(any(), target, any(), any(), any()) }
         }
 
     @Test
@@ -456,7 +556,7 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            coVerify { downloader.download("https://server/download", any(), any(), any()) }
+            coVerify { downloader.download("https://server/download", any(), any(), any(), any()) }
         }
 
     // ---- deletion while downloading ---------------------------------------------------------------
@@ -472,7 +572,7 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any()) }
             // Nothing is "downloaded": the item is gone, not finished.
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, any(), any()) }
         }
@@ -505,11 +605,63 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            coVerify(atLeast = 1) { downloadDao.updateProgress(uuid(1), any(), any(), NOW) }
+            coVerify(atLeast = 1) { downloadDao.updateProgress(uuid(1), any(), any(), any(), NOW) }
             listener.progress.shouldNotBeEmpty()
         }
 
     // ---- helpers --------------------------------------------------------------------------------
+
+    /** A one-hour item queued at `LOW`, so the media file is a transcode with a ceiling to beat. */
+    private fun givenTranscodeOfAnHour(
+        ceiling: Long,
+        seed: Long? = null,
+        sizeIsExact: Boolean = false,
+    ) {
+        every { itemMapper.toDtoOrNull(any()) } returns movie(runTimeTicks = HOUR_TICKS)
+        every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
+        queueWith(
+            download(
+                quality = DownloadQuality.LOW,
+                bytesTotal = ceiling,
+                projectedBytes = seed,
+                sizeIsExact = sizeIsExact,
+            ),
+        )
+    }
+
+    /**
+     * The poster lands at a known 400 bytes; the media file feeds [clusterMillis] of Matroska into
+     * the chunk sink and then reports [reportedBytes] with an unknown total, as a chunked transcode
+     * does for its whole life.
+     *
+     * @param clusterMillis `null` writes bytes carrying no cluster header at all — the state of the
+     *   stream before its first cluster arrives.
+     */
+    private fun givenMediaStream(
+        clusterMillis: Long?,
+        reportedBytes: Long,
+    ) {
+        coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any()) } returns 400L
+        coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any()) } coAnswers {
+            val body = clusterMillis?.let(::clusterBytes) ?: ByteArray(16) { 0x11 }
+            arg<MediaChunkSink?>(3)?.onChunk(body, 0, body.size)
+            arg<ProgressCallback>(4).onProgress(reportedBytes, 0L)
+            reportedBytes
+        }
+    }
+
+    /** One Matroska cluster whose `Timestamp` is [millis], at the default 1 ms scale. */
+    private fun clusterBytes(millis: Long): ByteArray {
+        val value =
+            byteArrayOf(
+                (millis shr 24).toByte(),
+                (millis shr 16).toByte(),
+                (millis shr 8).toByte(),
+                millis.toByte(),
+            )
+        // Cluster id, size 6, then `Timestamp` (0xE7) as a four-byte unsigned first child.
+        return byteArrayOf(0x1F, 0x43, 0xB6.toByte(), 0x75, 0x86.toByte(), 0xE7.toByte(), 0x84.toByte()) + value
+    }
 
     private fun queue() =
         DownloadQueue(
@@ -556,6 +708,12 @@ class DownloadQueueTest {
     }
 
     private companion object {
+        const val IMAGE_URL = "https://server/image"
+        const val TRANSCODE_URL = "https://server/videos/stream.mkv"
+
+        /** One hour in `runTimeTicks` (100 ns each). */
+        const val HOUR_TICKS = 36_000_000_000L
+
         val ITEM_ENTITY =
             ItemEntity(
                 id = uuid(1),

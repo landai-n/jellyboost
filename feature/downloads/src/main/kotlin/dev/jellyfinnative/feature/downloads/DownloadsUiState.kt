@@ -42,6 +42,11 @@ data class DownloadsUiState(
     val queue: List<DownloadItem> = emptyList(),
     /** Transfer speed in bytes per second, keyed by item id; absent while nothing is moving. */
     val speeds: Map<String, Long> = emptyMap(),
+    /**
+     * The fraction each queue row draws, keyed by item id — [DownloadProgressRatchet]'s answer, not
+     * `DownloadItem.progress`, so a growing projection cannot make a bar retreat.
+     */
+    val progress: Map<String, Float> = emptyMap(),
     val storage: StorageUsage = StorageUsage(),
     val wifiOnly: Boolean = true,
     val isLoading: Boolean = true,

@@ -24,9 +24,13 @@
 
     <!-- Queue row status line -->
     <string name="downloads_progress_of">%1$s of %2$s</string>
-    <!-- A transcoded download's total is an estimate, never the exact figure ORIGINAL gets from the server. -->
+    <!-- The size is a projection: measured from the stream, or seeded from finished episodes of the same show. -->
+    <string name="downloads_progress_of_approx">%1$s of ~%2$s</string>
+    <!-- Nothing but the enqueue-time upper bound: the encoder routinely lands well under it. -->
     <string name="downloads_progress_of_capped">%1$s of up to %2$s</string>
-    <!-- Same estimate, alone, for a row that has not started transferring yet. -->
+    <!-- The same projection, alone, for a row that has not started transferring yet. -->
+    <string name="downloads_size_approx">~%1$s</string>
+    <!-- The same ceiling, alone, for a row that has not started transferring yet. -->
     <string name="downloads_size_capped">up to %1$s</string>
     <string name="downloads_speed">%1$s/s</string>
     <string name="downloads_status_queued">Waiting</string>

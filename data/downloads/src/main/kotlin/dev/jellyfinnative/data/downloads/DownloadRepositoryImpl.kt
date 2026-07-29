@@ -274,6 +274,8 @@ class DownloadRepositoryImpl
                     bytesOnDisk = row.bytesOnDisk,
                     queuePosition = row.download.queuePosition,
                     quality = row.download.quality,
+                    projectedBytes = row.download.projectedBytes,
+                    sizeIsExact = row.download.sizeIsExact,
                     errorMessage = row.download.errorMessage,
                     item = items[row.download.itemId],
                 )

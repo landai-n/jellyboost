@@ -246,6 +246,9 @@ private fun QueueTab(
         items(items = state.queue, key = { it.itemId }) { item ->
             QueueRow(
                 item = item,
+                // The ratcheted fraction, falling back to the row's own only for an item the
+                // ratchet has not seen yet (the very first frame after an enqueue).
+                progress = state.progress[item.itemId] ?: item.progress,
                 speedBytesPerSecond = state.speeds[item.itemId],
                 actions = actions,
             )

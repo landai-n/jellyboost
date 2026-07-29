@@ -215,7 +215,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
         DownloadStatus.DOWNLOADING ->
             listOfNotNull(
                 stringResource(
-                    R.string.downloads_progress_of,
+                    if (isSizeCapped) R.string.downloads_progress_of_capped else R.string.downloads_progress_of,
                     formatBytes(bytesDownloaded),
                     formatBytes(bytesTotal),
                 ),
@@ -224,13 +224,36 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                     ?.let { stringResource(R.string.downloads_speed, formatBytes(it)) },
             ).joinToString(" · ")
 
-        DownloadStatus.QUEUED -> stringResource(R.string.downloads_status_queued)
+        DownloadStatus.QUEUED ->
+            listOfNotNull(
+                stringResource(R.string.downloads_status_queued),
+                // The expected size is already known at enqueue time (`DownloadEnqueuer.expectedBytes`),
+                // so a row waiting its turn can show it — a ceiling for a capped quality, exact for
+                // ORIGINAL — same rule the in-progress line above follows.
+                bytesTotal.takeIf { it > 0L }?.let { expectedSizeText(it) },
+            ).joinToString(" · ")
+
         DownloadStatus.PAUSED -> stringResource(R.string.downloads_status_paused)
         DownloadStatus.ERROR ->
             errorMessage?.let { stringResource(R.string.downloads_status_failed_reason, it) }
                 ?: stringResource(R.string.downloads_status_failed)
 
         DownloadStatus.DOWNLOADED, DownloadStatus.CANCELLED -> formatBytes(bytesOnDisk)
+    }
+
+/**
+ * [bytes] as an exact figure, or as an "up to" ceiling for a [DownloadItem.isSizeCapped] row.
+ *
+ * A transcoded download's total is `DownloadEnqueuer.expectedBytes`'s estimate, not a number the
+ * server has actually produced — the encoder routinely undershoots it on easy content (DECISIONS.md,
+ * 2026-07-29), so stating it as exact reads as wrong once the real file lands smaller.
+ */
+@Composable
+private fun DownloadItem.expectedSizeText(bytes: Long): String =
+    if (isSizeCapped) {
+        stringResource(R.string.downloads_size_capped, formatBytes(bytes))
+    } else {
+        formatBytes(bytes)
     }
 
 /**

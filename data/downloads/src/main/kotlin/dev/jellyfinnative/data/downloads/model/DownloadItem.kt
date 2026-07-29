@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads.model
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.JellyfinItem
 
@@ -21,6 +22,8 @@ data class DownloadItem(
     /** Bytes this item actually occupies on disk, summed over its files. */
     val bytesOnDisk: Long,
     val queuePosition: Int,
+    /** The download quality stamped on this row at enqueue time (schema v5). */
+    val quality: DownloadQuality = DownloadQuality.ORIGINAL,
     val errorMessage: String? = null,
     val item: JellyfinItem? = null,
 ) {
@@ -35,6 +38,17 @@ data class DownloadItem(
      * heading is only worth its line when it says something the rows underneath do not.
      */
     val seriesKey: String? get() = seriesName?.takeIf { it.isNotBlank() }
+
+    /**
+     * `true` when [bytesTotal] is an upper bound rather than an exact figure.
+     *
+     * For [DownloadQuality.ORIGINAL] the server already reported the real file size
+     * (`mediaSources[0].size`). For a transcoded step `DownloadEnqueuer.expectedBytes` can only
+     * estimate from the source's runtime and bitrate cap — a correct ceiling, but one the encoder
+     * routinely undershoots on easy content, so it must never be presented as an exact figure
+     * (DECISIONS.md, 2026-07-29).
+     */
+    val isSizeCapped: Boolean get() = quality.isTranscoded
 }
 
 /**

@@ -24,6 +24,10 @@
 
     <!-- Queue row status line -->
     <string name="downloads_progress_of">%1$s of %2$s</string>
+    <!-- A transcoded download's total is an estimate, never the exact figure ORIGINAL gets from the server. -->
+    <string name="downloads_progress_of_capped">%1$s of up to %2$s</string>
+    <!-- Same estimate, alone, for a row that has not started transferring yet. -->
+    <string name="downloads_size_capped">up to %1$s</string>
     <string name="downloads_speed">%1$s/s</string>
     <string name="downloads_status_queued">Waiting</string>
     <string name="downloads_status_paused">Paused</string>

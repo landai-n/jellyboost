@@ -199,6 +199,12 @@ An item with no `runTimeTicks` at all (a rare, malformed item) falls back to `0`
 source's own size: reporting the *original* size for a file the user is not going to receive would
 promise a number that is simply wrong, where `0` renders as an honest indeterminate bar.
 
+The estimate is a correct upper bound, not a prediction — the encoder routinely undershoots it on
+easy content, so a Downloads screen row for a transcoded (non-`ORIGINAL`) download presents it as a
+ceiling rather than an exact figure: *"75,0 MB of up to 552,4 MB"* while transferring, *"Waiting · up
+to 552,4 MB"* while queued. An `ORIGINAL` row keeps the plain, exact wording, since its number is the
+server's own reported size (DECISIONS.md, 2026-07-29).
+
 ### No resume
 
 `/Videos/{id}/stream.mkv?static=false` ignores an HTTP `Range` header — it cannot seek into a file it

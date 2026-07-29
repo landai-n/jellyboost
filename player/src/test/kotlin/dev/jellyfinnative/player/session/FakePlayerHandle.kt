@@ -79,6 +79,13 @@ internal class FakePlayerHandle : PlayerHandle {
         return trackSelectionSucceeds
     }
 
+    /** Every rate [setPlaybackSpeed] was asked for, oldest first. */
+    val playbackSpeeds = mutableListOf<Float>()
+
+    override fun setPlaybackSpeed(speed: Float) {
+        playbackSpeeds += speed
+    }
+
     override fun stop() {
         stopped = true
     }

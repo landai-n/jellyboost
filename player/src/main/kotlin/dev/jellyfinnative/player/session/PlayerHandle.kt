@@ -71,6 +71,16 @@ interface PlayerHandle {
         jellyfinIndex: Int?,
     ): Boolean
 
+    /**
+     * Sets the playback rate, where `1f` is normal speed.
+     *
+     * Session-scoped by design and not persisted, matching jellyfin-web: a speed the user set for
+     * one lecture should not silently follow them into the next film (docs/PLAN.md, "M9 Polish" →
+     * speed). It therefore has to be re-applied after every re-resolve, since a re-negotiation
+     * builds a fresh media item.
+     */
+    fun setPlaybackSpeed(speed: Float)
+
     /** Stops playback and clears the queued media, leaving the player reusable. */
     fun stop()
 }
@@ -89,6 +99,17 @@ sealed interface PlayerEvent {
 
     /** Tracks appeared or changed — the pickers need rebuilding. */
     data object TracksChanged : PlayerEvent
+
+    /**
+     * The decoded video size became known or changed.
+     *
+     * Picture-in-picture needs it: the floating window is created with the video's aspect ratio, and
+     * the only party that knows it is the decoder (docs/PLAN.md, "M9 Polish" → PiP).
+     */
+    data class VideoSizeChanged(
+        val width: Int,
+        val height: Int,
+    ) : PlayerEvent
 
     /**
      * Playback failed.

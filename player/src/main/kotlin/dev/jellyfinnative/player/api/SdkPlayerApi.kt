@@ -6,12 +6,17 @@ import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.hlsSegmentApi
 import org.jellyfin.sdk.api.client.extensions.mediaInfoApi
+import org.jellyfin.sdk.api.client.extensions.mediaSegmentsApi
 import org.jellyfin.sdk.api.client.extensions.playStateApi
+import org.jellyfin.sdk.api.client.extensions.userLibraryApi
+import org.jellyfin.sdk.model.api.MediaSegmentDto
+import org.jellyfin.sdk.model.api.MediaSegmentType
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackInfoResponse
 import org.jellyfin.sdk.model.api.PlaybackProgressInfo
 import org.jellyfin.sdk.model.api.PlaybackStartInfo
 import org.jellyfin.sdk.model.api.PlaybackStopInfo
+import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,4 +67,22 @@ internal class SdkPlayerApi
                 )
             }
         }
+
+        override suspend fun getTrickplayInfo(itemId: UUID): Map<String, Map<String, TrickplayInfoDto>> =
+            withContext(ioDispatcher) {
+                apiClient.userLibraryApi
+                    .getItem(itemId = itemId)
+                    .content.trickplay
+                    .orEmpty()
+            }
+
+        override suspend fun getMediaSegments(
+            itemId: UUID,
+            types: Collection<MediaSegmentType>,
+        ): List<MediaSegmentDto> =
+            withContext(ioDispatcher) {
+                apiClient.mediaSegmentsApi
+                    .getItemSegments(itemId = itemId, includeSegmentTypes = types)
+                    .content.items
+            }
     }

@@ -39,6 +39,15 @@ class ExoMediaSourceFactoryTest {
             ) = "https://server/Videos/$itemId/stream.$container?playSessionId=$playSessionId"
 
             override fun absoluteUrl(path: String) = "https://server$path"
+
+            // Trickplay is the scrubber's business, not this factory's; present so the fake still
+            // satisfies the interface.
+            override fun trickplayTileUrl(
+                itemId: UUID,
+                width: Int,
+                tileIndex: Int,
+                mediaSourceId: String?,
+            ) = "https://server/Videos/$itemId/Trickplay/$width/$tileIndex.jpg"
         }
 
     private val factory = ExoMediaSourceFactory(urls)

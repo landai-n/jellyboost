@@ -236,3 +236,52 @@ already owns the download schema, and crosses the boundary as a plain `Downloade
   from `Application.onCreate` because a device coming back online with the app backgrounded is
   precisely the case the milestone's definition of done exercises.
 <!-- END: Offline playback + sync (M8) -->
+
+<!-- BEGIN: Player polish (M9) -->
+## Player polish (M9)
+
+Three new seams, one new module edge, and one architectural correction.
+
+### New module edge
+
+`:player` now takes `implementation(projects.core.datastore)` (`DECISIONS.md`, 2026-07-29). Two of
+M9's behaviours are gated on a user preference and the player is the only thing that can act on
+them; `:data:downloads` already takes the same dependency for its Wi-Fi-only constraint. The enum
+they carry, `SegmentSkipMode`, lives in `:core:common` so the store, the player and the settings
+screen can all name it without seeing each other.
+
+### New seams inside `:player`
+
+```
+PlayerViewModel ──► TrickplayResolver ──► PlayerApi        (item's trickplay geometry)
+                          └──────────────► StreamUrlFactory (tile sheet URLs)
+                └─────► MediaSegmentLoader ──► PlayerApi    (GET /MediaSegments/{id})
+                └─────► SegmentSkipController                (pure decision, once-per-segment state)
+                └─────► PipController ◄──────────────────► MainActivity
+                └─────► AppPreferences                       (:core:datastore)
+
+PlayerGestureLayer (Compose) ──► PlayerGestureController     (zones, distance, exclusions)
+```
+
+- **`PipController`** is the only new `@Singleton` and the only one shared with `:app`. Picture-in-
+  picture is an *activity* capability whose conditions are entirely the player's, and `MainActivity`
+  hosts every screen — without this seam it would have to reach into the player's ViewModel or
+  guess. Traffic runs both ways: the player publishes readiness, the activity publishes the system's
+  mode changes.
+- **`SegmentSkipController` and `PlayerGestureController` hold no Android type.** Everything that has
+  a right answer — which sheet a position is on, which third a tap landed in, whether a segment has
+  already been auto-skipped — is a plain object with unit tests, and the composable that feeds it
+  coordinates is deliberately thin.
+- **`TrickplayTiles` is one type for two origins.** A downloaded item's sheets are `file://` URIs on
+  disk; a streamed item's are server URLs derived from the thumbnail count. The scrubber has one code
+  path, which extends M8's "the player UI is identical online and offline" to the seek bar.
+
+### Correction to the M5/M8 session architecture
+
+`PlaybackService` now calls `addSession(session)` in `onCreate`. Media3 only manages a session —
+media notification, foreground promotion — once it has been added, which normally happens when a
+`MediaController` connects; this app deliberately drives the shared `ExoPlayer` directly
+(`DECISIONS.md`, 2026-07-28), so nothing ever added it and the service was never promoted. That,
+not the notification permission, is why backgrounding the app stopped playback from M5 onwards
+(`DECISIONS.md`, 2026-07-29).
+<!-- END: Player polish (M9) -->

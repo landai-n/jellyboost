@@ -37,6 +37,14 @@ data class ItemDetailUiState(
     val errorMessage: String? = null,
     /** A one-shot message for the snackbar; cleared by `ItemDetailViewModel.consumeMessage`. */
     val userMessage: UserMessage? = null,
+    /**
+     * `true` while the delete-download confirmation dialog is up (docs/POLISH.md).
+     *
+     * Set by `ItemDetailViewModel.onDownloadClick` instead of deleting straight away whenever the
+     * download button's next tap would remove something already on the device — cleared again by
+     * either `confirmDeleteDownload` or `dismissDeleteConfirmation`.
+     */
+    val showDeleteConfirmation: Boolean = false,
 ) {
     /** `true` once the item is loaded and can be rendered. */
     val isLoaded: Boolean get() = !isLoading && item != null

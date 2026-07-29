@@ -412,7 +412,7 @@ class ItemDetailViewModelTest {
         }
 
     @Test
-    fun `download deletes an item that is already on the device`() =
+    fun `download on an already-downloaded item asks for confirmation instead of deleting straight away`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
             coEvery { downloads.delete(ITEM_ID) } returns AppResult.Success(0L)
@@ -423,11 +423,47 @@ class ItemDetailViewModelTest {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            // One button, two meanings — the same "tap again to undo" the watched and favourite
-            // buttons already use.
-            coVerify { downloads.delete(ITEM_ID) }
+            // A tap that would remove something already on the device is destructive enough to
+            // confirm first (docs/POLISH.md) — nothing is deleted until the dialog is confirmed.
+            model.uiState.value.showDeleteConfirmation shouldBe true
+            coVerify(exactly = 0) { downloads.delete(any()) }
             coVerify(exactly = 0) { downloads.enqueue(any()) }
+        }
+
+    @Test
+    fun `confirming the delete-download dialog removes the item and clears the dialog`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            coEvery { downloads.delete(ITEM_ID) } returns AppResult.Success(0L)
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+            model.confirmDeleteDownload()
+            advanceUntilIdle()
+
+            coVerify { downloads.delete(ITEM_ID) }
+            model.uiState.value.showDeleteConfirmation shouldBe false
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
+        }
+
+    @Test
+    fun `dismissing the delete-download dialog leaves the download untouched`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+            model.dismissDeleteConfirmation()
+            advanceUntilIdle()
+
+            model.uiState.value.showDeleteConfirmation shouldBe false
+            coVerify(exactly = 0) { downloads.delete(any()) }
         }
 
     @Test

@@ -68,6 +68,21 @@ season-cancel device checks are blocked — the tablet's stored server token was
 revoked server-side (every authenticated call now 401s), so the user needs to sign
 in again on the tablet before either check (both require enqueuing fresh downloads).
 
+### Third polish run (2026-07-29)
+The whole "New run" list landed (four worktree agents, orchestrator-merged; decisions
+in DECISIONS.md): detail back arrow/snackbar system-bar insets (b0177c6); watched-state
+changes now update home row *membership* — instant eviction from Continue watching /
+Next up plus a debounced silent re-fetch that also covers series/season toggles
+(2dc3e4e); configurable download storage location with SD-card support via secondary
+volumes, delete-all-and-switch guard per plan v1 (47bf76d); and Home now renders the
+section layout the user configured in jellyfin-web, read from DisplayPreferences with
+per-slot default fallback and an offline cache (febd896) — the feasibility research is
+in docs/notes/home-sections-feasibility.md. Also this run: the recurring "session
+expired" bug root-caused and fixed — per-install UUID device id instead of the
+signing-key-scoped ANDROID_ID (a64ed96); both installs need one re-sign-in. Full gate
+on the merged tree: **934 tests, 0 failures** (884 → 934). Device checks pending
+(this run's items + the two blocked ones above) — all still gated on the re-sign-in.
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

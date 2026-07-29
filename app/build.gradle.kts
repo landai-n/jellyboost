@@ -21,6 +21,11 @@ android {
         release {
             // R8 / shrinking is wired up in M10 (release hardening).
             isMinifyEnabled = false
+            // Local-only signing so a release-mode build can be installed on the test tablet and
+            // profiled against the debug variant — a debuggable app runs interpreted/JIT-limited,
+            // which distorts every scroll measurement. Real release signing is M10's job
+            // (DECISIONS.md, 2026-07-29).
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

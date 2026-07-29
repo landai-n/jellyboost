@@ -1,14 +1,48 @@
 # STATUS
 
-## Current milestone: M8 — Offline playback + sync (built, awaiting device DoD)
+## Current milestone: M9 — Polish (next up)
 
-**DoD (M8):** airplane-mode playback to 50% → reconnect → server shows 50% resume.
+**DoD (M9, docs/PLAN.md):** trickplay scrubber, segment skip, PiP, gestures,
+speed/quality, full settings, tablet/landscape.
 
 ### Next
-- Device DoD walk by the orchestrator after merge — see the M8 block at the bottom of
-  this file for the exact adb / logcat commands.
-- Test material already on the tablet: The Body (2.0 GB), Backrooms (2.9 GB),
-  Ouistreham (0.6 GB), Bref S1:E1+E2 — downloaded and left in place for M8.
+- Launch the M9 worktree agent. Beyond the plan line, fold in the accumulated
+  known-issue backlog that is M9 scope: background playback + notification-permission
+  flow, refresh-on-reconnect for offline-loaded screens, Wi-Fi-only/offline-mode toggle
+  hit targets, settings home for the download/offline preferences, and the per-tick
+  doomed position-push while offline (gate `UserDataRepositoryImpl` pushes on
+  connection state).
+- M9 touches `:player` heavily — run it sequentially, not in parallel with M10.
+
+## Previous milestone: M8 — Offline playback + sync (DONE, tagged m8)
+
+**DoD walk on test tablet (2026-07-29), all pass** (test film: Ouistreham, 0.6 GB,
+runtime 106.4 min):
+- **Offline local playback:** airplane-mode cold start → offline home (badged rows) →
+  detail → Play. Logcat: `Playing <id> from local storage`; **zero** server requests —
+  no `PlaybackInfo` POST, no `Sessions/*` triad (each 5 s tick logs
+  `nothing to report to the server`). Badge *Direct play*; no quality button. Player
+  landscape verified during the same session.
+- **Seek + local position:** instant seek to 53:53 (≈51 %), 20 s of playback, exit →
+  `user_data` row at 32,728,010,000 ticks, `toBeSynced=1`; offline detail immediately
+  shows "51 min left · Resume".
+- **Reconnect push (the DoD headline):** airplane off → within ~1 s
+  `UserDataSyncTrigger` → worker → `Pushed the local user data (it was newer)` →
+  server `PlaybackPositionTicks` exactly 32,728,010,000 (51.2 %), flag cleared.
+- **Reverse (adoption):** offline mark-watched, then a newer contradicting server
+  write → cold start → `Adopted the server's user data (it was newer)`; local change
+  correctly discarded. Most-recent-wins verified in both directions.
+- **Bug found & fixed during the walk:** the app-start drain raced the session
+  restore — first attempt died on `MissingBaseUrlException` and burned a 30 s
+  WorkManager backoff before the retry succeeded. Fixed by hoisting M7's
+  `DownloadSessionGate` to `:core:network` as a shared `SessionGate` used by both
+  `DownloadQueue` and `UserDataSyncWorker` (DECISIONS.md 2026-07-29). Re-walked:
+  `SessionGate` restores the session inside the worker and the **first** attempt
+  pushes in ~1.1 s.
+- Server user data restored as found (position 0, unplayed, play count 0); the four
+  downloads left on the tablet.
+- Note for M9 (new): while offline, `UserDataRepositoryImpl` still attempts one doomed
+  position-push per 5 s tick (fails fast, row stays pending — harmless but noisy).
 
 ## Previous milestone: M7 — Downloads (DONE, tagged m7)
 

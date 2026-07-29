@@ -8,6 +8,7 @@ import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -20,6 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -49,6 +51,13 @@ class SearchViewModelTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+        }
+
+    /** The reconnect signal (M9); fires only when a test says the server came back. */
+    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val reconnectRefresher =
+        mockk<ReconnectRefresher> {
+            every { reconnected } returns reconnects
         }
 
     private val queries = mutableListOf<ItemQuery>()
@@ -276,11 +285,47 @@ class SearchViewModelTest {
             state.movies.map { it.name } shouldContainExactly listOf("Dune")
         }
 
+    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+
+    @Test
+    fun `re-runs the current term when the server becomes reachable again`() =
+        runTest(dispatcher) {
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+            coVerify(exactly = 1) { repository.getItems(any()) }
+
+            // Still capturing: the term the reconnect re-runs is half of what this test asserts.
+            coEvery { repository.getItems(capture(queries)) } returns
+                AppResult.Success(listOf(movie("m1", "Dune")))
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            // The field keeps its text and the results are the server's, not the downloaded subset.
+            coVerify(exactly = 2) { repository.getItems(any()) }
+            queries.last().searchTerm shouldBe "dune"
+            viewModel.uiState.value.query shouldBe "dune"
+            viewModel.uiState.value.movies
+                .map { it.name } shouldContainExactly listOf("Dune")
+        }
+
+    @Test
+    fun `an empty search box has nothing to re-run on a reconnect`() =
+        runTest(dispatcher) {
+            startedViewModel()
+            advanceUntilIdle()
+
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { repository.getItems(any()) }
+        }
+
     // ---- helpers ----------------------------------------------------------------------------
 
     /** Builds the ViewModel and lets its debounce collector start before the test types. */
     private fun TestScope.startedViewModel(): SearchViewModel {
-        val viewModel = SearchViewModel(repository, downloads)
+        val viewModel = SearchViewModel(repository, downloads, reconnectRefresher)
         runCurrent()
         return viewModel
     }

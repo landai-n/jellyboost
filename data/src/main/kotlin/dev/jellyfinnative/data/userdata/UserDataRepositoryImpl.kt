@@ -6,6 +6,7 @@ import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.database.entities.UserDataEntity
 import dev.jellyfinnative.core.network.SessionRepository
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.runCatchingApi
@@ -39,7 +40,7 @@ import javax.inject.Singleton
  *
  * Steps 1 and 2 are the contract. Steps 3 and 4 are best effort: a failing push is a logged
  * warning and a scheduled retry, never a failed operation, because the change is already durable
- * and already on screen.
+ * and already on screen. While offline they are skipped altogether — see [pushToServer].
  */
 @Singleton
 class UserDataRepositoryImpl
@@ -50,6 +51,7 @@ class UserDataRepositoryImpl
         private val sessionRepository: SessionRepository,
         private val eventBus: UserDataEventBus,
         private val syncScheduler: UserDataSyncScheduler,
+        private val connectionState: ConnectionStateProvider,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : UserDataRepository {
@@ -183,10 +185,28 @@ class UserDataRepositoryImpl
                 }
             }
 
+        /**
+         * Step 3 of the write, guarded on connectivity.
+         *
+         * While offline the push is not attempted at all. It could only fail, and during playback
+         * `PlaybackReporter` calls [setPosition] every five seconds, so each tick used to cost a
+         * doomed request and a warning stack (STATUS.md, "Known issues"). Nothing is lost by
+         * skipping it: [storeLocally] has already set `toBeSynced = true`, and [UserDataSyncTrigger]
+         * drains every pending row on the next `OFFLINE → ONLINE` edge and at app start — which is
+         * also why the offline path does not bother scheduling the worker per write.
+         *
+         * When online this is exactly the pre-existing behaviour: push, clear the flag on success,
+         * warn and schedule a retry on failure.
+         */
         private suspend fun pushToServer(
             row: UserDataEntity,
             push: suspend (UserDataEntity) -> Unit,
         ) {
+            if (!connectionState.state.value.isOnline) {
+                Timber.d("User data for %s stays pending (offline, not pushing)", row.itemId)
+                return
+            }
+
             val pushed = withContext(ioDispatcher) { runCatchingApi { push(row) } }
 
             when (pushed) {

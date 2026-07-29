@@ -21,6 +21,7 @@ import dev.jellyfinnative.feature.downloads.DownloadsScreen
 import dev.jellyfinnative.feature.library.LibraryGridScreen
 import dev.jellyfinnative.feature.library.libraries.LibrariesScreen
 import dev.jellyfinnative.feature.search.SearchScreen
+import dev.jellyfinnative.feature.settings.SettingsScreen
 import dev.jellyfinnative.player.ui.PlayerScreen
 
 /**
@@ -32,7 +33,8 @@ import dev.jellyfinnative.player.ui.PlayerScreen
  *
  * @param startsSignedIn whether the session existed when the graph was first built.
  * @param sessionState live session; a flip to [SessionState.LoggedOut] from outside the auth
- *   flow (sign-out today, a 401-driven logout later) pushes the user back to server setup.
+ *   flow (the Settings screen's sign-out today, a 401-driven logout later) pushes the user back to
+ *   server setup.
  * @param modifier applied to the [NavHost] itself — [AppScaffold] uses it to reserve space for
  *   the bottom navigation bar, which only occupies space on the three top-level destinations.
  */
@@ -40,7 +42,6 @@ import dev.jellyfinnative.player.ui.PlayerScreen
 internal fun JellyfinNavHost(
     startsSignedIn: Boolean,
     sessionState: SessionState,
-    onSignOut: () -> Unit,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier,
 ) {
@@ -66,7 +67,7 @@ internal fun JellyfinNavHost(
 
         composable<Routes.Home> {
             HomeRoute(
-                onSignOut = onSignOut,
+                onNavigateToSettings = { navController.navigate(Routes.Settings) },
                 onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
                 onLibraryClick = { library ->
                     navController.navigate(Routes.LibraryGrid(library.id, library.name))
@@ -92,6 +93,13 @@ internal fun JellyfinNavHost(
 
         composable<Routes.Downloads> {
             DownloadsScreen(viewModel = hiltViewModel())
+        }
+
+        composable<Routes.Settings> {
+            SettingsScreen(
+                viewModel = hiltViewModel(),
+                onBack = { navController.popBackStack() },
+            )
         }
 
         composable<Routes.LibraryGrid> {

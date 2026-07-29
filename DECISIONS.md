@@ -484,3 +484,32 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** the same reason `releaseSession` was made `internal` at M5. The timer is not the interesting part; what happens at one position is. It is also a `while (true) { … delay(…) }` on `viewModelScope`, and `runTest` cannot drain a coroutine that never finishes — a test that started the poll spun forever inside `runTest`'s cleanup instead of failing, which is a far worse failure mode than a slightly wider visibility. Driving `onTick` directly makes each segment test one call and one assertion.
 
 <!-- END M9 (player polish) -->
+
+<!-- BEGIN M9 (settings + app polish) -->
+
+## 2026-07-29 — M9: the storage location picker does not ship with the settings screen
+- **Scope:** `:feature:settings`
+- **Plan said:** docs/PLAN.md line 77 — "Settings: prefs, account, storage location picker, sign out (clears SecureCredentialStore, optional delete downloads)."
+- **Done instead:** the Downloads section of the settings screen shows the current fixed download location as informational text only; there is no picker UI and no way to change it.
+- **Reason:** SAF/SD-card support was deliberately deferred at M7 behind the `DownloadStorage` seam (DECISIONS.md, M7) specifically so a storage picker could be added later without reworking the download pipeline. That SAF work does not exist yet, so a picker here would have nothing real to pick between. The picker ships together with SAF support, not at M9.
+
+## 2026-07-29 — M9: Settings is opened from the home overflow menu, not a top-bar avatar
+- **Scope:** `:feature:settings`, `:app` (`HomeRoute.kt`)
+- **Plan said:** docs/PLAN.md line 13 — "Navigation: bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar."
+- **Done instead:** the home top bar's existing overflow (kebab/⋮) menu — the same menu that already carried the M6 offline-mode toggle and a temporary M8 sign-out entry (`HomeRoute.kt`, both call sites' KDoc already flagged this as temporary pending M9) — has its "Sign out" entry replaced with a "Settings" entry that navigates to `Routes.Settings`. Sign-out itself moves into the new Settings screen's Account section (with the confirm dialog and optional delete-downloads checkbox). The overflow's "Offline mode" quick toggle is unchanged.
+- **Reason:** there is no user-avatar image or avatar asset pipeline anywhere in the app (Jellyfin user profile images are never fetched today). Building one — fetching/caching the profile image, giving it a dedicated top-bar slot — is out of scope for M9's settings work and not otherwise needed. The overflow menu is already the established, tested entry point behind an icon in the home top bar; reusing it is mechanical and low-risk, and still satisfies the plan's functional intent (settings reachable from an icon in the top bar, not from the bottom nav) even though it is not literally an avatar.
+
+## 2026-07-29 — M9: an offline user-data write does not enqueue the sync worker
+- **Scope:** `:data` (`UserDataRepositoryImpl.pushToServer`)
+- **Plan said:** docs/PLAN.md line 63 — "`UserDataRepositoryImpl` — **local-first always**: upsert Room (`toBeSynced=true`) → emit on `UserDataEventBus` → **if online** push `itemsApi.updateItemUserData(...)`, clear flag on success; **else/on failure enqueue `UserDataSyncWorker`**".
+- **Done instead:** the "if online push" half is now implemented literally — `pushToServer` returns early on `!connectionStateProvider.state.value.isOnline`, logging one `Timber.d` line. The plan's "else" half is **not** implemented: an offline write schedules nothing. `syncScheduler.enqueue()` still runs on the on-failure half (a push that was attempted online and failed), which is unchanged.
+- **Reason:** STATUS.md's M8 known issue — `PlaybackReporter` calls `setPosition` every five seconds, so an offline session fired one doomed request and one `Timber.w` stack per tick. Gating the push is what the plan asks for; the enqueue is what is left over. It is redundant because `UserDataSyncTrigger` (M8, which post-dates this plan line) already drains **all** pending rows on every `OFFLINE → ONLINE` edge and at app start, so the per-write enqueue only re-schedules that same unique work hundreds of times during one film. The plan's guarantee — a pending row eventually reaches the server — is delivered by the trigger, and the row still carries `toBeSynced = true`. Online behaviour is unchanged, and `UserDataRepositoryImplTest` pins both branches.
+
+## 2026-07-29 — M9: the reconnect refresh signal drops its initial value (unlike `UserDataSyncTrigger`)
+- **Scope:** `:core:network` (`connectivity/ReconnectEdges.kt`), `:data` (`ReconnectRefresher`), `:feature:home`, `:feature:library`, `:feature:search`, `:feature:detail`
+- **Plan said:** nothing about how a screen learns that connectivity returned. The established idiom in the codebase is `UserDataSyncTrigger`, which collects `ConnectionStateProvider.state`, maps to `isOnline`, `distinctUntilChanged`s and acts on **every** `true` — including the flow's initial value, so a normal online launch fires it once.
+- **Done instead:** `Flow<ConnectionState>.reconnectEdges()` deliberately `drop(1)`s, so it emits on a `false → true` edge and never for the state a collector starts with. The two conventions now differ, on purpose.
+- **Reason:** the two signals answer different questions. `UserDataSyncTrigger`'s consumer is idempotent and guarded by a `COUNT(*)` that costs nothing when there is nothing pending, so firing at app start is free and covers "the process was killed with rows still pending". Its consumers here are ViewModels that already fetch in `init` — an initial emission would make **every** screen fetch everything twice on an ordinary launch, on the home screen alone one `getUserViews` plus a `getLatestMedia` per library. There is no cheap guard available to make that harmless, and the plan's performance targets ("home first paint", "no redundant round trips") are the thing it would spend. Logged so a future reader does not "fix" the inconsistency by aligning the two.
+
+<!-- END -->
+

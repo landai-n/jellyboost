@@ -28,14 +28,4 @@ class MainViewModel
         init {
             viewModelScope.launch { sessionRepository.restoreSession() }
         }
-
-        /**
-         * Signs out and clears the stored credentials.
-         *
-         * Temporary home for this action: it belongs to the Settings screen (docs/PLAN.md, M9),
-         * but M1's definition of done requires sign-out to be exercisable on device.
-         */
-        fun signOut() {
-            viewModelScope.launch { sessionRepository.signOut() }
-        }
     }

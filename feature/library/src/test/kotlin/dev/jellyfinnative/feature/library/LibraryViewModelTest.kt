@@ -13,6 +13,7 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -25,6 +26,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -49,6 +51,13 @@ class LibraryViewModelTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+        }
+
+    /** The reconnect signal (M9); fires only when a test says the server came back. */
+    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val reconnectRefresher =
+        mockk<ReconnectRefresher> {
+            every { reconnected } returns reconnects
         }
 
     /** Every query the grid asked the repository for, in order. */
@@ -321,12 +330,65 @@ class LibraryViewModelTest {
             }
         }
 
+    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+
+    @Test
+    fun `re-loads the facets it had already fetched when the server becomes reachable again`() =
+        runTest(dispatcher) {
+            coEvery { repository.getFilterFacets(any(), any()) } returns
+                AppResult.Success(FilterFacets(genres = listOf("Drama")))
+            val viewModel = viewModel()
+            viewModel.openFilterSheet()
+            advanceUntilIdle()
+
+            coEvery { repository.getFilterFacets(any(), any()) } returns
+                AppResult.Success(FilterFacets(genres = listOf("Drama", "Thriller")))
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { repository.getFilterFacets(any(), any()) }
+            viewModel.uiState.value.facets.genres shouldContainExactly listOf("Drama", "Thriller")
+        }
+
+    @Test
+    fun `a reconnect does not fetch facets the screen never asked for`() =
+        runTest(dispatcher) {
+            coEvery { repository.getFilterFacets(any(), any()) } returns AppResult.Success(FilterFacets())
+            viewModel()
+            advanceUntilIdle()
+
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            // The sheet was never opened, so there is nothing stale to replace — and the facets are
+            // still fetched on the first open, as they always were.
+            coVerify(exactly = 0) { repository.getFilterFacets(any(), any()) }
+        }
+
+    @Test
+    fun `a reconnect leaves the grid to the pager`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                // `collectingItems` runs a non-suspending block; the buffered emission reaches the
+                // ViewModel's collector on the `advanceUntilIdle` below all the same.
+                reconnects.tryEmit(Unit)
+                advanceUntilIdle()
+
+                // `getItemsPaged` re-decides online/offline on every connection change itself, so a
+                // second trigger here would only make the grid fetch twice.
+                queries.size shouldBe 1
+            }
+        }
+
     // ---- helpers ----------------------------------------------------------------------------
 
     private fun viewModel() =
         LibraryViewModel(
             repository = repository,
             downloads = downloads,
+            reconnectRefresher = reconnectRefresher,
             savedStateHandle =
                 SavedStateHandle(
                     mapOf("libraryId" to LIBRARY_ID, "libraryName" to "Movies"),

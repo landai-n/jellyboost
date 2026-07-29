@@ -14,11 +14,17 @@ enum class DownloadsTab {
 }
 
 /**
- * A run of finished downloads that belong together.
+ * A run of finished downloads that belong together, or the one shared block that gathers every
+ * standalone film.
  *
  * Episodes are gathered under their series, which is how a user thinks about what is on the device:
- * *three episodes of Westworld*, not *three files*. A film is a group of one and is drawn without a
- * heading — see [isSeries].
+ * *three episodes of Westworld*, not *three files*. A lone film normally needs no heading of its
+ * own — see [isSeries] — but once at least one series group is also on the tab, a bare film row
+ * right after a series' last episode reads as one more episode of that series (there is nothing
+ * marking where the series ended). [isMoviesSection] is the fix: every film is gathered under one
+ * shared "Movies" heading in that case, placed after every series group, so every row on the tab
+ * sits under some heading (DECISIONS.md, 2026-07-29, "Downloads: a shared Movies heading marks
+ * where a series group ends").
  */
 data class DownloadGroup(
     val title: String,
@@ -30,6 +36,13 @@ data class DownloadGroup(
      * M9 device walk found on every film on the screen (docs/POLISH.md).
      */
     val isSeries: Boolean = false,
+    /**
+     * `true` for the single shared block that gathers every standalone film once a series group
+     * also exists — see [toGroups]. [title] is empty for this group: its heading text is a string
+     * resource ("Movies"), resolved in Compose rather than stored here, the same reasoning
+     * `DownloadsMessage` uses to keep the ViewModel free of Android resources.
+     */
+    val isMoviesSection: Boolean = false,
 ) {
     /** Bytes this group occupies on disk. */
     val bytesOnDisk: Long get() = items.sumOf { it.bytesOnDisk }
@@ -78,9 +91,13 @@ enum class DownloadsMessage {
  * status, and two independent queries would let the UI briefly show an item in neither tab (or in
  * both) while they settled.
  *
- * Series and films are ordered together alphabetically rather than in two blocks: the list is short
- * and read by title, and a user looking for *Dune* should not first have to work out whether the
- * app filed it as a series.
+ * When there is no series on the tab, films stay as their own headerless rows, ordered
+ * alphabetically: the list is short and read by title, and with nothing else on the tab a bare row
+ * cannot be mistaken for part of anything. Once at least one series group exists, every film is
+ * gathered under one shared *Movies* group ([DownloadGroup.isMoviesSection]) placed after every
+ * series group, so the boundary between the last series' episodes and the films is always marked
+ * (DECISIONS.md, 2026-07-29). Series groups are always ordered alphabetically among themselves, and
+ * so are the films inside the Movies group.
  */
 internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
     val (episodes, films) =
@@ -91,10 +108,23 @@ internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
             .groupBy { requireNotNull(it.seriesKey) }
             .map { (name, items) ->
                 DownloadGroup(title = name, items = items.sortedBy { it.title }, isSeries = true)
-            }
+            }.sortedBy { it.title.lowercase() }
 
-    return (series + films.map { DownloadGroup(title = it.title, items = listOf(it)) })
-        .sortedBy { it.title.lowercase() }
+    if (series.isEmpty()) {
+        // Nothing else on the tab to be confused with, so a bare row per film reads unambiguously.
+        return films
+            .map { DownloadGroup(title = it.title, items = listOf(it)) }
+            .sortedBy { it.title.lowercase() }
+    }
+
+    if (films.isEmpty()) return series
+
+    return series +
+        DownloadGroup(
+            title = "",
+            items = films.sortedBy { it.title.lowercase() },
+            isMoviesSection = true,
+        )
 }
 
 /** The queue tab's contents: everything not finished, in queue order. */

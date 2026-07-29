@@ -83,12 +83,14 @@ class DownloadsViewModelTest {
         }
 
     @Test
-    fun `downloaded episodes are grouped under their series`() =
+    fun `downloaded episodes are grouped under their series, series groups sorted alphabetically`() =
         runTest(dispatcher) {
+            // Only series on the tab — nothing for a film row to be confused with, so no Movies
+            // section is expected here either.
             items.value =
                 listOf(
                     item("1", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
-                    item("2", "Arrival", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Woodcutters in the Mist", series = "Fargo", status = DownloadStatus.DOWNLOADED),
                     item("3", "The Original", series = "Westworld", status = DownloadStatus.DOWNLOADED),
                 )
 
@@ -96,19 +98,21 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             val groups = model.uiState.value.downloaded
-            groups.map { it.title } shouldContainExactly listOf("Arrival", "Westworld")
+            groups.map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
+            groups.none { it.isMoviesSection } shouldBe true
             groups.first { it.title == "Westworld" }.items.map { it.itemId } shouldContainExactly listOf("1", "3")
         }
 
     @Test
-    fun `a film gets no heading of its own name`() =
+    fun `a lone film gets no heading of its own name`() =
         runTest(dispatcher) {
             // The M9 bug (docs/POLISH.md): every film was drawn under a group header reading its
-            // own title, so the name appeared twice, one line apart.
+            // own title, so the name appeared twice, one line apart. Only films on the tab here —
+            // see the next test for what happens once a series is also present.
             items.value =
                 listOf(
                     item("1", "Dune", status = DownloadStatus.DOWNLOADED),
-                    item("2", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Arrival", status = DownloadStatus.DOWNLOADED),
                 )
 
             val model = viewModel()
@@ -116,7 +120,36 @@ class DownloadsViewModelTest {
 
             val groups = model.uiState.value.downloaded
             groups.single { it.title == "Dune" }.isSeries shouldBe false
-            groups.single { it.title == "Westworld" }.isSeries shouldBe true
+            groups.none { it.isMoviesSection } shouldBe true
+        }
+
+    @Test
+    fun `a film alongside a series is gathered under the shared Movies heading, after every series group`() =
+        runTest(dispatcher) {
+            // The bug this fixes: a bare film row right after a series' last episode, at the same
+            // indentation and with nothing marking the boundary, read as part of that series.
+            items.value =
+                listOf(
+                    item("1", "Dune", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Arrival", status = DownloadStatus.DOWNLOADED),
+                    item("3", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                    item("4", "Woodcutters in the Mist", series = "Fargo", status = DownloadStatus.DOWNLOADED),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val groups = model.uiState.value.downloaded
+
+            // Series groups first, alphabetically, each with its own heading …
+            groups.dropLast(1).map { it.title } shouldContainExactly listOf("Fargo", "Westworld")
+            groups.dropLast(1).all { it.isSeries } shouldBe true
+
+            // … then one shared Movies group, last, holding every film in alphabetical order.
+            val moviesSection = groups.last()
+            moviesSection.isMoviesSection shouldBe true
+            moviesSection.isSeries shouldBe false
+            moviesSection.items.map { it.itemId } shouldContainExactly listOf("2", "1") // Arrival, Dune
         }
 
     @Test

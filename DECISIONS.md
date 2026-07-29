@@ -927,3 +927,33 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Tests:** view-layer sizing with no Compose-UI harness in the repo — code-only change; full gate green.
 
 <!-- END -->
+
+<!-- BEGIN the Downloaded tab gathers films under a shared Movies heading -->
+
+## 2026-07-29 — the Downloaded tab gathers films under a shared Movies heading, after every series group
+- **Scope:** `:feature:downloads` (`DownloadsUiState.DownloadGroup`/`toGroups`, `DownloadsScreen.GroupHeader`/
+  `DownloadedTab`, `strings.xml`), `docs/features/downloads.md`
+- **Plan said:** docs/PLAN.md line 76 — "Downloads | Room-only: *Downloaded* tab (**grouped**, sizes, delete) …".
+  The 2026-07-29 entry above it ("only series get a heading in the *Downloaded* tab") additionally states
+  "Series and films are ordered together alphabetically rather than in two blocks."
+- **Done instead:** that ordering changes. Once at least one series group exists on the tab, every film is now
+  gathered under one shared "Movies" heading (`DownloadGroup.isMoviesSection`, title left blank and resolved to
+  a string resource in Compose — the same reasoning `DownloadsMessage` uses to keep the ViewModel free of
+  resources), placed after every series group, which are themselves still ordered alphabetically among
+  themselves, and the films inside the Movies group alphabetically among themselves. When no series exists,
+  films are unchanged: their own headerless rows, ordered alphabetically. `DownloadGroup.isSeries` keeps its
+  narrower meaning (this group's title is a series name); a new `isMoviesSection` flag drives the shared header
+  instead of overloading it.
+- **Reason:** user report — on the *Downloaded* tab, a film immediately following a series' last episode, at the
+  same indentation and with nothing marking where the series group ended, read as though it belonged to that
+  series. The alphabetical-interleave ordering from the prior entry is exactly what let a film land in that
+  position. A per-movie heading was deliberately removed earlier (docs/POLISH.md, "Downloads page duplicate
+  movie header") because it repeated the film's own row title — that heading is not reinstated; one shared
+  heading over the whole films block does not have that problem, and marks the boundary the bug needed marked
+  without adding a header per film.
+- **Tests:** `DownloadsViewModelTest` grouping tests updated/added (series-only groups gain an explicit
+  `none { it.isMoviesSection }` assertion; a new test pins the mixed case — series groups first alphabetically,
+  then one Movies group holding every film alphabetically, after every series group). No assertion weakened —
+  the changed tests assert the new, intentionally different ordering; full gate green.
+
+<!-- END -->

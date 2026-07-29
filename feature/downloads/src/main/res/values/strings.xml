@@ -5,6 +5,11 @@
     <string name="downloads_tab_queue">Queue</string>
     <string name="downloads_wifi_only">Wi‑Fi only</string>
 
+    <!-- Downloaded tab grouping -->
+    <!-- Heading over every standalone film, shown only once at least one series group is also on
+         the tab — see DownloadGroup.isMoviesSection. -->
+    <string name="downloads_group_movies">Movies</string>
+
     <!-- Storage header -->
     <string name="downloads_storage_summary">%1$s used · %2$s free</string>
 

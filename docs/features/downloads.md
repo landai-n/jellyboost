@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (grouped by show or film, sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder, no grouping), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 

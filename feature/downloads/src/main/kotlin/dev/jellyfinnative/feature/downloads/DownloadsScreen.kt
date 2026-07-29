@@ -170,9 +170,13 @@ private fun DownloadedTab(
         contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
     ) {
         groups.forEach { group ->
-            // A film's heading would only repeat the title of the single row under it.
-            if (group.isSeries) {
-                item(key = "header-${group.title}") {
+            // A film's heading would only repeat the title of the single row under it, so a lone
+            // film group draws no header. A series always gets one, and so does the shared Movies
+            // group once one exists — otherwise a film row right after a series' last episode reads
+            // as one more row of that series (the bug docs/POLISH.md's "Downloads page duplicate
+            // movie header" entry did not cover, since it only ever looked at a film on its own).
+            if (group.isSeries || group.isMoviesSection) {
+                item(key = "header-${if (group.isMoviesSection) "movies-section" else group.title}") {
                     GroupHeader(group = group)
                 }
             }
@@ -270,7 +274,9 @@ private fun GroupHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = group.title,
+            // The Movies group carries no title of its own (DownloadGroup.isMoviesSection) — its
+            // heading is a string resource, resolved here, not baked into the ViewModel's state.
+            text = if (group.isMoviesSection) stringResource(R.string.downloads_group_movies) else group.title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )

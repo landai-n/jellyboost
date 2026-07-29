@@ -29,6 +29,9 @@ Highlights (details in DECISIONS.md and docs/features/):
   moment you go offline); downloaded items' rich metadata is protected from lean
   browse writes, repaired by full fetches, and kept current by a standing
   once-per-online-stretch sync (`DownloadedMetadataRefresher`).
+- **Connection:** the reachability probe re-runs on every session change — fixes the
+  fresh-install race where a successful login still showed "can't reach the server"
+  until restart (found on the release-build install).
 - **Chrome:** one combined top bar replaces bottom nav + per-screen top bars
   (~140 dp reclaimed); offline banner → status icon + timed snackbar; search inset
   bug fixed by construction; system-bar icons pinned light for the dark-only theme

@@ -11,6 +11,7 @@ decisions are logged in DECISIONS.md; per-feature details in docs/features/.
 - ~~Downloading a season fails with error 400~~ — a season/series tap now expands into one download per episode; folder items can never reach the file endpoint; verified E1…E26 in order.
 - ~~Download speed showing crazy numbers (100–180 MB/s)~~ — speed measured over ≥1 s windows; verified accurate against byte-count ground truth (~34 MB/s real).
 - ~~Download pausing doesn't work~~ — PAUSED no longer overwritten to QUEUED on cancellation; verified bytes frozen across 20 s and clean resume.
+- ~~Fresh install says "can't reach the server" right after a successful login (until restart)~~ — the reachability probe ran before login and its verdict was never invalidated; the connection state now re-probes on every session change (sign-in, restore, sign-out, server switch).
 
 # Polishing — all done ✅
 - ~~Offline status bar takes real estate~~ — now a status icon in the app bar (per-reason icon + tap-for-snackbar with action; snackbar auto-dismisses).

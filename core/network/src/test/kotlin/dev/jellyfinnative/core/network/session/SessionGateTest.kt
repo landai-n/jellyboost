@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads.work
+package dev.jellyfinnative.core.network.session
 
 import dev.jellyfinnative.core.network.SessionRepository
 import io.kotest.matchers.shouldBe
@@ -11,13 +11,14 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [DownloadSessionGate] — the fix for the cold-start race the M7 device walk found.
+ * Unit tests for [SessionGate] — the fix for the cold-start race the M7 device walk found (and M8
+ * hit again in the user-data sync drain).
  *
- * The property under test is narrow but load-bearing: a download worker that starts before the app
- * has restored its session must restore it itself, and must never turn "the process was cold" into
- * a failed download.
+ * The property under test is narrow but load-bearing: a worker that starts before the app has
+ * restored its session must restore it itself, and must never turn "the process was cold" into a
+ * failure of the work it was asked to do.
  */
-class DownloadSessionGateTest {
+class SessionGateTest {
     private val sessionRepository = mockk<SessionRepository>()
     private val apiClient = mockk<ApiClient>()
 
@@ -34,8 +35,8 @@ class DownloadSessionGateTest {
     @Test
     fun `a cold start restores the stored session`() =
         runTest {
-            // What the worker sees on a relaunch after `am force-stop`: WorkManager is running
-            // before `MainViewModel` has restored anything.
+            // What a worker sees on a relaunch after `am force-stop`: WorkManager is running before
+            // `MainViewModel` has restored anything.
             unconfigured()
             coEvery { sessionRepository.restoreSession() } answers { configured() }
 
@@ -56,8 +57,8 @@ class DownloadSessionGateTest {
     @Test
     fun `a base URL without a token is not a usable session`() =
         runTest {
-            // `FileDownloader` builds an Authorization header from the token; half a session would
-            // fail later, as a 401 on the media file.
+            // An `Authorization` header is built from the token; half a session would fail later,
+            // as a 401 on the first authenticated call.
             every { apiClient.baseUrl } returns "https://server"
             every { apiClient.accessToken } returns null
             coEvery { sessionRepository.restoreSession() } returns Unit
@@ -65,7 +66,7 @@ class DownloadSessionGateTest {
             gate().ensureSession() shouldBe false
         }
 
-    private fun gate() = DownloadSessionGate(sessionRepository = sessionRepository, apiClient = apiClient)
+    private fun gate() = SessionGate(sessionRepository = sessionRepository, apiClient = apiClient)
 
     private fun configured() {
         every { apiClient.baseUrl } returns "https://server"

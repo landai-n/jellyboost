@@ -41,6 +41,10 @@ interface DownloadRepository {
     /**
      * Re-fetches [itemId] in full, caches it (and its parents) as downloaded, queues it, and makes
      * sure the queue is running.
+     *
+     * A **season or a series** is a folder with no file behind it, so it is expanded instead: one
+     * download per episode, in broadcast order, skipping the episodes already on the device
+     * (DECISIONS.md, 2026-07-29). Callers therefore never have to check the item's type.
      */
     suspend fun enqueue(itemId: String): AppResult<Unit>
 

@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.engine
 
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.plan.NotDownloadableException
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
@@ -55,6 +56,17 @@ class DownloadErrorCopyTest {
     fun `a server error keeps its status code, which is all it can offer`() {
         DownloadErrorCopy.forFailure(DownloadHttpException(code = 502, url = "https://server/x")) shouldBe
             "The server couldn't send this download (error 502)."
+    }
+
+    @Test
+    fun `a row for a folder explains itself instead of quoting a 400`() {
+        // What the user actually saw: "The server couldn't send this download (error 400)", from a
+        // row keyed on a season id. Those rows still exist on devices that predate the fix, and a
+        // status code tells the user nothing they can act on (DECISIONS.md, 2026-07-29).
+        val copy = DownloadErrorCopy.forFailure(NotDownloadableException(uuid(11)))
+
+        copy shouldBe "This is a show or a season, not a single video. Remove it and download the episodes."
+        copy shouldNotContain "400"
     }
 
     @Test

@@ -142,53 +142,76 @@ class ItemDetailViewModel
          * A separate "delete" affordance next to it would be dead most of the time, and "tap again
          * to undo" is what the same button already means everywhere else on this screen (watched,
          * favourite).
+         *
+         * On a **season or series** page every one of those meanings is about the episodes under it
+         * rather than the item itself (DECISIONS.md, 2026-07-29): enqueue expands the container in
+         * `:data:downloads`, and remove/cancel act on each episode row. *Failed* on a container is
+         * an enqueue too, not a resume — the container has no row of its own to put back in the
+         * queue, and enqueueing is what retries the episodes that failed.
          */
         fun onDownloadClick() {
-            val item = _uiState.value.item ?: return
+            val state = _uiState.value
+            val item = state.item ?: return
 
-            when (_uiState.value.downloadState) {
-                is DownloadState.NotDownloaded ->
-                    viewModelScope.launch {
-                        reportDownload(
-                            downloads.enqueue(item.id),
-                            success = UserMessage.DownloadQueued,
-                            failure = UserMessage.DownloadFailed,
-                        )
-                    }
+            when (state.downloadState) {
+                is DownloadState.NotDownloaded -> enqueue(item.id)
 
                 is DownloadState.Failed ->
-                    viewModelScope.launch {
-                        reportDownload(
-                            downloads.resume(item.id),
-                            success = UserMessage.DownloadQueued,
-                            failure = UserMessage.DownloadFailed,
-                        )
+                    if (state.isDownloadContainer) {
+                        enqueue(item.id)
+                    } else {
+                        viewModelScope.launch {
+                            reportDownload(
+                                downloads.resume(item.id),
+                                success = UserMessage.DownloadQueued,
+                                failure = UserMessage.DownloadFailed,
+                            )
+                        }
                     }
 
                 is DownloadState.Downloaded -> _uiState.update { it.copy(showDeleteConfirmation = true) }
 
-                else ->
-                    viewModelScope.launch {
-                        reportDownload(
-                            downloads.delete(item.id),
-                            success = UserMessage.DownloadDeleted,
-                            failure = UserMessage.DownloadDeleteFailed,
-                        )
-                    }
+                else -> deleteDownloads()
             }
         }
 
         /** The delete-download dialog was confirmed — actually remove the item from this device. */
         fun confirmDeleteDownload() {
-            val item = _uiState.value.item ?: return
             _uiState.update { it.copy(showDeleteConfirmation = false) }
+            deleteDownloads()
+        }
 
+        private fun enqueue(itemId: String) {
             viewModelScope.launch {
                 reportDownload(
-                    downloads.delete(item.id),
-                    success = UserMessage.DownloadDeleted,
-                    failure = UserMessage.DownloadDeleteFailed,
+                    downloads.enqueue(itemId),
+                    success = UserMessage.DownloadQueued,
+                    failure = UserMessage.DownloadFailed,
                 )
+            }
+        }
+
+        /**
+         * Removes everything this page's Download button stands for.
+         *
+         * One row for a movie or an episode; for a season, every episode of it that has a row — the
+         * ones that do not are skipped rather than deleted as no-ops, so cancelling a season that is
+         * three episodes in does not run twenty pointless cascades through WorkManager.
+         */
+        private fun deleteDownloads() {
+            val state = _uiState.value
+            if (state.item == null) return
+            val targets = state.downloadTargets.filter { downloadStates.containsKey(it) }
+            if (targets.isEmpty()) return
+
+            viewModelScope.launch {
+                val failed = targets.map { downloads.delete(it) }.any { it is AppResult.Failure }
+                _uiState.update {
+                    it.copy(
+                        userMessage =
+                            if (failed) UserMessage.DownloadDeleteFailed else UserMessage.DownloadDeleted,
+                    )
+                }
             }
         }
 

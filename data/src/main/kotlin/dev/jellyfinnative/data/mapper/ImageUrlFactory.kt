@@ -23,8 +23,8 @@ interface ImageUrlFactory {
      * @param kind which artwork to build a URL for.
      * @param tag the server's image tag; `null` means the item has no such image, and the factory
      *   must return `null` rather than a URL that would 404.
-     * @param maxWidth largest width the UI will ever draw this image at, so the server can scale
-     *   it down before sending.
+     * @param maxWidth width in pixels to have the server scale the image to before sending — see
+     *   [ArtworkRequestWidths], which derives it from the dp size the surface draws at.
      * @return an absolute URL, or `null` when [tag] is `null`.
      */
     fun imageUrl(
@@ -33,15 +33,4 @@ interface ImageUrlFactory {
         tag: String?,
         maxWidth: Int? = null,
     ): String?
-
-    companion object {
-        /** Poster artwork is never drawn wider than this on a phone or tablet. */
-        const val POSTER_MAX_WIDTH = 400
-
-        /** Landscape card artwork (Continue watching / Next up / library tiles). */
-        const val THUMB_MAX_WIDTH = 640
-
-        /** Full-bleed backdrops behind detail headers. */
-        const val BACKDROP_MAX_WIDTH = 1280
-    }
 }

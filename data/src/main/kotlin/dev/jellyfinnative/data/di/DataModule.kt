@@ -1,11 +1,15 @@
 package dev.jellyfinnative.data.di
 
+import android.content.Context
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.data.DelegatingJellyfinRepository
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.mapper.ArtworkRequestWidths
 import dev.jellyfinnative.data.mapper.ImageUrlFactory
 import dev.jellyfinnative.data.mapper.SdkImageUrlFactory
 import javax.inject.Singleton
@@ -33,4 +37,16 @@ interface DataModule {
     @Binds
     @Singleton
     fun bindImageUrlFactory(impl: SdkImageUrlFactory): ImageUrlFactory
+
+    companion object {
+        /**
+         * Resolves the artwork request widths once, from the display the app is actually running
+         * on, so the server sends thumbnails at the size they are drawn at.
+         */
+        @Provides
+        @Singleton
+        fun provideArtworkRequestWidths(
+            @ApplicationContext context: Context,
+        ): ArtworkRequestWidths = ArtworkRequestWidths.forDensity(context.resources.displayMetrics.density)
+    }
 }

@@ -1,19 +1,48 @@
 # STATUS
 
-## Current milestone: M7 — Downloads (pipeline built on a worktree branch, awaiting merge + device DoD) + user-data stale-row bugfix (parallel worktree)
+## Current milestone: M8 — Offline playback + sync (next up)
 
-**DoD (M7):** 2GB movie resumes from byte offset after app kill; Wi-Fi-only honored;
-delete frees bytes.
+**DoD (M8):** airplane-mode playback to 50% → reconnect → server shows 50% resume.
 
 ### Next
-- M7 agent: full download pipeline per docs/PLAN.md; merge, review, gate, device DoD,
-  tag m7.
-- Done meanwhile: user-data read-refresh fix merged and device-verified (see Known
-  issues — struck through).
+- M8 agent: `LocalPlaybackResolver`, `UserDataSyncWorker` most-recent-wins drain,
+  offline trickplay. Offline home/library/search already work (M6+M7).
+- Test material already on the tablet: The Body (2.0 GB), Backrooms (2.9 GB),
+  Ouistreham (0.6 GB), Bref S1:E1+E2 — downloaded and left in place for M8.
 
-### M7 device-walk bugfixes (worktree branch, awaiting re-walk)
-Four findings from the DoD walk, all fixed with unit coverage; **the kill-resume walk
-must be re-run on the tablet** (this branch had no device):
+## Previous milestone: M7 — Downloads (DONE, tagged m7)
+
+**DoD walk on test tablet (2026-07-28/29), all pass:**
+- **Byte-offset resume after app kill:** Backrooms (2.94 GB) killed via `force-stop` at
+  exactly 861,145,720 bytes → relaunch → after WorkManager's retry backoff + the OEM ROM
+  scheduling (~75 s) the worker Range-resumed **the same file** from that offset —
+  monotonic growth to completion, no truncation, no second file. (First walk caught
+  bugs A/B below; this is the post-fix result.)
+- **Wi-Fi-only honored:** the WorkManager job requires the `NOT_METERED` capability
+  (JobScheduler dump) with the toggle on (its default); the Downloads-top-bar switch
+  writes `download_over_wifi_only` to DataStore and `restart()`s the unique work
+  (REPLACE) so the new constraint applies immediately. No SIM in the tablet, so
+  cellular end-to-end wasn't drivable — constraint-level verification.
+- **Delete frees bytes:** queue-tab delete freed 4,220,780 KB in one cascade (incl. an
+  orphaned partial from bug B), detail *Remove* freed exactly the 2,870,691 KB media
+  file; directories removed, headers/live state update; delete also works fully
+  offline.
+- **Parent prune:** two Bref episodes downloaded → E1 deleted offline → series and
+  season pages still open offline showing only E2.
+- **Offline integration:** cold-start in airplane mode shows Next Up (Bref E1, badge),
+  Latest Films row, Films grid (3 movies, all badged), Séries grid (Bref), full
+  series→season→episode offline navigation, offline search with badges.
+- File plan on disk matches the plan (`Movie (Year)/` and
+  `Series - S01E02 - Title/` dirs; primary → media (server filename) → backdrop /
+  series-primary; images webp).
+- `POST_NOTIFICATIONS` requested at first launch (granted); foreground download
+  notification observed.
+- UX note for M9: the Wi-Fi-only *label* is not tappable (only the Switch), and the
+  overflow *Offline mode* row is the same pattern in reverse — unify hit targets.
+
+### M7 device-walk bugfixes (merged `172afd3`, re-walk done)
+Four findings from the first DoD walk, all fixed with unit coverage (+25 tests) and
+re-verified on device where applicable:
 - **A — cold start raced session restore.** WorkManager started the worker before the UI
   restored the session, so the first URL threw the SDK's `Required value baseUrl is null`
   and the item went ERROR. `DownloadSessionGate` now restores it inside the drain; no

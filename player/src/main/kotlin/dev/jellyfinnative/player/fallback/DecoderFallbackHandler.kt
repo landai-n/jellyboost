@@ -2,6 +2,7 @@ package dev.jellyfinnative.player.fallback
 
 import androidx.media3.common.PlaybackException
 import dev.jellyfinnative.player.PlayMethod
+import dev.jellyfinnative.player.model.PlaybackMediaSource
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import timber.log.Timber
@@ -45,7 +46,7 @@ class DecoderFallbackHandler
          */
         fun onPlayerError(
             errorCode: Int,
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             positionTicks: Long,
         ): FallbackDecision =
             when (errorKindOf(errorCode)) {
@@ -68,15 +69,21 @@ class DecoderFallbackHandler
          * Only meaningful once the server is already transcoding: a source error on a direct play
          * is a network or file problem that a lower bitrate would not fix, so that case falls
          * through to forcing a transcode instead.
+         *
+         * A local source (M8) can never be transcoding, so a failure to read the downloaded file
+         * lands in the same place: ask the server for the item instead. Offline that surfaces as an
+         * error rather than looping over bytes that have already failed, which is what
+         * `PlaybackSourceResolver` uses `enableDirectPlay = false` to mean.
          */
         private fun lowerBitrate(
-            source: RemotePlaybackMediaSource,
+            source: PlaybackMediaSource,
             positionTicks: Long,
         ): FallbackDecision {
-            if (source.playMethod != PlayMethod.TRANSCODE) return forceTranscode(positionTicks)
+            val remote = source as? RemotePlaybackMediaSource ?: return forceTranscode(positionTicks)
+            if (remote.playMethod != PlayMethod.TRANSCODE) return forceTranscode(positionTicks)
             if (loweredBitrate) return FallbackDecision.GiveUp
 
-            val lower = PlaybackQuality.lowerThan(source.maxStreamingBitrate) ?: return FallbackDecision.GiveUp
+            val lower = PlaybackQuality.lowerThan(remote.maxStreamingBitrate) ?: return FallbackDecision.GiveUp
             loweredBitrate = true
             Timber.i("Transcode stalled; retrying at %d bps", lower.maxStreamingBitrate)
             return FallbackDecision.LowerBitrate(

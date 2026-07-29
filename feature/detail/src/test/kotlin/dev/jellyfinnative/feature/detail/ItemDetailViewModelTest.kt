@@ -8,6 +8,7 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataRepository
@@ -49,6 +50,13 @@ class ItemDetailViewModelTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+        }
+
+    /** The reconnect signal (M9); fires only when a test says the server came back. */
+    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val reconnectRefresher =
+        mockk<ReconnectRefresher> {
+            every { reconnected } returns reconnects
         }
 
     private val movie =
@@ -499,11 +507,33 @@ class ItemDetailViewModelTest {
             model.uiState.value.downloadState shouldBe DownloadState.Downloaded
         }
 
+    // ---- M9: refresh on reconnect ----------------------------------------------------------------
+
+    @Test
+    fun `re-fetches the item it is showing when the server becomes reachable again`() =
+        runTest(dispatcher) {
+            // Offline this page is a cached row, or a placeholder for something not downloaded.
+            coEvery { repository.getItem(ITEM_ID) } returns
+                AppResult.Success(movie.copy(name = "Arrival", available = false))
+            val model = viewModel()
+            advanceUntilIdle()
+            coVerify(exactly = 1) { repository.getItem(ITEM_ID) }
+
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { repository.getItem(ITEM_ID) }
+            model.uiState.value.item!!
+                .available shouldBe true
+        }
+
     private fun viewModel() =
         ItemDetailViewModel(
             repository = repository,
             userDataRepository = userDataRepository,
             downloads = downloads,
+            reconnectRefresher = reconnectRefresher,
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 

@@ -11,6 +11,7 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
@@ -43,6 +44,7 @@ class ItemDetailViewModel
         private val repository: JellyfinRepository,
         private val userDataRepository: UserDataRepository,
         private val downloads: DownloadRepository,
+        private val reconnectRefresher: ReconnectRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         /**
@@ -66,6 +68,20 @@ class ItemDetailViewModel
             load(isRefresh = false)
             observeUserDataChanges()
             observeDownloadState()
+            observeReconnects()
+        }
+
+        /**
+         * Re-fetches this item once the server is reachable again (M9).
+         *
+         * Offline, `getItem` answers from the cache — and for anything that is not downloaded, with
+         * a placeholder carrying `available = false`. That page has to become the real one on its
+         * own; a user who reconnects while looking at it should not have to back out and return.
+         */
+        private fun observeReconnects() {
+            viewModelScope.launch {
+                reconnectRefresher.reconnected.collect { refresh() }
+            }
         }
 
         /**

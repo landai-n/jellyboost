@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataEventBus
@@ -24,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -48,6 +50,13 @@ class HomeViewModelTest {
             every { observeStates() } returns downloadStates
         }
 
+    /** The reconnect signal (M9); fires only when a test says the server came back. */
+    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val reconnectRefresher =
+        mockk<ReconnectRefresher> {
+            every { reconnected } returns reconnects
+        }
+
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
     private val shows = LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
 
@@ -66,7 +75,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
 
             viewModel.uiState.value.isLoading shouldBe true
         }
@@ -84,7 +93,7 @@ class HomeViewModelTest {
             coEvery { repository.getLatestMedia("lib-movies", any()) } returns AppResult.Success(listOf(movie))
             coEvery { repository.getLatestMedia("lib-shows", any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -104,7 +113,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
 
-            HomeViewModel(repository, eventBus, downloads)
+            HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { repository.getLatestMedia("lib-movies", any()) }
@@ -117,7 +126,7 @@ class HomeViewModelTest {
             stubEverythingEmpty()
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
 
             viewModel.uiState.test {
                 awaitItem().isLoading shouldBe true
@@ -134,7 +143,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -148,7 +157,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Unauthorized())
 
-            HomeViewModel(repository, eventBus, downloads)
+            HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { repository.getResumeItems(any()) }
@@ -164,7 +173,7 @@ class HomeViewModelTest {
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(emptyList())
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -178,7 +187,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             stubEverythingEmpty()
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             viewModel.uiState.value.isEmpty shouldBe true
@@ -189,7 +198,7 @@ class HomeViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
             viewModel.uiState.value.errorMessage!! shouldContain "server"
 
@@ -206,6 +215,25 @@ class HomeViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
+    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+
+    @Test
+    fun `re-fetches the rows when the server becomes reachable again`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
+            advanceUntilIdle()
+            // The initial load, and nothing else: an app that starts online must not fetch twice.
+            coVerify(exactly = 1) { repository.getUserViews() }
+
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            reconnects.emit(Unit)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { repository.getUserViews() }
+            viewModel.uiState.value.libraries shouldContainExactly listOf(movies)
+        }
+
     // ---- M4: user-data event bus --------------------------------------------------------------
 
     @Test
@@ -216,7 +244,7 @@ class HomeViewModelTest {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
             coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(resumeItem))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
             viewModel.uiState.value.resume
                 .single()
@@ -243,7 +271,7 @@ class HomeViewModelTest {
             coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             eventBus.emit(UserDataChange("e2", UserData(isFavorite = true)))
@@ -272,7 +300,7 @@ class HomeViewModelTest {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
             val before = viewModel.uiState.value
 
@@ -293,7 +321,7 @@ class HomeViewModelTest {
             coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
             coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(listOf(movie))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
 
             downloadStates.value = mapOf("m1" to DownloadState.Downloaded)
@@ -319,7 +347,7 @@ class HomeViewModelTest {
             coEvery { repository.getLatestMedia(any(), any()) } returns
                 AppResult.Success(listOf(movie("m1", "Dune")))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
             viewModel.refresh()
             advanceUntilIdle()
@@ -338,7 +366,7 @@ class HomeViewModelTest {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
             coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
 
-            val viewModel = HomeViewModel(repository, eventBus, downloads)
+            val viewModel = HomeViewModel(repository, eventBus, downloads, reconnectRefresher)
             advanceUntilIdle()
             downloadStates.value = mapOf("somewhere-else" to DownloadState.Downloaded)
             advanceUntilIdle()

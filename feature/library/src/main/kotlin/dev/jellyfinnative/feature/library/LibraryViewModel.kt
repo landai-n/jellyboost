@@ -14,6 +14,7 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,7 @@ class LibraryViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val downloads: DownloadRepository,
+        private val reconnectRefresher: ReconnectRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val libraryId: String = savedStateHandle.get<String>(KEY_LIBRARY_ID).orEmpty()
@@ -86,6 +88,31 @@ class LibraryViewModel
                         if (next == item.downloadState) item else item.copy(downloadState = next)
                     }
                 }
+
+        init {
+            observeReconnects()
+        }
+
+        /**
+         * On a reconnect this re-loads **only the filter facets** — the grid needs nothing: its
+         * `Pager` is rebuilt on every connection change inside `getItemsPaged`, so the items swap
+         * back to the server's on their own (docs/features/offline-read.md).
+         *
+         * And only when the facets were already asked for: they are fetched the first time the
+         * sheet opens, so a screen whose sheet was never opened has nothing stale to replace and
+         * would just be spending a request.
+         */
+        private fun observeReconnects() {
+            viewModelScope.launch {
+                reconnectRefresher.reconnected.collect {
+                    val state = _uiState.value
+                    val wasAsked = state.areFacetsLoaded || state.facetsError != null
+                    if (wasAsked && !state.areFacetsLoading) {
+                        retryFacets()
+                    }
+                }
+            }
+        }
 
         /** Applies a sort key; picking the key that is already active flips the direction. */
         fun selectSort(sortBy: SortBy) {

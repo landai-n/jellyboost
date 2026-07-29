@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.engine
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.database.dao.DownloadDao
@@ -20,6 +21,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -31,6 +33,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -265,6 +268,71 @@ class DownloadQueueTest {
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
             coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
+        }
+
+    // ---- download quality (M9) ------------------------------------------------------------------
+
+    @Test
+    fun `the plan is built from the quality on the row, not from the live preference`() =
+        runTest {
+            queueWith(download(quality = DownloadQuality.MEDIUM))
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            // The bytes already on disk were fetched at this quality; re-reading the preference
+            // here is what would let a setting change corrupt a half-finished file.
+            verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM) }
+            coVerify(exactly = 0) { urls.mediaUrl(any()) }
+        }
+
+    @Test
+    fun `a 403 on a transcoded download is not retried on the static stream`() =
+        runTest {
+            // That fallback exists to route around `enableContentDownloading`; taking it here would
+            // hand the user the original file they asked the server to shrink.
+            queueWith(download(quality = DownloadQuality.LOW))
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
+            coEvery { downloader.download("https://server/videos/stream.mp4", any(), any(), any()) } throws
+                DownloadHttpException(code = 403, url = "https://server/videos/stream.mp4")
+
+            queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
+
+            coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
+        }
+
+    @Test
+    fun `an unknown file size falls back to the size the enqueue step estimated`() =
+        runTest {
+            // A transcode is chunked, so `FileDownloader` reports total 0 for as long as it is
+            // running. Without the estimate the item's total would collapse onto its downloaded
+            // bytes and the queue tab would read 100 % from the first chunk.
+            queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
+            coEvery { downloader.download(any(), any(), any(), any()) } coAnswers {
+                // The third argument, not the last: MockK hands a suspending call its continuation.
+                arg<ProgressCallback>(3).onProgress(300L, 0L)
+                300L
+            }
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            // 300 bytes of the poster plus 300 of the film, against the estimate rather than
+            // against a total that only knows about the bytes already written.
+            listener.progress shouldContain (600L to 4_000L)
+        }
+
+    @Test
+    fun `a generous estimate cannot leave a finished item short of complete`() =
+        runTest {
+            // Every file has reported a real size by the end, so the estimate is dropped and the
+            // exact sum wins — a download that ends at 90 % of a guess is worse than no guess.
+            queueWith(download(bytesTotal = 10_000L))
+            coEvery { downloader.download(any(), any(), any(), any()) } returns 100L
+
+            queue().drain(listener)
+
+            listener.progress.last() shouldBe (200L to 200L)
         }
 
     // ---- cancellation ---------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.plan
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.MediaStream
@@ -44,6 +45,9 @@ data class PlannedFile(
  * @param downloadAllowed the user's `enableContentDownloading` policy. `false` swaps the dedicated
  *   download endpoint for the static video stream — same bytes, a route the server does not gate on
  *   that policy.
+ * @param quality the *download quality* stamped on the row when the user tapped Download (M9).
+ *   Anything but [DownloadQuality.ORIGINAL] replaces the media entry with a server-side transcode
+ *   and nothing else — artwork, subtitles and trickplay tiles are the same files either way.
  */
 @Singleton
 class DownloadFilePlanner
@@ -61,13 +65,14 @@ class DownloadFilePlanner
             item: BaseItemDto,
             directoryName: String,
             downloadAllowed: Boolean = true,
+            quality: DownloadQuality = DownloadQuality.ORIGINAL,
         ): List<PlannedFile> {
             val mediaSource = item.mediaSources?.firstOrNull()
             val mediaSourceId = mediaSource?.id
 
             return buildList {
                 primaryImage(item)?.let(::add)
-                add(media(item, directoryName, mediaSourceId, downloadAllowed))
+                add(media(item, directoryName, mediaSourceId, downloadAllowed, quality))
                 backdropImage(item)?.let(::add)
                 seriesImage(item)?.let(::add)
                 if (mediaSourceId != null) {
@@ -77,20 +82,33 @@ class DownloadFilePlanner
             }
         }
 
+        /**
+         * The media entry.
+         *
+         * Three routes to the same slot, in order of preference: the dedicated download endpoint
+         * (the original file), the static video stream (the same bytes for a user whose
+         * `enableContentDownloading` policy is off), and — when the user asked for a smaller file —
+         * a transcode, which is neither of the other two and is never a fallback for them.
+         *
+         * A transcode also renames the file: the bytes are `mp4` whatever the source container was,
+         * and a `.mkv` holding an `mp4` is a file ExoPlayer sniffs its way out of but a user
+         * plugging the tablet into a computer does not.
+         */
         private fun media(
             item: BaseItemDto,
             directoryName: String,
             mediaSourceId: String?,
             downloadAllowed: Boolean,
+            quality: DownloadQuality,
         ): PlannedFile =
             PlannedFile(
                 type = DownloadFileType.MEDIA,
-                fileName = DownloadPaths.mediaFileName(item, directoryName),
+                fileName = DownloadPaths.mediaFileName(item, directoryName, quality),
                 url =
-                    if (downloadAllowed) {
-                        urls.mediaUrl(item.id)
-                    } else {
-                        urls.videoStreamUrl(item.id, mediaSourceId)
+                    when {
+                        quality.isTranscoded -> urls.transcodedVideoUrl(item.id, mediaSourceId, quality)
+                        downloadAllowed -> urls.mediaUrl(item.id)
+                        else -> urls.videoStreamUrl(item.id, mediaSourceId)
                     },
             )
 

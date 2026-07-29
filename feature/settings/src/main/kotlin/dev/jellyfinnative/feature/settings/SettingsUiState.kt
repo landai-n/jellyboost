@@ -1,12 +1,13 @@
 package dev.jellyfinnative.feature.settings
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.data.downloads.model.StorageUsage
 
 /**
  * Everything the Settings screen draws.
  *
- * A flat projection of five DataStore keys, the download pipeline's storage figures and the live
+ * A flat projection of six DataStore keys, the download pipeline's storage figures and the live
  * session — the screen owns no state of its own, so a preference changed from anywhere else (the
  * home overflow's offline toggle, the Downloads tab's Wi-Fi switch) is already correct here.
  *
@@ -18,6 +19,8 @@ data class SettingsUiState(
     val outroSkipMode: SegmentSkipMode = SegmentSkipMode.SHOW_BUTTON,
     val pipOnLeave: Boolean = true,
     val downloadOverWifiOnly: Boolean = true,
+    /** What future downloads are fetched at; the running queue keeps whatever it was enqueued with. */
+    val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
     val forceOffline: Boolean = false,
     val storage: StorageUsage = StorageUsage(),
     /** Who is signed in; `null` when the session is absent or still restoring. */

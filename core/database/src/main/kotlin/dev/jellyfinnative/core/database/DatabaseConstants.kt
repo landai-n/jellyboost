@@ -14,6 +14,7 @@ object DatabaseConstants {
      * - v2 — M4 user data (`user_data`), added by `@AutoMigration(1, 2)`.
      * - v3 — M6 offline read path (`items`, `library_views`), added by `@AutoMigration(2, 3)`.
      * - v4 — M7 downloads (`downloads`, `download_files`), added by `@AutoMigration(3, 4)`.
+     * - v5 — M9 download quality (`downloads.quality`, default `ORIGINAL`), by `@AutoMigration(4, 5)`.
      */
-    const val DATABASE_VERSION = 4
+    const val DATABASE_VERSION = 5
 }

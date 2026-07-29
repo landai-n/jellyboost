@@ -2,6 +2,7 @@ package dev.jellyfinnative.data.downloads
 
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.database.dao.DownloadDao
@@ -9,6 +10,7 @@ import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
@@ -24,6 +26,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.junit.jupiter.api.BeforeEach
@@ -44,6 +47,11 @@ class DownloadEnqueuerTest {
     private val itemDao = mockk<ItemDao>(relaxUnitFun = true)
     private val downloadDao = mockk<DownloadDao>(relaxUnitFun = true)
     private val mapper = mockk<ItemEntityMapper>()
+    private val downloadQuality = MutableStateFlow(DownloadQuality.ORIGINAL)
+    private val appPreferences =
+        mockk<AppPreferences> {
+            every { this@mockk.downloadQuality } returns this@DownloadEnqueuerTest.downloadQuality
+        }
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
 
     private val upserted = slot<List<ItemEntity>>()
@@ -216,6 +224,61 @@ class DownloadEnqueuerTest {
             coVerify(exactly = 0) { downloadDao.upsert(any()) }
         }
 
+    // ---- download quality (M9) ------------------------------------------------------------------
+
+    @Test
+    fun `the preference in force when the user taps Download is stamped on the row`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.MEDIUM
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // Stored, not re-read later: the queue plans every run from this column, so a user who
+            // changes the setting mid-transfer cannot make the pipeline append incompatible bytes.
+            row.captured.quality shouldBe DownloadQuality.MEDIUM
+        }
+
+    @Test
+    fun `an original download keeps the exact size the server reported`() =
+        runTest {
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(movie(sizeBytes = 2_100_000_000L, runTimeTicks = HOUR_TICKS)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.captured.bytesTotal shouldBe 2_100_000_000L
+        }
+
+    @Test
+    fun `a transcoded download is sized from its runtime and bitrate instead`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.MEDIUM
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(movie(sizeBytes = 2_100_000_000L, runTimeTicks = HOUR_TICKS)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The server will not send a Content-Length for a file it has not encoded yet, so an
+            // hour at 8 Mbps + 192 kbps of audio is the only number the queue tab can show.
+            val expected = 3_600L * (DownloadQuality.MEDIUM.videoBitRate!! + DownloadQuality.AUDIO_BITRATE) / 8
+            row.captured.bytesTotal shouldBe expected
+        }
+
+    @Test
+    fun `a transcoded download of an item with no runtime falls back to an unknown size`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(movie(sizeBytes = 2_100_000_000L, runTimeTicks = null)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // Zero is the pipeline's "unknown", which renders as an indeterminate bar. Reporting the
+            // *source* size here would promise a file the user is not going to get.
+            row.captured.bytesTotal shouldBe 0L
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
 
     private fun enqueuer() =
@@ -224,6 +287,7 @@ class DownloadEnqueuerTest {
             itemDao = itemDao,
             downloadDao = downloadDao,
             mapper = mapper,
+            appPreferences = appPreferences,
             clock = clock,
         )
 
@@ -242,5 +306,8 @@ class DownloadEnqueuerTest {
 
     private companion object {
         val USER = uuid(99)
+
+        /** One hour in `runTimeTicks` (100 ns each). */
+        const val HOUR_TICKS = 36_000_000_000L
     }
 }

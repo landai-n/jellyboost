@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads.plan
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
@@ -118,6 +119,28 @@ class DownloadPathsTest {
         val item = movie(path = null).copy(container = "mp4,mkv")
 
         DownloadPaths.mediaFileName(item, "Arrival (2016)") shouldBe "Arrival (2016).mp4"
+    }
+
+    @Test
+    fun `a transcoded download is named for the mp4 it will actually receive`() {
+        val item = movie(path = "/media/films/Arrival.2016.2160p.mkv")
+
+        // Neither the source name nor its container describes what arrives, so both are dropped.
+        DownloadPaths.mediaFileName(item, "Arrival (2016)", DownloadQuality.MEDIUM) shouldBe
+            "Arrival (2016) (medium).mp4"
+    }
+
+    @Test
+    fun `each quality gets its own file name`() {
+        val item = movie(path = null)
+
+        val names =
+            DownloadQuality.entries
+                .filter { it.isTranscoded }
+                .map { DownloadPaths.mediaFileName(item, "Arrival (2016)", it) }
+
+        // A user re-downloading at another quality must not overwrite the file they already have.
+        names.toSet().size shouldBe names.size
     }
 
     @Test

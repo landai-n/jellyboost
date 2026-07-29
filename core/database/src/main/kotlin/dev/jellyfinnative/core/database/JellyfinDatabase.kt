@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import dev.jellyfinnative.core.database.converters.DownloadFileTypeConverter
+import dev.jellyfinnative.core.database.converters.DownloadQualityConverter
 import dev.jellyfinnative.core.database.converters.DownloadStatusConverter
 import dev.jellyfinnative.core.database.converters.InstantConverter
 import dev.jellyfinnative.core.database.converters.ItemSourceConverter
@@ -34,8 +35,9 @@ import dev.jellyfinnative.core.database.entities.UserEntity
  *
  * Schemas are exported to `core/database/schemas/`, which is what lets each version bump be an
  * `@AutoMigration` instead of hand-written SQL as long as the change is purely additive. Every
- * version so far has been — v4 only adds two tables, so an existing install keeps its cached items
- * and its pending user-data rows across the upgrade.
+ * version so far has been — v4 only adds two tables and v5 one column with a SQL default, so an
+ * existing install keeps its cached items, its pending user-data rows and its download queue across
+ * every upgrade.
  */
 @Database(
     entities = [
@@ -57,6 +59,9 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         AutoMigration(from = 2, to = 3),
         // v3 → v4 adds `downloads` and `download_files`; nothing existing is touched.
         AutoMigration(from = 3, to = 4),
+        // v4 → v5 adds `downloads.quality`, a NOT NULL column with the SQL default `ORIGINAL`, so
+        // every row an older build wrote reads back as the behaviour that build had (M9).
+        AutoMigration(from = 4, to = 5),
     ],
 )
 @TypeConverters(
@@ -67,6 +72,7 @@ import dev.jellyfinnative.core.database.entities.UserEntity
     StringListConverter::class,
     DownloadStatusConverter::class,
     DownloadFileTypeConverter::class,
+    DownloadQualityConverter::class,
 )
 abstract class JellyfinDatabase : RoomDatabase() {
     /** DAO for [ServerEntity] and [ServerAddressEntity]. */

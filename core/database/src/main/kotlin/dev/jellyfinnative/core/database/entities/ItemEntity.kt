@@ -104,3 +104,23 @@ data class ItemCacheKey(
     val source: ItemSource,
     val cachedAt: Instant,
 )
+
+/**
+ * One downloaded row reduced to the two ids the offline *Latest* shelf needs: the row itself, and
+ * the **card** it collapses into.
+ *
+ * Online, `getLatestMedia` groups a TV library's new episodes into their series (the server's
+ * `GroupItems` behaviour), so the shelf shows one poster per show however many episodes landed.
+ * Offline the same reduction is done here: [groupId] is an episode's `seriesId` and an item's own
+ * id otherwise, so taking the first row of each [groupId] out of a `cachedAt DESC` list yields one
+ * card per series, ordered by its most recent download.
+ *
+ * A projection rather than whole rows because the grouping has to look at **every** downloaded
+ * item — the reduction happens before the row limit, so a series with twenty episodes must not
+ * consume twenty of the sixteen slots — and reading twenty multi-kilobyte
+ * [ItemEntity.dto] blobs to answer a question about two ids would be a needless megabyte of I/O.
+ */
+data class LatestDownloadKey(
+    val id: UUID,
+    val groupId: UUID,
+)

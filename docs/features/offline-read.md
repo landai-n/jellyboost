@@ -90,7 +90,7 @@ Scope, from the plan's "Confirmed decisions": **downloaded items only**, with on
 | My Media | cached `library_views`, in the server's own order |
 | Continue watching | downloads this device has a resume position for, most recent first |
 | Next up | first unwatched downloaded episode of each series |
-| Latest *library* | most recently downloaded items of that library's **kinds** |
+| Latest *library* | most recently downloaded items of that library's **kinds**, episodes grouped into their series |
 | Library grid | downloaded items of that library's **kinds**, name-ordered (DECISIONS.md) |
 | Search | name / series-name `LIKE` over downloaded items |
 | Item detail | any cached row; `getSimilarItems` is empty offline |
@@ -114,6 +114,20 @@ from the cached `library_views` and narrows the item types instead (movies → `
 plus `EPISODE` for Latest). Exact for the movie/TV libraries v1 supports; a documented v1
 simplification otherwise (DECISIONS.md 2026-07-28). Series → season → episode navigation is
 unaffected — it runs on `seriesId`/`seasonId`, which the DTOs do carry.
+
+**The *Latest* shelf shows one card per series, not one per episode.** Online the server groups a
+TV library's new episodes into their show (`getLatestMedia`'s `GroupItems` behaviour), so a season
+that just landed is one poster. Offline the shelf listed the downloaded rows raw, and a downloaded
+season filled it with its own episodes. `latestDownloadedKeys` now answers with a two-column
+projection — every downloaded row of the library's kinds, `cachedAt DESC`, each carrying the id of
+the card it collapses into (an episode's `seriesId`, an item's own id otherwise) — and
+`OfflineJellyfinRepository` keeps the first row of each group *before* applying the row limit, so
+twenty downloaded episodes take one of the sixteen slots rather than twenty. Movies group onto
+themselves and are untouched. The card itself is the **series' own cached row** (the download
+pipeline caches an episode's series and season alongside it, so its detail page, seasons and
+episodes all work offline); when that best-effort parent fetch failed, `ItemEntityMapper`
+synthesises the card from what the episode carries about its show — `seriesId`, `seriesName` and
+`seriesPrimaryImageTag`, so the poster is the show's and the tap target is still the series id.
 
 **It never throws and never reports a missing item as an error.** `getItem` answers with a
 placeholder carrying `available = false` — `JellyfinItem`'s own vocabulary for "known of, but not
@@ -340,9 +354,9 @@ Unit tests (JVM, no device):
 | `ConnectionStateProviderTest` | the state priority matrix, probe triggers, debounce (virtual clock) |
 | `ServerReachabilityProbeTest` | candidate rotation, per-address 3 s budget, signed-out short-circuit |
 | `DelegatingJellyfinRepositoryTest` | the full online/offline/forced/fallback/401 matrix, the 10 s ceiling, paged-grid swap |
-| `OfflineJellyfinRepositoryTest` | every row shape, `getItem` cache hits, missing-item behaviour |
+| `OfflineJellyfinRepositoryTest` | every row shape, `getItem` cache hits, missing-item behaviour, and the *Latest* grouping — episodes of a show collapsing to one card, a card per show newest-download-first, the limit counting shows rather than episodes, films unaffected, and the uncached-series fallback |
 | `BrowseCacheWriterTest` | the never-downgrade-a-download rule, library pruning |
-| `ItemEntityMapperTest` | blob round trip against the online mapper, unreadable-blob handling |
+| `ItemEntityMapperTest` | blob round trip against the online mapper, unreadable-blob handling, the synthesised series card (id, name, the show's poster) and the rows that have none |
 | `DataStoreAppPreferencesTest` | force-offline round trip through a real DataStore file |
 | `ConnectivityEdgesTest` | the edge semantics: nothing for the initial value (online and offline), `true` on coming back online, `false` on losing the connection, `false` when the user pins offline mode, nothing for a flap between two offline reasons, and `false,true,false,true` for a connection that flaps twice |
 | `ConnectivityRefresherTest` | the `:data` handle passes both directions through and adds nothing: fires when the connection comes back, fires when it is lost, fires when the user pins offline mode |

@@ -886,3 +886,28 @@ Seeded from the approved plan; listed for traceability, no divergence:
   unchanged, `ffprobe` duration `N/A` → `1380.000000`, and ffmpeg seeks and decodes at 600 s. Full gate green.
 
 <!-- END -->
+
+<!-- BEGIN the offline Latest shelf groups episodes into their series -->
+
+## 2026-07-29 — the offline Latest shelf groups episodes into their series
+- **Scope:** `:core:database` (`ItemDao.latestDownloaded` → `latestDownloadedKeys`, new `LatestDownloadKey`
+  projection), `:data` (`OfflineJellyfinRepository.getLatestMedia`, `ItemEntityMapper.toSeriesCardOrNull`),
+  `docs/features/offline-read.md`, `docs/features/home.md`
+- **Plan said:** docs/PLAN.md defines the offline *Latest* row as "recent downloads" and says nothing about
+  grouping; `OfflineJellyfinRepository` listed the downloaded rows raw, newest first.
+- **Done instead:** downloaded episodes collapse into their series before the row limit applies, the way the
+  server's `getLatestMedia` does online (`GroupItems`). A two-column projection reads every downloaded row of the
+  library's kinds newest-first with the id of the card it belongs to; the first row of each group wins; the card
+  is the series' own cached row, and — when the pipeline's best-effort parent fetch had failed — a card
+  synthesised from the episode's `seriesId`/`seriesName`/`seriesPrimaryImageTag`. Movies group onto themselves
+  and are unchanged.
+- **Reason:** user report — "latest series in offline mode is showing individual episodes instead of the season
+  itself". A downloaded season filled the whole shelf with its own episodes where the online row showed one
+  poster, so going offline visibly reshaped the screen the plan wants to be seamless. The synthesised card is the
+  one thing that goes beyond the plan's "the same mapper produces both": it is a `JellyfinItem` no cached row
+  backs. It exists only for the degraded case, it is built from the episode's blob (not from the query columns),
+  and the alternative — falling back to bare episodes for that show — is the very bug being fixed.
+- **Tests:** `OfflineJellyfinRepositoryTest` 27 → 34, `ItemEntityMapperTest` 12 → 17. No test weakened; full gate
+  green.
+
+<!-- END -->

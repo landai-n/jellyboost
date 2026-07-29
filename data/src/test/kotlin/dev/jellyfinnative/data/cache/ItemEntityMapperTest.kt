@@ -151,6 +151,66 @@ class ItemEntityMapperTest {
         restored.userData.playbackPositionTicks shouldBe 0L
     }
 
+    // ---- the synthesised series card ------------------------------------------------------------
+
+    @Test
+    fun `rebuilds the series an episode belongs to, with the show's own poster`() {
+        val row =
+            entity(
+                episodeDto(
+                    id = uuid(12),
+                    name = "Winter Is Coming",
+                    seriesId = uuid(10),
+                    seriesName = "Thrones",
+                    seasonId = uuid(11),
+                    seasonNumber = 1,
+                    episodeNumber = 1,
+                    seriesPrimaryImageTag = "series-tag",
+                ),
+            )
+
+        val card = mapper.toSeriesCardOrNull(row)
+
+        card.shouldNotBeNull()
+        // The tap target has to be the show, not the episode the card was built from.
+        card.id shouldBe uuid(10).toString()
+        card.name shouldBe "Thrones"
+        card.type shouldBe ItemType.SERIES
+        card.primaryImageUrl!! shouldContain "/Items/${uuid(10)}/Images/PRIMARY?tag=series-tag"
+    }
+
+    @Test
+    fun `a series card carries no artwork when the episode names no series image`() {
+        val row = entity(episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1))
+
+        mapper.toSeriesCardOrNull(row)!!.primaryImageUrl.shouldBeNull()
+    }
+
+    @Test
+    fun `there is no series card for a row that names no series`() {
+        mapper.toSeriesCardOrNull(entity(movieDto(movieId, "Arrival"))).shouldBeNull()
+    }
+
+    @Test
+    fun `there is no series card for a row whose series has no name`() {
+        val nameless =
+            entity(
+                episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1)
+                    .copy(seriesName = "  "),
+            )
+
+        mapper.toSeriesCardOrNull(nameless).shouldBeNull()
+    }
+
+    @Test
+    fun `there is no series card for an unreadable blob`() {
+        val corrupted =
+            entity(episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1))
+                .copy(dto = "not json")
+
+        mapper.toSeriesCardOrNull(corrupted).shouldBeNull()
+    }
+
     // ---- failure modes ------------------------------------------------------------------------
 
     @Test

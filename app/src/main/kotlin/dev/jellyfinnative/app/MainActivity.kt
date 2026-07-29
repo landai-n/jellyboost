@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
             JellyfinTheme {
                 NotificationPermissionRequest()
                 val sessionState by viewModel.sessionState.collectAsStateWithLifecycle()
-                JellyfinNativeApp(sessionState = sessionState, onSignOut = viewModel::signOut)
+                JellyfinNativeApp(sessionState = sessionState)
             }
         }
     }
@@ -163,10 +163,7 @@ private fun NotificationPermissionRequest() {
  * is created with a start destination that matches the session.
  */
 @Composable
-internal fun JellyfinNativeApp(
-    sessionState: SessionState,
-    onSignOut: () -> Unit,
-) {
+internal fun JellyfinNativeApp(sessionState: SessionState) {
     if (sessionState is SessionState.Unknown) return
 
     // Captured once: the start destination must not change under a live NavHost when the session
@@ -176,6 +173,5 @@ internal fun JellyfinNativeApp(
     AppScaffold(
         startsSignedIn = startsSignedIn,
         sessionState = sessionState,
-        onSignOut = onSignOut,
     )
 }

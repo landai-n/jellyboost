@@ -13,8 +13,8 @@ import dev.jellyfinnative.core.common.model.FilterOptions
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -55,7 +55,7 @@ class LibraryViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val downloads: DownloadRepository,
-        private val reconnectRefresher: ReconnectRefresher,
+        private val connectivityRefresher: ConnectivityRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val libraryId: String = savedStateHandle.get<String>(KEY_LIBRARY_ID).orEmpty()
@@ -90,21 +90,21 @@ class LibraryViewModel
                 }
 
         init {
-            observeReconnects()
+            observeConnectivityChanges()
         }
 
         /**
-         * On a reconnect this re-loads **only the filter facets** — the grid needs nothing: its
-         * `Pager` is rebuilt on every connection change inside `getItemsPaged`, so the items swap
-         * back to the server's on their own (docs/features/offline-read.md).
+         * On a connection change — in either direction — this re-loads **only the filter facets**:
+         * the grid needs nothing, its `Pager` is rebuilt on every connection change inside
+         * `getItemsPaged`, so the items swap source on their own (docs/features/offline-read.md).
          *
          * And only when the facets were already asked for: they are fetched the first time the
          * sheet opens, so a screen whose sheet was never opened has nothing stale to replace and
          * would just be spending a request.
          */
-        private fun observeReconnects() {
+        private fun observeConnectivityChanges() {
             viewModelScope.launch {
-                reconnectRefresher.reconnected.collect {
+                connectivityRefresher.connectivityChanged.collect {
                     val state = _uiState.value
                     val wasAsked = state.areFacetsLoaded || state.facetsError != null
                     if (wasAsked && !state.areFacetsLoading) {

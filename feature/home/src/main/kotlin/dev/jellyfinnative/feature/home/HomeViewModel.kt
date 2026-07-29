@@ -9,11 +9,12 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataEventBus
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,7 +45,7 @@ class HomeViewModel
         private val repository: JellyfinRepository,
         private val userDataEvents: UserDataEventBus,
         private val downloads: DownloadRepository,
-        private val reconnectRefresher: ReconnectRefresher,
+        private val connectivityRefresher: ConnectivityRefresher,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
 
@@ -58,18 +59,20 @@ class HomeViewModel
             load(isRefresh = false)
             observeUserDataChanges()
             observeDownloadStates()
-            observeReconnects()
+            observeConnectivityChanges()
         }
 
         /**
-         * Replaces the offline rows with the server's the moment it is reachable again (M9).
+         * Swaps the rows for the other source's the moment the connection changes (M9).
          *
-         * A home screen opened in airplane mode shows only downloaded media; without this it kept
-         * showing it until the user navigated away and back.
+         * Both directions matter. A home screen opened in airplane mode kept showing downloaded
+         * media after the server came back; one opened online kept showing *its* rows — links to
+         * media the app can no longer play — after the user pinned offline mode or lost the
+         * network. `refresh()` is the same load either way: the repository picks the source.
          */
-        private fun observeReconnects() {
+        private fun observeConnectivityChanges() {
             viewModelScope.launch {
-                reconnectRefresher.reconnected.collect { refresh() }
+                connectivityRefresher.connectivityChanged.collect { refresh() }
             }
         }
 
@@ -135,7 +138,7 @@ class HomeViewModel
                     .copy(
                         isLoading = false,
                         isRefreshing = false,
-                        libraries = libraries,
+                        libraries = rows.libraries,
                         resume = rows.resume,
                         nextUp = rows.nextUp,
                         latest = rows.latest,
@@ -149,22 +152,33 @@ class HomeViewModel
                 val resume = async { repository.getResumeItems().getOrNull().orEmpty() }
                 val nextUp = async { repository.getNextUp().getOrNull().orEmpty() }
                 val latest =
-                    libraries.map { library ->
-                        async {
-                            LatestSection(
-                                library = library,
-                                items = repository.getLatestMedia(library.id).getOrNull().orEmpty(),
-                            )
-                        }
-                    }
+                    libraries
+                        .map { library -> async { library to repository.getLatestMedia(library.id) } }
+                        .awaitAll()
+
                 Rows(
+                    // A library whose *Latest* call succeeded and came back empty has nothing
+                    // behind it — offline that is every library with no downloads in it, since
+                    // `getUserViews` still answers from the full cached list. A library whose call
+                    // *failed* is kept: one flaky request must not delete a library card.
+                    libraries = latest.filterNot { (_, items) -> items.isKnownEmpty() }.map { it.first },
                     resume = resume.await(),
                     nextUp = nextUp.await(),
-                    latest = latest.map { it.await() }.filter { it.items.isNotEmpty() },
+                    latest =
+                        latest.mapNotNull { (library, result) ->
+                            result
+                                .getOrNull()
+                                ?.takeIf { it.isNotEmpty() }
+                                ?.let { LatestSection(library, it) }
+                        },
                 )
             }
 
+        /** `true` only when the server (or Room) answered, and answered with nothing. */
+        private fun AppResult<List<JellyfinItem>>.isKnownEmpty(): Boolean = this is AppResult.Success && value.isEmpty()
+
         private data class Rows(
+            val libraries: List<LibraryView>,
             val resume: List<JellyfinItem>,
             val nextUp: List<JellyfinItem>,
             val latest: List<LatestSection>,

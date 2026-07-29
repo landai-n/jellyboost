@@ -36,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -188,8 +187,12 @@ private fun ItemGrid(
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
-        // The plan's grid metric: as many 110dp columns as the window fits, so a phone shows three
-        // and the tablet in landscape shows six or more without a separate layout.
+        // As many columns as the window fits, so a phone shows three and the tablet in landscape
+        // shows eight or more without a separate layout. The minimum is pinned to the home rows'
+        // poster width (Dimens.PosterWidth) rather than a smaller plan constant: GridCells.Adaptive
+        // always grows cells to at least fill the row evenly at >= minSize, so anchoring the floor
+        // to the same token home uses guarantees a library cell is never narrower than a home
+        // poster card in either orientation (see MIN_CELL_WIDTH kdoc for the arithmetic).
         columns = GridCells.Adaptive(MIN_CELL_WIDTH),
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(Dimens.ScreenPadding),
@@ -282,8 +285,17 @@ private fun FilterAction(
     }
 }
 
-/** Minimum grid column width from docs/PLAN.md, "Screens" → LibraryGrid. */
-private val MIN_CELL_WIDTH = 110.dp
+/**
+ * Minimum grid column width.
+ *
+ * docs/PLAN.md, "Screens" → LibraryGrid specifies `Adaptive(110.dp)`, but 110dp lets the test tablet tablet (1600x2560 @ 2.25x) fit 9 landscape columns at a settled cell width of ~112dp — narrower
+ * than the 120dp [Dimens.PosterWidth] the home rows use for the same 2:3 poster shape, which reads
+ * as an inconsistency between the two screens. Anchoring the floor to [Dimens.PosterWidth] itself
+ * keeps the same device at 5 portrait columns of ~126dp (unchanged) and 8 landscape columns of
+ * ~128dp (was 9 of ~112dp) — both now at or above the home card width, and still under
+ * `ArtworkRequestWidths.POSTER_DP` (128dp), so the artwork request size doesn't need to change.
+ */
+private val MIN_CELL_WIDTH = Dimens.PosterWidth
 
 private const val APPEND_KEY = "library-append-state"
 

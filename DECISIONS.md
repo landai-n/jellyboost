@@ -911,3 +911,19 @@ Seeded from the approved plan; listed for traceability, no divergence:
   green.
 
 <!-- END -->
+
+<!-- BEGIN library grid minimum cell width raised to Dimens.PosterWidth -->
+
+## 2026-07-29 — library grid minimum cell width raised to Dimens.PosterWidth (120dp)
+- **Scope:** `feature/library/.../LibraryGridScreen.kt`
+- **Plan said:** docs/PLAN.md, "Screens" → LibraryGrid: `LazyVerticalGrid(Adaptive(110.dp))`.
+- **Done instead:** `Adaptive(Dimens.PosterWidth)` (120dp), the same token Home's poster row uses.
+- **Reason:** user report — library tab items rendered smaller than Home's. On the test tablet in landscape,
+  `Adaptive(110.dp)` settles at 9 columns of ~112dp, narrower than Home's 120dp poster cards — a visible size
+  inconsistency between the two screens for the same poster shape (portrait was already fine at 5 × ~126dp).
+  Anchoring the floor to `Dimens.PosterWidth` guarantees cell width ≥ Home's card width in any orientation
+  (`Adaptive` always grows cells to ≥ minSize), while leaving portrait and other grids untouched. Artwork request
+  sizing unaffected: the new landscape cell (~127.7dp) stays under the fixed 128dp Coil bucket.
+- **Tests:** view-layer sizing with no Compose-UI harness in the repo — code-only change; full gate green.
+
+<!-- END -->

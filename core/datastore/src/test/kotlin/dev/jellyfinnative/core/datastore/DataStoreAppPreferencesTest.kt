@@ -3,7 +3,10 @@ package dev.jellyfinnative.core.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
+import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -123,6 +126,82 @@ class DataStoreAppPreferencesTest {
 
                 preferences.setDownloadOverWifiOnly(false)
                 awaitItem() shouldBe false
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    // ---- M9: segment skip + picture-in-picture ---------------------------------------------------
+
+    @Test
+    fun `both segment skip modes default to showing a button`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.introSkipMode.first() shouldBe SegmentSkipMode.SHOW_BUTTON
+            preferences.outroSkipMode.first() shouldBe SegmentSkipMode.SHOW_BUTTON
+        }
+
+    @Test
+    fun `a segment skip mode survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setIntroSkipMode(SegmentSkipMode.AUTO_SKIP)
+
+            DataStoreAppPreferences(store).introSkipMode.first() shouldBe SegmentSkipMode.AUTO_SKIP
+        }
+
+    @Test
+    fun `the intro and outro modes are independent`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.setIntroSkipMode(SegmentSkipMode.AUTO_SKIP)
+            preferences.setOutroSkipMode(SegmentSkipMode.OFF)
+
+            preferences.introSkipMode.first() shouldBe SegmentSkipMode.AUTO_SKIP
+            preferences.outroSkipMode.first() shouldBe SegmentSkipMode.OFF
+        }
+
+    @Test
+    fun `an unrecognised stored skip mode degrades to the default`() =
+        runTest {
+            val store = dataStore(this)
+            // What a downgrade, or a renamed constant, leaves behind in the file.
+            store.edit { it[stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_INTRO)] = "SKIP_EVERYTHING" }
+
+            DataStoreAppPreferences(store).introSkipMode.first() shouldBe SegmentSkipMode.SHOW_BUTTON
+        }
+
+    @Test
+    fun `picture in picture on leave defaults to on`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.pipOnLeave.first() shouldBe true
+        }
+
+    @Test
+    fun `turning picture in picture off survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setPipOnLeave(false)
+
+            DataStoreAppPreferences(store).pipOnLeave.first() shouldBe false
+        }
+
+    @Test
+    fun `emits every skip mode change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.outroSkipMode.test {
+                awaitItem() shouldBe SegmentSkipMode.SHOW_BUTTON
+
+                preferences.setOutroSkipMode(SegmentSkipMode.OFF)
+                awaitItem() shouldBe SegmentSkipMode.OFF
 
                 cancelAndIgnoreRemainingEvents()
             }

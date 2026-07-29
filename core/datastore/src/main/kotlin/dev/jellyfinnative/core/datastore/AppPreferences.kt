@@ -1,5 +1,6 @@
 package dev.jellyfinnative.core.datastore
 
+import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -42,4 +43,35 @@ interface AppPreferences {
 
     /** Turns the Wi-Fi-only download restriction on or off. */
     suspend fun setDownloadOverWifiOnly(enabled: Boolean)
+
+    // M9 player -----------------------------------------------------------------------------------
+
+    /**
+     * What the player does when playback enters an intro (docs/PLAN.md, "M9 Polish" → segment skip).
+     *
+     * Defaults to [SegmentSkipMode.SHOW_BUTTON]: the server's segment data is a guess produced by a
+     * plugin, and a wrong guess that offers a button is a button nobody presses, while a wrong guess
+     * that seeks is a film that jumps.
+     */
+    val introSkipMode: Flow<SegmentSkipMode>
+
+    /** Sets what the player does when playback enters an intro. */
+    suspend fun setIntroSkipMode(mode: SegmentSkipMode)
+
+    /** What the player does when playback enters an outro; same default and reasoning as the intro. */
+    val outroSkipMode: Flow<SegmentSkipMode>
+
+    /** Sets what the player does when playback enters an outro. */
+    suspend fun setOutroSkipMode(mode: SegmentSkipMode)
+
+    /**
+     * `true` while leaving the app during video playback should enter picture-in-picture.
+     *
+     * Defaults to **on**, matching every other video app on the platform: the alternative to a
+     * floating window is a film that vanishes, and the user can always dismiss the window.
+     */
+    val pipOnLeave: Flow<Boolean>
+
+    /** Turns the leave-into-picture-in-picture behaviour on or off. */
+    suspend fun setPipOnLeave(enabled: Boolean)
 }

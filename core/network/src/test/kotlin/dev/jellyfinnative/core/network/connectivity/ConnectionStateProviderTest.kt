@@ -1,5 +1,6 @@
 package dev.jellyfinnative.core.network.connectivity
 
+import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.network.ConnectionState
 import io.kotest.matchers.shouldBe
@@ -53,6 +54,19 @@ class ConnectionStateProviderTest {
             override val downloadOverWifiOnly: Flow<Boolean> = MutableStateFlow(true)
 
             override suspend fun setDownloadOverWifiOnly(enabled: Boolean) = Unit
+
+            // Likewise M9's player preferences: present so the fake satisfies the interface.
+            override val introSkipMode: Flow<SegmentSkipMode> = MutableStateFlow(SegmentSkipMode.SHOW_BUTTON)
+
+            override suspend fun setIntroSkipMode(mode: SegmentSkipMode) = Unit
+
+            override val outroSkipMode: Flow<SegmentSkipMode> = MutableStateFlow(SegmentSkipMode.SHOW_BUTTON)
+
+            override suspend fun setOutroSkipMode(mode: SegmentSkipMode) = Unit
+
+            override val pipOnLeave: Flow<Boolean> = MutableStateFlow(true)
+
+            override suspend fun setPipOnLeave(enabled: Boolean) = Unit
         }
 
     private var applicationScope: CoroutineScope? = null

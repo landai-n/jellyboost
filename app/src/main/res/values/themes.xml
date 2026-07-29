@@ -17,5 +17,12 @@
         <item name="windowSplashScreenBackground">@color/background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.JellyfinNative</item>
+        <!--
+            Theme.SplashScreen's DayNight parent otherwise follows the SYSTEM's light/dark setting
+            (android:Theme.DeviceDefault.DayNight), independently of the app's own always-dark theme.
+            On a system in light mode that draws dark status-bar icons over our dark splash background
+            for the brief window before postSplashScreenTheme takes over. Force it dark to match.
+        -->
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

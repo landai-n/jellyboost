@@ -1,10 +1,13 @@
 package dev.jellyfinnative.player.api
 
+import org.jellyfin.sdk.model.api.MediaSegmentDto
+import org.jellyfin.sdk.model.api.MediaSegmentType
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackInfoResponse
 import org.jellyfin.sdk.model.api.PlaybackProgressInfo
 import org.jellyfin.sdk.model.api.PlaybackStartInfo
 import org.jellyfin.sdk.model.api.PlaybackStopInfo
+import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import java.util.UUID
 
 /**
@@ -44,4 +47,28 @@ interface PlayerApi {
         deviceId: String,
         playSessionId: String,
     )
+
+    // M9 -------------------------------------------------------------------------------------------
+
+    /**
+     * The item's trickplay geometry — `BaseItemDto.trickplay`, keyed by media source id and then by
+     * thumbnail width.
+     *
+     * `PlaybackInfo` does not carry it, so the scrubber has to ask for the item itself. Empty when
+     * the server generated no scrubbing thumbnails for this item, which is the common case for a
+     * freshly added library.
+     */
+    suspend fun getTrickplayInfo(itemId: UUID): Map<String, Map<String, TrickplayInfoDto>>
+
+    /**
+     * `GET /MediaSegments/{itemId}` — the intro/outro ranges a plugin detected.
+     *
+     * Server-only by definition (docs/PLAN.md, "Playback pipeline" → "Media segments (M9)"), and
+     * optional: a server without the Media Segments API, or without a provider plugin, answers 404
+     * or with nothing, and the feature is simply absent rather than broken.
+     */
+    suspend fun getMediaSegments(
+        itemId: UUID,
+        types: Collection<MediaSegmentType>,
+    ): List<MediaSegmentDto>
 }

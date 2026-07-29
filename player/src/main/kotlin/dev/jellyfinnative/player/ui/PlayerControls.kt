@@ -3,13 +3,16 @@ package dev.jellyfinnative.player.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Forward30
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.outlined.ClosedCaption
 import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +50,11 @@ import kotlin.time.Duration.Companion.milliseconds
  *
  * Scrubbing is deliberately local while the finger is down — the slider follows the touch and only
  * seeks on release, so a drag across a two-hour film does not fire hundreds of seeks at a
- * transcoding server.
+ * transcoding server. Since M9 that same drag also drives the trickplay preview, which is the whole
+ * reason the scrub position is state rather than a callback.
+ *
+ * The bottom bar is width-capped and centred: on a 2560 px tablet a seek bar stretched edge to edge
+ * puts the time readout and the pickers a hand-span apart from each other.
  */
 @Composable
 internal fun PlayerControls(
@@ -70,7 +78,7 @@ internal fun PlayerControls(
             state = state,
             onSeekTo = actions.onSeekTo,
             onOpenSheet = { openSheet = it },
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
 
@@ -106,6 +114,15 @@ private fun TopBar(
             color = Color.White,
             modifier = Modifier.weight(1f),
         )
+        // Only when it is not 1×: a badge that is always there stops being information.
+        if (!state.speed.isNormal) {
+            Text(
+                text = state.speed.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(end = Dimens.SpaceMedium),
+            )
+        }
         state.playMethod?.let { method ->
             // On screen on purpose: the M5 definition of done is "the server shows the expected
             // play method", and having it here makes that check possible without the dashboard.
@@ -166,20 +183,16 @@ private fun BottomBar(
     onOpenSheet: (PlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var scrubPosition by remember { mutableStateOf<Float?>(null) }
-
     Column(
-        modifier = modifier.fillMaxWidth().systemBarsPadding().padding(Dimens.SpaceLarge),
+        modifier =
+            modifier
+                .widthIn(max = MAX_BAR_WIDTH)
+                .fillMaxWidth()
+                .systemBarsPadding()
+                .padding(Dimens.SpaceLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        Slider(
-            value = scrubPosition ?: state.progress,
-            onValueChange = { scrubPosition = it },
-            onValueChangeFinished = {
-                scrubPosition?.let { fraction -> onSeekTo((fraction * state.durationMs).toLong()) }
-                scrubPosition = null
-            },
-        )
+        Scrubber(state = state, onSeekTo = onSeekTo)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -211,6 +224,13 @@ private fun BottomBar(
                     icon = Icons.Outlined.ClosedCaption,
                 )
             }
+            SheetButton(
+                // The current rate replaces the word once it is not 1×, so the control says what it
+                // is doing without needing a second badge next to it.
+                label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
+                onClick = { onOpenSheet(PlayerSheet.SPEED) },
+                icon = Icons.Outlined.Speed,
+            )
             // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
             if (!state.isLocalPlayback) {
                 SheetButton(
@@ -220,6 +240,61 @@ private fun BottomBar(
                 )
             }
         }
+    }
+}
+
+/**
+ * The seek bar, and the trickplay thumbnail that floats above it while a drag is in progress.
+ *
+ * The preview is positioned with a negative offset so it draws *outside* this composable's bounds:
+ * reserving space for it would push the whole control bar up permanently, and a bar that jumps as
+ * soon as a finger touches it is worse than no preview. Its horizontal position follows the drag and
+ * is clamped to the bar, so a scrub to either end never leaves the thumbnail hanging off the screen —
+ * the case a 2560 px tablet and a 1080 px phone disagree about.
+ */
+@Composable
+private fun Scrubber(
+    state: PlayerUiState,
+    onSeekTo: (Long) -> Unit,
+) {
+    var scrubFraction by remember { mutableStateOf<Float?>(null) }
+    val fraction = scrubFraction ?: state.progress
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val tiles = state.trickplay
+        val scrubMs = (fraction * state.durationMs).toLong()
+        val thumbnail = if (scrubFraction == null) null else tiles?.tileFor(scrubMs)
+
+        if (tiles != null && thumbnail != null) {
+            val previewWidth = TRICKPLAY_PREVIEW_HEIGHT * tiles.aspectRatio
+            val slack = (maxWidth - previewWidth).coerceAtLeast(0.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .offset(
+                            x = (maxWidth * fraction - previewWidth / 2).coerceIn(0.dp, slack),
+                            y = -(TRICKPLAY_PREVIEW_HEIGHT + PREVIEW_GAP + PREVIEW_LABEL_HEIGHT),
+                        ),
+            ) {
+                TrickplayPreview(tiles = tiles, thumbnail = thumbnail)
+                Text(
+                    text = scrubMs.asClock(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                )
+            }
+        }
+
+        Slider(
+            value = fraction,
+            onValueChange = { scrubFraction = it },
+            onValueChangeFinished = {
+                scrubFraction?.let { committed -> onSeekTo((committed * state.durationMs).toLong()) }
+                scrubFraction = null
+            },
+        )
     }
 }
 
@@ -268,3 +343,9 @@ private const val DIM_ALPHA = 0.7f
 private val SCRIM = Color.Black.copy(alpha = 0.35f)
 private val PRIMARY_ICON = 64.dp
 private val SECONDARY_ICON = 40.dp
+
+/** Wide enough for a 21:9 film's controls, narrow enough to stay one glance on a tablet. */
+private val MAX_BAR_WIDTH = 1000.dp
+
+private val PREVIEW_GAP = 8.dp
+private val PREVIEW_LABEL_HEIGHT = 18.dp

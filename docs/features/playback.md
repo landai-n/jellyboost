@@ -1,8 +1,9 @@
 # Feature: Playback (online) — M5
 
 Streaming playback of a movie or episode from the server, in `:player`
-(docs/PLAN.md, "Playback pipeline"). Offline playback (`LocalPlaybackResolver`), media segments
-and the trickplay scrubber are **not** here — they are M8 and M9.
+(docs/PLAN.md, "Playback pipeline"). Offline playback (`LocalPlaybackResolver`) is in
+`offline-playback.md`; the M9 polish pass — trickplay scrubber, segment skip, picture-in-picture,
+gestures, speed, background playback — is the last section of this file.
 
 ## The shape of one playback session
 
@@ -132,6 +133,128 @@ not inherit an exhausted one.
 - Offline playback from downloads — M8. `PlaybackMediaSource` is already a sealed type with the
   local variant's shape in mind, and the `DefaultDataSource` wrapper already resolves `file://`
   and `content://` URIs.
-- Media segments (intro/outro skip), trickplay scrubber, PiP, gestures, playback speed — M9.
 - A persisted preference for the ASS/SSA toggle and the default quality — M9 settings. Both are
   parameters today (see DECISIONS.md, 2026-07-28).
+
+<!-- BEGIN: Player polish (M9) -->
+
+## M9 — polish
+
+Everything below is additive: nothing in the M5/M8 sections changed shape, and every M9 feature is
+absent-by-default rather than failing loudly when its data is missing.
+
+### New key classes
+
+| Class | Responsibility |
+|---|---|
+| `model/TrickplayTiles` | Sprite-sheet geometry + tile URIs, and `tileFor(positionMs)` → which sheet, column and row. The one implementation of that arithmetic, shared online and offline. |
+| `trickplay/TrickplayResolver` | `PlaybackMediaSource` → `TrickplayTiles?`. Local: the sheets already on disk. Remote: the item's `trickplay` map, closest width, tile URLs derived from the thumbnail count. |
+| `ui/TrickplayPreview` | Draws one thumbnail by sliding the whole sheet under a clipping window. |
+| `segments/MediaSegment` | One intro/outro range, in milliseconds. |
+| `segments/MediaSegmentLoader` | `GET /MediaSegments/{itemId}` → `List<MediaSegment>`. Server-only; every failure ends at "no segments". |
+| `segments/SegmentSkipController` | Position + segments + preferences → `None` / `Offer` / `AutoSkip`. Owns the once-per-segment auto-skip rule. |
+| `gesture/PlayerGestureController` | Zones, swipe distance and exclusion margins — the testable half of the gestures. |
+| `ui/PlayerGestureLayer` | The touch surface: `AudioManager`, window brightness, the transient indicator. |
+| `pip/PipController` | `@Singleton` seam between the player screen (publishes readiness) and `MainActivity` (arms the system). |
+| `model/PlaybackSpeed` | The speed picker's steps. Session-scoped; never persisted. |
+
+### Trickplay scrubber
+
+Jellyfin stores scrubbing thumbnails as **sprite sheets**: `columns × rows` thumbnails per sheet,
+one thumbnail every `interval` ms. There is no URL for "the frame at 23 minutes" — there is a URL
+for the sheet that contains it, and a cell to cut out of it.
+
+```
+drag on the seek bar
+   → TrickplayTiles.tileFor(scrubMs) → TrickplayThumbnail(uri, column, row)
+   → TrickplayPreview draws the sheet at (columns × previewWidth, rows × previewHeight)
+     offset by (-column × previewWidth, -row × previewHeight) inside a clipping Box
+```
+
+Drawing the sheet and clipping it — rather than transforming the bitmap — means every neighbouring
+thumbnail is a Coil **cache hit**: dragging along the bar decodes nothing until the drag crosses
+into the next sheet. The preview follows the thumb and is clamped to the bar's width, so it cannot
+overflow on a phone or leave the film on a 2560 px tablet.
+
+The sheet count is **derived**, never served: `ceil(thumbnailCount / (tileWidth × tileHeight))`.
+Absence is ordinary — no trickplay for the item, an unreachable server, or nonsense geometry all
+resolve to `null` and the seek bar simply has no preview.
+
+### Media segments
+
+| Step | Where |
+|---|---|
+| Fetch on playback start (server sources only) | `PlayerViewModel.loadPlaybackExtras` → `MediaSegmentLoader` |
+| Decide what to do at a position | `SegmentSkipController.decide(positionMs, segments, modes)` |
+| Draw the offer | `PlayerScreen`'s `SkipSegmentButton`, independent of the controls' visibility |
+| Perform the skip | `PlayerViewModel.skipCurrentSegment()` → `seekTo(segment.endMs)` |
+
+Per type (`INTRO`, `OUTRO`), the preference is `OFF` / `SHOW_BUTTON` (default) / `AUTO_SKIP`.
+**Auto-skip fires once per segment**: a user who seeks back into an intro they were just carried out
+of is telling the player they want to watch it, so the segment is downgraded to a button for the
+rest of the session instead of looping. Segments shorter than one second are ignored.
+
+A server without the Media Segments API (pre-10.10) or without a detection plugin answers 404 or
+with nothing, and the feature is silently absent. A downloaded item is never asked at all.
+
+### Picture-in-picture
+
+```
+PlayerViewModel  ──setPlayerState(active, w, h)──►  PipController  ──state──►  MainActivity
+   (route up? playing? pref on?)                                          setPictureInPictureParams
+MainActivity  ──setInPictureInPicture(…)──►  PipController  ──state──►  PlayerScreen (hide controls)
+```
+
+`MainActivity` hosts the whole app, so the three conditions are decided in the player and it only
+reads one boolean. On API 31+ `setAutoEnterEnabled` gives the seamless shrink users expect;
+`onUserLeaveHint` covers API 26–30 with a visible hop. The aspect ratio is clamped to Android's
+1:2.39 … 2.39:1 — an unclamped 2.76:1 film throws as the user presses Home. In PiP the screen draws
+bare video; transport control comes from the media notification.
+
+### Gestures
+
+| Gesture | Effect |
+|---|---|
+| Vertical swipe, left half | Brightness — a **window** attribute, so it dies with the player rather than changing the device setting |
+| Vertical swipe, right half | Volume — `AudioManager.STREAM_MUSIC` |
+| Double tap, outer thirds | −10 s / +30 s, matching the on-screen buttons rather than being symmetric |
+| Double tap, middle third | Nothing — a fumbled play/pause must not seek |
+| Single tap | Toggle the controls |
+
+A full 0→1 sweep is 0.66 of the screen height (jellyfin-android's ratio). Swipes starting within
+48 dp of the left/right edges or 64 dp of the top/bottom are left to the system, and the surface
+also calls `Modifier.systemGestureExclusion()`.
+
+### Playback speed
+
+0.5×–2× in jellyfin-web's steps, applied through `PlayerHandle.setPlaybackSpeed`. Session-scoped by
+design (DECISIONS.md 2026-07-29) and **re-applied after every re-resolve**, because a re-negotiation
+builds a fresh media item that starts at 1×.
+
+### Background playback
+
+Backgrounding the app no longer pauses playback. The root cause was not the notification
+permission: Media3 only manages a session once it has been **added** to the service, which normally
+happens when a `MediaController` connects — and this app deliberately has none. `PlaybackService`
+now calls `addSession` itself, so the service is promoted to the foreground with a media
+notification and survives the app leaving the foreground. Alongside it:
+
+- `setHandleAudioBecomingNoisy(true)` — headphones pulled out pause instead of blaring.
+- `setWakeMode(C.WAKE_MODE_NETWORK)` — a partial wake lock plus a Wi-Fi lock, so a *streamed* item
+  survives the screen going off.
+- Audio focus was already handled (`setAudioAttributes(…, handleAudioFocus = true)`, M5).
+- The session carries a launch `PendingIntent`, so tapping the notification returns to the player at
+  the live position — the UI re-attaches because the composition and the ViewModel both survived.
+
+The seek-bar poll still stops with the screen (it is cosmetic and would burn battery); progress
+reporting and playback do not.
+
+### New preferences
+
+| Key | Type | Default |
+|---|---|---|
+| `segment_skip_intro` | `SegmentSkipMode` | `SHOW_BUTTON` |
+| `segment_skip_outro` | `SegmentSkipMode` | `SHOW_BUTTON` |
+| `pip_on_leave` | `Boolean` | `true` |
+
+<!-- END: Player polish (M9) -->

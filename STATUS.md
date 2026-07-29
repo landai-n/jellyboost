@@ -579,3 +579,98 @@ honoured; delete frees bytes.
   re-entered; a refresh-on-reconnect is still M9.
 
 <!-- END M8 (offline playback + sync) -->
+
+<!-- BEGIN M9 (player polish) — appended by the M9 worktree; keep as one block when merging -->
+
+## M9 — player polish (worktree branch `worktree-agent-acf3fac666db7d869`)
+
+The **player half** of M9 only. The settings screen and the app-wide polish pass are a parallel
+branch; this branch adds the data layer and the defaults its author will surface, and touches
+nothing in `:feature:settings`.
+
+**Done**
+- **Trickplay scrubber.** `model/TrickplayTiles` (geometry + `tileFor(positionMs)` → sheet, column,
+  row — now the single implementation, with `LocalTrickplay.tileFor` delegating to it),
+  `trickplay/TrickplayResolver` (offline: the sheets M7 downloaded; online: the item's `trickplay`
+  map, closest width to 320 px, one tile URL per derived sheet), `ui/TrickplayPreview` (draws the
+  whole sprite sheet offset inside a clipping window, so neighbouring thumbnails are Coil cache
+  hits). The preview follows the thumb, is clamped to the seek bar, and is simply absent when the
+  item has no thumbnails.
+- **Media segments.** `segments/MediaSegmentLoader` (`getItemSegments(INTRO, OUTRO)`, server-only,
+  every failure ends at "no segments"), `segments/SegmentSkipController` (`OFF` / `SHOW_BUTTON` /
+  `AUTO_SKIP` per type; auto-skip fires **once per segment** so a user who seeks back is not put in
+  a loop), and a "Skip intro"/"Skip outro" button that is deliberately independent of the controls'
+  visibility.
+- **Picture-in-picture.** `pip/PipController` (`@Singleton` seam: the player publishes "route up +
+  playing + preference on", `MainActivity` arms `setAutoEnterEnabled` on API 31+ and falls back to
+  `onUserLeaveHint` on API 26–30). Aspect ratio from the decoded video size, clamped to Android's
+  1:2.39 … 2.39:1. In PiP the screen draws bare video; the media notification carries transport.
+- **Gestures.** `gesture/PlayerGestureController` (zones, 0.66-screen full sweep, 48 dp/64 dp
+  exclusion margins — jellyfin-android's numbers) plus `ui/PlayerGestureLayer` (`AudioManager`,
+  window brightness, transient indicator). Left-half swipe = brightness, right-half = volume,
+  double-tap outer thirds = −10 s/+30 s, middle third dead, single tap toggles the controls
+  (which now auto-hide after 4 s while playing).
+- **Playback speed.** `model/PlaybackSpeed` 0.5×–2×, a fourth picker in the existing dialog host,
+  shown on the control when it is not 1×. Session-scoped and re-applied after every re-resolve.
+- **Background playback — root cause found and fixed.** Media3 only manages a session (notification,
+  foreground promotion) once it has been **added** to the service; that normally happens when a
+  `MediaController` connects, and this app deliberately has none, so nothing ever added it and the
+  service was never promoted. `PlaybackService.onCreate` now calls `addSession` itself, sets a
+  session activity `PendingIntent`, and handles `onForegroundServiceStartNotAllowedException`.
+  `ExoPlayerHandle` adds `setHandleAudioBecomingNoisy(true)` and `setWakeMode(WAKE_MODE_NETWORK)`.
+  The `POST_NOTIFICATIONS` explanation carried in the M5 known issues was wrong — the permission
+  only ever decided whether the notification was *visible*.
+- **Tablet/landscape.** The controls bar is width-capped (1000 dp) and centred; the trickplay
+  preview is clamped inside the bar; the immersive-landscape effect stands down in PiP.
+- **New preferences** (data layer + defaults only, for the settings branch): `segment_skip_intro`
+  and `segment_skip_outro` (`SegmentSkipMode` = `OFF`/`SHOW_BUTTON`/`AUTO_SKIP`, default
+  `SHOW_BUTTON`), `pip_on_leave` (`Boolean`, default `true`). `:player` gained
+  `implementation(projects.core.datastore)` to read them.
+- **+53 unit tests** (`TrickplayTilesTest` 7, `TrickplayResolverTest` 9, `MediaSegmentLoaderTest` 8,
+  `SegmentSkipControllerTest` 10, `PlayerGestureControllerTest` 8, `PipControllerTest` 8, plus 13 new
+  `PlayerViewModelTest` cases and 7 new `DataStoreAppPreferencesTest` cases); project total **714**,
+  0 failures. Full gate green in one run (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- 7 DECISIONS entries; `docs/features/playback.md` M9 section, delimited ARCHITECTURE section.
+
+**Next — device verification (orchestrator)**
+1. `./gradlew installDebug`, open a **server** movie that has trickplay generated.
+2. **Trickplay:** drag the seek bar. A thumbnail with a time label should appear above it, follow the
+   thumb, and stay inside the bar at both ends. Logcat has nothing to say when it works; when the
+   item has none, expect `No trickplay available for <itemId>` at debug level and a plain bar.
+   Repeat in **airplane mode** on a downloaded item — same preview, no network.
+3. **Segments:** open an episode of a series with an intro-detection plugin. Expect a *Skip intro*
+   button while inside the intro; tapping it jumps to its end. Turn the intro preference to
+   `AUTO_SKIP` (until the settings screen lands:
+   `adb shell run-as dev.jellyfinnative.app.debug` … or simply verify `SHOW_BUTTON`) and watch for
+   `Auto-skipping INTRO to <ms> ms`, then seek back into the intro and confirm it is **not** skipped
+   again — a button appears instead. On a server without the plugin expect
+   `No media segments available for <itemId>` and no button at all.
+4. **Background playback (the M5 known issue):** start playback, press Home. Audio must continue and
+   a media notification with play/pause must appear. `adb shell dumpsys media_session | grep -A3
+   jellyfinnative` shows the session; `adb shell dumpsys activity services PlaybackService` should
+   show `isForeground=true`. Tap the notification → back in the player at the live position.
+   Pull the headphones/disconnect Bluetooth → playback pauses.
+5. **PiP:** while playing, press Home (or swipe up). The video should shrink into a floating window
+   with no controls, at the film's aspect ratio. Returning to the app restores the full UI.
+   Repeat from the **library grid** (not playing) and confirm nothing floats.
+6. **Gestures:** swipe up/down on the left half → brightness overlay; right half → volume overlay.
+   Double-tap the left third → −10 s, right third → +30 s, middle → nothing. Single tap toggles the
+   controls; they fade after ~4 s while playing and stay while paused. Swipe from the extreme edges
+   and confirm the system's back gesture still works.
+7. **Speed:** the *Speed* control opens the 0.5×–2× picker; the chosen rate shows in the bar and the
+   top bar. Change quality and confirm the rate survives the reload. Leave and re-enter the player —
+   it is back to 1× by design.
+8. **Tablet/landscape:** repeat 2, 3 and 6 at 2560×1600 landscape and in portrait.
+
+**Known issues (M9 player)**
+- Auto-skipping an outro that runs to the end of the file ends the item and closes the player; there
+  is no queue to advance to the next episode (out of scope until a queue exists).
+- The trickplay tile URL carries the access token as an `ApiKey` query parameter so Coil can fetch
+  it (DECISIONS.md 2026-07-29); it lives only in Coil's in-memory cache key.
+- Brightness is a window override and is not remembered between sessions — jellyfin-android has a
+  `rememberBrightness` preference, this branch does not.
+- The double-tap seek has no ripple/animation feedback yet; the position simply moves.
+- Carried over: screens loaded while offline keep their offline data until re-entered (the
+  refresh-on-reconnect belongs to the app-wide polish half of M9).
+
+<!-- END M9 (player polish) -->

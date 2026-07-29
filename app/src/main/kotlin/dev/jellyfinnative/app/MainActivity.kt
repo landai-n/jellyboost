@@ -4,10 +4,12 @@ import android.Manifest
 import android.app.PictureInPictureParams
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,7 +59,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         splashScreen.setKeepOnScreenCondition { viewModel.sessionState.value is SessionState.Unknown }
-        enableEdgeToEdge()
+        // The app is dark-only by design (JellyfinTheme, docs/PLAN.md) — the system bar icons must
+        // always be light, regardless of the *system's* light/dark setting. enableEdgeToEdge()'s
+        // default SystemBarStyle.auto() derives icon appearance from the system's night-mode
+        // configuration, not from the app's own (always-dark) theme, so on a system in light mode it
+        // was drawing dark (black) icons over our dark UI. SystemBarStyle.dark(...) pins both bars to
+        // the dark appearance (light icons) unconditionally, matching the theme.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
 
         observePictureInPictureReadiness()

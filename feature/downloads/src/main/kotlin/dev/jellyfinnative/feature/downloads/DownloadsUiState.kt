@@ -63,25 +63,87 @@ data class DownloadsUiState(
     val storage: StorageUsage = StorageUsage(),
     val wifiOnly: Boolean = true,
     val isLoading: Boolean = true,
+    /**
+     * `true` while the *Cancel all* dialog is up.
+     *
+     * In the state rather than `remember`ed in the list, unlike the *Downloaded* tab's per-row
+     * pending delete: this question is about the whole queue, which is the ViewModel's list, and the
+     * answer has to survive a rotation and the recompositions a live queue causes twice a second —
+     * a `remember`ed flag would not (precedent: `ItemDetailUiState.showDeleteConfirmation`).
+     */
+    val showCancelAllConfirmation: Boolean = false,
     /** One-shot message for the snackbar; cleared by `DownloadsViewModel.consumeMessage`. */
     val userMessage: DownloadsMessage? = null,
 ) {
     /** `true` when there is nothing at all on the device and nothing queued. */
     val isEmpty: Boolean get() = downloaded.isEmpty() && queue.isEmpty()
+
+    /** The queue rows *Pause all* would pause — see [DownloadItem.isPauseTarget]. */
+    val pauseAllTargets: List<DownloadItem> get() = queue.filter { it.isPauseTarget }
+
+    /** The queue rows *Resume all* would put back in the queue — see [DownloadItem.isResumeTarget]. */
+    val resumeAllTargets: List<DownloadItem> get() = queue.filter { it.isResumeTarget }
+
+    /**
+     * How many rows *Pause all* would deliberately leave running: transcodes, which cannot be
+     * paused at all (`DownloadItem.isPausable`). This is the number the snackbar reports so a queue
+     * that keeps moving after *Pause all* does not read as a bug.
+     */
+    val unpausableCount: Int get() = queue.count { !it.isResumeTarget && !it.isPausable }
+
+    /** `true` while at least one queue row can actually be paused. */
+    val canPauseAll: Boolean get() = pauseAllTargets.isNotEmpty()
+
+    /** `true` while at least one queue row is paused or failed. */
+    val canResumeAll: Boolean get() = resumeAllTargets.isNotEmpty()
 }
+
+/**
+ * `true` when this queue row offers *Resume*: paused and failed rows both do, because retrying a
+ * failure is the same operation, and for an original download the partial file means it costs only
+ * the bytes that are missing.
+ */
+internal val DownloadItem.isResumeTarget: Boolean
+    get() = status == DownloadStatus.PAUSED || status == DownloadStatus.ERROR
+
+/**
+ * `true` when this queue row offers *Pause*.
+ *
+ * A transcode is excluded ([DownloadItem.isPausable]): the server ignores `Range` on a file it is
+ * still producing, so pausing one throws the whole transfer away rather than suspending it. The
+ * per-row button and *Pause all* share this predicate on purpose — a bulk action that paused
+ * something the row itself refuses to pause would be the same bug, once per queue.
+ *
+ * Only meaningful for a row on the queue tab (nothing here excludes a finished download).
+ */
+internal val DownloadItem.isPauseTarget: Boolean
+    get() = !isResumeTarget && isPausable
 
 /**
  * One-shot messages this screen can raise.
  *
- * An enum rather than a string so the ViewModel stays free of resources and the copy lives in
- * `strings.xml`, matching `:feature:detail`'s `UserMessage`.
+ * A type rather than a string so the ViewModel stays free of resources and the copy lives in
+ * `strings.xml`, matching `:feature:detail`'s `UserMessage` — and, like it, a sealed interface
+ * rather than an enum since [PausedKeepingTranscodes] carries counts (DECISIONS.md, 2026-07-29).
  */
-enum class DownloadsMessage {
+sealed interface DownloadsMessage {
     /** A delete could not remove the files or the rows. */
-    DeleteFailed,
+    data object DeleteFailed : DownloadsMessage
 
     /** Pause, resume or reorder failed. */
-    ActionFailed,
+    data object ActionFailed : DownloadsMessage
+
+    /**
+     * *Pause all* paused [pausedCount] rows and left [transcodingCount] transcodes downloading,
+     * because a transcode cannot be paused without discarding it (`DownloadItem.isPausable`).
+     *
+     * Only raised when something was actually skipped: a queue that visibly keeps moving after
+     * *Pause all* otherwise reads as the button having failed.
+     */
+    data class PausedKeepingTranscodes(
+        val pausedCount: Int,
+        val transcodingCount: Int,
+    ) : DownloadsMessage
 }
 
 /**

@@ -159,15 +159,16 @@ private fun QueueRowActions(
 
         // Paused and failed items both offer "resume": retrying a failure is the same operation,
         // and for an original download the partial file means it costs only the bytes that are
-        // missing.
-        if (item.status == DownloadStatus.PAUSED || item.status == DownloadStatus.ERROR) {
+        // missing. The two predicates are shared with the queue's *Resume all* / *Pause all*
+        // (DownloadsUiState.kt) so a row and the bulk button can never disagree about it.
+        if (item.isResumeTarget) {
             IconButton(onClick = { actions.onResume(item) }) {
                 Icon(
                     imageVector = Icons.Filled.PlayArrow,
                     contentDescription = stringResource(R.string.downloads_action_resume),
                 )
             }
-        } else if (item.isPausable) {
+        } else if (item.isPauseTarget) {
             // A transcode cannot be resumed — the server ignores `Range` on a file it is still
             // producing — so pausing one would silently discard everything it has downloaded. See
             // [DownloadItem.isPausable]; *Cancel* remains, and says what it actually does.

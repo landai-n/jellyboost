@@ -1,7 +1,10 @@
 package dev.jellyfinnative.feature.downloads
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -9,10 +12,17 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -31,6 +41,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,7 +83,7 @@ fun DownloadsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { stringResource(it.textRes()) }
+    val message = state.userMessage?.let { downloadsMessageText(it) }
 
     LaunchedEffect(message) {
         if (message != null) {
@@ -87,6 +100,7 @@ fun DownloadsScreen(
         DownloadsContent(
             state = state,
             actions = downloadsActions(viewModel),
+            bulk = queueBulkActions(viewModel),
             onWifiOnlyChange = viewModel::setWifiOnly,
             modifier = Modifier.padding(innerPadding),
         )
@@ -103,6 +117,18 @@ data class DownloadsActions(
     val onSelectTab: (DownloadsTab) -> Unit,
 )
 
+/**
+ * The queue-wide actions, kept apart from [DownloadsActions] rather than swelling it: these take no
+ * row, they belong to one tab, and the *Downloaded* half of the screen has no use for them.
+ */
+data class QueueBulkActions(
+    val onPauseAll: () -> Unit,
+    val onResumeAll: () -> Unit,
+    val onCancelAll: () -> Unit,
+    val onConfirmCancelAll: () -> Unit,
+    val onDismissCancelAll: () -> Unit,
+)
+
 /** Binds the row actions to the ViewModel; a function so the screen stays one expression. */
 private fun downloadsActions(viewModel: DownloadsViewModel) =
     DownloadsActions(
@@ -114,11 +140,22 @@ private fun downloadsActions(viewModel: DownloadsViewModel) =
         onSelectTab = viewModel::selectTab,
     )
 
+/** Binds the queue-wide actions to the ViewModel. */
+private fun queueBulkActions(viewModel: DownloadsViewModel) =
+    QueueBulkActions(
+        onPauseAll = viewModel::pauseAll,
+        onResumeAll = viewModel::resumeAll,
+        onCancelAll = viewModel::requestCancelAll,
+        onConfirmCancelAll = viewModel::confirmCancelAll,
+        onDismissCancelAll = viewModel::dismissCancelAll,
+    )
+
 /** Stateless rendering — a pure function of [state], so it previews without a ViewModel. */
 @Composable
 fun DownloadsContent(
     state: DownloadsUiState,
     actions: DownloadsActions,
+    bulk: QueueBulkActions,
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -146,7 +183,7 @@ fun DownloadsContent(
             state.selectedTab == DownloadsTab.DOWNLOADED ->
                 DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete)
 
-            else -> QueueTab(state = state, actions = actions)
+            else -> QueueTab(state = state, actions = actions, bulk = bulk)
         }
     }
 }
@@ -237,27 +274,147 @@ private fun DeleteDownloadDialog(
 private fun QueueTab(
     state: DownloadsUiState,
     actions: DownloadsActions,
+    bulk: QueueBulkActions,
 ) {
     if (state.queue.isEmpty()) {
+        // No bar either: with nothing queued there is nothing for any of the three to act on, and a
+        // row of dead buttons over an empty state says less than the empty state alone.
         EmptyState(message = stringResource(R.string.downloads_empty_queue))
         return
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
-    ) {
-        items(items = state.queue, key = { it.itemId }) { item ->
-            QueueRow(
-                item = item,
-                // The ratcheted fraction, falling back to the row's own only for an item the
-                // ratchet has not seen yet (the very first frame after an enqueue).
-                progress = state.progress[item.itemId] ?: item.progress,
-                speedBytesPerSecond = state.speeds[item.itemId],
-                actions = actions,
-            )
+    Column(modifier = Modifier.fillMaxSize()) {
+        QueueActionsBar(state = state, bulk = bulk)
+
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
+        ) {
+            items(items = state.queue, key = { it.itemId }) { item ->
+                QueueRow(
+                    item = item,
+                    // The ratcheted fraction, falling back to the row's own only for an item the
+                    // ratchet has not seen yet (the very first frame after an enqueue).
+                    progress = state.progress[item.itemId] ?: item.progress,
+                    speedBytesPerSecond = state.speeds[item.itemId],
+                    actions = actions,
+                )
+            }
         }
     }
+
+    if (state.showCancelAllConfirmation) {
+        CancelAllDialog(
+            count = state.queue.size,
+            onDismiss = bulk.onDismissCancelAll,
+            onConfirm = bulk.onConfirmCancelAll,
+        )
+    }
+}
+
+/**
+ * The queue-wide actions, above the list.
+ *
+ * Here rather than in the app's top bar: that bar is shared by every top-level destination and
+ * carries navigation, while these three are about one tab of one screen and have to disappear with
+ * it. Labels rather than bare icons — *Cancel all* empties the queue, and an unlabelled bin at the
+ * top of a list is not a thing to leave to guesswork. A [FlowRow] because on a narrow phone three
+ * labelled buttons wrap rather than clip (the same idiom the detail header's action row uses).
+ *
+ * *Pause all* and *Resume all* are disabled, not hidden, when they have nothing to act on: a queue
+ * of transcodes has nothing pausable in it, and a button that vanishes as the queue changes shape
+ * under the finger is worse than one that visibly cannot be pressed.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QueueActionsBar(
+    state: DownloadsUiState,
+    bulk: QueueBulkActions,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.SpaceSmall, vertical = Dimens.SpaceExtraSmall),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+    ) {
+        QueueBulkButton(
+            icon = Icons.Filled.Pause,
+            labelRes = R.string.downloads_action_pause_all,
+            enabled = state.canPauseAll,
+            onClick = bulk.onPauseAll,
+        )
+        QueueBulkButton(
+            icon = Icons.Filled.PlayArrow,
+            labelRes = R.string.downloads_action_resume_all,
+            enabled = state.canResumeAll,
+            onClick = bulk.onResumeAll,
+        )
+        QueueBulkButton(
+            icon = Icons.Filled.Delete,
+            labelRes = R.string.downloads_action_cancel_all,
+            enabled = true,
+            onClick = bulk.onCancelAll,
+            // The one destructive action on the bar, coloured like one.
+            contentColor = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun QueueBulkButton(
+    icon: ImageVector,
+    @StringRes labelRes: Int,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    contentColor: Color = MaterialTheme.colorScheme.primary,
+) {
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        colors = ButtonDefaults.textButtonColors(contentColor = contentColor),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(ButtonDefaults.IconSize),
+        )
+        Text(text = stringResource(labelRes), modifier = Modifier.padding(start = Dimens.SpaceSmall))
+    }
+}
+
+/**
+ * Confirms emptying the queue.
+ *
+ * Confirmed although a single row's *Cancel* is not: one tap here can throw away every partly
+ * transferred file on the device, and the button sits a few millimetres from *Pause all*. The copy
+ * says out loud what the action does **not** touch — finished downloads are on the other tab and
+ * are never in this list (`toQueue()`), and the season-cancel walk showed that is exactly the
+ * question a user asks before pressing something called "cancel all" (DECISIONS.md, 2026-07-29).
+ */
+@Composable
+private fun CancelAllDialog(
+    count: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = pluralStringResource(R.plurals.downloads_cancel_all_dialog_title, count, count)) },
+        text = { Text(text = stringResource(R.string.downloads_cancel_all_dialog_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.downloads_cancel_all_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.downloads_cancel_all_dialog_dismiss))
+            }
+        },
+    )
 }
 
 @Composable
@@ -363,10 +520,19 @@ private fun DownloadsTab.titleRes(): Int =
         DownloadsTab.QUEUE -> R.string.downloads_tab_queue
     }
 
-private fun DownloadsMessage.textRes(): Int =
-    when (this) {
-        DownloadsMessage.DeleteFailed -> R.string.downloads_message_delete_failed
-        DownloadsMessage.ActionFailed -> R.string.downloads_message_action_failed
+/** Renders a one-shot [message] as snackbar copy (precedent: `:feature:detail`'s `userMessageText`). */
+@Composable
+private fun downloadsMessageText(message: DownloadsMessage): String =
+    when (message) {
+        DownloadsMessage.DeleteFailed -> stringResource(R.string.downloads_message_delete_failed)
+        DownloadsMessage.ActionFailed -> stringResource(R.string.downloads_message_action_failed)
+        is DownloadsMessage.PausedKeepingTranscodes ->
+            pluralStringResource(
+                R.plurals.downloads_message_paused_keeping_transcodes,
+                message.transcodingCount,
+                message.pausedCount,
+                message.transcodingCount,
+            )
     }
 
 @Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010)
@@ -402,6 +568,14 @@ private fun DownloadsPreview() {
                     onMoveUp = {},
                     onMoveDown = {},
                     onSelectTab = {},
+                ),
+            bulk =
+                QueueBulkActions(
+                    onPauseAll = {},
+                    onResumeAll = {},
+                    onCancelAll = {},
+                    onConfirmCancelAll = {},
+                    onDismissCancelAll = {},
                 ),
             onWifiOnlyChange = {},
         )

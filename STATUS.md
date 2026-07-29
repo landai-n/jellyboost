@@ -134,6 +134,24 @@ episodes collapse into one series card (grouped before the limit), the card is
 the cached series row or a synthesised one from the episode's series fields,
 movies unchanged. Gate: **1094 tests, 0 failures** (1082 → 1094).
 
+### UX batch (2026-07-29, five user requests, parallel/serial worktree agents)
+- Search opens with the field focused + keyboard up, guarded so it never steals
+  focus over visible results (4dc7579).
+- Library grid cells anchored to `Dimens.PosterWidth` — landscape was 9 cols of
+  ~112dp vs Home's 120dp cards; now 8 × ~128dp, portrait unchanged (60e410c,
+  DECISIONS: diverges from PLAN's literal `Adaptive(110.dp)`).
+- Home button next to Back on item detail / library grid / settings; reuses the
+  tab-switch nav contract (`navigateHome()` = navigate + popUpTo<Home> +
+  launchSingleTop), player excluded (793d1af).
+- Downloaded tab: films gather under one shared "Movies" heading after all
+  series groups when both kinds are present; films-only/series-only unchanged
+  (dc2f521, DECISIONS: reverses logged alphabetical interleave).
+- Queue tab: bulk action bar — Pause all (skips transcodes, counted snackbar),
+  Resume all (PAUSED+ERROR), Cancel all (confirmation dialog surviving rotation;
+  DOWNLOADED rows untouchable by construction); per-row and bulk share the same
+  target predicates; DownloadsMessage enum → sealed interface (logged).
+Gate after the batch: **1114 tests, 0 failures** (1094 → 1114).
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

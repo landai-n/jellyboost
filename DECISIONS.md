@@ -957,3 +957,50 @@ Seeded from the approved plan; listed for traceability, no divergence:
   the changed tests assert the new, intentionally different ordering; full gate green.
 
 <!-- END -->
+
+<!-- BEGIN the queue tab gains Pause all / Resume all / Cancel all -->
+
+## 2026-07-29 — the queue tab gains Pause all / Resume all / Cancel all
+
+- **Scope:** `:feature:downloads` (`DownloadsUiState`, `DownloadsViewModel`, `DownloadsScreen`, `DownloadRows`,
+  `strings.xml`, `DownloadsViewModelTest`, `DownloadRowsTest`), `docs/features/downloads.md`
+- **Plan said:** docs/PLAN.md line 76 — "Downloads | Room-only: … *Queue* tab (progress %, speed,
+  pause/resume/cancel, reorder)". Every action the plan names is **per row**; nothing queue-wide is specified.
+  The 2026-07-29 entry "Cancel on a season keeps the episodes that already finished" additionally states
+  "`:feature:downloads`' `DownloadsMessage` stays an enum — it has no count-carrying message."
+- **Done instead:** the queue tab draws a bulk action bar above the list (only while the queue is non-empty)
+  with three actions, each composed from the existing per-item repository calls — no new `DownloadRepository`
+  method, and therefore no second delete cascade to keep correct:
+  - **Pause all** pauses every row the *row's own* Pause button would offer, i.e. `QUEUED`/`DOWNLOADING` and
+    `isPausable`. Transcodes are skipped, not paused: the server ignores `Range` on a file it is still
+    producing, so pausing one discards the transfer (DECISIONS.md 2026-07-29, the pause/seek-index entries).
+    The button is **disabled** when the queue holds nothing pausable, and when it did skip transcodes a
+    snackbar reports both numbers ("Paused 2 — 1 transcode keeps downloading").
+  - **Resume all** re-queues every `PAUSED` or `ERROR` row, transcoded or not (a transcode's resume is
+    legitimate, it just costs the transfer again — the same rule the per-row button follows). Disabled with
+    no such row; silent on success, since the rows visibly change to *Waiting*.
+  - **Cancel all** deletes every row on the tab behind a **confirmation dialog** naming the count. Finished
+    downloads are untouched by construction rather than by a filter: the queue list is `toQueue()`, which
+    excludes `DOWNLOADED` — the season-cancel rule applied to the whole queue.
+  The per-row buttons now branch on the same two predicates the bulk actions use (`DownloadItem.isPauseTarget`
+  / `isResumeTarget`, in `DownloadsUiState.kt`), so row and bar cannot drift apart. `DownloadsMessage` becomes
+  a **sealed interface** — reversing the note quoted above — because `PausedKeepingTranscodes` carries two
+  counts for a plural (the same move `:feature:detail`'s `UserMessage` made, for the same reason).
+  `showCancelAllConfirmation` lives in `DownloadsUiState`, unlike the *Downloaded* tab's `remember`ed
+  `pendingDelete`: the question is about the ViewModel's whole queue and has to survive rotation and the
+  recompositions a live queue causes twice a second (precedent: `ItemDetailUiState.showDeleteConfirmation`).
+- **Reason:** user request — emptying or pausing a queue of twenty episodes meant twenty round trips through
+  per-row icon buttons. The plan predates container downloads, which is what makes a long queue ordinary: one
+  tap on a season enqueues every episode of it, so the screen needs one tap that undoes that. The bulk actions
+  are additive to the plan's per-row list rather than a replacement — every row action is unchanged — but the
+  transcode-skipping semantics, the confirmation asymmetry against the per-row *Cancel*, and the reversal of
+  the `DownloadsMessage`-stays-an-enum note are each worth recording.
+- **Tests:** `DownloadsViewModelTest` +12 (pause-all pauses only pausable rows and never a transcode, paused
+  or failed row; the counted transcode message; silence when nothing was skipped; a failed pause outranking
+  that message; resume-all covering `PAUSED`/`ERROR` including transcoded rows and nothing else; the
+  disabled-with-no-targets cases doing nothing at all; cancel-all asking first, dismissing cleanly, deleting
+  every queue row while never touching either `DOWNLOADED` row, and reporting a failed delete; an empty queue
+  offering no bulk action and refusing to open the dialog). `DownloadRowsTest` +4 pinning the shared
+  pause/resume predicates. No existing test changed or weakened; full gate green.
+
+<!-- END -->

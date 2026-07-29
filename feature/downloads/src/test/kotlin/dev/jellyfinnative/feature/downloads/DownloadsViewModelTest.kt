@@ -2,6 +2,7 @@ package dev.jellyfinnative.feature.downloads
 
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.downloads.model.DownloadItem
@@ -302,6 +303,265 @@ class DownloadsViewModelTest {
             coVerify { downloads.setWifiOnly(false) }
         }
 
+    // ---- queue-wide actions ----------------------------------------------------------------------
+
+    @Test
+    fun `pause all pauses every pausable row and leaves the transcodes downloading`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                    // A transcode cannot be paused without discarding it (DownloadItem.isPausable),
+                    // so *Pause all* must leave it alone rather than destroy its progress.
+                    transcode("3", "Chestnut", status = DownloadStatus.DOWNLOADING, position = 2),
+                    // Already paused, and a failure: neither is a pause target.
+                    item("4", "Sicario", status = DownloadStatus.PAUSED, position = 3),
+                    item("5", "Blade Runner", status = DownloadStatus.ERROR, position = 4),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.pauseAll()
+            advanceUntilIdle()
+
+            coVerify { downloads.pause("1") }
+            coVerify { downloads.pause("2") }
+            coVerify(exactly = 0) { downloads.pause("3") }
+            coVerify(exactly = 0) { downloads.pause("4") }
+            coVerify(exactly = 0) { downloads.pause("5") }
+        }
+
+    @Test
+    fun `pause all says how many transcodes it deliberately left running`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
+                    transcode("2", "Chestnut", status = DownloadStatus.QUEUED, position = 1),
+                    transcode("3", "The Original", status = DownloadStatus.QUEUED, position = 2),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.pauseAll()
+            advanceUntilIdle()
+
+            // Without this the queue visibly keeps moving after "Pause all" and reads as a bug.
+            model.uiState.value.userMessage shouldBe
+                DownloadsMessage.PausedKeepingTranscodes(pausedCount = 1, transcodingCount = 2)
+        }
+
+    @Test
+    fun `pause all is silent when the whole queue could be paused`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
+                    item("2", "Dune", status = DownloadStatus.QUEUED, position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.pauseAll()
+            advanceUntilIdle()
+
+            // The rows themselves changed to "Paused"; a snackbar over them would say nothing more.
+            model.uiState.value.userMessage shouldBe null
+        }
+
+    @Test
+    fun `a queue with nothing pausable in it offers no Pause all, and pausing it does nothing`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    transcode("1", "Chestnut", status = DownloadStatus.DOWNLOADING),
+                    item("2", "Dune", status = DownloadStatus.PAUSED, position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.canPauseAll shouldBe false
+
+            model.pauseAll()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.pause(any()) }
+        }
+
+    @Test
+    fun `a failed pause outranks the transcode message`() =
+        runTest(dispatcher) {
+            coEvery { downloads.pause(any()) } returns AppResult.Failure(AppError.Storage())
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
+                    transcode("2", "Chestnut", status = DownloadStatus.QUEUED, position = 1),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.pauseAll()
+            advanceUntilIdle()
+
+            model.uiState.value.userMessage shouldBe DownloadsMessage.ActionFailed
+        }
+
+    @Test
+    fun `resume all puts every paused and failed row back in the queue, and nothing else`() =
+        runTest(dispatcher) {
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.PAUSED),
+                    item("2", "Dune", status = DownloadStatus.ERROR, position = 1),
+                    // A paused transcode is still resumable — it just costs the whole transfer again.
+                    transcode("3", "Chestnut", status = DownloadStatus.PAUSED, position = 2),
+                    item("4", "Sicario", status = DownloadStatus.DOWNLOADING, position = 3),
+                    item("5", "Blade Runner", status = DownloadStatus.QUEUED, position = 4),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.resumeAll()
+            advanceUntilIdle()
+
+            coVerify { downloads.resume("1") }
+            coVerify { downloads.resume("2") }
+            coVerify { downloads.resume("3") }
+            coVerify(exactly = 0) { downloads.resume("4") }
+            coVerify(exactly = 0) { downloads.resume("5") }
+            model.uiState.value.userMessage shouldBe null
+        }
+
+    @Test
+    fun `a queue with nothing paused or failed offers no Resume all, and resuming it does nothing`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADING))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.canResumeAll shouldBe false
+
+            model.resumeAll()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.resume(any()) }
+        }
+
+    @Test
+    fun `a failed bulk resume reports it`() =
+        runTest(dispatcher) {
+            coEvery { downloads.resume(any()) } returns AppResult.Failure(AppError.Storage())
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.PAUSED))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.resumeAll()
+            advanceUntilIdle()
+
+            model.uiState.value.userMessage shouldBe DownloadsMessage.ActionFailed
+        }
+
+    @Test
+    fun `cancel all asks before it removes anything`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADING))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.requestCancelAll()
+            advanceUntilIdle()
+
+            model.uiState.value.showCancelAllConfirmation shouldBe true
+            coVerify(exactly = 0) { downloads.delete(any()) }
+        }
+
+    @Test
+    fun `dismissing the cancel-all dialog leaves the queue untouched`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADING))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.requestCancelAll()
+            model.dismissCancelAll()
+            advanceUntilIdle()
+
+            model.uiState.value.showCancelAllConfirmation shouldBe false
+            coVerify(exactly = 0) { downloads.delete(any()) }
+        }
+
+    @Test
+    fun `confirming cancel all empties the queue and never touches a finished download`() =
+        runTest(dispatcher) {
+            // The season-cancel rule (DECISIONS.md, 2026-07-29) applied to the whole queue: what is
+            // already on the device survives, whatever state the queue rows are in.
+            items.value =
+                listOf(
+                    item("1", "Arrival", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                    item("3", "Dune", status = DownloadStatus.DOWNLOADING, position = 1),
+                    item("4", "Sicario", status = DownloadStatus.QUEUED, position = 2),
+                    item("5", "The Original", status = DownloadStatus.PAUSED, position = 3),
+                    item("6", "Blade Runner", status = DownloadStatus.ERROR, position = 4),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.requestCancelAll()
+            model.confirmCancelAll()
+            advanceUntilIdle()
+
+            coVerify { downloads.delete("3") }
+            coVerify { downloads.delete("4") }
+            coVerify { downloads.delete("5") }
+            coVerify { downloads.delete("6") }
+            coVerify(exactly = 0) { downloads.delete("1") }
+            coVerify(exactly = 0) { downloads.delete("2") }
+            model.uiState.value.showCancelAllConfirmation shouldBe false
+        }
+
+    @Test
+    fun `a failed bulk delete raises the delete message`() =
+        runTest(dispatcher) {
+            coEvery { downloads.delete(any()) } returns AppResult.Failure(AppError.Storage())
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADING))
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.confirmCancelAll()
+            advanceUntilIdle()
+
+            model.uiState.value.userMessage shouldBe DownloadsMessage.DeleteFailed
+        }
+
+    @Test
+    fun `an empty queue offers no bulk action at all`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADED))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.queue
+                .isEmpty() shouldBe true
+            model.uiState.value.canPauseAll shouldBe false
+            model.uiState.value.canResumeAll shouldBe false
+
+            model.requestCancelAll()
+            model.pauseAll()
+            model.resumeAll()
+            advanceUntilIdle()
+
+            // In particular the dialog cannot be opened over an empty queue.
+            model.uiState.value.showCancelAllConfirmation shouldBe false
+            coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.pause(any()) }
+            coVerify(exactly = 0) { downloads.resume(any()) }
+        }
+
     // ---- reordering -----------------------------------------------------------------------------
 
     @Test
@@ -384,6 +644,14 @@ class DownloadsViewModelTest {
         total: Long,
     ) = item("1", "Chestnut", status = DownloadStatus.DOWNLOADING, downloaded = bytes, total = total)
 
+    /** A queue row that is being re-encoded, which is what makes it unpausable. */
+    private fun transcode(
+        id: String,
+        title: String,
+        status: DownloadStatus,
+        position: Int = 0,
+    ) = item(id, title, status = status, position = position, quality = DownloadQuality.LOW)
+
     @Suppress("LongParameterList")
     private fun item(
         id: String,
@@ -394,6 +662,7 @@ class DownloadsViewModelTest {
         onDisk: Long = 0L,
         downloaded: Long = 0L,
         total: Long = 0L,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
     ) = DownloadItem(
         itemId = id,
         title = title,
@@ -403,6 +672,7 @@ class DownloadsViewModelTest {
         bytesTotal = total,
         bytesOnDisk = onDisk,
         queuePosition = position,
+        quality = quality,
     )
 
     private companion object {

@@ -94,6 +94,86 @@ class DownloadsViewModel
             viewModelScope.launch { report(downloads.delete(item.itemId), DownloadsMessage.DeleteFailed) }
         }
 
+        /**
+         * Pauses every queue row that *can* be paused, and says so when some cannot.
+         *
+         * Transcodes are skipped rather than paused: the server ignores `Range` on a file it is
+         * still producing, so pausing one discards the transfer instead of suspending it
+         * (`DownloadItem.isPausable`). The per-row button hides *Pause* on exactly those rows, and
+         * this shares its predicate ([DownloadItem.isPauseTarget]) so the two cannot drift apart.
+         * When anything was skipped the snackbar reports both numbers — a queue that keeps moving
+         * after *Pause all* would otherwise read as the button having failed.
+         */
+        fun pauseAll() {
+            val state = _uiState.value
+            val targets = state.pauseAllTargets
+            if (targets.isEmpty()) return
+            val stillTranscoding = state.unpausableCount
+
+            viewModelScope.launch {
+                // `map` then `any`, never `any` alone: the check must not short-circuit the pauses.
+                val failed = targets.map { downloads.pause(it.itemId) }.any { it is AppResult.Failure }
+                val message =
+                    when {
+                        failed -> DownloadsMessage.ActionFailed
+                        stillTranscoding > 0 ->
+                            DownloadsMessage.PausedKeepingTranscodes(
+                                pausedCount = targets.size,
+                                transcodingCount = stillTranscoding,
+                            )
+
+                        else -> null
+                    }
+                if (message != null) _uiState.update { it.copy(userMessage = message) }
+            }
+        }
+
+        /**
+         * Puts every paused or failed row back in the queue.
+         *
+         * Silent on success: the rows themselves change to *Waiting* under the user's finger, which
+         * says it better than a snackbar over them would.
+         */
+        fun resumeAll() {
+            val targets = _uiState.value.resumeAllTargets
+            if (targets.isEmpty()) return
+
+            viewModelScope.launch {
+                val failed = targets.map { downloads.resume(it.itemId) }.any { it is AppResult.Failure }
+                if (failed) _uiState.update { it.copy(userMessage = DownloadsMessage.ActionFailed) }
+            }
+        }
+
+        /** *Cancel all* was tapped — ask first; [confirmCancelAll] is what actually removes anything. */
+        fun requestCancelAll() {
+            if (_uiState.value.queue.isEmpty()) return
+            _uiState.update { it.copy(showCancelAllConfirmation = true) }
+        }
+
+        /** The *Cancel all* dialog was dismissed; the queue is untouched. */
+        fun dismissCancelAll() {
+            _uiState.update { it.copy(showCancelAllConfirmation = false) }
+        }
+
+        /**
+         * Empties the queue: every row it holds is deleted, one existing [delete] each.
+         *
+         * **Finished downloads are never touched** — not by a filter here, but by construction: the
+         * queue tab is `toQueue()`, which excludes `DOWNLOADED` rows, so there is no id in this list
+         * that names a completed file. This is the season-cancel rule (DECISIONS.md, 2026-07-29,
+         * "Cancel on a season keeps the episodes that already finished") applied to the whole queue.
+         */
+        fun confirmCancelAll() {
+            val targets = _uiState.value.queue
+            _uiState.update { it.copy(showCancelAllConfirmation = false) }
+            if (targets.isEmpty()) return
+
+            viewModelScope.launch {
+                val failed = targets.map { downloads.delete(it.itemId) }.any { it is AppResult.Failure }
+                if (failed) _uiState.update { it.copy(userMessage = DownloadsMessage.DeleteFailed) }
+            }
+        }
+
         /** Moves a queued item one place towards the front. */
         fun moveUp(item: DownloadItem) {
             move(item, offset = -1)

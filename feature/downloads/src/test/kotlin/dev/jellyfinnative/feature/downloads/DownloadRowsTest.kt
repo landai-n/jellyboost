@@ -124,6 +124,41 @@ class DownloadRowsTest {
         }
     }
 
+    // ---- which of Pause / Resume a queue row offers ----------------------------------------------
+    // The same two predicates decide the row's buttons and the queue tab's *Pause all* / *Resume
+    // all* targets, so a bulk action can never act on something its own row refuses to.
+
+    @Test
+    fun `a transferring original row is a pause target and not a resume target`() {
+        val row = film(quality = DownloadQuality.ORIGINAL, status = DownloadStatus.DOWNLOADING)
+
+        row.isPauseTarget shouldBe true
+        row.isResumeTarget shouldBe false
+    }
+
+    @Test
+    fun `a waiting original row is a pause target too`() {
+        // Pausing a queued row is a real operation: it takes the row out of the worker's way.
+        film(quality = DownloadQuality.ORIGINAL, status = DownloadStatus.QUEUED).isPauseTarget shouldBe true
+    }
+
+    @Test
+    fun `a transferring transcode is no pause target`() {
+        film(quality = DownloadQuality.LOW, status = DownloadStatus.DOWNLOADING).isPauseTarget shouldBe false
+    }
+
+    @Test
+    fun `paused and failed rows are resume targets, transcoded or not`() {
+        for (status in listOf(DownloadStatus.PAUSED, DownloadStatus.ERROR)) {
+            for (quality in listOf(DownloadQuality.ORIGINAL, DownloadQuality.LOW)) {
+                val row = film(quality = quality, status = status)
+                row.isResumeTarget shouldBe true
+                // Resume, never pause: a paused row has nothing left to pause.
+                row.isPauseTarget shouldBe false
+            }
+        }
+    }
+
     // ---- row titles (M9 device walk, docs/POLISH.md) ---------------------------------------------
 
     @Test
@@ -148,12 +183,14 @@ class DownloadRowsTest {
         film.rowTitle(inSeriesGroup = true) shouldBe "Dune"
     }
 
+    @Suppress("LongParameterList")
     private fun film(
         bytesDownloaded: Long = 0L,
         bytesTotal: Long = 552L,
         projected: Long? = null,
         sizeIsExact: Boolean = false,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
+        status: DownloadStatus = DownloadStatus.DOWNLOADED,
     ) = episode(
         series = null,
         title = "Dune",
@@ -162,6 +199,7 @@ class DownloadRowsTest {
         bytesTotal = bytesTotal,
         projected = projected,
         sizeIsExact = sizeIsExact,
+        status = status,
     )
 
     @Suppress("LongParameterList")
@@ -173,11 +211,12 @@ class DownloadRowsTest {
         bytesTotal: Long = 0L,
         projected: Long? = null,
         sizeIsExact: Boolean = false,
+        status: DownloadStatus = DownloadStatus.DOWNLOADED,
     ) = DownloadItem(
         itemId = "1",
         title = title,
         seriesName = series,
-        status = DownloadStatus.DOWNLOADED,
+        status = status,
         bytesDownloaded = bytesDownloaded,
         bytesTotal = bytesTotal,
         bytesOnDisk = 0L,

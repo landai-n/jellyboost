@@ -122,6 +122,11 @@ internal class SdkDownloadUrlFactory
                 static = false,
                 mediaSourceId = mediaSourceId,
                 deviceId = apiClient.deviceInfo.id,
+                // A fresh id per URL. Nothing stores it yet — it costs one query parameter and it
+                // is what a later `stopEncodingProcess` (or any correlation with the server's own
+                // transcode reporting) would need to name this encode. Without it the server
+                // invents one we never learn.
+                playSessionId = UUID.randomUUID().toString(),
                 videoCodec = DownloadQuality.VIDEO_CODEC,
                 audioCodec = DownloadQuality.AUDIO_CODEC,
                 videoBitRate = quality.videoBitRate,

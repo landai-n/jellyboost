@@ -91,6 +91,21 @@ episodes, storage picker correctly hidden single-volume, single refresh pair per
 toggle post-nav-fix. Size estimate confirmed working as designed (ceiling semantics;
 encoder undershoot on easy content is the residual).
 
+### Live size projection for transcoded downloads (2026-07-29)
+The estimation note's full build list implemented (opus worktree agent,
+orchestrator-merged; DECISIONS.md "a transcoded download's size stops being a
+ceiling and becomes a measurement"): `MkvClusterScanner` reads Matroska cluster
+timestamps off the bytes already being copied and `TranscodeSizeProjector` turns
+them into a live projection (clamped `[bytesReceived, ceiling]`, schema v6's
+`projectedBytes`/`sizeIsExact`, AutoMigration 5→6); episodes are seeded from the
+median rate of finished same-series/same-quality siblings; requests the server
+answers with a video stream copy are recognised (`CanStreamCopyVideo` gates
+verified against 10.11 source) and shown exact; the Downloads screen words the
+figure "X" / "~X" / "up to X" and a per-session ratchet keeps the percent
+monotone, holding 99 % until DOWNLOADED. `playSessionId` now rides on transcode
+URLs. Full gate: **1032 tests, 0 failures** (941 → 1032). User-confirmed working
+on the tablet.
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.DownloadFileEntity
@@ -84,6 +85,31 @@ interface DownloadDao {
     @Query("SELECT MAX(queuePosition) FROM downloads")
     suspend fun maxQueuePosition(): Int?
 
+    /**
+     * Finished downloads of the same show at the same quality, newest first — the ground truth a
+     * fresh episode's size is seeded from (`DownloadEnqueuer`, schema v6).
+     *
+     * `seriesName` rather than a series id because that is the column this table actually carries;
+     * it is denormalised from the item precisely so a download row can be reasoned about without
+     * decoding a `BaseItemDto`. Two shows sharing a name on one server is not a case worth a join.
+     *
+     * The quality filter is not optional: a season half-downloaded at `ORIGINAL` says nothing about
+     * what its remaining episodes will weigh at `LOW`.
+     */
+    @Query(
+        """
+        SELECT * FROM downloads
+        WHERE seriesName = :seriesName AND quality = :quality AND status = 'DOWNLOADED'
+        ORDER BY updatedAt DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun completedSiblings(
+        seriesName: String,
+        quality: DownloadQuality,
+        limit: Int,
+    ): List<DownloadEntity>
+
     /** Rows in queue order — what a reorder renumbers. */
     @Query("SELECT * FROM downloads WHERE status IN ('QUEUED', 'DOWNLOADING', 'PAUSED') ORDER BY queuePosition ASC")
     suspend fun pending(): List<DownloadEntity>
@@ -116,15 +142,20 @@ interface DownloadDao {
      * Deliberately a targeted `UPDATE` rather than a read-modify-write of the whole row: this runs
      * up to twice a second for the length of a multi-gigabyte transfer, and it must not race the
      * status writes coming from the queue.
+     *
+     * [projectedBytes] rides along in the same statement rather than getting a write of its own, so
+     * a sample is still one round trip; `null` clears it, which is what the end of the media file
+     * does once the real size is known.
      */
     @Query(
         "UPDATE downloads SET bytesDownloaded = :bytesDownloaded, bytesTotal = :bytesTotal, " +
-            "updatedAt = :updatedAt WHERE itemId = :itemId",
+            "projectedBytes = :projectedBytes, updatedAt = :updatedAt WHERE itemId = :itemId",
     )
     suspend fun updateProgress(
         itemId: UUID,
         bytesDownloaded: Long,
         bytesTotal: Long,
+        projectedBytes: Long?,
         updatedAt: Instant,
     )
 

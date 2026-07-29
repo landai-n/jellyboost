@@ -30,6 +30,7 @@ import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.ui.component.JellyfinAsyncImage
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.data.downloads.model.DownloadItem
+import dev.jellyfinnative.data.downloads.model.SizeCertainty
 import java.util.Locale
 
 /** Artwork size for a list row — a small poster, not a card. */
@@ -77,10 +78,17 @@ internal fun DownloadedRow(
     }
 }
 
-/** One pending download: progress, speed, and the four queue actions. */
+/**
+ * One pending download: progress, speed, and the four queue actions.
+ *
+ * @param progress the fraction to draw, which is **not** `item.progress`: it comes through
+ *   [DownloadProgressRatchet] so the bar can never run backwards while the projection behind its
+ *   denominator settles.
+ */
 @Composable
 internal fun QueueRow(
     item: DownloadItem,
+    progress: Float,
     speedBytesPerSecond: Long?,
     actions: DownloadsActions,
     modifier: Modifier = Modifier,
@@ -107,7 +115,7 @@ internal fun QueueRow(
                 overflow = TextOverflow.Ellipsis,
             )
             LinearProgressIndicator(
-                progress = { item.progress },
+                progress = { progress },
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
                 drawStopIndicator = {},
@@ -215,9 +223,13 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
         DownloadStatus.DOWNLOADING ->
             listOfNotNull(
                 stringResource(
-                    if (isSizeCapped) R.string.downloads_progress_of_capped else R.string.downloads_progress_of,
+                    when (sizeCertainty) {
+                        SizeCertainty.EXACT -> R.string.downloads_progress_of
+                        SizeCertainty.APPROXIMATE -> R.string.downloads_progress_of_approx
+                        SizeCertainty.CEILING -> R.string.downloads_progress_of_capped
+                    },
                     formatBytes(bytesDownloaded),
-                    formatBytes(bytesTotal),
+                    formatBytes(displayTotalBytes),
                 ),
                 speedBytesPerSecond
                     ?.takeIf { it > 0L }
@@ -227,10 +239,11 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
         DownloadStatus.QUEUED ->
             listOfNotNull(
                 stringResource(R.string.downloads_status_queued),
-                // The expected size is already known at enqueue time (`DownloadEnqueuer.expectedBytes`),
-                // so a row waiting its turn can show it — a ceiling for a capped quality, exact for
-                // ORIGINAL — same rule the in-progress line above follows.
-                bytesTotal.takeIf { it > 0L }?.let { expectedSizeText(it) },
+                // The expected size is already known at enqueue time (`DownloadEnqueuer.sizeEstimate`),
+                // and an episode of a show already on the device may already carry a seeded
+                // projection, so a row waiting its turn can show whichever of the two it has —
+                // same rule the in-progress line above follows.
+                displayTotalBytes.takeIf { it > 0L }?.let { expectedSizeText(it) },
             ).joinToString(" · ")
 
         DownloadStatus.PAUSED -> stringResource(R.string.downloads_status_paused)
@@ -242,18 +255,19 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
     }
 
 /**
- * [bytes] as an exact figure, or as an "up to" ceiling for a [DownloadItem.isSizeCapped] row.
+ * [bytes] worded to match how well it is actually known — see [DownloadItem.sizeCertainty].
  *
- * A transcoded download's total is `DownloadEnqueuer.expectedBytes`'s estimate, not a number the
- * server has actually produced — the encoder routinely undershoots it on easy content (DECISIONS.md,
- * 2026-07-29), so stating it as exact reads as wrong once the real file lands smaller.
+ * *"552,4 MB"* when the number is the file's size, *"~301,2 MB"* when it is the app's projection,
+ * *"up to 552,4 MB"* when it is only a bound. Stating a ceiling as exact is what read as wrong once
+ * the real file landed at less than half of it (DECISIONS.md, 2026-07-29); stating a projection as
+ * exact would be the same mistake with a better number behind it.
  */
 @Composable
 private fun DownloadItem.expectedSizeText(bytes: Long): String =
-    if (isSizeCapped) {
-        stringResource(R.string.downloads_size_capped, formatBytes(bytes))
-    } else {
-        formatBytes(bytes)
+    when (sizeCertainty) {
+        SizeCertainty.EXACT -> formatBytes(bytes)
+        SizeCertainty.APPROXIMATE -> stringResource(R.string.downloads_size_approx, formatBytes(bytes))
+        SizeCertainty.CEILING -> stringResource(R.string.downloads_size_capped, formatBytes(bytes))
     }
 
 /**

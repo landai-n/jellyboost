@@ -750,3 +750,71 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Tests:** 28 new — the decode (every value, case/whitespace, `folders`, missing, unknown), the resolver (defaults from an empty map, full layout in order, `none` dropped without disturbing later slots, garbage → slot default, duplicate deduped first-wins, everything hidden, out-of-range keys ignored), the repository (persists a successful fetch, asks for the exact `usersettings`/`emby` record, empty record → defaults, fetch failure → persisted then defaults, offline → cache with no request, offline fresh install → defaults) and the ViewModel (order reaches the state, hidden row neither fetched nor shown, libraries row without *Latest*, no library-backed row → no `getUserViews`, layout re-resolved per refresh, membership refresh skipping hidden rows and skipping entirely when both are hidden). No existing test weakened: the 28 existing `HomeViewModelTest` cases changed only by the new constructor argument and stay green on the default layout.
 
 <!-- END -->
+
+<!-- BEGIN a transcoded download's size stops being a ceiling and becomes a measurement -->
+
+## 2026-07-29 — a transcoded download's size stops being a ceiling and becomes a measurement
+- **Scope:** `:core:database` (`DownloadEntity.projectedBytes` + `.sizeIsExact`, `DATABASE_VERSION` 5 → 6,
+  `AutoMigration(5, 6)`, `DownloadDao.updateProgress`/`completedSiblings`, new `SchemaMigrationTest`),
+  `:data:downloads` (new `engine/MkvClusterScanner` + `engine/TranscodeSizeProjector`, `FileDownloader`'s new
+  `MediaChunkSink` tap, `DownloadQueue.projectorFor`/`ItemProgress`, `DownloadEnqueuer.sizeEstimate`/`remuxBytes`/
+  `siblingSeed`, `DownloadUrlFactory.transcodedVideoUrl`, `DownloadItem.sizeCertainty`/`displayTotalBytes`,
+  `DownloadRepositoryImpl`), `:feature:downloads` (new `DownloadProgressRatchet`, `DownloadRows`, `DownloadsUiState`,
+  `DownloadsViewModel`, `DownloadsScreen`, `strings.xml`), `docs/features/download-quality.md`,
+  `docs/notes/download-size-estimation.md`
+- **Plan said:** docs/PLAN.md excludes transcoded downloads entirely ("**Not v1:** … transcoded downloads"), so it says
+  nothing about sizing one. What this amends is this log's own reasoning, from *"the transcode size estimate uses the
+  source bitrate when it is under the cap"* (2026-07-29): "`min(cap, source)` keeps the estimate a deterministic upper
+  bound — **no empirical fudge factor** … The estimate can still overshoot when the encoder undershoots the cap on easy
+  content; that residual is inherent to estimating a file that does not exist yet."
+- **Done instead:** the residual is no longer accepted as inherent. Three mechanisms may now lower the figure below the
+  ceiling, and a fourth stops the ceiling being needed at all. (1) `MkvClusterScanner` reads Matroska cluster timestamps
+  out of the bytes `FileDownloader` is already copying, and `TranscodeSizeProjector` turns them into
+  `bytesReceived × runtime / mediaTimeReceived` on the existing 500 ms/1 % throttle cadence, clamped into
+  `[bytesReceived, ceiling]`. (2) `DownloadEnqueuer.siblingSeed` seeds an episode from the median bytes-per-millisecond
+  of up to eight finished episodes of the **same series at the same quality**. (3) `DownloadEnqueuer.remuxBytes`
+  recognises the requests the server answers with a video stream copy and computes the size arithmetically. (4) The
+  Downloads screen words the figure three ways — `"X"` exact, `"~X"` projected, `"up to X"` ceiling — and
+  `DownloadProgressRatchet` keeps the displayed percent monotone per item for the session, holding at 99 % until
+  `DOWNLOADED`. Schema v6 adds two additive columns; `bytesTotal` is never overwritten, and the completion path still
+  snaps totals to written bytes.
+- **Reason:** the earlier entry's "no fudge factor" rule was about *what kind of number is allowed*, not about how good
+  the number may get, and this change keeps that rule while retiring the resignation attached to it. A LOW episode
+  estimated 552 MB and landed at 232 MB; the ceiling was correct and useless. Every figure introduced here stays
+  principled by the same test the fudge factor failed — it is **measured** (the projection is this transfer's own output
+  bitrate; the seed is what this show's finished episodes actually weigh on disk), **conditioned** (per item, or per
+  series *and* quality — never a global constant applied to everything), and **explainable** (the projection is
+  arithmetic over bytes the user is watching arrive; the seed comes from rows visible on the Downloads screen). The
+  global observed-ratio store stays rejected for exactly the reasons it always was, and `docs/notes/download-size-
+  estimation.md` records both verdicts side by side. Everything is clamped by the old ceiling, so no path here can be
+  worse than what shipped this morning.
+- **Verified, not assumed:** the remux rule was checked against `EncodingHelper.CanStreamCopyVideo` in jellyfin
+  `release-10.11.z` rather than inferred. That method runs ~a dozen gates; for the exact URL this client sends, all but
+  four are inert because we send none of `profile`, `level`, `maxRefFrames`, `maxVideoBitDepth`, `videoRangeType`,
+  `framerate`, `maxWidth`, `deInterlace`, `requireNonAnamorphic` or a subtitle stream index. So the four conditions
+  checked (h264 exact case-insensitive codec match; `height` present and ≤ `maxHeight`; `bitRate` present, positive and
+  ≤ `videoBitRate`; input container not `avi`) are sufficient rather than merely necessary. Two asymmetries decided the
+  design: a **null** stream height fails the gate, and a **null** stream bitrate fails it too — the server's only escape
+  hatch there is a `LiveStreamId`, which a download never has. That is why the rule requires the per-stream bitrate to be
+  present instead of deriving video bytes from the source's total size: the server would not have copied the stream, and
+  claiming an exact remux it never granted is worse than the estimate it replaces.
+- **Deliberate consequences:** a row the enqueue step marks exact is never handed a projector — an arithmetic answer
+  outranks a measured one, and re-measuring would flip a plain figure to a hedged one for nothing. The scanner is wired
+  only when `appendFrom == 0`, since a resumed body starts mid-container; a transcode always lands there anyway, because
+  the server ignores `Range` and answers `200`. The ratchet means an interrupted transcode (which restarts from zero)
+  holds its bar rather than visibly retreating — a stalled bar beats a reversing one, and the byte figure beside it stays
+  honest. `DownloadProgress`, the four-column projection behind the app-wide `DownloadBadge`, deliberately does **not**
+  carry `projectedBytes`: badges keep dividing by the ceiling, because there is no per-item ratchet on that path and a
+  retreating badge would be the very failure this entry adds a ratchet to prevent.
+- **Tests:** no test weakened. `DownloadRowsTest`'s two `isSizeCapped` cases became `sizeCertainty` cases making the same
+  claims — an original download's size is not a ceiling, a LOW download's is — plus the two states that boolean could not
+  express (remux-exact, projection-approximate) and five `displayTotalBytes` clamp cases; the class went 5 → 13. New:
+  `MkvClusterScannerTest` (21, all against synthetic EBML bytes — split ids and timestamp elements, every chunk boundary,
+  one-byte feeds, the id occurring inside payload data, invalid size varints, a wrong first child, implausible sizes,
+  non-monotonic and out-of-range timestamps, `TimestampScale` handling), `TranscodeSizeProjectorTest` (10),
+  `DownloadEnqueuerSizeTest` (20 — split out of `DownloadEnqueuerTest` to keep it under detekt's `LargeClass` limit),
+  `DownloadProgressRatchetTest` (10), `SchemaMigrationTest` (6, diffing the exported schema JSONs since the project has
+  no androidTest source set). `DownloadQueueTest` +7, `DownloadRepositoryImplTest` +3, `DownloadsViewModelTest` +2. The
+  `downloader.download` stubs and the `updateProgress` verification changed argument count only.
+
+<!-- END -->

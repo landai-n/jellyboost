@@ -45,6 +45,23 @@ fun interface ProgressCallback {
 }
 
 /**
+ * Sees every byte of the response body as it is written, in order and without gaps.
+ *
+ * The one consumer is [MkvClusterScanner], which reads a transcode's media timestamps out of the
+ * stream so its finished size can be projected while it is still arriving. It is a *tap*, not a
+ * transform: the bytes have already been written to disk when this is called, nothing here can
+ * change them, and an implementation must not block — it runs inside the copy loop.
+ */
+fun interface MediaChunkSink {
+    /** [length] bytes of the body, starting at [offset] in [buffer]. The array is reused. */
+    fun onChunk(
+        buffer: ByteArray,
+        offset: Int,
+        length: Int,
+    )
+}
+
+/**
  * Downloads one file over OkHttp, resuming from whatever is already on disk.
  *
  * This is the engine the plan points at jellyfin-android's `downloads/FileDownloader.kt` for, and
@@ -76,6 +93,9 @@ class FileDownloader
         /**
          * Fetches [url] into [target], appending to it when it already holds part of the file.
          *
+         * @param chunkSink an optional tap on the body as it is written; see [MediaChunkSink]. It
+         *   is deliberately declared before [onProgress] so the callback stays a trailing lambda at
+         *   every call site.
          * @return the total number of bytes the file holds once this call returns.
          * @throws IOException on any transport or HTTP failure the caller should treat as a
          *   download failure.
@@ -84,6 +104,7 @@ class FileDownloader
             url: String,
             target: File,
             dispatcher: CoroutineDispatcher,
+            chunkSink: MediaChunkSink? = null,
             onProgress: ProgressCallback,
         ): Long =
             withContext(dispatcher) {
@@ -100,9 +121,9 @@ class FileDownloader
                             return@withContext existing
                         }
 
-                        HTTP_PARTIAL -> writeBody(response, target, appendFrom = existing, onProgress)
+                        HTTP_PARTIAL -> writeBody(response, target, existing, chunkSink, onProgress)
 
-                        HTTP_OK -> writeBody(response, target, appendFrom = 0L, onProgress)
+                        HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
 
                         else -> throw DownloadHttpException(response.code, url)
                     }
@@ -139,11 +160,18 @@ class FileDownloader
          * @param appendFrom where in the file the body belongs. Seeking rather than opening in
          *   append mode is what makes the `200`-after-`Range` case safe: position 0 plus
          *   [RandomAccessFile.setLength] truncates whatever a partial run had left behind.
+         *
+         * A [chunkSink] is only wired up when [appendFrom] is `0`. A sink reads the stream from its
+         * beginning — a resumed body starts in the middle of a container it never saw the head of,
+         * and feeding it that would produce a confident wrong answer instead of no answer. In
+         * practice a transcode always lands here: the server ignores `Range` on one, answers `200`,
+         * and this method rewrites the file from zero.
          */
         private suspend fun writeBody(
             response: Response,
             target: File,
             appendFrom: Long,
+            chunkSink: MediaChunkSink?,
             onProgress: ProgressCallback,
         ): Long {
             // OkHttp 5 always hands back a body; an empty one simply declares length 0.
@@ -156,7 +184,8 @@ class FileDownloader
             return RandomAccessFile(target, "rw").use { output ->
                 if (appendFrom == 0L) output.setLength(0L)
                 output.seek(appendFrom)
-                body.byteStream().use { input -> copy(input, output, appendFrom, expectedTotal, onProgress) }
+                val sink = chunkSink?.takeIf { appendFrom == 0L }
+                body.byteStream().use { input -> copy(input, output, appendFrom, expectedTotal, sink, onProgress) }
             }
         }
 
@@ -167,11 +196,13 @@ class FileDownloader
          * *bytes accumulated* rather than by reads — otherwise the plan's "every 64 KB" would
          * silently be "every 8 KB" and the throttle above it would do eight times the work.
          */
+        @Suppress("LongParameterList")
         private suspend fun copy(
             input: InputStream,
             output: RandomAccessFile,
             appendFrom: Long,
             expectedTotal: Long,
+            chunkSink: MediaChunkSink?,
             onProgress: ProgressCallback,
         ): Long {
             val buffer = ByteArray(BUFFER_BYTES)
@@ -183,6 +214,8 @@ class FileDownloader
                 val read = input.read(buffer)
                 if (read == -1) break
                 output.write(buffer, 0, read)
+                // After the write, never before: the tap must not be able to affect the file.
+                chunkSink?.onChunk(buffer, 0, read)
                 written += read
                 sinceReport += read
                 if (sinceReport >= BUFFER_BYTES) {

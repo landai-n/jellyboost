@@ -15,6 +15,8 @@ object DatabaseConstants {
      * - v3 — M6 offline read path (`items`, `library_views`), added by `@AutoMigration(2, 3)`.
      * - v4 — M7 downloads (`downloads`, `download_files`), added by `@AutoMigration(3, 4)`.
      * - v5 — M9 download quality (`downloads.quality`, default `ORIGINAL`), by `@AutoMigration(4, 5)`.
+     * - v6 — live transcode size projection (`downloads.projectedBytes` nullable,
+     *   `downloads.sizeIsExact` default `0`), by `@AutoMigration(5, 6)`.
      */
-    const val DATABASE_VERSION = 5
+    const val DATABASE_VERSION = 6
 }

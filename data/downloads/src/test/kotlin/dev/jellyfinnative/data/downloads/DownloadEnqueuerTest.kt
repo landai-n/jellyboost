@@ -77,6 +77,9 @@ class DownloadEnqueuerTest {
         coEvery { downloadDao.upsert(capture(rows)) } just Runs
         coEvery { downloadDao.get(any()) } returns null
         coEvery { downloadDao.maxQueuePosition() } returns null
+        // No finished siblings and no cached runtimes by default: seeding is opt-in per test.
+        coEvery { downloadDao.completedSiblings(any(), any(), any()) } returns emptyList()
+        coEvery { itemDao.getItems(any()) } returns emptyList()
         coEvery { deleter.delete(any()) } returns 0L
         // `toEntity` is overloaded (items and library views), so the argument types are explicit.
         every { mapper.toEntity(any<BaseItemDto>(), any<ItemSource>(), any<Instant>()) } answers {

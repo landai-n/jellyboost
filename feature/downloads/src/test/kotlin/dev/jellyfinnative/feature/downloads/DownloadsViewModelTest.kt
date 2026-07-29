@@ -317,6 +317,40 @@ class DownloadsViewModelTest {
 
     private fun viewModel() = DownloadsViewModel(downloads = downloads, clock = FIXED_CLOCK)
 
+    // ---- the ratcheted progress the rows draw (schema v6) ----------------------------------------
+
+    @Test
+    fun `the state carries a ratcheted progress for every row`() =
+        runTest(dispatcher) {
+            items.value = listOf(downloading(bytes = 300L, total = 1_000L))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.progress["1"] shouldBe 0.3f
+        }
+
+    @Test
+    fun `a growing projection cannot make a row's progress go backwards`() =
+        runTest(dispatcher) {
+            // 60 % against a 500-byte projection, then the projection is corrected up to 1 000.
+            items.value = listOf(downloading(bytes = 300L, total = 500L))
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.progress["1"] shouldBe 0.6f
+
+            items.value = listOf(downloading(bytes = 300L, total = 1_000L))
+            advanceUntilIdle()
+
+            // The raw fraction is now 30 %, and not one byte was lost — see DownloadProgressRatchet.
+            model.uiState.value.progress["1"] shouldBe 0.6f
+        }
+
+    private fun downloading(
+        bytes: Long,
+        total: Long,
+    ) = item("1", "Chestnut", status = DownloadStatus.DOWNLOADING, downloaded = bytes, total = total)
+
     @Suppress("LongParameterList")
     private fun item(
         id: String,
@@ -325,13 +359,15 @@ class DownloadsViewModelTest {
         status: DownloadStatus,
         position: Int = 0,
         onDisk: Long = 0L,
+        downloaded: Long = 0L,
+        total: Long = 0L,
     ) = DownloadItem(
         itemId = id,
         title = title,
         seriesName = series,
         status = status,
-        bytesDownloaded = 0L,
-        bytesTotal = 0L,
+        bytesDownloaded = downloaded,
+        bytesTotal = total,
         bytesOnDisk = onDisk,
         queuePosition = position,
     )

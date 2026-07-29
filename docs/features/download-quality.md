@@ -186,12 +186,14 @@ fly has no `Content-Length` to declare — the response is chunked. `FileDownloa
 convention for this: a declared length of `-1` (chunked) reports total `0`, its existing "unknown"
 signal.
 
-`DownloadEnqueuer.expectedBytes` fills the gap at enqueue time: for `ORIGINAL` it uses
+`DownloadEnqueuer.sizeEstimate` fills the gap at enqueue time: for `ORIGINAL` it uses
 `mediaSources[0].size`, the exact figure the server already knows; for a transcoded step it estimates
-`runTimeTicks × (videoBitRate + 192 kbps) / 8` — the item's duration times the target bitrate,
-divided into bytes. `DownloadQueue`'s private `ItemProgress` class then uses that estimate as a
-**floor** for as long as *any* file belonging to the item still has an unknown real size, which for a
-transcode is the whole transfer. It stops using the floor — and the exact sum of real sizes wins
+`runTimeTicks × (min(cap, source bitrate) + 192 kbps) / 8` — the item's duration times the bitrate
+that will actually bind, since a transcode can never need more bits per second than the source
+already carries (DECISIONS.md, 2026-07-29). `DownloadQueue`'s private `ItemProgress` class then uses
+that estimate as a **floor** for as long as *any* file belonging to the item still has an unknown
+real size, which for a transcode is the whole transfer. It stops using the floor — and the exact sum
+of real sizes wins
 instead — the moment every file has reported a real size, which is what stops a generous estimate
 from leaving a finished item stuck showing something short of 100%.
 
@@ -200,10 +202,111 @@ source's own size: reporting the *original* size for a file the user is not goin
 promise a number that is simply wrong, where `0` renders as an honest indeterminate bar.
 
 The estimate is a correct upper bound, not a prediction — the encoder routinely undershoots it on
-easy content, so a Downloads screen row for a transcoded (non-`ORIGINAL`) download presents it as a
-ceiling rather than an exact figure: *"75,0 MB of up to 552,4 MB"* while transferring, *"Waiting · up
-to 552,4 MB"* while queued. An `ORIGINAL` row keeps the plain, exact wording, since its number is the
-server's own reported size (DECISIONS.md, 2026-07-29).
+easy content, which is why it is no longer the whole story a transcoded row tells. It is now only the
+**opening** answer: a queued or freshly-started transfer still shows *"Waiting · up to 552,4 MB"* and
+nothing else, because until bytes arrive there genuinely is nothing else to go on. From there a row
+can do better in three different ways, and `DownloadItem.sizeCertainty` (`EXACT` / `APPROXIMATE` /
+`CEILING`) is what decides which of three wordings — plain, `~`, or "up to" — is honest for the
+figure underneath.
+
+**The MKV scanner turns bytes already being copied into a live measurement.** A transcode is
+Matroska, and Matroska writes an absolute media timestamp at the head of every cluster (`Cluster`,
+`0x1F43B675`, and its `Timestamp` child, `0xE7`) roughly every five seconds or five megabytes with
+ffmpeg's own muxer defaults. `MkvClusterScanner` (`data/downloads/.../engine/MkvClusterScanner.kt`)
+is fed the same 64 KB buffers `FileDownloader` is already writing to disk — a new `MediaChunkSink`
+tap wired into `FileDownloader.copy()`, and only when `appendFrom` is `0`, because a sink reading a
+resumed transfer from its middle would see the tail of the stream and mistake it for the start — and
+it keeps nothing more than the most recent of those timestamps. It is the timestamp of the newest
+cluster *started* rather than finished, so it slightly understates the media actually received, which
+in turn keeps the projection built on it slightly generous — the safe direction for a figure sitting
+next to a progress bar. `TranscodeSizeProjector` then turns "bytes received" and "media time received"
+into a size the same way ffmpeg reports its own progress on itself: `projectedBytes = bytesReceived ×
+runtimeMillis / mediaMillisReceived`, recomputed on the existing `ProgressThrottle` cadence (every
+500 ms or every 1 %) and clamped into `[bytesReceived, ceiling]`, the ceiling being the same
+enqueue-time estimate this section already describes. The result is `null` until a first cluster has
+been read, which is what keeps the opening state honest, and a projector is only ever built for a
+transcoded, non-exact row with a known runtime (`DownloadQueue.projectorFor`) — an `ORIGINAL`
+download's size is already exact, and a row the enqueue step already recognised as a stream copy
+(below) would only be made worse by a measurement second-guessing an arithmetic answer.
+
+A full `MatroskaExtractor` was deliberately not used for this. Media3 ships a complete one, but it
+wants a `SeekMap`, an `ExtractorOutput` and a `DataSource`, it allocates per sample, and it gives up
+on a container it does not fully understand — everything a general-purpose demuxer needs and nothing
+this job does. The scanner needs exactly one integer and needs to survive garbage, so instead of
+parsing the container it looks for two elements and refuses to believe a match until it has passed
+every check going. A four-byte pattern occurs by chance roughly every 4 GB of random data, and
+considerably more often inside real compressed frame data, so a candidate cluster is only accepted
+once its size is a well-formed EBML size varint of one to eight bytes; once that size is either the
+all-ones "unknown size" sentinel a live mux legitimately writes, or a plausible length of no less than
+3 bytes and no more than 256 MB; once the cluster's first child element id is exactly `0xE7`, because
+Matroska orders `Timestamp` first and every muxer in practice honours that ordering, which is what
+makes a stray `1F 43 B6 75` turning up inside a video frame essentially impossible to accept; once the
+timestamp's own length varint falls in `0x81..0x88`, a one-to-eight-byte unsigned integer; once every
+one of those bytes is actually present in the buffer — a candidate that runs off the end of a chunk is
+dropped whole and retried on the next one through a 21-byte carry buffer rather than half-consumed,
+one byte short of the 22-byte longest candidate the scanner ever looks at; once the decoded value is
+non-negative and no more than 48 hours, since nothing in a real library runs longer; and once the
+resulting media time is not earlier than the newest one already accepted, because ffmpeg writes the
+file linearly and a timestamp that goes backwards is a false positive rather than a rewind.
+`TimestampScale` (`0x2AD7B1`) is read the same way, but only before the first cluster is seen — which
+is where Matroska's Segment Info always sits — so a byte triple that happens to occur inside frame
+data later can never move the clock; absent or implausible, it is left at the spec's own default of
+1 000 000 ns per tick, one millisecond, which is also what ffmpeg writes.
+
+**Sibling seeding gives an episode a head start before a single byte of it has arrived.** When the
+user enqueues an episode whose series already has `DOWNLOADED` rows at the *same* quality,
+`DownloadEnqueuer.siblingSeed` seeds the new row's `projectedBytes` from the finished ones: the
+median of `landedBytes / runtimeMillis` over up to the eight newest completed siblings
+(`DownloadDao.completedSiblings(seriesName, quality, limit)`, ordered `updatedAt DESC`, with runtimes
+read back from the `items` cache), multiplied by this episode's own runtime and clamped by the same
+ceiling every row already carries. The median rather than the mean, so one outlying clip-show episode
+moves the estimate rather than setting it. This is deliberately **not** the global, learned
+observed-ratio store that stayed rejected when the enqueue-time estimate was settled on
+`min(cap, source bitrate)` instead of an empirical fudge factor (DECISIONS.md, 2026-07-29, *"the
+transcode size estimate uses the source bitrate when it is under the cap"*): it is conditioned on
+this show *and* this quality rather than applied globally, it is computed from rows the user can see
+for themselves on the Downloads screen rather than from a hidden running average, and it can only
+ever move the seeded figure *down* from the same deterministic ceiling every row already carries. A
+film gets nothing — there are no siblings, and a director's other work is not evidence — and neither
+does an `ORIGINAL` row, nor a row the enqueue step already recognised as an exact remux.
+
+**Remux detection turns some transcodes into an exact figure instead of an estimate at all.** The
+transcode URL always sends `allowVideoStreamCopy=true`, so whenever the server can pass the source's
+video track straight through instead of re-encoding it, the output size is arithmetic:
+`runtime × (videoStream.bitRate + 192 kbps) / 8`. `DownloadEnqueuer.remuxBytes` claims this only when
+all four of the following hold: the source's video codec is `h264`, matched case-insensitively and
+exactly; the source stream reports a `height` at or under the quality step's `maxHeight`; the source
+stream reports a `bitRate` greater than zero and at or under the step's `videoBitRate`; and the source
+container is not `avi`. These were checked against `EncodingHelper.CanStreamCopyVideo` in jellyfin
+`release-10.11.z` itself rather than assumed: that method runs roughly a dozen gates in sequence, and
+for the exact URL this app sends, all but these four are inert, because the client never sends
+`profile`, `level`, `maxRefFrames`, `maxVideoBitDepth`, `videoRangeType`, `framerate`, `maxWidth`,
+`deInterlace`, `requireNonAnamorphic` or a subtitle stream index — every gate keyed to one of those
+parameters simply does not fire for us. Two asymmetries are worth stating plainly, since both read as
+surprising until the server's own logic is in front of you: a **null** stream height fails the check
+exactly as a too-tall one would, and a **null** stream bitrate **also** fails it — there is a
+`LiveStreamId` escape hatch in the server's own gate, and a download never has one — which is why this
+rule requires the per-stream bitrate to be present rather than falling back to deriving video bytes
+from the source's total file size, the way the plain ceiling estimate does. A row this identifies is
+marked exact and is never handed a projector at all (`DownloadQueue.projectorFor`): an arithmetic
+answer outranks a measured one, and re-measuring it would only turn a plain figure into a hedged one
+for nothing.
+
+Put together, a transcoded row now shows one of three things, and it is `DownloadItem.sizeCertainty`'s
+job to decide which. `"X"`, plain, when the size is exact — an `ORIGINAL` download, or a remux the
+enqueue step recognised outright. `"~X"`, the new `downloads_progress_of_approx` /
+`downloads_size_approx` wording, once a projection exists — measured from the stream itself, or seeded
+from finished siblings before the first byte has even landed. `"up to X"`, the wording this section
+used to end on, is now only the opening state: what a queued or just-started transcode shows before
+either mechanism has anything to say. And because the denominator behind that number can now grow as
+well as shrink — a busy scene the encoder is working harder on, a sibling seed corrected upward by a
+better measurement — the percentage shown on the Downloads screen no longer simply follows it.
+`DownloadProgressRatchet` (`:feature:downloads`) keeps the displayed percentage for an item id
+monotone for the session, holding it at 99 % until the row reaches `DOWNLOADED`, since nothing short
+of that is allowed to draw a full bar. The deliberate consequence is that a restarted transcode —
+which restarts from zero, since the server ignores `Range` on this URL — holds its bar at the height
+the abandoned attempt reached rather than visibly retreating; an item that leaves the list, deleted
+and later downloaded again, is simply forgotten and starts its ratchet over.
 
 ### No resume
 
@@ -254,6 +357,18 @@ is the only value that build ever understood anyway.
 schema follows, with an unknown stored name decoding to `ORIGINAL` — a downgrade or an unrecognised
 value can never leave a row unreadable.
 
+Schema v6 adds two more columns, both additive again: `projectedBytes`, a nullable `INTEGER` that
+needs no default at all, since `NULL` already means "no projection yet" the moment a fresh row is
+read; and `sizeIsExact`, a `NOT NULL INTEGER` with a SQL default of `0`. That default is the honest
+reading of every row a pre-v6 build ever wrote: none of them could have known whether their size was
+exact, so `false` — the size is a ceiling — is the only default that does not silently promise
+something a v5 row was never in a position to prove. Both defaults being expressible in SQL is what
+keeps this an `@AutoMigration(5, 6)` rather than a hand-written one: Room adds the columns and
+backfills them with no migration code of its own, `DatabaseConstants.DATABASE_VERSION` moves 5 → 6,
+and an existing install's whole queue reads back exactly as it did before the upgrade — a transcoded
+row already mid-transfer simply starts the new session with no projection and its old "up to" wording,
+and picks up the new one on its very next progress sample.
+
 ---
 
 ## The settings UI
@@ -279,6 +394,13 @@ tap, and nothing downstream reconsiders it.
 | `DownloadFilePlannerTest` | ("download quality (M9)") a quality below the original asking for a transcode instead of the download endpoint; every transcoded step carrying its own bitrate and height; a denied download policy *not* downgrading a transcode to the static stream; the transcoded media file being named for the container the server actually sends; quality changing the media file and nothing else in the plan |
 | `DownloadPathsTest` | a transcoded download being named for the container it will actually receive; a transcoded download never being named `.mp4` (the regression above, pinned across every step); each quality getting its own file name |
 | `DownloadEnqueuerTest` | ("download quality (M9)") the preference in force when the user taps Download being stamped on the row; an original download keeping the exact size the server reported; a transcoded download being sized from its runtime and bitrate instead; a transcoded download of an item with no runtime falling back to an unknown size |
-| `DownloadQueueTest` | ("download quality (M9)") the plan being built from the quality on the row, not from the live preference; a 403 on a transcoded download not being retried on the static stream; an unknown file size falling back to the enqueue step's estimate; a generous estimate not leaving a finished item short of complete |
+| `DownloadQueueTest` | ("download quality (M9)") the plan being built from the quality on the row, not from the live preference; a 403 on a transcoded download not being retried on the static stream; an unknown file size falling back to the enqueue step's estimate; a generous estimate not leaving a finished item short of complete. ("the live size projection, schema v6") a projection over the ceiling being clamped to the ceiling the enqueue step promised; a projection well under it being the one the row ends up carrying; the projection cleared once the media file is whole; an original download never projecting anything; a row the enqueue step marked exact not being second-guessed by the scanner; a seeded projection holding until the stream has a cluster of its own to offer; and a transcode of an item with no runtime having nothing to extrapolate to |
 | `DataStoreAppPreferencesTest` | ("download quality (M9)") download quality defaulting to the original file; a download quality surviving a round trip through storage; an unrecognised stored download quality degrading to the original file; every download quality change reaching observers |
 | `SettingsViewModelTest` | the download quality picker writing through to the preference store; a download quality changed upstream being picked up while the screen is open |
+| `MkvClusterScannerTest` | reading a cluster timestamp out of a single chunk, out of a stream fed one byte at a time, and out of a cluster or timestamp element split across a chunk boundary; the newest of several clusters winning and a repeated timestamp being harmless, which is what makes re-scanning the carry safe; a multi-byte timestamp decoded big-endian; `TimestampScale` defaulting to one millisecond per tick, being read once from Segment Info, and never being moved by a byte pattern occurring after the first cluster; and every rejection path — a cluster id occurring inside payload data, an invalid size varint, a first child that is not the timestamp, an implausible cluster size, a timestamp length Matroska cannot store, a timestamp going backwards, and one beyond any real runtime — leaving the last known value in place, alongside an unknown-size cluster (a live mux's own sentinel) being accepted |
+| `TranscodeSizeProjectorTest` | no projection before the first cluster or the first byte; a zero media clock treated as no evidence rather than divided by; the projection reading as the observed bitrate extended over the whole runtime, and converging on the true size as more of the file arrives; the projection never exceeding the enqueue-time ceiling and never falling below the bytes already on disk; bytes past a ceiling that was too small projecting to themselves; a longer item projecting a larger file from the same measured bitrate; and bytes handed to the projector being passed straight through to the scanner |
+| `DownloadEnqueuerSizeTest` | (split out of `DownloadEnqueuerTest` to keep that class under detekt's size limit) an original download's size being exact because the server measured it, against a re-encoded download's size being only ever a ceiling; a stream-copyable source being sized as video plus one AAC track, exactly, and every way a source fails to qualify — the wrong video codec, taller than the quality's `maxHeight`, above the quality's video bitrate, no per-stream bitrate at all, no video stream at all, an `avi` container — falling back to the ordinary ceiling instead, with an original download never treated as a remux whatever its streams say; sibling seeding from the median of finished episodes at the same quality, an even sibling count averaging the two middle rates, the seed scaled by this episode's own runtime rather than the siblings', the seed never exceeding the ceiling, siblings downloaded at another quality not counting as evidence, a series' first episode having nothing to be seeded from, a sibling whose runtime is not cached being skipped rather than guessed at, and a film, an original download, and a remux-exact episode each never being seeded |
+| `DownloadProgressRatchetTest` | a rising percentage passing straight through; a growing projection unable to make the bar retreat; the highest percentage reached this session being the one that keeps being shown; a transferring item held at 99 % however far it has run, and only a finished download drawing a full bar; a paused item keeping the height it reached rather than dropping; a restarted transcode holding its bar instead of falling back to zero; an item that leaves the list being forgotten, so a re-download starts over; each item ratcheting on its own; and an unknown total reading as zero rather than as complete |
+| `DownloadRepositoryImplTest` | a projected size reaching the row that has to divide by it (denominator *and* wording together); a row with no projection still reporting its ceiling and saying so; a stream-copy row carried through as exact rather than as a ceiling — the three columns the wording is decided from surviving the Room round trip intact |
+| `DownloadRowsTest` | which size a queue row shows — the ceiling with no projection, the projection replacing it, the projection clamped to the bytes already on disk and to the ceiling, and progress measured against the projection rather than the ceiling — and the four states its wording can be in: an original download and a stream copy both stating the figure plainly, a projection hedged as `~`, a bound stated as "up to", and a projection on an exact row unable to downgrade it |
+| `SchemaMigrationTest` | (in `:core:database`, which has no androidTest source set, so this diffs the exported schema JSONs instead of running a real migration) the exported schema being the version the constants declare; v5 to v6 adding the projection columns and touching nothing else; v5 to v6 dropping no column and changing no type; `projectedBytes` being nullable, so an older row simply has no projection; `sizeIsExact` being `NOT NULL` with a SQL default, which is what keeps the bump automatic; and v6 adding no table and removing none |

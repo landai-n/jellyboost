@@ -33,6 +33,7 @@ class DownloadsViewModel
         private val clock: Clock,
     ) : ViewModel() {
         private val speedTracker = DownloadSpeedTracker()
+        private val progressRatchet = DownloadProgressRatchet()
         private val _uiState = MutableStateFlow(DownloadsUiState())
 
         /** The single source of truth for [DownloadsScreen]. */
@@ -47,11 +48,13 @@ class DownloadsViewModel
                 ) { items, storage, wifiOnly -> Triple(items, storage, wifiOnly) }
                     .collect { (items, storage, wifiOnly) ->
                         val speeds = speedTracker.update(items, clock.millis())
+                        val progress = progressRatchet.update(items)
                         _uiState.update { state ->
                             state.copy(
                                 downloaded = items.toGroups(),
                                 queue = items.toQueue(),
                                 speeds = speeds,
+                                progress = progress,
                                 storage = storage,
                                 wifiOnly = wifiOnly,
                                 isLoading = false,

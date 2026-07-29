@@ -22,12 +22,14 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
 import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.file
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.model.SizeCertainty
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
 import dev.jellyfinnative.data.downloads.storage.DownloadVolume
 import dev.jellyfinnative.data.downloads.storage.StorageLocationManager
 import dev.jellyfinnative.data.downloads.storage.StorageSelection
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import io.kotest.matchers.maps.shouldContainExactly
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -167,8 +169,9 @@ class DownloadRepositoryImplTest {
     @Test
     fun `an Original download's row carries the exact quality the server reported`() =
         runTest {
-            // The UI decides "exact figure" vs "ceiling" off this field alone (DECISIONS.md,
-            // 2026-07-29) — it must survive the Room round trip untouched.
+            // The UI's wording is decided from `quality`, `sizeIsExact` and `projectedBytes`
+            // together (DECISIONS.md, 2026-07-29 and the v6 entry) — each must survive the Room
+            // round trip untouched.
             every { downloadDao.observeAll() } returns
                 flowOf(listOf(DownloadWithFiles(download(quality = DownloadQuality.ORIGINAL), emptyList())))
 
@@ -186,6 +189,68 @@ class DownloadRepositoryImplTest {
 
             repository().observeDownloads().test {
                 awaitItem().single().quality shouldBe DownloadQuality.LOW
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a projected size reaches the row that has to divide by it`() =
+        runTest {
+            every { downloadDao.observeAll() } returns
+                flowOf(
+                    listOf(
+                        DownloadWithFiles(
+                            download(quality = DownloadQuality.LOW, bytesTotal = 552L, projectedBytes = 301L),
+                            emptyList(),
+                        ),
+                    ),
+                )
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.projectedBytes shouldBe 301L
+                row.displayTotalBytes shouldBe 301L
+                row.sizeCertainty shouldBe SizeCertainty.APPROXIMATE
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a row with no projection still reports its ceiling and says so`() =
+        runTest {
+            every { downloadDao.observeAll() } returns
+                flowOf(
+                    listOf(
+                        DownloadWithFiles(download(quality = DownloadQuality.LOW, bytesTotal = 552L), emptyList()),
+                    ),
+                )
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.projectedBytes.shouldBeNull()
+                row.displayTotalBytes shouldBe 552L
+                row.sizeCertainty shouldBe SizeCertainty.CEILING
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a stream-copy row is carried through as exact, not as a ceiling`() =
+        runTest {
+            every { downloadDao.observeAll() } returns
+                flowOf(
+                    listOf(
+                        DownloadWithFiles(
+                            download(quality = DownloadQuality.HIGH, bytesTotal = 2_800L, sizeIsExact = true),
+                            emptyList(),
+                        ),
+                    ),
+                )
+
+            repository().observeDownloads().test {
+                val row = awaitItem().single()
+                row.sizeIsExact shouldBe true
+                row.sizeCertainty shouldBe SizeCertainty.EXACT
                 awaitComplete()
             }
         }

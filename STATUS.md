@@ -12,6 +12,20 @@ verification on the minified build.
   vs `MediaCodecList` on the Helio G100).
 - Note: the repo has no GitHub remote — CI can be authored but not exercised.
 
+## Batch selection (post-M9 feature, 2026-07-29 — built, gate green, **not yet device-verified**)
+
+Long-press → selection mode on the **library grid** and the **season page's episode list**, with
+*Mark watched* / *Mark unwatched* / *Download* over the set. Shared model in `:core:common`
+(`ItemSelection`, `SelectionIntent`, `runBatch`), shared contextual bar and summary copy in
+`:core:ui`. Every action composes an existing single-item repository call — no new server
+semantics. Home shelves and search results are deliberately out of v1.
+Docs: `docs/features/batch-selection.md`, `DECISIONS.md` (2026-07-29). Tests: +37
+(`ItemSelectionTest` 10 new, `ItemDetailSelectionTest` 13 new, `LibraryViewModelTest` +14).
+
+- **Known issue / next:** needs a device walk on the test tablet — long-press and haptic, the
+  contextual bar in portrait *and* landscape on both screens, a mixed batch (some items already
+  downloaded), and the offline behaviour of both actions.
+
 ## Post-M9 polish stream — docs/POLISH.md punch list (2026-07-29, DONE)
 
 All 14 punch-list items plus 4 bugs found along the way, built in six parallel/serial

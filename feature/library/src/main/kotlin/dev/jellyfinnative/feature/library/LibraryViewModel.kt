@@ -13,9 +13,16 @@ import dev.jellyfinnative.core.common.model.FilterOptions
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
+import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.common.selection.BatchReport
+import dev.jellyfinnative.core.common.selection.ItemSelection
+import dev.jellyfinnative.core.common.selection.SelectionAction
+import dev.jellyfinnative.core.common.selection.SelectionIntent
+import dev.jellyfinnative.core.common.selection.runBatch
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
+import dev.jellyfinnative.data.userdata.UserDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +39,13 @@ import javax.inject.Inject
 /**
  * State holder for the library grid.
  *
- * Two streams, deliberately separate:
+ * Three streams, deliberately separate:
  * - [items] — the paged content. Its loading, error and empty states belong to Paging's
  *   `LoadState`, so this class never mirrors them into [uiState]; duplicating them is how a grid
  *   ends up showing a spinner over already-loaded items.
  * - [uiState] — everything the user can turn (sort, filters) plus the filter sheet.
+ * - [selection] — the batch-selection set, apart from [uiState] so that a cell reading it is not
+ *   also subscribed to the sort key and the filters (docs/features/batch-selection.md).
  *
  * Changing sort or filters produces a new [dev.jellyfinnative.core.common.model.ItemQuery], which
  * swaps the `Pager` underneath: `distinctUntilChanged` makes sure opening or closing the sheet, or
@@ -55,6 +64,7 @@ class LibraryViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val downloads: DownloadRepository,
+        private val userDataRepository: UserDataRepository,
         private val connectivityRefresher: ConnectivityRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
@@ -68,12 +78,43 @@ class LibraryViewModel
         /** Sort, filters and sheet state. */
         val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
+        private val _selection = MutableStateFlow(ItemSelection())
+
         /**
-         * The grid's paged content, with each card's download badge stamped on.
+         * Which cards are selected, in its **own** flow rather than inside [uiState].
          *
-         * `cachedIn` comes **before** the download-state combine on purpose: it caches the pages, so
-         * a badge changing re-maps the already-loaded pages in place instead of re-fetching them
-         * from the server. Putting the combine upstream of `cachedIn` would make every progress
+         * A grid cell has to read this to draw its indicator, and reading it out of [uiState] would
+         * subscribe every visible cell to the sort key, the filters and the facets as well — so
+         * opening the sort menu would recompose the whole visible grid. Separated, a toggle
+         * invalidates only the cells whose own `selected` flag changed (see `LibraryGridScreen`).
+         */
+        val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
+
+        /**
+         * The app-wide download-state map, mirrored here.
+         *
+         * Collected once and shared, rather than subscribed separately by the grid and by the batch
+         * *Download* action: `observeStates()` is a Room Flow, and two collectors would be two
+         * queries re-running on every throttled progress write.
+         */
+        private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+
+        /**
+         * Local user-data changes seen since this screen opened, keyed by item id.
+         *
+         * The plan's Swiftfin pattern — "every list ViewModel patches in-memory items instantly"
+         * (docs/PLAN.md, "Data layer") — applied to a paged grid: a batch *Mark watched* writes
+         * locally and publishes on the bus, and the ticks appear on the cards without the grid
+         * asking the server for anything.
+         */
+        private val userDataPatches = MutableStateFlow<Map<String, UserData>>(emptyMap())
+
+        /**
+         * The grid's paged content, with each card's download badge and local user data stamped on.
+         *
+         * `cachedIn` comes **before** both combines on purpose: it caches the pages, so a badge or a
+         * watched tick changing re-maps the already-loaded pages in place instead of re-fetching
+         * them from the server. Putting a combine upstream of `cachedIn` would make every progress
          * write a full reload of the grid.
          */
         val items: Flow<PagingData<JellyfinItem>> =
@@ -82,15 +123,40 @@ class LibraryViewModel
                 .distinctUntilChanged()
                 .flatMapLatest { repository.getItemsPaged(it) }
                 .cachedIn(viewModelScope)
-                .combine(downloads.observeStates()) { paging, states ->
+                .combine(downloadStates) { paging, states ->
                     paging.map { item ->
                         val next = states[item.id] ?: DownloadState.NotDownloaded
                         if (next == item.downloadState) item else item.copy(downloadState = next)
+                    }
+                }.combine(userDataPatches) { paging, patches ->
+                    if (patches.isEmpty()) {
+                        paging
+                    } else {
+                        paging.map { item ->
+                            val next = patches[item.id]
+                            if (next == null || next == item.userData) item else item.copy(userData = next)
+                        }
                     }
                 }
 
         init {
             observeConnectivityChanges()
+            observeDownloadStates()
+            observeUserDataChanges()
+        }
+
+        private fun observeDownloadStates() {
+            viewModelScope.launch {
+                downloads.observeStates().collect { states -> downloadStates.value = states }
+            }
+        }
+
+        private fun observeUserDataChanges() {
+            viewModelScope.launch {
+                userDataRepository.changes.collect { change ->
+                    userDataPatches.update { it + (change.itemId to change.userData) }
+                }
+            }
         }
 
         /**
@@ -116,6 +182,7 @@ class LibraryViewModel
 
         /** Applies a sort key; picking the key that is already active flips the direction. */
         fun selectSort(sortBy: SortBy) {
+            dropSelection()
             _uiState.update { state ->
                 if (state.sortBy == sortBy) {
                     state.copy(sortOrder = state.sortOrder.flipped())
@@ -129,7 +196,23 @@ class LibraryViewModel
 
         /** Flips ascending/descending without changing the sort key. */
         fun toggleSortOrder() {
+            dropSelection()
             _uiState.update { it.copy(sortOrder = it.sortOrder.flipped()) }
+        }
+
+        /**
+         * Ends selection mode because the grid is about to hold different items.
+         *
+         * Changing the sort or the filters swaps the `Pager` underneath, so the selection would
+         * survive as a set of ids the user can no longer see — and the next batch action would then
+         * act on items that are not on screen. Clearing is the honest answer, and it is what
+         * jellyfin-web's own list re-queries do to a selection: nothing is silently retained.
+         *
+         * Called by the four mutators that change the query, and by nothing else — opening the
+         * filter sheet or editing the draft filters re-queries nothing and keeps the selection.
+         */
+        private fun dropSelection() {
+            _selection.update { it.cleared() }
         }
 
         /** Opens the filter sheet, loading the library's facets the first time it is needed. */
@@ -155,17 +238,87 @@ class LibraryViewModel
 
         /** Commits the sheet's edits onto the grid, which re-queries the server. */
         fun applyFilters() {
+            dropSelection()
             _uiState.update { it.copy(filters = it.draftFilters, isFilterSheetOpen = false) }
         }
 
         /** Drops every filter, from the sheet or from the empty state. */
         fun clearFilters() {
+            dropSelection()
             _uiState.update {
                 it.copy(
                     filters = FilterOptions(),
                     draftFilters = FilterOptions(),
                     isFilterSheetOpen = false,
                 )
+            }
+        }
+
+        /**
+         * Everything the contextual selection bar can ask for (docs/features/batch-selection.md).
+         *
+         * [SelectionIntent.SelectAll] is deliberately a no-op here and the bar never offers it on
+         * this screen: the grid is paged, so "all" would either mean "the pages loaded so far" — a
+         * different set every time the user scrolls, with nothing on screen saying so — or "every
+         * item matching the query", which no client-side call can enumerate without a new server
+         * round trip per page. The season page, whose episode list is finite and fully loaded, does
+         * offer it.
+         */
+        fun onSelection(intent: SelectionIntent) {
+            when (intent) {
+                is SelectionIntent.Toggle -> _selection.update { it.toggled(intent.itemId) }
+                is SelectionIntent.Clear -> dropSelection()
+                is SelectionIntent.SelectAll -> Unit
+                is SelectionIntent.Run -> runSelection(intent.action)
+            }
+        }
+
+        /** Clears the one-shot batch summary once the snackbar has shown it. */
+        fun consumeMessage() {
+            _uiState.update { it.copy(userMessage = null) }
+        }
+
+        /**
+         * Runs [action] over the selected ids, then reports one summary.
+         *
+         * Selection mode ends **before** the work starts, not after: the batch is composed of
+         * ordinary single-item calls that can take a while (an enqueue is a full re-fetch per item),
+         * and leaving the bar up over a live grid invites a second tap on the same selection. The
+         * snackbar is what says when it finished.
+         *
+         * *Mark watched / unwatched* goes through `UserDataRepository`, which writes Room first and
+         * publishes on the event bus before it contacts the server — so the whole batch works
+         * offline, and the ticks appear from the local write.
+         *
+         * *Download* skips what is already on the device or already queued
+         * ([DownloadState.isDownloadable]) and reports the count it skipped. A **series** never has
+         * a download row of its own — the pipeline expands it into episodes — so it always looks
+         * downloadable here and is always handed to `DownloadRepository.enqueue`, which does the
+         * per-episode skipping itself (DECISIONS.md, 2026-07-29). Offline, an enqueue fails exactly
+         * as a single tap on the same card would: the summary reports the failures.
+         */
+        private fun runSelection(action: SelectionAction) {
+            val ids = _selection.value.ids.toList()
+            if (ids.isEmpty()) return
+            dropSelection()
+
+            viewModelScope.launch {
+                val outcome =
+                    when (action) {
+                        SelectionAction.MARK_WATCHED ->
+                            runBatch(ids) { userDataRepository.setPlayed(it, played = true) }
+
+                        SelectionAction.MARK_UNWATCHED ->
+                            runBatch(ids) { userDataRepository.setPlayed(it, played = false) }
+
+                        SelectionAction.DOWNLOAD -> {
+                            val states = downloadStates.value
+                            val targets =
+                                ids.filter { (states[it] ?: DownloadState.NotDownloaded).isDownloadable }
+                            runBatch(targets, skipped = ids.size - targets.size) { downloads.enqueue(it) }
+                        }
+                    }
+                _uiState.update { it.copy(userMessage = BatchReport(action, outcome)) }
             }
         }
 

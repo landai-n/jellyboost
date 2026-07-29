@@ -4,6 +4,7 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.common.selection.BatchReport
 
 /**
  * Everything the item detail screen draws.
@@ -167,6 +168,16 @@ sealed interface UserMessage {
 
     /** A watched / favourite toggle could not even be written locally. */
     data object UserDataWriteFailed : UserMessage
+
+    /**
+     * A batch action over the selected episodes finished (docs/features/batch-selection.md).
+     *
+     * The counts travel resource-free and the copy is chosen in Compose by `batchOutcomeText`,
+     * which the library grid shares — the two screens report a mixed result in the same words.
+     */
+    data class BatchFinished(
+        val report: BatchReport,
+    ) : UserMessage
 }
 
 /**

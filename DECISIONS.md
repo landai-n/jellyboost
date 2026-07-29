@@ -1027,3 +1027,110 @@ Seeded from the approved plan; listed for traceability, no divergence:
   pause/resume predicates. No existing test changed or weakened; full gate green.
 
 <!-- END -->
+
+<!-- BEGIN batch selection on the library grid and the episode list -->
+
+## 2026-07-29 — batch selection on the library grid and the episode list
+
+- **Scope:** `:core:common` (new `selection/ItemSelection.kt`; `DownloadState.isDownloadable`),
+  `:core:ui` (new `SelectionAppBar`, `BatchOutcomeText`, first `res/values/strings.xml`;
+  `MediaCardArtwork` / `PosterCard` / `ThumbCard` gain `selected` + `onLongClick`),
+  `:feature:library` (`LibraryViewModel`, `LibraryUiState`, `LibraryGridScreen`, build file),
+  `:feature:detail` (`ItemDetailViewModel`, `ItemDetailUiState`, `ItemDetailScreen`, `EpisodeRow`,
+  build file), tests in all four, `docs/features/batch-selection.md`, `docs/ARCHITECTURE.md`.
+  `:feature:downloads`, `:feature:home` and `:feature:search` are untouched.
+- **Plan said:** nothing. docs/PLAN.md line 73 describes LibraryGrid as a paged, sorted, filtered
+  grid and line 74 gives ItemDetail "Play/Resume, Download, Mark played, Favorite" — **every action
+  in the plan is per item**, on the item's own page. There is no selection mode anywhere in the
+  plan, and no bulk action outside the Downloads queue (added 2026-07-29, itself a divergence).
+- **Done instead:** long-press enters a selection mode on **two** surfaces — the library grid and the
+  season page's episode list — with *Mark watched*, *Mark unwatched* and *Download* over the whole
+  set. Every action is composed from the **existing single-item call** (`UserDataRepository.setPlayed`,
+  `DownloadRepository.enqueue`); no new repository method, no new server call, no new download
+  semantics. The decisions worth recording:
+  - **A shared model above the features.** `ItemSelection` (id-keyed, immutable), `SelectionIntent` /
+    `SelectionAction` and `runBatch` live in `:core:common`; `SelectionAppBar` and the summary copy
+    live in `:core:ui`, which gains its **first `res/` directory** for the purpose. Two features
+    cannot depend on each other, so the alternative was two selection modes with two wordings.
+  - **Selection mode is derived from emptiness** (`isActive == ids.isNotEmpty()`), not tracked as a
+    second flag: the bar can never read "0 selected", and deselecting the last item exits.
+  - **One intent entry point per surface** (`fun onSelection(intent: SelectionIntent)`) rather than a
+    method per button. Both screens then hand the shared bar the identical lambda — and
+    `ItemDetailViewModel` is at detekt's `TooManyFunctions` ceiling, which a method per button would
+    have blown through. Two small consequences: its one-line `deleteDownloads()` wrapper was inlined
+    into `confirmDeleteDownload()` (unchanged behaviour, KDoc moved with it), and the batch dispatch
+    is a private **top-level** function in the same file rather than a member.
+  - **No *Select all* on the library grid; yes on the episode list.** On a Paging 3 grid "all" means
+    either "the pages loaded so far" — a different set after every scroll, with nothing on screen
+    saying so — or "everything matching the query", which needs a page-by-page walk of the library
+    for a button. An episode list is fetched whole, so "all" is a set the user can see and count.
+    The grid's `SelectionIntent.SelectAll` is an explicit no-op, pinned by a test.
+  - **The selection is dropped when the grid's query changes** (sort applied, filters applied or
+    cleared) and **kept, intersected, when the season page reloads.** A query change is a user
+    action that replaces the content; the season page's reload is a background connectivity edge, and
+    losing a selection to one would read as the app throwing work away. `ItemSelection.retaining`
+    drops only ids the server no longer returns.
+  - **The contextual bar replaces each screen's bar.** The grid's own `TopAppBar` is swapped out
+    wholesale — which also removes Sort and Filter for the duration, exactly right since those
+    re-query the grid. The detail screen has no top bar, so the overlaid Back + Home pair *is* its
+    bar and the contextual bar takes that place; Home is deliberately absent while selecting.
+    `BackHandler` is enabled **only** while the mode is on, so Back keeps popping the destination
+    otherwise.
+  - **Download skips what is already spoken for, and says so.** `DownloadEnqueuer` is idempotent only
+    on the *container* path (`isRetryable` runs when a season/series is expanded); a **single** movie
+    or episode handed to it is re-fetched and written back as `QUEUED`, which on a finished download
+    would reset the row and transfer the file again. The batch therefore filters on the new
+    `DownloadState.isDownloadable` (`NotDownloaded` or `Failed`) before calling — not a duplicated
+    guard, a guard that did not exist for singles — and reports the skipped count in the snackbar. A
+    series in the grid has no row of its own, so it always reaches the enqueuer and its own
+    per-episode skipping (DECISIONS.md, 2026-07-29). `Failed` is deliberately *not* skipped:
+    re-enqueueing is how a failure is retried.
+  - **The library grid now collects `UserDataEventBus`** and patches its loaded pages downstream of
+    `cachedIn`, which it did not before. Without it a batch *Mark watched* would show no ticks until
+    the next page fetch. This is the plan's own Swiftfin pattern ("every list ViewModel patches
+    in-memory items instantly", docs/PLAN.md → Data layer) finally applied to the grid; it costs zero
+    requests.
+  - **The watched tick is hidden on a card while selection mode is on.** It occupies the same corner
+    as the selection indicator and is the same glyph; two checks on one card is a puzzle. It returns
+    when the mode ends.
+  - **Selection is scoped to the episode list on the detail page** — not the seasons row, *Next up*
+    or *More like this*, which are navigation surfaces leading elsewhere rather than lists of peers.
+  - **Home shelves and search results are explicitly out of v1.** Home's rows are membership-driven
+    (marking things watched rearranges them under the finger) and search re-queries on every
+    keystroke, which is the grid's query-change problem made continuous. Both can join later by
+    exposing the same two members.
+  - **Remove download is not offered.** It is destructive, needs its own confirmation, the Downloads
+    screen already has a confirmed per-row delete and *Cancel all*, and a fourth icon costs more on a
+    phone bar than it earns.
+  - Batch execution is **sequential**, `map`-then-count so a failure never short-circuits the rest —
+    the shape `DownloadsViewModel.pauseAll` established. Concurrency would buy no wall-clock time
+    (local writes; a queue drained one item at a time) while making failure counts depend on
+    scheduling order. Selection mode ends **before** the work starts; one snackbar reports
+    done / failed / skipped.
+  - **Performance:** the selection is a separate `StateFlow` (not a `LibraryUiState` field, which
+    would subscribe every visible cell to the sort key and filters), passed down as a `State` and
+    read per cell inside `remember(selection, id) { derivedStateOf { … } }`, so one toggle
+    invalidates one cell. Cards take a plain `Boolean?`, never the set. A card with no `onLongClick`
+    keeps its existing plain `clickable`, so the app's other cards get no `combinedClickable`. The
+    recent grid work (contentType, no per-cell subcomposition) is untouched.
+- **Reason:** user request — "add batch selection to media lists, so that we can batch mark them
+  viewed, request download etc". The plan predates both container downloads and the download queue's
+  bulk actions; per-item actions on a 500-title library mean one navigation per item. The additive
+  shape (every single-item path unchanged, every batch composed from it) is what keeps this from
+  being a second code path to keep correct.
+- **Tests:** `ItemSelectionTest` (`:core:common`, new, 10) — toggle in/out of mode, insertion order,
+  `selecting`, `retaining` including identity when nothing changed, and `runBatch` attempting every
+  target after a failure. `ItemDetailSelectionTest` (`:feature:detail`, new, 13) — enter/exit,
+  *Select all* over the loaded episodes, clear writing nothing, a refresh keeping the selection minus
+  dropped episodes, one `setPlayed` per episode in both directions, mixed-failure counts, download
+  skipping downloaded/queued rows and retrying failed ones, a failed enqueue reported, mode ending as
+  the batch starts, and an empty selection doing nothing. `LibraryViewModelTest` +14 — the same, plus
+  *Select all* ignored on the paged grid, the selection surviving pages and badge changes, cleared on
+  sort and on applied filters but **not** on opening the sheet, the one-shot snackbar, and a
+  user-data change patching the loaded pages with no re-query. `ItemDetailViewModelTest` lost its
+  batch-selection section to the new file (detekt `LargeClass`) — **no assertion was changed,
+  removed or weakened**; the tests moved verbatim into `ItemDetailSelectionTest` and every
+  pre-existing test in the file is untouched. Full gate green
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+
+<!-- END -->

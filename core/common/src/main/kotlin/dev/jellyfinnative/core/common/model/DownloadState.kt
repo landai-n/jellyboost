@@ -33,4 +33,16 @@ sealed interface DownloadState {
     /** `true` while the item occupies a slot in the download queue. */
     val isActive: Boolean
         get() = this is Queued || this is Downloading || this is Paused
+
+    /**
+     * `true` when asking for this item to be downloaded would actually do something.
+     *
+     * Anything already on the device or already in the queue is excluded; [Failed] is **not**, since
+     * re-enqueueing a failure is exactly how it is retried (it keeps its queue position and the
+     * bytes already on disk). This mirrors `DownloadEnqueuer.isRetryable`, which applies the same
+     * rule to the episodes under a container — the difference is that a container expansion is the
+     * only place the pipeline applies it, so a batch of *singles* has to ask the question itself.
+     */
+    val isDownloadable: Boolean
+        get() = this is NotDownloaded || this is Failed
 }

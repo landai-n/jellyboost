@@ -30,6 +30,8 @@ import dev.jellyfinnative.core.ui.theme.THUMB_ASPECT_RATIO
  *
  * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
  *   width instead, which is what an adaptive grid cell wants.
+ * @param onLongClick offered by lists that support batch selection; `null` everywhere else.
+ * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork].
  */
 @Composable
 fun ThumbCard(
@@ -38,12 +40,20 @@ fun ThumbCard(
     modifier: Modifier = Modifier,
     width: Dp = Dimens.ThumbWidth,
     showTitle: Boolean = true,
+    onLongClick: (() -> Unit)? = null,
+    selected: Boolean? = null,
 ) {
     Column(
         modifier =
             modifier
                 .cardWidth(width)
-                .clickable(onClick = onClick),
+                .then(
+                    if (onLongClick == null) {
+                        Modifier.clickable(onClick = onClick)
+                    } else {
+                        Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
+                    },
+                ),
     ) {
         MediaCardArtwork(
             imageUrl = item.thumbImageUrl ?: item.backdropImageUrl ?: item.primaryImageUrl,
@@ -53,6 +63,7 @@ fun ThumbCard(
             played = item.userData.played,
             progress = item.playbackProgress,
             placeholderIcon = Icons.Outlined.Tv,
+            selected = selected,
         )
 
         if (showTitle) {

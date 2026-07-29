@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
+import dev.jellyfinnative.core.common.selection.BatchReport
 
 /**
  * Everything the library grid draws around its paged items.
@@ -30,6 +31,16 @@ data class LibraryUiState(
     val isFilterSheetOpen: Boolean = false,
     val areFacetsLoading: Boolean = false,
     val facetsError: AppError? = null,
+    /**
+     * A finished batch action, waiting for the snackbar; cleared by
+     * [LibraryViewModel.consumeMessage].
+     *
+     * The *selection* itself is deliberately **not** here — it lives in
+     * [LibraryViewModel.selection], its own `StateFlow`. A grid cell that had to read this state
+     * class to know whether it is selected would also be subscribed to the sort key, the filters,
+     * the facets and this message, and would recompose whenever any of them changed.
+     */
+    val userMessage: BatchReport? = null,
 ) {
     /** Number of active filter facets, for the "2" badge on the filter action. */
     val activeFilterCount: Int

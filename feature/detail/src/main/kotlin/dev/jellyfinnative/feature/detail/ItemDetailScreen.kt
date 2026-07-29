@@ -10,12 +10,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -96,7 +98,42 @@ fun ItemDetailScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+
+        if (state.showDeleteConfirmation) {
+            DeleteDownloadDialog(
+                onDismiss = viewModel::dismissDeleteConfirmation,
+                onConfirm = viewModel::confirmDeleteDownload,
+            )
+        }
     }
+}
+
+/**
+ * Confirms removing a download from this screen's Download button (docs/POLISH.md — deleting a
+ * downloaded file from the detail screen used to happen with no confirmation at all).
+ *
+ * Precedent: `SignOutDialog` in `:feature:settings`.
+ */
+@Composable
+private fun DeleteDownloadDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.detail_delete_download_dialog_title)) },
+        text = { Text(text = stringResource(R.string.detail_delete_download_dialog_message)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.detail_delete_download_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.detail_delete_download_dialog_cancel))
+            }
+        },
+    )
 }
 
 /**
@@ -150,9 +187,10 @@ private fun DetailSections(
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
         item(key = SECTION_BACKDROP) {
+            // No title here — DetailFacts (below, in the header section) already renders the
+            // headline once; drawing it again over the backdrop duplicated it.
             BackdropHeader(
                 imageUrl = detail.backdropImageUrl ?: detail.thumbImageUrl ?: detail.primaryImageUrl,
-                title = detail.displayTitle,
                 height = if (isWide) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight,
             )
         }

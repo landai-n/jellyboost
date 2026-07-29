@@ -13,6 +13,7 @@ import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.cache.CacheFixtures.MOVIES_LIBRARY
 import dev.jellyfinnative.data.cache.CacheFixtures.NOW
 import dev.jellyfinnative.data.cache.CacheFixtures.USER_ID
+import dev.jellyfinnative.data.cache.CacheFixtures.entity
 import dev.jellyfinnative.data.cache.CacheFixtures.mapper
 import dev.jellyfinnative.data.cache.CacheFixtures.movieDto
 import dev.jellyfinnative.data.cache.CacheFixtures.uuid
@@ -69,6 +70,7 @@ class BrowseCacheWriterTest {
     @BeforeEach
     fun setUp() {
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
+        coEvery { itemDao.getItems(any()) } returns emptyList()
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
         coEvery { libraryViewDao.upsert(any()) } just Runs
         coEvery { libraryViewDao.deleteExcept(any()) } just Runs
@@ -146,6 +148,33 @@ class BrowseCacheWriterTest {
 
             upserted.captured.single().source shouldBe ItemSource.BROWSE_CACHE
             upserted.captured.single().cachedAt shouldBe NOW
+        }
+
+    @Test
+    fun `browsing past a downloaded item keeps its rich blob, not the lean list DTO`() =
+        runTest {
+            // The blob DownloadEnqueuer stored at download time — the full response, overview and
+            // genres included.
+            val richDto =
+                movieDto(uuid(1), "Arrival", genres = listOf("Science Fiction", "Drama"))
+                    .copy(overview = "A linguist deciphers an alien language.")
+            val storedEntity = entity(richDto, source = ItemSource.DOWNLOAD, cachedAt = NOW.minusSeconds(3_600))
+
+            coEvery { itemDao.getCacheKeys(any()) } returns
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, storedEntity.cachedAt))
+            coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(storedEntity)
+
+            // What a browse list read actually sends: no overview, no genres — just the fields the
+            // list needs (OnlineJellyfinRepository's list calls request only PRIMARY_IMAGE_ASPECT_RATIO).
+            val leanDto = BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival")
+
+            writer().writeItems(listOf(leanDto))
+
+            val row = upserted.captured.single()
+            row.source shouldBe ItemSource.DOWNLOAD
+            val rebuilt = mapper.toDtoOrNull(row)
+            rebuilt?.overview shouldBe "A linguist deciphers an alien language."
+            rebuilt?.genres shouldContainExactly listOf("Science Fiction", "Drama")
         }
 
     @Test

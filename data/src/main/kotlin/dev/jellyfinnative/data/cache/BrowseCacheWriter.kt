@@ -26,12 +26,20 @@ import javax.inject.Singleton
  *
  * ### Rule one: a browse write must never downgrade a download
  * If a row already exists with [ItemSource.DOWNLOAD], the refreshed metadata is stored but the row
- * keeps its source *and* its original [ItemEntity.cachedAt]. Both halves matter:
+ * keeps its source, its original [ItemEntity.cachedAt] and its stored [ItemEntity.dto] blob. All
+ * three matter:
  *
  * - keeping the source stops a casual scroll past a downloaded film from making it evictable and
  *   orphaning its files on disk;
  * - keeping `cachedAt` stops that same scroll from reshuffling the offline "recently downloaded"
- *   rows, which order by exactly that column.
+ *   rows, which order by exactly that column;
+ * - keeping the blob stops that scroll from gutting the item's overview, genres, cast and taglines.
+ *   A browse list request only asks the server for the fields the list needs
+ *   (`OnlineJellyfinRepository`'s list calls request just `PRIMARY_IMAGE_ASPECT_RATIO`), so its DTO
+ *   is lean by construction — writing it straight into [ItemEntity.dto] would replace the rich blob
+ *   `DownloadEnqueuer` stored at download time with one missing everything the offline detail
+ *   screen reads back out of it. This was exactly that bug (docs/POLISH.md): browsing online wiped
+ *   the description of a film downloaded for offline viewing.
  *
  * ### Rule two: a server read refreshes `user_data`, unless the row is pending
  * Every read the app makes carries `userData` (list requests set `enableUserData = true`; `getItem`
@@ -108,12 +116,28 @@ class BrowseCacheWriter
             try {
                 val existing = itemDao.getCacheKeys(dtos.map { it.id }).associateBy { it.id }
 
+                // The blob is only fetched for rows that are actually downloads — everything else
+                // is happy to be replaced wholesale, and reading a multi-kilobyte blob for a page of
+                // ordinary browse-cache rows would be pure waste (the reason `getCacheKeys` excludes
+                // it in the first place).
+                val downloadIds = existing.values.filter { it.source == ItemSource.DOWNLOAD }.map { it.id }
+                val richBlobs =
+                    if (downloadIds.isEmpty()) {
+                        emptyMap()
+                    } else {
+                        itemDao.getItems(downloadIds).associate { it.id to it.dto }
+                    }
+
                 val rows =
                     dtos.map { dto ->
                         val row = mapper.toEntity(dto, ItemSource.BROWSE_CACHE, now)
                         val previous = existing[dto.id]
                         if (previous?.source == ItemSource.DOWNLOAD) {
-                            row.copy(source = ItemSource.DOWNLOAD, cachedAt = previous.cachedAt)
+                            row.copy(
+                                source = ItemSource.DOWNLOAD,
+                                cachedAt = previous.cachedAt,
+                                dto = richBlobs[dto.id] ?: row.dto,
+                            )
                         } else {
                             row
                         }

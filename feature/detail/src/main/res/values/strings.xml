@@ -41,4 +41,10 @@
     <string name="detail_message_download_deleted">Removed from this device.</string>
     <string name="detail_message_download_delete_failed">Couldn\'t remove that download.</string>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
+
+    <!-- Delete-download confirmation -->
+    <string name="detail_delete_download_dialog_title">Delete download?</string>
+    <string name="detail_delete_download_dialog_message">This removes it from this device. You can download it again anytime.</string>
+    <string name="detail_delete_download_dialog_confirm">Delete</string>
+    <string name="detail_delete_download_dialog_cancel">Cancel</string>
 </resources>

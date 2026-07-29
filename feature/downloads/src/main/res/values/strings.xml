@@ -16,6 +16,12 @@
     <string name="downloads_action_move_up">Move up the queue</string>
     <string name="downloads_action_move_down">Move down the queue</string>
 
+    <!-- Delete confirmation (Downloaded tab) -->
+    <string name="downloads_delete_dialog_title">Delete %1$s?</string>
+    <string name="downloads_delete_dialog_message">The downloaded files are removed from this device. You can download it again later.</string>
+    <string name="downloads_delete_dialog_confirm">Delete</string>
+    <string name="downloads_delete_dialog_cancel">Cancel</string>
+
     <!-- Queue row status line -->
     <string name="downloads_progress_of">%1$s of %2$s</string>
     <string name="downloads_speed">%1$s/s</string>

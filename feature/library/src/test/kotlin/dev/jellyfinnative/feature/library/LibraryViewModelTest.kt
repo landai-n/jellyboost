@@ -12,8 +12,8 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -53,11 +53,11 @@ class LibraryViewModelTest {
             every { observeStates() } returns downloadStates
         }
 
-    /** The reconnect signal (M9); fires only when a test says the server came back. */
-    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val reconnectRefresher =
-        mockk<ReconnectRefresher> {
-            every { reconnected } returns reconnects
+    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val connectivityRefresher =
+        mockk<ConnectivityRefresher> {
+            every { connectivityChanged } returns connectivityChanges
         }
 
     /** Every query the grid asked the repository for, in order. */
@@ -330,7 +330,7 @@ class LibraryViewModelTest {
             }
         }
 
-    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-loads the facets it had already fetched when the server becomes reachable again`() =
@@ -343,7 +343,7 @@ class LibraryViewModelTest {
 
             coEvery { repository.getFilterFacets(any(), any()) } returns
                 AppResult.Success(FilterFacets(genres = listOf("Drama", "Thriller")))
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             coVerify(exactly = 2) { repository.getFilterFacets(any(), any()) }
@@ -357,7 +357,7 @@ class LibraryViewModelTest {
             viewModel()
             advanceUntilIdle()
 
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             // The sheet was never opened, so there is nothing stale to replace — and the facets are
@@ -373,7 +373,7 @@ class LibraryViewModelTest {
             collectingItems(viewModel) {
                 // `collectingItems` runs a non-suspending block; the buffered emission reaches the
                 // ViewModel's collector on the `advanceUntilIdle` below all the same.
-                reconnects.tryEmit(Unit)
+                connectivityChanges.tryEmit(Unit)
                 advanceUntilIdle()
 
                 // `getItemsPaged` re-decides online/offline on every connection change itself, so a
@@ -388,7 +388,7 @@ class LibraryViewModelTest {
         LibraryViewModel(
             repository = repository,
             downloads = downloads,
-            reconnectRefresher = reconnectRefresher,
+            connectivityRefresher = connectivityRefresher,
             savedStateHandle =
                 SavedStateHandle(
                     mapOf("libraryId" to LIBRARY_ID, "libraryName" to "Movies"),

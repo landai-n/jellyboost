@@ -8,8 +8,8 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +44,7 @@ class SearchViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val downloads: DownloadRepository,
-        private val reconnectRefresher: ReconnectRefresher,
+        private val connectivityRefresher: ConnectivityRefresher,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(SearchUiState())
 
@@ -72,18 +72,19 @@ class SearchViewModel
                     _uiState.update { it.withDownloadStates(states) }
                 }
             }
-            observeReconnects()
+            observeConnectivityChanges()
         }
 
         /**
-         * Re-runs the current term against the server once it is reachable again (M9): a search made
-         * offline only looked at downloaded items, and the field keeps its text either way.
+         * Re-runs the current term whenever the connection changes (M9): a search made offline only
+         * looked at downloaded items and one made online at everything, and the field keeps its text
+         * either way — so the results have to follow the connection, in both directions.
          *
          * An empty field has nothing to re-run — it is not a search waiting for a better connection.
          */
-        private fun observeReconnects() {
+        private fun observeConnectivityChanges() {
             viewModelScope.launch {
-                reconnectRefresher.reconnected.collect {
+                connectivityRefresher.connectivityChanged.collect {
                     if (_uiState.value.query.isNotBlank()) retry()
                 }
             }

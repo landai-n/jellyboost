@@ -4,8 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -86,9 +90,16 @@ fun ItemDetailScreen(
                 ),
         )
 
+        // This screen is a pushed destination, so per `AppScaffold`'s inset contract it gets none
+        // of its own — the inset has to live on the button rather than the surrounding `Box`,
+        // since the backdrop behind it is meant to draw edge-to-edge under the status bar.
         IconButton(
             onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(Dimens.SpaceSmall),
+            modifier =
+                Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(Dimens.SpaceSmall),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -98,7 +109,7 @@ fun ItemDetailScreen(
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
         )
 
         if (state.showDeleteConfirmation) {

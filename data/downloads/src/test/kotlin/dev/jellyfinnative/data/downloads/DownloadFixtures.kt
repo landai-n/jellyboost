@@ -38,6 +38,7 @@ object DownloadFixtures {
         path: String? = "/media/films/Arrival (2016)/Arrival.2016.mkv",
         mediaSourceId: String? = "source-1",
         sizeBytes: Long? = 2_100_000_000L,
+        sourceBitRate: Int? = null,
         runTimeTicks: Long? = null,
         streams: List<MediaStream> = emptyList(),
         primaryTag: String? = "primary-tag",
@@ -56,7 +57,9 @@ object DownloadFixtures {
             backdropImageTags = backdropTag?.let { listOf(it) },
             trickplay = trickplay,
             mediaSources =
-                mediaSourceId?.let { listOf(mediaSource(id = it, size = sizeBytes, streams = streams)) },
+                mediaSourceId?.let {
+                    listOf(mediaSource(id = it, size = sizeBytes, bitrate = sourceBitRate, streams = streams))
+                },
         )
 
     fun episode(
@@ -127,11 +130,13 @@ object DownloadFixtures {
     fun mediaSource(
         id: String,
         size: Long?,
+        bitrate: Int? = null,
         streams: List<MediaStream> = emptyList(),
     ): MediaSourceInfo =
         MediaSourceInfo(
             id = id,
             size = size,
+            bitrate = bitrate,
             mediaStreams = streams,
             type = MediaSourceType.DEFAULT,
             protocol = MediaProtocol.FILE,

@@ -270,13 +270,67 @@ class DownloadEnqueuerTest {
         runTest {
             downloadQuality.value = DownloadQuality.MEDIUM
             coEvery { api.getFullItems(any()) } returns
-                AppResult.Success(listOf(movie(sizeBytes = 2_100_000_000L, runTimeTicks = HOUR_TICKS)))
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sizeBytes = 2_100_000_000L,
+                            // Above the MEDIUM cap, so the cap — not the source — bounds the estimate.
+                            sourceBitRate = DownloadQuality.MEDIUM.totalBitRate!! * 2,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
 
             enqueuer().enqueue(uuid(1), USER)
 
             // The server will not send a Content-Length for a file it has not encoded yet, so an
             // hour at 8 Mbps + 192 kbps of audio is the only number the queue tab can show.
             val expected = 3_600L * (DownloadQuality.MEDIUM.videoBitRate!! + DownloadQuality.AUDIO_BITRATE) / 8
+            row.bytesTotal shouldBe expected
+        }
+
+    @Test
+    fun `a transcoded download of a source under the cap is sized from the source bitrate`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            // Below the LOW cap (3 Mbps + 192 kbps audio) — an HEVC source, say — so the transcode
+            // cannot need more bits per second than the source already uses.
+            val sourceBitRate = 1_500_000
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sizeBytes = 2_100_000_000L,
+                            sourceBitRate = sourceBitRate,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            val expected = 3_600L * sourceBitRate / 8
+            row.bytesTotal shouldBe expected
+        }
+
+    @Test
+    fun `a transcoded download with no source bitrate falls back to the quality cap`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sizeBytes = 2_100_000_000L,
+                            sourceBitRate = null,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            val expected = 3_600L * (DownloadQuality.LOW.videoBitRate!! + DownloadQuality.AUDIO_BITRATE) / 8
             row.bytesTotal shouldBe expected
         }
 

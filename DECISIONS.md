@@ -670,3 +670,37 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Tests:** 5 new cases in `ConnectionStateProviderTest` (12 → 17), none of the existing 12 touched or weakened — the fresh-install sequence end to end (unreachable with no session → session appears → ONLINE, with the network never moving), no probe for the launch `Unknown`, a re-probe on sign-out, no probe when the same session is republished with only a new server version, and one probe for a burst of eight same-identity emissions.
 
 <!-- END -->
+
+<!-- BEGIN transcode size estimate uses the source bitrate -->
+
+## 2026-07-29 — the transcode size estimate uses the source bitrate when it is under the cap
+- **Scope:** `:data:downloads` (`DownloadEnqueuer.expectedBytes`, `DownloadEnqueuerTest`, `DownloadFixtures`)
+- **Plan said:** nothing about size estimates — the formula being amended is this log's own, from *"a transcoded download is not resumable, and its size is an estimate"* above: `bytesTotal` seeded from `runTimeTicks × (videoBitRate + audioBitRate)`, i.e. runtime × the quality tier's **cap**.
+- **Done instead:** the bitrate in that product is now the *effective* one: `min(cap, mediaSources[0].bitrate)` when the source bitrate is known and positive, the cap alone when it is missing or zero. `ORIGINAL` still returns the server's exact file size, and the no-runtime fallback is unchanged.
+- **Reason:** the cap is a ceiling the server is told not to exceed, not a prediction — most sources (HEVC especially) sit well under it, and a transcode can't need more bits per second than the source carries for the whole runtime. Measured on the final polish walk (docs/POLISH.md): a LOW episode estimated **552 MB** and landed at **232 MB**. `min(cap, source)` keeps the estimate a deterministic upper bound — no empirical fudge factor — while collapsing the error whenever the source rate is the binding constraint. The estimate can still overshoot when the encoder undershoots the cap on easy content; that residual is inherent to estimating a file that does not exist yet.
+- **Tests:** the pre-existing *"a transcoded download is sized from its runtime and bitrate instead"* now pins its fixture's source bitrate **above** the cap, so it still guards the cap-wins branch rather than passing vacuously; joined by *"a transcoded download of a source under the cap is sized from the source bitrate"* and *"a transcoded download with no source bitrate falls back to the quality cap"*. `DownloadFixtures.mediaSource`/`movie` gained a `bitrate`/`sourceBitRate` parameter defaulting to `null`, so every existing fixture call is untouched.
+
+<!-- END -->
+
+<!-- BEGIN cancel keeps finished episodes -->
+
+## 2026-07-29 — Cancel on a season keeps the episodes that already finished
+- **Scope:** `:feature:detail` (`ItemDetailViewModel`, `ItemDetailUiState.UserMessage`, `ItemDetailScreen`, `strings.xml`, `ItemDetailViewModelTest`)
+- **Plan said:** docs/PLAN.md line 76 gives the queue tab "progress %, speed, pause/resume/**cancel**, reorder" — cancel exists, but the plan predates container downloads (*"Download on a season or a series downloads its episodes"*, above) and says nothing about what cancelling the container does to episodes that already completed.
+- **Done instead:** the detail screen's Cancel on an in-flight container now partitions the season's rows and deletes only the ones that are queued, transferring, paused or failed — `DownloadState.Downloaded` rows are kept — and a snackbar says so ("Download cancelled — N finished episode(s) kept", a plural resource). The confirmed **Remove** path is untouched: it still deletes every row, completed included. Single-item cancel is unaffected.
+- **Reason:** observed on the final polish walk (docs/POLISH.md): cancelling a season three episodes in silently destroyed those three finished, playable files. The punch list asked whether cancel should *confirm*; keeping the finished episodes is strictly better than warning about losing them — Cancel stays immediate (consistent with the queue tab's deliberately unconfirmed cancel) and stops being destructive at all. The only thing a dialog could have protected is now simply not at risk.
+- **Deliberate consequence:** a partly-kept season aggregates back to *NotDownloaded* — that is the pre-existing, test-pinned behaviour (*"a season with only some episodes downloaded still offers to download the rest"*) — so the detail button then offers **Download** for the missing episodes rather than Remove. Removing the kept episodes goes through the Downloads screen's confirmed delete. The aggregate was left alone precisely because changing it would have weakened that test.
+- **Also:** `UserMessage` went from `enum class` to `sealed interface` because the new message carries the kept count for the plural (precedent: `:feature:auth`'s `AuthErrorMessage`); all other messages became `data object`s and no call site changed shape. `:feature:downloads`' `DownloadsMessage` stays an enum — it has no count-carrying message.
+- **Tests:** *"cancelling a queued season cancels only the episodes that have rows"* gained an assertion (message is plain `DownloadDeleted` when nothing was kept) and lost none; new cases cover the partial cancel keeping the finished episode and emitting the counted message, the post-cancel season offering to download the rest, and a confirmed delete still removing what a cancel would have kept.
+
+<!-- END -->
+
+<!-- BEGIN portrait banner height is viewport-proportional -->
+
+## 2026-07-29 — the portrait detail banner is a share of the viewport height
+- **Scope:** `:feature:detail` (`ItemDetailScreen`: `backdropHeight()`, `PORTRAIT_BACKDROP_FRACTION`, `MAX_BACKDROP_HEIGHT`)
+- **Plan said:** docs/PLAN.md line 45 lists `BackdropHeader` as a `:core:ui` component with no sizing rule; the sizes were implementation constants (220dp, 320dp above the 720dp width breakpoint).
+- **Done instead:** in portrait (`maxHeight > maxWidth`) the banner is `0.40 × maxHeight`, coerced between the old width-derived value (as the floor) and 560dp (so the facts and Play button stay on the first screenful). Landscape keeps the width-based constants byte for byte. `BackdropHeader` itself is untouched — the screen just passes a computed height.
+- **Reason:** the width-only breakpoint misfired on the test tablet: at ~753dp wide in portrait it took the "wide" 320dp branch on a ~1200dp-tall screen, stranding the artwork at the top with dead space below (docs/POLISH.md). A height share scales with the actual viewport: ~480dp on the tablet in portrait, ~320dp instead of 220dp on a ~360×800dp phone (the same fix, proportionally), and unchanged in landscape where vertical space is scarce.
+
+<!-- END -->

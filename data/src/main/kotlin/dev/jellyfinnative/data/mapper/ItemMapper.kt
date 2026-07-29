@@ -25,12 +25,17 @@ import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
  * sees a DTO (docs/PLAN.md, "Data layer"). Image URLs are resolved here, following the same
  * artwork fallback chain jellyfin-web uses (own image → series image → parent image), so rows do
  * not degrade into placeholders for episodes that carry no artwork of their own.
+ *
+ * @param widths the pixel widths artwork is requested at, resolved from the device's display
+ *   density. Defaulted so unit tests can build a mapper without a display; Hilt always supplies the
+ *   real one (`DataModule.provideArtworkRequestWidths`).
  */
 @Singleton
 class ItemMapper
     @Inject
     constructor(
         private val imageUrls: ImageUrlFactory,
+        private val widths: ArtworkRequestWidths = ArtworkRequestWidths.Default,
     ) {
         /** Maps one item. */
         fun toDomain(dto: BaseItemDto): JellyfinItem =
@@ -102,57 +107,51 @@ class ItemMapper
                 name = name.orEmpty(),
                 role = role?.takeIf { it.isNotBlank() },
                 kind = type.toPersonKind(),
-                primaryImageUrl = imageUrls.imageUrl(id, ImageKind.PRIMARY, primaryImageTag, POSTER_WIDTH),
+                primaryImageUrl = imageUrls.imageUrl(id, ImageKind.PRIMARY, primaryImageTag, widths.poster),
             )
 
         // ---- artwork ------------------------------------------------------------------------
 
         private fun BaseItemDto.primaryImageUrl(): String? {
             imageUrls
-                .imageUrl(id, ImageKind.PRIMARY, imageTags?.get(ImageType.PRIMARY), POSTER_WIDTH)
+                .imageUrl(id, ImageKind.PRIMARY, imageTags?.get(ImageType.PRIMARY), widths.poster)
                 ?.let { return it }
             seriesId?.let { series ->
                 imageUrls
-                    .imageUrl(series, ImageKind.PRIMARY, seriesPrimaryImageTag, POSTER_WIDTH)
+                    .imageUrl(series, ImageKind.PRIMARY, seriesPrimaryImageTag, widths.poster)
                     ?.let { return it }
             }
             return parentPrimaryImageItemId?.let { parent ->
-                imageUrls.imageUrl(parent, ImageKind.PRIMARY, parentPrimaryImageTag, POSTER_WIDTH)
+                imageUrls.imageUrl(parent, ImageKind.PRIMARY, parentPrimaryImageTag, widths.poster)
             }
         }
 
         private fun BaseItemDto.backdropImageUrl(): String? {
             imageUrls
-                .imageUrl(id, ImageKind.BACKDROP, backdropImageTags?.firstOrNull(), BACKDROP_WIDTH)
+                .imageUrl(id, ImageKind.BACKDROP, backdropImageTags?.firstOrNull(), widths.backdrop)
                 ?.let { return it }
             return parentBackdropItemId?.let { parent ->
-                imageUrls.imageUrl(parent, ImageKind.BACKDROP, parentBackdropImageTags?.firstOrNull(), BACKDROP_WIDTH)
+                imageUrls.imageUrl(parent, ImageKind.BACKDROP, parentBackdropImageTags?.firstOrNull(), widths.backdrop)
             }
         }
 
         private fun BaseItemDto.thumbImageUrl(): String? {
             imageUrls
-                .imageUrl(id, ImageKind.THUMB, imageTags?.get(ImageType.THUMB), THUMB_WIDTH)
+                .imageUrl(id, ImageKind.THUMB, imageTags?.get(ImageType.THUMB), widths.thumb)
                 ?.let { return it }
             seriesId?.let { series ->
-                imageUrls.imageUrl(series, ImageKind.THUMB, seriesThumbImageTag, THUMB_WIDTH)?.let { return it }
+                imageUrls.imageUrl(series, ImageKind.THUMB, seriesThumbImageTag, widths.thumb)?.let { return it }
             }
             return parentThumbItemId?.let { parent ->
-                imageUrls.imageUrl(parent, ImageKind.THUMB, parentThumbImageTag, THUMB_WIDTH)
+                imageUrls.imageUrl(parent, ImageKind.THUMB, parentThumbImageTag, widths.thumb)
             }
         }
 
         private fun BaseItemDto.logoImageUrl(): String? {
-            imageUrls.imageUrl(id, ImageKind.LOGO, imageTags?.get(ImageType.LOGO), THUMB_WIDTH)?.let { return it }
+            imageUrls.imageUrl(id, ImageKind.LOGO, imageTags?.get(ImageType.LOGO), widths.thumb)?.let { return it }
             return parentLogoItemId?.let { parent ->
-                imageUrls.imageUrl(parent, ImageKind.LOGO, parentLogoImageTag, THUMB_WIDTH)
+                imageUrls.imageUrl(parent, ImageKind.LOGO, parentLogoImageTag, widths.thumb)
             }
-        }
-
-        private companion object {
-            const val POSTER_WIDTH = ImageUrlFactory.POSTER_MAX_WIDTH
-            const val THUMB_WIDTH = ImageUrlFactory.THUMB_MAX_WIDTH
-            const val BACKDROP_WIDTH = ImageUrlFactory.BACKDROP_MAX_WIDTH
         }
     }
 

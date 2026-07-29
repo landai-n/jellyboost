@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.database.entities.LibraryViewEntity
 import dev.jellyfinnative.core.database.entities.UserDataEntity
+import dev.jellyfinnative.data.mapper.ArtworkRequestWidths
 import dev.jellyfinnative.data.mapper.ImageKind
 import dev.jellyfinnative.data.mapper.ImageUrlFactory
 import dev.jellyfinnative.data.mapper.ItemMapper
@@ -45,6 +46,7 @@ class ItemEntityMapper
     constructor(
         private val itemMapper: ItemMapper,
         private val imageUrls: ImageUrlFactory,
+        private val widths: ArtworkRequestWidths = ArtworkRequestWidths.Default,
     ) {
         /**
          * Serialises [dto] into a cache row.
@@ -170,14 +172,14 @@ class ItemEntityMapper
                         entity.id,
                         ImageKind.PRIMARY,
                         entity.primaryImageTag,
-                        ImageUrlFactory.POSTER_MAX_WIDTH,
+                        widths.poster,
                     ),
                 thumbImageUrl =
                     imageUrls.imageUrl(
                         entity.id,
                         ImageKind.THUMB,
                         entity.thumbImageTag,
-                        ImageUrlFactory.THUMB_MAX_WIDTH,
+                        widths.thumb,
                     ),
             )
 

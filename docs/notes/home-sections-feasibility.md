@@ -1,9 +1,14 @@
 # Feasibility note — server-configured home screen sections
 
 *2026-07-29 · answers docs/POLISH.md "New run": "Find if we can fetch the homescreen
-section list as configured for the user on server side." Research only — nothing here
-is implemented yet; building it needs a DECISIONS.md entry (the plan's Home section
-doesn't mention DisplayPreferences).*
+section list as configured for the user on server side."*
+
+> **STATUS: IMPLEMENTED (2026-07-29).** Everything below held up; the "suggested v1
+> shape" was built essentially as described, with one deviation (the layout lives in a
+> `HomeLayoutRepository` of its own rather than in `JellyfinRepository` /
+> `OnlineJellyfinRepository` — it has an offline answer that is a cache rather than a
+> Room query, and it must never fail). See `docs/features/home.md` for the shipped
+> behaviour and DECISIONS.md, 2026-07-29, for the plan divergence.
 
 ## Verdict
 
@@ -66,13 +71,41 @@ in `User.Configuration` via `GET /Users/{id}` — full web parity needs both cal
   jellyfin/jellyfin#13820) was **closed unmerged** in July 2026 — nothing new to build
   against.
 
-## Suggested v1 shape (when/if built)
+## v1 shape — as built
 
-Fetch prefs once per Home load (cache last-known for offline); resolve the 10 slots
-with the default fallback; render only the types we support, in the configured order —
-i.e. the user's ordering and hiding of My Media / Continue Watching / Next Up / Latest
-is honored, unsupported types are skipped. New repository method in `:data`
-(`OnlineJellyfinRepository`), plumbed into `HomeViewModel.fetchRows`. Reference
-implementation pattern: jellyfin-androidtv `UserSettingPreferences` +
+Fetched once per full Home load (initial, pull-to-refresh, connectivity edge — no
+polling), the 10 slots resolved with the per-slot default fallback, and only the
+supported types rendered, in the configured order. The user's ordering and hiding of
+My Media / Continue Watching / Next Up / Latest is honored; unsupported types are
+carried through the resolution (so they keep the rows after them in place) and skipped
+at render time. Rows the layout hides are not even *fetched*.
+
+| Piece | Where |
+|---|---|
+| `HomeSectionType` (the ten values + forgiving decode) | `:core:common` |
+| `resolveHomeSections`, `DEFAULT_HOME_SECTIONS` (jellyfin-web's `DEFAULT_SECTIONS`) | `:data`, `homelayout/HomeSections.kt` |
+| `HomeLayoutRepository` (fetch → resolve → persist; never fails) | `:data`, `homelayout/` |
+| `HomeLayoutStore` / `SharedPreferencesHomeLayoutStore` (`home_layout` prefs file) | `:core:datastore` |
+| `HomeUiState.sections` + row iteration | `:feature:home` |
+
+Deviation from the suggestion above: it is **not** a method on `JellyfinRepository`.
+That interface is the browse contract, split online/offline and delegated per call;
+this is one piece of configuration whose offline answer is a cache of the last layout
+seen rather than a Room query, and which must never surface a failure. Keeping it
+separate left both browse implementations untouched.
+
+Reference implementation pattern: jellyfin-androidtv `UserSettingPreferences` +
 `HomeRowsFragment`; nearest local precedent for the SDK call:
 `../jellyfin-android/.../player/PlayerViewModel.kt:184-187`.
+
+## Deliberately still out of scope
+
+- **Per-library inclusion/order** from `User.Configuration` (`LatestItemsExcludes`,
+  `MyMediaExcludes`, `OrderedViews`, `HidePlayedInLatest`) via `GET /Users/{id}`. Full
+  web parity needs this second call; the app currently shows every movie/TV library, in
+  the server's own order, in both *My Media* and the *Latest* rows.
+- **`librarybuttons` as large buttons.** Both it and `smalllibrarytiles` render as the
+  existing tile row; a layout containing both draws that row once (two items under one
+  lazy-list key would crash).
+- **Writing the configuration back** — no home-layout editor in the app. The one place
+  to change it stays jellyfin-web's Settings → Home.

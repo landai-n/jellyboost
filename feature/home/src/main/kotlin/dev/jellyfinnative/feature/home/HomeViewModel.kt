@@ -7,12 +7,14 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.DownloadState
+import dev.jellyfinnative.core.common.model.HomeSectionType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
+import dev.jellyfinnative.data.homelayout.HomeLayoutRepository
 import dev.jellyfinnative.data.userdata.UserDataEventBus
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
@@ -31,9 +33,11 @@ import javax.inject.Inject
 /**
  * State holder for the home screen.
  *
- * Loads the libraries first (every *Latest …* row is keyed off one), then fetches *Continue
- * watching*, *Next up* and every *Latest* row concurrently so the screen is bound by the slowest
- * single request rather than by their sum.
+ * Resolves the user's row layout first (`HomeLayoutRepository`, which never fails), then loads the
+ * libraries (every *Latest …* row is keyed off one) and fetches *Continue watching*, *Next up* and
+ * every *Latest* row concurrently, so the screen is bound by the slowest single request rather
+ * than by their sum. **Only rows the layout actually contains are fetched** — a user who hid
+ * *Next up* in jellyfin-web costs no `getNextUp` call at all.
  *
  * Failure policy: only a failing `getUserViews` produces an error screen — without libraries there
  * is nothing to render. An individual row that fails is left empty, matching jellyfin-web, which
@@ -48,6 +52,7 @@ class HomeViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
+        private val homeLayout: HomeLayoutRepository,
         private val userDataEvents: UserDataEventBus,
         private val downloads: DownloadRepository,
         private val connectivityRefresher: ConnectivityRefresher,
@@ -188,10 +193,17 @@ class HomeViewModel
             // has nowhere to have been adopted: the instant patch above is the whole update.
             if (!connectivityRefresher.isOnline) return
 
+            // A row the user's layout does not include is not on screen, so its membership is not
+            // a question anyone is asking — a hidden *Next up* costs no request here either.
+            val sections = _uiState.value.sections
+            val wantsResume = HomeSectionType.RESUME in sections
+            val wantsNextUp = HomeSectionType.NEXT_UP in sections
+            if (!wantsResume && !wantsNextUp) return
+
             val (resume, nextUp) =
                 coroutineScope {
-                    val resumeCall = async { repository.getResumeItems() }
-                    val nextUpCall = async { repository.getNextUp() }
+                    val resumeCall = async { if (wantsResume) repository.getResumeItems() else null }
+                    val nextUpCall = async { if (wantsNextUp) repository.getNextUp() else null }
                     resumeCall.await() to nextUpCall.await()
                 }
 
@@ -200,8 +212,8 @@ class HomeViewModel
                     .copy(
                         // A row whose call failed keeps what it had; one flaky request must not
                         // empty a shelf the user is looking at.
-                        resume = resume.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.resume,
-                        nextUp = nextUp.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.nextUp,
+                        resume = resume?.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.resume,
+                        nextUp = nextUp?.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.nextUp,
                     ).withDownloadStates(downloadStates)
             }
         }
@@ -221,28 +233,45 @@ class HomeViewModel
                     it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, errorMessage = null)
                 }
 
+                // Resolved on every full load — initial, pull-to-refresh and connectivity edge —
+                // and never on a timer: changing Settings → Home in jellyfin-web and pulling to
+                // refresh is the whole freshness story. This call cannot fail.
+                val sections = homeLayout.getHomeSections()
+
+                if (LIBRARY_BACKED_SECTIONS.none { it in sections }) {
+                    // Nothing on this home screen is keyed off a library, so the libraries call —
+                    // the only one that can produce an error screen — is not made at all.
+                    emitRows(sections, libraries = emptyList())
+                    return@launch
+                }
+
                 when (val views = repository.getUserViews()) {
                     is AppResult.Failure ->
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
                                 isRefreshing = false,
+                                sections = sections,
                                 errorMessage = views.error.toMessage(),
                             )
                         }
 
-                    is AppResult.Success -> emitRows(views.value)
+                    is AppResult.Success -> emitRows(sections, views.value)
                 }
             }
         }
 
-        private suspend fun emitRows(libraries: List<LibraryView>) {
-            val rows = fetchRows(libraries)
+        private suspend fun emitRows(
+            sections: List<HomeSectionType>,
+            libraries: List<LibraryView>,
+        ) {
+            val rows = fetchRows(sections, libraries)
             _uiState.update {
                 it
                     .copy(
                         isLoading = false,
                         isRefreshing = false,
+                        sections = sections,
                         libraries = rows.libraries,
                         // Anything toggled *while* the fetch was in flight still wins: the load
                         // cleared the overrides before starting, so only those changes are left.
@@ -254,21 +283,52 @@ class HomeViewModel
             }
         }
 
-        private suspend fun fetchRows(libraries: List<LibraryView>): Rows =
+        private suspend fun fetchRows(
+            sections: List<HomeSectionType>,
+            libraries: List<LibraryView>,
+        ): Rows =
             coroutineScope {
-                val resume = async { repository.getResumeItems().getOrNull().orEmpty() }
-                val nextUp = async { repository.getNextUp().getOrNull().orEmpty() }
+                val wantsLatest = HomeSectionType.LATEST_MEDIA in sections
+                val resume =
+                    async {
+                        if (HomeSectionType.RESUME in sections) {
+                            repository.getResumeItems().getOrNull().orEmpty()
+                        } else {
+                            emptyList()
+                        }
+                    }
+                val nextUp =
+                    async {
+                        if (HomeSectionType.NEXT_UP in sections) {
+                            repository.getNextUp().getOrNull().orEmpty()
+                        } else {
+                            emptyList()
+                        }
+                    }
                 val latest =
-                    libraries
-                        .map { library -> async { library to repository.getLatestMedia(library.id) } }
-                        .awaitAll()
+                    if (wantsLatest) {
+                        libraries
+                            .map { library -> async { library to repository.getLatestMedia(library.id) } }
+                            .awaitAll()
+                    } else {
+                        emptyList()
+                    }
 
                 Rows(
                     // A library whose *Latest* call succeeded and came back empty has nothing
                     // behind it — offline that is every library with no downloads in it, since
                     // `getUserViews` still answers from the full cached list. A library whose call
                     // *failed* is kept: one flaky request must not delete a library card.
-                    libraries = latest.filterNot { (_, items) -> items.isKnownEmpty() }.map { it.first },
+                    //
+                    // With *Latest* hidden there is nothing to filter by, and asking anyway would
+                    // undo the saving: the cards then list every library the user can see, which
+                    // offline includes ones with no downloads behind them.
+                    libraries =
+                        if (wantsLatest) {
+                            latest.filterNot { (_, items) -> items.isKnownEmpty() }.map { it.first }
+                        } else {
+                            libraries
+                        },
                     resume = resume.await(),
                     nextUp = nextUp.await(),
                     latest =
@@ -292,6 +352,17 @@ class HomeViewModel
         )
 
         private companion object {
+            /**
+             * The sections that need `getUserViews`: the libraries row draws them, and every
+             * *Latest …* row is one request per library.
+             */
+            val LIBRARY_BACKED_SECTIONS =
+                setOf(
+                    HomeSectionType.SMALL_LIBRARY_TILES,
+                    HomeSectionType.LIBRARY_BUTTONS,
+                    HomeSectionType.LATEST_MEDIA,
+                )
+
             /**
              * How long the membership refresh waits for the toggling to stop, in milliseconds.
              *

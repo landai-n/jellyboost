@@ -1,19 +1,65 @@
 # Feature: Home (online) — M2
 
 The app's landing destination. Mirrors jellyfin-web's home layout so that a side-by-side
-comparison shows the same sections, items and ordering (the M2 definition of done).
+comparison shows the same sections, items and ordering (the M2 definition of done) — including,
+since 2026-07-29, the **order and visibility the user configured server-side** in jellyfin-web's
+Settings → Home.
 
-## Rows, in order
+## Rows
 
-| # | Row | Source call | Limit |
+| Row | `homesectionN` value | Source call | Limit |
 |---|---|---|---|
-| 1 | My Media | `getUserViews()`, filtered to `MOVIES` / `TVSHOWS` | – |
-| 2 | Continue Watching | `getResumeItems()` | 20 |
-| 3 | Next Up | `getNextUp()` | 20 |
-| 4… | Latest &lt;library&gt; | `getLatestMedia(parentId)`, one row per library | 16 |
+| My Media | `smalllibrarytiles` / `librarybuttons` (`folders` legacy alias) | `getUserViews()`, filtered to `MOVIES` / `TVSHOWS` | – |
+| Continue Watching | `resume` | `getResumeItems()` | 20 |
+| Next Up | `nextup` | `getNextUp()` | 20 |
+| Latest &lt;library&gt; | `latestmedia` | `getLatestMedia(parentId)`, one row per library | 16 |
+
+Default order — what an account that never opened Settings → Home gets — is My Media, Continue
+Watching, Next Up, then the *Latest* rows, exactly as before.
 
 Empty rows are not rendered — jellyfin-web omits an empty shelf rather than showing a blank one,
 and `MediaRow` returns early on an empty list to match.
+
+## The configured layout
+
+jellyfin-web stores Settings → Home in **DisplayPreferences**, as `homesection0` … `homesection9`
+inside `customPrefs`. `HomeLayoutRepository` reads it with one call:
+
+```kotlin
+apiClient.displayPreferencesApi.getDisplayPreferences(
+    displayPreferencesId = "usersettings", // any other id is MD5-hashed into an unrelated record
+    client = "emby",                       // legacy partition key — every client that shares the
+)                                          // web-configured layout passes this literal
+```
+
+Both strings are load-bearing: preferences are partitioned by `(userId, itemId, client)`, so this
+app's own client name would read a private, permanently empty record. Research and provenance:
+`docs/notes/home-sections-feasibility.md`.
+
+**Resolution** (`resolveHomeSections`, `:data`): each of the ten slots is resolved independently —
+a missing key, an empty value or one this build does not recognise falls back to *that slot's*
+jellyfin-web default (`smalllibrarytiles, resume, resumeaudio, resumebook, livetv, nextup,
+latestmedia, none, none, none`). A user who never opened Settings → Home has **no** keys at all, so
+"missing" has to mean "client defaults", not "empty home screen". `none` is then dropped and the
+list de-duplicated, first occurrence winning.
+
+**Sections this app has no row for** — `resumeaudio`, `resumebook`, `livetv`, `activerecordings`
+(v1 is movies and TV) — are carried through the resolution faithfully and skipped at render time.
+Dropping them earlier would silently reorder everything after them.
+
+**Failure policy:** `HomeLayoutRepository.getHomeSections()` never throws and never returns
+nothing usable. Online it fetches and persists; on any fetch or parse failure, and offline, it
+answers from the persisted layout, and from the defaults if there is none (fresh install, first
+launch, no network). The shape of the home screen is not worth an error state.
+
+**Freshness:** resolved on every *full* load — first open, pull-to-refresh, and the connectivity
+edge — and never polled. Changing Settings → Home in jellyfin-web then pulling to refresh shows
+the new layout.
+
+**Out of scope** (documented in the feasibility note): the per-library exclusions in
+`User.Configuration` (`LatestItemsExcludes`, `MyMediaExcludes`, `OrderedViews`,
+`HidePlayedInLatest`), rendering `librarybuttons` as large buttons rather than the tile row, and
+writing the configuration back from the app.
 
 ## Key classes
 
@@ -21,6 +67,9 @@ and `MediaRow` returns early on an empty list to match.
 |---|---|---|
 | `HomeScreen` / `HomeContent` | `:feature:home` | Stateful wrapper + stateless rendering |
 | `HomeViewModel` / `HomeUiState` | `:feature:home` | Loads and holds the rows |
+| `HomeSectionType` | `:core:common` | The ten row kinds jellyfin-web can configure |
+| `HomeLayoutRepository`, `resolveHomeSections` | `:data` | Reads and resolves the configured layout |
+| `HomeLayoutStore` / `SharedPreferencesHomeLayoutStore` | `:core:datastore` | Caches the last resolved layout (`home_layout` prefs file) |
 | `JellyfinRepository` | `:data` | The home-scope data contract |
 | `OnlineJellyfinRepository` | `:data` | SDK-backed implementation |
 | `ItemMapper` | `:data` | `BaseItemDto` → `JellyfinItem` / `LibraryView` |
@@ -29,13 +78,20 @@ and `MediaRow` returns early on an empty list to match.
 
 ## Loading strategy
 
-Libraries load first (every *Latest* row is keyed off one), then *Continue Watching*, *Next Up*
-and every *Latest* row are fetched concurrently in a `coroutineScope`, so the screen is bound by
-the slowest single request rather than by their sum.
+The layout is resolved first, and then **only the rows it contains are fetched**: a hidden *Next
+Up* costs no `getNextUp` call, and a layout with neither the libraries row nor *Latest* skips
+`getUserViews` altogether. Libraries load before the rest (every *Latest* row is keyed off one),
+then *Continue Watching*, *Next Up* and every *Latest* row are fetched concurrently in a
+`coroutineScope`, so the screen is bound by the slowest single request rather than by their sum.
 
 **Failure policy:** only a failing `getUserViews` produces an error screen — without libraries
 there is nothing to render. A single row that fails is left empty, matching jellyfin-web, which
 omits a section it could not load instead of blanking the page.
+
+One deliberate consequence: the *My Media* cards are filtered to libraries with something behind
+them using the *Latest* answers, so a layout that hides *Latest* shows every library the user can
+see — offline that includes libraries with no downloads in them. Asking anyway would undo the
+saving the hidden row buys.
 
 ## Requests are deliberately lean
 
@@ -51,7 +107,7 @@ to is never the screen they left. None of them shows a spinner or touches `isRef
 
 | Signal | Source | Effect |
 |---|---|---|
-| `UserDataEventBus` | any watched/favourite/position write in the app | patch the cards in place, and re-fetch the two rows whose *membership* depends on watched state |
+| `UserDataEventBus` | any watched/favourite/position write in the app | patch the cards in place, and re-fetch the two rows whose *membership* depends on watched state — skipping either if the configured layout hides it |
 | `DownloadRepository.observeStates()` | the download engine | re-stamp every card's badge |
 | `ConnectivityRefresher.connectivityChanged` | both online↔offline edges | full reload — the other source answers now |
 

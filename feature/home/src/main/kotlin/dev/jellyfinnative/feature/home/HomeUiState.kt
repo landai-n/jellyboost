@@ -1,18 +1,31 @@
 package dev.jellyfinnative.feature.home
 
 import dev.jellyfinnative.core.common.model.DownloadState
+import dev.jellyfinnative.core.common.model.HomeSectionType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.data.homelayout.DEFAULT_HOME_SECTIONS
 
 /**
- * Everything the home screen draws, in the order jellyfin-web draws it: *My Media*, *Continue
- * Watching*, *Next Up*, then one *Latest …* row per library (docs/PLAN.md, "Screens" → Home).
- * Matching that order is the M2 definition of done.
+ * Everything the home screen draws, in the order jellyfin-web draws it: by default *My Media*,
+ * *Continue Watching*, *Next Up*, then one *Latest …* row per library (docs/PLAN.md, "Screens" →
+ * Home). Matching that order is the M2 definition of done.
+ *
+ * Since the layout became server-configurable, [sections] — not this class's field order — decides
+ * what is drawn and in which order; the default value of [sections] is exactly the order above.
  */
 data class HomeUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
+    /**
+     * The rows to draw, in order, as configured in jellyfin-web's Settings → Home.
+     *
+     * Resolved on every full load. Sections this app does not implement (audio/book resume, live
+     * TV) are carried faithfully — dropping them would reorder everything after them — and skipped
+     * at render time.
+     */
+    val sections: List<HomeSectionType> = DEFAULT_HOME_SECTIONS,
     val libraries: List<LibraryView> = emptyList(),
     val resume: List<JellyfinItem> = emptyList(),
     val nextUp: List<JellyfinItem> = emptyList(),

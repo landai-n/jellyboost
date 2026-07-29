@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.database.entities.DownloadFileEntity
 import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
 import dev.jellyfinnative.data.downloads.DownloadFixtures.download
@@ -19,7 +20,6 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
-import dev.jellyfinnative.data.downloads.work.DownloadSessionGate
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -58,7 +58,7 @@ class DownloadQueueTest {
     private val storage = mockk<DownloadStorage>()
     private val downloader = mockk<FileDownloader>()
     private val urls = mockk<DownloadUrlFactory>(relaxed = true)
-    private val sessionGate = mockk<DownloadSessionGate>()
+    private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
 

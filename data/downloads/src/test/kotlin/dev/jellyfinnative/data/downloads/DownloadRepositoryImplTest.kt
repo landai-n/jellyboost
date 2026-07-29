@@ -3,6 +3,7 @@ package dev.jellyfinnative.data.downloads
 import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.ItemType
@@ -159,6 +160,32 @@ class DownloadRepositoryImplTest {
                 row.itemId shouldBe uuid(1).toString()
                 row.item shouldBe MOVIE
                 row.bytesOnDisk shouldBe 900L
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `an Original download's row carries the exact quality the server reported`() =
+        runTest {
+            // The UI decides "exact figure" vs "ceiling" off this field alone (DECISIONS.md,
+            // 2026-07-29) — it must survive the Room round trip untouched.
+            every { downloadDao.observeAll() } returns
+                flowOf(listOf(DownloadWithFiles(download(quality = DownloadQuality.ORIGINAL), emptyList())))
+
+            repository().observeDownloads().test {
+                awaitItem().single().quality shouldBe DownloadQuality.ORIGINAL
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `a capped download's row carries the quality that stamped the ceiling`() =
+        runTest {
+            every { downloadDao.observeAll() } returns
+                flowOf(listOf(DownloadWithFiles(download(quality = DownloadQuality.LOW), emptyList())))
+
+            repository().observeDownloads().test {
+                awaitItem().single().quality shouldBe DownloadQuality.LOW
                 awaitComplete()
             }
         }

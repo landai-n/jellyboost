@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.downloads
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.data.downloads.model.DownloadItem
 import io.kotest.matchers.shouldBe
@@ -12,6 +13,22 @@ import org.junit.jupiter.api.Test
  * not repeat the series name the header already shows.
  */
 class DownloadRowsTest {
+    // ---- ceiling vs exact (DECISIONS.md, 2026-07-29) ---------------------------------------------
+
+    @Test
+    fun `an Original download's total is the exact figure the server reported`() {
+        val item = episode(series = null, title = "Dune", quality = DownloadQuality.ORIGINAL)
+
+        item.isSizeCapped shouldBe false
+    }
+
+    @Test
+    fun `a capped quality download's total is only ever a ceiling`() {
+        val item = episode(series = null, title = "Dune", quality = DownloadQuality.LOW)
+
+        item.isSizeCapped shouldBe true
+    }
+
     @Test
     fun `an episode outside a series group shows series and title`() {
         val episode = episode(series = "Westworld", title = "Chestnut")
@@ -37,6 +54,7 @@ class DownloadRowsTest {
     private fun episode(
         series: String?,
         title: String,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
     ) = DownloadItem(
         itemId = "1",
         title = title,
@@ -46,5 +64,6 @@ class DownloadRowsTest {
         bytesTotal = 0L,
         bytesOnDisk = 0L,
         queuePosition = 0,
+        quality = quality,
     )
 }

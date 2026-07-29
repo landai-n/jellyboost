@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dev.jellyfinnative.core.network.session.SessionGate
 import timber.log.Timber
 
 /**
@@ -17,13 +18,19 @@ import timber.log.Timber
  * the unique-work policy, the exponential backoff, the pending-row query — so filling it in meant
  * writing [UserDataSyncer] and nothing else.
  *
- * The worker itself is deliberately three lines of mapping: the decision matrix lives in
- * [UserDataSyncer], which runs on the JVM, while a `CoroutineWorker` only runs on a device.
+ * The worker itself is deliberately thin: the session check lives in [SessionGate] and the decision
+ * matrix lives in [UserDataSyncer], both of which run on the JVM, while a `CoroutineWorker` only runs
+ * on a device.
  *
  * ### Enqueued from three places
  * - a local write whose push failed ([UserDataRepositoryImpl]);
  * - app start, when rows are already pending ([UserDataSyncTrigger]);
  * - every transition back to `ConnectionState.ONLINE` (the same trigger).
+ *
+ * Any of the three can run before `MainViewModel` has restored the session — app start is the
+ * obvious one, but a reconnect right after process death races it too — so [doWork] consults
+ * [SessionGate] before touching [UserDataSyncer], the same fix M7 shipped for `DownloadWorker`
+ * (see `DECISIONS.md`, "the download worker restores the session itself").
  */
 @HiltWorker
 class UserDataSyncWorker
@@ -31,6 +38,7 @@ class UserDataSyncWorker
     constructor(
         @Assisted appContext: Context,
         @Assisted workerParameters: WorkerParameters,
+        private val sessionGate: SessionGate,
         private val syncer: UserDataSyncer,
     ) : CoroutineWorker(appContext, workerParameters) {
         /**
@@ -39,8 +47,13 @@ class UserDataSyncWorker
          * silently strand the user's watch state on the device.
          */
         @Suppress("TooGenericExceptionCaught")
-        override suspend fun doWork(): Result =
-            try {
+        override suspend fun doWork(): Result {
+            if (!sessionGate.ensureSession()) {
+                Timber.i("No session yet; the user-data sync will be retried")
+                return Result.retry()
+            }
+
+            return try {
                 when (syncer.sync()) {
                     SyncOutcome.NOTHING_PENDING, SyncOutcome.DRAINED -> Result.success()
                     SyncOutcome.RETRY -> Result.retry()
@@ -51,6 +64,7 @@ class UserDataSyncWorker
                 Timber.e(error, "User-data sync failed unexpectedly")
                 Result.retry()
             }
+        }
 
         companion object {
             /** Unique-work name; one drain at a time, app-wide. */

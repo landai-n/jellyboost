@@ -12,12 +12,20 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SortBy
 import dev.jellyfinnative.core.common.model.SortOrder
+import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.common.selection.BatchOutcome
+import dev.jellyfinnative.core.common.selection.BatchReport
+import dev.jellyfinnative.core.common.selection.SelectionAction
+import dev.jellyfinnative.core.common.selection.SelectionIntent
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
+import dev.jellyfinnative.data.userdata.UserDataChange
+import dev.jellyfinnative.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -26,6 +34,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -51,6 +60,14 @@ class LibraryViewModelTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+        }
+
+    /** The local-first watched/favourite writer, and the bus the grid patches its cards from. */
+    private val userDataChanges =
+        MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val userDataRepository =
+        mockk<UserDataRepository> {
+            every { changes } returns userDataChanges
         }
 
     /** The connectivity-change signal (M9); fires only when a test says the server came back. */
@@ -382,12 +399,232 @@ class LibraryViewModelTest {
             }
         }
 
+    // ---- batch selection (docs/features/batch-selection.md) -------------------------------------
+
+    @Test
+    fun `long-pressing a card enters selection mode and a second tap leaves it`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            viewModel.selection.value.isActive shouldBe false
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.selection.value.count shouldBe 1
+
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.selection.value.isActive shouldBe false
+        }
+
+    @Test
+    fun `the close affordance leaves selection mode`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.onSelection(SelectionIntent.Clear)
+
+            viewModel.selection.value.isActive shouldBe false
+        }
+
+    @Test
+    fun `the paged grid offers no Select all, and ignores one if asked`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.onSelection(SelectionIntent.SelectAll)
+
+            // "All" on a paged grid would mean either "the pages loaded so far" — a different set
+            // after every scroll — or a per-page walk of the whole library. The bar does not show
+            // the action; this pins that the ViewModel would not act on it either.
+            viewModel.selection.value.ids shouldContainExactly setOf("m1")
+        }
+
+    @Test
+    fun `a selection survives new pages and a download-badge change`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.onSelection(SelectionIntent.Toggle("m1"))
+                downloadStates.value = mapOf("m1" to DownloadState.Downloading(progress = 0.4f))
+                advanceUntilIdle()
+
+                // The selection is a set of ids in its own flow, so nothing the pager or the
+                // download pipeline does underneath it can disturb it.
+                viewModel.selection.value.ids shouldContainExactly setOf("m1")
+            }
+        }
+
+    @Test
+    fun `changing the sort clears the selection`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.selectSort(SortBy.DATE_CREATED)
+
+            // The query is swapped underneath, so a kept selection would be ids the user can no
+            // longer see — and the next batch would act on items that are not on screen.
+            viewModel.selection.value.isActive shouldBe false
+        }
+
+    @Test
+    fun `applying filters clears the selection, opening the sheet does not`() =
+        runTest(dispatcher) {
+            coEvery { repository.getFilterFacets(any(), any()) } returns AppResult.Success(FilterFacets())
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.openFilterSheet()
+            advanceUntilIdle()
+            viewModel.updateDraftFilters(FilterOptions(genres = listOf("Thriller")))
+            viewModel.selection.value.isActive shouldBe true
+
+            viewModel.applyFilters()
+            viewModel.selection.value.isActive shouldBe false
+        }
+
+    @Test
+    fun `marking the selection watched writes one call per card, locally first`() =
+        runTest(dispatcher) {
+            coEvery { userDataRepository.setPlayed(any(), any()) } returns AppResult.Success(UserData())
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.onSelection(SelectionIntent.Toggle("m2"))
+
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.MARK_WATCHED))
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { userDataRepository.setPlayed("m1", true) }
+            coVerify(exactly = 1) { userDataRepository.setPlayed("m2", true) }
+            viewModel.uiState.value.userMessage shouldBe
+                BatchReport(SelectionAction.MARK_WATCHED, BatchOutcome(done = 2))
+        }
+
+    @Test
+    fun `marking the selection unwatched writes played false`() =
+        runTest(dispatcher) {
+            coEvery { userDataRepository.setPlayed(any(), any()) } returns AppResult.Success(UserData())
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.MARK_UNWATCHED))
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { userDataRepository.setPlayed("m1", false) }
+        }
+
+    @Test
+    fun `a batch runs every item and counts the failures rather than stopping at the first`() =
+        runTest(dispatcher) {
+            coEvery { userDataRepository.setPlayed("m1", any()) } returns AppResult.Failure(AppError.Storage())
+            coEvery { userDataRepository.setPlayed("m2", any()) } returns AppResult.Success(UserData())
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.onSelection(SelectionIntent.Toggle("m2"))
+
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.MARK_WATCHED))
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { userDataRepository.setPlayed("m2", true) }
+            viewModel.uiState.value.userMessage shouldBe
+                BatchReport(SelectionAction.MARK_WATCHED, BatchOutcome(done = 1, failed = 1))
+        }
+
+    @Test
+    fun `downloading the selection skips what is already on the device`() =
+        runTest(dispatcher) {
+            coEvery { downloads.enqueue(any()) } returns AppResult.Success(Unit)
+            downloadStates.value = mapOf("m1" to DownloadState.Downloaded, "m2" to DownloadState.Queued)
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.onSelection(SelectionIntent.Toggle("m2"))
+            viewModel.onSelection(SelectionIntent.Toggle("m3"))
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
+            advanceUntilIdle()
+
+            // Only the card with no row of its own is enqueued. A series never has one — the
+            // pipeline expands it — so it always reaches the enqueuer, which skips the episodes
+            // already downloaded itself (DECISIONS.md, 2026-07-29).
+            coVerify(exactly = 0) { downloads.enqueue("m1") }
+            coVerify(exactly = 0) { downloads.enqueue("m2") }
+            coVerify(exactly = 1) { downloads.enqueue("m3") }
+            viewModel.uiState.value.userMessage shouldBe
+                BatchReport(SelectionAction.DOWNLOAD, BatchOutcome(done = 1, skipped = 2))
+        }
+
+    @Test
+    fun `a failed enqueue is counted and reported`() =
+        runTest(dispatcher) {
+            coEvery { downloads.enqueue("m1") } returns AppResult.Failure(AppError.Network())
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.userMessage shouldBe
+                BatchReport(SelectionAction.DOWNLOAD, BatchOutcome(done = 0, failed = 1))
+        }
+
+    @Test
+    fun `selection mode ends as the batch starts, and the snackbar is one-shot`() =
+        runTest(dispatcher) {
+            coEvery { userDataRepository.setPlayed(any(), any()) } returns AppResult.Success(UserData())
+            val viewModel = viewModel()
+            viewModel.onSelection(SelectionIntent.Toggle("m1"))
+
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.MARK_WATCHED))
+            viewModel.selection.value.isActive shouldBe false
+
+            advanceUntilIdle()
+            val message = viewModel.uiState.value.userMessage
+            message.shouldNotBeNull()
+
+            viewModel.consumeMessage()
+            val consumed = viewModel.uiState.value.userMessage
+            consumed.shouldBeNull()
+        }
+
+    @Test
+    fun `an action with nothing selected does nothing at all`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            viewModel.onSelection(SelectionIntent.Run(SelectionAction.DOWNLOAD))
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.enqueue(any()) }
+            val message = viewModel.uiState.value.userMessage
+            message.shouldBeNull()
+        }
+
+    @Test
+    fun `a user-data change patches the loaded pages without re-querying the server`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                queries.clear()
+                userDataChanges.tryEmit(UserDataChange("m1", UserData(played = true)))
+                advanceUntilIdle()
+
+                // The plan's Swiftfin pattern: a batch *Mark watched* is reflected on the cards
+                // from the local write, never from a refetch (docs/PLAN.md, "Data layer").
+                queries.shouldBeEmpty()
+            }
+        }
+
     // ---- helpers ----------------------------------------------------------------------------
 
     private fun viewModel() =
         LibraryViewModel(
             repository = repository,
             downloads = downloads,
+            userDataRepository = userDataRepository,
             connectivityRefresher = connectivityRefresher,
             savedStateHandle =
                 SavedStateHandle(

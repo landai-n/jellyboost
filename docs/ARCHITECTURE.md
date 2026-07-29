@@ -396,3 +396,49 @@ No new module edges: `:data:downloads` already depended on `:core:datastore` (th
 constraint) and on `:core:database`, so the quality preference travels along dependency edges that
 already existed.
 <!-- END: Download quality (M9) -->
+
+<!-- BEGIN: Batch selection (post-M9) -->
+## Batch selection (post-M9)
+
+Full detail: [`docs/features/batch-selection.md`](features/batch-selection.md).
+
+**The cross-module pattern this introduces:** a list-selection mode is *state plus one intent
+lambda*, and both live above the feature modules so two screens cannot drift into two different
+selection modes. No feature module gained a dependency on another; the two screens still do not see
+each other.
+
+| module | role |
+|---|---|
+| `:core:common` | `selection/ItemSelection.kt` — the id-keyed immutable selection, the `SelectionIntent` / `SelectionAction` vocabulary, and `runBatch` + `BatchOutcome` / `BatchReport`. Pure Kotlin and Android-free, so it unit-tests without a device and can be held in any `ViewModel`. Also `DownloadState.isDownloadable`, the "would enqueueing this do anything" predicate a batch needs and a single tap never did. |
+| `:core:ui` | `SelectionAppBar` (the contextual M3 bar), `batchOutcomeText` (the summary copy), the selection scrim/indicator on `MediaCardArtwork`, and `Modifier.selectableCardClick` (tap + haptic long press). This is also the module's **first `res/`** — the shared bar needs its own strings, and duplicating "Mark watched" per feature is how two screens end up wording one action two ways. |
+| `:feature:library`, `:feature:detail` | each exposes `val selection: StateFlow<ItemSelection>` and `fun onSelection(intent: SelectionIntent)`, and composes its batch from the single-item repository calls it already made. |
+
+```
+:core:common   ItemSelection / SelectionIntent / runBatch      DownloadState.isDownloadable
+      ▲                        ▲                                        ▲
+      │                        │                                        │
+:core:ui    SelectionAppBar ───┘   batchOutcomeText                      │
+      ▲                                                                 │
+      ├───────────── :feature:library  LibraryViewModel.selection ───────┤
+      └───────────── :feature:detail   ItemDetailViewModel.selection ────┘
+                                   │
+                                   ├─► UserDataRepository.setPlayed   (:data, local-first)
+                                   └─► DownloadRepository.enqueue     (:data:downloads)
+```
+
+**Two rules the layering enforces**, both worth keeping if a third surface joins:
+
+1. **The selection is its own `StateFlow`, never a field of the screen's ui state.** A grid cell has
+   to read it to draw its indicator; reading it out of `LibraryUiState` would subscribe every visible
+   cell to the sort key, the filters and the snackbar message as well.
+2. **A batch is composed, never a new repository method.** `runBatch` takes a suspend lambda and the
+   `ViewModel` hands it the existing single-item call, so there is no second code path to keep
+   correct — the same reasoning `:feature:downloads`' *Pause all* / *Cancel all* follow
+   (DECISIONS.md, 2026-07-29).
+
+The one place a batch is *not* a plain fan-out is *Download*, and only because
+`DownloadEnqueuer`'s idempotence is asymmetric: it skips already-downloaded children when it expands
+a container, but a **single** item handed to it is always written back as `QUEUED`. The batch filters
+on `DownloadState.isDownloadable` before calling, which is why that predicate lives in `:core:common`
+next to the state it reads rather than in either feature.
+<!-- END: Batch selection (post-M9) -->

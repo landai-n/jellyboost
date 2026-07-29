@@ -10,6 +10,12 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.selection.BatchOutcome
+import dev.jellyfinnative.core.common.selection.BatchReport
+import dev.jellyfinnative.core.common.selection.ItemSelection
+import dev.jellyfinnative.core.common.selection.SelectionAction
+import dev.jellyfinnative.core.common.selection.SelectionIntent
+import dev.jellyfinnative.core.common.selection.runBatch
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
@@ -63,6 +69,18 @@ class ItemDetailViewModel
 
         /** The single source of truth for [ItemDetailScreen]. */
         val uiState: StateFlow<ItemDetailUiState> = _uiState.asStateFlow()
+
+        private val _selection = MutableStateFlow(ItemSelection())
+
+        /**
+         * Which **episode rows** are selected (docs/features/batch-selection.md).
+         *
+         * Scoped to the episode list and to nothing else on the page: the seasons row, *Next up* and
+         * *More like this* are navigation surfaces that lead somewhere else, and a season page's one
+         * list of comparable things is its episodes. Kept out of [uiState] so a row reading it is
+         * not also subscribed to the download progress this page re-emits several times a second.
+         */
+        val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
 
         init {
             load(isRefresh = false)
@@ -175,10 +193,19 @@ class ItemDetailViewModel
             }
         }
 
-        /** The delete-download dialog was confirmed — actually remove the item from this device. */
+        /**
+         * The delete-download dialog was confirmed — actually remove the item from this device.
+         *
+         * One row for a movie or an episode; for a season, every episode of it that has a row — the
+         * ones that do not are skipped rather than deleted as no-ops, so cancelling a season that is
+         * three episodes in does not run twenty pointless cascades through WorkManager.
+         */
         fun confirmDeleteDownload() {
             _uiState.update { it.copy(showDeleteConfirmation = false) }
-            deleteDownloads()
+            removeDownloads(
+                targets = _uiState.value.downloadTargets.filter { downloadStates.containsKey(it) },
+                keptCount = 0,
+            )
         }
 
         private fun enqueue(itemId: String) {
@@ -189,20 +216,6 @@ class ItemDetailViewModel
                     failure = UserMessage.DownloadFailed,
                 )
             }
-        }
-
-        /**
-         * Removes everything this page's Download button stands for.
-         *
-         * One row for a movie or an episode; for a season, every episode of it that has a row — the
-         * ones that do not are skipped rather than deleted as no-ops, so cancelling a season that is
-         * three episodes in does not run twenty pointless cascades through WorkManager.
-         */
-        private fun deleteDownloads() {
-            removeDownloads(
-                targets = _uiState.value.downloadTargets.filter { downloadStates.containsKey(it) },
-                keptCount = 0,
-            )
         }
 
         /**
@@ -260,6 +273,47 @@ class ItemDetailViewModel
             }
         }
 
+        /**
+         * Everything the contextual selection bar over the episode list can ask for.
+         *
+         * One entry point rather than a method per button, so this screen and the library grid hand
+         * the shared `SelectionAppBar` the identical lambda (docs/features/batch-selection.md).
+         *
+         * Unlike the grid, **Select all** is offered and means exactly what it says: an episode list
+         * is fetched whole, so "all" is a set the user can see and count. Also unlike the grid, the
+         * selection is *not* dropped when the page reloads — [emitDetail] keeps whatever episodes
+         * came back — because a reload here is a background refresh (a connectivity change), not
+         * something the user asked for.
+         *
+         * The batch itself: *Mark watched / unwatched* is `UserDataRepository`, local-first, so it
+         * works with no network; *Download* skips episodes already on the device or already queued
+         * ([DownloadState.isDownloadable]) — the same rule `DownloadEnqueuer` applies when it
+         * expands a season — and reports the count it skipped. Selection mode ends before the work
+         * starts; the snackbar says when it finished.
+         */
+        fun onSelection(intent: SelectionIntent) {
+            val ids = _selection.value.ids.toList()
+            // Read before the `when` clears it: a Run acts on what was selected when it was tapped.
+            val action = (intent as? SelectionIntent.Run)?.action
+
+            when (intent) {
+                is SelectionIntent.Toggle -> _selection.update { it.toggled(intent.itemId) }
+                is SelectionIntent.SelectAll ->
+                    _selection.update { it.selecting(_uiState.value.episodes.map(JellyfinItem::id)) }
+
+                // Selection mode ends *before* the work starts, not after: a batch is a series of
+                // ordinary single-item calls that can take a while, and a bar left up over a live
+                // list invites a second tap on the same selection.
+                is SelectionIntent.Clear, is SelectionIntent.Run -> _selection.update { it.cleared() }
+            }
+
+            if (action == null || ids.isEmpty()) return
+            viewModelScope.launch {
+                val outcome = runSelectionBatch(action, ids, downloadStates, userDataRepository, downloads)
+                _uiState.update { it.copy(userMessage = UserMessage.BatchFinished(BatchReport(action, outcome))) }
+            }
+        }
+
         /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
             _uiState.update { it.copy(userMessage = null) }
@@ -302,6 +356,10 @@ class ItemDetailViewModel
 
         private suspend fun emitDetail(item: JellyfinItem) {
             val related = fetchRelated(item)
+            // A reload here is a background refresh — a connectivity edge, not a user action — so an
+            // open selection is kept rather than dropped. Episodes the server no longer returns fall
+            // out of it, because a batch must never act on a row that is not on the screen.
+            _selection.update { it.retaining(related.episodes.map(JellyfinItem::id)) }
             _uiState.update {
                 it
                     .copy(
@@ -368,6 +426,37 @@ class ItemDetailViewModel
              * series, so "more like this season" would be noise.
              */
             private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+        }
+    }
+
+/**
+ * Runs one batch action over [ids] and reports how it went.
+ *
+ * A top-level function rather than a method: `ItemDetailViewModel` is already at the project's
+ * function-count ceiling (detekt `TooManyFunctions`, threshold 20), and this dispatch depends on
+ * nothing but its arguments — which also makes it readable on its own.
+ *
+ * - **watched / unwatched** — `UserDataRepository`, which writes Room and publishes on the event bus
+ *   *before* it contacts the server, so the whole batch works with no network and the ticks appear
+ *   from the local write (docs/PLAN.md, "Data layer").
+ * - **download** — episodes already on the device or already queued are not passed to the enqueuer
+ *   at all ([DownloadState.isDownloadable]) and are counted as `skipped`; a failed one *is* passed,
+ *   because re-enqueueing is how a failure is retried. Offline, each enqueue fails exactly as a
+ *   single tap on the same row does today, and the summary reports the failures.
+ */
+private suspend fun runSelectionBatch(
+    action: SelectionAction,
+    ids: List<String>,
+    downloadStates: Map<String, DownloadState>,
+    userDataRepository: UserDataRepository,
+    downloads: DownloadRepository,
+): BatchOutcome =
+    when (action) {
+        SelectionAction.MARK_WATCHED -> runBatch(ids) { userDataRepository.setPlayed(it, played = true) }
+        SelectionAction.MARK_UNWATCHED -> runBatch(ids) { userDataRepository.setPlayed(it, played = false) }
+        SelectionAction.DOWNLOAD -> {
+            val targets = ids.filter { (downloadStates[it] ?: DownloadState.NotDownloaded).isDownloadable }
+            runBatch(targets, skipped = ids.size - targets.size) { downloads.enqueue(it) }
         }
     }
 

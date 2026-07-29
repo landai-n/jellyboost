@@ -64,6 +64,22 @@ the same event patches the home rows behind the screen. See `docs/features/user-
 The two not-yet-built buttons are drawn and enabled and say what is actually true rather than
 being disabled (which reads as "broken") or silently doing nothing — logged in `DECISIONS.md`.
 
+### Batch selection over the episode list
+
+Long-press an episode row to select it, then *Mark watched* / *Mark unwatched* / *Download* the
+whole set — see [`docs/features/batch-selection.md`](batch-selection.md). Detail-screen specifics:
+
+- selection is scoped to the **episode list** and to nothing else on the page; the seasons row,
+  *Next up* and *More like this* are navigation surfaces, not lists of peers;
+- this screen has no top bar, so the overlaid Back + Home pair *is* its bar and the contextual bar
+  takes that place while the mode is on (Home deliberately absent for the duration; `BackHandler`
+  intercepts Back only while selecting);
+- **Select all** is offered here — unlike the library grid — because an episode list is fetched
+  whole, so "all" is a set the user can see and count;
+- a background refresh (a connectivity edge) **keeps** the selection, minus any episode the server
+  no longer returns;
+- a selected row shows a `secondaryContainer` wash and its Play button becomes a checkbox.
+
 ## Navigation
 
 Route: `Routes.ItemDetail(itemId: String)` in `:core:common` (already declared at M0).

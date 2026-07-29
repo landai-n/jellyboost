@@ -99,6 +99,21 @@ detail chains that can get many entries deep. `onHome` is `AppScaffold.navigateH
 docs/features/item-detail.md, "Getting out of the chain", for why it navigates rather than pops.
 `actions` stays reserved for sort and filter.
 
+## Batch selection
+
+Long-press a poster to select it, then act on the whole set — see
+[`docs/features/batch-selection.md`](batch-selection.md) for the full behaviour. Grid-specific
+points:
+
+- the contextual bar **replaces** this screen's `TopAppBar`, so Sort and Filter are gone while a
+  selection is open — which is the point: they re-query the grid;
+- there is **no *Select all*** on a paged grid ("all" would mean either "the pages loaded so far" or
+  a page-by-page walk of the library);
+- the selection is **cleared whenever the query changes** — sort applied, filters applied or
+  cleared — and kept across page appends, badge changes and rotation;
+- `LibraryViewModel` now also collects `UserDataEventBus` and patches the loaded pages in place, so
+  a batch *Mark watched* shows its ticks with no re-query.
+
 ## Offline behaviour
 
 Online only until M6. `OnlineJellyfinRepository` is a pure network reader with no Room

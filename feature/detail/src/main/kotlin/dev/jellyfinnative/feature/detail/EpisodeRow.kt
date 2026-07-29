@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,17 +10,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.ui.component.ThumbCard
+import dev.jellyfinnative.core.ui.component.selectableCardClick
 import dev.jellyfinnative.core.ui.theme.Dimens
 
 /**
@@ -29,10 +33,16 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  * Reusing `ThumbCard` for the artwork is deliberate — the watched indicator and download badge an
  * episode shows here have to be the exact same ones the home rows show.
  *
- * @param onClick opens the episode's own detail page.
+ * @param onClick opens the episode's own detail page — or, while the list is in batch-selection
+ *   mode, toggles this row (the caller decides; see `ItemDetailScreen`).
  * @param onPlay starts playback directly. Worth its own button: from a season page the thing a
  *   user wants is almost always "play this one", and making them go through the episode page
- *   first adds a screen and a request for nothing.
+ *   first adds a screen and a request for nothing. Replaced by the selection checkbox while the
+ *   mode is on: play is a one-item action, and the mode is about many.
+ * @param onLongClick enters batch-selection mode; `null` on lists that do not offer it.
+ * @param selected `null` outside selection mode. Selected rows get a `secondaryContainer` wash
+ *   rather than the artwork scrim a poster gets — a list row's identity is its text, and dimming
+ *   the thumbnail alone would not read at a glance down a column of forty.
  */
 @Composable
 internal fun EpisodeRow(
@@ -40,13 +50,26 @@ internal fun EpisodeRow(
     onClick: () -> Unit,
     onPlay: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
+    selected: Boolean? = null,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+                .then(
+                    if (selected == true) {
+                        Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+                    } else {
+                        Modifier
+                    },
+                ).then(
+                    if (onLongClick == null) {
+                        Modifier.clickable(onClick = onClick)
+                    } else {
+                        Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
+                    },
+                ).padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         ThumbCard(
@@ -54,6 +77,8 @@ internal fun EpisodeRow(
             onClick = onClick,
             modifier = Modifier.width(EPISODE_THUMB_WIDTH),
             showTitle = false,
+            onLongClick = onLongClick,
+            selected = selected,
         )
 
         Column(
@@ -87,11 +112,21 @@ internal fun EpisodeRow(
             }
         }
 
-        IconButton(onClick = onPlay) {
-            Icon(
-                imageVector = Icons.Filled.PlayArrow,
-                contentDescription = stringResource(R.string.detail_play_episode),
-                tint = MaterialTheme.colorScheme.primary,
+        if (selected == null) {
+            IconButton(onClick = onPlay) {
+                Icon(
+                    imageVector = Icons.Filled.PlayArrow,
+                    contentDescription = stringResource(R.string.detail_play_episode),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        } else {
+            // `onCheckedChange = null` on purpose: the whole row is already the click target, and a
+            // second one inside it would let a tap land on the box but not on the row it belongs to.
+            Checkbox(
+                checked = selected,
+                onCheckedChange = null,
+                modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
     }

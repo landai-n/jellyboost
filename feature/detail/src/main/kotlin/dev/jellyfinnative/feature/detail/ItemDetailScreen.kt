@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.detail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,7 +27,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +40,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.selection.ItemSelection
+import dev.jellyfinnative.core.common.selection.SelectionIntent
 import dev.jellyfinnative.core.ui.component.BackdropHeader
 import dev.jellyfinnative.core.ui.component.EmptyState
 import dev.jellyfinnative.core.ui.component.ErrorState
 import dev.jellyfinnative.core.ui.component.LoadingState
 import dev.jellyfinnative.core.ui.component.MediaRow
 import dev.jellyfinnative.core.ui.component.PosterCard
+import dev.jellyfinnative.core.ui.component.SelectionAppBar
 import dev.jellyfinnative.core.ui.component.ThumbCard
+import dev.jellyfinnative.core.ui.component.batchOutcomeText
 import dev.jellyfinnative.core.ui.theme.Dimens
 
 /**
@@ -71,6 +79,11 @@ fun ItemDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectionState = viewModel.selection.collectAsStateWithLifecycle()
+    // Only *whether* the mode is on is read in this scope — it flips twice per selection. Reading
+    // the set here would recompose the page (and re-create the episode list's content lambda) on
+    // every toggle; the count is read inside [SelectionOverlay]'s own scope.
+    val isSelecting by remember(selectionState) { derivedStateOf { selectionState.value.isActive } }
     val snackbarHostState = remember { SnackbarHostState() }
     val message = state.userMessage?.let { userMessageText(it) }
 
@@ -80,6 +93,10 @@ fun ItemDetailScreen(
             viewModel.consumeMessage()
         }
     }
+
+    // Enabled only while the mode is on, so Back keeps popping this destination — and the overlaid
+    // Back / Home buttons keep working — at every other moment.
+    BackHandler(enabled = isSelecting) { viewModel.onSelection(SelectionIntent.Clear) }
 
     Box(modifier = modifier.fillMaxSize()) {
         ItemDetailContent(
@@ -94,6 +111,8 @@ fun ItemDetailScreen(
                     onToggleWatched = viewModel::toggleWatched,
                     onToggleFavorite = viewModel::toggleFavorite,
                 ),
+            selection = selectionState,
+            onSelection = viewModel::onSelection,
         )
 
         // This screen is a pushed destination, so per `AppScaffold`'s inset contract it gets none
@@ -103,24 +122,38 @@ fun ItemDetailScreen(
         // Home sits beside Back because a detail chain is the one place in the app that gets deep:
         // series → season → episode → "More like this" → … with no app bar to escape through, so
         // the only way out used to be tapping Back once per hop.
-        Row(
-            modifier =
-                Modifier
-                    .align(Alignment.TopStart)
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(Dimens.SpaceSmall),
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.detail_back),
-                )
-            }
-            IconButton(onClick = onHome) {
-                Icon(
-                    imageVector = Icons.Filled.Home,
-                    contentDescription = stringResource(R.string.detail_home),
-                )
+        //
+        // While episodes are selected the contextual bar takes this overlay's place rather than
+        // sitting beside or below it. This screen has no top bar of its own, so the overlaid pair
+        // *is* its bar, and a contextual bar's whole job is to replace one: the close (X) lands
+        // exactly where Back was, and Home is deliberately gone for the duration — leaving the
+        // screen mid-selection is what Back and X are for.
+        if (isSelecting) {
+            SelectionOverlay(
+                selection = selectionState,
+                onIntent = viewModel::onSelection,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        } else {
+            Row(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(Dimens.SpaceSmall),
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.detail_back),
+                    )
+                }
+                IconButton(onClick = onHome) {
+                    Icon(
+                        imageVector = Icons.Filled.Home,
+                        contentDescription = stringResource(R.string.detail_home),
+                    )
+                }
             }
         }
 
@@ -136,6 +169,26 @@ fun ItemDetailScreen(
             )
         }
     }
+}
+
+/**
+ * The contextual bar, in a composable of its own so that reading the *count* recomposes this and
+ * nothing else — `ItemDetailScreen` only ever reads whether the mode is on.
+ */
+@Composable
+private fun SelectionOverlay(
+    selection: State<ItemSelection>,
+    onIntent: (SelectionIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SelectionAppBar(
+        count = selection.value.count,
+        onIntent = onIntent,
+        modifier = modifier,
+        // Unlike the paged library grid, an episode list is fetched whole: "all" is a set the user
+        // can see and count (docs/features/batch-selection.md).
+        showSelectAll = true,
+    )
 }
 
 /**
@@ -177,6 +230,8 @@ fun ItemDetailContent(
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
+    selection: State<ItemSelection> = remember { mutableStateOf(ItemSelection()) },
+    onSelection: (SelectionIntent) -> Unit = {},
 ) {
     val detail = state.item
     when {
@@ -198,6 +253,8 @@ fun ItemDetailContent(
                     onItemClick = onItemClick,
                     onPlay = onPlay,
                     actions = actions,
+                    selection = selection,
+                    onSelection = onSelection,
                 )
             }
     }
@@ -212,6 +269,8 @@ private fun DetailSections(
     onItemClick: (JellyfinItem) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     actions: DetailActionHandlers,
+    selection: State<ItemSelection>,
+    onSelection: (SelectionIntent) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -261,10 +320,29 @@ private fun DetailSections(
                 SectionTitle(text = stringResource(R.string.detail_section_episodes))
             }
             items(items = state.episodes, key = JellyfinItem::id) { episode ->
+                val id = episode.id
+                // One derived flag per row, so toggling one episode invalidates one row rather than
+                // the forty a season can hold — the same idiom `LibraryGridScreen` uses.
+                val selected by
+                    remember(selection, id) {
+                        derivedStateOf {
+                            val current = selection.value
+                            if (current.isActive) id in current else null
+                        }
+                    }
+
                 EpisodeRow(
                     episode = episode,
-                    onClick = { onItemClick(episode) },
+                    onClick = {
+                        if (selection.value.isActive) {
+                            onSelection(SelectionIntent.Toggle(id))
+                        } else {
+                            onItemClick(episode)
+                        }
+                    },
                     onPlay = { onPlay(episode.id, playbackStartTicks(episode)) },
+                    onLongClick = { onSelection(SelectionIntent.Toggle(id)) },
+                    selected = selected,
                 )
             }
         }
@@ -309,6 +387,8 @@ private fun userMessageText(message: UserMessage): String =
                 message.keptCount,
                 message.keptCount,
             )
+
+        is UserMessage.BatchFinished -> batchOutcomeText(message.report.action, message.report.outcome)
     }
 
 private const val SECTION_BACKDROP = "section-backdrop"

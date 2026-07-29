@@ -32,6 +32,12 @@ import dev.jellyfinnative.core.ui.theme.POSTER_ASPECT_RATIO
  * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
  *   width instead, which is what an adaptive grid cell wants (and saves the caller a
  *   `BoxWithConstraints` per cell).
+ * @param onLongClick offered by lists that support batch selection; `null` everywhere else, which
+ *   leaves the card with a plain `clickable` and no combined-gesture detector at all.
+ * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork]. A plain
+ *   `Boolean` per card (rather than the selection set itself) is what keeps a toggle from
+ *   recomposing every visible cell: only the two cards whose flag actually flipped have a changed
+ *   parameter.
  */
 @Composable
 fun PosterCard(
@@ -40,12 +46,20 @@ fun PosterCard(
     modifier: Modifier = Modifier,
     width: Dp = Dimens.PosterWidth,
     showTitle: Boolean = true,
+    onLongClick: (() -> Unit)? = null,
+    selected: Boolean? = null,
 ) {
     Column(
         modifier =
             modifier
                 .cardWidth(width)
-                .clickable(onClick = onClick),
+                .then(
+                    if (onLongClick == null) {
+                        Modifier.clickable(onClick = onClick)
+                    } else {
+                        Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
+                    },
+                ),
     ) {
         MediaCardArtwork(
             imageUrl = item.primaryImageUrl,
@@ -55,6 +69,7 @@ fun PosterCard(
             played = item.userData.played,
             progress = item.playbackProgress,
             placeholderIcon = Icons.Outlined.Movie,
+            selected = selected,
         )
 
         if (showTitle) {

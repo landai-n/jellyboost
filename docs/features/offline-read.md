@@ -5,8 +5,8 @@ screen with or without a server, and the only thing that changes underneath is w
 answered. No banner-driven navigation, no separate offline UI, no "download manager" the user has
 to go into to watch what they downloaded.
 
-This document covers what M6 built, plus the M9 refresh-on-reconnect that closed its one known gap
-("Coming back online", below). Downloads themselves are M7; offline *playback* and the
+This document covers what M6 built, plus the M9 refresh that closed its one known gap
+("Following the connection", below). Downloads themselves are M7; offline *playback* and the
 most-recent-wins sync worker are M8.
 
 ---
@@ -95,6 +95,16 @@ Scope, from the plan's "Confirmed decisions": **downloaded items only**, with on
 | Search | name / series-name `LIKE` over downloaded items |
 | Item detail | any cached row; `getSimilarItems` is empty offline |
 
+**`getUserViews` does not know about the download filter.** My Media is the one row above that
+isn't scoped to downloaded items — it answers from the full cached `library_views` table, the same
+rows an online session would see, whether or not anything in a given library has actually been
+downloaded. Left alone, that means an offline My Media card can open onto a grid with nothing in
+it. `HomeViewModel` corrects this one level up: a library is dropped from the *My Media* cards when
+its *Latest* call for that library **succeeded and came back empty**, and kept when that call
+**failed**. The *Latest* shelves were already filtered on `items.isNotEmpty()`, so this only makes
+the cards agree with the shelves below them; distinguishing failure from emptiness is what stops
+one flaky `getLatestMedia` call while online from making a library's card vanish.
+
 **Which library an offline row belongs to is decided by its type, not by `parentId`.** A downloaded
 row is stored with `parentId NULL` (the enqueue-time DTO carries no usable `ParentId`), and even
 when a server sends one it is the item's containing *folder*, not the library-view id the grid asks
@@ -118,39 +128,48 @@ The behaviour is pinned by `OfflineJellyfinRepositoryTest`, which seeds Room dir
 
 ---
 
-## Coming back online — refresh on reconnect (M9)
+## Following the connection — refresh on every connectivity change (M9)
 
 Choosing a source *per call* is the right rule for a call that has not happened yet, and no rule at
 all for a screen that already fetched. A home screen opened in airplane mode kept showing downloaded
 media after the network returned, until the user navigated away and back (STATUS.md, M6 known
-issues). That is the gap this closes.
+issues). That was the original gap, but it turned out to be only half of it: switching to offline
+mode, or simply losing the network, left an already-loaded screen showing its *online* rows —
+server items the app can no longer play, sitting right next to a banner saying so. Going offline
+needs the same correction as coming back, and for the same reason: what a screen is showing must
+match what it can currently do. Both directions are handled by one signal now.
 
 ```
-ConnectionStateProvider.state ─► reconnectEdges() ─► ReconnectRefresher.reconnected ─► ViewModels
-      StateFlow<ConnectionState>      Flow<Unit>            Flow<Unit> (@Singleton)      re-load
+ConnectionStateProvider.state ─► onlineStateChanges() ─► ConnectivityRefresher.connectivityChanged ─► ViewModels
+      StateFlow<ConnectionState>      Flow<Boolean>                Flow<Unit> (@Singleton)               re-load
 ```
 
-**`reconnectEdges()` (`:core:network/connectivity`)** maps the state to online-ness,
-`distinctUntilChanged`s it, **drops the initial value** and emits `Unit` on every `false → true`
-edge after that. The two things it does not do are the point:
+**`onlineStateChanges()` (`:core:network/connectivity`)** maps the state to online-ness,
+`distinctUntilChanged`s it, **drops the initial value** and emits the new online-ness — `true` or
+`false` — on every change after that, in both directions. The two things it does not do are the
+point:
 
 - *no emission for the state a screen starts with.* Every ViewModel already loads in its `init`, so
   an initial emission would make an ordinary online launch fetch everything twice. This is exactly
   where it diverges from `UserDataSyncTrigger`, which deliberately *does* act on its initial value —
   its consumer is guarded by a cheap `COUNT(*)`, and it has an app-start case to cover. See
   DECISIONS.md, 2026-07-29.
-- *no emission per intermediate state.* Swapping between two offline reasons is not a reconnect, and
-  a connection that flaps twice produces two refreshes, not one per state it passed through.
+- *no emission per intermediate state.* Swapping between two offline reasons (say,
+  `OFFLINE_NO_NETWORK` to `OFFLINE_FORCED`) is not a connectivity change as far as a screen's data is
+  concerned, and a connection that flaps twice produces two refreshes, not one per state it passed
+  through.
 
-**`ReconnectRefresher` (`:data`)** is the `@Singleton` handle feature modules inject:
-`val reconnected: Flow<Unit>`. Its surface is a `Flow<Unit>` and nothing else on purpose — feature
-modules depend on `:data`, not on `:core:network`, so no ViewModel needs to see `ConnectionState` to
-know "refresh now". No `build.gradle.kts` changed to wire this up.
+**`ConnectivityRefresher` (`:data`)** is the `@Singleton` handle feature modules inject:
+`val connectivityChanged: Flow<Unit>`. It discards the `Boolean` — every ViewModel below reruns the
+same reload whichever way the edge ran — and its surface is a bare `Flow<Unit>` and nothing else on
+purpose: feature modules depend on `:data`, not on `:core:network`, so no ViewModel needs to see
+`ConnectionState` to know "refresh now". No `build.gradle.kts` changed to wire this up.
 
 Each ViewModel collects it in `init` and re-runs **the load path it already had** — nothing here is
-a second, reconnect-only code path:
+a second, connectivity-only code path, and the same call fires whether the edge just went offline or
+just came back online:
 
-| ViewModel | on a reconnect |
+| ViewModel | on a connectivity change |
 |---|---|
 | `HomeViewModel` | `refresh()` — every row |
 | `LibrariesViewModel` | `refresh()` — the library list |
@@ -159,10 +178,11 @@ a second, reconnect-only code path:
 | `LibraryViewModel` | `retryFacets()` — the filter facets, and **only** them |
 
 **The library grid is the special case.** `getItemsPaged` already re-decides online/offline on every
-connection change and hands out a new `Pager` (see §2 above), so the grid swaps back to the server's
-items on its own, with no wiring — re-triggering it here would only make it fetch twice. The filter
-facets are a one-shot call the sheet makes, so they are the part that stays stale; they are re-loaded
-only if the sheet was already opened once (`areFacetsLoaded || facetsError != null`), because a
+connection change and hands out a new `Pager` (see §2 above), so the grid swaps to the right side —
+server or downloaded — on its own, in either direction, with no wiring: re-triggering it here would
+only make it fetch twice. The filter facets are a one-shot call the sheet makes, so they are the part
+that stays stale on either edge; they are re-loaded only if the sheet was already opened once
+(`areFacetsLoaded || facetsError != null`), because a
 screen whose sheet was never opened has nothing stale to replace and still fetches on first open.
 
 ---
@@ -251,9 +271,9 @@ Unit tests (JVM, no device):
 | `BrowseCacheWriterTest` | the never-downgrade-a-download rule, library pruning |
 | `ItemEntityMapperTest` | blob round trip against the online mapper, unreadable-blob handling |
 | `DataStoreAppPreferencesTest` | force-offline round trip through a real DataStore file |
-| `ReconnectEdgesTest` | the edge semantics: nothing for the initial value, one emission per `false → true`, none for a flap between offline reasons |
-| `ReconnectRefresherTest` | the `:data` handle passes the edges through and adds nothing |
-| `HomeViewModelTest`, `LibrariesViewModelTest`, `ItemDetailViewModelTest`, `SearchViewModelTest`, `LibraryViewModelTest` | one reconnect test each: the expected reload runs exactly once, and nothing runs before the reconnect (plus search's blank-query no-op and the grid's leave-it-to-the-`Pager` case) |
+| `ConnectivityEdgesTest` | the edge semantics: nothing for the initial value (online and offline), `true` on coming back online, `false` on losing the connection, `false` when the user pins offline mode, nothing for a flap between two offline reasons, and `false,true,false,true` for a connection that flaps twice |
+| `ConnectivityRefresherTest` | the `:data` handle passes both directions through and adds nothing: fires when the connection comes back, fires when it is lost, fires when the user pins offline mode |
+| `HomeViewModelTest`, `LibrariesViewModelTest`, `ItemDetailViewModelTest`, `SearchViewModelTest`, `LibraryViewModelTest` | the expected reload runs exactly once on each edge — coming back online and losing the connection alike — and nothing runs before the change (plus search's blank-query no-op and the grid's leave-it-to-the-`Pager` case); `HomeViewModelTest` additionally covers the empty-library-card rule: a card is kept when its *Latest* call only failed, and dropped — on either an online refresh or on losing the connection — when the call succeeded with nothing behind it |
 
 On device (M6 definition of done, walked by the orchestrator):
 

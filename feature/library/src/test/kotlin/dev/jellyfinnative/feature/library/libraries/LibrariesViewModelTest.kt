@@ -5,8 +5,8 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -34,11 +34,11 @@ class LibrariesViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
 
-    /** The reconnect signal (M9); fires only when a test says the server came back. */
-    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val reconnectRefresher =
-        mockk<ReconnectRefresher> {
-            every { reconnected } returns reconnects
+    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val connectivityRefresher =
+        mockk<ConnectivityRefresher> {
+            every { connectivityChanged } returns connectivityChanges
         }
 
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
@@ -59,7 +59,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
 
             viewModel.uiState.value.isLoading shouldBe true
         }
@@ -69,7 +69,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -83,7 +83,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
 
             viewModel.uiState.test {
                 awaitItem().isLoading shouldBe true
@@ -100,7 +100,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
 
             val state = viewModel.uiState.value
@@ -114,7 +114,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
 
             viewModel.uiState.value.isEmpty shouldBe true
@@ -125,7 +125,7 @@ class LibrariesViewModelTest {
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Failure(AppError.Network())
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
             val failed = viewModel.uiState.value
             failed.error.shouldBeInstanceOf<AppError.Network>()
@@ -141,20 +141,20 @@ class LibrariesViewModelTest {
             coVerify(exactly = 2) { repository.getUserViews() }
         }
 
-    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-fetches the libraries when the server becomes reachable again`() =
         runTest(dispatcher) {
             coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
 
-            val viewModel = LibrariesViewModel(repository, reconnectRefresher)
+            val viewModel = LibrariesViewModel(repository, connectivityRefresher)
             advanceUntilIdle()
             // The initial load, and nothing else: an app that starts online must not fetch twice.
             coVerify(exactly = 1) { repository.getUserViews() }
 
             coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies, shows))
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             coVerify(exactly = 2) { repository.getUserViews() }

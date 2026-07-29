@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -55,6 +56,15 @@ class DataStoreAppPreferences
             dataStore.edit { it[DOWNLOAD_OVER_WIFI_ONLY] = enabled }
         }
 
+        // Same name-based encoding, and the same forgiving read, as the skip modes below: a stored
+        // name this build does not know decodes to ORIGINAL, which is what a fresh install gets.
+        override val downloadQuality: Flow<DownloadQuality> =
+            preferences.map { DownloadQuality.fromNameOrDefault(it[DOWNLOAD_QUALITY]) }
+
+        override suspend fun setDownloadQuality(quality: DownloadQuality) {
+            dataStore.edit { it[DOWNLOAD_QUALITY] = quality.name }
+        }
+
         // M9 player ---------------------------------------------------------------------------
 
         override val introSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_INTRO) }
@@ -89,6 +99,7 @@ class DataStoreAppPreferences
         private companion object {
             val FORCE_OFFLINE = booleanPreferencesKey(PreferenceKeys.FORCE_OFFLINE)
             val DOWNLOAD_OVER_WIFI_ONLY = booleanPreferencesKey(PreferenceKeys.DOWNLOAD_OVER_WIFI_ONLY)
+            val DOWNLOAD_QUALITY = stringPreferencesKey(PreferenceKeys.DOWNLOAD_QUALITY)
             val SEGMENT_SKIP_INTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_INTRO)
             val SEGMENT_SKIP_OUTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_OUTRO)
             val PIP_ON_LEAVE = booleanPreferencesKey(PreferenceKeys.PIP_ON_LEAVE)

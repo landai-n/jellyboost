@@ -10,8 +10,8 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
@@ -44,7 +44,7 @@ class ItemDetailViewModel
         private val repository: JellyfinRepository,
         private val userDataRepository: UserDataRepository,
         private val downloads: DownloadRepository,
-        private val reconnectRefresher: ReconnectRefresher,
+        private val connectivityRefresher: ConnectivityRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         /**
@@ -68,19 +68,21 @@ class ItemDetailViewModel
             load(isRefresh = false)
             observeUserDataChanges()
             observeDownloadState()
-            observeReconnects()
+            observeConnectivityChanges()
         }
 
         /**
-         * Re-fetches this item once the server is reachable again (M9).
+         * Re-fetches this item whenever the connection changes (M9), in either direction.
          *
          * Offline, `getItem` answers from the cache — and for anything that is not downloaded, with
-         * a placeholder carrying `available = false`. That page has to become the real one on its
-         * own; a user who reconnects while looking at it should not have to back out and return.
+         * a placeholder carrying `available = false`. That page has to become the real one when the
+         * server returns, and the real one has to become the placeholder when it goes away: a user
+         * looking at a detail page across either transition should not have to back out and return
+         * to see a Play button that means what it says.
          */
-        private fun observeReconnects() {
+        private fun observeConnectivityChanges() {
             viewModelScope.launch {
-                reconnectRefresher.reconnected.collect { refresh() }
+                connectivityRefresher.connectivityChanged.collect { refresh() }
             }
         }
 

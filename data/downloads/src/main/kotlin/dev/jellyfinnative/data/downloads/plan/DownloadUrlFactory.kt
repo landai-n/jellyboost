@@ -1,11 +1,13 @@
 package dev.jellyfinnative.data.downloads.plan
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.subtitleApi
 import org.jellyfin.sdk.api.client.extensions.trickplayApi
 import org.jellyfin.sdk.api.client.extensions.videosApi
+import org.jellyfin.sdk.model.api.EncodingContext
 import org.jellyfin.sdk.model.api.ImageFormat
 import org.jellyfin.sdk.model.api.ImageType
 import java.util.UUID
@@ -38,6 +40,27 @@ interface DownloadUrlFactory {
     fun videoStreamUrl(
         itemId: UUID,
         mediaSourceId: String?,
+    ): String
+
+    /**
+     * A server-side transcode of the item, muxed into one progressive `.mp4` (M9 download quality).
+     *
+     * Every encoding parameter is spelled out rather than left to the server's own negotiation:
+     * a download has no `PlaybackInfo` session behind it and no device profile to reason from, so
+     * the only way the bytes are predictable is to ask for exactly one shape — H.264 video under
+     * [DownloadQuality.videoBitRate] and [DownloadQuality.maxHeight], stereo AAC audio, `mp4`.
+     *
+     * `context = STATIC` is the one non-obvious parameter and it matters: the server throttles a
+     * `STREAMING` transcode to roughly real time, which would make a two-hour film take two hours
+     * to download. `STATIC` is the "produce this as fast as you can" context.
+     *
+     * @param quality must be a transcoded step; [DownloadQuality.ORIGINAL] has no stream URL and is
+     *   served by [mediaUrl] instead.
+     */
+    fun transcodedVideoUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+        quality: DownloadQuality,
     ): String
 
     /** An item image at a fixed width — artwork is stored small, not at source resolution. */
@@ -82,6 +105,32 @@ internal class SdkDownloadUrlFactory
                 static = true,
                 mediaSourceId = mediaSourceId,
                 deviceId = apiClient.deviceInfo.id,
+            )
+
+        override fun transcodedVideoUrl(
+            itemId: UUID,
+            mediaSourceId: String?,
+            quality: DownloadQuality,
+        ): String =
+            apiClient.videosApi.getVideoStreamByContainerUrl(
+                itemId = itemId,
+                // `/Videos/{id}/stream.mp4` rather than `?container=mp4`: the extension is part of
+                // the path, so the response is one progressive file and not an HLS playlist.
+                container = DownloadQuality.CONTAINER,
+                static = false,
+                mediaSourceId = mediaSourceId,
+                deviceId = apiClient.deviceInfo.id,
+                videoCodec = DownloadQuality.VIDEO_CODEC,
+                audioCodec = DownloadQuality.AUDIO_CODEC,
+                videoBitRate = quality.videoBitRate,
+                maxHeight = quality.maxHeight,
+                audioBitRate = DownloadQuality.AUDIO_BITRATE,
+                maxAudioChannels = DownloadQuality.AUDIO_CHANNELS,
+                // Copy the video track when it already fits the request, re-encode when it does
+                // not: a 1080p H.264 file asked for at HIGH becomes a remux, which is free.
+                allowVideoStreamCopy = true,
+                allowAudioStreamCopy = false,
+                context = EncodingContext.STATIC,
             )
 
         override fun imageUrl(

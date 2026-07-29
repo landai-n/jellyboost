@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.plan
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.subtitleStream
@@ -77,6 +78,54 @@ class DownloadFilePlannerTest {
     @Test
     fun `the media file is named after the server's own file`() {
         planner.plan(movie(), DIRECTORY).media().fileName shouldBe "Arrival.2016.mkv"
+    }
+
+    // ---- download quality (M9) ------------------------------------------------------------------
+
+    @Test
+    fun `a quality below the original asks for a transcode instead of the download endpoint`() {
+        val plan = planner.plan(movie(), DIRECTORY, quality = DownloadQuality.MEDIUM)
+
+        plan.media().url shouldBe
+            "transcode://${uuid(1)}?mediaSourceId=source-1&quality=MEDIUM&videoBitRate=8000000&maxHeight=1080"
+    }
+
+    @Test
+    fun `every transcoded step carries its own bitrate and height`() {
+        DownloadQuality.entries.filter { it.isTranscoded }.forEach { quality ->
+            val url = planner.plan(movie(), DIRECTORY, quality = quality).media().url
+
+            url shouldContain "videoBitRate=${quality.videoBitRate}"
+            url shouldContain "maxHeight=${quality.maxHeight}"
+        }
+    }
+
+    @Test
+    fun `a denied download policy does not downgrade a transcode to the static stream`() {
+        // The static stream *is* the original file; falling back to it would silently hand the user
+        // the 25 Mbps remux they asked the server to shrink.
+        val plan = planner.plan(movie(), DIRECTORY, downloadAllowed = false, quality = DownloadQuality.LOW)
+
+        plan.media().url shouldContain "transcode://"
+    }
+
+    @Test
+    fun `a transcoded media file is named for the container the server actually sends`() {
+        // The source is `Arrival.2016.mkv`; what arrives is mp4, and the name says so — along with
+        // the quality, so a re-download at another quality cannot land on top of this file.
+        planner.plan(movie(), DIRECTORY, quality = DownloadQuality.LOW).media().fileName shouldBe
+            "$DIRECTORY (low).mp4"
+    }
+
+    @Test
+    fun `quality changes the media file and nothing else`() {
+        val item = movie(backdropTag = "backdrop", streams = listOf(subtitleStream(index = 3)))
+
+        val original = planner.plan(item, DIRECTORY)
+        val transcoded = planner.plan(item, DIRECTORY, quality = DownloadQuality.HIGH)
+
+        original.filterNot { it.type == DownloadFileType.MEDIA } shouldContainExactly
+            transcoded.filterNot { it.type == DownloadFileType.MEDIA }
     }
 
     // ---- images ---------------------------------------------------------------------------------
@@ -242,6 +291,13 @@ private class FakeDownloadUrlFactory : DownloadUrlFactory {
         itemId: UUID,
         mediaSourceId: String?,
     ) = "stream://$itemId?mediaSourceId=$mediaSourceId"
+
+    override fun transcodedVideoUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+        quality: DownloadQuality,
+    ) = "transcode://$itemId?mediaSourceId=$mediaSourceId&quality=${quality.name}" +
+        "&videoBitRate=${quality.videoBitRate}&maxHeight=${quality.maxHeight}"
 
     override fun imageUrl(
         itemId: UUID,

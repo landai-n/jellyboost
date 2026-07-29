@@ -307,16 +307,18 @@ directly, and the pre-existing `LogoutRedirectEffect` in `JellyfinNavHost` (watc
 `SessionState.LoggedOut`, regardless of what triggered it. The `onSignOut` callback that used to
 thread `MainActivity → JellyfinNativeApp → AppScaffold → JellyfinNavHost → HomeRoute` is gone.
 
-### A second connectivity signal: reconnect edges
+### A second connectivity signal: connectivity changes
 
 `ConnectionStateProvider.state` already had one consumer that reacts to a connectivity
-*transition* rather than a snapshot (`UserDataSyncTrigger`, M8). M9 adds a second, smaller one:
+*transition* rather than a snapshot (`UserDataSyncTrigger`, M8). M9 adds a second, smaller one —
+and, after a fix later the same milestone, one that fires on *both* the online→offline and the
+offline→online edge, not only the latter:
 
 ```
-ConnectionStateProvider.state ──► reconnectEdges()   (:core:network, Flow<ConnectionState> extension)
-                                        │  map{isOnline}.distinctUntilChanged().drop(1).filter{it}
+ConnectionStateProvider.state ──► onlineStateChanges()   (:core:network, Flow<ConnectionState> extension)
+                                        │  map{isOnline}.distinctUntilChanged().drop(1)
                                         ▼
-                                 ReconnectRefresher.reconnected: Flow<Unit>   (:data)
+                            ConnectivityRefresher.connectivityChanged: Flow<Unit>   (:data)
                                         │
               ┌─────────────┬──────────┼───────────────┬─────────────────┐
               ▼             ▼          ▼                ▼                 ▼
@@ -326,19 +328,27 @@ ConnectionStateProvider.state ──► reconnectEdges()   (:core:network, Flow<
                                                                       refreshes, see below)
 ```
 
-`ReconnectRefresher` exists so five feature modules — none of which depend on `core:network` — can
-observe a reconnect edge as a bare `Flow<Unit>`, the same shape `:data` already uses to keep
+`ConnectivityRefresher` exists so five feature modules — none of which depend on `core:network` —
+can observe a connectivity change as a bare `Flow<Unit>`, the same shape `:data` already uses to keep
 `core.network` types off feature classpaths for `JellyfinRepository`. It deliberately does **not**
 reuse `UserDataSyncTrigger`'s "fire on the initial value too" convention: that trigger's consumer is
 idempotent and free when nothing is pending, but a ViewModel that already fetches once in `init`
-would double every request on an ordinary launch if the reconnect signal fired at startup too
+would double every request on an ordinary launch if the connectivity signal fired at startup too
 (`DECISIONS.md`, 2026-07-29). The two connectivity-transition consumers now answer genuinely
 different questions and are not expected to converge.
 
+The signal originally fired only on the offline→online edge (`filter{it}` after the
+`distinctUntilChanged`), which turned out to be half the bug it was meant to fix: switching to
+offline mode, or simply losing the network, left an already-loaded screen showing online rows the
+app could no longer play, right next to the offline banner saying so. Dropping the `filter{it}` so
+`onlineStateChanges()` emits the new online-ness — `true` or `false` — on every change fixes that
+symmetrically, with every consumer below running the exact same reload on either edge (DECISIONS.md,
+2026-07-29).
+
 `LibraryViewModel`'s paged grid needed no wiring at all — `DelegatingJellyfinRepository.
 getItemsPaged` already `flatMapLatest`s a fresh `Pager` off `ConnectionState.isOnline`, so a
-reconnect edge already swaps the grid's data source for free. `ReconnectRefresher` only drives that
-ViewModel's filter facets, which sit outside the paged flow.
+connectivity change already swaps the grid's data source for free, in either direction.
+`ConnectivityRefresher` only drives that ViewModel's filter facets, which sit outside the paged flow.
 
 ### The offline user-data push is now actually gated on connectivity
 
@@ -350,3 +360,39 @@ deliberately not mirrored for the offline case: `UserDataSyncTrigger` already ow
 everything pending on the next reconnect, so an offline write only needs to leave `toBeSynced = true`
 behind, which `storeLocally` already did before this change and still does.
 <!-- END: Settings + app polish (M9) -->
+
+<!-- BEGIN: Download quality (M9) -->
+## Download quality (M9)
+
+Full detail: [`docs/features/download-quality.md`](features/download-quality.md).
+
+**The rule the architecture enforces:** the quality a download was fetched at is a property of the
+*row*, not of a live preference read — the same "Room holds the plan, Room wins" rule the file name
+already followed, and for the same corruption reason (DECISIONS.md, 2026-07-29).
+
+One preference threads through the whole module graph, each module doing exactly one job with it:
+
+| module | role |
+|---|---|
+| `:core:common` | `model/DownloadQuality.kt` — the four-entry enum (`ORIGINAL`/`HIGH`/`MEDIUM`/`LOW`), its bitrate/height ladder, and `isTranscoded`. Lives here for the reason `DownloadStatus` and `SegmentSkipMode` already do: the preference store, the pipeline and the settings screen all need to see it and none of them see each other. |
+| `:core:datastore` | `AppPreferences.downloadQuality` (DataStore key `download_quality`), defaulting to `ORIGINAL`. Read exactly once per item, by `DownloadEnqueuer`, at the moment of the tap. |
+| `:core:database` | `DownloadEntity.quality`, `DownloadQualityConverter`. Schema **v5** via `@AutoMigration(4, 5)` — one `NOT NULL` column with SQL default `'ORIGINAL'`, purely additive, exported. This is the module graph's **current** database version. |
+| `:data:downloads` | the plan branch: `DownloadFilePlanner.media()` picks `DownloadUrlFactory.mediaUrl()` or `.transcodedVideoUrl()` on `quality.isTranscoded`; `DownloadQueue.reconcile` always plans from `download.quality`, never from the live preference; the 403 download-policy fallback is skipped for a transcoded row. |
+| `:feature:settings` | `DownloadQualityGroup`, a `SettingsChoiceGroup` in the Downloads section, one row per entry with its bitrate in the label. |
+
+```
+:feature:settings ──► AppPreferences.downloadQuality (:core:datastore)
+                              │
+                              │ read once, on tap
+                              ▼
+                     DownloadEnqueuer (:data:downloads) ──► DownloadEntity.quality (:core:database, v5)
+                              │
+                              │ every later drain reads the ROW
+                              ▼
+                     DownloadQueue.reconcile ──► DownloadFilePlanner.media(quality) ──► DownloadUrlFactory
+```
+
+No new module edges: `:data:downloads` already depended on `:core:datastore` (the Wi-Fi-only
+constraint) and on `:core:database`, so the quality preference travels along dependency edges that
+already existed.
+<!-- END: Download quality (M9) -->

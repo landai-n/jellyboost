@@ -84,7 +84,9 @@ Order is the contract:
 
 1. **`IMAGE_PRIMARY`** — `primary.webp`, 480 px. First so the queue row and the notification have
    artwork within a second rather than after the two gigabytes.
-2. **`MEDIA`** — the item's own filename from `path`, else `<directory>.<container>`. **Essential.**
+2. **`MEDIA`** — the item's own filename from `path`, else `<directory>.<container>`, **when the
+   download is fetched at its `ORIGINAL` quality** (the default, and the only quality this document
+   otherwise describes). **Essential.**
 3. **`IMAGE_BACKDROP`** — `backdrop.webp`, 1280 px (the offline detail header draws it full-bleed).
 4. **`IMAGE_SERIES_PRIMARY`** — `series-primary.webp`, 300 px; lets a downloaded episode render its
    show offline without the series being downloaded.
@@ -98,12 +100,20 @@ Order is the contract:
 `ERROR`; any other file failing marks *that file* `ERROR` and the item still finishes `DOWNLOADED` —
 a film without its backdrop is still a film.
 
+**A download can also ask for less than the original file.** Everything in this section describes
+the `ORIGINAL` quality — the plan's own behaviour and still the default. When the user's *download
+quality* setting is `HIGH`/`MEDIUM`/`LOW`, the `MEDIA` entry is a server-side transcode instead: a
+different URL, a different (fixed) file name, no exact size and no `Range` resume. That path, its
+reasoning and its tests are documented separately in
+[`docs/features/download-quality.md`](download-quality.md) rather than duplicated here.
+
 ### Endpoints
 
 | File | Call |
 |---|---|
 | media | `libraryApi.getDownloadUrl(itemId)` |
 | media (fallback) | `videosApi.getVideoStreamUrl(itemId, static = true, mediaSourceId)` |
+| media (transcoded, non-`ORIGINAL` quality) | `videosApi.getVideoStreamByContainerUrl(...)` — see [`docs/features/download-quality.md`](download-quality.md) |
 | images | `imageApi.getItemImageUrl(itemId, type, tag, format = WEBP, fillWidth)` |
 | subtitles | `subtitleApi.getSubtitleUrl(itemId, mediaSourceId, streamIndex, format)` |
 | trickplay | `trickplayApi.getTrickplayTileImageUrl(itemId, width, tileIndex)` |

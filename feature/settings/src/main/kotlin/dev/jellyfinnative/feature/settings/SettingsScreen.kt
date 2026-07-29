@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.core.ui.theme.JellyfinTheme
@@ -74,6 +75,7 @@ fun SettingsScreen(
                 onOutroSkipMode = viewModel::setOutroSkipMode,
                 onPipOnLeave = viewModel::setPipOnLeave,
                 onWifiOnly = viewModel::setDownloadOverWifiOnly,
+                onDownloadQuality = viewModel::setDownloadQuality,
                 onForceOffline = viewModel::setForceOffline,
                 onSignOut = viewModel::signOut,
             ),
@@ -88,6 +90,7 @@ data class SettingsActions(
     val onOutroSkipMode: (SegmentSkipMode) -> Unit,
     val onPipOnLeave: (Boolean) -> Unit,
     val onWifiOnly: (Boolean) -> Unit,
+    val onDownloadQuality: (DownloadQuality) -> Unit,
     val onForceOffline: (Boolean) -> Unit,
     /** `true` also removes every downloaded file before the session ends. */
     val onSignOut: (Boolean) -> Unit,
@@ -216,8 +219,44 @@ private fun DownloadsSection(
             checked = state.downloadOverWifiOnly,
             onCheckedChange = actions.onWifiOnly,
         )
+        DownloadQualityGroup(selected = state.downloadQuality, onSelect = actions.onDownloadQuality)
         StorageRow(usage = state.storage)
     }
+}
+
+/**
+ * The download-quality picker (M9).
+ *
+ * Each option carries its bitrate in the label rather than in a supporting line, because what the
+ * user is choosing between is four numbers and the numbers are the choice. The caveat under the
+ * group is the one thing they cannot infer: a transcoded download shows an estimated size and does
+ * not resume (see docs/features/download-quality.md).
+ */
+@Composable
+private fun DownloadQualityGroup(
+    selected: DownloadQuality,
+    onSelect: (DownloadQuality) -> Unit,
+) {
+    SettingsChoiceGroup(label = stringResource(R.string.settings_quality)) {
+        DownloadQuality.entries.forEach { quality ->
+            SettingsChoiceRow(
+                label = stringResource(quality.labelRes()),
+                selected = quality == selected,
+                onSelect = { onSelect(quality) },
+            )
+        }
+    }
+    Text(
+        text = stringResource(R.string.settings_quality_supporting),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier =
+            Modifier.padding(
+                start = Dimens.ScreenPadding,
+                end = Dimens.ScreenPadding,
+                bottom = Dimens.SpaceSmall,
+            ),
+    )
 }
 
 /** Informational only — changing where downloads live waits on SAF support (see the file KDoc). */
@@ -354,6 +393,14 @@ private fun DeleteDownloadsCheckbox(
     }
 }
 
+private fun DownloadQuality.labelRes(): Int =
+    when (this) {
+        DownloadQuality.ORIGINAL -> R.string.settings_quality_original
+        DownloadQuality.HIGH -> R.string.settings_quality_high
+        DownloadQuality.MEDIUM -> R.string.settings_quality_medium
+        DownloadQuality.LOW -> R.string.settings_quality_low
+    }
+
 private fun SegmentSkipMode.labelRes(): Int =
     when (this) {
         SegmentSkipMode.OFF -> R.string.settings_skip_mode_off
@@ -372,6 +419,7 @@ private fun SettingsPreview() {
                     outroSkipMode = SegmentSkipMode.SHOW_BUTTON,
                     pipOnLeave = true,
                     downloadOverWifiOnly = true,
+                    downloadQuality = DownloadQuality.MEDIUM,
                     forceOffline = false,
                     storage =
                         StorageUsage(
@@ -387,6 +435,7 @@ private fun SettingsPreview() {
                     onOutroSkipMode = {},
                     onPipOnLeave = {},
                     onWifiOnly = {},
+                    onDownloadQuality = {},
                     onForceOffline = {},
                     onSignOut = {},
                 ),

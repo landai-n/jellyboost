@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads.plan
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import java.util.Locale
@@ -78,11 +79,23 @@ object DownloadPaths {
      * recognises, and keeping it means the file on disk matches the one on the server by name as
      * well as by bytes. When the item carries no path (the `PATH` field is only returned to users
      * allowed to see it) the container extension is enough for ExoPlayer to sniff the format.
+     *
+     * A transcoded download (M9) is none of that: the source's name and container describe a file
+     * this device is not going to receive, so it is named after its directory and given the
+     * container the transcode actually produces. The quality is part of the name because it is the
+     * one thing a user cannot see from the outside, and because it keeps a re-download at a
+     * different quality from silently landing on top of the old file.
      */
     fun mediaFileName(
         item: BaseItemDto,
         directoryName: String,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
     ): String {
+        if (quality.isTranscoded) {
+            val suffix = quality.name.lowercase(Locale.ROOT)
+            return "$directoryName ($suffix).${DownloadQuality.CONTAINER}"
+        }
+
         val serverName =
             item.path
                 ?.substringAfterLast('/')

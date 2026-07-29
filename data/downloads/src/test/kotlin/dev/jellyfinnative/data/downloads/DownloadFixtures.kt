@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.DownloadFileEntity
@@ -37,6 +38,7 @@ object DownloadFixtures {
         path: String? = "/media/films/Arrival (2016)/Arrival.2016.mkv",
         mediaSourceId: String? = "source-1",
         sizeBytes: Long? = 2_100_000_000L,
+        runTimeTicks: Long? = null,
         streams: List<MediaStream> = emptyList(),
         primaryTag: String? = "primary-tag",
         backdropTag: String? = null,
@@ -49,6 +51,7 @@ object DownloadFixtures {
             productionYear = year,
             path = path,
             container = "mkv",
+            runTimeTicks = runTimeTicks,
             imageTags = primaryTag?.let { mapOf(ImageType.PRIMARY to it) },
             backdropImageTags = backdropTag?.let { listOf(it) },
             trickplay = trickplay,
@@ -141,6 +144,7 @@ object DownloadFixtures {
         queuePosition: Int = 0,
         bytesDownloaded: Long = 0L,
         bytesTotal: Long = 0L,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
         directoryName: String = "Arrival (2016)",
         itemName: String = "Arrival",
         seriesName: String? = null,
@@ -150,6 +154,7 @@ object DownloadFixtures {
             userId = uuid(99),
             status = status,
             mediaSourceId = "source-1",
+            quality = quality,
             bytesDownloaded = bytesDownloaded,
             bytesTotal = bytesTotal,
             queuePosition = queuePosition,

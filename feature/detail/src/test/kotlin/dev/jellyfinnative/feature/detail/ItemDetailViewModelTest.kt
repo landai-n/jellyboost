@@ -7,8 +7,8 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataRepository
@@ -52,11 +52,11 @@ class ItemDetailViewModelTest {
             every { observeStates() } returns downloadStates
         }
 
-    /** The reconnect signal (M9); fires only when a test says the server came back. */
-    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val reconnectRefresher =
-        mockk<ReconnectRefresher> {
-            every { reconnected } returns reconnects
+    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val connectivityRefresher =
+        mockk<ConnectivityRefresher> {
+            every { connectivityChanged } returns connectivityChanges
         }
 
     private val movie =
@@ -543,7 +543,7 @@ class ItemDetailViewModelTest {
             model.uiState.value.downloadState shouldBe DownloadState.Downloaded
         }
 
-    // ---- M9: refresh on reconnect ----------------------------------------------------------------
+    // ---- M9: refresh when connectivity changes ----------------------------------------------------------------
 
     @Test
     fun `re-fetches the item it is showing when the server becomes reachable again`() =
@@ -556,7 +556,7 @@ class ItemDetailViewModelTest {
             coVerify(exactly = 1) { repository.getItem(ITEM_ID) }
 
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             coVerify(exactly = 2) { repository.getItem(ITEM_ID) }
@@ -569,7 +569,7 @@ class ItemDetailViewModelTest {
             repository = repository,
             userDataRepository = userDataRepository,
             downloads = downloads,
-            reconnectRefresher = reconnectRefresher,
+            connectivityRefresher = connectivityRefresher,
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 

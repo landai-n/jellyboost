@@ -33,9 +33,8 @@ decisions are logged in DECISIONS.md; per-feature details in docs/features/.
 - ~~Media banner could take more space in portrait mode~~ — banner is now 0.40 × viewport height in portrait, coerced between the old width-derived value (220dp narrow / 320dp wide) and 560dp; landscape unchanged. Device-verified on the test tablet, both orientations: portrait now ~449dp (was 220dp) with the header directly below; landscape confirmed unchanged at exactly 320dp.
 - ~~Cancelling an in-progress season download silently deletes the episodes that already finished~~ — resolved better than a confirmation dialog: Cancel on an in-flight season now deletes only queued/transferring/paused/failed rows and keeps `Downloaded` ones, with a snackbar ("Download cancelled — N finished episode(s) kept"); Remove still deletes everything. A partly-kept season aggregates back to NotDownloaded, so the button then offers Download for the missing episodes (pre-existing, test-pinned behavior). Unit-verified (4 tests added/updated); device check pending — blocked, see Remaining.
 
-# Remaining
-- Re-sign in on the tablet — the stored server token was revoked server-side, so every authenticated call currently 401s. Once signed in, device-check the size estimate on a fresh enqueue and the partial-season cancel.
-
 # New run
 - The top back arrow is too close to the system icon
 - The storage path should be configurable (e.g., to an SD card)
+- Changing watched state of a media item doesn't update the home screen, this needs a fix
+- ~~Find if we can fetch the homescreen section list as configured for the user on server side~~ — yes: one SDK call (`displayPreferencesApi.getDisplayPreferences("usersettings", client = "emby")`) returns the web-configured `homesection0..9` keys; jellyfin-androidtv does exactly this. Full findings, gotchas (magic strings, missing-keys default), and a suggested v1 shape in `docs/notes/home-sections-feasibility.md`. Not implemented — needs a DECISIONS entry if/when built.

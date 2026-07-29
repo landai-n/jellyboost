@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +27,9 @@ import dev.jellyfinnative.core.ui.theme.THUMB_ASPECT_RATIO
  *
  * Falls back through thumb → backdrop → primary artwork so a row never degrades into placeholders
  * just because a server has no dedicated thumb image.
+ *
+ * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
+ *   width instead, which is what an adaptive grid cell wants.
  */
 @Composable
 fun ThumbCard(
@@ -40,7 +42,7 @@ fun ThumbCard(
     Column(
         modifier =
             modifier
-                .width(width)
+                .cardWidth(width)
                 .clickable(onClick = onClick),
     ) {
         MediaCardArtwork(

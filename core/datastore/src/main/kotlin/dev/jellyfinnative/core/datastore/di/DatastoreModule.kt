@@ -15,9 +15,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.datastore.DataStoreAppPreferences
+import dev.jellyfinnative.core.datastore.DeviceIdStore
 import dev.jellyfinnative.core.datastore.EncryptedSecureCredentialStore
 import dev.jellyfinnative.core.datastore.PreferenceKeys
 import dev.jellyfinnative.core.datastore.SecureCredentialStore
+import dev.jellyfinnative.core.datastore.SharedPreferencesDeviceIdStore
 import javax.inject.Singleton
 
 /**
@@ -37,6 +39,11 @@ interface DatastoreModule {
     @Binds
     @Singleton
     fun bindAppPreferences(impl: DataStoreAppPreferences): AppPreferences
+
+    /** Binds [DeviceIdStore] to its plain-`SharedPreferences` implementation. */
+    @Binds
+    @Singleton
+    fun bindDeviceIdStore(impl: SharedPreferencesDeviceIdStore): DeviceIdStore
 }
 
 /**

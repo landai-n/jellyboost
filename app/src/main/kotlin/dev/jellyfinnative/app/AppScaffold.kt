@@ -19,10 +19,11 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import dev.jellyfinnative.core.common.Routes
 import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.model.SessionState
@@ -152,11 +153,32 @@ private fun NavDestination?.isTopLevel(): Boolean =
         this?.hasRoute<Routes.Downloads>() == true
 
 private fun NavHostController.navigateToTab(route: Any) {
-    navigate(route) {
-        // Standard tabbed-navigation pattern: keep one copy of each tab's back stack, restore it on
-        // return, and never pile up duplicate destinations from repeated taps on the same tab.
-        popUpTo(graph.findStartDestination().id) { saveState = true }
+    navigate(route, topLevelNavOptions())
+}
+
+/**
+ * The options every tab switch navigates with: keep one copy of each tab's back stack, restore it
+ * on return, and never pile up duplicate destinations from repeated taps on the same tab.
+ *
+ * The pop target is [Routes.Home] — the root of the signed-in area — and deliberately **not**
+ * `graph.findStartDestination()`, which is what the standard tabbed-navigation snippet uses. This
+ * graph has two possible start destinations: `Routes.Home` on a launch that already has a session,
+ * but `Routes.ServerSetup` on one that does not (see [JellyfinNavHost]), and signing in *navigates*
+ * to Home rather than rebuilding the graph. On that second launch the graph's start destination is
+ * therefore not on the back stack at all, and `popUpTo` an absent destination is a documented no-op
+ * ("Ignoring popBackStack to destination … as it was not found on the current back stack"): nothing
+ * is popped, nothing is saved for `restoreState` to find, and `launchSingleTop` only collapses a
+ * destination that is already on top. Every tab tap then *pushed* a new entry, so returning to Home
+ * from another tab created a **second** Home entry — a second `HomeViewModel` with its own
+ * `UserDataEventBus` collector, which is why one watched-state change fired two identical
+ * `getResumeItems`/`getNextUp` refreshes, and why re-selecting the Home tab reloaded the screen.
+ *
+ * Internal rather than private so the flags themselves are unit-testable: a `NavController` needs a
+ * device, but the options it is handed do not.
+ */
+internal fun topLevelNavOptions(): NavOptions =
+    navOptions {
+        popUpTo<Routes.Home> { saveState = true }
         launchSingleTop = true
         restoreState = true
     }
-}

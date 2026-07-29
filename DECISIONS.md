@@ -513,3 +513,19 @@ Seeded from the approved plan; listed for traceability, no divergence:
 
 <!-- END -->
 
+<!-- BEGIN M9 (downloads polish) -->
+
+## 2026-07-29 — M9: only series get a heading in the *Downloaded* tab
+- **Scope:** `:feature:downloads` (`DownloadsUiState`, `DownloadsScreen`), `:data:downloads` (`model/DownloadItem`)
+- **Plan said:** docs/PLAN.md line 76 — "Downloads | Room-only: *Downloaded* tab (**grouped**, sizes, delete) …".
+- **Done instead:** episodes are still grouped under their series name; a film is a group of one drawn with **no** heading (`DownloadGroup.isSeries`), and `DownloadItem.groupKey` — which fell back to the item's own title — became `DownloadItem.seriesKey`, which is `null` for a film. Series and films are ordered together alphabetically rather than in two blocks.
+- **Reason:** that fallback made every film render a `GroupHeader` reading its own title directly above a row reading the same title — "Dune" over "Dune", on every film on the screen, found on the M9 device walk. It also merged two different films that happen to share a title into one heading with two identical-looking rows. Nothing is lost by dropping the heading: the size it showed on the right is already on the row underneath it.
+
+## 2026-07-29 — M9: the download speed is measured over a one-second window, and one test's expectation changed with it
+- **Scope:** `:feature:downloads` (`DownloadSpeedTracker`, `DownloadSpeedTrackerTest`)
+- **Plan said:** docs/PLAN.md line 76 asks the Queue tab for a speed; CLAUDE.md governance rule 4 — "never weaken or delete a test to make it pass; if a test is genuinely wrong, log first".
+- **Done instead:** the tracker no longer divides by the gap between the last two emissions. A sample is folded into the rate only once at least 1 s has passed since the previous fold; nearer samples accumulate against the same anchor. The test `a half-second window is extrapolated to a second` pinned the old rule and could not survive it, so it is replaced by `samples inside the window are accumulated, not extrapolated` (same fixture, stricter assertion — the held bytes must still be counted in the next full window) plus a new `a burst of emissions milliseconds apart cannot inflate the speed`. No assertion was dropped without a stronger one taking its place, and the file's test count goes up by one.
+- **Reason:** `DownloadDao.observeAll` is a `@Transaction` over `downloads` *and* `download_files`, and `DownloadQueue` writes the file's byte counter and then the item's back to back, so one throttled progress update produces two or three emissions milliseconds apart. Half a throttle window's bytes over 1 ms of wall clock is ~500 MB/s; the Queue tab was showing 100–180 MB/s for transfers actually running at 2–8 MB/s. Extrapolating from *any* sub-second gap is that bug in its general form, which is why the old expectation had to go rather than be worked around.
+
+<!-- END -->
+

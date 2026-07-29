@@ -6,9 +6,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for the navigation options behind the app bar's four tabs — and behind the Home
- * affordance every pushed screen carries next to its Back button, which navigates with the very
- * same options (`AppScaffold.navigateHome`).
+ * Unit tests for the navigation options behind the app bar's four tabs.
+ *
+ * The pushed screens' Home affordance used to navigate with these very same options; it now has its
+ * own, and the reason is pinned by [HomeNavOptionsTest].
  *
  * Driving a real `NavController` needs a device, but the options it is handed are a plain value, and
  * they are the whole of the tab-switching contract. The pop target is the part worth pinning: with
@@ -39,28 +40,5 @@ class TopLevelNavOptionsTest {
 
         options.shouldPopUpToSaveState() shouldBe true
         options.shouldRestoreState() shouldBe true
-    }
-
-    @Test
-    @DisplayName("the Home affordance pops an arbitrarily deep chain in one tap, not one entry")
-    fun homeAffordancePopsTheWholeChain() {
-        val options = topLevelNavOptions()
-
-        // A detail chain (series → season → episode → similar → …) stacks entirely *above* Home,
-        // so a non-inclusive `popUpTo<Home>` unwinds all of it regardless of depth. Were this
-        // inclusive, Home would be popped too and re-pushed as a fresh entry with a fresh
-        // `HomeViewModel`; were the pop target anything else, part of the chain would survive.
-        options.popUpToRouteClass shouldBe Routes.Home::class
-        options.isPopUpToInclusive() shouldBe false
-    }
-
-    @Test
-    @DisplayName("the Home affordance re-enters an already-open Home rather than stacking a second")
-    fun homeAffordanceNeverStacksASecondHome() {
-        // The chain is popped down *to* Home, which leaves Home on top — at which point the
-        // `navigate` in `navigateHome` would push a duplicate without this flag. That duplicate is
-        // exactly the 649a7c8 bug: two `HomeViewModel`s, two `UserDataEventBus` collectors, two
-        // refreshes per watched-state change.
-        topLevelNavOptions().shouldLaunchSingleTop() shouldBe true
     }
 }

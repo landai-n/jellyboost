@@ -92,12 +92,22 @@ The overlaid controls at the top-start corner are therefore a **Row of two**: Ba
 Home (leaves the whole chain). Both sit inside a single `windowInsetsPadding(WindowInsets.statusBars)`
 so the backdrop still draws edge-to-edge underneath them.
 
-Home calls `AppScaffold.navigateHome` — `navigate(Routes.Home, topLevelNavOptions())`, byte-for-byte
-what tapping the Home tab does. A `popBackStack(Routes.Home, inclusive = false)` would read more
-directly but fails silently (returns `false`, moves nothing) if Home is ever absent from the stack;
-a `navigate` still lands the user on Home. `:feature:library`'s grid and `:feature:settings` carry
-the same pair in their `TopAppBar`'s `navigationIcon` slot; the player is excluded, since leaving
-playback belongs to its own chrome.
+Home calls `AppScaffold.navigateHome` — `navigate(Routes.Home, homeNavOptions())`. A
+`popBackStack(Routes.Home, inclusive = false)` would read more directly but fails silently (returns
+`false`, moves nothing) if Home is ever absent from the stack; a `navigate` still lands the user on
+Home. `:feature:library`'s grid and `:feature:settings` carry the same pair in their `TopAppBar`'s
+`navigationIcon` slot; the player is excluded, since leaving playback belongs to its own chrome.
+
+`homeNavOptions()` is **not** `topLevelNavOptions()`, which is what the button shipped with and what
+made it look dead. Those options carry `saveState`/`restoreState`, and Navigation maps the state
+saved by a non-inclusive `popUpTo(X) { saveState = true }` to *X's own* destination id — here Home,
+the destination being navigated to. `NavController.navigate` reads that map after running the
+`popUpTo`, so one tap saved the chain under `Home` and instantly restored it: the user stayed on the
+detail screen. The Home *tab* is unaffected because popping to Home from a top-level screen pops
+nothing, storing a null sentinel that makes the restore a no-op. `homeNavOptions()` therefore keeps
+`popUpTo<Home>` + `launchSingleTop` and drops both state flags — Home is never itself popped, so it
+never has a stack worth restoring. The cost is that unwinding through another tab (Libraries → grid
+→ Home) drops that tab's chain, exactly as pressing Back twice would.
 
 ## Key classes
 

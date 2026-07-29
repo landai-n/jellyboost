@@ -140,9 +140,11 @@ movies unchanged. Gate: **1094 tests, 0 failures** (1082 → 1094).
 - Library grid cells anchored to `Dimens.PosterWidth` — landscape was 9 cols of
   ~112dp vs Home's 120dp cards; now 8 × ~128dp, portrait unchanged (60e410c,
   DECISIONS: diverges from PLAN's literal `Adaptive(110.dp)`).
-- Home button next to Back on item detail / library grid / settings; reuses the
-  tab-switch nav contract (`navigateHome()` = navigate + popUpTo<Home> +
-  launchSingleTop), player excluded (793d1af).
+- Home button next to Back on item detail / library grid / settings; player
+  excluded (793d1af). `navigateHome()` = navigate + popUpTo<Home> +
+  launchSingleTop, with `saveState`/`restoreState` deliberately off — reusing
+  the tab-switch options made the button a no-op on any screen pushed from Home
+  (it saved the chain under Home's own key, then restored it in the same call).
 - Downloaded tab: films gather under one shared "Movies" heading after all
   series groups when both kinds are present; films-only/series-only unchanged
   (dc2f521, DECISIONS: reverses logged alphabetical interleave).

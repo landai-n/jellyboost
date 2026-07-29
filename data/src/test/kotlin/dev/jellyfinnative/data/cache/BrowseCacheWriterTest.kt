@@ -51,6 +51,10 @@ import java.util.UUID
  * **A browse write must never downgrade a download.** Getting that wrong would be quietly
  * catastrophic — a user scrolling past a film they downloaded would make its row evictable, and the
  * next eviction pass would orphan gigabytes of files on disk with no database row pointing at them.
+ * The stored `dto` blob is protected the same way, but only from a **lean** write: the `full` flag
+ * is what separates a list response (which must preserve it) from `getItem`'s complete one (which
+ * must replace it, so a row an older build gutted can be repaired). Both directions are pinned
+ * below, because getting either one wrong leaves a downloaded film with a blank detail page.
  *
  * **A server read refreshes `user_data`, unless the row is pending.** Getting *that* wrong is the
  * corruption bug in STATUS.md: a local row that never learns about a change made from another
@@ -168,13 +172,85 @@ class BrowseCacheWriterTest {
             // list needs (OnlineJellyfinRepository's list calls request only PRIMARY_IMAGE_ASPECT_RATIO).
             val leanDto = BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival")
 
-            writer().writeItems(listOf(leanDto))
+            writer().writeItems(listOf(leanDto), full = false)
 
             val row = upserted.captured.single()
             row.source shouldBe ItemSource.DOWNLOAD
             val rebuilt = mapper.toDtoOrNull(row)
             rebuilt?.overview shouldBe "A linguist deciphers an alien language."
             rebuilt?.genres shouldContainExactly listOf("Science Fiction", "Drama")
+        }
+
+    @Test
+    fun `a full detail read replaces a downloaded item's blob instead of preserving it`() =
+        runTest {
+            val stored =
+                entity(
+                    movieDto(uuid(1), "Arrival", genres = listOf("Drama"))
+                        .copy(overview = "The synopsis the server has since corrected."),
+                    source = ItemSource.DOWNLOAD,
+                    cachedAt = NOW.minusSeconds(3_600),
+                )
+            coEvery { itemDao.getCacheKeys(any()) } returns
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, stored.cachedAt))
+            coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(stored)
+
+            // What `getItem` returns: the complete field set, and therefore strictly better than
+            // whatever is on the row.
+            val fullDto =
+                movieDto(uuid(1), "Arrival", genres = listOf("Science Fiction"))
+                    .copy(overview = "A linguist deciphers an alien language.")
+
+            writer().writeItems(listOf(fullDto), full = true)
+
+            val row = upserted.captured.single()
+            val rebuilt = mapper.toDtoOrNull(row)
+            rebuilt?.overview shouldBe "A linguist deciphers an alien language."
+            rebuilt?.genres shouldContainExactly listOf("Science Fiction")
+            // The two properties a download keeps whatever the write: it stays a download, and it
+            // does not jump to the top of the offline "recently downloaded" rows.
+            row.source shouldBe ItemSource.DOWNLOAD
+            row.cachedAt shouldBe stored.cachedAt
+        }
+
+    @Test
+    fun `a full detail read repairs a downloaded item whose blob an older build gutted`() =
+        runTest {
+            // The state the device walk found: a pre-fix build wrote a lean list DTO over the rich
+            // blob, and every later browse write preserved *that*, so the offline detail page was
+            // bare forever. Opening the item online has to be able to undo it.
+            val gutted =
+                entity(
+                    BaseItemDto(id = uuid(1), type = BaseItemKind.MOVIE, name = "Arrival"),
+                    source = ItemSource.DOWNLOAD,
+                    cachedAt = NOW.minusSeconds(86_400),
+                )
+            coEvery { itemDao.getCacheKeys(any()) } returns
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, gutted.cachedAt))
+            coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(gutted)
+
+            val fullDto =
+                movieDto(uuid(1), "Arrival", genres = listOf("Science Fiction", "Drama"))
+                    .copy(overview = "A linguist deciphers an alien language.")
+
+            writer().writeItems(listOf(fullDto), full = true)
+
+            val rebuilt = mapper.toDtoOrNull(upserted.captured.single())
+            rebuilt?.overview shouldBe "A linguist deciphers an alien language."
+            rebuilt?.genres shouldContainExactly listOf("Science Fiction", "Drama")
+        }
+
+    @Test
+    fun `a full detail read does not read the stored blobs back at all`() =
+        runTest {
+            coEvery { itemDao.getCacheKeys(any()) } returns
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, NOW))
+
+            writer().writeItems(listOf(movieDto(uuid(1), "Arrival")), full = true)
+
+            // It is about to overwrite every one of them; fetching multi-kilobyte blobs first would
+            // be pure waste.
+            coVerify(exactly = 0) { itemDao.getItems(any()) }
         }
 
     @Test

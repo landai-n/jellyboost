@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
@@ -23,7 +23,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,12 +52,17 @@ import dev.jellyfinnative.data.downloads.model.StorageUsage
  * Room-only by construction — it never touches the network, so it is the one screen that behaves
  * identically online and offline.
  *
- * The Wi-Fi-only toggle lives in this screen's top bar rather than in the home overflow menu that
- * holds *Offline mode*: it is a download setting, this is the download screen, and the effect of
- * flipping it (the queue stopping or starting) is visible right underneath (DECISIONS.md
- * 2026-07-28, "M7: the Wi-Fi-only toggle lives in the Downloads top bar").
+ * The Wi-Fi-only toggle lives on this screen rather than in the app overflow menu that holds
+ * *Offline mode*: it is a download setting, this is the download screen, and the effect of flipping
+ * it (the queue stopping or starting) is visible right underneath (DECISIONS.md 2026-07-28, "M7:
+ * the Wi-Fi-only toggle lives in the Downloads top bar"). Since M9 this screen has no top bar of
+ * its own — `:app`'s combined `AppTopBar` carries the navigation for every top-level destination —
+ * so the toggle sits next to the storage header at the top of the content instead.
+ *
+ * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
+ * WindowInsets(0)`: the frame above already reserved both the app bar and the system navigation
+ * bar, and a second helping of the same insets would pad the list twice.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadsScreen(
     viewModel: DownloadsViewModel,
@@ -77,19 +81,13 @@ fun DownloadsScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.downloads_title)) },
-                actions = {
-                    WifiOnlyToggle(enabled = state.wifiOnly, onChange = viewModel::setWifiOnly)
-                },
-            )
-        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         DownloadsContent(
             state = state,
             actions = downloadsActions(viewModel),
+            onWifiOnlyChange = viewModel::setWifiOnly,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -121,10 +119,16 @@ private fun downloadsActions(viewModel: DownloadsViewModel) =
 fun DownloadsContent(
     state: DownloadsUiState,
     actions: DownloadsActions,
+    onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        StorageHeader(usage = state.storage, downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk })
+        StorageHeader(
+            usage = state.storage,
+            downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk },
+            wifiOnly = state.wifiOnly,
+            onWifiOnlyChange = onWifiOnlyChange,
+        )
 
         PrimaryTabRow(selectedTabIndex = state.selectedTab.ordinal) {
             DownloadsTab.entries.forEach { tab ->
@@ -275,6 +279,8 @@ private fun GroupHeader(
 private fun StorageHeader(
     usage: StorageUsage,
     downloadedBytes: Long,
+    wifiOnly: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val total = usage.usedBytes + usage.availableBytes
@@ -286,16 +292,24 @@ private fun StorageHeader(
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceMedium),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
-        Text(
-            text =
-                stringResource(
-                    R.string.downloads_storage_summary,
-                    formatBytes(maxOf(usage.usedBytes, downloadedBytes)),
-                    formatBytes(usage.availableBytes),
-                ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text =
+                    stringResource(
+                        R.string.downloads_storage_summary,
+                        formatBytes(maxOf(usage.usedBytes, downloadedBytes)),
+                        formatBytes(usage.availableBytes),
+                    ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            WifiOnlyToggle(enabled = wifiOnly, onChange = onWifiOnlyChange)
+        }
         LinearProgressIndicator(
             progress = { if (total <= 0L) 0f else (usage.usedBytes.toFloat() / total).coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth(),
@@ -376,6 +390,7 @@ private fun DownloadsPreview() {
                     onMoveDown = {},
                     onSelectTab = {},
                 ),
+            onWifiOnlyChange = {},
         )
     }
 }

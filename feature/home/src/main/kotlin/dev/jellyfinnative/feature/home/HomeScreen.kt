@@ -100,12 +100,16 @@ private fun HomeRows(
     ) {
         // Empty sections are skipped entirely rather than emitted as zero-height items, which
         // would still consume the column's `spacedBy` gap and leave a visible hole.
+        //
+        // Every row declares its `contentType` — both here (a screenful of rows is itself a lazy
+        // list) and inside `MediaRow` — so scrolling reuses nodes instead of composing new ones.
         if (state.libraries.isNotEmpty()) {
-            item(key = SECTION_MY_MEDIA) {
+            item(key = SECTION_MY_MEDIA, contentType = ROW_LIBRARIES) {
                 MediaRow(
                     title = "My Media",
                     items = state.libraries,
                     key = LibraryView::id,
+                    contentType = CARD_LIBRARY,
                 ) { library ->
                     LibraryCard(library = library, onClick = { onLibraryClick(library) })
                 }
@@ -113,11 +117,12 @@ private fun HomeRows(
         }
 
         if (state.resume.isNotEmpty()) {
-            item(key = SECTION_RESUME) {
+            item(key = SECTION_RESUME, contentType = ROW_THUMBS) {
                 MediaRow(
                     title = "Continue Watching",
                     items = state.resume,
                     key = JellyfinItem::id,
+                    contentType = CARD_THUMB,
                 ) { item ->
                     ThumbCard(item = item, onClick = { onItemClick(item) })
                 }
@@ -125,22 +130,28 @@ private fun HomeRows(
         }
 
         if (state.nextUp.isNotEmpty()) {
-            item(key = SECTION_NEXT_UP) {
+            item(key = SECTION_NEXT_UP, contentType = ROW_THUMBS) {
                 MediaRow(
                     title = "Next Up",
                     items = state.nextUp,
                     key = JellyfinItem::id,
+                    contentType = CARD_THUMB,
                 ) { item ->
                     ThumbCard(item = item, onClick = { onItemClick(item) })
                 }
             }
         }
 
-        items(items = state.latest, key = { it.library.id }) { section ->
+        items(
+            items = state.latest,
+            key = { it.library.id },
+            contentType = { ROW_POSTERS },
+        ) { section ->
             MediaRow(
                 title = "Latest ${section.library.name}",
                 items = section.items,
                 key = JellyfinItem::id,
+                contentType = CARD_POSTER,
                 onSeeAll = { onLibraryClick(section.library) },
             ) { item ->
                 PosterCard(item = item, onClick = { onItemClick(item) })
@@ -152,6 +163,14 @@ private fun HomeRows(
 private const val SECTION_MY_MEDIA = "section-my-media"
 private const val SECTION_RESUME = "section-resume"
 private const val SECTION_NEXT_UP = "section-next-up"
+
+// Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
+private const val ROW_LIBRARIES = "row-libraries"
+private const val ROW_THUMBS = "row-thumbs"
+private const val ROW_POSTERS = "row-posters"
+private const val CARD_LIBRARY = "card-library"
+private const val CARD_THUMB = "card-thumb"
+private const val CARD_POSTER = "card-poster"
 
 @Preview(name = "Home", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 800)
 @Composable

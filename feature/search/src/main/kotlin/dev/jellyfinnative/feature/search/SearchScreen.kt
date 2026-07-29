@@ -38,6 +38,11 @@ import dev.jellyfinnative.core.ui.theme.JellyfinTheme
  * The search screen: a debounced text field over one server query, rendered as one section per
  * item type (docs/PLAN.md, "Screens" → Search).
  *
+ * Like the other top-level tabs it draws no bar of its own and no status-bar padding: `:app`'s
+ * combined `AppTopBar` sits above it and the modifier it is handed already accounts for the bar
+ * (which is what stopped the search field from rendering under the status-bar icons — the screen
+ * used to be a bare full-screen `Column` under an edge-to-edge window).
+ *
  * The [SearchViewModel] is passed in rather than resolved here so `:app` owns the
  * `hiltViewModel()` call together with the rest of the navigation graph wiring, as it does for
  * home.
@@ -141,32 +146,38 @@ private fun SearchResults(
     ) {
         // Sections in jellyfin-web's order; MediaRow renders nothing for an empty list, and an
         // empty `item` would still consume the column's `spacedBy` gap, so they are skipped here.
+        //
+        // The `contentType`s let the two poster sections reuse each other's nodes as results come
+        // and go while the user types, instead of composing a row from scratch each time.
         if (state.movies.isNotEmpty()) {
-            item(key = SECTION_MOVIES) {
+            item(key = SECTION_MOVIES, contentType = ROW_POSTERS) {
                 MediaRow(
                     title = stringResource(R.string.search_section_movies),
                     items = state.movies,
                     key = JellyfinItem::id,
+                    contentType = CARD_POSTER,
                 ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
 
         if (state.series.isNotEmpty()) {
-            item(key = SECTION_SERIES) {
+            item(key = SECTION_SERIES, contentType = ROW_POSTERS) {
                 MediaRow(
                     title = stringResource(R.string.search_section_series),
                     items = state.series,
                     key = JellyfinItem::id,
+                    contentType = CARD_POSTER,
                 ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
 
         if (state.episodes.isNotEmpty()) {
-            item(key = SECTION_EPISODES) {
+            item(key = SECTION_EPISODES, contentType = ROW_THUMBS) {
                 MediaRow(
                     title = stringResource(R.string.search_section_episodes),
                     items = state.episodes,
                     key = JellyfinItem::id,
+                    contentType = CARD_THUMB,
                 ) { item -> ThumbCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
@@ -176,6 +187,12 @@ private fun SearchResults(
 private const val SECTION_MOVIES = "section-movies"
 private const val SECTION_SERIES = "section-series"
 private const val SECTION_EPISODES = "section-episodes"
+
+// Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
+private const val ROW_POSTERS = "row-posters"
+private const val ROW_THUMBS = "row-thumbs"
+private const val CARD_POSTER = "card-poster"
+private const val CARD_THUMB = "card-thumb"
 
 @Preview(name = "Search", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 800)
 @Composable

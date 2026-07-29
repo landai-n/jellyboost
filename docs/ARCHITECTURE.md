@@ -25,7 +25,7 @@ and `ItemEntity` never cross a repository boundary.
 | `:core:datastore` | `AppPreferences` + `DataStoreAppPreferences` (the `forceOffline` setting) and the singleton preferences `DataStore`. |
 | `:core:network` | `connectivity/` — `ConnectivityMonitor`, `ServerReachabilityProbe`, `ServerProbeApi`, `ConnectionStateProvider`. Plus `@ApplicationScope` (process-lifetime `CoroutineScope`) and `ApiClientProvider.useAddress`. |
 | `:data` | `OfflineJellyfinRepository`, `DelegatingJellyfinRepository` (**now the `JellyfinRepository` binding**), `cache/ItemEntityMapper`, `cache/BrowseCacheWriter`; `OnlineJellyfinRepository` gained write-through. |
-| `:app` | `ConnectionViewModel`; `AppScaffold` hosts the app-wide `OfflineBanner`; the home overflow menu carries the offline-mode toggle. |
+| `:app` | `ConnectionViewModel`; `AppScaffold` + `AppTopBar` (one combined bar: the four destination tabs, the offline status icon, and the overflow menu carrying the offline-mode toggle and Settings). |
 
 ### Layering
 

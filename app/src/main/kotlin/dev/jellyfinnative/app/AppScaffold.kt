@@ -1,23 +1,17 @@
 package dev.jellyfinnative.app
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -31,24 +25,23 @@ import androidx.navigation.compose.rememberNavController
 import dev.jellyfinnative.core.common.Routes
 import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.model.SessionState
-import dev.jellyfinnative.core.ui.component.OfflineBanner
+import kotlinx.coroutines.launch
 
 /**
- * The app's outer frame: the [JellyfinNavHost], a Material 3 bottom navigation bar for the four
- * top-level destinations, and the single app-wide [OfflineBanner] (docs/PLAN.md, "Confirmed
- * decisions" — "bottom nav bar Home / Libraries / Search / Downloads"). The Downloads tab landed
- * with the pipeline behind it at M7, closing DECISIONS.md 2026-07-28 "Downloads tab deferred to M7".
+ * The app's outer frame: the [JellyfinNavHost] under one [AppTopBar], plus the snackbar that
+ * explains the connection status.
  *
- * The banner sits **above the navigation bar** rather than at the top of the screen. Every screen
- * already draws (and insets) its own `TopAppBar`, so a top-anchored banner would either hide under
- * the status bar or push a second status-bar padding down onto the screen below it; the bottom slot
- * has no such interaction and keeps the notice visible on every destination, bar or no bar.
+ * The bar carries the four top-level destinations, the app overflow menu (Settings + the
+ * offline-mode toggle) and the offline status icon — it is the whole of the app's chrome on a
+ * top-level destination, replacing the bottom `NavigationBar` + per-screen `TopAppBar` + full-width
+ * `OfflineBanner` arrangement the app carried until M9 (DECISIONS.md 2026-07-29).
  *
- * `contentWindowInsets = WindowInsets(0)` is deliberate: every screen already manages its own
- * status-bar insets (`AuthScreenScaffold.safeDrawingPadding()`, the per-screen `Scaffold`s in
- * `:feature:home`/`:feature:library`/`:feature:detail`). Letting this outer `Scaffold` also
- * consume system-bar insets would pad those screens twice; this one only reserves space for what
- * it actually draws.
+ * `contentWindowInsets = WindowInsets(0)` is deliberate and unchanged: pushed destinations
+ * (Settings, LibraryGrid, ItemDetail, the auth flow) each manage their own system-bar insets, and
+ * letting this outer `Scaffold` consume them as well would pad those screens twice. What the frame
+ * does own on a **top-level** destination is both ends of the window: [AppTopBar] pads itself out
+ * of the status bar, and the nav host gets [navigationBarsPadding] — the space the bottom
+ * navigation bar used to reserve for it.
  */
 @Composable
 internal fun AppScaffold(
@@ -57,9 +50,19 @@ internal fun AppScaffold(
 ) {
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
+    val isTopLevel = currentDestination.isTopLevel()
 
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
     val connectionState by connectionViewModel.connectionState.collectAsStateWithLifecycle()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val showConnectionStatus =
+        rememberConnectionStatusExplainer(
+            state = connectionState,
+            snackbarHostState = snackbarHostState,
+            onRetry = connectionViewModel::refresh,
+            onLeaveOfflineMode = { connectionViewModel.setForceOffline(false) },
+        )
 
     // Coming back to the app is the other moment the plan wants a reachability probe: the network
     // may well have changed while we were not listening (docs/PLAN.md, "Connectivity").
@@ -70,66 +73,66 @@ internal fun AppScaffold(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            Column {
-                ConnectionBanner(
-                    state = connectionState,
-                    onRetry = connectionViewModel::refresh,
-                    onLeaveOfflineMode = { connectionViewModel.setForceOffline(false) },
+        topBar = {
+            if (isTopLevel) {
+                AppTopBar(
+                    currentDestination = currentDestination,
+                    connectionState = connectionState,
+                    onSelectTab = navController::navigateToTab,
+                    onConnectionStatusClick = showConnectionStatus,
+                    onNavigateToSettings = { navController.navigate(Routes.Settings) },
+                    onSetForceOffline = connectionViewModel::setForceOffline,
                 )
-                if (currentDestination.isTopLevel()) {
-                    AppNavigationBar(currentDestination = currentDestination, navController = navController)
-                }
             }
+        },
+        snackbarHost = {
+            // The frame consumes no insets, so the host has to keep itself off the gesture bar.
+            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.navigationBarsPadding())
         },
     ) { innerPadding ->
         JellyfinNavHost(
             startsSignedIn = startsSignedIn,
             sessionState = sessionState,
             navController = navController,
-            modifier = Modifier.padding(innerPadding),
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .then(if (isTopLevel) Modifier.navigationBarsPadding() else Modifier),
         )
     }
 }
 
 /**
- * The offline notice, with copy and an action chosen by *why* the app is offline — the three
- * reasons call for three different things from the user.
+ * Builds the action behind the app bar's offline status icon: a snackbar carrying the reason the
+ * app is offline, and — for the two reasons the user can act on — the action that fixes it.
  *
- * @param onRetry re-probes the server; only offered when there is something to retry.
- * @param onLeaveOfflineMode turns the force-offline preference back off.
+ * The strings are resolved here rather than inside the click handler because a handler runs outside
+ * composition, where `stringResource` is not available.
  */
 @Composable
-private fun ConnectionBanner(
+private fun rememberConnectionStatusExplainer(
     state: ConnectionState,
+    snackbarHostState: SnackbarHostState,
     onRetry: () -> Unit,
     onLeaveOfflineMode: () -> Unit,
-) {
-    val message =
-        when (state) {
-            ConnectionState.ONLINE -> null
-            ConnectionState.OFFLINE_NO_NETWORK -> R.string.offline_no_network
-            ConnectionState.OFFLINE_SERVER_UNREACHABLE -> R.string.offline_server_unreachable
-            ConnectionState.OFFLINE_FORCED -> R.string.offline_forced
-        }
+): () -> Unit {
+    val scope = rememberCoroutineScope()
+    val status = state.toStatus()
+    val message = stringResource((status ?: ConnectionStatus.NO_NETWORK).messageRes)
+    val actionLabel = status?.actionLabelRes?.let { stringResource(it) }
 
-    OfflineBanner(
-        visible = message != null,
-        // Held over during the collapse animation so the text does not blank out mid-transition.
-        message = stringResource(message ?: R.string.offline_no_network),
-        actionLabel =
-            when (state) {
-                ConnectionState.OFFLINE_SERVER_UNREACHABLE -> stringResource(R.string.offline_retry)
-                ConnectionState.OFFLINE_FORCED -> stringResource(R.string.offline_go_online)
+    return {
+        val action =
+            when (status) {
+                ConnectionStatus.SERVER_UNREACHABLE -> onRetry
+                ConnectionStatus.FORCED -> onLeaveOfflineMode
                 else -> null
-            },
-        onAction =
-            when (state) {
-                ConnectionState.OFFLINE_SERVER_UNREACHABLE -> onRetry
-                ConnectionState.OFFLINE_FORCED -> onLeaveOfflineMode
-                else -> null
-            },
-    )
+            }
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(message = message, actionLabel = actionLabel)
+            if (result == SnackbarResult.ActionPerformed) action?.invoke()
+        }
+    }
 }
 
 /** The four destinations the bar can switch between; hidden everywhere else. */
@@ -139,64 +142,12 @@ private fun NavDestination?.isTopLevel(): Boolean =
         this?.hasRoute<Routes.Search>() == true ||
         this?.hasRoute<Routes.Downloads>() == true
 
-@Composable
-private fun AppNavigationBar(
-    currentDestination: NavDestination?,
-    navController: NavHostController,
-) {
-    NavigationBar {
-        AppTab(
-            selected = currentDestination?.hasRoute<Routes.Home>() == true,
-            icon = Icons.Filled.Home,
-            label = stringResource(R.string.nav_home),
-            onClick = { navController.navigateToTab(Routes.Home) },
-        )
-        AppTab(
-            selected = currentDestination?.hasRoute<Routes.Libraries>() == true,
-            icon = Icons.Filled.VideoLibrary,
-            label = stringResource(R.string.nav_libraries),
-            onClick = { navController.navigateToTab(Routes.Libraries) },
-        )
-        AppTab(
-            selected = currentDestination?.hasRoute<Routes.Search>() == true,
-            icon = Icons.Filled.Search,
-            label = stringResource(R.string.nav_search),
-            onClick = { navController.navigateToTab(Routes.Search) },
-        )
-        AppTab(
-            selected = currentDestination?.hasRoute<Routes.Downloads>() == true,
-            icon = Icons.Filled.Download,
-            label = stringResource(R.string.nav_downloads),
-            onClick = { navController.navigateToTab(Routes.Downloads) },
-        )
-    }
-}
-
 private fun NavHostController.navigateToTab(route: Any) {
     navigate(route) {
-        // Standard bottom-nav pattern: keep one copy of each tab's back stack, restore it on
+        // Standard tabbed-navigation pattern: keep one copy of each tab's back stack, restore it on
         // return, and never pile up duplicate destinations from repeated taps on the same tab.
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }
-}
-
-/**
- * An extension on [RowScope] because Material 3's `NavigationBarItem` is one too — it can only be
- * called from inside [NavigationBar]'s content lambda.
- */
-@Composable
-private fun RowScope.AppTab(
-    selected: Boolean,
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-) {
-    NavigationBarItem(
-        selected = selected,
-        onClick = onClick,
-        icon = { Icon(imageVector = icon, contentDescription = null) },
-        label = { Text(text = label) },
-    )
 }

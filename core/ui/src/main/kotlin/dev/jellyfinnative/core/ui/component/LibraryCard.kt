@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Movie
@@ -29,6 +28,9 @@ import dev.jellyfinnative.core.ui.theme.THUMB_ASPECT_RATIO
 /**
  * A user library tile for the home screen's *My Media* row, matching jellyfin-web's landscape
  * library cards.
+ *
+ * @param width fixed tile width, as a row of tiles needs; [Dp.Unspecified] fills the available
+ *   width instead, which is what an adaptive grid cell wants.
  */
 @Composable
 fun LibraryCard(
@@ -40,7 +42,7 @@ fun LibraryCard(
     Column(
         modifier =
             modifier
-                .width(width)
+                .cardWidth(width)
                 .clickable(onClick = onClick),
     ) {
         JellyfinAsyncImage(

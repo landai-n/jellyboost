@@ -11,6 +11,7 @@ import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
+import dev.jellyfinnative.data.downloads.DownloadedMetadataRefresher
 import dev.jellyfinnative.data.userdata.UserDataSyncTrigger
 import timber.log.Timber
 import javax.inject.Inject
@@ -39,6 +40,17 @@ class JellyfinNativeApplication :
      */
     @Inject
     lateinit var userDataSyncTrigger: UserDataSyncTrigger
+
+    /**
+     * Keeps every downloaded item's cached metadata in step with the server's, whenever online.
+     *
+     * A standing sync, not a migration: a download's metadata is written once at enqueue time and
+     * would otherwise never pick up a retitle, an artwork change or a corrected overview again.
+     * Injected alongside the sync trigger and for the same reason — it is worth nothing if it only
+     * runs while a particular screen happens to be showing.
+     */
+    @Inject
+    lateinit var downloadedMetadataRefresher: DownloadedMetadataRefresher
 
     override val workManagerConfiguration: Configuration
         get() =
@@ -83,6 +95,7 @@ class JellyfinNativeApplication :
             Timber.plant(Timber.DebugTree())
         }
         userDataSyncTrigger.start()
+        downloadedMetadataRefresher.start()
     }
 
     private companion object {

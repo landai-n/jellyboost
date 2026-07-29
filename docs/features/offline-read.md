@@ -231,6 +231,79 @@ refreshed.
 Writes are fire-and-forget on the application scope: a home screen must not wait on a disk write to
 draw, and a failed cache write is a logged warning, never a failed read.
 
+There is a **second** rule underneath it, and it is the one that had a bug: only a *full* read may
+replace a download's stored `dto` blob. A browse list request asks the server for the fields the
+list needs and nothing more, so writing its DTO into `dto` would replace the rich blob
+`DownloadEnqueuer` stored with one missing overview, genres, cast and media streams — which is
+exactly what happened, and what left downloaded films with a blank offline detail page. The
+`full: Boolean` flag on `cacheItems`/`writeItems` is a **caller** statement, never sniffed out of the
+DTO's shape (an item that genuinely has no overview would fool any such sniff in the direction that
+loses data). `OnlineJellyfinRepository.getItem` is the only call site that passes `true`.
+
+### Downloaded metadata stays current — `:data:downloads/DownloadedMetadataRefresher`
+
+**This is an ongoing sync, not a one-shot migration.** It is worth stating plainly, because the class
+was written in response to the bug above and a later reader could easily conclude the bug is fixed
+and the class is now dead code. It is not, and it should not be deleted.
+
+A download's copy of its metadata is written exactly once — when it is enqueued — and then never
+again for as long as the file lives on the device, while the server's copy keeps moving. Someone
+fixes a mis-scraped title, an identify/refresh pass replaces the artwork tags, an overview or genre
+list is corrected, an episode is renumbered, a show is renamed. Without this class every one of those
+edits is invisible offline for the lifetime of the download, and the offline library drifts away from
+the library it is a copy of. `DownloadedMetadataRefresher` is what keeps the two in step, on a device
+that never had a bug at all.
+
+The historical repair is simply the first thing it happens to do. The `full = true` write above
+repairs a gutted row as well as protecting a good one, but only the row for the item the user happens
+to open while online; on a device that upgraded across the lean-write bug, every other row stays bare
+until someone visits it, one by one. The first sync pass on such a device heals all of them at once.
+Welcome, but a side effect.
+
+`DownloadedMetadataRefresher` (`@Singleton`, `:data:downloads`) borrows `UserDataSyncTrigger`'s shape
+exactly — collect `ConnectionStateProvider.state`, map to online-ness, `distinctUntilChanged`, act on
+**every** `true` including the flow's initial value — so one code path covers both "the app started
+online" and "the connection came back". `JellyfinNativeApplication.onCreate` starts it, next to the
+sync trigger and for the same reason: it must run whether or not a screen is showing.
+
+One pass is:
+
+```
+DownloadDao.allItemIds()  ─►  DownloadApi.getFullItems(ids, chunked by 50)   ← DOWNLOAD_FIELDS
+                                        │
+                                        ├─► the series/season ids of what came back  ─► getFullItems
+                                        │
+                                        ▼
+                     ItemDao.upsert(ItemEntity(source = DOWNLOAD, cachedAt = the row's original))
+```
+
+Four properties are worth knowing:
+
+- **Parents too.** The series and season rows behind a downloaded episode — what the offline "walk up
+  to the show" path reads — go stale exactly like the episode does (a renamed show, new series
+  artwork), and the lean write gutted them too. They are re-fetched alongside, mirroring
+  `DownloadEnqueuer.fetchParents`.
+- **`cachedAt` is preserved for a row that already exists.** It is the offline "recently downloaded"
+  ordering key, so stamping `now` onto eighteen downloads at once would silently reshuffle the
+  offline home into refresh order — every sync, not just once. Only a row the pass *creates* — a
+  parent never cached — gets the current time. This is the one place the refresher deliberately does
+  not copy the enqueuer, which writes `now` because for a fresh download `now` *is* the download
+  time.
+- **Once per online stretch.** A flag is set on attempt and cleared when the connection drops. A
+  failed pass is not retried within the stretch; the next offline → online edge picks it up, and the
+  whole thing is one request for a few dozen items. That cadence is also the answer to "how fresh":
+  metadata is as current as the last time the device came online, which for a downloads-first user is
+  exactly when it matters.
+- **It tolerates everything.** A failed batch is logged and skipped so one bad chunk cannot cost the
+  others their update; an id the server no longer recognises is simply absent from `getItems`'
+  response and leaves its local row untouched (losing the item server-side is not a reason to delete
+  the download). It goes through `SessionGate` first, because the connection state starts
+  optimistically `ONLINE` and the app-start pass can beat `restoreSession()`.
+
+Like the enqueuer, it writes **straight to the DAO** rather than through `BrowseCacheWriter`: the
+DTOs came from `DOWNLOAD_FIELDS`, so routing them through the writer would classify them as a browse
+read and preserve the very blob they are there to replace.
+
 ---
 
 ## The offline status icon and the force-offline setting

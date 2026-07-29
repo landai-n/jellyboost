@@ -529,3 +529,13 @@ Seeded from the approved plan; listed for traceability, no divergence:
 
 <!-- END -->
 
+
+<!-- BEGIN M9 (detail polish) -->
+
+## 2026-07-29 — M9: deleting a download from the detail screen now asks first, and the test pinning immediate deletion changed with it
+- **Scope:** `:feature:detail` (`ItemDetailViewModel`, `ItemDetailScreen`, `ItemDetailViewModelTest`)
+- **Plan said:** nothing about confirmation on delete; CLAUDE.md governance rule 4 — "never weaken or delete a test to make it pass; if a test is genuinely wrong, log first". docs/POLISH.md (user request, 2026-07-29): "Deleting a downloaded file is not showing a confirmation dialog, it should ask for confirmation before deleting."
+- **Done instead:** `onDownloadClick()` on a `Downloaded` item no longer deletes; it raises `showDeleteConfirmation`, and only `confirmDeleteDownload()` deletes. The test `download deletes an item that is already on the device` pinned the old immediate-delete behavior and was replaced by three tests: the click requests confirmation instead of deleting, confirming deletes and clears the flag, dismissing leaves the download untouched. Retry-on-failed and cancel-in-flight still act immediately (nothing finished is lost by them).
+- **Reason:** the old assertion described exactly the behavior the user reported as a bug — a tap silently destroying a completed download. The replacement suite is strictly stronger: it still pins that deletion happens (now behind the confirm) and adds the two paths the old test could not see.
+
+<!-- END -->

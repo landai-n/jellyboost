@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -190,6 +191,51 @@ class DataStoreAppPreferencesTest {
             DataStoreAppPreferences(store).setPipOnLeave(false)
 
             DataStoreAppPreferences(store).pipOnLeave.first() shouldBe false
+        }
+
+    // ---- download quality (M9) ------------------------------------------------------------------
+
+    @Test
+    fun `download quality defaults to the original file`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.downloadQuality.first() shouldBe DownloadQuality.ORIGINAL
+        }
+
+    @Test
+    fun `a download quality survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setDownloadQuality(DownloadQuality.MEDIUM)
+
+            DataStoreAppPreferences(store).downloadQuality.first() shouldBe DownloadQuality.MEDIUM
+        }
+
+    @Test
+    fun `an unrecognised stored download quality degrades to the original file`() =
+        runTest {
+            val store = dataStore(this)
+            // What a downgrade looks like: a name only a newer build knows.
+            store.edit { it[stringPreferencesKey(PreferenceKeys.DOWNLOAD_QUALITY)] = "POTATO" }
+
+            DataStoreAppPreferences(store).downloadQuality.first() shouldBe DownloadQuality.ORIGINAL
+        }
+
+    @Test
+    fun `emits every download quality change to observers`() =
+        runTest {
+            val preferences = DataStoreAppPreferences(dataStore(this))
+
+            preferences.downloadQuality.test {
+                awaitItem() shouldBe DownloadQuality.ORIGINAL
+
+                preferences.setDownloadQuality(DownloadQuality.LOW)
+                awaitItem() shouldBe DownloadQuality.LOW
+
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

@@ -45,11 +45,13 @@ orchestrator-merged and gated: **748 tests, 0 failures** (forced rerun; 645 → 
 - **Offline push gate (M8 note closed):** ~30 s of offline local playback produced
   7 debug "stays pending (offline, not pushing)" lines and **zero** doomed HTTP
   POSTs / warning stacks (was one per 5 s tick).
-- **Refresh-on-reconnect (M6 known issue closed):** on the airplane-off edge, with no
+- **Refresh on connectivity change (M6 known issue closed):** on the airplane-off edge, with no
   input, live screens re-fetched themselves (logcat: `UserViews`, the open item +
   `/Similar`) and the pending user-data row drained in ~1 s; the detail screen
   visibly gained its full online content without re-entry. One refresh per edge, no
-  storm.
+  storm. (This walk predates the both-edges fix below; the airplane-*on* edge — a
+  live screen dropping back to its offline data — is covered by the M9 settings +
+  app polish block's device-verification step 5.)
 
 **Not device-verifiable on this setup** (recorded, pinned by unit tests instead):
 - Trickplay scrubber *positive* path: test-server has trickplay generated for zero
@@ -311,10 +313,12 @@ which is what Dashboard renders):
   the user re-enters them (e.g. Home shows only cached My Media after a reconnect; a
   killed/relaunched app is fine). The delegating repository is per-call, but ViewModels
   don't re-fetch on connection regain — wire a refresh-on-reconnect (or pull-to-refresh)
-  by M9.~~ — **fixed on the M9 branch**: `ReconnectRefresher` (`:data`) publishes a
-  `false → true` connectivity edge that home, libraries, search, item detail and the
-  library grid's filter facets re-load themselves on (the grid's items already swap via
-  `getItemsPaged`). See `docs/features/offline-read.md`, "Coming back online".
+  by M9.~~ — **fixed on the M9 branch**: `ConnectivityRefresher` (`:data`) publishes on
+  every online-ness change — both the `false → true` edge and, since a same-day fix
+  once the one-way version turned out to leave the reverse case just as stale, the
+  `true → false` edge too — that home, libraries, search, item detail and the library
+  grid's filter facets re-load themselves on (the grid's items already swap either way
+  via `getItemsPaged`). See `docs/features/offline-read.md`, "Following the connection".
 - the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
   scripts must delete the file first and re-verify the screen before every tap (a stale
   dump caused stray taps this session — see incident note).
@@ -761,15 +765,23 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
   the whole row (`Modifier.toggleable(role = Role.Switch)`, `Switch.onCheckedChange = null`), closing
   the STATUS M7 note. The home overflow's Offline-mode row already dispatched on the whole
   `DropdownMenuItem`; it gained explicit `Role.Switch` + on/off `stateDescription` for TalkBack.
-- **Refresh-on-reconnect**, closing the M6 known issue. `Flow<ConnectionState>.reconnectEdges()`
-  (`:core:network`) emits once per `false → true` edge, dropping the flow's initial value (so a
-  normal launch — which already fetches once in every `init` — does not double-fetch; this is
-  deliberately narrower than `UserDataSyncTrigger`'s convention, DECISIONS.md). `ReconnectRefresher`
-  (`:data`) wraps it as a bare `Flow<Unit>` so feature modules never need `core:network` on their
-  classpath. Wired into `HomeViewModel`/`LibrariesViewModel`/`ItemDetailViewModel` (call their
-  existing `refresh()`), `SearchViewModel` (`retry()`, only if the query is non-blank), and
-  `LibraryViewModel` (facets only — the grid already rebuilds its `Pager` per connection change
-  inside `DelegatingJellyfinRepository.getItemsPaged`, so it needed no new wiring).
+- **Refresh on connectivity change**, closing the M6 known issue — and, after a same-day fix, on
+  *both* edges rather than one. `Flow<ConnectionState>.onlineStateChanges()` (`:core:network`) emits
+  the new online-ness on every change, dropping only the flow's initial value (so a normal launch —
+  which already fetches once in every `init` — does not double-fetch; this is deliberately narrower
+  than `UserDataSyncTrigger`'s convention, DECISIONS.md). It first shipped filtered down to the
+  `false → true` edge only, which turned out to be the bug it was meant to fix: switching to offline
+  mode or losing the network left an already-loaded screen showing online rows it could no longer
+  play. Dropping that filter so it fires symmetrically closed the gap (DECISIONS.md, 2026-07-29).
+  `ConnectivityRefresher` (`:data`) wraps it as a bare `Flow<Unit>` so feature modules never need
+  `core:network` on their classpath. Wired into `HomeViewModel`/`LibrariesViewModel`/
+  `ItemDetailViewModel` (call their existing `refresh()`), `SearchViewModel` (`retry()`, only if the
+  query is non-blank), and `LibraryViewModel` (facets only — the grid already rebuilds its `Pager`
+  per connection change inside `DelegatingJellyfinRepository.getItemsPaged`, so it needed no new
+  wiring, in either direction). `HomeViewModel` also now drops a library card from *My Media* when
+  its *Latest* call succeeded and came back empty (kept when the call failed) — offline,
+  `getUserViews` answers from the full cached `library_views` table regardless of what was
+  downloaded, so this keeps the cards honest on the same edge.
 - **Offline user-data push silenced**, closing the M8 known issue. `UserDataRepositoryImpl.
   pushToServer` now returns immediately (one `Timber.d` line, no HTTP attempt, no
   `syncScheduler.enqueue()`) when `ConnectionStateProvider.state.value.isOnline` is false — the
@@ -777,14 +789,49 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
   unconditionally beforehand. `UserDataSyncTrigger` already drains every pending row on the next
   `OFFLINE → ONLINE` edge, so nothing is lost; a five-minute offline playback session now logs one
   debug line total instead of ~60 warning stacks. Online behaviour is byte-for-byte unchanged.
-- **+34 unit tests** (12 `SettingsViewModelTest`, 15 across `ReconnectEdgesTest`/
-  `ReconnectRefresherTest`/the five reconnect-wired ViewModel test files, 5 `UserDataRepositoryImplTest`,
-  2 `MainViewModelTest` net); project total **748**, 0 failures, 0 skipped (independently counted
-  from the JUnit XML, not the gradle summary line). Full gate green in one run
-  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
-- 4 DECISIONS entries (storage picker deferral; Settings via overflow not avatar; offline write does
-  not enqueue the sync worker; reconnect signal drops its initial value); `docs/features/settings.md`
-  (new), `docs/features/offline-read.md` and `docs/features/user-data.md` updated.
+- **+39 unit tests** (12 `SettingsViewModelTest`, 20 across `ConnectivityEdgesTest`/
+  `ConnectivityRefresherTest`/the five connectivity-wired ViewModel test files, 5 `UserDataRepositoryImplTest`,
+  2 `MainViewModelTest` net); 0 failures, 0 skipped. Full gate green in one run
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`). The branch total is stated once, below,
+  under *Download quality*, which is the later of the two passes on this branch.
+- 5 DECISIONS entries (storage picker deferral; Settings via overflow not avatar; offline write does
+  not enqueue the sync worker; refresh signal drops its initial value; refresh signal fires on both
+  edges); `docs/features/settings.md` (new), `docs/features/offline-read.md` and
+  `docs/features/user-data.md` updated.
+
+**Done — download quality for offline downloads (M9, user-requested via docs/POLISH.md)**
+- **A `downloadQuality` preference** — `ORIGINAL` (default, unchanged behaviour) / `HIGH` (20 Mbps,
+  1080p) / `MEDIUM` (8 Mbps, 1080p) / `LOW` (3 Mbps, 720p), the video bitrates deliberately the same
+  ladder `PlaybackQuality` uses. Enum in `:core:common`, DataStore key `download_quality` in
+  `:core:datastore`, radio group in the settings Downloads section. docs/PLAN.md line 7 lists
+  transcoded downloads as *not v1*, so the scope addition is logged in DECISIONS.md before the code.
+- **Read once, stamped on the row.** `DownloadEnqueuer` reads the preference when the user taps
+  *Download* and writes it to the new `downloads.quality` column (schema v4 → v5, a Room
+  `@AutoMigration` on a `TEXT NOT NULL DEFAULT 'ORIGINAL'` column, so an existing install keeps its
+  queue). `DownloadQueue.reconcile` plans every later run from the row, never from the live
+  preference — `reconcile` deliberately rebuilds URLs each run, so a preference changed mid-transfer
+  would otherwise resume a half-written transcode against `/Items/{id}/Download`, which honours
+  `Range`, and mark a corrupt file `DOWNLOADED` (DECISIONS.md).
+- **The transcode URL.** `videosApi.getVideoStreamByContainerUrl` → `/Videos/{id}/stream.mp4`, with
+  the container in the *path* (one progressive file, not an HLS playlist), `static = false`,
+  `videoCodec = h264`, `audioCodec = aac`, the step's `videoBitRate`/`maxHeight`, 192 kbps stereo
+  AAC, `allowVideoStreamCopy = true`, and `context = EncodingContext.STATIC` — a `STREAMING`
+  transcode is throttled by the server to roughly real time.
+- **Two documented losses, both `ORIGINAL`-only guarantees.** No `Content-Length` (the file is not
+  encoded yet): the row is seeded with `runTimeTicks × bitrate / 8` and `ItemProgress` uses it as a
+  floor while any file's real size is unknown, dropping it once every file has reported, so a
+  generous estimate cannot strand a finished item below 100 %. No resume: the endpoint ignores
+  `Range`, and `FileDownloader` already truncates-and-rewrites on a `200` answer to a ranged
+  request, so an interruption costs a repeated transfer and never a corrupt file. A transcoded media
+  file is named `<directory> (<quality>).mp4`, and the `403`/`enableContentDownloading` fallback to
+  the static stream is skipped for a transcoded row (it would hand back the original file).
+- **+21 unit tests** (5 `DownloadFilePlannerTest`, 2 `DownloadPathsTest`, 4 `DownloadEnqueuerTest`,
+  4 `DownloadQueueTest`, 4 `DataStoreAppPreferencesTest`, 2 `SettingsViewModelTest`); branch total
+  **779**, 0 failures, 0 skipped (counted from the JUnit XML, not the gradle summary line). Full
+  gate green (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- 3 DECISIONS entries (the scope addition itself; quality stored on the row rather than read live;
+  a transcode is not resumable and its size is an estimate); `docs/features/download-quality.md`
+  (new), `docs/ARCHITECTURE.md` updated.
 
 **Next — device verification (orchestrator)**
 1. `./gradlew installDebug`, launch signed in.
@@ -800,11 +847,26 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
 4. **Hit targets:** in Downloads, tap anywhere on the Wi-Fi-only row (not just the switch) — it
    toggles. In the home overflow, tap anywhere on the Offline-mode row — it toggles (this already
    worked; confirm no regression).
-5. **Refresh-on-reconnect:** airplane mode on, browse Home/Libraries/Search/an item detail page so
-   each loads its offline data, airplane mode off. Within a couple seconds each screen should
-   silently refresh — watch logcat for each screen's normal load call re-firing exactly once (no
-   storm), and check Home/Search in particular show live data again without leaving the screen.
-6. **Offline push silence:** airplane mode on, start local playback of a download, let it run
+5. **Refresh on connectivity change:** first the original edge — airplane mode on, browse
+   Home/Libraries/Search/an item detail page so each loads its offline data, airplane mode off.
+   Within a couple seconds each screen should silently refresh — watch logcat for each screen's
+   normal load call re-firing exactly once (no storm), and check Home/Search in particular show live
+   data again without leaving the screen. Then the reverse edge, which is the fix landing with this
+   pass: with those same screens showing live server data, turn airplane mode on (or toggle Offline
+   mode from the home overflow). Each screen should silently reload from Room within a couple
+   seconds — no crash, one reload each, Home's *My Media* should drop any card whose library has
+   nothing downloaded rather than opening onto an empty grid.
+6. **Download quality:** Settings → Downloads → *Download quality*. Leave it on *Original file* and
+   download one item — the queue tab should show an exact size and the file on disk should keep the
+   server's own filename and container. Set it to *Low*, download a second item — the queue row
+   should show an approximate size that keeps moving (not an indeterminate bar), the file should
+   land as `<directory> (low).mp4`, and it should play offline. Pause it mid-transfer and resume:
+   the transfer restarts from zero (expected — the endpoint ignores `Range`) and the finished file
+   is still playable. Confirm changing the setting while something is downloading does **not** touch
+   the running item (`adb shell run-as … sqlite3 databases/jellyfin-native.db
+   'SELECT itemName, quality FROM downloads;'`). Upgrade check: install over an existing build and
+   confirm the queue survives (schema v4 → v5 auto-migration) with every old row reading `ORIGINAL`.
+7. **Offline push silence:** airplane mode on, start local playback of a download, let it run
    ~30 s (six 5-second ticks). Logcat should show six `User data for … stays pending (offline, not
    pushing)` debug lines and **zero** `stays pending: …` warning-with-stack-trace lines. Reconnect —
    the existing M8 drain path (`UserDataSyncTrigger` → `Pushed the local user data…`) still fires.

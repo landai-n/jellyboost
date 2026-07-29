@@ -1,5 +1,6 @@
 package dev.jellyfinnative.core.datastore
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 
@@ -43,6 +44,21 @@ interface AppPreferences {
 
     /** Turns the Wi-Fi-only download restriction on or off. */
     suspend fun setDownloadOverWifiOnly(enabled: Boolean)
+
+    /**
+     * How much of the file a download asks the server for (M9).
+     *
+     * Read **once per enqueue**, by `DownloadEnqueuer`, and stamped onto the download row; the
+     * pipeline never consults it again for an item already in the queue (DECISIONS.md, 2026-07-29).
+     * Changing it therefore affects the next download the user starts, not the one running.
+     *
+     * Defaults to [DownloadQuality.ORIGINAL], which is the plan's behaviour: the source file, byte
+     * for byte, with an exact size and byte-level resume.
+     */
+    val downloadQuality: Flow<DownloadQuality>
+
+    /** Sets the quality future downloads are fetched at. */
+    suspend fun setDownloadQuality(quality: DownloadQuality)
 
     // M9 player -----------------------------------------------------------------------------------
 

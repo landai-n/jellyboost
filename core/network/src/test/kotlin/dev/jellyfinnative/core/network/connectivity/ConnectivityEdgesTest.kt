@@ -10,24 +10,24 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
 /**
- * Unit tests for [reconnectEdges] — the signal every screen refreshes itself on (M9).
+ * Unit tests for [onlineStateChanges] — the signal every screen refreshes itself on (M9).
  *
- * The two properties that matter are both about what it does *not* emit: nothing for the value the
- * flow already holds when a screen subscribes (the screen has just loaded), and nothing extra for a
- * connection that flaps.
+ * Three properties: it reports a change in *either* direction, it says nothing about the value the
+ * flow already holds when a screen subscribes (that screen has just loaded), and it says nothing
+ * extra for a connection flapping between two states that are equally offline.
  *
  * Each state change is followed by `runCurrent()`: a `StateFlow` conflates, so two assignments in a
  * row without letting the collector run would be one transition, and the test would be asserting
  * something other than what it says.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ReconnectEdgesTest {
+class ConnectivityEdgesTest {
     @Test
-    fun `an already-online connection is not a reconnect`() =
+    fun `an already-online connection is not a change`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.ONLINE)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
 
                 expectNoEvents()
@@ -36,11 +36,11 @@ class ReconnectEdgesTest {
         }
 
     @Test
-    fun `an already-offline connection is not a reconnect either`() =
+    fun `an already-offline connection is not a change either`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.OFFLINE_NO_NETWORK)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
 
                 expectNoEvents()
@@ -49,42 +49,59 @@ class ReconnectEdgesTest {
         }
 
     @Test
-    fun `coming back online emits exactly once`() =
+    fun `coming back online emits true exactly once`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.OFFLINE_NO_NETWORK)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
                 state.value = ConnectionState.ONLINE
                 runCurrent()
 
-                awaitItem() shouldBe Unit
+                awaitItem() shouldBe true
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
     @Test
-    fun `losing the connection emits nothing`() =
+    fun `losing the connection emits false`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.ONLINE)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
                 state.value = ConnectionState.OFFLINE_NO_NETWORK
                 runCurrent()
 
+                awaitItem() shouldBe false
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }
 
     @Test
-    fun `swapping between two offline reasons is not a reconnect`() =
+    fun `the user pinning offline mode is a change like any other`() =
+        runTest {
+            val state = MutableStateFlow(ConnectionState.ONLINE)
+
+            state.onlineStateChanges().test {
+                runCurrent()
+                state.value = ConnectionState.OFFLINE_FORCED
+                runCurrent()
+
+                awaitItem() shouldBe false
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `swapping between two offline reasons is not a change`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.OFFLINE_NO_NETWORK)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
                 state.value = ConnectionState.OFFLINE_SERVER_UNREACHABLE
                 runCurrent()
@@ -97,14 +114,14 @@ class ReconnectEdgesTest {
         }
 
     @Test
-    fun `a connection that flaps twice refreshes exactly twice`() =
+    fun `a connection that flaps twice emits once per crossing, alternating`() =
         runTest {
             val state = MutableStateFlow(ConnectionState.ONLINE)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
-                // Walking out of Wi-Fi range and back, twice: two refreshes, not one per state the
-                // connection passed through on the way.
+                // Walking out of Wi-Fi range and back, twice: one emission per crossing, not one
+                // per state the connection passed through on the way.
                 state.value = ConnectionState.OFFLINE_NO_NETWORK
                 runCurrent()
                 state.value = ConnectionState.ONLINE
@@ -114,8 +131,10 @@ class ReconnectEdgesTest {
                 state.value = ConnectionState.ONLINE
                 runCurrent()
 
-                awaitItem() shouldBe Unit
-                awaitItem() shouldBe Unit
+                awaitItem() shouldBe false
+                awaitItem() shouldBe true
+                awaitItem() shouldBe false
+                awaitItem() shouldBe true
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
@@ -126,11 +145,11 @@ class ReconnectEdgesTest {
         runTest {
             val state = MutableStateFlow(ConnectionState.OFFLINE_FORCED)
 
-            state.reconnectEdges().test {
+            state.onlineStateChanges().test {
                 runCurrent()
                 state.value = ConnectionState.ONLINE
                 runCurrent()
-                awaitItem() shouldBe Unit
+                awaitItem() shouldBe true
 
                 state.value = ConnectionState.ONLINE
                 runCurrent()

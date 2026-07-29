@@ -17,6 +17,12 @@
     <string name="settings_section_downloads">Downloads</string>
     <string name="settings_wifi_only">Wi‑Fi only</string>
     <string name="settings_wifi_only_supporting">Pause downloads on mobile data.</string>
+    <string name="settings_quality">Download quality</string>
+    <string name="settings_quality_original">Original file — exact copy, resumable</string>
+    <string name="settings_quality_high">High — about 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Medium — about 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Low — about 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Anything but the original file is converted by your server as it sends it, so the size shown while it downloads is an estimate and an interrupted transfer starts again.</string>
     <string name="settings_storage_label">Storage</string>
     <string name="settings_storage_summary">%1$s used · %2$s free on this device</string>
     <string name="settings_storage_location">Downloads are kept in %1$s</string>

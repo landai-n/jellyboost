@@ -217,7 +217,9 @@ class DownloadQueue
             existing: List<DownloadFileEntity>,
         ): List<DownloadFileEntity> {
             storage.prepareItemDirectory(download.directoryName)
-            val planned = planner.plan(dto, download.directoryName)
+            // The quality comes from the row, never from the live preference: the bytes already on
+            // disk were fetched at it (DECISIONS.md, 2026-07-29).
+            val planned = planner.plan(dto, download.directoryName, quality = download.quality)
 
             return planned.map { file ->
                 val previous =
@@ -256,7 +258,7 @@ class DownloadQueue
             files: List<DownloadFileEntity>,
             listener: DownloadQueueListener,
         ): Boolean {
-            val progress = ItemProgress(files)
+            val progress = ItemProgress(files, estimatedTotal = download.bytesTotal)
 
             for (file in files) {
                 if (downloadDao.get(download.itemId) == null) {
@@ -283,6 +285,10 @@ class DownloadQueue
          * A `403` here means the server refused `/Items/{id}/Download` for this user, which is
          * exactly the "download policy denied" case; the same bytes are still reachable as a static
          * video stream, so the one file is re-planned onto that URL and retried once.
+         *
+         * The fallback is for `ORIGINAL` downloads only. A transcoded row never asks
+         * `/Items/{id}/Download` in the first place, so a `403` on one is a real refusal and
+         * re-planning would only re-issue the identical URL.
          */
         private suspend fun downloadEssential(
             download: DownloadEntity,
@@ -294,7 +300,7 @@ class DownloadQueue
             try {
                 downloadOne(download, file, progress, listener)
             } catch (error: DownloadHttpException) {
-                if (error.code != HTTP_FORBIDDEN) throw error
+                if (error.code != HTTP_FORBIDDEN || download.quality.isTranscoded) throw error
 
                 Timber.i("Download endpoint denied for %s; falling back to the video stream", download.itemName)
                 val fallback =
@@ -384,9 +390,18 @@ class DownloadQueue
  *
  * Without this a 2 GB film would jump to 100 % while its 40 KB poster finished, then back to 0 %.
  * Sizes start from the rows already on disk so a resumed item does not restart its percentage.
+ *
+ * @param estimatedTotal the size the enqueue step predicted for the whole item. It is used as a
+ *   floor for as long as **any** file's real size is still unknown, which is the permanent state of
+ *   a transcoded download: the server encodes on the fly and never sends a `Content-Length`, so
+ *   without the floor `bytesTotal` would collapse onto `bytesDownloaded` and the queue tab would
+ *   read 100 % from the first chunk (DECISIONS.md, 2026-07-29). Once every file has reported a real
+ *   size — the ordinary end of an `ORIGINAL` download — the estimate is dropped and the exact sum
+ *   wins, so an estimate that was too generous cannot leave a finished item short of 100 %.
  */
 private class ItemProgress(
     files: List<DownloadFileEntity>,
+    private val estimatedTotal: Long,
 ) {
     private val downloaded = files.associate { it.id to it.bytesDownloaded }.toMutableMap()
     private val totals = files.associate { it.id to it.bytesTotal }.toMutableMap()
@@ -404,5 +419,10 @@ private class ItemProgress(
 
     val bytesDownloaded: Long get() = downloaded.values.sum()
 
-    val bytesTotal: Long get() = maxOf(totals.values.sum(), bytesDownloaded)
+    val bytesTotal: Long
+        get() {
+            val known = totals.values.sum()
+            val floor = if (totals.values.any { it <= 0L }) estimatedTotal else 0L
+            return maxOf(known, floor, bytesDownloaded)
+        }
 }

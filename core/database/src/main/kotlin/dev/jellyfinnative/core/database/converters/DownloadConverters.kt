@@ -2,6 +2,7 @@ package dev.jellyfinnative.core.database.converters
 
 import androidx.room.TypeConverter
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 
 /**
@@ -20,6 +21,22 @@ class DownloadStatusConverter {
     /** Writes a status as its constant name. */
     @TypeConverter
     fun fromDownloadStatus(status: DownloadStatus?): String? = status?.name
+}
+
+/** Room converter pair for [DownloadQuality] — what a download row was fetched at (M9). */
+class DownloadQualityConverter {
+    /**
+     * Reads a stored quality.
+     *
+     * An unknown name decodes to [DownloadQuality.ORIGINAL], which is both the column's SQL default
+     * and the only value every build of this app has ever understood.
+     */
+    @TypeConverter
+    fun toDownloadQuality(value: String?): DownloadQuality? = value?.let(DownloadQuality::fromNameOrDefault)
+
+    /** Writes a quality as its constant name. */
+    @TypeConverter
+    fun fromDownloadQuality(quality: DownloadQuality?): String? = quality?.name
 }
 
 /** Room converter pair for [DownloadFileType]. */

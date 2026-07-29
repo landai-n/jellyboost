@@ -7,8 +7,8 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -53,11 +53,11 @@ class SearchViewModelTest {
             every { observeStates() } returns downloadStates
         }
 
-    /** The reconnect signal (M9); fires only when a test says the server came back. */
-    private val reconnects = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val reconnectRefresher =
-        mockk<ReconnectRefresher> {
-            every { reconnected } returns reconnects
+    /** The connectivity-change signal (M9); fires only when a test says the server came back. */
+    private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val connectivityRefresher =
+        mockk<ConnectivityRefresher> {
+            every { connectivityChanged } returns connectivityChanges
         }
 
     private val queries = mutableListOf<ItemQuery>()
@@ -285,7 +285,7 @@ class SearchViewModelTest {
             state.movies.map { it.name } shouldContainExactly listOf("Dune")
         }
 
-    // ---- M9: refresh on reconnect ---------------------------------------------------------------
+    // ---- M9: refresh when connectivity changes ---------------------------------------------------------------
 
     @Test
     fun `re-runs the current term when the server becomes reachable again`() =
@@ -298,7 +298,7 @@ class SearchViewModelTest {
             // Still capturing: the term the reconnect re-runs is half of what this test asserts.
             coEvery { repository.getItems(capture(queries)) } returns
                 AppResult.Success(listOf(movie("m1", "Dune")))
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             // The field keeps its text and the results are the server's, not the downloaded subset.
@@ -315,7 +315,7 @@ class SearchViewModelTest {
             startedViewModel()
             advanceUntilIdle()
 
-            reconnects.emit(Unit)
+            connectivityChanges.emit(Unit)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { repository.getItems(any()) }
@@ -325,7 +325,7 @@ class SearchViewModelTest {
 
     /** Builds the ViewModel and lets its debounce collector start before the test types. */
     private fun TestScope.startedViewModel(): SearchViewModel {
-        val viewModel = SearchViewModel(repository, downloads, reconnectRefresher)
+        val viewModel = SearchViewModel(repository, downloads, connectivityRefresher)
         runCurrent()
         return viewModel
     }

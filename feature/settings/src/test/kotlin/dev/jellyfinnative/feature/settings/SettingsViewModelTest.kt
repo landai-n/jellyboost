@@ -3,6 +3,7 @@ package dev.jellyfinnative.feature.settings
 import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
@@ -46,6 +47,7 @@ class SettingsViewModelTest {
     private val outroSkipMode = MutableStateFlow(SegmentSkipMode.SHOW_BUTTON)
     private val pipOnLeave = MutableStateFlow(true)
     private val downloadOverWifiOnly = MutableStateFlow(true)
+    private val downloadQuality = MutableStateFlow(DownloadQuality.ORIGINAL)
     private val forceOffline = MutableStateFlow(false)
     private val storage = MutableStateFlow(StorageUsage())
     private val sessionState = MutableStateFlow<SessionState>(SessionState.Unknown)
@@ -62,6 +64,7 @@ class SettingsViewModelTest {
         every { appPreferences.outroSkipMode } returns outroSkipMode
         every { appPreferences.pipOnLeave } returns pipOnLeave
         every { appPreferences.downloadOverWifiOnly } returns downloadOverWifiOnly
+        every { appPreferences.downloadQuality } returns downloadQuality
         every { appPreferences.forceOffline } returns forceOffline
         every { sessionRepository.sessionState } returns sessionState
         every { downloads.observeStorage() } returns storage
@@ -83,6 +86,7 @@ class SettingsViewModelTest {
             outroSkipMode.value = SegmentSkipMode.OFF
             pipOnLeave.value = false
             downloadOverWifiOnly.value = false
+            downloadQuality.value = DownloadQuality.LOW
             forceOffline.value = true
             storage.value = StorageUsage(usedBytes = 100L, availableBytes = 900L, rootPath = "/sdcard")
 
@@ -95,6 +99,7 @@ class SettingsViewModelTest {
                 state.outroSkipMode shouldBe SegmentSkipMode.OFF
                 state.pipOnLeave shouldBe false
                 state.downloadOverWifiOnly shouldBe false
+                state.downloadQuality shouldBe DownloadQuality.LOW
                 state.forceOffline shouldBe true
                 state.storage.usedBytes shouldBe 100L
                 state.storage.rootPath shouldBe "/sdcard"
@@ -126,6 +131,30 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { appPreferences.setIntroSkipMode(SegmentSkipMode.AUTO_SKIP) }
+        }
+
+    @Test
+    fun `the download quality picker writes through to the preference store`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setDownloadQuality(DownloadQuality.MEDIUM)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { appPreferences.setDownloadQuality(DownloadQuality.MEDIUM) }
+        }
+
+    @Test
+    fun `a download quality changed upstream is picked up while the screen is open`() =
+        runTest(dispatcher) {
+            viewModel().uiState.test {
+                awaitItem().downloadQuality shouldBe DownloadQuality.ORIGINAL
+
+                downloadQuality.value = DownloadQuality.HIGH
+
+                awaitItem().downloadQuality shouldBe DownloadQuality.HIGH
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     @Test

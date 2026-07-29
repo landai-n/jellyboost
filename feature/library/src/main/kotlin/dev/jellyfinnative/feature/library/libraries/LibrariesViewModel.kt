@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
-import dev.jellyfinnative.data.ReconnectRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +24,7 @@ class LibrariesViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
-        private val reconnectRefresher: ReconnectRefresher,
+        private val connectivityRefresher: ConnectivityRefresher,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(LibrariesUiState())
 
@@ -33,16 +33,16 @@ class LibrariesViewModel
 
         init {
             load()
-            observeReconnects()
+            observeConnectivityChanges()
         }
 
         /**
-         * Swaps the cached library list for the server's when it is reachable again (M9) — the
-         * offline list only contains libraries this device has already seen.
+         * Re-loads the list whenever the connection changes (M9), in either direction — the offline
+         * list only contains libraries this device has already seen.
          */
-        private fun observeReconnects() {
+        private fun observeConnectivityChanges() {
             viewModelScope.launch {
-                reconnectRefresher.reconnected.collect { refresh() }
+                connectivityRefresher.connectivityChanged.collect { refresh() }
             }
         }
 

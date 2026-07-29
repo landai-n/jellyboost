@@ -133,8 +133,8 @@ class ItemDetailViewModel
          * - not on the device → enqueue it (M7's pipeline takes it from there);
          * - failed → put it back in the queue, which resumes from the bytes already on disk rather
          *   than starting the transfer over;
-         * - queued, downloading or paused → cancel it. Nothing finished is lost, so this stays
-         *   immediate;
+         * - queued, downloading or paused → cancel it. Nothing finished is lost — on a container
+         *   the episodes that already completed are explicitly kept — so this stays immediate;
          * - downloaded → ask for confirmation before removing it (docs/POLISH.md — deleting a
          *   finished download straight away, with no way back, was too easy to trigger by accident).
          *   [confirmDeleteDownload] does the actual removal once the user confirms.
@@ -171,7 +171,7 @@ class ItemDetailViewModel
 
                 is DownloadState.Downloaded -> _uiState.update { it.copy(showDeleteConfirmation = true) }
 
-                else -> deleteDownloads()
+                else -> cancelDownloads()
             }
         }
 
@@ -199,19 +199,49 @@ class ItemDetailViewModel
          * three episodes in does not run twenty pointless cascades through WorkManager.
          */
         private fun deleteDownloads() {
-            val state = _uiState.value
-            if (state.item == null) return
-            val targets = state.downloadTargets.filter { downloadStates.containsKey(it) }
-            if (targets.isEmpty()) return
+            removeDownloads(
+                targets = _uiState.value.downloadTargets.filter { downloadStates.containsKey(it) },
+                keptCount = 0,
+            )
+        }
+
+        /**
+         * Cancels a download that is still in flight, **keeping whatever already finished**.
+         *
+         * On a season, Cancel used to run the same delete as Remove and take the episodes that had
+         * completed with it (docs/POLISH.md) — a user stopping a season three episodes in lost those
+         * three. Cancel now only touches rows that are queued, transferring, paused or failed. A
+         * partly-kept season then aggregates back to *NotDownloaded* (the deliberate
+         * some-episodes-missing behaviour), so the button offers *Download* for the rest; removing
+         * the kept episodes goes through the Downloads screen's confirmed delete
+         * (DECISIONS.md, 2026-07-29).
+         */
+        private fun cancelDownloads() {
+            val targets = _uiState.value.downloadTargets.mapNotNull { id -> downloadStates[id]?.let { id to it } }
+            val (finished, inFlight) = targets.partition { (_, state) -> state is DownloadState.Downloaded }
+
+            removeDownloads(targets = inFlight.map { (id, _) -> id }, keptCount = finished.size)
+        }
+
+        /**
+         * Deletes [targets] and reports how it went. [keptCount] is the number of finished downloads
+         * this call deliberately left alone, which is what the snackbar tells the user about.
+         */
+        private fun removeDownloads(
+            targets: List<String>,
+            keptCount: Int,
+        ) {
+            if (_uiState.value.item == null || targets.isEmpty()) return
 
             viewModelScope.launch {
                 val failed = targets.map { downloads.delete(it) }.any { it is AppResult.Failure }
-                _uiState.update {
-                    it.copy(
-                        userMessage =
-                            if (failed) UserMessage.DownloadDeleteFailed else UserMessage.DownloadDeleted,
-                    )
-                }
+                val message =
+                    when {
+                        failed -> UserMessage.DownloadDeleteFailed
+                        keptCount > 0 -> UserMessage.DownloadCancelledKeepingFinished(keptCount)
+                        else -> UserMessage.DownloadDeleted
+                    }
+                _uiState.update { it.copy(userMessage = message) }
             }
         }
 

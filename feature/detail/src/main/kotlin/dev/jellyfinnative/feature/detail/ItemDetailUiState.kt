@@ -137,24 +137,36 @@ fun playbackStartTicks(item: JellyfinItem): Long =
 /**
  * The one-shot messages the detail screen can raise.
  *
- * An enum rather than a string so the ViewModel stays free of resources and the copy lives in
- * `strings.xml` where it can be translated.
+ * A type rather than a string so the ViewModel stays free of resources and the copy lives in
+ * `strings.xml` where it can be translated — a sealed interface rather than an enum because one of
+ * the messages carries a count (precedent: `:feature:auth`'s `AuthErrorMessage`).
  */
-enum class UserMessage {
+sealed interface UserMessage {
     /** The item was accepted into the download queue. */
-    DownloadQueued,
+    data object DownloadQueued : UserMessage
 
     /** The enqueue failed — usually because the server could not be reached. */
-    DownloadFailed,
+    data object DownloadFailed : UserMessage
 
     /** The item and its files were removed from the device. */
-    DownloadDeleted,
+    data object DownloadDeleted : UserMessage
 
     /** Deleting the download failed. */
-    DownloadDeleteFailed,
+    data object DownloadDeleteFailed : UserMessage
+
+    /**
+     * A container download was cancelled while [keptCount] of its episodes were already finished —
+     * those were left on the device (DECISIONS.md, 2026-07-29).
+     *
+     * Worth saying out loud: afterwards the button simply offers *Download* for the missing
+     * episodes, and without this the user cannot tell whether the finished ones survived.
+     */
+    data class DownloadCancelledKeepingFinished(
+        val keptCount: Int,
+    ) : UserMessage
 
     /** A watched / favourite toggle could not even be written locally. */
-    UserDataWriteFailed,
+    data object UserDataWriteFailed : UserMessage
 }
 
 /**

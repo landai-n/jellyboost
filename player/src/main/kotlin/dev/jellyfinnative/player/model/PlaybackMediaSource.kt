@@ -152,24 +152,33 @@ data class LocalTrickplay(
     val tileUris: List<String>,
 ) {
     /**
+     * The same sheets in the vocabulary the scrubber draws from.
+     *
+     * The geometry is identical — only the names differ, because "tileWidth" means *thumbnails per
+     * row* on the server and reads like a pixel width everywhere else. M9 renders
+     * [TrickplayTiles], and a downloaded item reaches it through here.
+     */
+    fun toTiles(): TrickplayTiles =
+        TrickplayTiles(
+            thumbnailWidth = width,
+            thumbnailHeight = height,
+            columns = tileWidth,
+            rows = tileHeight,
+            thumbnailCount = thumbnailCount,
+            intervalMs = intervalMs,
+            tileUris = tileUris,
+        )
+
+    /**
      * The sheet, and the position inside it, holding the thumbnail for [positionMs].
      *
      * `null` when the geometry is unusable, or when the thumbnail would sit on a sheet that is not
      * on disk — which is what a position past the last generated thumbnail resolves to.
+     *
+     * Delegates to [TrickplayTiles] since M9: the online scrubber needs the identical arithmetic
+     * over sheets that live on the server, and two copies of it would be two chances to be wrong.
      */
-    fun tileFor(positionMs: Long): TrickplayThumbnail? {
-        val perTile = tileWidth * tileHeight
-        if (intervalMs <= 0 || perTile <= 0) return null
-
-        val thumbnail = (positionMs / intervalMs).toInt().coerceIn(0, (thumbnailCount - 1).coerceAtLeast(0))
-        val uri = tileUris.getOrNull(thumbnail / perTile) ?: return null
-        val withinTile = thumbnail % perTile
-        return TrickplayThumbnail(
-            uri = uri,
-            column = withinTile % tileWidth,
-            row = withinTile / tileWidth,
-        )
-    }
+    fun tileFor(positionMs: Long): TrickplayThumbnail? = toTiles().tileFor(positionMs)
 }
 
 /** Where one trickplay thumbnail sits: which sheet, and which cell of it. */

@@ -2,7 +2,10 @@ package dev.jellyfinnative.player.ui
 
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.model.PlaybackQuality
+import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.PlaybackTrack
+import dev.jellyfinnative.player.model.TrickplayTiles
+import dev.jellyfinnative.player.segments.MediaSegment
 
 /**
  * Everything the player screen draws.
@@ -40,6 +43,26 @@ data class PlayerUiState(
     /** Jellyfin stream index of the active subtitle track; `null` means subtitles are off. */
     val selectedSubtitleIndex: Int? = null,
     val quality: PlaybackQuality = PlaybackQuality.AUTO,
+    /** Playback rate; session-scoped and never persisted (M9). */
+    val speed: PlaybackSpeed = PlaybackSpeed.NORMAL,
+    /**
+     * Scrubbing thumbnails, or `null` when this item has none (M9).
+     *
+     * `null` is the common case — trickplay is generated per-library and off by default — so the
+     * scrubber has to treat its absence as ordinary rather than as a failure to report.
+     */
+    val trickplay: TrickplayTiles? = null,
+    /**
+     * The intro or outro playback is currently inside, or `null`.
+     *
+     * Only ever set for a segment the user's preference says to *offer*: an auto-skip has already
+     * happened by the time the state is written, and a segment whose preference is off never
+     * reaches here (`SegmentSkipController`).
+     */
+    val skippableSegment: MediaSegment? = null,
+    /** Decoded video size; drives the picture-in-picture window's aspect ratio (M9). */
+    val videoWidth: Int = 0,
+    val videoHeight: Int = 0,
     val hasEnded: Boolean = false,
     /** One-shot message for the snackbar; cleared through `PlayerViewModel.consumeMessage`. */
     val userMessage: PlayerMessage? = null,
@@ -84,12 +107,15 @@ data class PlayerActions(
     val onSelectAudio: (Int) -> Unit,
     val onSelectSubtitle: (Int?) -> Unit,
     val onSelectQuality: (PlaybackQuality) -> Unit,
+    val onSelectSpeed: (PlaybackSpeed) -> Unit,
+    val onSkipSegment: () -> Unit,
     val onBack: () -> Unit,
 )
 
-/** The three pickers the player offers. */
+/** The four pickers the player offers. */
 internal enum class PlayerSheet {
     AUDIO,
     SUBTITLES,
     QUALITY,
+    SPEED,
 }

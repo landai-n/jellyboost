@@ -1,0 +1,256 @@
+package dev.jellyfinnative.player.ui
+
+import android.app.Activity
+import android.content.Context
+import android.media.AudioManager
+import android.provider.Settings
+import android.view.WindowManager
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.systemGestureExclusion
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.BrightnessMedium
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import dev.jellyfinnative.core.ui.theme.Dimens
+import dev.jellyfinnative.player.gesture.GestureConfig
+import dev.jellyfinnative.player.gesture.PlayerGestureController
+import dev.jellyfinnative.player.gesture.SwipeTarget
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
+
+/**
+ * The invisible touch surface over the video (docs/PLAN.md, "M9 Polish" → gestures).
+ *
+ * It is a sibling *below* the transport controls rather than a wrapper around them: a tap that
+ * lands on a button is consumed by the button, and everything else falls through to here. That is
+ * what lets a single tap toggle the controls without every icon needing to know about gestures.
+ *
+ * The judgement — which half of the screen, which third, how far a swipe has to travel, which edges
+ * belong to the system — is [PlayerGestureController]'s and is unit tested. What is left here is
+ * the platform plumbing that cannot be: `AudioManager` for volume, the window's `screenBrightness`
+ * attribute for brightness (a per-window override, so it dies with the player rather than changing
+ * the device setting), and a transient indicator.
+ */
+@Composable
+internal fun PlayerGestureLayer(
+    onToggleControls: () -> Unit,
+    onSeekBy: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val density = LocalDensity.current
+    val activity = context as? Activity
+    val audioManager = remember(context) { context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager }
+
+    val controller =
+        remember(density) {
+            PlayerGestureController(
+                GestureConfig(
+                    verticalExclusionPx = with(density) { VERTICAL_EXCLUSION.toPx() },
+                    horizontalExclusionPx = with(density) { HORIZONTAL_EXCLUSION.toPx() },
+                ),
+            )
+        }
+
+    var indicator by remember { mutableStateOf<GestureIndicator?>(null) }
+    // Reset by every new indicator, so a continuing swipe keeps it on screen and a finished one
+    // lets it fade out on its own.
+    LaunchedEffect(indicator) {
+        if (indicator != null) {
+            delay(INDICATOR_LINGER_MS)
+            indicator = null
+        }
+    }
+
+    Box(
+        modifier =
+            modifier
+                .fillMaxSize()
+                // Asks the system not to steal touches that start near the edges; the controller
+                // additionally ignores them, because this is only a request below API 29.
+                .systemGestureExclusion()
+                .pointerInput(controller) {
+                    detectTapGestures(
+                        onTap = { onToggleControls() },
+                        onDoubleTap = { offset ->
+                            controller.doubleTapSeekMs(offset.x, size.width.toFloat())?.let(onSeekBy)
+                        },
+                    )
+                }.pointerInput(controller, audioManager) {
+                    var target: SwipeTarget? = null
+                    var value = 0f
+
+                    detectVerticalDragGestures(
+                        onDragStart = { offset ->
+                            target =
+                                controller.swipeTargetFor(
+                                    xPx = offset.x,
+                                    yPx = offset.y,
+                                    widthPx = size.width.toFloat(),
+                                    heightPx = size.height.toFloat(),
+                                )
+                            value =
+                                when (target) {
+                                    SwipeTarget.VOLUME -> audioManager.volumeFraction()
+                                    SwipeTarget.BRIGHTNESS -> activity.brightnessFraction()
+                                    null -> 0f
+                                }
+                        },
+                        onDragEnd = { target = null },
+                        onDragCancel = { target = null },
+                        onVerticalDrag = { change, dragAmount ->
+                            val current = target
+                            if (current != null) {
+                                change.consume()
+                                value =
+                                    (value + controller.deltaFor(dragAmount, size.height.toFloat()))
+                                        .coerceIn(0f, 1f)
+                                when (current) {
+                                    SwipeTarget.VOLUME -> audioManager.setVolumeFraction(value)
+                                    SwipeTarget.BRIGHTNESS -> activity.setBrightnessFraction(value)
+                                }
+                                indicator = GestureIndicator(current, value)
+                            }
+                        },
+                    )
+                },
+    ) {
+        indicator?.let { GestureIndicatorOverlay(it, Modifier.align(Alignment.Center)) }
+    }
+}
+
+/** What the transient overlay is showing. */
+private data class GestureIndicator(
+    val target: SwipeTarget,
+    val value: Float,
+)
+
+@Composable
+private fun GestureIndicatorOverlay(
+    indicator: GestureIndicator,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(Dimens.SpaceLarge))
+                .background(Color.Black.copy(alpha = OVERLAY_ALPHA))
+                .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        Icon(
+            imageVector =
+                when (indicator.target) {
+                    SwipeTarget.VOLUME -> Icons.AutoMirrored.Outlined.VolumeUp
+                    SwipeTarget.BRIGHTNESS -> Icons.Outlined.BrightnessMedium
+                },
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(Dimens.SpaceExtraLarge),
+        )
+        LinearProgressIndicator(
+            progress = { indicator.value },
+            modifier = Modifier.width(INDICATOR_BAR_WIDTH),
+            color = Color.White,
+            trackColor = Color.White.copy(alpha = TRACK_ALPHA),
+        )
+        Text(
+            text = "${(indicator.value * PERCENT).roundToInt()}%",
+            color = Color.White,
+        )
+    }
+}
+
+/** Current media volume as `0f..1f`, or `0f` when there is no audio service to ask. */
+private fun AudioManager?.volumeFraction(): Float {
+    val manager = this ?: return 0f
+    val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    return if (max <= 0) 0f else manager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max
+}
+
+private fun AudioManager?.setVolumeFraction(fraction: Float) {
+    val manager = this ?: return
+    val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    manager.setStreamVolume(AudioManager.STREAM_MUSIC, (fraction * max).roundToInt().coerceIn(0, max), 0)
+}
+
+/**
+ * The window's brightness override, or the device's own brightness the first time.
+ *
+ * `BRIGHTNESS_OVERRIDE_NONE` (-1) is the "follow the system" value a window starts with, and it is
+ * not a brightness — starting a swipe from it would jump the screen to full dark. The system
+ * setting is read once to seed the gesture instead.
+ */
+private fun Activity?.brightnessFraction(): Float {
+    val activity = this ?: return DEFAULT_BRIGHTNESS
+    val attribute = activity.window.attributes.screenBrightness
+    if (attribute in 0f..1f) return attribute
+    val system =
+        runCatching {
+            Settings.System.getFloat(
+                activity.contentResolver,
+                Settings.System.SCREEN_BRIGHTNESS,
+            ) / SYSTEM_BRIGHTNESS_MAX
+        }.getOrNull()
+    return system?.coerceIn(0f, 1f) ?: DEFAULT_BRIGHTNESS
+}
+
+/**
+ * Sets brightness for this window only.
+ *
+ * A window attribute rather than `Settings.System`: it needs no permission, and it is undone the
+ * moment the player's window goes away — a film watched at full brightness must not leave the phone
+ * blinding for everything afterwards.
+ */
+private fun Activity?.setBrightnessFraction(fraction: Float) {
+    val window = this?.window ?: return
+    window.attributes =
+        WindowManager.LayoutParams().apply {
+            copyFrom(window.attributes)
+            screenBrightness = fraction.coerceIn(MIN_BRIGHTNESS, 1f)
+        }
+}
+
+/** The system's back-gesture strip; a swipe starting here belongs to the system. */
+private val HORIZONTAL_EXCLUSION = 48.dp
+
+/** The status- and navigation-bar pull-down zones. */
+private val VERTICAL_EXCLUSION = 64.dp
+
+private val INDICATOR_BAR_WIDTH = 140.dp
+private const val INDICATOR_LINGER_MS = 900L
+private const val OVERLAY_ALPHA = 0.6f
+private const val TRACK_ALPHA = 0.3f
+private const val PERCENT = 100f
+private const val DEFAULT_BRIGHTNESS = 0.5f
+private const val SYSTEM_BRIGHTNESS_MAX = 255f
+
+/** Never fully black: a brightness of zero looks exactly like a crash. */
+private const val MIN_BRIGHTNESS = 0.01f

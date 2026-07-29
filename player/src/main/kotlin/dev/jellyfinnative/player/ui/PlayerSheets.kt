@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.player.R
 import dev.jellyfinnative.player.model.PlaybackQuality
+import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.PlaybackTrack
 
 /**
@@ -73,6 +74,19 @@ internal fun PlayerSheetHost(
                     },
                 onSelect = { ordinal ->
                     ordinal?.let { actions.onSelectQuality(PlaybackQuality.entries[it]) }
+                },
+                onDismiss = onDismiss,
+            )
+
+        PlayerSheet.SPEED ->
+            OptionDialog(
+                title = stringResource(R.string.player_speed),
+                options =
+                    PlaybackSpeed.entries.map { speed ->
+                        Option(key = speed.ordinal, label = speed.label, selected = speed == state.speed)
+                    },
+                onSelect = { ordinal ->
+                    ordinal?.let { actions.onSelectSpeed(PlaybackSpeed.entries[it]) }
                 },
                 onDismiss = onDismiss,
             )

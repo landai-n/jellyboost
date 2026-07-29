@@ -10,6 +10,10 @@ object PreferenceKeys {
     const val DATASTORE_NAME = "app_preferences"
     const val SECURE_STORE_NAME = "secure_credentials"
 
+    /** Plain preferences file holding only the device id — see `DeviceIdStore`. */
+    const val DEVICE_IDENTITY_STORE_NAME = "device_identity"
+    const val DEVICE_ID = "device_id"
+
     const val DOWNLOAD_OVER_WIFI_ONLY = "download_over_wifi_only"
     const val DOWNLOAD_QUALITY = "download_quality"
     const val FORCE_OFFLINE = "force_offline"

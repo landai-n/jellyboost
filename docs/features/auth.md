@@ -17,7 +17,8 @@ offline-capable; sign-out returns to ServerSetup.
 
 - `:core:network` (`core/network/src/main/kotlin/dev/jellyfinnative/core/network/`)
   - `ApiClientProvider` — owns the SDK `Jellyfin` instance + the single mutable `ApiClient`
-    (`useServer` / `useSession` / `clearSession`); exposes `deviceId`.
+    (`useServer` / `useSession` / `clearSession`); exposes `deviceId`, supplied explicitly
+    from `DeviceIdProvider` rather than left to the SDK default (see below).
   - `ServerDiscoveryRepository` — `discoverLocalServers(): Flow<DiscoveredServer>` and
     `resolveServerAddress(input)`; pure candidate selection in
     `RecommendedServerSelection.kt` (GREAT, else first GOOD, else
@@ -37,7 +38,22 @@ offline-capable; sign-out returns to ServerSetup.
     repositories are unit-testable with MockK.
 - `:core:datastore` — `SecureCredentialStore` / `EncryptedSecureCredentialStore`
   (EncryptedSharedPreferences; the ONLY place the access token is ever persisted),
-  `StoredSession` (serverId + userId + token as one atomic record).
+  `StoredSession` (serverId + userId + token as one atomic record),
+  `DeviceIdProvider` + `DeviceIdStore` / `SharedPreferencesDeviceIdStore` (the device id:
+  a random UUID generated once and persisted in a plain `device_identity` preferences file;
+  not a secret, not cleared on sign-out).
+
+## Device identity
+
+A Jellyfin server keys **one access token per (user, device id)**: a sign-in with a device id
+that is already registered revokes the token previously issued for it. The SDK's default device
+id is `Settings.Secure.ANDROID_ID`, which Android scopes per *signing key*, not per package —
+so the `.debug` install and the locally debug-signed `dev.jellyfinnative.app` release variant
+used for profiling presented the *same* device id and silently revoked each other's session on
+every sign-in (every authenticated call then 401s). The app therefore supplies its own device
+id: a random UUID, generated on first run and persisted per installation, stable across
+restarts and sign-outs. Changing the id makes the server treat the app as a new device, so the
+one-time upgrade past this change requires signing in again.
 - `:core:database` — `ServerEntity`, `ServerAddressEntity` (multi-URL per server),
   `UserEntity` (no token column by design), `ServerDao`, `UserDao`.
 - `:feature:auth` (`feature/auth/src/main/kotlin/dev/jellyfinnative/feature/auth/`)

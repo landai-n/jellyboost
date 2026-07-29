@@ -2,10 +2,13 @@ package dev.jellyfinnative.core.network
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.jellyfinnative.core.datastore.DeviceIdProvider
 import org.jellyfin.sdk.Jellyfin
+import org.jellyfin.sdk.android.androidDevice
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
+import org.jellyfin.sdk.model.DeviceInfo
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,31 +22,43 @@ import javax.inject.Singleton
  * connection pool, the configured base URL and the access token in one place. Repositories must
  * never construct their own client.
  *
- * Passing an Android `Context` into [createJellyfin] is what makes the SDK derive a stable
- * [org.jellyfin.sdk.model.DeviceInfo] (device id + name) for us — see [deviceId].
+ * The Android `Context` gives the SDK the device *name* it derives from `Build`/`device_name`.
+ * The device *id* is deliberately NOT the SDK's default — see [deviceId].
  */
 @Singleton
 class ApiClientProvider
     @Inject
     constructor(
         @ApplicationContext applicationContext: Context,
+        deviceIdProvider: DeviceIdProvider,
     ) {
         /** SDK entry point. Exposed for `jellyfin.discovery`; not for issuing API calls. */
         val jellyfin: Jellyfin =
             createJellyfin {
                 context = applicationContext
                 clientInfo = ClientInfo(name = CLIENT_NAME, version = CLIENT_VERSION)
+                deviceInfo =
+                    DeviceInfo(
+                        id = deviceIdProvider.deviceId,
+                        name = androidDevice(applicationContext).name,
+                    )
             }
 
         /** The one API client. Its base URL and access token change over the app's lifetime. */
         val apiClient: ApiClient = jellyfin.createApi()
 
         /**
-         * Stable per-installation device identifier the SDK derives from the Android context.
+         * Stable per-installation device identifier, from [DeviceIdProvider] (a random UUID
+         * persisted on first run) rather than the SDK's `ANDROID_ID` default.
+         *
+         * The default would be shared by every app signed with the same key — Android scopes the
+         * SSAID per signing key, not per package — and since a Jellyfin server keeps one token per
+         * (user, device id), our debug and locally-signed release installs kept revoking each
+         * other's session. See `DeviceIdProvider`.
          *
          * This is the id the server shows under Dashboard → Devices, and the one playback
          * reporting and Quick Connect sessions are attributed to. `null` only if the SDK could
-         * not build a `DeviceInfo`, which cannot happen for the Android platform build.
+         * not build a `DeviceInfo`, which cannot happen now that one is supplied explicitly.
          */
         val deviceId: String? get() = jellyfin.deviceInfo?.id
 

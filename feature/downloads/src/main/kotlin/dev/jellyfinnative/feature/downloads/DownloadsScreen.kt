@@ -177,7 +177,11 @@ private fun DownloadedTab(
                 }
             }
             items(items = group.items, key = { it.itemId }) { item ->
-                DownloadedRow(item = item, onDelete = { pendingDelete = item })
+                DownloadedRow(
+                    item = item,
+                    onDelete = { pendingDelete = item },
+                    inSeriesGroup = group.isSeries,
+                )
             }
         }
     }

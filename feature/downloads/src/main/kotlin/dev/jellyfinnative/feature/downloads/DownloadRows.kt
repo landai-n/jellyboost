@@ -41,6 +41,7 @@ internal fun DownloadedRow(
     item: DownloadItem,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    inSeriesGroup: Boolean = false,
 ) {
     Row(
         modifier =
@@ -54,7 +55,7 @@ internal fun DownloadedRow(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = item.rowTitle(),
+                text = item.rowTitle(inSeriesGroup = inSeriesGroup),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
@@ -191,9 +192,21 @@ private fun RowArtwork(
     )
 }
 
-/** `Westworld · S1:E2 · Chestnut` for an episode, the plain title otherwise. */
-internal fun DownloadItem.rowTitle(): String =
-    listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(" · ")
+/**
+ * `Westworld · Chestnut` for an episode, the plain title otherwise.
+ *
+ * @param inSeriesGroup `true` when the row is drawn under its series' own group header (the
+ *   *Downloaded* tab's series groups) — the header already names the series, so repeating it on
+ *   every row underneath ("Pyjamasques" header over "Pyjamasques · Bibou et le ballon-lune" rows)
+ *   was the M9 device walk's other title-duplication bug (docs/POLISH.md). Standalone rows — the
+ *   queue tab, and films, which are never grouped — keep the full form.
+ */
+internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
+    if (inSeriesGroup) {
+        title
+    } else {
+        listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(" · ")
+    }
 
 /** The second line under a queue row's progress bar. */
 @Composable

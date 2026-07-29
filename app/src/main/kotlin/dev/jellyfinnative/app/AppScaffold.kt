@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -129,7 +130,15 @@ private fun rememberConnectionStatusExplainer(
                 else -> null
             }
         scope.launch {
-            val result = snackbarHostState.showSnackbar(message = message, actionLabel = actionLabel)
+            // `actionLabel` alone would default `duration` to Indefinite (M3's `showSnackbar`) — the
+            // M9 device walk found the offline snackbar sitting over the last list row for minutes.
+            // `Long` still leaves the action tappable, just not forever.
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = actionLabel,
+                    duration = SnackbarDuration.Long,
+                )
             if (result == SnackbarResult.ActionPerformed) action?.invoke()
         }
     }

@@ -11,7 +11,7 @@ every operation, in this order (docs/PLAN.md, "Data layer"):
 
 1. **Upsert Room** — `UserDataEntity` with `toBeSynced = true` and a fresh `updatedAt`.
 2. **Publish** on `UserDataEventBus` — every list ViewModel patches its items in place.
-3. **Push** to the server.
+3. **Push** to the server — *only while online* (see "The offline push gate" below).
 4. **Settle** — on success clear `toBeSynced`; on failure leave it set and enqueue
    `UserDataSyncWorker`.
 
@@ -38,6 +38,32 @@ failed operation.
 
 The plan specifies `updateItemUserData` for all three; using the dedicated endpoints for played and
 favourite is logged in `DECISIONS.md` (2026-07-28).
+
+## The offline push gate (M9)
+
+`UserDataRepositoryImpl` injects `ConnectionStateProvider` and checks it once, at the top of
+`pushToServer`. When `state.value.isOnline` is `false` the push is **not attempted at all**: one
+`Timber.d` line is logged and the method returns.
+
+Why: `PlaybackReporter` calls `setPosition` every five seconds, so an offline session fired one
+request that could only fail — plus a `Timber.w` stack — per tick (STATUS.md, "Known issues": *while
+offline, `UserDataRepositoryImpl` still attempts one doomed push per position tick*). The request
+bought nothing, because the row is left pending either way.
+
+The offline path deliberately also skips `syncScheduler.enqueue()`. That is not a gap:
+`UserDataSyncTrigger` already drains **every** pending row on each `OFFLINE → ONLINE` edge and at app
+start, so a per-write enqueue while offline is redundant work whose only effect is to re-schedule the
+same drain a few hundred times during a film.
+
+What does **not** change:
+
+- Steps 1 and 2 happen before `pushToServer` is even called, so the Room row (`toBeSynced = true`)
+  and the `UserDataChange` event are identical online and offline.
+- The return value is still `AppResult.Success`. A skipped push is no more a failure than a failed
+  one — the contract above is unconditional.
+- **The online branch is untouched, byte for byte**: push, clear the flag on success, `Timber.w` plus
+  `syncScheduler.enqueue()` on failure. `UserDataRepositoryImplTest` pins this by leaving its fixture
+  at `ConnectionState.ONLINE` for every test that is not explicitly about the gate.
 
 Marking watched clears the resume position locally because the server does the same — not
 mirroring it would leave a progress bar on a watched card until the next sync overwrote it.
@@ -177,7 +203,7 @@ back on the retry.
 
 | Trigger | Owner |
 |---|---|
-| A local write whose push failed | `UserDataRepositoryImpl` (M4) |
+| A local write that was **online** and whose push failed anyway | `UserDataRepositoryImpl` (M4, gated on connectivity since M9) |
 | App start, when rows are already pending | `UserDataSyncTrigger` (M8) |
 | Every transition back to `ConnectionState.ONLINE` | `UserDataSyncTrigger` (M8) |
 
@@ -212,8 +238,8 @@ manifest) has been in place since M0.
 ## Offline behaviour
 
 The write path never requires a network. With no connectivity the Room row is written, the UI
-patches, the push fails (or, since M8, is not attempted at all while `PlaybackReporter` knows the app
-is offline), the flag stays set, and the drain runs on the next return to `ONLINE`. See
+patches, the push is skipped outright (M9 — see "The offline push gate"), the flag stays set, and the
+drain runs on the next return to `ONLINE`. See
 [`docs/features/offline-playback.md`](offline-playback.md) for the playback half of that loop.
 
 ## Verification

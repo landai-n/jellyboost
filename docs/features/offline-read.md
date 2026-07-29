@@ -16,7 +16,7 @@ most-recent-wins sync worker are M8.
 ```
 ConnectivityMonitor ─┐
                      ├─► ConnectionStateProvider ─► DelegatingJellyfinRepository ─► Online / Offline
-ServerReachability ──┤                          └─► OfflineBanner (AppScaffold)
+ServerReachability ──┤                          └─► status icon (AppTopBar)
         Probe        │
 AppPreferences ──────┘
  (forceOffline)
@@ -52,7 +52,7 @@ one probe and then waits `PROBE_DEBOUNCE_MS` (2 s), so a screenful of ViewModels
 same failed request produces one `getPublicSystemInfo`, not twelve. Probes are triggered by:
 
 - a network becoming available (including at app start),
-- `refresh()` — app resume (`LifecycleResumeEffect` in `AppScaffold`) and the banner's *Retry*,
+- `refresh()` — app resume (`LifecycleResumeEffect` in `AppScaffold`) and the status icon's *Retry*,
 - `reportFailure()` — the delegating repository, after a transport-level failure.
 
 ### 2. Choosing a source per call — `:data/DelegatingJellyfinRepository`
@@ -213,24 +213,28 @@ draw, and a failed cache write is a logged warning, never a failed read.
 
 ---
 
-## The offline banner and the force-offline setting
+## The offline status icon and the force-offline setting
 
-`AppScaffold` hosts the single app-wide `OfflineBanner`, above the bottom navigation bar
-(DECISIONS.md). Copy and action depend on *why* we are offline:
+The combined `AppTopBar` (`:app`) carries one status icon; it replaced the full-width
+`OfflineBanner` at M9 (DECISIONS.md 2026-07-29). Icon, message and action all depend on *why* we
+are offline — tapping the icon shows the message, with the action, in a snackbar:
 
-| state | message | action |
-|---|---|---|
-| `OFFLINE_NO_NETWORK` | "No network — showing downloaded media" | — |
-| `OFFLINE_SERVER_UNREACHABLE` | "Can't reach the server — showing downloaded media" | **Retry** → re-probe |
-| `OFFLINE_FORCED` | "Offline mode is on — showing downloaded media" | **Go online** → clears the preference |
+| state | icon | message | action |
+|---|---|---|---|
+| `OFFLINE_NO_NETWORK` | `WifiOff` | "No network — showing downloaded media" | — |
+| `OFFLINE_SERVER_UNREACHABLE` | `CloudOff` | "Can't reach the server — showing downloaded media" | **Retry** → re-probe |
+| `OFFLINE_FORCED` | `AirplanemodeActive` | "Offline mode is on — showing downloaded media" | **Go online** → clears the preference |
+
+The `ConnectionState → ConnectionStatus` mapping is a plain function, pinned by
+`app/src/test/kotlin/dev/jellyfinnative/app/ConnectionStatusTest.kt`.
 
 `AppPreferences.forceOffline` (DataStore, `:core:datastore`) is the persisted setting; it feeds
-`ConnectionStateProvider` and is toggled from the home top bar's overflow menu until Settings lands
-at M9.
+`ConnectionStateProvider` and is toggled either from the app bar's overflow menu or from the
+Settings screen's Connectivity section (M9).
 
-Both `AppScaffold` and `HomeRoute` read their own `ConnectionViewModel` — a thin view over the
-`@Singleton` `ConnectionStateProvider`, so the two instances observe and mutate the same state with
-no wiring threaded through the NavHost.
+`AppScaffold` reads one `ConnectionViewModel` — a thin view over the `@Singleton`
+`ConnectionStateProvider` — and hands the state to the bar, so nothing has to be threaded through
+the NavHost.
 
 ---
 

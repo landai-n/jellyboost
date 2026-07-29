@@ -66,8 +66,8 @@ recent downloads) behind this same `JellyfinRepository` interface — the screen
 
 Wired into the app. `HomeViewModel` is `@HiltViewModel`, backed by the `org.jellyfin.sdk.api.client.ApiClient`
 binding `:core:network` provides (`di/NetworkModule.kt`, `ApiClientModule`). `Routes.Home` in the
-`:app` NavHost renders `HomeRoute` (`app/src/main/kotlin/dev/jellyfinnative/app/HomeRoute.kt`), a
-`Scaffold`/`TopAppBar` with a temporary sign-out action, hosting
-`HomeScreen(viewModel = hiltViewModel(), …)`. `onItemClick`/`onLibraryClick` are inert until item
-detail (M4) and the library grid (M3) exist. Bottom navigation and the offline banner
-(`AppScaffold`) are separate, later work.
+`:app` NavHost renders `HomeScreen(viewModel = hiltViewModel(), …)` directly; `onItemClick` pushes
+`Routes.ItemDetail` and `onLibraryClick` pushes `Routes.LibraryGrid`. The screen draws no bar of its
+own — since M9 the combined `AppTopBar` in `AppScaffold` carries the navigation, the app overflow
+menu (offline toggle + Settings) and the offline status icon for every top-level destination, and
+the intermediate `HomeRoute` composable it replaced is gone (DECISIONS.md 2026-07-29).

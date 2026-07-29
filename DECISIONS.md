@@ -851,3 +851,38 @@ Seeded from the approved plan; listed for traceability, no divergence:
   download that triggered it. Every existing test unchanged and green; full gate green.
 
 <!-- END -->
+
+<!-- BEGIN a transcoded download's seek index is written by the client -->
+
+## 2026-07-29 — a transcoded download's seek index is written by the client, into the muxer's own reserved space
+- **Scope:** `:data:downloads` (`engine/MatroskaSeekIndexRepair`, `offline/DownloadedMediaProvider`,
+  `model/DownloadItem`), `:feature:downloads` (`DownloadRows`)
+- **Plan said:** docs/PLAN.md's download pipeline copies "the original file untouched" and the player opens what is
+  on disk; nothing anywhere contemplates the client *modifying* a downloaded file, and transcoded downloads are
+  outside the plan to begin with (see the 2026-07-29 entry that shipped them).
+- **Done instead:** Two things. (1) A downloaded transcode's header is patched in place, once, before its first
+  local playback: a 26-byte `SeekHead` naming the file's own `Cues`, and an 11-byte `Duration`, written into the
+  Void elements ffmpeg reserved for exactly those and never came back to fill. (2) A transcoded queue row no longer
+  offers *Pause*.
+- **Reason:** Reported as "streaming of transcoded downloads doesn't allow selecting the reading position". Reading
+  a real `(low).mkv` off the tablet showed why: Jellyfin's ffmpeg writes its output to a transcoding temp file and
+  patches the header at the end, but by then those header bytes have already been streamed to the device — so the
+  download keeps a 152-byte reserved Void where the `SeekHead` belongs, no `Duration`, and a complete 698-point
+  `Cues` element at the end of the file that nothing points at. Media3's `MatroskaExtractor` finds `Cues` only
+  through a `SeekHead`, publishes `SeekMap.Unseekable` without one, and `ProgressiveMediaPeriod.seekToUs` turns
+  every seek into a seek to zero. The index is already in the file; only the 26 bytes naming it are missing, and
+  writing them is strictly cheaper and strictly more accurate than the alternative considered — recording our own
+  index during the download (schema v7, a bespoke `SeekMap`, a custom `Extractor`, and no help at all for the
+  downloads already on the device). Every byte written lands inside a Void, so nothing that means anything is
+  overwritten and the file's length never changes; the patched regions are read back and the header re-walked
+  afterwards, and a disagreement restores the original bytes. It runs from `DownloadedMediaProvider` rather than
+  the download pipeline because that is the only path that also reaches downloads made before the fix — the ones
+  the fault was reported against. Pause goes for the matching reason: `/Videos/{id}/stream.mkv?static=false`
+  ignores `Range`, so a paused transcode restarts from zero; a button that silently discards several hundred
+  megabytes is not a pause, and *Cancel* already says what it does.
+- **Tests:** `MatroskaSeekIndexRepairTest` (17, incl. the real ffmpeg header at
+  `src/test/resources/ffmpeg-transcode-header.bin`), `DownloadedMediaProviderTest` +2, `DownloadRowsTest` +2.
+  Verified end to end on a real 220 MB `(low)` episode: 33 bytes changed, all inside the reserved Voids, length
+  unchanged, `ffprobe` duration `N/A` → `1380.000000`, and ffmpeg seeks and decodes at 600 s. Full gate green.
+
+<!-- END -->

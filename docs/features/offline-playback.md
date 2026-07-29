@@ -55,6 +55,14 @@ Optional files are filtered the same way, one at a time: a subtitle sidecar that
 is simply not offered. That is the plan's "optional-file failure → item still playable", one language
 short.
 
+Being the one gate every offline playback passes through also makes it the place a **transcoded**
+download is made seekable. Those files land without the `SeekHead` their `Cues` need, so every drag
+of the seek bar used to restart the item from zero; `MatroskaSeekIndexRepair` writes the missing 26
+bytes into the Void the muxer reserved for them, here rather than in the download pipeline, because
+this is the only path that also reaches downloads made before the fix — see
+docs/features/download-quality.md, *"No seek index — until the client writes one"*. It is idempotent,
+costs two twelve-byte reads for a file that is already indexed, and never changes a file's length.
+
 ### What it builds
 
 `LocalPlaybackResolver` turns that into a `LocalPlaybackMediaSource` — the second variant of the
@@ -205,7 +213,7 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 
 | Class | Tests | Covers |
 |---|---|---|
-| `DownloadedMediaProviderTest` | 13 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering |
+| `DownloadedMediaProviderTest` | 15 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, and the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway |
 | `LocalPlaybackResolverTest` | 14 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing |
 | `PlaybackSourceResolverTest` | 8 | The full selection matrix incl. the forced-transcode exception and the immediate offline failure |
 | `PlaybackReporterTest` | +7 | Local and offline sessions report nothing and still write every position |

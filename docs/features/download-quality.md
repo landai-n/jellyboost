@@ -337,6 +337,74 @@ attempt — the failure mode is a repeated transfer, never a corrupt file.
 `ORIGINAL` keeps the byte-exact, `Range`-honouring resume the M7 definition of done measures. The
 guarantee is not weakened; it is a property of the quality steps a user has to deliberately opt into.
 
+**So a transcoded queue row does not offer *Pause*.** `DownloadItem.isPausable` is
+`!quality.isTranscoded`, and `QueueRowActions` draws the button only when it is true. A pause the
+user cannot resume from is not a pause: it silently discards however many hundred megabytes have
+already arrived, and the next attempt starts the encode again from zero. *Cancel* is still there and
+already says exactly that. *Resume* is still offered on a paused or failed transcoded row — the
+operation is legitimate, it just costs the whole transfer, and a row a previous build left `PAUSED`
+has to have a way out.
+
+### No seek index — until the client writes one
+
+A transcoded download used to be **unseekable**: dragging the seek bar restarted the episode from
+zero. It was reported as *"streaming of transcoded downloads doesn't allow selecting the reading
+position"*, and it is fixed by `MatroskaSeekIndexRepair`
+(`data/downloads/.../engine/MatroskaSeekIndexRepair.kt`).
+
+Reading the bytes of a real `(low).mkv` off the test tablet is what explained it. A transcoded
+download's header is not the header the server's ffmpeg eventually writes:
+
+```
+off  0   1A45DFA3  EBML header
+off 40   18538067  Segment, size = 01 FF FF FF FF FF FF FF   ← "unknown", still being written
+off 52   EC        Void, 152 bytes                            ← reserved for the SeekHead
+off 213  1549A966  Info
+off 218    EC      Void, 6 bytes
+off 224    2AD7B1  TimestampScale = 1 000 000
+off 280    EC      Void, 11 bytes                             ← reserved for Duration
+off 291  1654AE6B  Tracks
+off 776  1F43B675  Cluster …
+        1C53BB6B  Cues                                        ← at the very end of the file
+```
+
+Jellyfin's ffmpeg writes its output to a transcoding temp file and the response streams that file as
+it grows. ffmpeg's own output therefore *is* seekable — which is why the `Cues` it appends in its
+trailer are present and complete, 698 cue points for a 23-minute episode. But the header patch it
+performs at the end, seeking back to fill in the `SeekHead` and the `Duration` it reserved room for,
+lands in the temp file **after** those bytes have already been streamed to the device. The client
+keeps the pre-patch header and the post-trailer `Cues`: a complete index that nothing points at.
+
+Media3's `MatroskaExtractor` learns where `Cues` live only from a `SeekHead`. Reaching the first
+`Cluster` without one, it publishes `SeekMap.Unseekable`, and
+`ProgressiveMediaPeriod.seekToUs` then does `positionUs = seekMap.isSeekable() ? positionUs : 0` —
+every seek becomes a seek to the start. An `ORIGINAL` download is a file the server had finished
+writing long before, carries a real `SeekHead` at that same offset 52, and has always seeked
+correctly, which is why only the transcoded steps were affected.
+
+The repair writes the 26 bytes that were missing — a `SeekHead` with one `Seek` entry naming `Cues`
+at its `SeekPosition` — into the Void reserved for exactly that, padding the remainder back to a
+Void so the header still tiles. When the item's runtime is known it also writes an 11-byte 64-bit
+`Duration` into the Void `Info` reserved for it, which is what makes `Player.getDuration()`, the
+media notification and PiP agree with a seek bar that was already falling back to the item's runtime.
+**Every byte written lands inside a Void**, so nothing that means anything is overwritten, the file's
+length never changes, and every offset the `Cues` already hold stays valid. On a real 220 MB `(low)`
+episode the operation changes 33 bytes, all of them in `[52, 288]`, and turns `ffprobe`'s
+`duration=N/A` into `duration=1380.000000`.
+
+It runs from `DownloadedMediaProvider`, the single gate every offline playback passes through, rather
+than from the download pipeline — that is the only place it reaches the downloads that were already
+on the device when it shipped, which are the ones the fault was reported against. It is idempotent
+and cheap to repeat: a file that already has a `SeekHead` is recognised in two twelve-byte reads, and
+only a file that genuinely needs the repair pays the one-megabyte tail scan that locates the `Cues`,
+once, ever.
+
+Everything is a veto that leaves the file untouched: not Matroska, a header that does not parse, a
+`SeekHead` already present, no `Cues` element ending exactly at the end of the file (an interrupted
+transfer has no index to point at), or no reserved Void big enough. After writing, the patched
+regions are read back and the header re-walked; a disagreement puts the original bytes back, because
+a download that seeks badly is a bug and one that no longer parses is a lost gigabyte.
+
 ---
 
 ## File naming
@@ -410,6 +478,7 @@ tap, and nothing downstream reconsiders it.
 |---|---|
 | `DownloadFilePlannerTest` | ("download quality (M9)") a quality below the original asking for a transcode instead of the download endpoint; every transcoded step carrying its own bitrate and height; a denied download policy *not* downgrading a transcode to the static stream; the transcoded media file being named for the container the server actually sends; quality changing the media file and nothing else in the plan |
 | `DownloadPathsTest` | a transcoded download being named for the container it will actually receive; a transcoded download never being named `.mp4` (the regression above, pinned across every step); each quality getting its own file name |
+| `MatroskaSeekIndexRepairTest` | ("no seek index") a live-muxed transcode gaining a `SeekHead` whose `SeekPosition` is the `Cues` offset counted from the Segment's content; the header still tiling all the way to the first cluster afterwards, so what is left of the reserved Void is a legal Void; every byte outside the two reserved Voids being untouched; the runtime written as a `Duration`, divided by a coarser `TimestampScale` when there is one, skipped when the runtime is unknown, never overwriting a `Duration` that is already there, and its absence not costing the file its seek index; the four refusals — an existing `SeekHead`, `Cues` that never arrived, no room, and something that is not Matroska — each leaving the file byte-for-byte identical; repeating the repair being a no-op, which is what running it from the playback path means; `Cues` followed by `Tags` still being found, and a stray `1C 53 BB 6B` inside cluster data not being mistaken for the index; and the whole operation performed on **the first 291 bytes of a real `(low).mkv` pulled off the test tablet** (`src/test/resources/ffmpeg-transcode-header.bin`), asserting the 26 written bytes one by one |
 | `DownloadEnqueuerTest` | ("download quality (M9)") the preference in force when the user taps Download being stamped on the row; an original download keeping the exact size the server reported; a transcoded download being sized from its runtime and bitrate instead; a transcoded download of an item with no runtime falling back to an unknown size |
 | `DownloadQueueTest` | ("download quality (M9)") the plan being built from the quality on the row, not from the live preference; a 403 on a transcoded download not being retried on the static stream; an unknown file size falling back to the enqueue step's estimate; a generous estimate not leaving a finished item short of complete. ("the live size projection, schema v6") a projection over the ceiling being clamped to the ceiling the enqueue step promised; a projection well under it being the one the row ends up carrying; the projection cleared once the media file is whole; an original download never projecting anything; a row the enqueue step marked exact not being second-guessed by the scanner; a seeded projection holding until the stream has a cluster of its own to offer; and a transcode of an item with no runtime having nothing to extrapolate to. ("sibling seeding at the moments the queue owns") a row starting with no projection being seeded before its first byte and starting its transfer from that seed rather than from the ceiling; a row that already carries one being left alone; an original download never being seeded; a finished item re-seeding the rows still waiting on it, and doing so *after* its own row is `DOWNLOADED` so it counts as evidence; a failed item seeding nothing; and a re-seed that throws not failing the download that triggered it |
 | `DataStoreAppPreferencesTest` | ("download quality (M9)") download quality defaulting to the original file; a download quality surviving a round trip through storage; an unrecognised stored download quality degrading to the original file; every download quality change reaching observers |
@@ -421,5 +490,5 @@ tap, and nothing downstream reconsiders it.
 | `SeasonSeedingScenarioTest` | the user-reported scenario end to end over a map standing in for Room: a season queued in one tap starting with nothing to be seeded from (and every row carrying the `seriesName` the sibling query matches on); the first episode to finish seeding the ones still waiting behind it, within its ceiling and without touching `bytesTotal`; a row already carrying a projection not being overwritten by a later sibling; rows of another show or another quality left alone; and `DOWNLOADED` or `ERROR` rows not counting as rows waiting for a size |
 | `DownloadProgressRatchetTest` | a rising percentage passing straight through; a growing projection unable to make the bar retreat; the highest percentage reached this session being the one that keeps being shown; a transferring item held at 99 % however far it has run, and only a finished download drawing a full bar; a paused item keeping the height it reached rather than dropping; a restarted transcode holding its bar instead of falling back to zero; an item that leaves the list being forgotten, so a re-download starts over; each item ratcheting on its own; and an unknown total reading as zero rather than as complete |
 | `DownloadRepositoryImplTest` | a projected size reaching the row that has to divide by it (denominator *and* wording together); a row with no projection still reporting its ceiling and saying so; a stream-copy row carried through as exact rather than as a ceiling — the three columns the wording is decided from surviving the Room round trip intact |
-| `DownloadRowsTest` | which size a queue row shows — the ceiling with no projection, the projection replacing it, the projection clamped to the bytes already on disk and to the ceiling, and progress measured against the projection rather than the ceiling — and the four states its wording can be in: an original download and a stream copy both stating the figure plainly, a projection hedged as `~`, a bound stated as "up to", and a projection on an exact row unable to downgrade it |
+| `DownloadRowsTest` | which size a queue row shows — the ceiling with no projection, the projection replacing it, the projection clamped to the bytes already on disk and to the ceiling, and progress measured against the projection rather than the ceiling — and the four states its wording can be in: an original download and a stream copy both stating the figure plainly, a projection hedged as `~`, a bound stated as "up to", and a projection on an exact row unable to downgrade it. ("no resume") an original download offering *Pause*, and every transcoded step offering none |
 | `SchemaMigrationTest` | (in `:core:database`, which has no androidTest source set, so this diffs the exported schema JSONs instead of running a real migration) the exported schema being the version the constants declare; v5 to v6 adding the projection columns and touching nothing else; v5 to v6 dropping no column and changing no type; `projectedBytes` being nullable, so an older row simply has no projection; `sizeIsExact` being `NOT NULL` with a SQL default, which is what keeps the bump automatic; and v6 adding no table and removing none |

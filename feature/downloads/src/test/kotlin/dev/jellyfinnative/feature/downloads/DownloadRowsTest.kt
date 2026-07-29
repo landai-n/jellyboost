@@ -108,6 +108,22 @@ class DownloadRowsTest {
         item.sizeCertainty shouldBe SizeCertainty.EXACT
     }
 
+    // ---- whether the row offers Pause -------------------------------------------------------------
+
+    @Test
+    fun `an original download offers Pause, because its resume costs only the missing bytes`() {
+        film(quality = DownloadQuality.ORIGINAL).isPausable shouldBe true
+    }
+
+    @Test
+    fun `a transcoded download offers no Pause, because pausing one throws the transfer away`() {
+        // `/Videos/{id}/stream.mkv?static=false` ignores `Range`, so there is no resume to pause
+        // into: the next attempt restarts from zero. Cancel remains, and is honest about it.
+        for (quality in listOf(DownloadQuality.LOW, DownloadQuality.MEDIUM, DownloadQuality.HIGH)) {
+            film(quality = quality).isPausable shouldBe false
+        }
+    }
+
     // ---- row titles (M9 device walk, docs/POLISH.md) ---------------------------------------------
 
     @Test

@@ -112,9 +112,20 @@ seeded episodes 2..N. Now a reusable `SiblingSeeder` is asked at three moments �
 enqueue, queue pick-up, and sibling completion (re-seeding waiting rows via
 `setProjectedBytesIfAbsent`, which can never clobber a live measurement). Data
 path verified sound; the gap was purely *when*. Gate: **1061 tests, 0 failures**
-(1032 → 1061). Known open issue: seeking is dead during playback of transcoded
-downloads (likely cueless live-muxed MKV → ExoPlayer unseekable) — opus agent
-investigating.
+(1032 → 1061).
+
+Second follow-up (same day, user report "transcoded downloads don't allow
+selecting the reading position"): root-caused from real bytes off the tablet —
+ffmpeg streams the header before its end-of-encode patch, so the file lands with
+a complete 698-point `Cues` index at EOF that nothing points at (152-byte
+reserved Void where the `SeekHead` belongs, no `Duration`); Media3 finds Cues
+only via SeekHead → `SeekMap.Unseekable` → every seek lands at 0. Fix:
+`MatroskaSeekIndexRepair` writes the missing 26-byte SeekHead + 11-byte Duration
+into ffmpeg's own reserved Voids at first local playback (idempotent,
+verify-and-rollback, refusals leave the file byte-identical) — which also heals
+every transcode already on the device; no schema change. Pause removed from
+transcoded queue rows (server ignores Range → "pause" would silently restart
+from zero; Resume stays). Gate: **1082 tests, 0 failures** (1061 → 1082).
 
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 

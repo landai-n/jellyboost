@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.entities.DownloadFileEntity
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.engine.MatroskaSeekIndexRepair
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -32,6 +33,11 @@ import javax.inject.Singleton
  * Optional files are filtered the same way, one by one: a subtitle track whose sidecar failed to
  * download simply is not offered, which is what the plan means by "optional-file failure → item
  * still playable".
+ *
+ * It is also where a transcoded download is made **seekable**. Being the one gate every offline
+ * playback passes through makes it the only place a repair reaches downloads that were already on
+ * the device when it shipped — see [MatroskaSeekIndexRepair] for what is wrong with those files and
+ * why fixing them here rather than in the download pipeline was the point.
  */
 @Singleton
 class DownloadedMediaProvider
@@ -40,6 +46,7 @@ class DownloadedMediaProvider
         private val downloadDao: DownloadDao,
         private val itemDao: ItemDao,
         private val itemMapper: ItemEntityMapper,
+        private val seekIndex: MatroskaSeekIndexRepair,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
@@ -62,6 +69,11 @@ class DownloadedMediaProvider
                 // and the item is better streamed than played as a single untitled track.
                 val dto = itemDao.getItem(itemId)?.let(itemMapper::toDtoOrNull)
                 val mediaSource = dto?.pickMediaSource(stored.download.mediaSourceId)
+                val runTimeTicks = mediaSource?.runTimeTicks ?: dto?.runTimeTicks ?: 0L
+
+                // Idempotent, and a no-op in two reads for anything that already has a seek index —
+                // which after the first play of a given file is everything.
+                seekIndex.ensureSeekable(File(mediaFile.path), runTimeTicks / TICKS_PER_MILLISECOND)
 
                 DownloadedMedia(
                     itemId = itemId,
@@ -71,7 +83,7 @@ class DownloadedMediaProvider
                             ?: itemId.toString(),
                     mediaSource = mediaSource,
                     mediaUri = localFileUri(mediaFile.path),
-                    runTimeTicks = mediaSource?.runTimeTicks ?: dto?.runTimeTicks ?: 0L,
+                    runTimeTicks = runTimeTicks,
                     subtitles = stored.files.toSubtitles(),
                     trickplay = stored.files.toTrickplay(dto),
                 )
@@ -140,3 +152,6 @@ class DownloadedMediaProvider
         private fun DownloadFileEntity.takeIfOnDisk(): DownloadFileEntity? =
             takeIf { it.status == DownloadStatus.DOWNLOADED && File(it.path).isFile }
     }
+
+/** Jellyfin counts time in 100 ns ticks. */
+private const val TICKS_PER_MILLISECOND = 10_000L

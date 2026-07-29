@@ -44,6 +44,38 @@ List calls request only `PRIMARY_IMAGE_ASPECT_RATIO` plus `PRIMARY`/`BACKDROP`/`
 chapters, trickplay) are fetched only on the detail and playback paths — the Swiftfin pattern the
 plan adopts.
 
+## Staying current while the user is elsewhere
+
+The rows are loaded once and then kept true by three subscriptions, so the screen a user comes back
+to is never the screen they left. None of them shows a spinner or touches `isRefreshing`.
+
+| Signal | Source | Effect |
+|---|---|---|
+| `UserDataEventBus` | any watched/favourite/position write in the app | patch the cards in place, and re-fetch the two rows whose *membership* depends on watched state |
+| `DownloadRepository.observeStates()` | the download engine | re-stamp every card's badge |
+| `ConnectivityRefresher.connectivityChanged` | both online↔offline edges | full reload — the other source answers now |
+
+### Watched state and row membership
+
+*Continue watching* and *Next up* are rows of **unfinished** items, so a watched toggle can move
+items in and out of them — something a patch, which can only rewrite a card that is already on
+screen under that exact id, cannot express on its own. `HomeViewModel` handles it in two layers:
+
+- **Instant, request-free:** `HomeUiState.withUserData` evicts an item from those two rows when the
+  change says it is played (elsewhere — *Latest* — it patches as before). Marking a movie watched
+  makes it leave *Continue watching* in the same frame, offline included.
+- **Debounced silent refresh:** a change whose `played` flipped — or one for an item no row shows,
+  which is exactly what *Mark watched* on a **series or season** page publishes — queues a
+  re-fetch of `getResumeItems()` + `getNextUp()`, 1.5 s after the last such change. That is what
+  advances *Next up* to the following episode, brings an un-marked item back, and fixes the rows
+  after a container toggle; the debounce turns "mark a season watched" (one write per episode) into
+  one pair of requests. Online only, and a row whose call fails keeps what it had.
+
+Position-only writes deliberately do **not** trigger it (`PlaybackReporter` writes one every five
+seconds); the played flag it sets when playback finishes does. Local changes are re-applied on top
+of whatever the refresh fetches, so a read cannot overtake its own write — see
+`docs/features/user-data.md` and DECISIONS.md, 2026-07-29.
+
 ## Artwork fallback
 
 `ItemMapper` follows jellyfin-web's chain so rows never degrade into placeholders:

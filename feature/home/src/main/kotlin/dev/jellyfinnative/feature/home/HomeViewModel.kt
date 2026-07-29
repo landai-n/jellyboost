@@ -9,16 +9,21 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
+import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataEventBus
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -55,9 +60,25 @@ class HomeViewModel
         /** Last download-state map seen, re-applied whenever a load replaces the rows. */
         private var downloadStates: Map<String, DownloadState> = emptyMap()
 
+        /**
+         * The newest user data this app itself published, per item, since the last full load.
+         *
+         * Re-applied on top of anything the membership refresh below fetches, so a read that
+         * overtakes its own write cannot resurrect the state the user just changed. A full load
+         * clears it: pull-to-refresh means "give me the server's answer".
+         *
+         * Only ever touched from `viewModelScope`, i.e. from the main dispatcher.
+         */
+        private val knownUserData = mutableMapOf<String, UserData>()
+
+        /** One token per user-data change that may have moved an item in or out of a row. */
+        private val membershipRefreshRequests =
+            MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
         init {
             load(isRefresh = false)
             observeUserDataChanges()
+            observeMembershipRefreshRequests()
             observeDownloadStates()
             observeConnectivityChanges()
         }
@@ -94,14 +115,94 @@ class HomeViewModel
         /**
          * Patches the loaded rows in place whenever user data changes anywhere in the app.
          *
-         * Deliberately not a refresh: M4's definition of done is that marking an item watched on
-         * its detail page updates the home row **without a refetch** (docs/PLAN.md, "Data layer").
+         * The patch itself is never a refresh: M4's definition of done is that marking an item
+         * watched on its detail page updates the home row **without a refetch** (docs/PLAN.md,
+         * "Data layer"), and that still holds for everything a patch can express — the tick, the
+         * favourite heart, the progress bar, and an item leaving *Continue watching* or *Next up*
+         * because it is now played.
+         *
+         * What a patch cannot express is the rest of the membership question, and that is where
+         * this screen was wrong: which episode takes a watched one's place in *Next up*, an item
+         * coming back after being un-marked, and — the case with no matching card at all — *Mark
+         * watched* on a series or season page, whose id no home row contains. Those changes queue
+         * a [refreshMembershipRows] pass, debounced so that marking a whole season watched costs
+         * one pair of requests rather than one per episode.
          */
         private fun observeUserDataChanges() {
             viewModelScope.launch {
                 userDataEvents.changes.collect { change ->
+                    val previous = knownUserData[change.itemId] ?: currentUserData(change.itemId)
+                    knownUserData[change.itemId] = change.userData
                     _uiState.update { it.withUserData(change.itemId, change.userData) }
+                    if (movesRowMembership(previous, change.userData)) {
+                        membershipRefreshRequests.tryEmit(Unit)
+                    }
                 }
+            }
+        }
+
+        /**
+         * `true` when this change can have moved items in or out of *Continue watching* / *Next up*.
+         *
+         * Only `played` can: both rows are defined by what is unfinished. Position is deliberately
+         * excluded even though it reorders *Continue watching* — `PlaybackReporter` writes one
+         * every five seconds, so honouring it here would turn a debounce into a poll for the whole
+         * length of a film. An item that reaches the end is marked played by the same reporter, and
+         * that is the edge that matters.
+         *
+         * An item the screen has never seen ([previous] `null`) counts as a possible move: that is
+         * precisely the series or season whose *Mark watched* changed the episodes in the rows.
+         */
+        private fun movesRowMembership(
+            previous: UserData?,
+            next: UserData,
+        ): Boolean = previous == null || previous.played != next.played
+
+        /** The user data the loaded rows currently show for [itemId], if any of them shows it. */
+        private fun currentUserData(itemId: String): UserData? =
+            with(_uiState.value) {
+                (resume.asSequence() + nextUp.asSequence() + latest.asSequence().flatMap { it.items })
+                    .firstOrNull { it.id == itemId }
+                    ?.userData
+            }
+
+        /**
+         * Re-fetches the two membership-sensitive rows after a burst of watched-state changes.
+         *
+         * Silent by design: no spinner, no `isRefreshing`, no error state. This runs because the
+         * user toggled something somewhere else in the app, so a failure must leave the screen
+         * exactly as it was rather than announce itself. *Latest* is not re-fetched — recently
+         * added is not a function of what has been watched.
+         */
+        @OptIn(FlowPreview::class)
+        private fun observeMembershipRefreshRequests() {
+            viewModelScope.launch {
+                membershipRefreshRequests
+                    .debounce(MEMBERSHIP_REFRESH_DEBOUNCE_MS)
+                    .collect { refreshMembershipRows() }
+            }
+        }
+
+        private suspend fun refreshMembershipRows() {
+            // Offline the rows are the downloads Room already answered with, and the local write
+            // has nowhere to have been adopted: the instant patch above is the whole update.
+            if (!connectivityRefresher.isOnline) return
+
+            val (resume, nextUp) =
+                coroutineScope {
+                    val resumeCall = async { repository.getResumeItems() }
+                    val nextUpCall = async { repository.getNextUp() }
+                    resumeCall.await() to nextUpCall.await()
+                }
+
+            _uiState.update { state ->
+                state
+                    .copy(
+                        // A row whose call failed keeps what it had; one flaky request must not
+                        // empty a shelf the user is looking at.
+                        resume = resume.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.resume,
+                        nextUp = nextUp.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.nextUp,
+                    ).withDownloadStates(downloadStates)
             }
         }
 
@@ -111,6 +212,10 @@ class HomeViewModel
         }
 
         private fun load(isRefresh: Boolean) {
+            // A deliberate reload asks for the server's answer, so the local overrides that guard
+            // the silent refresh below stop applying; anything still unsynced comes back on the bus
+            // when `UserDataSyncer` resolves it.
+            knownUserData.clear()
             viewModelScope.launch {
                 _uiState.update {
                     it.copy(isLoading = !isRefresh, isRefreshing = isRefresh, errorMessage = null)
@@ -139,8 +244,10 @@ class HomeViewModel
                         isLoading = false,
                         isRefreshing = false,
                         libraries = rows.libraries,
-                        resume = rows.resume,
-                        nextUp = rows.nextUp,
+                        // Anything toggled *while* the fetch was in flight still wins: the load
+                        // cleared the overrides before starting, so only those changes are left.
+                        resume = rows.resume.mergeLocalUserData(knownUserData),
+                        nextUp = rows.nextUp.mergeLocalUserData(knownUserData),
                         latest = rows.latest,
                         errorMessage = null,
                     ).withDownloadStates(downloadStates)
@@ -183,6 +290,19 @@ class HomeViewModel
             val nextUp: List<JellyfinItem>,
             val latest: List<LatestSection>,
         )
+
+        private companion object {
+            /**
+             * How long the membership refresh waits for the toggling to stop, in milliseconds.
+             *
+             * Two jobs. It collapses a burst — *Mark watched* on a season is one write per episode
+             * — into a single pair of requests. And it gives the write itself time to reach the
+             * server: `UserDataRepositoryImpl` publishes on the bus *before* it pushes, so a read
+             * fired immediately would race its own write. `mergeLocalUserData` still covers the
+             * case where it loses.
+             */
+            const val MEMBERSHIP_REFRESH_DEBOUNCE_MS = 1_500L
+        }
     }
 
 /** Turns the domain failure taxonomy into copy a user can act on. */

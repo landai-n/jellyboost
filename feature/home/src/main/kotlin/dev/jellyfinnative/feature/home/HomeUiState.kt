@@ -45,6 +45,14 @@ data class LatestSection(
  * on its detail page publishes on `UserDataEventBus`, and the home rows behind it redraw from the
  * patched state without a single request (docs/PLAN.md, "Data layer").
  *
+ * *Continue watching* and *Next up* hold, by definition, items that are **not** finished, so a
+ * change that says the item is played does not patch it there — it removes it. That is the
+ * membership half of the same instant, request-free update: marking a movie watched makes it leave
+ * *Continue watching* in the same frame the tick appears elsewhere, online or off (see
+ * `docs/features/user-data.md`). What a patch cannot synthesise — the *next* episode that should
+ * take a watched one's place in *Next up*, or an item coming **back** after being un-marked — is
+ * the job of `HomeViewModel`'s debounced membership refresh.
+ *
  * Rows that do not contain [itemId] are returned untouched — identity is preserved, so Compose
  * skips them entirely.
  */
@@ -53,14 +61,25 @@ internal fun HomeUiState.withUserData(
     userData: UserData,
 ): HomeUiState =
     copy(
-        resume = resume.patch(itemId, userData),
-        nextUp = nextUp.patch(itemId, userData),
+        resume = resume.patchUnwatchedRow(itemId, userData),
+        nextUp = nextUp.patchUnwatchedRow(itemId, userData),
         latest =
             latest.map { section ->
                 val patched = section.items.patch(itemId, userData)
                 if (patched === section.items) section else section.copy(items = patched)
             },
     )
+
+/** A row of unfinished items: the patch either updates the item or evicts it once it is played. */
+private fun List<JellyfinItem>.patchUnwatchedRow(
+    itemId: String,
+    userData: UserData,
+): List<JellyfinItem> =
+    when {
+        none { it.id == itemId } -> this
+        userData.played -> filterNot { it.id == itemId }
+        else -> patch(itemId, userData)
+    }
 
 private fun List<JellyfinItem>.patch(
     itemId: String,
@@ -70,6 +89,22 @@ private fun List<JellyfinItem>.patch(
         this
     } else {
         map { if (it.id == itemId) it.copy(userData = userData) else it }
+    }
+
+/**
+ * Re-applies the local user-data changes seen this session to a freshly fetched *Continue watching*
+ * or *Next up* row, and drops whatever those changes say is already watched.
+ *
+ * A server read is authoritative *unless a local write is still waiting to be pushed* — the rule
+ * `StaleUserDataRegressionTest` pins in `:data`. The home rows are re-fetched moments after a
+ * toggle, so a push that is slow, or that failed and is now queued for `UserDataSyncWorker`, would
+ * otherwise resurrect the state the user just changed. [known] is that guard: the last value the
+ * app itself published for each item, which is also the newest one it knows of.
+ */
+internal fun List<JellyfinItem>.mergeLocalUserData(known: Map<String, UserData>): List<JellyfinItem> =
+    mapNotNull { item ->
+        val merged = known[item.id]?.let { item.copy(userData = it) } ?: item
+        merged.takeUnless { it.userData.played }
     }
 
 /**

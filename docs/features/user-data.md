@@ -140,7 +140,7 @@ a page's items still owe the server a write, then batch-write the rest. The filt
 in `BrowseCacheWriter` rather than in a `@Transaction` DAO method, for the same reason the
 download-demotion rule does — so it is JVM-unit-testable instead of device-only.
 
-## `UserDataEventBus` — patch, never refetch
+## `UserDataEventBus` — patch first, and never refetch for the patch's own sake
 
 A `@Singleton` `SharedFlow<UserDataChange>` (`itemId` + the new `UserData`), replay-free and
 buffered so publishing never suspends. It is the Swiftfin pattern the plan adopts: marking an
@@ -157,6 +157,43 @@ Collectors today:
 
 Replay is deliberately off: a screen that loads after a toggle reads the current value from its own
 request, and a replayed stale change would fight with it.
+
+### What a patch cannot do — and what home does about it
+
+A patch rewrites the `userData` of a card **that is already on screen, under that exact id**. Three
+things fall outside that, and all three were visible as "changing watched state doesn't update the
+home screen":
+
+| Case | Why the patch misses it |
+|---|---|
+| Marking a movie watched | The card should *leave* *Continue watching*, not restyle |
+| Marking an episode watched | *Next up* should advance to the **next** episode — an item the screen has never seen |
+| *Mark watched* on a series/season page | The change is published under the **container's** id, which no episode card matches |
+
+`HomeViewModel` answers these in two layers (`docs/features/home.md` has the screen-side detail):
+
+1. **Instantly, with no request.** `withUserData` treats *Continue watching* and *Next up* as rows
+   of unfinished items: a change that says `played` evicts the item rather than patching it. This
+   is the first case, and it works offline, where nothing else can.
+2. **Once the toggling stops**, a debounced (1.5 s) silent re-fetch of just those two rows —
+   `getResumeItems()` + `getNextUp()`, online only, no spinner, no error state, *Latest* untouched
+   because "recently added" is not a function of what was watched. This covers the other two cases
+   and un-marking, and one pass covers a whole season's worth of writes.
+
+This is a deliberate softening of "patch, **never** refetch" (DECISIONS.md, 2026-07-29): the patch
+is still the only thing the user waits for, and the refetch exists solely for row *membership*,
+which is a server-side question. Two rules keep it honest:
+
+- **The read must not undo the write.** `UserDataRepositoryImpl` publishes *before* it pushes, so a
+  refetch can overtake its own write — and a push that failed is queued for `UserDataSyncWorker`
+  and may stay pending for a while. The ViewModel therefore keeps the last value it published per
+  item and re-applies it on top of whatever comes back (`HomeUiState.mergeLocalUserData`), which is
+  the same rule `StaleUserDataRegressionTest` pins in `:data`: a server read is authoritative
+  unless a local write is still waiting.
+- **Only `played` triggers it.** Position writes do not, even though they reorder *Continue
+  watching*: `PlaybackReporter` writes one every five seconds, so a position-triggered refresh
+  would be a poll for the length of a film. A finished item is marked played by that same reporter,
+  so returning from the player still corrects the row.
 
 ## `UserDataSyncWorker` — real since M8
 

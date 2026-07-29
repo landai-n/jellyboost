@@ -54,7 +54,6 @@ import dev.jellyfinnative.core.ui.component.OfflineBanner
 internal fun AppScaffold(
     startsSignedIn: Boolean,
     sessionState: SessionState,
-    onSignOut: () -> Unit,
 ) {
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
@@ -87,7 +86,6 @@ internal fun AppScaffold(
         JellyfinNavHost(
             startsSignedIn = startsSignedIn,
             sessionState = sessionState,
-            onSignOut = onSignOut,
             navController = navController,
             modifier = Modifier.padding(innerPadding),
         )

@@ -484,3 +484,19 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** the same reason `releaseSession` was made `internal` at M5. The timer is not the interesting part; what happens at one position is. It is also a `while (true) { … delay(…) }` on `viewModelScope`, and `runTest` cannot drain a coroutine that never finishes — a test that started the poll spun forever inside `runTest`'s cleanup instead of failing, which is a far worse failure mode than a slightly wider visibility. Driving `onTick` directly makes each segment test one call and one assertion.
 
 <!-- END M9 (player polish) -->
+
+<!-- BEGIN M9 (settings + app polish) -->
+
+## 2026-07-29 — M9: the storage location picker does not ship with the settings screen
+- **Scope:** `:feature:settings`
+- **Plan said:** docs/PLAN.md line 77 — "Settings: prefs, account, storage location picker, sign out (clears SecureCredentialStore, optional delete downloads)."
+- **Done instead:** the Downloads section of the settings screen shows the current fixed download location as informational text only; there is no picker UI and no way to change it.
+- **Reason:** SAF/SD-card support was deliberately deferred at M7 behind the `DownloadStorage` seam (DECISIONS.md, M7) specifically so a storage picker could be added later without reworking the download pipeline. That SAF work does not exist yet, so a picker here would have nothing real to pick between. The picker ships together with SAF support, not at M9.
+
+## 2026-07-29 — M9: Settings is opened from the home overflow menu, not a top-bar avatar
+- **Scope:** `:feature:settings`, `:app` (`HomeRoute.kt`)
+- **Plan said:** docs/PLAN.md line 13 — "Navigation: bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar."
+- **Done instead:** the home top bar's existing overflow (kebab/⋮) menu — the same menu that already carried the M6 offline-mode toggle and a temporary M8 sign-out entry (`HomeRoute.kt`, both call sites' KDoc already flagged this as temporary pending M9) — has its "Sign out" entry replaced with a "Settings" entry that navigates to `Routes.Settings`. Sign-out itself moves into the new Settings screen's Account section (with the confirm dialog and optional delete-downloads checkbox). The overflow's "Offline mode" quick toggle is unchanged.
+- **Reason:** there is no user-avatar image or avatar asset pipeline anywhere in the app (Jellyfin user profile images are never fetched today). Building one — fetching/caching the profile image, giving it a dedicated top-bar slot — is out of scope for M9's settings work and not otherwise needed. The overflow menu is already the established, tested entry point behind an icon in the home top bar; reusing it is mechanical and low-risk, and still satisfies the plan's functional intent (settings reachable from an icon in the top bar, not from the bottom nav) even though it is not literally an avatar.
+
+<!-- END -->

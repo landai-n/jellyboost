@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.engine
 
 import dev.jellyfinnative.core.common.AppError
+import dev.jellyfinnative.data.downloads.plan.NotDownloadableException
 import dev.jellyfinnative.data.toAppError
 
 /**
@@ -25,6 +26,7 @@ internal object DownloadErrorCopy {
     fun forFailure(error: Throwable): String =
         when {
             error is MissingMetadataException -> MISSING_METADATA
+            error is NotDownloadableException -> NOT_A_FILE
             error is DownloadHttpException -> forStatus(error.code)
             else ->
                 when (val appError = error.toAppError()) {
@@ -57,6 +59,14 @@ internal object DownloadErrorCopy {
 
     private const val MISSING_METADATA =
         "This item's details are missing on this device. Remove the download and add it again."
+
+    /**
+     * A show or a season that was queued as if it were a file — only reachable for rows created
+     * before containers were expanded into their episodes (DECISIONS.md, 2026-07-29). It says what
+     * to do about it, because the row itself can never succeed.
+     */
+    private const val NOT_A_FILE =
+        "This is a show or a season, not a single video. Remove it and download the episodes."
 
     private const val UNKNOWN = "Something went wrong. The download will retry."
 

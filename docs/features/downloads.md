@@ -14,7 +14,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 
 | Surface | Behaviour |
 |---|---|
-| Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. |
+| Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
 | Downloads tab | *Downloaded* (grouped by show or film, sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
@@ -30,8 +30,10 @@ ItemDetailViewModel.onDownloadClick()
         ▼
 DownloadRepository.enqueue(itemId)
         │
-        ├── DownloadEnqueuer ── DownloadApi.getFullItems([item] + parents)   ← one server call
-        │        ├── ItemDao.upsert(ItemEntity(source = DOWNLOAD))           ← item AND series/season
+        ├── DownloadEnqueuer ── a folder?  ── yes ──► DownloadApi.getEpisodeIds(seriesId, seasonId?)
+        │        │                                    (one row per episode, container row deleted)
+        │        ├── DownloadApi.getFullItems([items] + parents)             ← one server call
+        │        ├── ItemDao.upsert(ItemEntity(source = DOWNLOAD))           ← items AND series/season
         │        └── DownloadDao.upsert(DownloadEntity(QUEUED))
         │
         └── DownloadScheduler.ensureRunning()  →  enqueueUniqueWork("downloads", KEEP)
@@ -56,8 +58,9 @@ DownloadRepository.enqueue(itemId)
 | Class | Module | Responsibility |
 |---|---|---|
 | `DownloadRepository` / `DownloadRepositoryImpl` | `:data:downloads` | The only type features see. Owns the decisions (what pause means, what cancel and delete share) and the ordering of every mutation. |
-| `DownloadEnqueuer` | `:data:downloads` | The full-fields re-fetch, the `source = DOWNLOAD` cache write for the item **and its parents**, and the `DownloadEntity` row. |
-| `DownloadApi` / `SdkDownloadApi` | `:data:downloads` | The one SDK call the pipeline makes, behind a seam so enqueueing is unit-testable. |
+| `DownloadEnqueuer` | `:data:downloads` | The full-fields re-fetch, the `source = DOWNLOAD` cache write for the item **and its parents**, the `DownloadEntity` rows — and the expansion of a season or series into one download per episode. |
+| `DownloadApi` / `SdkDownloadApi` | `:data:downloads` | The SDK calls the pipeline makes (`getItems` for the full DTOs, `/Shows/{id}/Episodes` for a container's children), behind a seam so enqueueing is unit-testable. |
+| `isFolderItem` (`FolderItems.kt`) | `:data:downloads` | The one predicate for "this is a folder, not a video" — `isFolder`, with a kind list as the fallback. |
 | `DownloadFilePlanner` | `:data:downloads` | `BaseItemDto` → ordered `List<PlannedFile>`, with the essential/optional split. |
 | `DownloadUrlFactory` / `SdkDownloadUrlFactory` | `:data:downloads` | Every URL the pipeline fetches, behind a seam (a real `ApiClient` has no base URL in a JVM test). |
 | `DownloadPaths` | `:data:downloads` | Directory and file naming; pure, fully unit-tested. |
@@ -72,6 +75,48 @@ DownloadRepository.enqueue(itemId)
 | `DownloadDeleter` | `:data:downloads` | The delete cascade. |
 | `DownloadsViewModel` / `DownloadsScreen` | `:feature:downloads` | The two tabs, the storage header, the Wi-Fi-only toggle. |
 | `DownloadSpeedTracker` | `:feature:downloads` | Derives bytes/second from successive Room emissions (no speed column exists). |
+
+---
+
+## Containers: a season is its episodes
+
+A season and a series are **folders**. There is no file behind one, and `/Items/{id}/Download`
+answers `400` if you ask — which is exactly what a tap on a season's Download button used to produce:
+a single `DownloadEntity` keyed on the season, permanently `ERROR`, reading *"The server couldn't
+send this download (error 400)"* (docs/POLISH.md; DECISIONS.md, 2026-07-29).
+
+Expansion happens in **`DownloadEnqueuer`**, not in the ViewModel, so that every caller of
+`DownloadRepository.enqueue` is type-safe by construction:
+
+| Item | What is enqueued |
+|---|---|
+| Movie, episode | Itself. Unchanged. |
+| Season | One download per episode of that season, in the server's (broadcast) order. |
+| Series | One download per episode of the show, every season, one `/Shows/{id}/Episodes` request. |
+| Anything else that is a folder | Refused — nothing is written. |
+
+Rules that matter:
+
+- **Episodes already spoken for are skipped.** Any existing row except `ERROR` is left exactly as it
+  is, so re-tapping Download on a half-downloaded season adds only what is missing. `ERROR` is
+  re-enqueued, keeping its queue position and the bytes a `Range` resume will pick up from.
+- **Each episode row is stamped exactly as a direct tap on that episode would have stamped it** —
+  the same full re-fetch, the same paths, and the one download-quality value read once for the whole
+  expansion (a preference changed mid-season cannot split it across two containers).
+- **The container's own row is deleted** when one exists, through the ordinary delete cascade. Those
+  rows only exist on devices that predate this fix and can never succeed.
+- **`DownloadFilePlanner` refuses a folder** (`NotDownloadableException`) before it builds a URL.
+  With expansion in place that is unreachable through the UI; it is the guard that keeps a future
+  caller's mistake from becoming an unexplained `400` halfway down the queue, and it gives the row
+  copy that says what to do rather than a status code.
+
+On the **detail screen** the button follows: a season has no row of its own, so its state is the
+aggregate of its episodes' (`aggregateDownloadState`) — all downloaded is *Downloaded*, anything
+transferring is *Downloading* at the season's own percentage, anything failed with nothing running is
+*Retry*, and a partly-downloaded season still offers *Download* for the rest. Remove and cancel act
+on the episode rows, not on the season id. A **series** page keeps the plain button (it lists seasons,
+not episodes, so it has nothing to aggregate): its tap always enqueues, which is idempotent because
+expansion skips what is already there.
 
 ---
 
@@ -118,6 +163,7 @@ reasoning and its tests are documented separately in
 | subtitles | `subtitleApi.getSubtitleUrl(itemId, mediaSourceId, streamIndex, format)` |
 | trickplay | `trickplayApi.getTrickplayTileImageUrl(itemId, width, tileIndex)` |
 | enqueue re-fetch | `itemsApi.getItems(ids, fields = [MEDIA_SOURCES, MEDIA_STREAMS, PATH, OVERVIEW, GENRES, CHAPTERS, TRICKPLAY, PEOPLE, STUDIOS, TAGLINES, PRIMARY_IMAGE_ASPECT_RATIO])` |
+| container expansion | `tvShowsApi.getEpisodes(seriesId, seasonId?, fields = [], enableImages = false, enableUserData = false, isMissing = false)` — ids only; the re-fetch above then fetches the real DTOs |
 
 The download-policy fallback is applied **on a 403**, not from a policy flag: the server refusing
 `/Items/{id}/Download` is the authoritative answer, and the same bytes are reachable as a static

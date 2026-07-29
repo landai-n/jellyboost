@@ -543,6 +543,153 @@ class ItemDetailViewModelTest {
             model.uiState.value.downloadState shouldBe DownloadState.Downloaded
         }
 
+    // ---- the Download button on a container (docs/POLISH.md: downloading a season failed) --------
+
+    @Test
+    fun `a season's download button reads its episodes, not a row of its own`() =
+        runTest(dispatcher) {
+            // A season has no download row — the pipeline expands it into episode downloads — so
+            // "is this season downloaded" is a question about its episodes (DECISIONS.md,
+            // 2026-07-29).
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.downloadState shouldBe DownloadState.Downloaded
+        }
+
+    @Test
+    fun `a season halfway through its episodes reports the progress of the whole season`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(
+                    EPISODE_1 to DownloadState.Downloaded,
+                    EPISODE_2 to DownloadState.Downloading(progress = 0.5f),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            // One episode done and one half-done is 75 % of the season, not 50 % of whichever file
+            // happens to be moving.
+            model.uiState.value.downloadState shouldBe DownloadState.Downloading(progress = 0.75f)
+        }
+
+    @Test
+    fun `a season with only some episodes downloaded still offers to download the rest`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value = mapOf(EPISODE_1 to DownloadState.Downloaded)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.downloadState shouldBe DownloadState.NotDownloaded
+
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            // Enqueueing the *season* is right: the pipeline expands it and skips the episode that
+            // is already on the device.
+            coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
+        }
+
+    @Test
+    fun `a season whose episodes failed is enqueued again, not resumed`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Failed)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.downloadState shouldBe DownloadState.Failed
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            // There is no row keyed on the season to put back in the queue; re-enqueueing is what
+            // retries the episodes that failed.
+            coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
+            coVerify(exactly = 0) { downloads.resume(any()) }
+        }
+
+    @Test
+    fun `deleting a downloaded season removes each of its episodes`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
+            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+            model.uiState.value.showDeleteConfirmation shouldBe true
+
+            model.confirmDeleteDownload()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.delete(EPISODE_1) }
+            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
+            // The season itself never had a row; deleting it would be a no-op round trip.
+            coVerify(exactly = 0) { downloads.delete(ITEM_ID) }
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
+        }
+
+    @Test
+    fun `cancelling a queued season cancels only the episodes that have rows`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value = mapOf(EPISODE_2 to DownloadState.Queued)
+            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.downloadState shouldBe DownloadState.Queued
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
+            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+        }
+
+    @Test
+    fun `one failed episode delete makes the whole season delete report a failure`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
+            coEvery { downloads.delete(EPISODE_1) } returns AppResult.Success(0L)
+            coEvery { downloads.delete(EPISODE_2) } returns AppResult.Failure(AppError.Storage())
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.confirmDeleteDownload()
+            advanceUntilIdle()
+
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleteFailed
+        }
+
+    @Test
+    fun `a series page enqueues the whole show`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(series)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
+        }
+
     // ---- M9: refresh when connectivity changes ----------------------------------------------------------------
 
     @Test
@@ -564,6 +711,18 @@ class ItemDetailViewModelTest {
                 .available shouldBe true
         }
 
+    /** The season page as the user reaches it: two episodes, loaded from its series. */
+    private fun givenSeasonWithEpisodes() {
+        coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
+        coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
+            AppResult.Success(
+                listOf(
+                    JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE),
+                    JellyfinItem(id = EPISODE_2, name = "Chestnut", type = ItemType.EPISODE),
+                ),
+            )
+    }
+
     private fun viewModel() =
         ItemDetailViewModel(
             repository = repository,
@@ -576,5 +735,7 @@ class ItemDetailViewModelTest {
     private companion object {
         const val ITEM_ID = "item-1"
         const val SERIES_ID = "series-1"
+        const val EPISODE_1 = "episode-1"
+        const val EPISODE_2 = "episode-2"
     }
 }

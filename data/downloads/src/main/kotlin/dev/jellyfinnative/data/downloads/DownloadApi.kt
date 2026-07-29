@@ -7,13 +7,15 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** The one server call the download pipeline makes, behind a seam so enqueueing is unit-testable. */
+/** The server calls the download pipeline makes, behind a seam so enqueueing is unit-testable. */
 interface DownloadApi {
     /**
      * Re-fetches items with every field the file plan needs.
@@ -21,6 +23,22 @@ interface DownloadApi {
      * @return the items the server knew about; ids it did not recognise are simply absent.
      */
     suspend fun getFullItems(ids: List<UUID>): AppResult<List<org.jellyfin.sdk.model.api.BaseItemDto>>
+
+    /**
+     * The episodes of a series, or of one of its seasons, in broadcast order.
+     *
+     * This is what turns "download this season" into downloads (DECISIONS.md, 2026-07-29): a season
+     * and a series are folders, and a folder has no file to fetch. Only the **ids** are returned —
+     * [getFullItems] then fetches the same rich DTOs a single-episode download uses, so an expanded
+     * episode is byte-for-byte the row a direct tap on that episode would have produced.
+     *
+     * @param seasonId `null` for every episode of the series, across all its seasons.
+     * @return ids in the order the server lists them; empty when the container has no episodes.
+     */
+    suspend fun getEpisodeIds(
+        seriesId: UUID,
+        seasonId: UUID?,
+    ): AppResult<List<UUID>>
 }
 
 /**
@@ -50,6 +68,36 @@ internal class SdkDownloadApi
                                 enableTotalRecordCount = false,
                             ),
                         ).content.items
+                }
+            }
+
+        /**
+         * `/Shows/{seriesId}/Episodes`, the same endpoint the season detail page reads.
+         *
+         * No `fields`, no images and no user data: the caller wants ids, and asking the server for
+         * the full DTO of every episode of a series only to throw all but the id away would make
+         * "download this show" a much heavier request than it needs to be. `isMissing = false` for
+         * the reason the browse path gives it — an episode with no file on the server is nothing a
+         * download could ever fetch.
+         */
+        override suspend fun getEpisodeIds(
+            seriesId: UUID,
+            seasonId: UUID?,
+        ): AppResult<List<UUID>> =
+            withContext(ioDispatcher) {
+                runCatchingApi {
+                    apiClient.tvShowsApi
+                        .getEpisodes(
+                            GetEpisodesRequest(
+                                seriesId = seriesId,
+                                seasonId = seasonId,
+                                fields = emptyList(),
+                                enableImages = false,
+                                enableUserData = false,
+                                isMissing = false,
+                            ),
+                        ).content.items
+                        .map { it.id }
                 }
             }
 

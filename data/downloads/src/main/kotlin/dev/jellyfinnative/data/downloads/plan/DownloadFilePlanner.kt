@@ -90,9 +90,10 @@ class DownloadFilePlanner
          * `enableContentDownloading` policy is off), and — when the user asked for a smaller file —
          * a transcode, which is neither of the other two and is never a fallback for them.
          *
-         * A transcode also renames the file: the bytes are `mp4` whatever the source container was,
-         * and a `.mkv` holding an `mp4` is a file ExoPlayer sniffs its way out of but a user
-         * plugging the tablet into a computer does not.
+         * A transcode also renames the file: the bytes are [DownloadQuality.CONTAINER] whatever the
+         * source container was, and a name carrying the source's extension is one ExoPlayer sniffs
+         * its way out of but a user plugging the tablet into a computer does not. The quality goes
+         * in the name too, so a re-download at another step cannot land on the old file.
          */
         private fun media(
             item: BaseItemDto,

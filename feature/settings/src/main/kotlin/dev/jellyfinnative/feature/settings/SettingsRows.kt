@@ -121,6 +121,12 @@ internal fun SettingsChoiceRow(
  *
  * `selectableGroup()` is what tells TalkBack the rows belong together, so it announces "2 of 3"
  * instead of reading three unrelated radio buttons.
+ *
+ * The label is styled as a **subsection heading** — `labelLarge` in `onSurfaceVariant` — and not
+ * like the rows beneath it. It used to be `bodyLarge`/`onSurface`, pixel for pixel what [RowLabel]
+ * draws, so "Skip intro" read as one more tappable row sitting above three others and nothing said
+ * otherwise until you pressed it (POLISH.md). It stays quieter than [SettingsSection]'s
+ * `titleSmall`-in-primary heading, which is the level above it.
  */
 @Composable
 internal fun SettingsChoiceGroup(
@@ -131,12 +137,14 @@ internal fun SettingsChoiceGroup(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier =
                 Modifier.padding(
-                    horizontal = Dimens.ScreenPadding,
-                    vertical = Dimens.SpaceSmall,
+                    start = Dimens.ScreenPadding,
+                    end = Dimens.ScreenPadding,
+                    top = Dimens.SpaceMedium,
+                    bottom = Dimens.SpaceExtraSmall,
                 ),
         )
         Column(modifier = Modifier.selectableGroup(), content = content)

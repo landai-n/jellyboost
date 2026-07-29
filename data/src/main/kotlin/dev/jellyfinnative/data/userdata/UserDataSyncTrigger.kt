@@ -19,9 +19,10 @@ import javax.inject.Singleton
  * Asks for a user-data drain at the two moments a failed write cannot ask for itself: **app start**
  * and **every return to the network**.
  *
- * `UserDataRepositoryImpl` already enqueues the worker when its own push fails, which covers a
- * change made while offline. It does not cover the two cases that actually deliver the milestone's
- * definition of done:
+ * `UserDataRepositoryImpl` already enqueues the worker when an *online* push fails. Since M9 it does
+ * **not** attempt a push (or enqueue) at all while offline (DECISIONS.md, 2026-07-29) — an offline
+ * write only sets `toBeSynced` and waits for this trigger. Neither path covers the two cases that
+ * actually deliver the milestone's definition of done:
  *
  * - the app was killed (or the device rebooted) while rows were still pending — nothing is left to
  *   enqueue anything, and WorkManager only persists work that was enqueued in the first place;

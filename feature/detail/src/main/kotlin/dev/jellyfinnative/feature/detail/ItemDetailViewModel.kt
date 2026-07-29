@@ -126,12 +126,16 @@ class ItemDetailViewModel
         }
 
         /**
-         * The Download button. One button, two meanings, decided by the current state:
+         * The Download button. One button, several meanings, decided by the current state:
          *
          * - not on the device → enqueue it (M7's pipeline takes it from there);
          * - failed → put it back in the queue, which resumes from the bytes already on disk rather
          *   than starting the transfer over;
-         * - anything else (queued, downloading, paused, downloaded) → remove it.
+         * - queued, downloading or paused → cancel it. Nothing finished is lost, so this stays
+         *   immediate;
+         * - downloaded → ask for confirmation before removing it (docs/POLISH.md — deleting a
+         *   finished download straight away, with no way back, was too easy to trigger by accident).
+         *   [confirmDeleteDownload] does the actual removal once the user confirms.
          *
          * A separate "delete" affordance next to it would be dead most of the time, and "tap again
          * to undo" is what the same button already means everywhere else on this screen (watched,
@@ -140,30 +144,55 @@ class ItemDetailViewModel
         fun onDownloadClick() {
             val item = _uiState.value.item ?: return
 
-            viewModelScope.launch {
-                when (_uiState.value.downloadState) {
-                    is DownloadState.NotDownloaded ->
+            when (_uiState.value.downloadState) {
+                is DownloadState.NotDownloaded ->
+                    viewModelScope.launch {
                         reportDownload(
                             downloads.enqueue(item.id),
                             success = UserMessage.DownloadQueued,
                             failure = UserMessage.DownloadFailed,
                         )
+                    }
 
-                    is DownloadState.Failed ->
+                is DownloadState.Failed ->
+                    viewModelScope.launch {
                         reportDownload(
                             downloads.resume(item.id),
                             success = UserMessage.DownloadQueued,
                             failure = UserMessage.DownloadFailed,
                         )
+                    }
 
-                    else ->
+                is DownloadState.Downloaded -> _uiState.update { it.copy(showDeleteConfirmation = true) }
+
+                else ->
+                    viewModelScope.launch {
                         reportDownload(
                             downloads.delete(item.id),
                             success = UserMessage.DownloadDeleted,
                             failure = UserMessage.DownloadDeleteFailed,
                         )
-                }
+                    }
             }
+        }
+
+        /** The delete-download dialog was confirmed — actually remove the item from this device. */
+        fun confirmDeleteDownload() {
+            val item = _uiState.value.item ?: return
+            _uiState.update { it.copy(showDeleteConfirmation = false) }
+
+            viewModelScope.launch {
+                reportDownload(
+                    downloads.delete(item.id),
+                    success = UserMessage.DownloadDeleted,
+                    failure = UserMessage.DownloadDeleteFailed,
+                )
+            }
+        }
+
+        /** The delete-download dialog was dismissed without confirming — the download is untouched. */
+        fun dismissDeleteConfirmation() {
+            _uiState.update { it.copy(showDeleteConfirmation = false) }
         }
 
         private fun reportDownload(

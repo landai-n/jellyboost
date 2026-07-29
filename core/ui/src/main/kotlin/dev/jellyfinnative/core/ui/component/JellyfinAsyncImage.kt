@@ -29,6 +29,9 @@ import dev.jellyfinnative.core.ui.theme.JellyfinGradients
  * @param url fully-qualified image URL, or `null` when the item has no artwork.
  * @param contentDescription accessibility label; `null` for purely decorative artwork.
  * @param placeholderIcon icon drawn on the placeholder gradient; `null` draws the bare gradient.
+ * @param alignment where Coil anchors the source image inside the box before [contentScale] is
+ *   applied — matters once the box's aspect ratio differs from the artwork's, e.g. a 2:3 poster
+ *   landing in a wide backdrop slot.
  */
 @Composable
 fun JellyfinAsyncImage(
@@ -36,6 +39,7 @@ fun JellyfinAsyncImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
+    alignment: Alignment = Alignment.Center,
     placeholderIcon: ImageVector? = Icons.Outlined.Movie,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -57,6 +61,7 @@ fun JellyfinAsyncImage(
                 contentDescription = contentDescription,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = contentScale,
+                alignment = alignment,
             )
         }
         overlay()

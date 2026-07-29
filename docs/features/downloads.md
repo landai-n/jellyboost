@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder, no grouping), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 
@@ -238,6 +238,32 @@ and the notification are all Flows over it.
   docs/features/download-quality.md, *"No resume"*).
 - **A network loss is not a pause**: the row stays `QUEUED` and WorkManager's constraint resumes it.
 
+### Queue-wide actions
+
+A bar above the queue list (`DownloadsScreen.QueueActionsBar`, drawn only while the queue is
+non-empty) applies the row actions to the whole queue. Each one composes the existing per-item
+repository call — there is no bulk path through `DownloadRepository`, and therefore no second
+cascade to keep correct.
+
+| Action | Acts on | Does not touch |
+|---|---|---|
+| *Pause all* | every `QUEUED` / `DOWNLOADING` row that is **pausable** (`DownloadItem.isPauseTarget`) | transcodes (they cannot resume, so pausing one discards it), and rows already `PAUSED`/`ERROR` |
+| *Resume all* | every `PAUSED` or `ERROR` row, transcoded or not (`isResumeTarget`) | rows already moving |
+| *Cancel all* | every row on the tab — `QUEUED`, `DOWNLOADING`, `PAUSED`, `ERROR` | **`DOWNLOADED` rows, by construction**: the queue list is `toQueue()`, which excludes them |
+
+`isPauseTarget` / `isResumeTarget` (`DownloadsUiState.kt`) are the *same* predicates the per-row
+buttons branch on, so a bulk action can never act on something its own row refuses to.
+
+- *Pause all* and *Resume all* are **disabled** when they have no targets — a queue of nothing but
+  transcodes offers no *Pause all* at all — rather than hidden, so the bar does not reshuffle under
+  the finger as the queue changes.
+- When *Pause all* skips transcodes, a snackbar says so ("Paused 2 — 1 transcode keeps downloading");
+  otherwise it is silent, because the rows themselves change to *Paused*.
+- *Cancel all* **confirms** (`DownloadsUiState.showCancelAllConfirmation`, a plural title carrying
+  the count), unlike a single row's *Cancel*: one tap otherwise discards every partial transfer on
+  the device. The dialog copy states that finished downloads are not affected — the same rule as
+  cancelling a season (DECISIONS.md, 2026-07-29).
+
 ---
 
 ## Delete cascade
@@ -353,7 +379,7 @@ delete do not.
 | `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
-| `DownloadsViewModelTest` | tab split, grouping, actions, reorder bounds |
+| `DownloadsViewModelTest` | tab split, grouping, actions, reorder bounds, the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |
 | `DownloadSpeedTrackerTest` | derived speed, smoothing, restarts, stopped items |
 
 `FileDownloader` is tested against an OkHttp `Interceptor` returning canned responses — no server,

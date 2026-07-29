@@ -18,6 +18,7 @@ import dev.jellyfinnative.feature.auth.LoginScreen
 import dev.jellyfinnative.feature.auth.ServerSetupScreen
 import dev.jellyfinnative.feature.detail.ItemDetailScreen
 import dev.jellyfinnative.feature.downloads.DownloadsScreen
+import dev.jellyfinnative.feature.home.HomeScreen
 import dev.jellyfinnative.feature.library.LibraryGridScreen
 import dev.jellyfinnative.feature.library.libraries.LibrariesScreen
 import dev.jellyfinnative.feature.search.SearchScreen
@@ -35,8 +36,8 @@ import dev.jellyfinnative.player.ui.PlayerScreen
  * @param sessionState live session; a flip to [SessionState.LoggedOut] from outside the auth
  *   flow (the Settings screen's sign-out today, a 401-driven logout later) pushes the user back to
  *   server setup.
- * @param modifier applied to the [NavHost] itself — [AppScaffold] uses it to reserve space for
- *   the bottom navigation bar, which only occupies space on the three top-level destinations.
+ * @param modifier applied to the [NavHost] itself — [AppScaffold] uses it to reserve space for the
+ *   combined app bar and the system navigation bar on the four top-level destinations.
  */
 @Composable
 internal fun JellyfinNavHost(
@@ -66,8 +67,8 @@ internal fun JellyfinNavHost(
         }
 
         composable<Routes.Home> {
-            HomeRoute(
-                onNavigateToSettings = { navController.navigate(Routes.Settings) },
+            HomeScreen(
+                viewModel = hiltViewModel(),
                 onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
                 onLibraryClick = { library ->
                     navController.navigate(Routes.LibraryGrid(library.id, library.name))

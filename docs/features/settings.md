@@ -127,15 +127,15 @@ what makes this button and a future 401-driven logout land in the same place.
 
 ## Entry point
 
-Home top bar → ⋮ overflow → **Settings** (`Icons.Filled.Settings`), which navigates to
-`Routes.Settings`. The plan asks for Settings "behind top-bar avatar"; there is no user-avatar image
-or asset pipeline anywhere in this app, so the established overflow menu carries it instead —
-logged in DECISIONS.md, 2026-07-29, *"M9: Settings is opened from the home overflow menu, not a
-top-bar avatar"*.
+App bar → ⋮ overflow → **Settings** (`Icons.Filled.Settings`), which navigates to `Routes.Settings`.
+The plan asks for Settings "behind top-bar avatar"; there is no user-avatar image or asset pipeline
+anywhere in this app, so the established overflow menu carries it instead — logged in DECISIONS.md,
+2026-07-29, *"M9: Settings is opened from the home overflow menu, not a top-bar avatar"*. That menu
+moved from the home screen's own top bar into the combined `AppTopBar` later the same day, so it is
+now reachable from all four top-level destinations rather than from Home alone.
 
-`Routes.Settings` is a pushed destination, not a bottom-nav tab, so the screen owns a `TopAppBar`
-with a back action the way `LibraryGridScreen` and `ItemDetailScreen` do, and the bottom navigation
-bar hides while it is up.
+`Routes.Settings` is a pushed destination, not a tab, so the screen owns a `TopAppBar` with a back
+action the way `LibraryGridScreen` and `ItemDetailScreen` do, and the app bar hides while it is up.
 
 Sign-out moving here made `:app`'s whole `onSignOut` chain dead — `MainActivity` →
 `JellyfinNativeApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`, plus `MainViewModel.signOut()`

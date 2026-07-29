@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.network.SessionRepository
@@ -48,6 +49,7 @@ class SettingsViewModel
                     outroSkipMode = prefs.outroSkipMode,
                     pipOnLeave = prefs.pipOnLeave,
                     downloadOverWifiOnly = prefs.downloadOverWifiOnly,
+                    downloadQuality = prefs.downloadQuality,
                     forceOffline = prefs.forceOffline,
                     storage = storage,
                     account = session.toAccountInfo(),
@@ -76,6 +78,17 @@ class SettingsViewModel
         /** Restricts downloads to unmetered networks, or lifts the restriction. */
         fun setDownloadOverWifiOnly(enabled: Boolean) {
             viewModelScope.launch { appPreferences.setDownloadOverWifiOnly(enabled) }
+        }
+
+        /**
+         * Sets the quality **future** downloads are fetched at.
+         *
+         * Deliberately not retroactive: `DownloadEnqueuer` stamps the quality onto each row when the
+         * user taps Download, and the queue plans from the row (DECISIONS.md, 2026-07-29). Changing
+         * this while a transfer is running leaves that transfer exactly as it was.
+         */
+        fun setDownloadQuality(quality: DownloadQuality) {
+            viewModelScope.launch { appPreferences.setDownloadQuality(quality) }
         }
 
         /** Pins the app to offline mode, or releases it. */
@@ -115,28 +128,33 @@ class SettingsViewModel
         }
 
         /**
-         * The five preference keys as one value.
+         * The six preference keys as one value.
          *
-         * `combine` tops out at five typed flows, and the state needs seven sources; folding the
+         * `combine` tops out at five typed flows, and the state needs eight sources; folding the
          * preferences into one intermediate keeps the outer `combine` typed rather than dropping to
-         * the `Array<Any?>` overload and casting each element back.
+         * the `Array<Any?>` overload and casting each element back. The sixth key is folded in by a
+         * second `combine` over the first for the same reason — one more nested call is cheaper to
+         * read than five untyped array indices.
          */
         private fun preferences(): Flow<Preferences> =
             combine(
-                appPreferences.introSkipMode,
-                appPreferences.outroSkipMode,
-                appPreferences.pipOnLeave,
-                appPreferences.downloadOverWifiOnly,
-                appPreferences.forceOffline,
-            ) { intro, outro, pip, wifiOnly, forceOffline ->
-                Preferences(
-                    introSkipMode = intro,
-                    outroSkipMode = outro,
-                    pipOnLeave = pip,
-                    downloadOverWifiOnly = wifiOnly,
-                    forceOffline = forceOffline,
-                )
-            }
+                combine(
+                    appPreferences.introSkipMode,
+                    appPreferences.outroSkipMode,
+                    appPreferences.pipOnLeave,
+                    appPreferences.downloadOverWifiOnly,
+                    appPreferences.forceOffline,
+                ) { intro, outro, pip, wifiOnly, forceOffline ->
+                    Preferences(
+                        introSkipMode = intro,
+                        outroSkipMode = outro,
+                        pipOnLeave = pip,
+                        downloadOverWifiOnly = wifiOnly,
+                        forceOffline = forceOffline,
+                    )
+                },
+                appPreferences.downloadQuality,
+            ) { rest, quality -> rest.copy(downloadQuality = quality) }
 
         private data class Preferences(
             val introSkipMode: SegmentSkipMode,
@@ -144,6 +162,7 @@ class SettingsViewModel
             val pipOnLeave: Boolean,
             val downloadOverWifiOnly: Boolean,
             val forceOffline: Boolean,
+            val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
         )
 
         private companion object {

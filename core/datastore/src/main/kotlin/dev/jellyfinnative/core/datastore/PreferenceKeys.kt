@@ -11,6 +11,7 @@ object PreferenceKeys {
     const val SECURE_STORE_NAME = "secure_credentials"
 
     const val DOWNLOAD_OVER_WIFI_ONLY = "download_over_wifi_only"
+    const val DOWNLOAD_QUALITY = "download_quality"
     const val FORCE_OFFLINE = "force_offline"
     const val MAX_STREAMING_BITRATE = "max_streaming_bitrate"
     const val DOWNLOAD_STORAGE_URI = "download_storage_uri"

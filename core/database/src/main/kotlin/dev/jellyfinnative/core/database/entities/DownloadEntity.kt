@@ -1,8 +1,10 @@
 package dev.jellyfinnative.core.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import java.time.Instant
 import java.util.UUID
@@ -31,6 +33,11 @@ import java.util.UUID
  *   `UserDataEntity` rows are safe to drop.
  * @property mediaSourceId the media source the file plan was built from — the version that is
  *   actually on disk, which offline playback (M8) resolves against.
+ * @property quality what the user's *download quality* preference said **when they tapped
+ *   Download** (M9). It is stored rather than re-read because the file on disk was fetched at this
+ *   quality and the partial file is the resume bookmark: a plan rebuilt at a different quality
+ *   mid-transfer would append incompatible bytes (DECISIONS.md, 2026-07-29). Column default
+ *   `ORIGINAL`, which is what every row written before schema v5 was.
  * @property queuePosition ordering key for the queue tab; the queue always takes the pending row
  *   with the lowest value. Reordering rewrites this column and nothing else.
  * @property errorMessage last failure, kept so the queue tab can say *why* an item is in
@@ -51,6 +58,8 @@ data class DownloadEntity(
     val userId: UUID,
     val status: DownloadStatus,
     val mediaSourceId: String? = null,
+    @ColumnInfo(defaultValue = "ORIGINAL")
+    val quality: DownloadQuality = DownloadQuality.ORIGINAL,
     val bytesDownloaded: Long = 0L,
     val bytesTotal: Long = 0L,
     val queuePosition: Int = 0,

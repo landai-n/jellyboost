@@ -24,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.common.model.JellyfinItem
@@ -60,7 +62,7 @@ fun ItemDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { stringResource(it.textRes()) }
+    val message = state.userMessage?.let { userMessageText(it) }
 
     LaunchedEffect(message) {
         if (message != null) {
@@ -164,6 +166,7 @@ fun ItemDetailContent(
                     state = state,
                     detail = detail,
                     isWide = maxWidth >= WIDE_BREAKPOINT,
+                    backdropHeight = backdropHeight(maxWidth = maxWidth, maxHeight = maxHeight),
                     onItemClick = onItemClick,
                     onPlay = onPlay,
                     actions = actions,
@@ -177,6 +180,7 @@ private fun DetailSections(
     state: ItemDetailUiState,
     detail: JellyfinItem,
     isWide: Boolean,
+    backdropHeight: Dp,
     onItemClick: (JellyfinItem) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     actions: DetailActionHandlers,
@@ -191,7 +195,7 @@ private fun DetailSections(
             // headline once; drawing it again over the backdrop duplicated it.
             BackdropHeader(
                 imageUrl = detail.backdropImageUrl ?: detail.thumbImageUrl ?: detail.primaryImageUrl,
-                height = if (isWide) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight,
+                height = backdropHeight,
             )
         }
 
@@ -262,13 +266,21 @@ private fun SectionTitle(
     )
 }
 
-private fun UserMessage.textRes(): Int =
-    when (this) {
-        UserMessage.DownloadQueued -> R.string.detail_message_download_queued
-        UserMessage.DownloadFailed -> R.string.detail_message_download_failed
-        UserMessage.DownloadDeleted -> R.string.detail_message_download_deleted
-        UserMessage.DownloadDeleteFailed -> R.string.detail_message_download_delete_failed
-        UserMessage.UserDataWriteFailed -> R.string.detail_message_user_data_failed
+/** Renders a one-shot [message] as snackbar copy (precedent: `:feature:auth`'s `authErrorText`). */
+@Composable
+private fun userMessageText(message: UserMessage): String =
+    when (message) {
+        UserMessage.DownloadQueued -> stringResource(R.string.detail_message_download_queued)
+        UserMessage.DownloadFailed -> stringResource(R.string.detail_message_download_failed)
+        UserMessage.DownloadDeleted -> stringResource(R.string.detail_message_download_deleted)
+        UserMessage.DownloadDeleteFailed -> stringResource(R.string.detail_message_download_delete_failed)
+        UserMessage.UserDataWriteFailed -> stringResource(R.string.detail_message_user_data_failed)
+        is UserMessage.DownloadCancelledKeepingFinished ->
+            pluralStringResource(
+                R.plurals.detail_message_download_cancelled_kept,
+                message.keptCount,
+                message.keptCount,
+            )
     }
 
 private const val SECTION_BACKDROP = "section-backdrop"
@@ -278,7 +290,38 @@ private const val SECTION_SEASONS = "section-seasons"
 private const val SECTION_EPISODES = "section-episodes"
 private const val SECTION_SIMILAR = "section-similar"
 
+/**
+ * How tall the backdrop banner is for a viewport of [maxWidth] × [maxHeight].
+ *
+ * In **portrait** the banner is a share of the viewport *height* rather than a fixed number of dp:
+ * a tablet in portrait is wide enough to take the [WIDE_BACKDROP_HEIGHT] branch on a screen twice
+ * as tall, which left the poster stranded at the top with dead space below it (docs/POLISH.md).
+ * The width-derived value stays as the floor — a proportional banner never gets *shorter* than the
+ * fixed one — and [MAX_BACKDROP_HEIGHT] keeps it from pushing the facts and Play button off-screen
+ * on a very tall device.
+ *
+ * In **landscape** vertical space is what is scarce, so the width-based height is used unchanged.
+ */
+private fun backdropHeight(
+    maxWidth: Dp,
+    maxHeight: Dp,
+): Dp {
+    val fixed = if (maxWidth >= WIDE_BREAKPOINT) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight
+    val isPortrait = maxHeight > maxWidth
+    return if (isPortrait) {
+        (maxHeight * PORTRAIT_BACKDROP_FRACTION).coerceIn(fixed, MAX_BACKDROP_HEIGHT)
+    } else {
+        fixed
+    }
+}
+
 /** Above this width the header lays out side by side — roughly a tablet in portrait. */
 private val WIDE_BREAKPOINT = 720.dp
 
 private val WIDE_BACKDROP_HEIGHT = 320.dp
+
+/** Share of the viewport height the banner claims in portrait. */
+private const val PORTRAIT_BACKDROP_FRACTION = 0.40f
+
+/** Ceiling for the proportional portrait banner, so the header below it stays in view. */
+private val MAX_BACKDROP_HEIGHT = 560.dp

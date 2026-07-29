@@ -40,6 +40,10 @@
     <string name="detail_message_download_failed">Couldn\'t start that download.</string>
     <string name="detail_message_download_deleted">Removed from this device.</string>
     <string name="detail_message_download_delete_failed">Couldn\'t remove that download.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Download cancelled — %1$d finished episode kept.</item>
+        <item quantity="other">Download cancelled — %1$d finished episodes kept.</item>
+    </plurals>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 
     <!-- Delete-download confirmation -->

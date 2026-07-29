@@ -657,6 +657,79 @@ class ItemDetailViewModelTest {
 
             coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
             coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+            // Nothing had finished, so this is an ordinary removal — no "kept" message.
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
+        }
+
+    @Test
+    fun `cancelling a partly-finished season keeps the episodes that already downloaded`() =
+        runTest(dispatcher) {
+            // The bug this covers: Cancel used to run the same delete as Remove and take the
+            // finished episodes with it (DECISIONS.md, 2026-07-29).
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(
+                    EPISODE_1 to DownloadState.Downloaded,
+                    EPISODE_2 to DownloadState.Downloading(progress = 0.5f),
+                )
+            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
+            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadCancelledKeepingFinished(keptCount = 1)
+        }
+
+    @Test
+    fun `after a cancel that kept finished episodes the season offers to download the rest`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Queued)
+            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            // The pipeline drops the cancelled row; what is left on the device is the finished
+            // episode — the season is partly downloaded, so the button goes back to offering the
+            // rest rather than to removing what survived.
+            downloadStates.value = mapOf(EPISODE_1 to DownloadState.Downloaded)
+            advanceUntilIdle()
+            model.uiState.value.downloadState shouldBe DownloadState.NotDownloaded
+
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
+            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+        }
+
+    @Test
+    fun `a confirmed delete still removes the finished episodes a cancel would have kept`() =
+        runTest(dispatcher) {
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Queued)
+            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            // Not the Cancel path: the dialog's confirm is the "remove everything" affordance and
+            // is unfiltered, finished episodes included.
+            model.confirmDeleteDownload()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.delete(EPISODE_1) }
+            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
+            model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
 
     @Test

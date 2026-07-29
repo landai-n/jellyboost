@@ -11,6 +11,8 @@ dependencies {
     api(projects.core.common)
     implementation(projects.core.ui)
     implementation(projects.core.network)
+    // M9: the segment-skip and picture-in-picture preferences (DECISIONS.md 2026-07-29).
+    implementation(projects.core.datastore)
     implementation(projects.data)
     implementation(projects.data.downloads)
 

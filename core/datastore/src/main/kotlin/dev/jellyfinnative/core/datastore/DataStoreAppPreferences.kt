@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -53,11 +55,51 @@ class DataStoreAppPreferences
             dataStore.edit { it[DOWNLOAD_OVER_WIFI_ONLY] = enabled }
         }
 
+        // M9 player ---------------------------------------------------------------------------
+
+        override val introSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_INTRO) }
+
+        override suspend fun setIntroSkipMode(mode: SegmentSkipMode) {
+            dataStore.edit { it[SEGMENT_SKIP_INTRO] = mode.name }
+        }
+
+        override val outroSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_OUTRO) }
+
+        override suspend fun setOutroSkipMode(mode: SegmentSkipMode) {
+            dataStore.edit { it[SEGMENT_SKIP_OUTRO] = mode.name }
+        }
+
+        override val pipOnLeave: Flow<Boolean> = preferences.map { it[PIP_ON_LEAVE] ?: DEFAULT_PIP_ON_LEAVE }
+
+        override suspend fun setPipOnLeave(enabled: Boolean) {
+            dataStore.edit { it[PIP_ON_LEAVE] = enabled }
+        }
+
+        /**
+         * The stored skip mode, degraded to the default rather than throwing.
+         *
+         * Enums are persisted by `name`, which survives reordering; a name that no longer exists —
+         * a downgrade, or a renamed constant — reads as "unset", which is the same safe answer a
+         * fresh install gets.
+         */
+        private fun Preferences.skipMode(key: Preferences.Key<String>): SegmentSkipMode =
+            this[key]?.let { stored -> SegmentSkipMode.entries.firstOrNull { it.name == stored } }
+                ?: DEFAULT_SKIP_MODE
+
         private companion object {
             val FORCE_OFFLINE = booleanPreferencesKey(PreferenceKeys.FORCE_OFFLINE)
             val DOWNLOAD_OVER_WIFI_ONLY = booleanPreferencesKey(PreferenceKeys.DOWNLOAD_OVER_WIFI_ONLY)
+            val SEGMENT_SKIP_INTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_INTRO)
+            val SEGMENT_SKIP_OUTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_OUTRO)
+            val PIP_ON_LEAVE = booleanPreferencesKey(PreferenceKeys.PIP_ON_LEAVE)
 
             /** Downloads are Wi-Fi-only until the user says otherwise. */
             const val DEFAULT_WIFI_ONLY = true
+
+            /** Segments offer a button and never move playback on their own until asked. */
+            val DEFAULT_SKIP_MODE = SegmentSkipMode.SHOW_BUTTON
+
+            /** Leaving the app mid-film floats the video rather than losing it. */
+            const val DEFAULT_PIP_ON_LEAVE = true
         }
     }

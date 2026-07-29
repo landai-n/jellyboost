@@ -14,4 +14,9 @@ object PreferenceKeys {
     const val FORCE_OFFLINE = "force_offline"
     const val MAX_STREAMING_BITRATE = "max_streaming_bitrate"
     const val DOWNLOAD_STORAGE_URI = "download_storage_uri"
+
+    // M9 player — segment skip (one key per segment type) and picture-in-picture.
+    const val SEGMENT_SKIP_INTRO = "segment_skip_intro"
+    const val SEGMENT_SKIP_OUTRO = "segment_skip_outro"
+    const val PIP_ON_LEAVE = "pip_on_leave"
 }

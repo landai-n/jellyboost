@@ -26,20 +26,35 @@ import javax.inject.Singleton
  *
  * ### Rule one: a browse write must never downgrade a download
  * If a row already exists with [ItemSource.DOWNLOAD], the refreshed metadata is stored but the row
- * keeps its source, its original [ItemEntity.cachedAt] and its stored [ItemEntity.dto] blob. All
- * three matter:
+ * keeps its source and its original [ItemEntity.cachedAt]:
  *
  * - keeping the source stops a casual scroll past a downloaded film from making it evictable and
  *   orphaning its files on disk;
  * - keeping `cachedAt` stops that same scroll from reshuffling the offline "recently downloaded"
- *   rows, which order by exactly that column;
- * - keeping the blob stops that scroll from gutting the item's overview, genres, cast and taglines.
- *   A browse list request only asks the server for the fields the list needs
- *   (`OnlineJellyfinRepository`'s list calls request just `PRIMARY_IMAGE_ASPECT_RATIO`), so its DTO
- *   is lean by construction — writing it straight into [ItemEntity.dto] would replace the rich blob
- *   `DownloadEnqueuer` stored at download time with one missing everything the offline detail
- *   screen reads back out of it. This was exactly that bug (docs/POLISH.md): browsing online wiped
- *   the description of a film downloaded for offline viewing.
+ *   rows, which order by exactly that column.
+ *
+ * ### Rule one-and-a-half: only a *full* read may replace a download's stored blob
+ * The [ItemEntity.dto] blob is the offline detail screen's only source of overview, genres, cast
+ * and taglines, so a **lean** write must leave it alone. A browse list request only asks the server
+ * for the fields the list needs (`OnlineJellyfinRepository`'s list calls request just
+ * `PRIMARY_IMAGE_ASPECT_RATIO`), so its DTO is lean by construction — writing it straight into
+ * [ItemEntity.dto] would replace the rich blob `DownloadEnqueuer` stored at download time with one
+ * missing everything read back out of it. This was exactly that bug (docs/POLISH.md): browsing
+ * online wiped the description of a film downloaded for offline viewing.
+ *
+ * Preserving the blob **unconditionally** was the over-correction, and it was its own bug: it also
+ * discarded the one response that is strictly better than what is stored. `getItem`
+ * (`/Users/{userId}/Items/{itemId}`) is the endpoint that always serialises the *complete* field
+ * set, and a row whose blob an earlier build already gutted could therefore never be repaired —
+ * opening the item online refetched everything and then threw it away, leaving a bare offline
+ * detail page forever.
+ *
+ * So the distinction is made **explicitly, by the caller**, not sniffed out of the DTO's shape: the
+ * `full` flag on [cacheItems]/[writeItems] is `true` only where the response is known to carry the
+ * complete field set. A full write replaces the blob — repairing a gutted row on the way — while a
+ * lean write preserves it. Sniffing (does this DTO have an overview? does it have media sources?)
+ * would be guesswork about a server response, and it would get an item that genuinely has no
+ * overview wrong in the direction that loses data.
  *
  * ### Rule two: a server read refreshes `user_data`, unless the row is pending
  * Every read the app makes carries `userData` (list requests set `enableUserData = true`; `getItem`
@@ -83,10 +98,21 @@ class BrowseCacheWriter
         private val clock: Clock,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
-        /** Mirrors a successful item read into the browse cache, without blocking the caller. */
-        fun cacheItems(dtos: List<BaseItemDto>) {
+        /**
+         * Mirrors a successful item read into the browse cache, without blocking the caller.
+         *
+         * @param full `true` only when [dtos] came from a request that returns the **complete**
+         *   field set — in practice `getItem`, and nothing else. It is what allows the write to
+         *   replace a downloaded item's stored blob (and so repair one an older build gutted); a
+         *   lean read must leave that blob exactly where it is. The default is the safe answer:
+         *   preserve.
+         */
+        fun cacheItems(
+            dtos: List<BaseItemDto>,
+            full: Boolean = false,
+        ) {
             if (dtos.isEmpty()) return
-            scope.launch { writeItems(dtos) }
+            scope.launch { writeItems(dtos, full) }
         }
 
         /** Mirrors a successful `getUserViews` into the cached library list. */
@@ -102,25 +128,36 @@ class BrowseCacheWriter
          * The metadata write and the user-data refresh are guarded separately: they are independent
          * mirrors of the same response, and a failure of one is no reason to abandon the other.
          */
-        suspend fun writeItems(dtos: List<BaseItemDto>) {
+        suspend fun writeItems(
+            dtos: List<BaseItemDto>,
+            full: Boolean = false,
+        ) {
             val now = clock.instant()
-            writeItemRows(dtos, now)
+            writeItemRows(dtos, now, full)
             refreshUserData(dtos, now)
         }
 
         private suspend fun writeItemRows(
             dtos: List<BaseItemDto>,
             now: Instant,
+            full: Boolean,
         ) {
             @Suppress("TooGenericExceptionCaught")
             try {
                 val existing = itemDao.getCacheKeys(dtos.map { it.id }).associateBy { it.id }
 
-                // The blob is only fetched for rows that are actually downloads — everything else
-                // is happy to be replaced wholesale, and reading a multi-kilobyte blob for a page of
-                // ordinary browse-cache rows would be pure waste (the reason `getCacheKeys` excludes
-                // it in the first place).
-                val downloadIds = existing.values.filter { it.source == ItemSource.DOWNLOAD }.map { it.id }
+                // The blob is only fetched for rows that are actually downloads *and* only when the
+                // incoming DTO is lean enough to need protecting — everything else is happy to be
+                // replaced wholesale, and reading a multi-kilobyte blob for a page of ordinary
+                // browse-cache rows would be pure waste (the reason `getCacheKeys` excludes it in
+                // the first place). A `full` write skips the read entirely: it is going to overwrite
+                // every blob it fetched.
+                val downloadIds =
+                    if (full) {
+                        emptyList()
+                    } else {
+                        existing.values.filter { it.source == ItemSource.DOWNLOAD }.map { it.id }
+                    }
                 val richBlobs =
                     if (downloadIds.isEmpty()) {
                         emptyMap()
@@ -136,6 +173,8 @@ class BrowseCacheWriter
                             row.copy(
                                 source = ItemSource.DOWNLOAD,
                                 cachedAt = previous.cachedAt,
+                                // Empty on a full write, so `row.dto` — the complete response —
+                                // wins and a previously gutted row is repaired.
                                 dto = richBlobs[dto.id] ?: row.dto,
                             )
                         } else {

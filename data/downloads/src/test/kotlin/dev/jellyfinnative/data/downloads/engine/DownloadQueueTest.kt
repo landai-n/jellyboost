@@ -276,7 +276,7 @@ class DownloadQueueTest {
     fun `the plan is built from the quality on the row, not from the live preference`() =
         runTest {
             queueWith(download(quality = DownloadQuality.MEDIUM))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
@@ -292,9 +292,9 @@ class DownloadQueueTest {
             // That fallback exists to route around `enableContentDownloading`; taking it here would
             // hand the user the original file they asked the server to shrink.
             queueWith(download(quality = DownloadQuality.LOW))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
-            coEvery { downloader.download("https://server/videos/stream.mp4", any(), any(), any()) } throws
-                DownloadHttpException(code = 403, url = "https://server/videos/stream.mp4")
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
+            coEvery { downloader.download("https://server/videos/stream.mkv", any(), any(), any()) } throws
+                DownloadHttpException(code = 403, url = "https://server/videos/stream.mkv")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
@@ -308,7 +308,7 @@ class DownloadQueueTest {
             // running. Without the estimate the item's total would collapse onto its downloaded
             // bytes and the queue tab would read 100 % from the first chunk.
             queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mp4"
+            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
             coEvery { downloader.download(any(), any(), any(), any()) } coAnswers {
                 // The third argument, not the last: MockK hands a suspending call its continuation.
                 arg<ProgressCallback>(3).onProgress(300L, 0L)

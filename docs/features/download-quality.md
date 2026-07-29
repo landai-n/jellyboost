@@ -32,9 +32,11 @@ a 4K source is worse to watch than 3 Mbps of 720p.
 the same 20 / 8 / 3 Mbps steps the in-app quality picker offers for streaming. A user who has already
 learned what "Medium" looks like in the player is not asked to learn a second scale for downloads.
 
-Every transcode targets the same shape regardless of step: H.264 video, AAC audio, muxed into `mp4`
-— the one combination every Android decoder handles without a fallback, and the one container
-ExoPlayer never has to sniff its way into.
+Every transcode targets the same shape regardless of step: H.264 video, AAC audio, muxed into
+**Matroska** (`DownloadQuality.CONTAINER`) — the one codec combination every Android decoder handles
+without a fallback, in the one container that is still a valid file while it is being written. See
+*"Why the container is mkv and not mp4"* below; the short version is that mp4 was tried first and
+produced a file Media3 refuses to open.
 
 ---
 
@@ -62,7 +64,7 @@ SettingsViewModel.setDownloadQuality  ──────►  DownloadEnqueuer.en
                                              │                          │
                                              ▼                          ▼
                               DownloadUrlFactory.mediaUrl()   DownloadUrlFactory.transcodedVideoUrl()
-                              (/Items/{id}/Download)          (/Videos/{id}/stream.mp4?static=false…)
+                              (/Items/{id}/Download)          (/Videos/{id}/stream.mkv?static=false…)
 ```
 
 `AppPreferences.downloadQuality` is read exactly once per item — by `DownloadEnqueuer`, at the moment
@@ -100,9 +102,9 @@ name, at a quality, the plan that produced them is the only plan allowed to keep
 
 ## The transcode URL
 
-Requested through `videosApi.getVideoStreamByContainerUrl` as `/Videos/{id}/stream.mp4`, never as
-`/Videos/{id}/stream?container=mp4`. **The container is in the path, not a query parameter** — that
-is what makes the response one progressive `.mp4` file rather than an HLS playlist the download
+Requested through `videosApi.getVideoStreamByContainerUrl` as `/Videos/{id}/stream.mkv`, never as
+`/Videos/{id}/stream?container=mkv`. **The container is in the path, not a query parameter** — that
+is what makes the response one progressive `.mkv` file rather than an HLS playlist the download
 pipeline has no way to reassemble.
 
 Every encoding parameter is spelled out; a download has no `PlaybackInfo` session behind it and no
@@ -113,7 +115,7 @@ shape:
 |---|---|---|
 | `static` | `false` | this *is* the transcode request — `static = true` is what the plain video-stream fallback uses for the untouched original |
 | `videoCodec` | `h264` | the one format every Android decoder handles without a fallback ladder |
-| `audioCodec` | `aac` | pairs with `mp4`; no container remux surprises |
+| `audioCodec` | `aac` | decoded natively by every Android device, and legal in Matroska; no container remux surprises |
 | `videoBitRate` | the step's bitrate | the ceiling the server encodes to |
 | `maxHeight` | the step's height | paired with the bitrate so a low step is not just a blurrier full-resolution frame |
 | `audioBitRate` | 192 kbps | fixed across every step |
@@ -127,6 +129,49 @@ shape:
 it at — which would make a two-hour film take two hours to download. `STATIC` tells the server to
 produce the file as fast as it can, which is what a download (nobody watching it arrive) actually
 wants.
+
+---
+
+## Why the container is mkv and not mp4
+
+This shipped as `mp4` first, and every non-`ORIGINAL` download it produced was **unplayable**. The
+reason is structural, not a server misconfiguration:
+
+An MP4 keeps its sample index (`moov`) separate from its sample data (`mdat`), and the index cannot
+be written until the size of the data is known. A muxer writing to a file it can seek back into
+simply patches the header afterwards. A muxer producing bytes it is sending as it makes them cannot
+— so it writes `ftyp → free → mdat` with the `mdat` size left as `0`, the encoding that means "this
+box runs to the end of the file", and appends the `moov` behind it. That is exactly what came off the
+test tablet for a `LOW` download.
+
+Media3's `Mp4Extractor` takes the zero-sized `mdat` at its word: it treats the box as running to EOF,
+which swallows the trailing `moov`, so the index is never found and preparation never completes. The
+player reports
+
+```
+ParserException: Loading finished before preparation is complete, contentIsMalformed=true
+```
+
+Offline the item simply failed to play. Online it silently fell back to server streaming, which is
+why the fault survived the first pass of testing — the download appeared to work everywhere the user
+was likely to look.
+
+**Matroska has no equivalent ordering constraint.** Every element declares its own size as it is
+written, which is what makes it the basis of WebM and of every live-streamed mkv: the byte stream is
+a valid file at every prefix and a complete one when the transfer ends. Media3 ships a full
+`MatroskaExtractor`; `mkv` is already in this app's own
+`DeviceProfileBuilder.SUPPORTED_CONTAINER_FORMATS` with h264 among its codecs; jellyfin-android's
+device profile offers `mkv` as a transcoding container too. Server and device were always going to
+agree on it.
+
+MPEG-TS (`.ts`) would have been progressively valid as well and was the runner-up. It loses on three
+counts: no duration metadata in the container, roughly 4 % packetisation overhead on every byte
+downloaded, and it is a worse file for the user who plugs the tablet into a computer — which is the
+stated point of the whole file-naming scheme.
+
+Nothing else about the request changed: same codecs, same bitrate ceilings, same
+`EncodingContext.STATIC`, same `static = false`. And `ORIGINAL` never went near any of this — it
+fetches `/Items/{id}/Download` and keeps the source's own container and filename, exactly as before.
 
 ---
 
@@ -156,7 +201,7 @@ promise a number that is simply wrong, where `0` renders as an honest indetermin
 
 ### No resume
 
-`/Videos/{id}/stream.mp4?static=false` ignores an HTTP `Range` header — it cannot seek into a file it
+`/Videos/{id}/stream.mkv?static=false` ignores an HTTP `Range` header — it cannot seek into a file it
 has not finished producing yet. `FileDownloader` already has to handle a server that ignores `Range`
 for other reasons (some proxies do): when a ranged request comes back `200 OK` instead of
 `206 Partial Content`, it truncates the file and rewrites it from zero rather than appending a second
@@ -170,8 +215,8 @@ guarantee is not weakened; it is a property of the quality steps a user has to d
 
 ## File naming
 
-`DownloadPaths.mediaFileName` names a transcoded media file `<directory> (<quality>).mp4` — for
-example `Arrival (2016) (medium).mp4` — rather than reusing the source's own filename and container.
+`DownloadPaths.mediaFileName` names a transcoded media file `<directory> (<quality>).mkv` — for
+example `Arrival (2016) (medium).mkv` — rather than reusing the source's own filename and container.
 The source's name and extension describe a file that is never going to arrive; the transcode is a
 different set of bytes with a different container, and naming it as if it were the original would be
 a lie the user only discovers by opening it. Putting the quality in the name also means a later
@@ -226,7 +271,7 @@ tap, and nothing downstream reconsiders it.
 | class | covers |
 |---|---|
 | `DownloadFilePlannerTest` | ("download quality (M9)") a quality below the original asking for a transcode instead of the download endpoint; every transcoded step carrying its own bitrate and height; a denied download policy *not* downgrading a transcode to the static stream; the transcoded media file being named for the container the server actually sends; quality changing the media file and nothing else in the plan |
-| `DownloadPathsTest` | a transcoded download being named for the `mp4` it will actually receive; each quality getting its own file name |
+| `DownloadPathsTest` | a transcoded download being named for the container it will actually receive; a transcoded download never being named `.mp4` (the regression above, pinned across every step); each quality getting its own file name |
 | `DownloadEnqueuerTest` | ("download quality (M9)") the preference in force when the user taps Download being stamped on the row; an original download keeping the exact size the server reported; a transcoded download being sized from its runtime and bitrate instead; a transcoded download of an item with no runtime falling back to an unknown size |
 | `DownloadQueueTest` | ("download quality (M9)") the plan being built from the quality on the row, not from the live preference; a 403 on a transcoded download not being retried on the static stream; an unknown file size falling back to the enqueue step's estimate; a generous estimate not leaving a finished item short of complete |
 | `DataStoreAppPreferencesTest` | ("download quality (M9)") download quality defaulting to the original file; a download quality surviving a round trip through storage; an unrecognised stored download quality degrading to the original file; every download quality change reaching observers |

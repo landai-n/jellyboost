@@ -812,7 +812,7 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
   preference — `reconcile` deliberately rebuilds URLs each run, so a preference changed mid-transfer
   would otherwise resume a half-written transcode against `/Items/{id}/Download`, which honours
   `Range`, and mark a corrupt file `DOWNLOADED` (DECISIONS.md).
-- **The transcode URL.** `videosApi.getVideoStreamByContainerUrl` → `/Videos/{id}/stream.mp4`, with
+- **The transcode URL.** `videosApi.getVideoStreamByContainerUrl` → `/Videos/{id}/stream.mkv`, with
   the container in the *path* (one progressive file, not an HLS playlist), `static = false`,
   `videoCodec = h264`, `audioCodec = aac`, the step's `videoBitRate`/`maxHeight`, 192 kbps stereo
   AAC, `allowVideoStreamCopy = true`, and `context = EncodingContext.STATIC` — a `STREAMING`
@@ -823,7 +823,7 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
   generous estimate cannot strand a finished item below 100 %. No resume: the endpoint ignores
   `Range`, and `FileDownloader` already truncates-and-rewrites on a `200` answer to a ranged
   request, so an interruption costs a repeated transfer and never a corrupt file. A transcoded media
-  file is named `<directory> (<quality>).mp4`, and the `403`/`enableContentDownloading` fallback to
+  file is named `<directory> (<quality>).mkv`, and the `403`/`enableContentDownloading` fallback to
   the static stream is skipped for a transcoded row (it would hand back the original file).
 - **+21 unit tests** (5 `DownloadFilePlannerTest`, 2 `DownloadPathsTest`, 4 `DownloadEnqueuerTest`,
   4 `DownloadQueueTest`, 4 `DataStoreAppPreferencesTest`, 2 `SettingsViewModelTest`); branch total
@@ -832,6 +832,38 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
 - 3 DECISIONS entries (the scope addition itself; quality stored on the row rather than read live;
   a transcode is not resumable and its size is an estimate); `docs/features/download-quality.md`
   (new), `docs/ARCHITECTURE.md` updated.
+
+**Done — two defects the M9 verification walk found in the work above**
+- **A downloaded item's offline metadata can be refreshed and repaired again.** The blob-preservation
+  fix (`BrowseCacheWriter`, "a lean browse write must not gut a download's rich DTO") was applied
+  unconditionally, so it also discarded the one response strictly better than what was stored:
+  `getItem` returns the *complete* field set and funnels through the same `cacheItems` path, and its
+  blob was thrown away too. A row an earlier build had already gutted could therefore never be
+  repaired — opening the item online refetched everything and kept the bare version, leaving a blank
+  offline detail page permanently. `cacheItems`/`writeItems` now take an explicit `full: Boolean`
+  (defaulting to the safe answer, *preserve*); `OnlineJellyfinRepository.getItem` is the single call
+  site that passes `full = true`, every list read stays lean, and a full write skips the blob read-back
+  entirely since it is about to overwrite it. The flag is a **caller** statement, deliberately not a
+  heuristic sniffed out of the DTO's shape — an item that genuinely has no overview would fool any
+  such sniff in the direction that loses data. `DownloadEnqueuer` is unaffected: it upserts its
+  `DOWNLOAD_FIELDS` response straight to the DAO, bypassing the writer, so its blob is rich by
+  construction. +5 tests (3 `BrowseCacheWriterTest` pinning both directions and the repair,
+  2 `OnlineJellyfinRepositoryTest` pinning which call sites set the flag).
+- **A transcoded download is now a playable file.** The M9 quality feature asked for `mp4`, and a
+  server muxing mp4 as it sends it must emit `mdat` with size `0` ("runs to EOF") and append the
+  `moov` behind it; Media3's `Mp4Extractor` then swallows the index inside the `mdat` and fails with
+  `ParserException: … contentIsMalformed=true`. Every non-`ORIGINAL` download was unplayable offline,
+  and online it silently fell back to server streaming, which is what hid it. `DownloadQuality.
+  CONTAINER` is now `mkv` — every element in Matroska carries its own size as it is written, so the
+  file is valid at every prefix; Media3 has a full `MatroskaExtractor` and `mkv` is already in this
+  app's `SUPPORTED_CONTAINER_FORMATS`. Codecs, bitrates, `static = false` and
+  `EncodingContext.STATIC` are unchanged, and `ORIGINAL` is byte-identical to before. `.ts` was the
+  runner-up, rejected for having no duration metadata and ~4 % packetisation overhead (DECISIONS.md).
+  +1 test (`a transcoded download is never named mp4`, pinning the whole ladder); two existing
+  expectations changed from `.mp4` to `.mkv` because the assertion *was* the bug, both explicitly
+  recorded in the DECISIONS entry.
+- Branch total **808** unit tests, 0 failures, 0 skipped. Full gate green
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
 
 **Next — device verification (orchestrator)**
 1. `./gradlew installDebug`, launch signed in.
@@ -860,7 +892,9 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
    download one item — the queue tab should show an exact size and the file on disk should keep the
    server's own filename and container. Set it to *Low*, download a second item — the queue row
    should show an approximate size that keeps moving (not an indeterminate bar), the file should
-   land as `<directory> (low).mp4`, and it should play offline. Pause it mid-transfer and resume:
+   land as `<directory> (low).mkv`, and it should play offline **from the local file** (watch logcat
+   for the local resolver, not a stream URL — an mp4 build of this failed here with
+   `contentIsMalformed=true` and silently fell back to streaming). Pause it mid-transfer and resume:
    the transfer restarts from zero (expected — the endpoint ignores `Range`) and the finished file
    is still playable. Confirm changing the setting while something is downloading does **not** touch
    the running item (`adb shell run-as … sqlite3 databases/jellyfin-native.db
@@ -870,6 +904,12 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
    ~30 s (six 5-second ticks). Logcat should show six `User data for … stays pending (offline, not
    pushing)` debug lines and **zero** `stays pending: …` warning-with-stack-trace lines. Reconnect —
    the existing M8 drain path (`UserDataSyncTrigger` → `Pushed the local user data…`) still fires.
+8. **Offline metadata repair:** find a downloaded item whose offline detail page is bare (a pre-fix
+   build gutted its blob — the walk found several). Online, open its detail page once, then go
+   offline and open it again: the overview, genres, cast and taglines should now all be there.
+   Then the other direction, which must **not** regress: with that item still downloaded, scroll the
+   home and library screens past it online several times, go offline, re-open it — the description
+   must still be present, and its position in the offline *Latest* row must not have moved.
 
 **Known issues (M9 settings + app polish)**
 - No storage-location picker; the Downloads section shows the fixed location as text only. Ships

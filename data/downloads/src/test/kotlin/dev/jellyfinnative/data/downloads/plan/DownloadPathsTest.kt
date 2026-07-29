@@ -5,6 +5,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 
@@ -122,12 +123,27 @@ class DownloadPathsTest {
     }
 
     @Test
-    fun `a transcoded download is named for the mp4 it will actually receive`() {
-        val item = movie(path = "/media/films/Arrival.2016.2160p.mkv")
+    fun `a transcoded download is named for the container it will actually receive`() {
+        val item = movie(path = "/media/films/Arrival.2016.2160p.h264.mp4")
 
-        // Neither the source name nor its container describes what arrives, so both are dropped.
+        // Neither the source name nor its container describes what arrives, so both are dropped —
+        // and what arrives is Matroska, whatever the source was.
         DownloadPaths.mediaFileName(item, "Arrival (2016)", DownloadQuality.MEDIUM) shouldBe
-            "Arrival (2016) (medium).mp4"
+            "Arrival (2016) (medium).mkv"
+    }
+
+    @Test
+    fun `a transcoded download is never named mp4`() {
+        val item = movie(path = null)
+
+        // Not a style preference: a server muxing mp4 on the fly cannot write the `moov` before the
+        // `mdat` it indexes, so it emits a zero-sized `mdat` running to EOF with the `moov` behind
+        // it. Media3 reads that as one `mdat` swallowing the index and fails the whole load with
+        // `contentIsMalformed=true` — the file is unplayable, which is the only thing a download is
+        // for (DECISIONS.md, 2026-07-29).
+        DownloadQuality.entries.filter { it.isTranscoded }.forEach { quality ->
+            DownloadPaths.mediaFileName(item, "Arrival (2016)", quality) shouldEndWith ".mkv"
+        }
     }
 
     @Test

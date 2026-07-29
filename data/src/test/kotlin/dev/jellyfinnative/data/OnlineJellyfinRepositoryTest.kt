@@ -3,6 +3,8 @@ package dev.jellyfinnative.data
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.CollectionKind
+import dev.jellyfinnative.core.common.model.ItemQuery
+import dev.jellyfinnative.data.cache.BrowseCacheWriter
 import dev.jellyfinnative.data.mapper.FakeImageUrlFactory
 import dev.jellyfinnative.data.mapper.ItemMapper
 import io.kotest.matchers.collections.shouldContainExactly
@@ -17,6 +19,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -41,6 +44,7 @@ import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
+import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
@@ -67,12 +71,13 @@ class OnlineJellyfinRepositoryTest {
     private val tvShowsApi = mockk<TvShowsApi>()
     private val userLibraryApi = mockk<UserLibraryApi>()
     private val libraryApi = mockk<LibraryApi>()
+    private val browseCache = mockk<BrowseCacheWriter>(relaxed = true)
 
     private val repository =
         OnlineJellyfinRepository(
             apiClient = apiClient,
             mapper = ItemMapper(FakeImageUrlFactory()),
-            browseCache = mockk(relaxed = true),
+            browseCache = browseCache,
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 
@@ -260,6 +265,37 @@ class OnlineJellyfinRepositoryTest {
 
             (result as AppResult.Success).value.name shouldBe "Arrival"
             coVerify(exactly = 1) { userLibraryApi.getItem(moviesLibraryId, any()) }
+        }
+
+    @Test
+    fun `getItem caches its response as a full write, so a downloaded item's blob is replaced`() =
+        runTest {
+            coEvery { userLibraryApi.getItem(any(), any()) } returns
+                Response(
+                    content = itemDto(BaseItemKind.MOVIE, "Arrival"),
+                    status = 200,
+                    headers = emptyMap(),
+                )
+
+            repository.getItem(moviesLibraryId.toString())
+
+            // `/Users/{userId}/Items/{itemId}` is the one endpoint that serialises the complete
+            // field set, so it is the one write allowed to overwrite the rich blob a download
+            // stored — and therefore the only thing that can repair a row an older build gutted.
+            verify(exactly = 1) { browseCache.cacheItems(any(), full = true) }
+        }
+
+    @Test
+    fun `a list read caches its response as a lean write, so a downloaded item keeps its blob`() =
+        runTest {
+            coEvery { itemsApi.getItems(any<GetItemsRequest>()) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.MOVIE, "Arrival")))
+
+            repository.getItems(ItemQuery(parentId = moviesLibraryId.toString()))
+
+            // A list request only asks for the fields the list draws; writing that through would
+            // gut the overview and genres of anything downloaded.
+            verify(exactly = 1) { browseCache.cacheItems(any(), full = false) }
         }
 
     @Test

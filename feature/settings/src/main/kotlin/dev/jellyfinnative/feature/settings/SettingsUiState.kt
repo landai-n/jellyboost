@@ -2,6 +2,7 @@ package dev.jellyfinnative.feature.settings
 
 import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
+import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
 
 /**
@@ -23,6 +24,8 @@ data class SettingsUiState(
     val downloadQuality: DownloadQuality = DownloadQuality.ORIGINAL,
     val forceOffline: Boolean = false,
     val storage: StorageUsage = StorageUsage(),
+    /** The volumes downloads can live on; empty until the pipeline has answered. */
+    val storageLocations: StorageLocations = StorageLocations(),
     /** Who is signed in; `null` when the session is absent or still restoring. */
     val account: AccountInfo? = null,
 )

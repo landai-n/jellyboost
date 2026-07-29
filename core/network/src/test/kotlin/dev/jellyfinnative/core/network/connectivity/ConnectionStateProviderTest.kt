@@ -70,6 +70,10 @@ class ConnectionStateProviderTest {
 
             override suspend fun setDownloadQuality(quality: DownloadQuality) = Unit
 
+            override val downloadStorageVolumeId: Flow<String?> = MutableStateFlow(null)
+
+            override suspend fun setDownloadStorageVolumeId(volumeId: String?) = Unit
+
             // Likewise M9's player preferences: present so the fake satisfies the interface.
             override val introSkipMode: Flow<SegmentSkipMode> = MutableStateFlow(SegmentSkipMode.SHOW_BUTTON)
 

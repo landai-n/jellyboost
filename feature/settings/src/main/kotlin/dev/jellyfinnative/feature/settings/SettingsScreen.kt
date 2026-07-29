@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +42,9 @@ import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.core.ui.theme.JellyfinTheme
+import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
+import dev.jellyfinnative.data.downloads.model.StorageVolumeOption
 
 /**
  * The Settings screen (docs/PLAN.md, "Screens" → Settings): preferences, account and sign-out.
@@ -51,10 +54,10 @@ import dev.jellyfinnative.data.downloads.model.StorageUsage
  * menu"). It is a pushed destination, not a bottom-nav tab, so it owns a `TopAppBar` with a back
  * action the way `LibraryGridScreen` and `ItemDetailScreen` do.
  *
- * The storage **location picker** the plan lists is deliberately absent: it ships with SAF support,
- * which was deferred behind the `DownloadStorage` seam at M7 (DECISIONS.md 2026-07-29, "the storage
- * location picker does not ship with the settings screen"). The Downloads section reports where
- * files live and how much room is left, and nothing more.
+ * The Downloads section's storage **location picker** chooses between the app-specific directories
+ * the platform reports — internal storage and, when one is in, the SD card. Picking an arbitrary
+ * folder still waits on SAF, which stays deferred behind the `DownloadStorage` seam (DECISIONS.md
+ * 2026-07-29, "the storage location picker ships now, backed by secondary volumes").
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call.
  * @param onBack pops this destination off the back stack.
@@ -76,6 +79,7 @@ fun SettingsScreen(
                 onPipOnLeave = viewModel::setPipOnLeave,
                 onWifiOnly = viewModel::setDownloadOverWifiOnly,
                 onDownloadQuality = viewModel::setDownloadQuality,
+                onStorageLocation = viewModel::setStorageLocation,
                 onForceOffline = viewModel::setForceOffline,
                 onSignOut = viewModel::signOut,
             ),
@@ -91,6 +95,8 @@ data class SettingsActions(
     val onPipOnLeave: (Boolean) -> Unit,
     val onWifiOnly: (Boolean) -> Unit,
     val onDownloadQuality: (DownloadQuality) -> Unit,
+    /** Volume id, and whether the user agreed to lose the downloads already on the device. */
+    val onStorageLocation: (String, Boolean) -> Unit,
     val onForceOffline: (Boolean) -> Unit,
     /** `true` also removes every downloaded file before the session ends. */
     val onSignOut: (Boolean) -> Unit,
@@ -221,8 +227,125 @@ private fun DownloadsSection(
         )
         DownloadQualityGroup(selected = state.downloadQuality, onSelect = actions.onDownloadQuality)
         StorageRow(usage = state.storage)
+        StorageLocationGroup(locations = state.storageLocations, onSelect = actions.onStorageLocation)
     }
 }
+
+/**
+ * The storage-location picker (docs/PLAN.md, "Screens" → Settings).
+ *
+ * One row per **mounted** volume: internal storage always, the SD card when there is one. A card
+ * that is not in the device is not a disabled row, it is no row — there is nothing to explain about
+ * a choice that is not on offer, and the missing-selection warning above covers the one case where
+ * its absence matters. The group hides itself entirely when there is only one place to put files,
+ * which is what most devices look like.
+ *
+ * Switching while downloads exist deletes them (the plan's v1 policy — files are not moved yet), so
+ * that switch goes through a confirmation. Switching with an empty device is immediate: there is
+ * nothing to lose and nothing to warn about.
+ */
+@Composable
+private fun StorageLocationGroup(
+    locations: StorageLocations,
+    onSelect: (String, Boolean) -> Unit,
+) {
+    if (locations.volumes.size < 2) return
+    var pendingVolumeId by remember { mutableStateOf<String?>(null) }
+
+    if (locations.selectedVolumeMissing) {
+        Text(
+            text = stringResource(R.string.settings_storage_missing),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier =
+                Modifier.padding(
+                    start = Dimens.ScreenPadding,
+                    end = Dimens.ScreenPadding,
+                    bottom = Dimens.SpaceSmall,
+                ),
+        )
+    }
+
+    SettingsChoiceGroup(label = stringResource(R.string.settings_storage_picker)) {
+        locations.volumes.forEach { volume ->
+            SettingsChoiceRow(
+                label = volume.label(),
+                supportingText =
+                    stringResource(R.string.settings_storage_volume_free, formatBytes(volume.availableBytes)),
+                selected = volume.id == locations.activeVolumeId,
+                onSelect = {
+                    when {
+                        // Tapping the row that is already in force normally does nothing. The
+                        // exception is a stale choice: with the card out, this is how the user says
+                        // "just use this one" — the files are already here, so nothing is deleted.
+                        volume.id == locations.activeVolumeId ->
+                            if (locations.selectedVolumeMissing) onSelect(volume.id, false)
+
+                        locations.downloadCount > 0 -> pendingVolumeId = volume.id
+                        else -> onSelect(volume.id, false)
+                    }
+                },
+            )
+        }
+    }
+
+    pendingVolumeId?.let { volumeId ->
+        SwitchStorageDialog(
+            downloadCount = locations.downloadCount,
+            onDismiss = { pendingVolumeId = null },
+            onConfirm = {
+                pendingVolumeId = null
+                onSelect(volumeId, true)
+            },
+        )
+    }
+}
+
+/** Confirms that switching location throws the downloads away, because nothing moves them yet. */
+@Composable
+private fun SwitchStorageDialog(
+    downloadCount: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.settings_storage_switch_title)) },
+        text = {
+            Text(
+                text =
+                    pluralStringResource(
+                        R.plurals.settings_storage_switch_message,
+                        downloadCount,
+                        downloadCount,
+                    ),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.settings_storage_switch_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.settings_cancel))
+            }
+        },
+    )
+}
+
+/**
+ * What to call a volume.
+ *
+ * The platform's own description first — it is localised, and it knows whether the thing is an SD
+ * card, a USB drive or something a manufacturer named itself. Our two strings are the fallback for
+ * the devices that will not say.
+ */
+@Composable
+private fun StorageVolumeOption.label(): String =
+    description ?: stringResource(
+        if (isRemovable) R.string.settings_storage_sd_card else R.string.settings_storage_internal,
+    )
 
 /**
  * The download-quality picker (M9).
@@ -259,7 +382,12 @@ private fun DownloadQualityGroup(
     )
 }
 
-/** Informational only — changing where downloads live waits on SAF support (see the file KDoc). */
+/**
+ * How much room the downloads take and where they are — the *active* root, fallback included.
+ *
+ * Still informational: the picker underneath is what changes it. The path stays on screen because
+ * it is the one thing a user can check against a file manager when a card is involved.
+ */
 @Composable
 private fun StorageRow(usage: StorageUsage) {
     SettingsInfoRow(
@@ -425,7 +553,29 @@ private fun SettingsPreview() {
                         StorageUsage(
                             usedBytes = 12_300_000_000L,
                             availableBytes = 41_000_000_000L,
-                            rootPath = "/storage/emulated/0/Android/data/dev.jellyfinnative.app/files",
+                            rootPath = "/storage/emulated/0/Android/data/dev.jellyfinnative.app/files/downloads",
+                        ),
+                    storageLocations =
+                        StorageLocations(
+                            volumes =
+                                listOf(
+                                    StorageVolumeOption(
+                                        id = "primary",
+                                        description = "Internal shared storage",
+                                        isRemovable = false,
+                                        path = "/storage/emulated/0/Android/data/dev.jellyfinnative.app/files",
+                                        availableBytes = 41_000_000_000L,
+                                    ),
+                                    StorageVolumeOption(
+                                        id = "1A2B-3C4D",
+                                        description = "SD card",
+                                        isRemovable = true,
+                                        path = "/storage/1A2B-3C4D/Android/data/dev.jellyfinnative.app/files",
+                                        availableBytes = 118_000_000_000L,
+                                    ),
+                                ),
+                            activeVolumeId = "primary",
+                            downloadCount = 3,
                         ),
                     account = AccountInfo(userName = "casey", serverName = "Living Room"),
                 ),
@@ -436,6 +586,7 @@ private fun SettingsPreview() {
                     onPipOnLeave = {},
                     onWifiOnly = {},
                     onDownloadQuality = {},
+                    onStorageLocation = { _, _ -> },
                     onForceOffline = {},
                     onSignOut = {},
                 ),

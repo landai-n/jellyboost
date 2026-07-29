@@ -88,13 +88,20 @@ internal fun SettingsSwitchRow(
     }
 }
 
-/** One option inside a [SettingsSection]'s choice group; the whole row selects it. */
+/**
+ * One option inside a [SettingsSection]'s choice group; the whole row selects it.
+ *
+ * [supportingText] is for a fact about the option the label cannot carry — how much room is left on
+ * a volume, say. It is not a place for explanation: a group whose options need explaining wants the
+ * caveat under the group, the way the download-quality picker does it.
+ */
 @Composable
 internal fun SettingsChoiceRow(
     label: String,
     selected: Boolean,
     onSelect: () -> Unit,
     modifier: Modifier = Modifier,
+    supportingText: String? = null,
 ) {
     Row(
         modifier =
@@ -106,12 +113,7 @@ internal fun SettingsChoiceRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
+        RowLabel(label = label, supportingText = supportingText, modifier = Modifier.weight(1f))
         RadioButton(selected = selected, onClick = null)
     }
 }

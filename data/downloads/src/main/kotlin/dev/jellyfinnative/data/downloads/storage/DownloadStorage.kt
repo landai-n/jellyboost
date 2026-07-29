@@ -1,8 +1,6 @@
 package dev.jellyfinnative.data.downloads.storage
 
-import android.content.Context
 import android.os.StatFs
-import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -16,10 +14,11 @@ import javax.inject.Singleton
  * which needs no runtime permission, is wiped on uninstall (so a removed app leaves no gigabytes
  * behind) and is excluded from the media scanner.
  *
- * The interface exists so that the optional SAF-tree / secondary-volume backend the plan also
- * describes can be added without touching the queue, the file plan or the delete cascade. v1 ships
- * only the [FileDownloadStorage] implementation — see DECISIONS.md 2026-07-28, "M7: SAF and
- * secondary-volume storage deferred".
+ * The root is no longer fixed: `StorageLocationManager` resolves it from the volume the user picked
+ * in Settings, which may be an SD card (DECISIONS.md 2026-07-29, "the storage location picker ships
+ * now, backed by secondary volumes"). It stays a plain `java.io.File` on every volume, so this
+ * interface is unchanged by that; the SAF-tree backend the plan also describes is still the reason
+ * the interface exists, and is still deferred.
  */
 interface DownloadStorage {
     /** Absolute path of the storage root, or `null` when no external volume is mounted. */
@@ -50,25 +49,27 @@ interface DownloadStorage {
 }
 
 /**
- * [DownloadStorage] on plain `java.io.File`, rooted at `getExternalFilesDir(null)/downloads`.
+ * [DownloadStorage] on plain `java.io.File`, rooted at `<chosen volume>/downloads`.
  *
  * Every method is defensive to the point of being boring: an unmounted volume, a directory that
  * cannot be created, a file that vanished between two calls. None of these may throw, because they
  * all run inside the download worker, where an exception is the difference between "this one item
  * failed" and "the whole queue stopped".
+ *
+ * Which volume that is comes from [StorageLocationManager] rather than from the `Context` directly,
+ * which is the whole of what makes the location configurable — every path in the pipeline is built
+ * from this class, so there is exactly one place the root has to change.
  */
 @Singleton
 class FileDownloadStorage
     @Inject
     constructor(
-        @ApplicationContext private val context: Context,
+        private val locations: StorageLocationManager,
     ) : DownloadStorage {
         private fun root(): File? =
-            context.getExternalFilesDir(null)?.let { external ->
-                File(external, DOWNLOADS_DIRECTORY).also { directory ->
-                    if (!directory.exists() && !directory.mkdirs()) {
-                        Timber.w("Could not create the downloads root at %s", directory)
-                    }
+            locations.activeRoot()?.also { directory ->
+                if (!directory.exists() && !directory.mkdirs()) {
+                    Timber.w("Could not create the downloads root at %s", directory)
                 }
             }
 
@@ -112,11 +113,6 @@ class FileDownloadStorage
             return runCatching { StatFs(root.absolutePath).availableBytes }
                 .onFailure { Timber.w(it, "Could not stat the downloads volume") }
                 .getOrDefault(0L)
-        }
-
-        private companion object {
-            /** Sub-directory of the app's external files dir, per docs/PLAN.md. */
-            const val DOWNLOADS_DIRECTORY = "downloads"
         }
     }
 

@@ -42,8 +42,9 @@ class SettingsViewModel
             combine(
                 preferences(),
                 downloads.observeStorage(),
+                downloads.observeStorageLocations(),
                 sessionRepository.sessionState,
-            ) { prefs, storage, session ->
+            ) { prefs, storage, locations, session ->
                 SettingsUiState(
                     introSkipMode = prefs.introSkipMode,
                     outroSkipMode = prefs.outroSkipMode,
@@ -52,6 +53,7 @@ class SettingsViewModel
                     downloadQuality = prefs.downloadQuality,
                     forceOffline = prefs.forceOffline,
                     storage = storage,
+                    storageLocations = locations,
                     account = session.toAccountInfo(),
                 )
             }.stateIn(
@@ -89,6 +91,27 @@ class SettingsViewModel
          */
         fun setDownloadQuality(quality: DownloadQuality) {
             viewModelScope.launch { appPreferences.setDownloadQuality(quality) }
+        }
+
+        /**
+         * Points future downloads at another volume.
+         *
+         * The screen asks before setting [deleteExistingDownloads], but the rule is not the
+         * screen's: `DownloadRepository` refuses the switch outright while downloads exist and the
+         * caller has not agreed to lose them (docs/PLAN.md's v1 policy — nothing moves files yet).
+         * A refusal is logged rather than surfaced: it can only be reached by a race with a
+         * download starting between the dialog and the confirm, and the picker simply stays put.
+         */
+        fun setStorageLocation(
+            volumeId: String,
+            deleteExistingDownloads: Boolean,
+        ) {
+            viewModelScope.launch {
+                val result = downloads.setStorageLocation(volumeId, deleteExistingDownloads)
+                if (result is AppResult.Failure) {
+                    Timber.w("Could not switch download storage to %s: %s", volumeId, result.error)
+                }
+            }
         }
 
         /** Pins the app to offline mode, or releases it. */
@@ -130,7 +153,7 @@ class SettingsViewModel
         /**
          * The six preference keys as one value.
          *
-         * `combine` tops out at five typed flows, and the state needs eight sources; folding the
+         * `combine` tops out at five typed flows, and the state needs nine sources; folding the
          * preferences into one intermediate keeps the outer `combine` typed rather than dropping to
          * the `Array<Any?>` overload and casting each element back. The sixth key is folded in by a
          * second `combine` over the first for the same reason — one more nested call is cheaper to

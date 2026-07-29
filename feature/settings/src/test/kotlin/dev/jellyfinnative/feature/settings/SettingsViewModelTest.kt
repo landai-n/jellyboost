@@ -11,7 +11,9 @@ import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.downloads.model.DownloadItem
+import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
+import dev.jellyfinnative.data.downloads.model.StorageVolumeOption
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -50,6 +52,7 @@ class SettingsViewModelTest {
     private val downloadQuality = MutableStateFlow(DownloadQuality.ORIGINAL)
     private val forceOffline = MutableStateFlow(false)
     private val storage = MutableStateFlow(StorageUsage())
+    private val storageLocations = MutableStateFlow(StorageLocations())
     private val sessionState = MutableStateFlow<SessionState>(SessionState.Unknown)
     private val items = MutableStateFlow<List<DownloadItem>>(emptyList())
 
@@ -68,8 +71,10 @@ class SettingsViewModelTest {
         every { appPreferences.forceOffline } returns forceOffline
         every { sessionRepository.sessionState } returns sessionState
         every { downloads.observeStorage() } returns storage
+        every { downloads.observeStorageLocations() } returns storageLocations
         every { downloads.observeDownloads() } returns items
         coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+        coEvery { downloads.setStorageLocation(any(), any()) } returns AppResult.Success(Unit)
     }
 
     @AfterEach
@@ -201,6 +206,78 @@ class SettingsViewModelTest {
             coVerify(exactly = 1) { appPreferences.setForceOffline(true) }
         }
 
+    // ---- storage location -------------------------------------------------------------------------
+
+    @Test
+    fun `the volumes downloads can live on reach the state`() =
+        runTest(dispatcher) {
+            storageLocations.value =
+                StorageLocations(
+                    volumes = listOf(volumeOption("primary"), volumeOption("1A2B-3C4D")),
+                    activeVolumeId = "1A2B-3C4D",
+                    selectedVolumeMissing = false,
+                    downloadCount = 2,
+                )
+
+            viewModel().uiState.test {
+                skipItems(1)
+                val locations = awaitItem().storageLocations
+
+                locations.volumes.map { it.id } shouldBe listOf("primary", "1A2B-3C4D")
+                locations.activeVolumeId shouldBe "1A2B-3C4D"
+                locations.downloadCount shouldBe 2
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a card removed while the screen is open is reflected without reopening it`() =
+        runTest(dispatcher) {
+            viewModel().uiState.test {
+                awaitItem().storageLocations.selectedVolumeMissing shouldBe false
+
+                storageLocations.value = StorageLocations(selectedVolumeMissing = true)
+
+                awaitItem().storageLocations.selectedVolumeMissing shouldBe true
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `picking a volume with nothing downloaded switches without deleting anything`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setStorageLocation("1A2B-3C4D", deleteExistingDownloads = false)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.setStorageLocation("1A2B-3C4D", false) }
+        }
+
+    @Test
+    fun `a confirmed switch passes the user's agreement to lose the downloads through`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.setStorageLocation("1A2B-3C4D", deleteExistingDownloads = true)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.setStorageLocation("1A2B-3C4D", true) }
+        }
+
+    @Test
+    fun `a refused switch is survived rather than crashed on`() =
+        runTest(dispatcher) {
+            // The repository refuses when downloads appeared between the dialog and the confirm.
+            coEvery { downloads.setStorageLocation(any(), any()) } returns AppResult.Failure(AppError.Storage())
+            val model = viewModel()
+
+            model.setStorageLocation("1A2B-3C4D", deleteExistingDownloads = false)
+            advanceUntilIdle()
+
+            model.uiState.value.storageLocations shouldBe StorageLocations()
+        }
+
     // ---- account ----------------------------------------------------------------------------------
 
     @Test
@@ -284,6 +361,15 @@ class SettingsViewModelTest {
             appPreferences = appPreferences,
             sessionRepository = sessionRepository,
             downloads = downloads,
+        )
+
+    private fun volumeOption(id: String) =
+        StorageVolumeOption(
+            id = id,
+            description = null,
+            isRemovable = id != "primary",
+            path = "/storage/$id/Android/data/app/files",
+            availableBytes = 1_000L,
         )
 
     private fun item(id: String) =

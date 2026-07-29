@@ -14,7 +14,7 @@ through `:core:network`, and asks `:data:downloads` for the storage figures and 
 | Section | Rows |
 |---|---|
 | Playback | *Skip intro* and *Skip outro* — three-way pickers over `SegmentSkipMode` (`OFF` / `SHOW_BUTTON` / `AUTO_SKIP`); *Picture-in-picture* — enter a floating window when leaving the app mid-playback. |
-| Downloads | *Wi-Fi only* — pause transfers on metered networks; a storage line reporting used/free bytes and where the files live. Informational only, no picker. |
+| Downloads | *Wi-Fi only* — pause transfers on metered networks; *Download quality*; a storage line reporting used/free bytes and where the files live; *Storage location* — one option per mounted volume (internal storage, SD card), shown only on a device that has more than one. |
 | Connectivity | *Offline mode* — the same force-offline preference the home overflow toggles and the offline banner reports. |
 | Account | The signed-in user name and the server name, and *Sign out* behind a confirm dialog with an optional *Also delete downloads*. |
 
@@ -31,9 +31,10 @@ JellyfinNavHost
   composable<Routes.Settings> → SettingsScreen(viewModel = hiltViewModel(), onBack = popBackStack)
                                      │
                                      ▼
-                            SettingsViewModel  ── AppPreferences        (5 keys, read + write)
+                            SettingsViewModel  ── AppPreferences        (6 keys, read + write)
                                      │         ── SessionRepository     (sessionState, signOut)
-                                     │         └─ DownloadRepository    (observeStorage, observeDownloads, delete)
+                                     │         └─ DownloadRepository    (observeStorage, observeStorageLocations,
+                                     │                                   setStorageLocation, observeDownloads, delete)
                                      ▼
                             StateFlow<SettingsUiState>
                                      │
@@ -52,9 +53,9 @@ JellyfinNavHost
 | `SettingsScreen.kt` | `Scaffold` + `TopAppBar`, the four sections, the sign-out dialog, the preview. |
 | `SettingsRows.kt` | The row vocabulary — section, switch row, choice group/row, info row — plus `formatBytes`. |
 
-The state combines seven sources. `combine` tops out at five typed flows, so the five preference
+The state combines nine sources. `combine` tops out at five typed flows, so the six preference
 keys fold into one private `Preferences` value first and the outer `combine` takes that plus the
-storage usage and the session. The alternative — the `Array<Any?>` overload — would mean casting
+storage usage, the storage locations and the session. The alternative — the `Array<Any?>` overload — would mean casting
 each element back by index, which is exactly the kind of thing that survives a refactor and fails at
 runtime.
 
@@ -145,13 +146,36 @@ nothing calls. `MainViewModel` still injects `SessionRepository` for `restoreSes
 
 ---
 
+## Storage location
+
+The picker the plan asks for, added in M9 polish (docs/POLISH.md, "New run"). It lists the volumes
+`getExternalFilesDirs(null)` reports — internal storage, plus the SD card when one is in — and hides
+itself on a device with only one. Each row is named by the platform (`StorageVolume.getDescription`,
+already localised) with *Internal storage* / *SD card* as our fallback, and carries the volume's
+free space as supporting text.
+
+Two behaviours are worth knowing:
+
+- **Switching deletes.** Nothing moves downloaded files between volumes yet (`MoveStorageWorker` is
+  deferred), so picking a different volume while downloads exist opens a confirmation — *Delete and
+  switch* — and picking one with an empty device is immediate. The rule is enforced in
+  `DownloadRepository.setStorageLocation`, not in the dialog: the screen asking nicely is a
+  courtesy, the repository refusing is the guarantee.
+- **A removed card is announced, not hidden.** If the chosen volume is not mounted the pipeline
+  falls back to internal storage, and the section says so in `colorScheme.error` above the group.
+
+Everything behind it — the token stored in DataStore, the fallback rule, why the pipeline still runs
+on `java.io.File` — is in docs/features/downloads.md, "Storage". Choosing an *arbitrary* folder still
+waits on SAF (DECISIONS.md, 2026-07-29).
+
+---
+
 ## Not here
 
-**The storage location picker.** The plan lists it; it does not ship at M9. SAF/SD-card support was
-deferred at M7 behind the `DownloadStorage` seam precisely so a picker could be added later without
-reworking the pipeline, and that work does not exist yet — a picker now would have nothing real to
-pick between. It ships with SAF support. See DECISIONS.md, 2026-07-29, *"M9: the storage location
-picker does not ship with the settings screen"*.
+**An arbitrary storage folder.** The picker above chooses between app-specific volume directories,
+which need no permission and no persisted URI grant. Pointing downloads at any folder the user
+browses to needs SAF and a `DocumentFile` backend behind the `DownloadStorage` seam, which is still
+deferred.
 
 **The server address.** The Account section shows the user name and the server *name* only.
 `SessionState.LoggedIn` carries no address and `:core:network` exposes no accessor for one; adding
@@ -167,7 +191,7 @@ later, it is a `SessionRepository` change first.
 
 | Suite | Covers |
 |---|---|
-| `SettingsViewModelTest` | each of the five preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out |
+| `SettingsViewModelTest` | each of the six preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out |
 
 `SettingsContent` is stateless and takes a `SettingsUiState` plus a `SettingsActions` bundle, so the
 `@Preview` renders the full screen — every section, a live storage figure, a signed-in account —

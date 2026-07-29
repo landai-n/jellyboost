@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.Flow
  * they live only in [SecureCredentialStore], never in DataStore and never in Room.
  *
  * Settings arrive per milestone; M6 adds the one the offline read path needs and M7 the one the
- * download queue needs. The remaining keys already named in [PreferenceKeys] (max bitrate, storage
- * location) join this interface with the milestones that consume them (M9).
+ * download queue needs. The storage-location key joined at M9 polish, when the picker that reads it
+ * shipped. The one key still named in [PreferenceKeys] but absent here — max streaming bitrate —
+ * joins with the milestone that consumes it.
  */
 interface AppPreferences {
     /**
@@ -59,6 +60,24 @@ interface AppPreferences {
 
     /** Sets the quality future downloads are fetched at. */
     suspend fun setDownloadQuality(quality: DownloadQuality)
+
+    /**
+     * The id of the volume downloaded files are written to, or `null` while the default holds.
+     *
+     * `null` is not "no storage": it means *the primary volume*, which is what a fresh install
+     * uses and what every download before the picker existed was written to. Storing the default as
+     * an absent key rather than as the literal id keeps the two indistinguishable, so a device
+     * whose volume ids change under it still resolves to somewhere writable.
+     *
+     * The value is a **stable token** — the volume's UUID, or `"primary"` — and deliberately not an
+     * index into `getExternalFilesDirs`, which reorders when a card is removed, nor a path, which
+     * is only stable while the card is mounted. A stored id no volume answers to (the card was
+     * taken out) falls back to the primary volume rather than failing; see `StorageLocationManager`.
+     */
+    val downloadStorageVolumeId: Flow<String?>
+
+    /** Chooses the volume downloads are written to; `null` restores the default. */
+    suspend fun setDownloadStorageVolumeId(volumeId: String?)
 
     // M9 player -----------------------------------------------------------------------------------
 

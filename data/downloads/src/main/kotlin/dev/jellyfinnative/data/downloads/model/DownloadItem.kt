@@ -85,6 +85,22 @@ data class DownloadItem(
                 projectedBytes != null -> SizeCertainty.APPROXIMATE
                 else -> SizeCertainty.CEILING
             }
+
+    /**
+     * Whether the queue row offers *Pause*.
+     *
+     * Only an [DownloadQuality.ORIGINAL] download does. `/Videos/{id}/stream.mkv?static=false`
+     * ignores an HTTP `Range` header — the server cannot seek into a file it has not finished
+     * producing — so a paused transcode does not resume, it **restarts from zero**
+     * (docs/features/download-quality.md, *"No resume"*). A pause button that silently throws away
+     * however many hundred megabytes have arrived is not a pause, and offering it is worse than not
+     * offering it: *Cancel* already says what it does, and says it honestly.
+     *
+     * Resume is still offered on a paused or failed transcoded row — the operation is legitimate,
+     * it just costs the whole transfer again, and a row left `PAUSED` by an earlier build has to
+     * have some way out.
+     */
+    val isPausable: Boolean get() = !quality.isTranscoded
 }
 
 /** How well the size on a [DownloadItem] is known; see [DownloadItem.sizeCertainty]. */

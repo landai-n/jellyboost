@@ -233,7 +233,9 @@ and the notification are all Flows over it.
 - **Interrupted rows** (`DOWNLOADING` from a dead process) are put back to `QUEUED` when the worker
   starts. That is what lets `nextRunnable` tell "mine" from "someone else's".
 - **Pause** stops the work (the only way to interrupt a transfer in flight) and restarts it, so the
-  queue moves on to the next item.
+  queue moves on to the next item. It is offered on `ORIGINAL` rows only: a transcode cannot resume,
+  so pausing one would throw the whole transfer away (`DownloadItem.isPausable`, and
+  docs/features/download-quality.md, *"No resume"*).
 - **A network loss is not a pause**: the row stays `QUEUED` and WorkManager's constraint resumes it.
 
 ---

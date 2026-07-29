@@ -158,7 +158,8 @@ private fun QueueRowActions(
         }
 
         // Paused and failed items both offer "resume": retrying a failure is the same operation,
-        // and the partial file means it costs only the bytes that are missing.
+        // and for an original download the partial file means it costs only the bytes that are
+        // missing.
         if (item.status == DownloadStatus.PAUSED || item.status == DownloadStatus.ERROR) {
             IconButton(onClick = { actions.onResume(item) }) {
                 Icon(
@@ -166,7 +167,10 @@ private fun QueueRowActions(
                     contentDescription = stringResource(R.string.downloads_action_resume),
                 )
             }
-        } else {
+        } else if (item.isPausable) {
+            // A transcode cannot be resumed — the server ignores `Range` on a file it is still
+            // producing — so pausing one would silently discard everything it has downloaded. See
+            // [DownloadItem.isPausable]; *Cancel* remains, and says what it actually does.
             IconButton(onClick = { actions.onPause(item) }) {
                 Icon(
                     imageVector = Icons.Filled.Pause,

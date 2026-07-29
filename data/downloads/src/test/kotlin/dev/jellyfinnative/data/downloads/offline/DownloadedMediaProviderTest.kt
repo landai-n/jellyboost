@@ -9,6 +9,7 @@ import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.DownloadFixtures
+import dev.jellyfinnative.data.downloads.engine.MatroskaSeekIndexRepair
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -16,6 +17,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -41,11 +43,14 @@ class DownloadedMediaProviderTest {
     private val itemDao = mockk<ItemDao>()
     private val itemMapper = mockk<ItemEntityMapper>()
 
+    private val seekIndex = mockk<MatroskaSeekIndexRepair>(relaxed = true)
+
     private val provider =
         DownloadedMediaProvider(
             downloadDao = downloadDao,
             itemDao = itemDao,
             itemMapper = itemMapper,
+            seekIndex = seekIndex,
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 
@@ -139,6 +144,35 @@ class DownloadedMediaProviderTest {
                 .mediaStreams
                 ?.single()
                 ?.index shouldBe 3
+        }
+
+    // ---- the seek index a transcoded download arrives without -----------------------------------
+
+    @Test
+    fun `the media file is made seekable before it is handed to the player`() =
+        runTest {
+            // A transcoded download lands without a SeekHead, and every seek into one restarts it
+            // from zero (see MatroskaSeekIndexRepair). This is the only gate that reaches downloads
+            // already on the device, so it is the one that has to ask.
+            every { itemMapper.toDtoOrNull(any()) } returns
+                movieWith(mediaSourceId = "source-1", runTimeTicks = 72_000_000_000L)
+            val media = write("a.mkv")
+            stored(files = listOf(mediaFile(path = media.absolutePath)))
+
+            provider.get(itemId).shouldNotBeNull()
+
+            // Milliseconds, not ticks: what a Matroska `Duration` is scaled from.
+            verify { seekIndex.ensureSeekable(media, 7_200_000L) }
+        }
+
+    @Test
+    fun `nothing is written to a file that is not playable anyway`() =
+        runTest {
+            coEvery { downloadDao.getWithFiles(itemId) } returns null
+
+            provider.get(itemId).shouldBeNull()
+
+            verify(exactly = 0) { seekIndex.ensureSeekable(any(), any()) }
         }
 
     @Test

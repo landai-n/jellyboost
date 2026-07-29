@@ -257,11 +257,14 @@ which is what Dashboard renders):
 - Backgrounding the app pauses playback: `POST_NOTIFICATIONS` is declared but never
   requested (M9), so the media notification can't show; background-continue +
   notification permission flow are M9 scope (background playback is not in the M5 DoD).
-- Screens loaded while offline keep their offline data after connectivity returns until
+- ~~Screens loaded while offline keep their offline data after connectivity returns until
   the user re-enters them (e.g. Home shows only cached My Media after a reconnect; a
   killed/relaunched app is fine). The delegating repository is per-call, but ViewModels
   don't re-fetch on connection regain — wire a refresh-on-reconnect (or pull-to-refresh)
-  by M9.
+  by M9.~~ — **fixed on the M9 branch**: `ReconnectRefresher` (`:data`) publishes a
+  `false → true` connectivity edge that home, libraries, search, item detail and the
+  library grid's filter facets re-load themselves on (the grid's items already swap via
+  `getItemsPaged`). See `docs/features/offline-read.md`, "Coming back online".
 - the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
   scripts must delete the file first and re-verify the screen before every tap (a stale
   dump caused stray taps this session — see incident note).

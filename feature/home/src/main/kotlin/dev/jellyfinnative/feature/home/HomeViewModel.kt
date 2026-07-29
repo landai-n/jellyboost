@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.data.JellyfinRepository
+import dev.jellyfinnative.data.ReconnectRefresher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataEventBus
 import kotlinx.coroutines.async
@@ -43,6 +44,7 @@ class HomeViewModel
         private val repository: JellyfinRepository,
         private val userDataEvents: UserDataEventBus,
         private val downloads: DownloadRepository,
+        private val reconnectRefresher: ReconnectRefresher,
     ) : ViewModel() {
         private val _uiState = MutableStateFlow(HomeUiState())
 
@@ -56,6 +58,19 @@ class HomeViewModel
             load(isRefresh = false)
             observeUserDataChanges()
             observeDownloadStates()
+            observeReconnects()
+        }
+
+        /**
+         * Replaces the offline rows with the server's the moment it is reachable again (M9).
+         *
+         * A home screen opened in airplane mode shows only downloaded media; without this it kept
+         * showing it until the user navigated away and back.
+         */
+        private fun observeReconnects() {
+            viewModelScope.launch {
+                reconnectRefresher.reconnected.collect { refresh() }
+            }
         }
 
         /**

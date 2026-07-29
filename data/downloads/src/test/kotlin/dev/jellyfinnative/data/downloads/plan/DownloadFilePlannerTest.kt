@@ -111,10 +111,13 @@ class DownloadFilePlannerTest {
 
     @Test
     fun `a transcoded media file is named for the container the server actually sends`() {
-        // The source is `Arrival.2016.mkv`; what arrives is mp4, and the name says so — along with
-        // the quality, so a re-download at another quality cannot land on top of this file.
+        // What arrives is a Matroska mux of a fresh H.264/AAC encode, not the source file, and the
+        // name says so — along with the quality, so a re-download at another quality cannot land on
+        // top of this file. `mp4` was tried first and produced a file Media3 refuses to open; see
+        // `DownloadQuality.CONTAINER`.
         planner.plan(movie(), DIRECTORY, quality = DownloadQuality.LOW).media().fileName shouldBe
-            "$DIRECTORY (low).mp4"
+            "$DIRECTORY (low).${DownloadQuality.CONTAINER}"
+        DownloadQuality.CONTAINER shouldBe "mkv"
     }
 
     @Test

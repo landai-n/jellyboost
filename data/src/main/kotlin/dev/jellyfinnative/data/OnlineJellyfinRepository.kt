@@ -199,8 +199,10 @@ class OnlineJellyfinRepository
             onIo {
                 val response = apiClient.userLibraryApi.getItem(itemId = UUID.fromString(id))
                 // The one call that returns the *complete* DTO, so this is the write that makes a
-                // cached item worth opening offline.
-                browseCache.cacheItems(listOf(response.content))
+                // cached item worth opening offline — and the only one allowed to replace the stored
+                // blob of a downloaded item, which is what `full = true` says. Every other write in
+                // this class is a lean list response and must preserve it (see `BrowseCacheWriter`).
+                browseCache.cacheItems(listOf(response.content), full = true)
                 mapper.toDomain(response.content)
             }
 

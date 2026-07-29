@@ -43,12 +43,14 @@ interface DownloadUrlFactory {
     ): String
 
     /**
-     * A server-side transcode of the item, muxed into one progressive `.mp4` (M9 download quality).
+     * A server-side transcode of the item, muxed into one progressive `.mkv` (M9 download quality).
      *
      * Every encoding parameter is spelled out rather than left to the server's own negotiation:
      * a download has no `PlaybackInfo` session behind it and no device profile to reason from, so
      * the only way the bytes are predictable is to ask for exactly one shape — H.264 video under
-     * [DownloadQuality.videoBitRate] and [DownloadQuality.maxHeight], stereo AAC audio, `mp4`.
+     * [DownloadQuality.videoBitRate] and [DownloadQuality.maxHeight], stereo AAC audio, and
+     * [DownloadQuality.CONTAINER] (Matroska, for the reason spelled out on that constant: an mp4
+     * muxed on the fly is a file Media3 refuses to open).
      *
      * `context = STATIC` is the one non-obvious parameter and it matters: the server throttles a
      * `STREAMING` transcode to roughly real time, which would make a two-hour film take two hours
@@ -114,7 +116,7 @@ internal class SdkDownloadUrlFactory
         ): String =
             apiClient.videosApi.getVideoStreamByContainerUrl(
                 itemId = itemId,
-                // `/Videos/{id}/stream.mp4` rather than `?container=mp4`: the extension is part of
+                // `/Videos/{id}/stream.mkv` rather than `?container=mkv`: the extension is part of
                 // the path, so the response is one progressive file and not an HLS playlist.
                 container = DownloadQuality.CONTAINER,
                 static = false,

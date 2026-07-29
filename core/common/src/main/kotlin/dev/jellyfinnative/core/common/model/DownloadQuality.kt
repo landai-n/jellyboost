@@ -57,8 +57,25 @@ enum class DownloadQuality(
         /** Stereo: a downloaded file is watched on the device's own speakers or on headphones. */
         const val AUDIO_CHANNELS: Int = 2
 
-        /** The container every transcoded download is muxed into — see `DownloadUrlFactory`. */
-        const val CONTAINER = "mp4"
+        /**
+         * The container every transcoded download is muxed into — see `DownloadUrlFactory`.
+         *
+         * **Matroska, and deliberately not `mp4`.** An `mp4` has to know where its `mdat` ends
+         * before it can write the `moov` that indexes it, so a server muxing one on the fly emits
+         * `ftyp → free → mdat(size 0, "to end of file")` with the `moov` appended at the tail. That
+         * file is a valid mp4 to a tool that can read it backwards, and unreadable to Media3:
+         * `Mp4Extractor` resolves a zero-sized `mdat` as running to EOF, swallowing the trailing
+         * `moov`, and gives up with `ParserException: Loading finished before preparation is
+         * complete, contentIsMalformed=true`. Every non-`ORIGINAL` download produced exactly that
+         * (DECISIONS.md, 2026-07-29).
+         *
+         * Matroska has no such ordering constraint — every element declares its own size as it is
+         * written, which is why it is the basis of WebM and of every live-streamed mkv — so the
+         * bytes are valid at any prefix and complete when the transfer ends. Media3 ships a full
+         * `MatroskaExtractor`, and `mkv` is already in this app's own `SUPPORTED_CONTAINER_FORMATS`
+         * with h264 among its codecs, so it is a container the device was always going to play.
+         */
+        const val CONTAINER = "mkv"
 
         /** Video codec for a transcode; the one format every Android decoder handles. */
         const val VIDEO_CODEC = "h264"

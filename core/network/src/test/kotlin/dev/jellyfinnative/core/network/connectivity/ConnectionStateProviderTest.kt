@@ -4,6 +4,13 @@ import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.network.ConnectionState
+import dev.jellyfinnative.core.network.SessionStateHolder
+import dev.jellyfinnative.core.network.TestFixtures.SERVER_ID
+import dev.jellyfinnative.core.network.TestFixtures.SERVER_NAME
+import dev.jellyfinnative.core.network.TestFixtures.SERVER_VERSION
+import dev.jellyfinnative.core.network.TestFixtures.USER_ID
+import dev.jellyfinnative.core.network.TestFixtures.USER_NAME
+import dev.jellyfinnative.core.network.model.SessionState
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -36,6 +43,9 @@ class ConnectionStateProviderTest {
     private val hasNetworkFlow = MutableStateFlow(true)
     private val forceOfflineFlow = MutableStateFlow(false)
     private val probe = mockk<ServerReachabilityProbe>()
+
+    /** Starts at [SessionState.Unknown], exactly as it does at app launch. */
+    private val sessionStateHolder = SessionStateHolder()
 
     private val monitor =
         object : ConnectivityMonitor {
@@ -96,11 +106,21 @@ class ConnectionStateProviderTest {
         applicationScope = scope
         return ConnectionStateProvider(
             connectivityMonitor = monitor,
+            sessionStateHolder = sessionStateHolder,
             probe = probe,
             appPreferences = preferences,
             scope = scope,
         )
     }
+
+    private fun loggedIn(serverVersion: String? = SERVER_VERSION) =
+        SessionState.LoggedIn(
+            serverId = SERVER_ID,
+            userId = USER_ID,
+            userName = USER_NAME,
+            serverName = SERVER_NAME,
+            serverVersion = serverVersion,
+        )
 
     // ---- state resolution ---------------------------------------------------------------------
 
@@ -262,6 +282,86 @@ class ConnectionStateProviderTest {
             advanceUntilIdle()
 
             provider.state.value shouldBe ConnectionState.ONLINE
+        }
+
+    // ---- probing on session changes -------------------------------------------------------------
+
+    /**
+     * The fresh-install bug, in one test: the launch probe runs before anyone is signed in, so it
+     * answers "no server to probe", and until this wiring existed nothing ever re-asked — the user
+     * signed in successfully and the app still claimed it could not reach the server until restart.
+     */
+    @Test
+    fun `re-probes when a session appears, with no connectivity change at all`() =
+        runTest {
+            coEvery { probe.isServerReachable() } returns false
+            val provider = newProvider()
+            advanceUntilIdle()
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+
+            // Sign-in: a server to probe now exists, and the network never moved.
+            coEvery { probe.isServerReachable() } returns true
+            sessionStateHolder.update(loggedIn())
+            advanceUntilIdle()
+
+            provider.state.value shouldBe ConnectionState.ONLINE
+            coVerify(exactly = 2) { probe.isServerReachable() }
+        }
+
+    @Test
+    fun `does not probe for the unknown session the app launches with`() =
+        runTest {
+            newProvider()
+
+            advanceUntilIdle()
+
+            // Only the network-available probe; `Unknown` means "not decided yet", not a change.
+            coVerify(exactly = 1) { probe.isServerReachable() }
+        }
+
+    @Test
+    fun `re-probes on sign-out so no stale verdict outlives the session`() =
+        runTest {
+            val provider = newProvider()
+            sessionStateHolder.update(loggedIn())
+            advanceUntilIdle()
+            provider.state.value shouldBe ConnectionState.ONLINE
+
+            // With nobody signed in the probe has no address to try and says so.
+            coEvery { probe.isServerReachable() } returns false
+            sessionStateHolder.update(SessionState.LoggedOut)
+            advanceUntilIdle()
+
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+            coVerify(exactly = 3) { probe.isServerReachable() }
+        }
+
+    @Test
+    fun `does not probe again when the same session is republished`() =
+        runTest {
+            newProvider()
+            sessionStateHolder.update(loggedIn())
+            advanceUntilIdle()
+
+            // Same user on the same server — only the reported server version moved, which changes
+            // nothing about what the probe would try.
+            sessionStateHolder.update(loggedIn(serverVersion = "10.11.1"))
+            advanceUntilIdle()
+
+            // The launch probe and the sign-in probe, and nothing for the republished session.
+            coVerify(exactly = 2) { probe.isServerReachable() }
+        }
+
+    @Test
+    fun `probes once per session identity, not once per emission`() =
+        runTest {
+            newProvider()
+            advanceUntilIdle()
+
+            repeat(SCREENFUL_OF_REQUESTS) { sessionStateHolder.update(loggedIn(serverVersion = "10.11.$it")) }
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { probe.isServerReachable() }
         }
 
     private companion object {

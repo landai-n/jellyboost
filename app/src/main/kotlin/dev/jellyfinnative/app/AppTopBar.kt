@@ -3,6 +3,7 @@ package dev.jellyfinnative.app
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -271,46 +272,51 @@ private fun AppOverflowMenu(
     val offlineStateDescription =
         stringResource(if (forceOffline) R.string.state_on else R.string.state_off)
 
-    IconButton(onClick = { expanded = true }) {
-        Icon(
-            imageVector = Icons.Filled.MoreVert,
-            contentDescription = stringResource(R.string.home_more_options),
-        )
-    }
+    // The menu must be a direct sibling of the button *inside the same Box*: a DropdownMenu anchors
+    // to its layout parent, and without this wrapper the parent was the whole top bar `Row`, which
+    // anchored the menu to the bar's left edge instead of dropping from this button.
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                contentDescription = stringResource(R.string.home_more_options),
+            )
+        }
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.settings_offline_mode)) },
-            trailingIcon = {
-                // Not clickable itself — the item's own `onClick` already covers the whole row, and
-                // a second handler here would toggle twice on a tap that landed on the switch.
-                //
-                // The switch role and its on/off state are declared on *this* node rather than on
-                // the item's `modifier`: `clickable` merges the semantics of its descendants, so an
-                // ancestor `Modifier.semantics {}` would sit on a node TalkBack never focuses,
-                // leaving the row announced as a plain menu entry with no state.
-                Switch(
-                    checked = forceOffline,
-                    onCheckedChange = null,
-                    modifier =
-                        Modifier.semantics {
-                            role = Role.Switch
-                            stateDescription = offlineStateDescription
-                        },
-                )
-            },
-            onClick = { onSetForceOffline(!forceOffline) },
-        )
-        DropdownMenuItem(
-            text = { Text(text = stringResource(R.string.home_settings)) },
-            leadingIcon = {
-                Icon(imageVector = Icons.Filled.Settings, contentDescription = null)
-            },
-            onClick = {
-                expanded = false
-                onNavigateToSettings()
-            },
-        )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.settings_offline_mode)) },
+                trailingIcon = {
+                    // Not clickable itself — the item's own `onClick` already covers the whole row, and
+                    // a second handler here would toggle twice on a tap that landed on the switch.
+                    //
+                    // The switch role and its on/off state are declared on *this* node rather than on
+                    // the item's `modifier`: `clickable` merges the semantics of its descendants, so an
+                    // ancestor `Modifier.semantics {}` would sit on a node TalkBack never focuses,
+                    // leaving the row announced as a plain menu entry with no state.
+                    Switch(
+                        checked = forceOffline,
+                        onCheckedChange = null,
+                        modifier =
+                            Modifier.semantics {
+                                role = Role.Switch
+                                stateDescription = offlineStateDescription
+                            },
+                    )
+                },
+                onClick = { onSetForceOffline(!forceOffline) },
+            )
+            DropdownMenuItem(
+                text = { Text(text = stringResource(R.string.home_settings)) },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Filled.Settings, contentDescription = null)
+                },
+                onClick = {
+                    expanded = false
+                    onNavigateToSettings()
+                },
+            )
+        }
     }
 }
 

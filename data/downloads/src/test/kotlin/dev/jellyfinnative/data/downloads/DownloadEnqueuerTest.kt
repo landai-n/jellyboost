@@ -549,6 +549,7 @@ class DownloadEnqueuerTest {
             deleter = deleter,
             mapper = mapper,
             appPreferences = appPreferences,
+            seeder = SiblingSeeder(downloadDao = downloadDao, itemDao = itemDao, clock = clock),
             clock = clock,
         )
 

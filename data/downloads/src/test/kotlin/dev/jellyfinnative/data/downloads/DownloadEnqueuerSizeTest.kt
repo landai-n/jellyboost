@@ -465,6 +465,9 @@ class DownloadEnqueuerSizeTest {
             deleter = deleter,
             mapper = mapper,
             appPreferences = appPreferences,
+            // The real seeder over the same mocked DAOs: the median it computes *is* what these
+            // tests are about, so stubbing it would leave the arithmetic untested.
+            seeder = SiblingSeeder(downloadDao = downloadDao, itemDao = itemDao, clock = clock),
             clock = clock,
         )
 

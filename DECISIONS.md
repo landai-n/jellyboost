@@ -818,3 +818,36 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `downloader.download` stubs and the `updateProgress` verification changed argument count only.
 
 <!-- END -->
+
+<!-- BEGIN sibling size seeding happens three times, not once -->
+
+## 2026-07-29 — sibling size seeding happens three times, not once
+- **Scope:** `data/downloads/.../SiblingSeeder.kt` (new), `DownloadEnqueuer.kt`, `engine/DownloadQueue.kt`,
+  `core/database/.../dao/DownloadDao.kt`, `docs/features/download-quality.md`
+- **Plan said:** docs/PLAN.md leaves download size reporting to the pipeline's own design; the shipped feature
+  (commit b7b4e42, "live size projection for transcoded downloads") computed the sibling seed at **enqueue time
+  only**, and `DownloadEnqueuer` documented that a season enqueued in one go is seeded "from whatever finished
+  before the tap".
+- **Done instead:** the seed is asked for at three moments, and the median arithmetic moved out of
+  `DownloadEnqueuer`'s private methods into a reusable `SiblingSeeder`: (1) at enqueue, as before; (2) when
+  `DownloadQueue` picks a row up with no projection; (3) when an item reaches DOWNLOADED, over every
+  `QUEUED`/`PAUSED` row of the same series and quality that still has no projection and no exact size. Two new
+  DAO statements carry it — `unseededSiblings` and `setProjectedBytesIfAbsent`, whose `projectedBytes IS NULL`
+  clause means a seed can never overwrite a live `TranscodeSizeProjector` measurement or an earlier seed.
+  `bytesTotal` is never written by any of this. No schema change (v6 stands). A row already mid-transfer when a
+  sibling lands keeps its in-memory figure: it was seeded at pick-up, and its own scanner is about to produce
+  something better.
+- **Reason:** user report — "sibling seeding doesn't seem to work with currently running download".
+  Enqueue-time-only seeding cannot serve the case the feature exists for: a season queued in one tap has no
+  finished sibling at the instant its rows are written, so every episode after the first kept the "up to X"
+  ceiling wording for the whole season however many siblings landed. The enqueue-time data path was verified
+  sound (series name is persisted for expanded episodes, the Room quality converter round-trips by name against
+  a TEXT column, episode runtimes are cached, and a bitrate-less source still gets a cap-derived ceiling) — the
+  gap was purely one of *when* the question is asked.
+- **Tests:** `SiblingSeederTest` (18, new) and `SeasonSeedingScenarioTest` (5, new — the whole scenario over a
+  map standing in for Room: enqueue a season, finish episode one, assert the rest acquire a seed within their
+  own ceilings, with other series, other qualities, already-projected rows and finished/failed rows all
+  untouched); `DownloadQueueTest` 35 → 41 for the two new triggers, including a re-seed failure not failing the
+  download that triggered it. Every existing test unchanged and green; full gate green.
+
+<!-- END -->

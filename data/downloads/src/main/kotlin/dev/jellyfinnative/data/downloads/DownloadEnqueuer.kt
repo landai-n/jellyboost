@@ -58,6 +58,7 @@ class DownloadEnqueuer
         private val deleter: DownloadDeleter,
         private val mapper: ItemEntityMapper,
         private val appPreferences: AppPreferences,
+        private val seeder: SiblingSeeder,
         private val clock: Clock,
     ) {
         /**
@@ -256,7 +257,10 @@ class DownloadEnqueuer
                                 // The seed is read per row, after the ones before it were written,
                                 // so the second episode of a season enqueued in one go is seeded
                                 // from whatever finished *before* the tap — never from a sibling
-                                // this same expansion queued and has not downloaded yet.
+                                // this same expansion queued and has not downloaded yet. That is
+                                // why enqueue time is not the only moment seeding happens:
+                                // `SiblingSeeder.seedPendingSiblingsOf` comes back to these rows
+                                // as each episode lands (docs/features/download-quality.md).
                                 projected = dto.siblingSeed(quality, estimate),
                             )
                         downloadDao.upsert(row)
@@ -398,51 +402,31 @@ class DownloadEnqueuer
          * What this item is likely to weigh, judged from episodes of the same show already on the
          * device at the same quality — or `null` when there is nothing to judge from.
          *
-         * The ceiling is deterministic but generous, and it stays generous for the whole of the
-         * first minute of a download. Finished siblings are *measured*: a completed row's
-         * `bytesDownloaded` is the real file, and the item cache still holds its runtime, so
-         * `bytes / runtime` is the bitrate this server's encoder actually produced for this show at
-         * this quality. The **median** of those rates, not the mean: one episode that happened to
-         * be a clip show should move the estimate, not define it.
+         * The arithmetic is [SiblingSeeder]'s, and it is shared on purpose: the same question is
+         * asked again when a sibling finishes and when the queue starts a row, and three copies of
+         * a median would be three chances for the wordings on one screen to disagree.
          *
-         * This is emphatically not the global observed-ratio store rejected in DECISIONS.md
-         * (2026-07-29) — it is conditioned on the show and the quality, computed from rows the user
-         * can see on the Downloads screen, and it is clamped by the same ceiling as before, so it
-         * can only ever move the figure *down* from a number that was already an upper bound.
-         *
-         * Films get `null`: there are no siblings, and a director's other work is not evidence.
+         * What stays here is the *gate*. A row whose size is exact — an `ORIGINAL` download, or a
+         * transcode the server will answer with a video stream copy — is not seeded at all: a guess
+         * cannot improve on an arithmetic answer, and it would flip the row's wording from a plain
+         * figure to a hedged one for nothing. Films get `null` too: there are no siblings, and a
+         * director's other work is not evidence.
          */
-        @Suppress("ReturnCount")
         private suspend fun BaseItemDto.siblingSeed(
             quality: DownloadQuality,
             estimate: SizeEstimate,
         ): Long? {
             if (!quality.isTranscoded || estimate.exact) return null
             val ceiling = estimate.bytes?.takeIf { it > 0L } ?: return null
-            val series = seriesName?.takeIf { it.isNotBlank() } ?: return null
             val runtimeMillis = runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return null
 
-            val siblings =
-                downloadDao
-                    .completedSiblings(series, quality, SIBLING_SAMPLE)
-                    .filter { it.itemId != id && it.bytesDownloaded > 0L }
-            if (siblings.isEmpty()) return null
-
-            val runtimes =
-                itemDao
-                    .getItems(siblings.map { it.itemId })
-                    .mapNotNull { entity -> entity.runTimeTicks?.takeIf { it > 0L }?.let { entity.id to it } }
-                    .toMap()
-
-            val rates =
-                siblings
-                    .mapNotNull { row ->
-                        val millis = runtimes[row.itemId]?.div(TICKS_PER_MILLI)?.takeIf { it > 0L }
-                        millis?.let { row.bytesDownloaded.toDouble() / it }
-                    }.sorted()
-            if (rates.isEmpty()) return null
-
-            return (rates.median() * runtimeMillis).toLong().coerceIn(0L, ceiling)
+            return seeder.seedFor(
+                itemId = id,
+                seriesName = seriesName,
+                quality = quality,
+                runtimeMillis = runtimeMillis,
+                ceilingBytes = ceiling,
+            )
         }
 
         /**
@@ -459,14 +443,6 @@ class DownloadEnqueuer
 
             /** The same tick, per millisecond. */
             const val TICKS_PER_MILLI = 10_000L
-
-            /**
-             * How many finished siblings the seed is taken from.
-             *
-             * Newest first, so a show re-encoded at a new quality converges on its recent
-             * behaviour; small enough that the extra `getItems` stays one cheap query.
-             */
-            const val SIBLING_SAMPLE = 8
 
             /** The one input container `CanStreamCopyVideo` has a special case for. */
             const val AVI_CONTAINER = "avi"
@@ -488,7 +464,3 @@ internal data class SizeEstimate(
     val bytes: Long?,
     val exact: Boolean,
 )
-
-/** The middle rate, averaging the two middles for an even sample. Input must be sorted. */
-private fun List<Double>.median(): Double =
-    if (size % 2 == 1) this[size / 2] else (this[size / 2 - 1] + this[size / 2]) / 2.0

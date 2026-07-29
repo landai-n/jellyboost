@@ -148,7 +148,9 @@ None yet. M2 is the online-only milestone: `OnlineJellyfinRepository` is a pure 
 no Room write-through. The browse cache (`source=BROWSE_CACHE`), `OfflineJellyfinRepository` and
 `DelegatingJellyfinRepository` arrive in M6, at which point the offline home rows come from Room
 (resume = downloads with position > 0, next-up = next downloaded episode per series, latest =
-recent downloads) behind this same `JellyfinRepository` interface — the screen does not change.
+recent downloads, with downloaded **episodes grouped into their series** the way the server's
+`GroupItems` does online — see `docs/features/offline-read.md`) behind this same
+`JellyfinRepository` interface — the screen does not change.
 
 ## Integration status
 

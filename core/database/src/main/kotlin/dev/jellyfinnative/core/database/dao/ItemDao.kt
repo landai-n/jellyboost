@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.database.entities.ItemCacheKey
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.core.database.entities.LatestDownloadKey
 import java.time.Instant
 import java.util.UUID
 
@@ -148,24 +149,36 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
-     * The offline *Latest* row: the most recently downloaded items of the given kinds.
+     * The ordering keys of the offline *Latest* row: every downloaded item of the given kinds,
+     * newest first, each carrying the id of the card it belongs to.
      *
      * Scoped by type rather than by library id, for the reason [pagingDownloaded] documents.
+     *
+     * **No `LIMIT`, and no whole rows.** Episodes collapse into their series before the row limit
+     * applies (see [LatestDownloadKey]), so the statement cannot stop at sixteen rows and the
+     * caller cannot afford to read sixteen — let alone every — `dto` blob to find that out. The
+     * "one row per series" reduction itself is done in Kotlin, for the reason
+     * [unwatchedDownloadedEpisodes] gives.
      */
     @Query(
         """
-        SELECT * FROM items
+        SELECT
+          id AS id,
+          CASE
+            WHEN type = :episodeType AND seriesId IS NOT NULL THEN seriesId
+            ELSE id
+          END AS groupId
+        FROM items
         WHERE source = :source
           AND type IN (:types)
         ORDER BY cachedAt DESC
-        LIMIT :limit
         """,
     )
-    suspend fun latestDownloaded(
+    suspend fun latestDownloadedKeys(
         source: ItemSource,
         types: List<ItemType>,
-        limit: Int,
-    ): List<ItemEntity>
+        episodeType: ItemType,
+    ): List<LatestDownloadKey>
 
     /**
      * A downloaded series' seasons, in server order.

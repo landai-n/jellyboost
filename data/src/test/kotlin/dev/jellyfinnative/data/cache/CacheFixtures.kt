@@ -7,6 +7,7 @@ import dev.jellyfinnative.data.mapper.FakeImageUrlFactory
 import dev.jellyfinnative.data.mapper.ItemMapper
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.ImageType
 import java.time.Instant
 import java.util.UUID
 
@@ -57,6 +58,7 @@ internal object CacheFixtures {
         seasonId: UUID,
         seasonNumber: Int,
         episodeNumber: Int,
+        seriesPrimaryImageTag: String? = null,
     ): BaseItemDto =
         BaseItemDto(
             id = id,
@@ -69,18 +71,21 @@ internal object CacheFixtures {
             parentIndexNumber = seasonNumber,
             indexNumber = episodeNumber,
             runTimeTicks = 24_000_000_000L,
+            seriesPrimaryImageTag = seriesPrimaryImageTag,
         )
 
     fun seriesDto(
         id: UUID,
         name: String,
         parentId: UUID = SHOWS_LIBRARY,
+        primaryImageTag: String? = null,
     ): BaseItemDto =
         BaseItemDto(
             id = id,
             type = BaseItemKind.SERIES,
             name = name,
             parentId = parentId,
+            imageTags = primaryImageTag?.let { mapOf(ImageType.PRIMARY to it) },
         )
 
     fun seasonDto(

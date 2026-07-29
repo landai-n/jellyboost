@@ -11,7 +11,9 @@ import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
+import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.core.database.entities.LatestDownloadKey
 import dev.jellyfinnative.core.database.entities.LibraryViewEntity
 import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.model.SessionState
@@ -31,6 +33,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -178,9 +181,7 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `latest lists the most recent downloads of one library`() =
         runTest {
-            coEvery {
-                itemDao.latestDownloaded(ItemSource.DOWNLOAD, any(), 16)
-            } returns listOf(entity(movieDto(uuid(1), "Dune")), entity(movieDto(uuid(2), "Arrival")))
+            seedLatest(listOf(entity(movieDto(uuid(1), "Dune")), entity(movieDto(uuid(2), "Arrival"))))
 
             repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
                 listOf("Dune", "Arrival")
@@ -198,9 +199,7 @@ class OfflineJellyfinRepositoryTest {
             // The M7 device bug: both downloaded films were stored with `parentId NULL`, and the
             // row's library was decided by a `parentId = <library>` predicate, so the offline home
             // had no Latest row at all.
-            val types = mutableListOf<List<ItemType>>()
-            coEvery { itemDao.latestDownloaded(ItemSource.DOWNLOAD, capture(types), 16) } returns
-                listOf(entity(movieDto(uuid(1), "The Body", parentId = null)))
+            val types = seedLatest(listOf(entity(movieDto(uuid(1), "The Body", parentId = null))))
 
             repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
                 listOf("The Body")
@@ -211,12 +210,138 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `a TV library's latest row is scoped to shows and episodes`() =
         runTest {
-            val types = mutableListOf<List<ItemType>>()
-            coEvery { itemDao.latestDownloaded(ItemSource.DOWNLOAD, capture(types), 16) } returns emptyList()
+            val types = seedLatest(emptyList())
 
             repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16)
 
             types.single() shouldContainExactly listOf(ItemType.SERIES, ItemType.EPISODE)
+        }
+
+    // ---- Latest: episodes group into their series (like the server's `GroupItems`) -------------
+
+    @Test
+    fun `every downloaded episode of a series collapses into one card for the series`() =
+        runTest {
+            // The reported bug: a downloaded season filled the offline Latest shelf with its own
+            // episodes, where the online row shows one poster for the show.
+            val series = entity(seriesDto(THRONES, "Thrones"))
+            seedLatest(
+                listOf(
+                    thronesEpisode(uuid(13), "The Kingsroad", episodeNumber = 2),
+                    thronesEpisode(uuid(12), "Winter Is Coming", episodeNumber = 1),
+                    series,
+                ),
+            )
+
+            val items = repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16).getOrNull()!!
+
+            items shouldHaveNames listOf("Thrones")
+            items.single().type shouldBe ItemType.SERIES
+            // The tap target is the series, so the card opens the show's page and not an episode.
+            items.single().id shouldBe THRONES.toString()
+        }
+
+    @Test
+    fun `each series gets its own card, most recently downloaded first`() =
+        runTest {
+            seedLatest(
+                listOf(
+                    entity(episodeDto(uuid(22), "The Heirs", DRAGON, "Dragon", uuid(21), 1, 1)),
+                    entity(seriesDto(DRAGON, "Dragon")),
+                    thronesEpisode(uuid(12), "Winter Is Coming", episodeNumber = 1),
+                    thronesEpisode(uuid(13), "The Kingsroad", episodeNumber = 2),
+                    entity(seriesDto(THRONES, "Thrones")),
+                ),
+            )
+
+            repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
+                listOf("Dragon", "Thrones")
+        }
+
+    @Test
+    fun `the row limit counts series, not episodes`() =
+        runTest {
+            seedLatest(
+                (1..5).map { number -> thronesEpisode(uuid(100 + number), "E$number", number) } +
+                    entity(seriesDto(THRONES, "Thrones")) +
+                    entity(episodeDto(uuid(22), "The Heirs", DRAGON, "Dragon", uuid(21), 1, 1)) +
+                    entity(seriesDto(DRAGON, "Dragon")),
+            )
+
+            // Five episodes of one show would have consumed the whole shelf before this fix.
+            repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 2).getOrNull()!! shouldHaveNames
+                listOf("Thrones", "Dragon")
+        }
+
+    @Test
+    fun `a mixed library keeps one card per film alongside one card per series`() =
+        runTest {
+            seedLatest(
+                listOf(
+                    entity(movieDto(uuid(1), "Dune")),
+                    thronesEpisode(uuid(12), "Winter Is Coming", episodeNumber = 1),
+                    thronesEpisode(uuid(13), "The Kingsroad", episodeNumber = 2),
+                    entity(seriesDto(THRONES, "Thrones")),
+                    entity(movieDto(uuid(2), "Arrival")),
+                ),
+            )
+
+            repository.getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
+                listOf("Dune", "Thrones", "Arrival")
+        }
+
+    @Test
+    fun `the series card is the cached series row, artwork and all`() =
+        runTest {
+            seedLatest(listOf(thronesEpisode(uuid(12), "Winter Is Coming", episodeNumber = 1)))
+            coEvery { itemDao.getItems(any()) } answers {
+                val ids = firstArg<List<UUID>>().toSet()
+                listOf(
+                    entity(seriesDto(THRONES, "Thrones", primaryImageTag = "series-tag")),
+                    thronesEpisode(uuid(12), "Winter Is Coming", episodeNumber = 1),
+                ).filter { it.id in ids }
+            }
+
+            val card = repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16).getOrNull()!!.single()
+
+            card.id shouldBe THRONES.toString()
+            card.name shouldBe "Thrones"
+            card.primaryImageUrl!! shouldContain "/Items/$THRONES/Images/PRIMARY?tag=series-tag"
+        }
+
+    @Test
+    fun `a series whose own row was never cached still gets a series card built from the episode`() =
+        runTest {
+            // `DownloadEnqueuer` caches an episode's parents best effort; when that fetch failed
+            // there is no series row to show, and the shelf must not fall back to bare episodes.
+            val episodes =
+                listOf(
+                    thronesEpisode(uuid(12), "Winter Is Coming", 1, seriesImageTag = "series-tag"),
+                    thronesEpisode(uuid(13), "The Kingsroad", 2, seriesImageTag = "series-tag"),
+                )
+            seedLatest(newestFirst = episodes, cached = episodes)
+
+            val card = repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16).getOrNull()!!.single()
+
+            card.id shouldBe THRONES.toString()
+            card.name shouldBe "Thrones"
+            card.type shouldBe ItemType.SERIES
+            // The show's poster, not the episode still.
+            card.primaryImageUrl!! shouldContain "/Items/$THRONES/Images/PRIMARY?tag=series-tag"
+        }
+
+    @Test
+    fun `an episode that names no series at all still appears, as itself`() =
+        runTest {
+            val orphan =
+                entity(
+                    episodeDto(uuid(12), "Winter Is Coming", THRONES, "Thrones", uuid(11), 1, 1)
+                        .copy(seriesId = null, seriesName = null),
+                )
+            seedLatest(listOf(orphan))
+
+            repository.getLatestMedia(SHOWS_LIBRARY.toString(), limit = 16).getOrNull()!! shouldHaveNames
+                listOf("Winter Is Coming")
         }
 
     // ---- library grid & search ----------------------------------------------------------------
@@ -490,6 +615,56 @@ class OfflineJellyfinRepositoryTest {
         map { it.name } shouldContainExactly names
     }
 
+    /**
+     * Stands `latestDownloadedKeys` + `getItems` up over a list of rows.
+     *
+     * [newestFirst] is what the ordering query would answer — the rows in `cachedAt DESC` order —
+     * and the grouping key is derived here exactly the way the SQL `CASE` does, so a test states
+     * only what is in the table. [cached] is what `getItems` can find, which defaults to the same
+     * rows and is narrowed by the one test where a series' own row is missing.
+     *
+     * @return the captured item-type lists the offline library scoping asked for.
+     */
+    private fun seedLatest(
+        newestFirst: List<ItemEntity>,
+        cached: List<ItemEntity> = newestFirst,
+    ): List<List<ItemType>> {
+        val types = mutableListOf<List<ItemType>>()
+        val keys =
+            newestFirst.map { row ->
+                LatestDownloadKey(
+                    id = row.id,
+                    groupId = if (row.type == ItemType.EPISODE) row.seriesId ?: row.id else row.id,
+                )
+            }
+        coEvery {
+            itemDao.latestDownloadedKeys(ItemSource.DOWNLOAD, capture(types), ItemType.EPISODE)
+        } returns keys
+        coEvery { itemDao.getItems(any()) } answers {
+            val ids = firstArg<List<UUID>>().toSet()
+            cached.filter { it.id in ids }
+        }
+        return types
+    }
+
+    private fun thronesEpisode(
+        id: UUID,
+        name: String,
+        episodeNumber: Int,
+        seriesImageTag: String? = null,
+    ) = entity(
+        episodeDto(
+            id = id,
+            name = name,
+            seriesId = THRONES,
+            seriesName = "Thrones",
+            seasonId = uuid(11),
+            seasonNumber = 1,
+            episodeNumber = episodeNumber,
+            seriesPrimaryImageTag = seriesImageTag,
+        ),
+    )
+
     private fun libraryRow(
         id: UUID,
         name: String,
@@ -502,6 +677,11 @@ class OfflineJellyfinRepositoryTest {
         sortIndex = sortIndex,
         cachedAt = NOW,
     )
+
+    private companion object {
+        val THRONES: UUID = uuid(10)
+        val DRAGON: UUID = uuid(20)
+    }
 
     private fun loggedIn() =
         SessionState.LoggedIn(

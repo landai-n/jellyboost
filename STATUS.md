@@ -127,6 +127,13 @@ every transcode already on the device; no schema change. Pause removed from
 transcoded queue rows (server ignores Range → "pause" would silently restart
 from zero; Resume stays). Gate: **1082 tests, 0 failures** (1061 → 1082).
 
+Third follow-up (same day, user report): the offline *Latest* shelf listed raw
+downloaded rows, so one downloaded season filled all 16 slots with its own
+episodes. It now performs the server's `GroupItems` reduction client-side:
+episodes collapse into one series card (grouped before the limit), the card is
+the cached series row or a synthesised one from the episode's series fields,
+movies unchanged. Gate: **1094 tests, 0 failures** (1082 → 1094).
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

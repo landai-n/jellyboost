@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.cache
 
 import dev.jellyfinnative.core.common.model.CollectionKind
+import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.database.entities.ItemEntity
@@ -124,6 +125,45 @@ class ItemEntityMapper
                 Timber.w(error, "Unreadable cached item %s; treating it as not cached", entity.id)
                 null
             }
+
+        /**
+         * Rebuilds the **series** an episode row belongs to, as a card, or `null` when the row
+         * names no series (or its blob is unreadable).
+         *
+         * This is the fallback half of the offline *Latest* grouping. Normally the series' own
+         * cached row is the card — the download pipeline caches an episode's series and season
+         * alongside it — but that fetch is best effort, and a failure there must not put bare
+         * episodes back on a shelf that is supposed to show one poster per show.
+         *
+         * Artwork comes from the episode's `seriesPrimaryImageTag`/`seriesThumbImageTag`: those are
+         * the *series'* images, so the card gets the show's poster rather than an episode still
+         * stretched into a poster frame. Everything else is deliberately left at its default —
+         * a synthesised card carries only what an episode actually knows about its show.
+         */
+        fun toSeriesCardOrNull(entity: ItemEntity): JellyfinItem? {
+            val dto = toDtoOrNull(entity) ?: return null
+            val seriesId = dto.seriesId ?: return null
+            val name = dto.seriesName?.takeIf { it.isNotBlank() } ?: return null
+            return JellyfinItem(
+                id = seriesId.toString(),
+                name = name,
+                type = ItemType.SERIES,
+                primaryImageUrl =
+                    imageUrls.imageUrl(
+                        seriesId,
+                        ImageKind.PRIMARY,
+                        dto.seriesPrimaryImageTag,
+                        widths.poster,
+                    ),
+                thumbImageUrl =
+                    imageUrls.imageUrl(
+                        seriesId,
+                        ImageKind.THUMB,
+                        dto.seriesThumbImageTag,
+                        widths.thumb,
+                    ),
+            )
+        }
 
         /** Maps a whole page, dropping rows whose blob is unreadable. */
         fun toDomain(

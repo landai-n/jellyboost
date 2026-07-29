@@ -17,6 +17,7 @@ import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
+import dev.jellyfinnative.core.database.entities.LatestDownloadKey
 import dev.jellyfinnative.core.database.entities.UserDataEntity
 import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.di.IoDispatcher
@@ -47,7 +48,7 @@ import javax.inject.Singleton
  * |---|---|
  * | Continue watching | downloads this device has a resume position for |
  * | Next up | the first unwatched downloaded episode of each series |
- * | Latest *library* | the most recently downloaded items of that library |
+ * | Latest *library* | the most recently downloaded items of that library, episodes grouped into their series |
  *
  * ### What it never does
  * It never throws for a missing item and never reports one as an error: [getItem] answers with a
@@ -99,6 +100,17 @@ class OfflineJellyfinRepository
                     .withLocalUserData(userId)
             }
 
+        /**
+         * The offline *Latest* shelf — **one card per series**, exactly like the online row.
+         *
+         * The server groups a TV library's new episodes into their show (`GroupItems`), so online
+         * the shelf shows one poster per series however many episodes arrived. Offline the shelf
+         * used to list the downloaded rows raw, which meant a downloaded season filled it with its
+         * own episodes. The reduction happens here instead: downloads are read newest-first as
+         * [dev.jellyfinnative.core.database.entities.LatestDownloadKey]s, the first row of each
+         * group wins, and only then does [limit] apply — a series with twenty episodes takes one
+         * slot, not twenty. Movies group onto themselves and are unaffected.
+         */
         override suspend fun getLatestMedia(
             parentId: String,
             limit: Int,
@@ -106,9 +118,55 @@ class OfflineJellyfinRepository
             onIo {
                 val library = parentId.toUuidOrNull() ?: return@onIo emptyList()
                 itemDao
-                    .latestDownloaded(ItemSource.DOWNLOAD, typesOf(library, LIST_ITEM_TYPES), limit)
-                    .withLocalUserData(currentUserId())
+                    .latestDownloadedKeys(
+                        source = ItemSource.DOWNLOAD,
+                        types = typesOf(library, LIST_ITEM_TYPES),
+                        episodeType = ItemType.EPISODE,
+                    )
+                    // Newest first already, so the surviving row of a group is that show's most
+                    // recent download — the position `GroupItems=true` gives it online.
+                    .distinctBy { it.groupId }
+                    .take(limit)
+                    .let { groups -> latestCards(groups) }
             }
+
+        /**
+         * Turns grouped [LatestDownloadKey]s into the cards the shelf draws, in the order given.
+         *
+         * A group's card is, in order of preference:
+         * 1. the **series' own cached row** — the download pipeline caches an episode's series and
+         *    season alongside it, so this is the normal case and the card is a real item with a
+         *    working detail page;
+         * 2. a card **synthesised from the episode** when that parent fetch failed (it is best
+         *    effort), so the shelf still shows one poster per show;
+         * 3. the episode itself, for the pathological row that names no series at all — a card
+         *    that is slightly wrong beats a download that vanished from the shelf.
+         */
+        private suspend fun latestCards(groups: List<LatestDownloadKey>): List<JellyfinItem> {
+            if (groups.isEmpty()) return emptyList()
+            val ids = (groups.map { it.groupId } + groups.map { it.id }).distinct()
+            // Deliberately *not* filtered to downloads: the card a group collapses into is the
+            // parent series, and "cached parents of downloaded items still open" is the plan's one
+            // exception to the downloads-only rule (docs/PLAN.md, "Confirmed decisions").
+            val rows = itemDao.getItems(ids).associateBy { it.id }
+            val userData: Map<UUID, UserDataEntity> =
+                currentUserId()
+                    ?.let { userDataDao.getUserDataFor(ids, it) }
+                    ?.associateBy { it.itemId }
+                    .orEmpty()
+
+            return groups.mapNotNull { group ->
+                val card = rows[group.groupId]
+                if (group.groupId == group.id || card?.type == ItemType.SERIES) {
+                    card?.let { mapper.toDomainOrNull(it, userData[it.id]) }
+                } else {
+                    rows[group.id]?.let { episode ->
+                        mapper.toSeriesCardOrNull(episode)
+                            ?: mapper.toDomainOrNull(episode, userData[episode.id])
+                    }
+                }
+            }
+        }
 
         // ---- library grid & search ---------------------------------------------------------
 

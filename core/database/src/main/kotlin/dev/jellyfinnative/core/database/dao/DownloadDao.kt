@@ -48,6 +48,17 @@ interface DownloadDao {
     suspend fun get(itemId: UUID): DownloadEntity?
 
     /**
+     * One download **with** its files — what offline playback resolves against (M8).
+     *
+     * [observeAll] returns the same shape for the whole table; a player opening a single item has
+     * no use for the other rows and no use for a Flow, since the file set of a finished download
+     * does not change while it is being played.
+     */
+    @Transaction
+    @Query("SELECT * FROM downloads WHERE itemId = :itemId")
+    suspend fun getWithFiles(itemId: UUID): DownloadWithFiles?
+
+    /**
      * The next item the queue should work on: the lowest queue position among rows that are
      * waiting or were interrupted mid-transfer.
      *

@@ -1,6 +1,11 @@
 package dev.jellyfinnative.player
 
+import dev.jellyfinnative.data.downloads.offline.DownloadedMedia
+import dev.jellyfinnative.data.downloads.offline.DownloadedSubtitle
+import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
 import dev.jellyfinnative.player.model.ExternalSubtitle
+import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
+import dev.jellyfinnative.player.model.LocalTrickplay
 import dev.jellyfinnative.player.model.PlaybackTrack
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import org.jellyfin.sdk.model.api.MediaProtocol
@@ -157,5 +162,70 @@ internal object PlayerFixtures {
             externalSubtitles = externalSubtitles,
             selectedAudioIndex = selectedAudioIndex,
             selectedSubtitleIndex = selectedSubtitleIndex,
+        )
+
+    // ---- M8, offline ---------------------------------------------------------------------------
+
+    /** `file://` URI of the downloaded media file used throughout the offline tests. */
+    const val LOCAL_MEDIA_URI = "file:///downloads/Arrival%20(2016)/Arrival.mkv"
+
+    @Suppress("LongParameterList")
+    fun localSource(
+        startPositionTicks: Long = 0L,
+        audioTracks: List<PlaybackTrack> = emptyList(),
+        subtitleTracks: List<PlaybackTrack> = emptyList(),
+        externalSubtitles: List<ExternalSubtitle> = emptyList(),
+        selectedAudioIndex: Int? = null,
+        selectedSubtitleIndex: Int? = null,
+        trickplay: LocalTrickplay? = null,
+    ): LocalPlaybackMediaSource =
+        LocalPlaybackMediaSource(
+            itemId = ITEM_ID,
+            mediaSourceId = ITEM_ID.toString(),
+            mediaUri = LOCAL_MEDIA_URI,
+            runTimeTicks = RUN_TIME_TICKS,
+            startPositionTicks = startPositionTicks,
+            audioTracks = audioTracks,
+            subtitleTracks = subtitleTracks,
+            externalSubtitles = externalSubtitles,
+            selectedAudioIndex = selectedAudioIndex,
+            selectedSubtitleIndex = selectedSubtitleIndex,
+            trickplay = trickplay,
+        )
+
+    /** What `DownloadedMediaProvider` hands `LocalPlaybackResolver`. */
+    fun downloadedMedia(
+        mediaSource: MediaSourceInfo? = mediaSourceInfo(supportsDirectPlay = true),
+        runTimeTicks: Long = RUN_TIME_TICKS,
+        subtitles: List<DownloadedSubtitle> = emptyList(),
+        trickplay: DownloadedTrickplay? = null,
+    ): DownloadedMedia =
+        DownloadedMedia(
+            itemId = ITEM_ID,
+            mediaSourceId = ITEM_ID.toString(),
+            mediaSource = mediaSource,
+            mediaUri = LOCAL_MEDIA_URI,
+            runTimeTicks = runTimeTicks,
+            subtitles = subtitles,
+            trickplay = trickplay,
+        )
+
+    @Suppress("LongParameterList")
+    fun downloadedTrickplay(
+        width: Int = 320,
+        tileWidth: Int = 10,
+        tileHeight: Int = 10,
+        thumbnailCount: Int = 250,
+        intervalMs: Int = 10_000,
+        tileUris: List<String> = listOf("file:///downloads/t.0.jpg", "file:///downloads/t.1.jpg"),
+    ): DownloadedTrickplay =
+        DownloadedTrickplay(
+            width = width,
+            height = 180,
+            tileWidth = tileWidth,
+            tileHeight = tileHeight,
+            thumbnailCount = thumbnailCount,
+            intervalMs = intervalMs,
+            tileUris = tileUris,
         )
 }

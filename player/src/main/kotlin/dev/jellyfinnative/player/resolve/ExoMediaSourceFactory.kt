@@ -3,7 +3,9 @@ package dev.jellyfinnative.player.resolve
 import androidx.media3.common.MimeTypes
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.api.StreamUrlFactory
+import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
 import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
+import dev.jellyfinnative.player.model.PlaybackMediaSource
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import dev.jellyfinnative.player.model.SubtitleSpec
 import dev.jellyfinnative.player.model.externalSubtitleTrackId
@@ -33,21 +35,53 @@ class ExoMediaSourceFactory
          * @return what to hand ExoPlayer, or `null` when the source cannot be played at all —
          *   an unknown protocol, or a transcode offered over something other than HLS.
          */
-        fun create(source: RemotePlaybackMediaSource): PlaybackMediaItemSpec? {
+        fun create(source: PlaybackMediaSource): PlaybackMediaItemSpec? =
+            when (source) {
+                is LocalPlaybackMediaSource -> source.toSpec()
+                is RemotePlaybackMediaSource -> source.toSpec()
+            }
+
+        private fun RemotePlaybackMediaSource.toSpec(): PlaybackMediaItemSpec? {
             val (uri, mimeType) =
-                when (source.playMethod) {
-                    PlayMethod.DIRECT_PLAY -> source.directPlayTarget() ?: return null
-                    PlayMethod.DIRECT_STREAM -> source.directStreamTarget() ?: return null
-                    PlayMethod.TRANSCODE -> source.transcodeTarget() ?: return null
+                when (playMethod) {
+                    PlayMethod.DIRECT_PLAY -> directPlayTarget() ?: return null
+                    PlayMethod.DIRECT_STREAM -> directStreamTarget() ?: return null
+                    PlayMethod.TRANSCODE -> transcodeTarget() ?: return null
                 }
 
             return PlaybackMediaItemSpec(
-                mediaId = source.itemId.toString(),
+                mediaId = itemId.toString(),
                 uri = uri,
                 mimeType = mimeType,
-                subtitles = source.subtitleSpecs(),
+                subtitles = subtitleSpecs(),
             )
         }
+
+        /**
+         * A downloaded item needs no URL construction at all: the file is the URL.
+         *
+         * The MIME type is deliberately left unset — the container is whatever the server stored,
+         * and ExoPlayer sniffs a local file far more reliably than a guess from an extension the
+         * download pipeline copied off the server's own filename. Sidecar subtitles are already
+         * `file://` URIs and must **not** be run through [StreamUrlFactory.absoluteUrl], which would
+         * prefix them with the server's base address.
+         */
+        private fun LocalPlaybackMediaSource.toSpec(): PlaybackMediaItemSpec =
+            PlaybackMediaItemSpec(
+                mediaId = itemId.toString(),
+                uri = mediaUri,
+                mimeType = null,
+                subtitles =
+                    externalSubtitles.map { subtitle ->
+                        SubtitleSpec(
+                            id = externalSubtitleTrackId(subtitle.index),
+                            uri = subtitle.url,
+                            mimeType = subtitle.mimeType,
+                            label = subtitle.label,
+                            language = subtitle.language,
+                        )
+                    },
+            )
 
         /**
          * A file on the server is streamed byte-for-byte; a source the server itself pulls over

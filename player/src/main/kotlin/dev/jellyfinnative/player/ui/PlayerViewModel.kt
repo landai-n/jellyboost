@@ -11,14 +11,16 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.fallback.DecoderFallbackHandler
 import dev.jellyfinnative.player.fallback.FallbackDecision
+import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
+import dev.jellyfinnative.player.model.PlaybackMediaSource
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import dev.jellyfinnative.player.model.ticksToMillis
 import dev.jellyfinnative.player.report.PlaybackReporter
 import dev.jellyfinnative.player.resolve.ExoMediaSourceFactory
-import dev.jellyfinnative.player.resolve.PlaybackInfoResolver
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
+import dev.jellyfinnative.player.resolve.PlaybackSourceResolver
 import dev.jellyfinnative.player.session.PlayerEvent
 import dev.jellyfinnative.player.session.PlayerHandle
 import kotlinx.coroutines.Job
@@ -48,13 +50,17 @@ import kotlin.time.Duration.Companion.milliseconds
  *   every quality change strands an ffmpeg process on the server;
  * - the stop report goes out on a detached scope, because `viewModelScope` is already cancelled by
  *   the time [onCleared] runs.
+ *
+ * Since M8 the source may equally be a local file: [PlaybackSourceResolver] picks between the
+ * download on disk and the server, and nothing below this line knows which it got. That is the
+ * whole reason `PlaybackMediaSource` is a sealed type.
  */
 @HiltViewModel
 class PlayerViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
-        private val resolver: PlaybackInfoResolver,
+        private val resolver: PlaybackSourceResolver,
         private val mediaSourceFactory: ExoMediaSourceFactory,
         private val playerHandle: PlayerHandle,
         private val reporter: PlaybackReporter,
@@ -85,7 +91,7 @@ class PlayerViewModel
         val videoPlayer: StateFlow<Player?> = _videoPlayer.asStateFlow()
 
         /** The currently playing source; `null` until the first resolve succeeds. */
-        private var source: RemotePlaybackMediaSource? = null
+        private var source: PlaybackMediaSource? = null
 
         private var reportingJob: Job? = null
         private var uiTickerJob: Job? = null
@@ -146,7 +152,7 @@ class PlayerViewModel
         fun selectAudioTrack(jellyfinIndex: Int) {
             val current = source ?: return
             if (playerHandle.selectAudioTrack(current, jellyfinIndex)) {
-                source = current.copy(selectedAudioIndex = jellyfinIndex)
+                source = current.withSelectedAudio(jellyfinIndex)
                 _uiState.update { it.copy(selectedAudioIndex = jellyfinIndex) }
                 return
             }
@@ -160,7 +166,7 @@ class PlayerViewModel
         fun selectSubtitleTrack(jellyfinIndex: Int?) {
             val current = source ?: return
             if (playerHandle.selectSubtitleTrack(current, jellyfinIndex)) {
-                source = current.copy(selectedSubtitleIndex = jellyfinIndex)
+                source = current.withSelectedSubtitle(jellyfinIndex)
                 _uiState.update { it.copy(selectedSubtitleIndex = jellyfinIndex) }
                 return
             }
@@ -176,9 +182,13 @@ class PlayerViewModel
          *
          * Choosing a cap below the file's bitrate is what makes the server transcode, and is how
          * the milestone's forced-transcode verification is driven from the UI.
+         *
+         * A locally-played download has no bitrate to cap — there is no server in the loop — so the
+         * control is hidden for it (`PlayerUiState.isLocalPlayback`) and the call is ignored if it
+         * arrives anyway.
          */
         fun selectQuality(quality: PlaybackQuality) {
-            val current = source ?: return
+            val current = source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
             _uiState.update { it.copy(quality = quality) }
             reopen(current.asRequest().copy(maxStreamingBitrate = quality.maxStreamingBitrate))
@@ -429,19 +439,21 @@ class PlayerViewModel
  * The request that would reproduce what is playing right now.
  *
  * Callers `copy()` the one thing they are changing, which keeps every re-negotiation — quality,
- * track, fallback — from silently dropping a setting the previous one had established.
+ * track, fallback — from silently dropping a setting the previous one had established. A local
+ * source has no bitrate cap to carry over, so it contributes `null` and the server picks freely if
+ * the re-negotiation ends up there.
  */
-private fun RemotePlaybackMediaSource.asRequest(): PlaybackResolveRequest =
+private fun PlaybackMediaSource.asRequest(): PlaybackResolveRequest =
     PlaybackResolveRequest(
         itemId = itemId,
         mediaSourceId = mediaSourceId,
-        maxStreamingBitrate = maxStreamingBitrate,
+        maxStreamingBitrate = (this as? RemotePlaybackMediaSource)?.maxStreamingBitrate,
         audioStreamIndex = selectedAudioIndex,
         subtitleStreamIndex = selectedSubtitleIndex,
     )
 
 private fun PlayerUiState.withSource(
-    source: RemotePlaybackMediaSource,
+    source: PlaybackMediaSource,
     message: PlayerMessage?,
 ): PlayerUiState =
     copy(
@@ -450,13 +462,14 @@ private fun PlayerUiState.withSource(
         errorMessage = null,
         hasEnded = false,
         playMethod = source.playMethod,
+        isLocalPlayback = source is LocalPlaybackMediaSource,
         durationMs = source.runTimeTicks.ticksToMillis(),
         positionMs = source.startPositionTicks.ticksToMillis(),
         audioTracks = source.audioTracks,
         subtitleTracks = source.subtitleTracks,
         selectedAudioIndex = source.selectedAudioIndex,
         selectedSubtitleIndex = source.selectedSubtitleIndex,
-        quality = PlaybackQuality.forBitrate(source.maxStreamingBitrate),
+        quality = PlaybackQuality.forBitrate((source as? RemotePlaybackMediaSource)?.maxStreamingBitrate),
         userMessage = message ?: userMessage,
     )
 

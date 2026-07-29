@@ -106,6 +106,16 @@ monotone, holding 99 % until DOWNLOADED. `playSessionId` now rides on transcode
 URLs. Full gate: **1032 tests, 0 failures** (941 → 1032). User-confirmed working
 on the tablet.
 
+Follow-up (same day, user report "seeding doesn't work with a currently running
+download"): seeding was enqueue-time only, so a season queued in one tap never
+seeded episodes 2..N. Now a reusable `SiblingSeeder` is asked at three moments —
+enqueue, queue pick-up, and sibling completion (re-seeding waiting rows via
+`setProjectedBytesIfAbsent`, which can never clobber a live measurement). Data
+path verified sound; the gap was purely *when*. Gate: **1061 tests, 0 failures**
+(1032 → 1061). Known open issue: seeking is dead during playback of transcoded
+downloads (likely cueless live-muxed MKV → ExoPlayer unseekable) — opus agent
+investigating.
+
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 
 Built in two sequential worktree passes (player polish, then settings + app-wide),

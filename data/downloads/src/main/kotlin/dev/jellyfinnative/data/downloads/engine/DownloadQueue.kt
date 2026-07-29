@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
@@ -99,6 +100,7 @@ class DownloadQueue
         private val planner: DownloadFilePlanner,
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
+        private val seeder: SiblingSeeder,
         private val sessionGate: SessionGate,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -141,11 +143,13 @@ class DownloadQueue
 
             return try {
                 val dto = loadDto(download) ?: throw MissingMetadataException(download.itemId)
-                val files = reconcile(download, dto, queued.files)
+                val seeded = seedIfUnseeded(download, dto)
+                val files = reconcile(seeded, dto, queued.files)
                 // `false` means the row was deleted underneath us (the user cancelled): the item is
                 // gone, not finished, and writing a status for it would only resurrect nothing.
-                if (transfer(download, dto, files, listener)) {
-                    downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADED, clock.instant())
+                if (transfer(seeded, dto, files, listener)) {
+                    downloadDao.setStatus(seeded.itemId, DownloadStatus.DOWNLOADED, clock.instant())
+                    reseedSiblings(seeded)
                 }
                 true
             } catch (cancellation: CancellationException) {
@@ -286,6 +290,62 @@ class DownloadQueue
                 }
             }
             return true
+        }
+
+        /**
+         * Passes a finished item's measured size on to the rows still waiting on the same show.
+         *
+         * Called once the row is `DOWNLOADED`, so it is itself part of the evidence — a season
+         * queued in one tap has no other way to ever leave its enqueue-time ceiling, since seeding
+         * at enqueue had nothing finished to learn from.
+         *
+         * Best effort on purpose: a download that is on disk and playable must not be reported as
+         * failed because a cosmetic estimate for the *next* item could not be written.
+         */
+        private suspend fun reseedSiblings(download: DownloadEntity) {
+            runCatching { seeder.seedPendingSiblingsOf(download) }
+                .onFailure { error ->
+                    if (error is CancellationException) throw error
+                    Timber.w(error, "Could not re-seed the siblings of %s", download.itemName)
+                }
+        }
+
+        /**
+         * Gives a row about to start a projection if it still has none, and returns the row the
+         * transfer should run with.
+         *
+         * The scanner cannot say anything until a first Matroska cluster has arrived, which on a
+         * slow connection is tens of seconds of the user staring at *"up to X"* for an episode whose
+         * siblings are sitting finished on the same device. The row may well have been enqueued
+         * before any of them landed — a whole season queued in one tap is exactly that case — so the
+         * seed is computed again here rather than trusted to have happened at enqueue.
+         *
+         * The write goes through [DownloadDao.setProjectedBytesIfAbsent], so a projection written in
+         * the meantime wins; the returned row carries the seed so the in-memory `ItemProgress`
+         * starts from it too, instead of waiting for the next drain to pick it up from Room.
+         */
+        @Suppress("ReturnCount")
+        private suspend fun seedIfUnseeded(
+            download: DownloadEntity,
+            dto: BaseItemDto,
+        ): DownloadEntity {
+            if (download.projectedBytes != null || !download.quality.isTranscoded || download.sizeIsExact) {
+                return download
+            }
+            val runtimeMillis = dto.runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return download
+            val ceiling = download.bytesTotal.takeIf { it > 0L } ?: return download
+
+            val seed =
+                seeder.seedFor(
+                    itemId = download.itemId,
+                    seriesName = download.seriesName,
+                    quality = download.quality,
+                    runtimeMillis = runtimeMillis,
+                    ceilingBytes = ceiling,
+                ) ?: return download
+
+            downloadDao.setProjectedBytesIfAbsent(download.itemId, seed, clock.instant())
+            return download.copy(projectedBytes = seed)
         }
 
         /**

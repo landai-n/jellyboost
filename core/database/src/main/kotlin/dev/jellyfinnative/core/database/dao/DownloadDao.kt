@@ -110,6 +110,51 @@ interface DownloadDao {
         limit: Int,
     ): List<DownloadEntity>
 
+    /**
+     * Rows of the same show at the same quality that are still waiting and still have nothing
+     * better than their ceiling to show — what a finished sibling re-seeds (`SiblingSeeder`).
+     *
+     * Every clause is a case that must not be touched: a `DOWNLOADED` or `ERROR` row is not waiting
+     * for a size, a row that already carries a `projectedBytes` has a better answer than a fresh
+     * guess (a live scanner measurement, or an earlier seed), and a row whose `bytesTotal` is
+     * already exact has no ceiling to improve on.
+     */
+    @Query(
+        """
+        SELECT * FROM downloads
+        WHERE seriesName = :seriesName AND quality = :quality
+          AND status IN ('QUEUED', 'PAUSED')
+          AND projectedBytes IS NULL AND sizeIsExact = 0
+        ORDER BY queuePosition ASC
+        """,
+    )
+    suspend fun unseededSiblings(
+        seriesName: String,
+        quality: DownloadQuality,
+    ): List<DownloadEntity>
+
+    /**
+     * Writes a projection onto a row that has none, and leaves one that has alone.
+     *
+     * The `projectedBytes IS NULL` test lives in the statement rather than in a read-then-write in
+     * Kotlin because the two racers are real: the queue starts the row it has just re-seeded and
+     * its `TranscodeSizeProjector` begins writing measurements through
+     * [updateProgress], while this seed is still being computed from the rows of its siblings. A
+     * measurement outranks a guess, so the guess must lose that race by construction.
+     *
+     * [bytesTotal] is deliberately not in the statement: the ceiling is what the enqueue step
+     * promised, and a seed is only ever allowed to improve on what is shown *next to* it.
+     */
+    @Query(
+        "UPDATE downloads SET projectedBytes = :projectedBytes, updatedAt = :updatedAt " +
+            "WHERE itemId = :itemId AND projectedBytes IS NULL",
+    )
+    suspend fun setProjectedBytesIfAbsent(
+        itemId: UUID,
+        projectedBytes: Long,
+        updatedAt: Instant,
+    )
+
     /** Rows in queue order — what a reorder renumbers. */
     @Query("SELECT * FROM downloads WHERE status IN ('QUEUED', 'DOWNLOADING', 'PAUSED') ORDER BY queuePosition ASC")
     suspend fun pending(): List<DownloadEntity>

@@ -18,6 +18,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.file
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
@@ -28,6 +29,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
+import io.mockk.Ordering
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -62,6 +64,7 @@ class DownloadQueueTest {
     private val itemMapper = mockk<ItemEntityMapper>()
     private val storage = mockk<DownloadStorage>()
     private val downloader = mockk<FileDownloader>()
+    private val seeder = mockk<SiblingSeeder>(relaxUnitFun = true)
     private val urls = mockk<DownloadUrlFactory>(relaxed = true)
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
@@ -87,6 +90,8 @@ class DownloadQueueTest {
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
         coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
+        // Nothing to seed from unless a test says otherwise.
+        coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
     }
 
     // ---- the happy path -------------------------------------------------------------------------
@@ -435,6 +440,87 @@ class DownloadQueueTest {
             projections.filterNotNull().shouldBeEmpty()
         }
 
+    // ---- sibling seeding at the moments the queue owns -------------------------------------------
+
+    @Test
+    fun `a row that starts with no projection is seeded from its finished siblings`() =
+        runTest {
+            // The user's report: a season queued in one tap has nothing to be seeded from at
+            // enqueue, so the row reaching the front of the queue must ask again — otherwise it
+            // shows "up to X" until the scanner reads a cluster, which on a slow link is a minute.
+            givenTranscodeOfAnHour(ceiling = 10_000_000L, seriesName = "Westworld")
+            coEvery { seeder.seedFor(uuid(1), "Westworld", DownloadQuality.LOW, HOUR_MILLIS, 10_000_000L) } returns
+                3_000_000L
+            givenMediaStream(clusterMillis = null, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            coVerify { downloadDao.setProjectedBytesIfAbsent(uuid(1), 3_000_000L, NOW) }
+            // And the transfer starts from it rather than from the ceiling: the seed reaches the
+            // in-memory progress too, so the first sample already reads "~3,0 MB".
+            projections shouldContain 3_000_000L + 400L
+        }
+
+    @Test
+    fun `a row that already carries a projection is left alone`() =
+        runTest {
+            givenTranscodeOfAnHour(ceiling = 10_000_000L, seed = 3_000_000L, seriesName = "Westworld")
+            givenMediaStream(clusterMillis = null, reportedBytes = 2_000L)
+
+            queue().drain(listener)
+
+            // Whatever is on the row — an enqueue-time seed, or a measurement from an earlier
+            // attempt — is better evidence than a median recomputed now.
+            coVerify(exactly = 0) { seeder.seedFor(any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `an original download is never seeded — its size is already the server's own`() =
+        runTest {
+            queueWith(download(bytesTotal = 10_000L, seriesName = "Westworld"))
+
+            queue().drain(listener)
+
+            coVerify(exactly = 0) { seeder.seedFor(any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `a finished item re-seeds the siblings still waiting on it`() =
+        runTest {
+            queueWith(download(seriesName = "Westworld"))
+
+            queue().drain(listener)
+
+            // The row is DOWNLOADED by then, so it is part of the evidence the waiting rows use.
+            coVerify(ordering = Ordering.ORDERED) {
+                downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null)
+                seeder.seedPendingSiblingsOf(match { it.itemId == uuid(1) })
+            }
+        }
+
+    @Test
+    fun `an item that failed seeds nothing, since it measured nothing`() =
+        runTest {
+            queueWith(download(seriesName = "Westworld"))
+            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("boom")
+
+            queue().drain(listener)
+
+            coVerify(exactly = 0) { seeder.seedPendingSiblingsOf(any()) }
+        }
+
+    @Test
+    fun `a re-seed that fails does not fail the download that triggered it`() =
+        runTest {
+            // The item is on disk and playable; an estimate for the *next* one is cosmetic.
+            queueWith(download(seriesName = "Westworld"))
+            coEvery { seeder.seedPendingSiblingsOf(any()) } throws IOException("room is busy")
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
+        }
+
     // ---- cancellation ---------------------------------------------------------------------------
 
     @Test
@@ -616,6 +702,7 @@ class DownloadQueueTest {
         ceiling: Long,
         seed: Long? = null,
         sizeIsExact: Boolean = false,
+        seriesName: String? = null,
     ) {
         every { itemMapper.toDtoOrNull(any()) } returns movie(runTimeTicks = HOUR_TICKS)
         every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
@@ -625,6 +712,7 @@ class DownloadQueueTest {
                 bytesTotal = ceiling,
                 projectedBytes = seed,
                 sizeIsExact = sizeIsExact,
+                seriesName = seriesName,
             ),
         )
     }
@@ -671,6 +759,7 @@ class DownloadQueueTest {
             planner = DownloadFilePlanner(urls),
             storage = storage,
             downloader = downloader,
+            seeder = seeder,
             sessionGate = sessionGate,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
@@ -713,6 +802,9 @@ class DownloadQueueTest {
 
         /** One hour in `runTimeTicks` (100 ns each). */
         const val HOUR_TICKS = 36_000_000_000L
+
+        /** The same hour in milliseconds — what the seeder is asked in. */
+        const val HOUR_MILLIS = 3_600_000L
 
         val ITEM_ENTITY =
             ItemEntity(

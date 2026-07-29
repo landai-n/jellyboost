@@ -28,8 +28,10 @@ decisions are logged in DECISIONS.md; per-feature details in docs/features/.
 # Next steps — done ✅
 - ~~General quality setting for offline downloads~~ — Original/High/Medium/Low (bitrate-capped H.264/AAC in MKV — the server's streamed mp4 mux is not playable as a file); quality stamped per download row (schema v5); transcodes restart rather than resume, by design. Verified: LOW episode downloads as `(low).mkv` and direct-plays offline.
 
-# Todo next run
-- Download size estimate are off my a wide margin, shouldn't be so hard to mulitply the bitrate by the duration of the media to get a rough estimate of the size.
-  (Walk data point: a LOW episode estimated 552 MB, landed at 232 MB — the estimate uses the bitrate cap, not typical encoder output.)
-- Media banner could take more space in portrait mode, right now we have a lot of empty space at the bottom
-- Cancelling an in-progress season download silently deletes the episodes that already finished — should that ask for confirmation? (observed on the final device walk)
+# Second run — code landed ✅
+- ~~Download size estimate are off my a wide margin~~ — `DownloadEnqueuer.expectedBytes` now uses min(quality cap, source `mediaSources[0].bitrate`) when the source bitrate is known/positive, falling back to the cap when it isn't; ORIGINAL unchanged. Unit-verified (3 tests, one re-pinned with its source bitrate above the cap); device check pending — blocked, see Remaining.
+- ~~Media banner could take more space in portrait mode~~ — banner is now 0.40 × viewport height in portrait, coerced between the old width-derived value (220dp narrow / 320dp wide) and 560dp; landscape unchanged. Device-verified on the test tablet, both orientations: portrait now ~449dp (was 220dp) with the header directly below; landscape confirmed unchanged at exactly 320dp.
+- ~~Cancelling an in-progress season download silently deletes the episodes that already finished~~ — resolved better than a confirmation dialog: Cancel on an in-flight season now deletes only queued/transferring/paused/failed rows and keeps `Downloaded` ones, with a snackbar ("Download cancelled — N finished episode(s) kept"); Remove still deletes everything. A partly-kept season aggregates back to NotDownloaded, so the button then offers Download for the missing episodes (pre-existing, test-pinned behavior). Unit-verified (4 tests added/updated); device check pending — blocked, see Remaining.
+
+# Remaining
+- Re-sign in on the tablet — the stored server token was revoked server-side, so every authenticated call currently 401s. Once signed in, device-check the size estimate on a fresh enqueue and the partial-season cancel.

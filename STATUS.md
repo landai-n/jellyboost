@@ -42,12 +42,31 @@ Highlights (details in DECISIONS.md and docs/features/):
   debug ~4 % — perceived scroll lag is debug-build overhead. Release build is
   debug-signed as a local measurement aid; real signing/R8/baseline profiles stay M10.
 
-### Known issues / carried forward (also in docs/POLISH.md "Todo next run")
-- Transcode size estimates use the bitrate cap → far above real output (552 MB
-  est. vs 232 MB actual on a LOW episode).
-- Portrait detail banner leaves empty space at the bottom.
-- Season-level Cancel silently deletes already-completed episodes (no confirmation).
+### Known issues / carried forward (also in docs/POLISH.md)
+- ~~Transcode size estimates use the bitrate cap → far above real output (552 MB
+  est. vs 232 MB actual on a LOW episode).~~ — **fixed 2026-07-29**:
+  `DownloadEnqueuer.expectedBytes` now uses min(quality cap, source bitrate) when the
+  source's bitrate is known/positive, else the cap. Unit-verified (3 tests); device
+  check pending (blocked — see the second-run note below).
+- ~~Portrait detail banner leaves empty space at the bottom.~~ — **fixed 2026-07-29**:
+  banner is now 0.40 × viewport height in portrait, coerced between the old
+  width-derived value and 560dp. Device-verified on the test tablet, both
+  orientations: portrait ~449dp (was 220dp), landscape unchanged at 320dp.
+- ~~Season-level Cancel silently deletes already-completed episodes (no
+  confirmation).~~ — **fixed 2026-07-29**: Cancel on an in-flight season now deletes
+  only queued/transferring/paused/failed rows and keeps `Downloaded` ones, with a
+  snackbar naming the count kept; Remove still deletes everything. Unit-verified (4
+  tests); device check pending (blocked — see the second-run note below).
 - Series detail page has no aggregate download-button state (logged in DECISIONS.md).
+
+### Second polish run (2026-07-29)
+Three punch-list items above landed in code (commits 339d725, 7b90788; decisions
+logged in DECISIONS.md): the transcode size estimate, the portrait banner, and
+season-cancel keep-finished. Full gate on the merged tree: **884 tests, 0 failures**
+(858 → 884). The banner is device-verified both orientations; the size-estimate and
+season-cancel device checks are blocked — the tablet's stored server token was
+revoked server-side (every authenticated call now 401s), so the user needs to sign
+in again on the tablet before either check (both require enqueuing fresh downloads).
 
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 

@@ -79,9 +79,17 @@ section layout the user configured in jellyfin-web, read from DisplayPreferences
 per-slot default fallback and an offline cache (febd896) — the feasibility research is
 in docs/notes/home-sections-feasibility.md. Also this run: the recurring "session
 expired" bug root-caused and fixed — per-install UUID device id instead of the
-signing-key-scoped ANDROID_ID (a64ed96); both installs need one re-sign-in. Full gate
-on the merged tree: **934 tests, 0 failures** (884 → 934). Device checks pending
-(this run's items + the two blocked ones above) — all still gated on the re-sign-in.
+signing-key-scoped ANDROID_ID (a64ed96); both installs need one re-sign-in. Also landed after the device walk: tab switches pop to `Routes.Home` instead of the
+graph's start destination — fixes duplicated HomeViewModels/refresh pairs on
+signed-out launches (649a7c8) — and capped transcode estimates now read "up to X"
+(ee490d0), with the deeper estimation question answered in
+docs/notes/download-size-estimation.md (mid-flight projection feasible, pre-flight
+impossible). Full gate: **941 tests, 0 failures** (884 → 941). All device checks
+DONE on the re-signed-in tablet (walk notes in docs/POLISH.md): insets both
+orientations, watched→membership round-trip, season-cancel keeping finished
+episodes, storage picker correctly hidden single-volume, single refresh pair per
+toggle post-nav-fix. Size estimate confirmed working as designed (ceiling semantics;
+encoder undershoot on easy content is the residual).
 
 ## Previous milestone: M9 — Polish (DONE, tagged m9)
 

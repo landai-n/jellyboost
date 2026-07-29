@@ -278,8 +278,24 @@ class DownloadQueueTest {
             runCatching { queue().drain(listener) }
 
             // This is what makes the next run resume from the byte offset instead of restarting.
-            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.QUEUED, NOW, null) }
+            coVerify { downloadDao.requeueIfDownloading(uuid(1), NOW) }
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
+        }
+
+    @Test
+    fun `cancellation never writes QUEUED over whatever status the row now has`() =
+        runTest {
+            // The M9 bug (docs/POLISH.md, "pausing a download doesn't work"): *Pause* writes
+            // `PAUSED` and then cancels the work to interrupt the transfer, so this handler runs
+            // *after* the user's own write. An unconditional `setStatus(QUEUED)` here undid it and
+            // `nextRunnable` picked the item straight back up — pause looked like it did nothing.
+            // The status test lives in the statement (`requeueIfDownloading`) so it cannot race.
+            queueWith(download())
+            coEvery { downloader.download(any(), any(), any(), any()) } throws CancellationException("paused")
+
+            runCatching { queue().drain(listener) }
+
+            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.QUEUED, any(), any()) }
         }
 
     // ---- the file plan --------------------------------------------------------------------------

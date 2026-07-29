@@ -220,6 +220,20 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
+    fun `pausing writes PAUSED and leaves the rest of the queue running`() =
+        runTest {
+            // The other half of the M9 pause bug (docs/POLISH.md): the repository's own writes must
+            // leave exactly one status behind — `DownloadQueue` is what used to add a second one
+            // when it saw the cancellation — and the queue must be brought back up with
+            // `ensureRunning`, so items behind the paused one keep draining.
+            repository().pause(uuid(1).toString())
+
+            coVerify(exactly = 1) { downloadDao.setStatus(uuid(1), DownloadStatus.PAUSED, NOW, null) }
+            coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.QUEUED, any(), any()) }
+            coVerify(exactly = 1) { scheduler.ensureRunning() }
+        }
+
+    @Test
     fun `resuming re-queues the row and restarts with fresh constraints`() =
         runTest {
             repository().resume(uuid(1).toString())

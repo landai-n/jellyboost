@@ -17,8 +17,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +51,10 @@ import dev.jellyfinnative.core.ui.theme.JellyfinTheme
  * The [SearchViewModel] is passed in rather than resolved here so `:app` owns the
  * `hiltViewModel()` call together with the rest of the navigation graph wiring, as it does for
  * home.
+ *
+ * The field autofocuses (and raises the keyboard) whenever the field is empty at entry — see the
+ * `LaunchedEffect` in [SearchField] for why that fires on the right entries and not on every
+ * keystroke.
  */
 @Composable
 fun SearchScreen(
@@ -110,6 +119,27 @@ private fun SearchField(
     onQueryChange: (String) -> Unit,
     onClearQuery: () -> Unit,
 ) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Land on the field with the keyboard already up, so the user can type immediately instead of
+    // tapping first. Keyed on `Unit`, this fires once per *composition* of the screen rather than
+    // once per keystroke: `:app`'s NavHost disposes `SearchScreen` when another top-level tab is on
+    // top and composes it fresh on return (only the ViewModel/state survive that via
+    // `restoreState` — see `topLevelNavOptions()` in AppScaffold.kt), so this effect re-runs on a
+    // fresh entry and on every tab re-entry, but never on a plain recomposition (e.g. a keystroke
+    // or results streaming in) since those don't remount the composable. Guarding on a blank query
+    // means it only grabs focus when there is nothing to disturb: a first visit, or a tab
+    // re-entry/return-from-detail with the field still empty. Re-entering (or returning from a
+    // result's detail page) with results already showing leaves focus alone, so it doesn't yank the
+    // keyboard back up over someone scrolling the list.
+    LaunchedEffect(Unit) {
+        if (query.isBlank()) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
@@ -130,6 +160,7 @@ private fun SearchField(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .focusRequester(focusRequester)
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
     )
 }

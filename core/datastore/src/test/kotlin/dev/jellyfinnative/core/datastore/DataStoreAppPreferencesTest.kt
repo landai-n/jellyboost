@@ -223,6 +223,47 @@ class DataStoreAppPreferencesTest {
             DataStoreAppPreferences(store).downloadQuality.first() shouldBe DownloadQuality.ORIGINAL
         }
 
+    // ---- storage location ------------------------------------------------------------------------
+
+    @Test
+    fun `no storage volume is stored until the user picks one`() =
+        runTest {
+            // Absent, not "primary": the default and an explicit choice of the built-in volume are
+            // deliberately indistinguishable, so a device whose volume ids change still resolves.
+            DataStoreAppPreferences(dataStore(this)).downloadStorageVolumeId.first() shouldBe null
+        }
+
+    @Test
+    fun `the chosen storage volume survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setDownloadStorageVolumeId("1A2B-3C4D")
+
+            DataStoreAppPreferences(store).downloadStorageVolumeId.first() shouldBe "1A2B-3C4D"
+        }
+
+    @Test
+    fun `clearing the chosen storage volume restores the default`() =
+        runTest {
+            val store = dataStore(this)
+            DataStoreAppPreferences(store).setDownloadStorageVolumeId("1A2B-3C4D")
+
+            DataStoreAppPreferences(store).setDownloadStorageVolumeId(null)
+
+            DataStoreAppPreferences(store).downloadStorageVolumeId.first() shouldBe null
+        }
+
+    @Test
+    fun `a blank stored storage volume reads as no choice at all`() =
+        runTest {
+            val store = dataStore(this)
+            // Only a bad write can produce this, and the default volume is the safe answer to it.
+            store.edit { it[stringPreferencesKey(PreferenceKeys.DOWNLOAD_STORAGE_VOLUME)] = "  " }
+
+            DataStoreAppPreferences(store).downloadStorageVolumeId.first() shouldBe null
+        }
+
     @Test
     fun `emits every download quality change to observers`() =
         runTest {

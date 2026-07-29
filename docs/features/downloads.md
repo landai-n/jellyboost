@@ -66,6 +66,8 @@ DownloadRepository.enqueue(itemId)
 | `DownloadUrlFactory` / `SdkDownloadUrlFactory` | `:data:downloads` | Every URL the pipeline fetches, behind a seam (a real `ApiClient` has no base URL in a JVM test). |
 | `DownloadPaths` | `:data:downloads` | Directory and file naming; pure, fully unit-tested. |
 | `DownloadStorage` / `FileDownloadStorage` | `:data:downloads` | Where files live. The interface is the seam a SAF backend would go behind. |
+| `StorageLocationManager` | `:data:downloads` | Which volume that root sits on: the stored choice if it is mounted, the primary volume otherwise. Caches the choice so the non-suspending `DownloadStorage` surface can stay non-suspending. |
+| `StorageVolumeProvider` / `AndroidStorageVolumeProvider` | `:data:downloads` | Enumerates the mounted volumes from `getExternalFilesDirs` + `StorageManager`; an interface so the resolution rules are testable on the JVM. |
 | `FileDownloader` | `:data:downloads` | One file over OkHttp, with HTTP `Range` resume and 64 KB progress callbacks. |
 | `ProgressThrottle` | `:data:downloads` | Decides which callbacks are worth a Room write (500 ms **or** 1 %). |
 | `DownloadQueue` | `:data:downloads` | One item at a time, in queue order; the status machine. |
@@ -255,11 +257,50 @@ and the notification are all Flows over it.
 
 ## Storage
 
-Default `getExternalFilesDir(null)/downloads` — app-private external storage: no runtime permission,
-wiped on uninstall, invisible to the media scanner. `DownloadStorage` is the seam a SAF-tree or
-secondary-volume backend would go behind; v1 ships only the `File` implementation (DECISIONS.md,
-2026-07-28 — "SAF and secondary-volume storage deferred"). The storage header walks the filesystem
-rather than summing Room, so an orphaned file shows up instead of hiding.
+`<app-specific dir on the chosen volume>/downloads` — app-private external storage: no runtime
+permission, wiped on uninstall, invisible to the media scanner. The storage header walks the
+filesystem rather than summing Room, so an orphaned file shows up instead of hiding.
+
+### Choosing the volume
+
+Settings → Downloads → *Storage location* lists every **mounted** volume `getExternalFilesDirs(null)`
+reports — internal storage, and the SD card when one is in. The group is hidden entirely on a device
+with only one. Each option is an app-specific directory, which is what keeps the whole pipeline on
+plain `java.io.File`: picking the SD card needs no permission, no persisted URI grant and no
+`DocumentFile`. Choosing an *arbitrary* folder still needs SAF, which is still deferred behind the
+`DownloadStorage` seam (DECISIONS.md 2026-07-29).
+
+```
+AppPreferences.downloadStorageVolumeId   ("primary" | volume UUID | absent = default)
+        │
+        ▼
+StorageLocationManager.resolve(id) ── StorageVolumeProvider.volumes()   (mounted volumes)
+        │                                     │
+        │  chosen volume if mounted,          └─ getExternalFilesDirs + StorageManager
+        │  primary volume otherwise
+        ▼
+   activeRoot() = <volume app dir>/downloads  ──▶  FileDownloadStorage  ──▶  every path in the pipeline
+```
+
+Three rules are worth stating outright:
+
+- **The stored value is a token, not a position.** A volume UUID (or `"primary"`), never an index —
+  indices reorder when a card is pulled — and never a path, which is only stable while mounted.
+- **A missing volume falls back rather than fails.** Take the card out and downloads go to internal
+  storage again; Settings says so in red instead of the app writing nowhere. The default is stored
+  as an *absent* key, so "never chose" and "chose the built-in volume" stay indistinguishable.
+- **Switching is delete-all-and-switch, or nothing** (docs/PLAN.md's v1 policy; `MoveStorageWorker`
+  is still deferred). `DownloadRepository.setStorageLocation` counts the download rows and refuses
+  unless the caller passed `deleteExistingDownloads`; the Settings picker asks first, and switches
+  immediately when the device is empty. The reason is mechanical: `DownloadFileEntity.path` is
+  absolute and is only re-resolved when an item is (re-)enqueued, so files left behind on the old
+  volume would keep playing until the card came out and then silently fall back to streaming.
+  Re-selecting the volume already being written to is the one switch that deletes nothing — it moves
+  no files, and it is how a user clears a stale choice once the card is gone.
+
+The primary volume resolves to exactly the path used before the picker existed
+(`getExternalFilesDir(null)/downloads`), so an install that never touches the setting needs no
+migration.
 
 ---
 

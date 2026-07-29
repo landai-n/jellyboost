@@ -3,6 +3,7 @@ package dev.jellyfinnative.data.downloads
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.data.downloads.model.DownloadItem
+import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
 import kotlinx.coroutines.flow.Flow
 
@@ -31,6 +32,28 @@ interface DownloadRepository {
 
     /** Storage used and free at the download root; re-read whenever [observeDownloads] changes. */
     fun observeStorage(): Flow<StorageUsage>
+
+    /** The volumes downloads can be written to, and which one is in force — the Settings picker. */
+    fun observeStorageLocations(): Flow<StorageLocations>
+
+    /**
+     * Points future downloads at [volumeId].
+     *
+     * The plan's v1 policy is enforced here rather than in the UI: **a location change is only
+     * allowed when no downloads exist**, or when the caller has agreed to delete them all first
+     * (docs/PLAN.md, "Download pipeline" → Storage; `MoveStorageWorker` is deferred). The reason is
+     * mechanical, not cautious: a finished download's file rows hold absolute paths that nothing
+     * rewrites, so files left on the old volume would still be found — until the card is pulled, at
+     * which point offline playback would silently fall back to streaming.
+     *
+     * @param deleteExistingDownloads deletes every download — files, rows and orphaned metadata —
+     *   before switching. Required when any download exists; the call fails otherwise, and nothing
+     *   is changed.
+     */
+    suspend fun setStorageLocation(
+        volumeId: String,
+        deleteExistingDownloads: Boolean,
+    ): AppResult<Unit>
 
     /** `true` while downloads are restricted to unmetered networks. */
     val wifiOnly: Flow<Boolean>

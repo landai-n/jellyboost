@@ -65,6 +65,23 @@ class DataStoreAppPreferences
             dataStore.edit { it[DOWNLOAD_QUALITY] = quality.name }
         }
 
+        // A blank stored id reads as "unset" as well as an absent one: an empty string can only be
+        // the result of a bad write, and the default volume is the safe answer to any of them.
+        override val downloadStorageVolumeId: Flow<String?> =
+            preferences.map { it[DOWNLOAD_STORAGE_VOLUME]?.takeIf(String::isNotBlank) }
+
+        override suspend fun setDownloadStorageVolumeId(volumeId: String?) {
+            dataStore.edit { store ->
+                // Removing the key rather than storing "" keeps "the default" and "a corrupted
+                // value" from ever looking alike on the read side.
+                if (volumeId.isNullOrBlank()) {
+                    store.remove(DOWNLOAD_STORAGE_VOLUME)
+                } else {
+                    store[DOWNLOAD_STORAGE_VOLUME] = volumeId
+                }
+            }
+        }
+
         // M9 player ---------------------------------------------------------------------------
 
         override val introSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_INTRO) }
@@ -100,6 +117,7 @@ class DataStoreAppPreferences
             val FORCE_OFFLINE = booleanPreferencesKey(PreferenceKeys.FORCE_OFFLINE)
             val DOWNLOAD_OVER_WIFI_ONLY = booleanPreferencesKey(PreferenceKeys.DOWNLOAD_OVER_WIFI_ONLY)
             val DOWNLOAD_QUALITY = stringPreferencesKey(PreferenceKeys.DOWNLOAD_QUALITY)
+            val DOWNLOAD_STORAGE_VOLUME = stringPreferencesKey(PreferenceKeys.DOWNLOAD_STORAGE_VOLUME)
             val SEGMENT_SKIP_INTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_INTRO)
             val SEGMENT_SKIP_OUTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_OUTRO)
             val PIP_ON_LEAVE = booleanPreferencesKey(PreferenceKeys.PIP_ON_LEAVE)

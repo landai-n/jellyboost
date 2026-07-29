@@ -26,6 +26,17 @@
     <string name="settings_storage_label">Storage</string>
     <string name="settings_storage_summary">%1$s used · %2$s free on this device</string>
     <string name="settings_storage_location">Downloads are kept in %1$s</string>
+    <string name="settings_storage_picker">Storage location</string>
+    <string name="settings_storage_internal">Internal storage</string>
+    <string name="settings_storage_sd_card">SD card</string>
+    <string name="settings_storage_volume_free">%1$s free</string>
+    <string name="settings_storage_missing">The storage you chose isn\'t available right now, so downloads are going to the location selected below.</string>
+    <string name="settings_storage_switch_title">Move downloads?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Downloads can\'t be moved between locations yet, so the one already on this device will be deleted. You can download it again to the new location.</item>
+        <item quantity="other">Downloads can\'t be moved between locations yet, so the %1$d already on this device will be deleted. You can download them again to the new location.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Delete and switch</string>
 
     <!-- Connectivity -->
     <string name="settings_section_connectivity">Connectivity</string>

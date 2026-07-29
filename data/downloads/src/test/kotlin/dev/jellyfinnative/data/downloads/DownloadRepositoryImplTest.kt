@@ -22,6 +22,9 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.file
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import dev.jellyfinnative.data.downloads.storage.DownloadVolume
+import dev.jellyfinnative.data.downloads.storage.StorageLocationManager
+import dev.jellyfinnative.data.downloads.storage.StorageSelection
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -31,13 +34,19 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.time.Clock
 import java.time.ZoneOffset
 
@@ -57,14 +66,21 @@ class DownloadRepositoryImplTest {
     private val deleter = mockk<DownloadDeleter>()
     private val scheduler = mockk<DownloadScheduler>(relaxUnitFun = true)
     private val storage = mockk<DownloadStorage>(relaxed = true)
+    private val locations = mockk<StorageLocationManager>(relaxUnitFun = true)
     private val preferences = mockk<AppPreferences>(relaxUnitFun = true)
     private val sessionRepository = mockk<SessionRepository>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
+    private val selectedVolumeId = MutableStateFlow<String?>(null)
 
     @BeforeEach
     fun setUp() {
         every { sessionRepository.sessionState } returns MutableStateFlow(LOGGED_IN)
         every { preferences.downloadOverWifiOnly } returns flowOf(true)
+        every { locations.selectedVolumeId } returns selectedVolumeId
+        every { locations.resolve(any()) } answers { selectionFor(firstArg()) }
+        // The tests that switch volume start out writing to the primary one.
+        every { locations.activeVolume() } returns PRIMARY_VOLUME
+        coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { scheduler.ensureRunning() } returns Unit
         coEvery { scheduler.restart() } returns Unit
         coEvery { deleter.delete(any()) } returns 0L
@@ -366,9 +382,137 @@ class DownloadRepositoryImplTest {
             }
         }
 
+    // ---- storage location -------------------------------------------------------------------------
+
+    @Test
+    fun `the picker sees every mounted volume, which is active, and what stands in the way`() =
+        runTest {
+            every { downloadDao.observeProgress() } returns
+                flowOf(listOf(progress(uuid(1), DownloadStatus.DOWNLOADED)))
+            selectedVolumeId.value = CARD_ID
+
+            val locations = repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().first()
+
+            locations.volumes.map { it.id } shouldBe listOf(PRIMARY_ID, CARD_ID)
+            locations.activeVolumeId shouldBe CARD_ID
+            locations.selectedVolumeMissing shouldBe false
+            // What the confirmation dialog counts, and what the switch guard enforces.
+            locations.downloadCount shouldBe 1
+        }
+
+    @Test
+    fun `an ejected card is reported as a fallback rather than shown as the selection`() =
+        runTest {
+            every { downloadDao.observeProgress() } returns flowOf(emptyList())
+            selectedVolumeId.value = "a-card-that-is-not-here"
+
+            val locations = repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().first()
+
+            locations.activeVolumeId shouldBe PRIMARY_ID
+            locations.selectedVolumeMissing shouldBe true
+        }
+
+    @Test
+    fun `switching volume with nothing downloaded takes effect at once`() =
+        runTest {
+            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = false)
+
+            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
+            coVerify { locations.select(CARD_ID) }
+            coVerify(exactly = 0) { deleter.delete(any()) }
+        }
+
+    @Test
+    fun `switching volume while downloads exist is refused unless the caller agrees to lose them`() =
+        runTest {
+            // docs/PLAN.md's v1 policy: nothing moves files yet, and a finished download's file
+            // rows hold absolute paths on the old volume that nothing rewrites.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
+
+            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = false)
+
+            result.shouldBeInstanceOf<AppResult.Failure>()
+            coVerify(exactly = 0) { locations.select(any()) }
+            coVerify(exactly = 0) { deleter.delete(any()) }
+        }
+
+    @Test
+    fun `delete-all-and-switch empties the device before the root moves`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1), uuid(2))
+
+            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = true)
+
+            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
+            coVerifyOrder {
+                // Stop first so the downloader cannot hold a handle to a file being unlinked, and
+                // delete before the root moves or the cascade looks on the wrong volume for them.
+                scheduler.stop()
+                deleter.delete(uuid(1))
+                deleter.delete(uuid(2))
+                locations.select(CARD_ID)
+            }
+        }
+
+    @Test
+    fun `re-affirming the volume already in force keeps the downloads that are on it`() =
+        runTest {
+            // What clearing a stale choice looks like: the card is out, the fallback is already
+            // writing to internal storage, and the user taps it. Nothing moves, so nothing is lost.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
+            every { locations.activeVolume() } returns PRIMARY_VOLUME
+
+            val result = repository().setStorageLocation(PRIMARY_ID, deleteExistingDownloads = false)
+
+            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
+            coVerify { locations.select(PRIMARY_ID) }
+            coVerify(exactly = 0) { deleter.delete(any()) }
+        }
+
+    @Test
+    fun `switching to a volume that is not mounted changes nothing`() =
+        runTest {
+            val result = repository().setStorageLocation("a-card-that-is-not-here", deleteExistingDownloads = true)
+
+            result.shouldBeInstanceOf<AppResult.Failure>()
+            result.error.shouldBeInstanceOf<AppError.NotFound>()
+            coVerify(exactly = 0) { locations.select(any()) }
+        }
+
+    @Test
+    fun `the storage header re-reads when the volume changes, not only when a download does`() =
+        runTest {
+            // Switching with an empty queue changes no download row, so a projection keyed only on
+            // progress would keep reporting the old volume's free space.
+            every { downloadDao.observeProgress() } returns MutableStateFlow(emptyList())
+            every { storage.usedBytes() } returnsMany listOf(10L, 20L)
+            every { storage.availableBytes() } returnsMany listOf(90L, 180L)
+
+            val emissions =
+                async(UnconfinedTestDispatcher(testScheduler)) {
+                    repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().take(2).toList()
+                }
+            selectedVolumeId.value = CARD_ID
+
+            emissions.await().map { it.usedBytes } shouldBe listOf(10L, 20L)
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
 
-    private fun repository() =
+    /** Two mounted volumes; anything else the caller asks for falls back to the primary one. */
+    private fun selectionFor(selectedVolumeId: String?): StorageSelection {
+        val volumes = listOf(PRIMARY_VOLUME, CARD_VOLUME)
+        val chosen = volumes.firstOrNull { it.id == selectedVolumeId }
+        return StorageSelection(
+            volumes = volumes,
+            active = chosen ?: PRIMARY_VOLUME,
+            selectionMissing = selectedVolumeId != null && chosen == null,
+        )
+    }
+
+    // The dispatcher is a parameter only so the storage-location tests can share `runTest`'s
+    // scheduler: they collect a projection that never completes, which needs the two in step.
+    private fun repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) =
         DownloadRepositoryImpl(
             downloadDao = downloadDao,
             itemDao = itemDao,
@@ -377,10 +521,11 @@ class DownloadRepositoryImplTest {
             deleter = deleter,
             scheduler = scheduler,
             storage = storage,
+            locations = locations,
             preferences = preferences,
             sessionRepository = sessionRepository,
             clock = clock,
-            ioDispatcher = UnconfinedTestDispatcher(),
+            ioDispatcher = ioDispatcher,
         )
 
     private fun progress(
@@ -391,6 +536,27 @@ class DownloadRepositoryImplTest {
     ) = DownloadProgress(itemId = itemId, status = status, bytesDownloaded = downloaded, bytesTotal = total)
 
     private companion object {
+        const val PRIMARY_ID = DownloadVolume.PRIMARY_ID
+        const val CARD_ID = "1A2B-3C4D"
+
+        val PRIMARY_VOLUME =
+            DownloadVolume(
+                id = PRIMARY_ID,
+                isPrimary = true,
+                isRemovable = false,
+                description = "Internal shared storage",
+                directory = File("/storage/emulated/0/Android/data/app/files"),
+            )
+
+        val CARD_VOLUME =
+            DownloadVolume(
+                id = CARD_ID,
+                isPrimary = false,
+                isRemovable = true,
+                description = "SD card",
+                directory = File("/storage/$CARD_ID/Android/data/app/files"),
+            )
+
         val LOGGED_IN =
             SessionState.LoggedIn(
                 serverId = uuid(50),

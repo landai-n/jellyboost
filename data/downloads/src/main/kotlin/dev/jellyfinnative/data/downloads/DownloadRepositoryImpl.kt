@@ -14,11 +14,16 @@ import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.model.DownloadItem
+import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
+import dev.jellyfinnative.data.downloads.model.StorageVolumeOption
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
+import dev.jellyfinnative.data.downloads.storage.DownloadVolume
+import dev.jellyfinnative.data.downloads.storage.StorageLocationManager
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -51,6 +56,7 @@ class DownloadRepositoryImpl
         private val deleter: DownloadDeleter,
         private val scheduler: DownloadScheduler,
         private val storage: DownloadStorage,
+        private val locations: StorageLocationManager,
         private val preferences: AppPreferences,
         private val sessionRepository: SessionRepository,
         private val clock: Clock,
@@ -75,17 +81,77 @@ class DownloadRepositoryImpl
                 .distinctUntilChanged()
                 .flowOn(ioDispatcher)
 
+        // The selected volume is a second trigger, not decoration: switching location with an empty
+        // queue changes no download row, so keying only on progress would leave the Downloads
+        // header reporting the *old* volume's free space until the next enqueue.
         override fun observeStorage(): Flow<StorageUsage> =
-            downloadDao
-                .observeProgress()
-                .map {
-                    StorageUsage(
-                        usedBytes = storage.usedBytes(),
-                        availableBytes = storage.availableBytes(),
-                        rootPath = storage.rootPath,
-                    )
-                }.distinctUntilChanged()
+            combine(downloadDao.observeProgress(), locations.selectedVolumeId) { _, _ ->
+                StorageUsage(
+                    usedBytes = storage.usedBytes(),
+                    availableBytes = storage.availableBytes(),
+                    rootPath = storage.rootPath,
+                )
+            }.distinctUntilChanged()
                 .flowOn(ioDispatcher)
+
+        override fun observeStorageLocations(): Flow<StorageLocations> =
+            combine(downloadDao.observeProgress(), locations.selectedVolumeId) { rows, selectedId ->
+                val selection = locations.resolve(selectedId)
+                StorageLocations(
+                    volumes = selection.volumes.map(DownloadVolume::toOption),
+                    activeVolumeId = selection.active?.id,
+                    selectedVolumeMissing = selection.selectionMissing,
+                    downloadCount = rows.size,
+                )
+            }.distinctUntilChanged()
+                .flowOn(ioDispatcher)
+
+        override suspend fun setStorageLocation(
+            volumeId: String,
+            deleteExistingDownloads: Boolean,
+        ): AppResult<Unit> =
+            withContext(ioDispatcher) {
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    // Refuse an id no mounted volume answers to rather than storing it: the manager
+                    // would fall back to the primary volume, and the picker would show a selection
+                    // the user never made.
+                    if (locations.resolve(volumeId).active?.id != volumeId) {
+                        return@withContext AppResult.Failure(AppError.NotFound(volumeId))
+                    }
+
+                    if (locations.activeVolume()?.id == volumeId) {
+                        // Already writing here, so nothing moves and nothing has to be deleted.
+                        // This is the path that clears a *stale* choice: with the card out, the
+                        // user can tap the volume the fallback already picked and make it the
+                        // choice, instead of being stuck with a selection they cannot reach.
+                        locations.select(volumeId)
+                        return@withContext AppResult.Success(Unit)
+                    }
+
+                    val existing = downloadDao.allItemIds()
+                    if (existing.isNotEmpty() && !deleteExistingDownloads) {
+                        // Not an exception: the caller asked whether it could, and the answer is no.
+                        Timber.w("Refusing to switch storage to %s: %d downloads exist", volumeId, existing.size)
+                        return@withContext AppResult.Failure(AppError.Storage())
+                    }
+
+                    if (existing.isNotEmpty()) {
+                        // Same order as a single delete: stop the queue before unlinking anything,
+                        // so the downloader cannot be holding a handle to a file we remove — and
+                        // delete *before* the root moves, or the cascade would look on the new
+                        // volume for files that are on the old one.
+                        scheduler.stop()
+                        existing.forEach { deleter.delete(it) }
+                    }
+
+                    locations.select(volumeId)
+                    AppResult.Success(Unit)
+                } catch (error: Exception) {
+                    Timber.e(error, "Could not switch download storage to %s", volumeId)
+                    AppResult.Failure(AppError.Storage(error))
+                }
+            }
 
         override val wifiOnly: Flow<Boolean> get() = preferences.downloadOverWifiOnly
 
@@ -215,6 +281,21 @@ class DownloadRepositoryImpl
 
         private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
     }
+
+/**
+ * A volume as the settings picker sees it.
+ *
+ * `availableBytes` is read here, on the IO dispatcher the projection runs on, rather than exposed as
+ * a lazy property the UI would touch on the main thread.
+ */
+private fun DownloadVolume.toOption(): StorageVolumeOption =
+    StorageVolumeOption(
+        id = id,
+        description = description,
+        isRemovable = isRemovable,
+        path = directory.absolutePath,
+        availableBytes = availableBytes,
+    )
 
 /** The badge state a progress row maps to. */
 internal fun DownloadProgress.toDownloadState(): DownloadState = status.toDownloadState(bytesDownloaded, bytesTotal)

@@ -11,8 +11,10 @@ import dev.jellyfinnative.data.downloads.DownloadRepositoryImpl
 import dev.jellyfinnative.data.downloads.SdkDownloadApi
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.plan.SdkDownloadUrlFactory
+import dev.jellyfinnative.data.downloads.storage.AndroidStorageVolumeProvider
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
 import dev.jellyfinnative.data.downloads.storage.FileDownloadStorage
+import dev.jellyfinnative.data.downloads.storage.StorageVolumeProvider
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import dev.jellyfinnative.data.downloads.work.WorkManagerDownloadScheduler
 import okhttp3.Call
@@ -40,10 +42,15 @@ internal interface DownloadsModule {
     @Singleton
     fun bindDownloadUrlFactory(impl: SdkDownloadUrlFactory): DownloadUrlFactory
 
-    /** Binds storage to the plan's default app-private external directory. */
+    /** Binds storage to the app-private external directory on whichever volume is selected. */
     @Binds
     @Singleton
     fun bindDownloadStorage(impl: FileDownloadStorage): DownloadStorage
+
+    /** Binds volume enumeration to the platform; the JVM tests substitute temporary directories. */
+    @Binds
+    @Singleton
+    fun bindStorageVolumeProvider(impl: AndroidStorageVolumeProvider): StorageVolumeProvider
 
     /** Binds the queue's scheduling to WorkManager. */
     @Binds

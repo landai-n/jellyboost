@@ -77,6 +77,10 @@ class DownloadEnqueuer
             return try {
                 // The item and its parents in one upsert: a partially-cached hierarchy is the state
                 // that makes offline navigation dead-end halfway up.
+                //
+                // Deliberately straight to the DAO and not through `BrowseCacheWriter`: these DTOs
+                // came from `DownloadApi.DOWNLOAD_FIELDS`, so the blob written here is the rich one
+                // every later lean browse write is forbidden from replacing.
                 itemDao.upsert((listOf(fetched) + parents).map { mapper.toEntity(it, ItemSource.DOWNLOAD, now) })
 
                 val row = fetched.toDownloadRow(userId, quality, now)

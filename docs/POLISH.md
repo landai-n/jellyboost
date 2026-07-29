@@ -2,6 +2,7 @@
 - Search page top texts are showing under the system icons, making them unreadable.
 - Switching to offline mode still lists online media on the Home screen (should show only downloaded/available content).
 - The app is probably configured as light theme even though it uses dark colors: system status-bar text and icons are drawn in black over the dark UI, making them unreadable.
+- Downloading a season fails: queue rows for whole seasons (e.g. La Pat' Patrouille S5/S6, Pyjamasques S1) end in "Download failed: The server couldn't send this download (error 400)".
 - Download speed is showing crazy numbers not matching the actual speed (like 100MB/s to 180MB/s for something more in the range of 2MB/s to 8MB/s).
 - Download pausing doesn't work.
 

@@ -822,3 +822,69 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
 
 <!-- END M9 (settings + app polish) -->
 
+<!-- BEGIN M9 (downloads polish) — appended by the downloads-polish worktree; keep as one block when merging -->
+
+## M9 — downloads polish (worktree branch `worktree-agent-a4271a149498eba88`)
+
+Five findings from the M9 device walk (docs/POLISH.md), all in the downloads domain. No
+`:player`, no `:feature:detail`, no schema change (new DAO query only — still Room v4).
+
+**Done**
+- **Download speed was 20× too high** (100–180 MB/s shown for a 2–8 MB/s transfer).
+  `DownloadDao.observeAll` is a `@Transaction` over `downloads` *and* `download_files` and
+  `DownloadQueue` writes the file's byte counter then the item's back to back, so one
+  throttled update emits two or three times milliseconds apart — and `DownloadSpeedTracker`
+  divided a whole window's bytes by that gap. The tracker now folds a measurement only once
+  ≥ 1 s has passed since the last one; nearer samples accumulate against the same anchor.
+  `DownloadRepositoryImpl.observeDownloads()` also gained the `distinctUntilChanged` its
+  sibling `observeStates()` already had.
+- **Pause did not stick.** *Pause* writes `PAUSED` and then cancels the work to interrupt the
+  transfer; `DownloadQueue`'s cancellation handler unconditionally wrote the row back to
+  `QUEUED`, and `nextRunnable` picked it straight back up. The handler now uses a new
+  `DownloadDao.requeueIfDownloading(itemId, updatedAt)` whose `WHERE` clause carries the
+  status test, so it cannot overwrite a status someone else has since written. (Table-wide
+  `requeueInterrupted` was already `WHERE status = 'DOWNLOADING'` and needed no change.)
+- **Films were drawn under a heading of their own title** ("Dune" over "Dune"). Only series
+  get a `GroupHeader` now (`DownloadGroup.isSeries`); a film is a group of one drawn without
+  one, and two films sharing a title no longer merge. Series and films interleave
+  alphabetically. `DownloadItem.groupKey` → `seriesKey` (`null` for a film).
+- **Wi-Fi-only toggle** in the Downloads top bar: label and switch were touching; the row now
+  uses `Arrangement.spacedBy(Dimens.SpaceSmall)`. Placement unchanged (DECISIONS.md
+  2026-07-28/29).
+- **Deleting a finished download now asks first** — an M3 `AlertDialog` ("Delete &lt;title&gt;?",
+  Cancel/Delete) modelled on the settings sign-out dialog. Queue-tab *Cancel* stays immediate
+  by design (it only costs the bytes not yet spent).
+- **+5 unit tests** in the touched files (`DownloadSpeedTrackerTest` 8→9,
+  `DownloadsViewModelTest` 14→16, `DownloadQueueTest` 23→24, `DownloadRepositoryImplTest`
+  18→19), 0 failures. Full gate green in one run
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- 2 DECISIONS entries (series-only headings; the one-second speed window, which replaces one
+  test's expectation).
+
+**Next — device verification (orchestrator)**
+1. Queue a large item and watch the Queue tab: the speed line should read single-digit MB/s
+   and update about once a second, not 100+ MB/s.
+2. Press *Pause* on the item that is transferring: the row must say **Paused** and stay that
+   way (`… sqlite3 databases/jellyfin.db 'SELECT itemName,status FROM downloads;'` → `PAUSED`),
+   with no bytes growing. Anything else queued behind it must keep downloading. *Resume*
+   restarts it from its byte offset. Repeat from the notification's *Pause* action.
+3. Downloaded tab: a film shows one row and no heading above it; a series still shows its name
+   over its episodes; both sorted together alphabetically.
+4. Downloads top bar: a visible gap between "Wi-Fi only" and the switch; the whole row still
+   toggles (the M9 hit-target fix).
+5. Delete a downloaded film: the confirm dialog names it; *Cancel* leaves it alone, *Delete*
+   removes it and frees the bytes. Queue-tab *Cancel* still deletes immediately.
+
+**Known issues (M9 downloads polish)**
+- The pause guard now lives in SQL (`requeueIfDownloading`), which the JVM unit tests cannot
+  execute — there is no Room/Robolectric test setup in this project. The tests pin that the
+  queue calls the conditional statement and never the unconditional `setStatus(QUEUED)`;
+  the statement itself is verified on device (step 2 above).
+- The speed reading can still overshoot briefly when a fold lands just after an item-level
+  write and the previous one landed just before one; the EMA damps it and it is bounded by the
+  window, nowhere near the 20× that was reported.
+- The delete confirmation is `remember`ed, not `rememberSaveable`d: rotating the tablet while
+  the dialog is open dismisses it (nothing is deleted).
+
+<!-- END M9 (downloads polish) -->
+

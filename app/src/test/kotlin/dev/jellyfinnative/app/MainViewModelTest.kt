@@ -4,7 +4,6 @@ import app.cash.turbine.test
 import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.model.SessionState
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -63,19 +62,9 @@ class MainViewModelTest {
             }
         }
 
-    @Test
-    @DisplayName("signing out delegates to the session repository")
-    fun signOutDelegates() =
-        runTest {
-            coEvery { sessionRepository.signOut() } returns Unit
-            val viewModel = MainViewModel(sessionRepository)
-            advanceUntilIdle()
-
-            viewModel.signOut()
-            advanceUntilIdle()
-
-            coVerify(exactly = 1) { sessionRepository.signOut() }
-        }
+    // Sign-out is no longer this ViewModel's concern: it moved into `:feature:settings`'s Account
+    // section at M9, and `SettingsViewModelTest` covers it (including the delete-then-sign-out
+    // ordering, which is the part worth pinning). The test that lived here went with the method.
 
     private companion object {
         val LOGGED_IN =

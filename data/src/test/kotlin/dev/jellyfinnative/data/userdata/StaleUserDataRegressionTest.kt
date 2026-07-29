@@ -4,7 +4,9 @@ import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.database.entities.UserDataEntity
+import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.SessionRepository
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.cache.BrowseCacheWriter
 import dev.jellyfinnative.data.cache.CacheFixtures
@@ -62,6 +64,7 @@ class StaleUserDataRegressionTest {
     private val apiClient = mockk<ApiClient>()
     private val itemsApi = mockk<ItemsApi>()
     private val syncScheduler = mockk<UserDataSyncScheduler>(relaxUnitFun = true)
+    private val connectionState = mockk<ConnectionStateProvider>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
 
     /** The `user_data` table, in memory: both halves of the fix read and write the same rows. */
@@ -85,6 +88,9 @@ class StaleUserDataRegressionTest {
                     serverVersion = "10.11.0",
                 ),
             )
+
+        // This regression is about what a push carries, so the repository is exercised online.
+        every { connectionState.state } returns MutableStateFlow(ConnectionState.ONLINE)
 
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
         coEvery { itemDao.upsert(any()) } just Runs
@@ -170,6 +176,7 @@ class StaleUserDataRegressionTest {
             sessionRepository = sessionRepository,
             eventBus = UserDataEventBus(),
             syncScheduler = syncScheduler,
+            connectionState = connectionState,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

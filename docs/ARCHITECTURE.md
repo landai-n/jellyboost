@@ -285,3 +285,68 @@ media notification, foreground promotion — once it has been added, which norma
 not the notification permission, is why backgrounding the app stopped playback from M5 onwards
 (`DECISIONS.md`, 2026-07-29).
 <!-- END: Player polish (M9) -->
+
+<!-- BEGIN: Settings + app polish (M9) -->
+## Settings + app polish (M9)
+
+One new module, one new cross-cutting signal, no changes to `:player`.
+
+### `:feature:settings` joins the module graph
+
+`:feature:settings` moves from an empty stub to a real screen and takes two dependency edges no
+other feature module has needed before: `implementation(projects.core.network)` (for
+`SessionRepository` — account info and sign-out) and `implementation(projects.core.datastore)` (for
+`AppPreferences` — every preference the screen edits), plus the already-common
+`implementation(projects.data.downloads)`. `:player` set the precedent for a feature-adjacent module
+depending on both `core:network` and `core:datastore` directly at M9 (`DECISIONS.md`, 2026-07-29);
+this is the same shape applied to a screen instead of the player.
+
+Sign-out itself needed no new plumbing: `SettingsViewModel` calls `SessionRepository.signOut()`
+directly, and the pre-existing `LogoutRedirectEffect` in `JellyfinNavHost` (watching
+`SessionRepository.sessionState`) already redirects to `Routes.ServerSetup` on any transition to
+`SessionState.LoggedOut`, regardless of what triggered it. The `onSignOut` callback that used to
+thread `MainActivity → JellyfinNativeApp → AppScaffold → JellyfinNavHost → HomeRoute` is gone.
+
+### A second connectivity signal: reconnect edges
+
+`ConnectionStateProvider.state` already had one consumer that reacts to a connectivity
+*transition* rather than a snapshot (`UserDataSyncTrigger`, M8). M9 adds a second, smaller one:
+
+```
+ConnectionStateProvider.state ──► reconnectEdges()   (:core:network, Flow<ConnectionState> extension)
+                                        │  map{isOnline}.distinctUntilChanged().drop(1).filter{it}
+                                        ▼
+                                 ReconnectRefresher.reconnected: Flow<Unit>   (:data)
+                                        │
+              ┌─────────────┬──────────┼───────────────┬─────────────────┐
+              ▼             ▼          ▼                ▼                 ▼
+        HomeViewModel LibrariesVM ItemDetailVM   SearchViewModel   LibraryViewModel
+          .refresh()   .refresh()  .refresh()   .retry() if query   .retryFacets() only
+                                                    non-blank        (grid already self-
+                                                                      refreshes, see below)
+```
+
+`ReconnectRefresher` exists so five feature modules — none of which depend on `core:network` — can
+observe a reconnect edge as a bare `Flow<Unit>`, the same shape `:data` already uses to keep
+`core.network` types off feature classpaths for `JellyfinRepository`. It deliberately does **not**
+reuse `UserDataSyncTrigger`'s "fire on the initial value too" convention: that trigger's consumer is
+idempotent and free when nothing is pending, but a ViewModel that already fetches once in `init`
+would double every request on an ordinary launch if the reconnect signal fired at startup too
+(`DECISIONS.md`, 2026-07-29). The two connectivity-transition consumers now answer genuinely
+different questions and are not expected to converge.
+
+`LibraryViewModel`'s paged grid needed no wiring at all — `DelegatingJellyfinRepository.
+getItemsPaged` already `flatMapLatest`s a fresh `Pager` off `ConnectionState.isOnline`, so a
+reconnect edge already swaps the grid's data source for free. `ReconnectRefresher` only drives that
+ViewModel's filter facets, which sit outside the paged flow.
+
+### The offline user-data push is now actually gated on connectivity
+
+`UserDataRepositoryImpl` gained a fourth collaborator, `ConnectionStateProvider`, read once per
+write inside `pushToServer`. This closes the gap between what `docs/PLAN.md` describes ("if online
+push … else/on failure enqueue") and what M8 actually built (an unconditional push attempt every
+time, online or not) — see `DECISIONS.md`, 2026-07-29, for why the "enqueue on failure" half is
+deliberately not mirrored for the offline case: `UserDataSyncTrigger` already owns draining
+everything pending on the next reconnect, so an offline write only needs to leave `toBeSynced = true`
+behind, which `storeLocally` already did before this change and still does.
+<!-- END: Settings + app polish (M9) -->

@@ -5,7 +5,8 @@ screen with or without a server, and the only thing that changes underneath is w
 answered. No banner-driven navigation, no separate offline UI, no "download manager" the user has
 to go into to watch what they downloaded.
 
-This document covers what M6 built. Downloads themselves are M7; offline *playback* and the
+This document covers what M6 built, plus the M9 refresh-on-reconnect that closed its one known gap
+("Coming back online", below). Downloads themselves are M7; offline *playback* and the
 most-recent-wins sync worker are M8.
 
 ---
@@ -117,6 +118,55 @@ The behaviour is pinned by `OfflineJellyfinRepositoryTest`, which seeds Room dir
 
 ---
 
+## Coming back online — refresh on reconnect (M9)
+
+Choosing a source *per call* is the right rule for a call that has not happened yet, and no rule at
+all for a screen that already fetched. A home screen opened in airplane mode kept showing downloaded
+media after the network returned, until the user navigated away and back (STATUS.md, M6 known
+issues). That is the gap this closes.
+
+```
+ConnectionStateProvider.state ─► reconnectEdges() ─► ReconnectRefresher.reconnected ─► ViewModels
+      StateFlow<ConnectionState>      Flow<Unit>            Flow<Unit> (@Singleton)      re-load
+```
+
+**`reconnectEdges()` (`:core:network/connectivity`)** maps the state to online-ness,
+`distinctUntilChanged`s it, **drops the initial value** and emits `Unit` on every `false → true`
+edge after that. The two things it does not do are the point:
+
+- *no emission for the state a screen starts with.* Every ViewModel already loads in its `init`, so
+  an initial emission would make an ordinary online launch fetch everything twice. This is exactly
+  where it diverges from `UserDataSyncTrigger`, which deliberately *does* act on its initial value —
+  its consumer is guarded by a cheap `COUNT(*)`, and it has an app-start case to cover. See
+  DECISIONS.md, 2026-07-29.
+- *no emission per intermediate state.* Swapping between two offline reasons is not a reconnect, and
+  a connection that flaps twice produces two refreshes, not one per state it passed through.
+
+**`ReconnectRefresher` (`:data`)** is the `@Singleton` handle feature modules inject:
+`val reconnected: Flow<Unit>`. Its surface is a `Flow<Unit>` and nothing else on purpose — feature
+modules depend on `:data`, not on `:core:network`, so no ViewModel needs to see `ConnectionState` to
+know "refresh now". No `build.gradle.kts` changed to wire this up.
+
+Each ViewModel collects it in `init` and re-runs **the load path it already had** — nothing here is
+a second, reconnect-only code path:
+
+| ViewModel | on a reconnect |
+|---|---|
+| `HomeViewModel` | `refresh()` — every row |
+| `LibrariesViewModel` | `refresh()` — the library list |
+| `ItemDetailViewModel` | `refresh()` — the item it is showing (`itemId` comes from its `SavedStateHandle`) |
+| `SearchViewModel` | `retry()`, re-running the current term — **only when the field is non-blank**; the text is kept either way |
+| `LibraryViewModel` | `retryFacets()` — the filter facets, and **only** them |
+
+**The library grid is the special case.** `getItemsPaged` already re-decides online/offline on every
+connection change and hands out a new `Pager` (see §2 above), so the grid swaps back to the server's
+items on its own, with no wiring — re-triggering it here would only make it fetch twice. The filter
+facets are a one-shot call the sheet makes, so they are the part that stays stale; they are re-loaded
+only if the sheet was already opened once (`areFacetsLoaded || facetsError != null`), because a
+screen whose sheet was never opened has nothing stale to replace and still fetches on first open.
+
+---
+
 ## The cache — `:core:database` schema v3
 
 `ItemEntity` (`items`) is a single table for every item kind ([D] in the plan — deliberately not
@@ -197,6 +247,9 @@ Unit tests (JVM, no device):
 | `BrowseCacheWriterTest` | the never-downgrade-a-download rule, library pruning |
 | `ItemEntityMapperTest` | blob round trip against the online mapper, unreadable-blob handling |
 | `DataStoreAppPreferencesTest` | force-offline round trip through a real DataStore file |
+| `ReconnectEdgesTest` | the edge semantics: nothing for the initial value, one emission per `false → true`, none for a flap between offline reasons |
+| `ReconnectRefresherTest` | the `:data` handle passes the edges through and adds nothing |
+| `HomeViewModelTest`, `LibrariesViewModelTest`, `ItemDetailViewModelTest`, `SearchViewModelTest`, `LibraryViewModelTest` | one reconnect test each: the expected reload runs exactly once, and nothing runs before the reconnect (plus search's blank-query no-op and the grid's leave-it-to-the-`Pager` case) |
 
 On device (M6 definition of done, walked by the orchestrator):
 

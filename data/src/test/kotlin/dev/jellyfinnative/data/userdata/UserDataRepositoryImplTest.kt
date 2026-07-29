@@ -5,7 +5,9 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.database.entities.UserDataEntity
+import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.SessionRepository
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.model.SessionState
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -63,6 +65,8 @@ class UserDataRepositoryImplTest {
     private val itemsApi = mockk<ItemsApi>()
     private val sessionRepository = mockk<SessionRepository>()
     private val syncScheduler = mockk<UserDataSyncScheduler>(relaxUnitFun = true)
+    private val connectionState = mockk<ConnectionStateProvider>()
+    private val state = MutableStateFlow(ConnectionState.ONLINE)
     private val eventBus = UserDataEventBus()
 
     private val userId = UUID.fromString("11111111-1111-1111-1111-111111111111")
@@ -78,6 +82,7 @@ class UserDataRepositoryImplTest {
             sessionRepository = sessionRepository,
             eventBus = eventBus,
             syncScheduler = syncScheduler,
+            connectionState = connectionState,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )
@@ -95,6 +100,7 @@ class UserDataRepositoryImplTest {
         every { apiClient.itemsApi } returns itemsApi
 
         every { sessionRepository.sessionState } returns MutableStateFlow(loggedIn())
+        every { connectionState.state } returns state
 
         coEvery { userDataDao.getUserData(any(), any()) } returns null
         coEvery { userDataDao.upsert(any()) } just Runs
@@ -364,6 +370,84 @@ class UserDataRepositoryImplTest {
             stored.captured.played shouldBe true
             stored.captured.isFavorite shouldBe true
             stored.captured.playbackPositionTicks shouldBe 8L
+        }
+
+    // ---- offline: the push is not even attempted ----------------------------------------------
+
+    /**
+     * `PlaybackReporter` calls `setPosition` every five seconds, so before M9 an offline session
+     * fired one doomed request — and logged one warning stack — per tick (STATUS.md, "Known
+     * issues"). The row is pending either way and `UserDataSyncTrigger` drains it on the next
+     * return to `ONLINE`, so the request buys nothing.
+     *
+     * Every *other* test in this class leaves the fixture at [ConnectionState.ONLINE], which is what
+     * pins the online branch as unchanged: it still pushes, still clears the flag on success, and
+     * still warns plus enqueues on failure.
+     */
+    @Test
+    fun `an offline write never touches the network`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_NO_NETWORK
+
+            repository.setPosition(itemId, positionTicks = 5L)
+
+            coVerify(exactly = 0) { itemsApi.updateItemUserData(any(), any(), any()) }
+        }
+
+    @Test
+    fun `an offline write does not schedule the sync worker per tick`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_NO_NETWORK
+
+            repository.setPosition(itemId, positionTicks = 5L)
+
+            // Redundant work: UserDataSyncTrigger drains every pending row on the OFFLINE -> ONLINE
+            // edge and at app start.
+            verify(exactly = 0) { syncScheduler.enqueue() }
+            coVerify(exactly = 0) { userDataDao.clearPendingSync(any(), any(), any()) }
+        }
+
+    @Test
+    fun `an offline write still stores the pending row and publishes it`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_FORCED
+            val stored = slot<UserDataEntity>()
+            coEvery { userDataDao.upsert(capture(stored)) } just Runs
+
+            eventBus.changes.test {
+                repository.setPosition(itemId, positionTicks = 5L)
+
+                val change = awaitItem()
+                change.itemId shouldBe itemId
+                change.userData.playbackPositionTicks shouldBe 5L
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            coVerify(exactly = 1) { userDataDao.upsert(any()) }
+            stored.captured.toBeSynced shouldBe true
+            stored.captured.playbackPositionTicks shouldBe 5L
+        }
+
+    @Test
+    fun `a skipped offline push is still a successful operation`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_SERVER_UNREACHABLE
+
+            val result = repository.setPosition(itemId, positionTicks = 5L)
+
+            // Skipping the push must not invent a failure mode the failing push never had.
+            (result as AppResult.Success).value.playbackPositionTicks shouldBe 5L
+        }
+
+    @Test
+    fun `a write while online still pushes`() =
+        runTest {
+            state.value = ConnectionState.ONLINE
+
+            repository.setPosition(itemId, positionTicks = 5L)
+
+            coVerify(exactly = 1) { itemsApi.updateItemUserData(itemUuid, userId, any()) }
+            coVerify(exactly = 1) { userDataDao.clearPendingSync(itemUuid, userId, now) }
         }
 
     // ---- helpers ----------------------------------------------------------------------------

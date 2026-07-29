@@ -54,8 +54,8 @@ dependencies {
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)
-    // Icons.AutoMirrored.Filled.Logout (HomeRoute's sign-out action) lives only in the extended
-    // icon set, not in the material3 core the `compose` bundle already pulls in.
+    // Icons.Filled.VideoLibrary (the Libraries tab) lives only in the extended icon set, not in
+    // the material3 core the `compose` bundle already pulls in.
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 

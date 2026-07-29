@@ -2,10 +2,14 @@
 <resources>
     <string name="app_name">Jellyfin</string>
 
-    <!-- Temporary home top-bar actions; move to Settings at M9. -->
-    <string name="home_sign_out">Sign out</string>
+    <!-- Home top-bar overflow menu -->
     <string name="home_more_options">More options</string>
+    <string name="home_settings">Settings</string>
     <string name="settings_offline_mode">Offline mode</string>
+
+    <!-- Accessibility state descriptions for switch rows -->
+    <string name="state_on">On</string>
+    <string name="state_off">Off</string>
 
     <!-- Bottom navigation bar (M3/M4 integration) -->
     <string name="nav_home">Home</string>

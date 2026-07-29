@@ -257,11 +257,14 @@ which is what Dashboard renders):
 - Backgrounding the app pauses playback: `POST_NOTIFICATIONS` is declared but never
   requested (M9), so the media notification can't show; background-continue +
   notification permission flow are M9 scope (background playback is not in the M5 DoD).
-- Screens loaded while offline keep their offline data after connectivity returns until
+- ~~Screens loaded while offline keep their offline data after connectivity returns until
   the user re-enters them (e.g. Home shows only cached My Media after a reconnect; a
   killed/relaunched app is fine). The delegating repository is per-call, but ViewModels
   don't re-fetch on connection regain — wire a refresh-on-reconnect (or pull-to-refresh)
-  by M9.
+  by M9.~~ — **fixed on the M9 branch**: `ReconnectRefresher` (`:data`) publishes a
+  `false → true` connectivity edge that home, libraries, search, item detail and the
+  library grid's filter facets re-load themselves on (the grid's items already swap via
+  `getItemsPaged`). See `docs/features/offline-read.md`, "Coming back online".
 - the OEM ROM `uiautomator dump` can fail silently and leave a stale dump file; UI-driving
   scripts must delete the file first and re-verify the screen before every tap (a stale
   dump caused stray taps this session — see incident note).
@@ -674,3 +677,98 @@ nothing in `:feature:settings`.
   refresh-on-reconnect belongs to the app-wide polish half of M9).
 
 <!-- END M9 (player polish) -->
+
+<!-- BEGIN M9 (settings + app polish) — appended by the M9 worktree; keep as one block when merging -->
+
+## M9 — settings + app polish (worktree branch `worktree-agent-a041cc39c512aaa0f`)
+
+The **settings + app-wide polish half** of M9 only. `:player` (trickplay, segments, PiP, gestures,
+speed, background playback) is the parallel branch documented in the block above; this branch does
+not touch `:player` and reads the preferences that branch defined (`introSkipMode`, `outroSkipMode`,
+`pipOnLeave`).
+
+**Done**
+- **`:feature:settings` — the full settings screen.** `SettingsViewModel` folds five
+  `AppPreferences` flows, `DownloadRepository.observeStorage()` and `SessionRepository.sessionState`
+  into one `StateFlow<SettingsUiState>`. `SettingsScreen` (`Scaffold` + back-button `TopAppBar`,
+  content capped at 640 dp and centred so a 2560×1600 tablet doesn't strand a label at one edge and
+  its control at the other) renders four sections: **Playback** (Skip intro / Skip outro — three-way
+  `SegmentSkipMode` choice each — and Picture-in-picture on leave), **Downloads** (Wi-Fi-only switch
+  plus an informational used/free/root-path storage line — no location picker, see Known issues),
+  **Connectivity** (Offline mode switch), **Account** (user name, server name, Sign out). Every row
+  is a single `Modifier.toggleable`/`.selectable` container (`Role.Switch`/`Role.RadioButton`,
+  `heightIn(min = 48.dp)`) so the whole row is the touch target, not just the trailing control. Sign
+  out opens a confirm `AlertDialog` with an unchecked-by-default "Also delete downloads" checkbox;
+  when checked, `SettingsViewModel.signOut` snapshots the current download list, best-effort-deletes
+  every item, and only then calls `SessionRepository.signOut()` — verified in order with
+  `coVerifyOrder`. Reached from the home top-bar overflow menu's new *Settings* entry, which replaces
+  the temporary M8 *Sign out* entry there (DECISIONS.md, two entries: storage picker deferred to ship
+  with SAF support; Settings behind the existing overflow icon, not a new avatar).
+- **Dead sign-out plumbing removed.** `onSignOut` no longer threads through `MainActivity` →
+  `JellyfinNativeApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`; `MainViewModel.signOut()` is
+  gone along with its test. `MainViewModel` still restores/exposes the session.
+- **Hit-target fix.** `feature/downloads/DownloadsScreen.kt`'s Wi-Fi-only top-bar row now toggles on
+  the whole row (`Modifier.toggleable(role = Role.Switch)`, `Switch.onCheckedChange = null`), closing
+  the STATUS M7 note. The home overflow's Offline-mode row already dispatched on the whole
+  `DropdownMenuItem`; it gained explicit `Role.Switch` + on/off `stateDescription` for TalkBack.
+- **Refresh-on-reconnect**, closing the M6 known issue. `Flow<ConnectionState>.reconnectEdges()`
+  (`:core:network`) emits once per `false → true` edge, dropping the flow's initial value (so a
+  normal launch — which already fetches once in every `init` — does not double-fetch; this is
+  deliberately narrower than `UserDataSyncTrigger`'s convention, DECISIONS.md). `ReconnectRefresher`
+  (`:data`) wraps it as a bare `Flow<Unit>` so feature modules never need `core:network` on their
+  classpath. Wired into `HomeViewModel`/`LibrariesViewModel`/`ItemDetailViewModel` (call their
+  existing `refresh()`), `SearchViewModel` (`retry()`, only if the query is non-blank), and
+  `LibraryViewModel` (facets only — the grid already rebuilds its `Pager` per connection change
+  inside `DelegatingJellyfinRepository.getItemsPaged`, so it needed no new wiring).
+- **Offline user-data push silenced**, closing the M8 known issue. `UserDataRepositoryImpl.
+  pushToServer` now returns immediately (one `Timber.d` line, no HTTP attempt, no
+  `syncScheduler.enqueue()`) when `ConnectionStateProvider.state.value.isOnline` is false — the
+  local Room write (`toBeSynced = true`) and the `UserDataEventBus` emission both still happen
+  unconditionally beforehand. `UserDataSyncTrigger` already drains every pending row on the next
+  `OFFLINE → ONLINE` edge, so nothing is lost; a five-minute offline playback session now logs one
+  debug line total instead of ~60 warning stacks. Online behaviour is byte-for-byte unchanged.
+- **+34 unit tests** (12 `SettingsViewModelTest`, 15 across `ReconnectEdgesTest`/
+  `ReconnectRefresherTest`/the five reconnect-wired ViewModel test files, 5 `UserDataRepositoryImplTest`,
+  2 `MainViewModelTest` net); project total **748**, 0 failures, 0 skipped (independently counted
+  from the JUnit XML, not the gradle summary line). Full gate green in one run
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- 4 DECISIONS entries (storage picker deferral; Settings via overflow not avatar; offline write does
+  not enqueue the sync worker; reconnect signal drops its initial value); `docs/features/settings.md`
+  (new), `docs/features/offline-read.md` and `docs/features/user-data.md` updated.
+
+**Next — device verification (orchestrator)**
+1. `./gradlew installDebug`, launch signed in.
+2. **Settings screen:** tap the home top-bar overflow (⋮) → *Settings* (no more *Sign out* there).
+   Confirm all four sections render; toggle each switch and each three-way skip choice, relaunch the
+   app, confirm every choice persisted (`adb shell run-as dev.jellyfinnative.app.debug` +
+   `DataStore` prefs, or just observe the UI survives the relaunch). Rotate to landscape on the
+   tablet — content should stay capped and centred, not stretch edge-to-edge.
+3. **Sign out:** tap *Sign out* → confirm dialog appears with the "Also delete downloads" checkbox
+   unchecked. Cancel, confirm nothing happened. Download one small item first, then sign out with the
+   checkbox checked — confirm the download is gone (`adb shell run-as … sqlite3 databases/jellyfin.db
+   'SELECT COUNT(*) FROM downloads;'` → 0) and the app lands on server setup. Sign back in.
+4. **Hit targets:** in Downloads, tap anywhere on the Wi-Fi-only row (not just the switch) — it
+   toggles. In the home overflow, tap anywhere on the Offline-mode row — it toggles (this already
+   worked; confirm no regression).
+5. **Refresh-on-reconnect:** airplane mode on, browse Home/Libraries/Search/an item detail page so
+   each loads its offline data, airplane mode off. Within a couple seconds each screen should
+   silently refresh — watch logcat for each screen's normal load call re-firing exactly once (no
+   storm), and check Home/Search in particular show live data again without leaving the screen.
+6. **Offline push silence:** airplane mode on, start local playback of a download, let it run
+   ~30 s (six 5-second ticks). Logcat should show six `User data for … stays pending (offline, not
+   pushing)` debug lines and **zero** `stays pending: …` warning-with-stack-trace lines. Reconnect —
+   the existing M8 drain path (`UserDataSyncTrigger` → `Pushed the local user data…`) still fires.
+
+**Known issues (M9 settings + app polish)**
+- No storage-location picker; the Downloads section shows the fixed location as text only. Ships
+  with SAF/SD-card support (DECISIONS.md).
+- The Account section has no server *address* field (only server name) — `SessionState.LoggedIn`
+  doesn't carry it and no accessor exists on `SessionRepository` for feature code; would need new
+  surface on `:core:network` to add.
+- Settings is reached via the existing overflow menu icon, not a dedicated avatar (DECISIONS.md) —
+  there is no user-avatar image/asset pipeline anywhere in the app yet.
+- Not verified on device by this worktree (rule: no adb/device access from the settings-branch
+  agent) — see the walk above for the orchestrator to run after merge.
+
+<!-- END M9 (settings + app polish) -->
+

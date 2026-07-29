@@ -24,19 +24,27 @@ import dev.jellyfinnative.core.ui.theme.JellyfinGradients
 import dev.jellyfinnative.core.ui.theme.JellyfinTheme
 
 /**
- * Full-bleed backdrop with a scrim and the item's title stacked over it — the top of every detail
- * screen, and the hero slot on the home screen.
+ * Full-bleed backdrop with a scrim — the top of every detail screen, and the hero slot on the home
+ * screen.
  *
  * The scrim fades into the app background so the header blends into the scrolling content instead
  * of ending on a hard edge.
  *
+ * The artwork is always centre-cropped to fill the box regardless of its source aspect ratio: the
+ * URL callers pass falls back through backdrop → thumb → primary image, and a 2:3 poster is a
+ * realistic fallback for a wide header.
+ *
+ * @param title drawn over the backdrop when non-null. Optional because the item detail screen
+ *   already renders the headline in its content below the backdrop (`DetailFacts`) — drawing it
+ *   here too duplicated the title. Left in for callers (e.g. the home screen hero) that have no
+ *   other place to put it.
  * @param actions optional trailing content (Play / Download / Favourite) drawn under the title.
  */
 @Composable
 fun BackdropHeader(
     imageUrl: String?,
-    title: String,
     modifier: Modifier = Modifier,
+    title: String? = null,
     subtitle: String? = null,
     height: Dp = Dimens.BackdropHeight,
     actions: @Composable BoxScope.() -> Unit = {},
@@ -52,6 +60,7 @@ fun BackdropHeader(
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
+            alignment = Alignment.Center,
             placeholderIcon = Icons.Outlined.Movie,
         )
 
@@ -62,27 +71,29 @@ fun BackdropHeader(
                     .background(JellyfinGradients.BackdropScrim),
         )
 
-        Column(
-            modifier =
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(Dimens.ScreenPadding),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            subtitle?.let {
+        if (title != null) {
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(Dimens.ScreenPadding),
+            ) {
                 Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
+                subtitle?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
 

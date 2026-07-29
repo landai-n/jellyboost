@@ -60,6 +60,7 @@ DownloadRepository.enqueue(itemId)
 | `DownloadRepository` / `DownloadRepositoryImpl` | `:data:downloads` | The only type features see. Owns the decisions (what pause means, what cancel and delete share) and the ordering of every mutation. |
 | `DownloadEnqueuer` | `:data:downloads` | The full-fields re-fetch, the `source = DOWNLOAD` cache write for the item **and its parents**, the `DownloadEntity` rows — and the expansion of a season or series into one download per episode. |
 | `DownloadApi` / `SdkDownloadApi` | `:data:downloads` | The SDK calls the pipeline makes (`getItems` for the full DTOs, `/Shows/{id}/Episodes` for a container's children), behind a seam so enqueueing is unit-testable. |
+| `DownloadedMetadataRefresher` | `:data:downloads` | **Ongoing sync, not dead migration code.** Re-runs the enqueuer's cache write for **every** downloaded item (and its parents) once per stretch of connectivity, so a download's cached metadata keeps tracking the server's — retitles, artwork changes, corrected overviews, renumbered episodes. Healing rows an older build gutted is the first thing it happens to do, not its purpose. See `docs/features/offline-read.md`, "Downloaded metadata stays current". |
 | `isFolderItem` (`FolderItems.kt`) | `:data:downloads` | The one predicate for "this is a folder, not a video" — `isFolder`, with a kind list as the fallback. |
 | `DownloadFilePlanner` | `:data:downloads` | `BaseItemDto` → ordered `List<PlannedFile>`, with the essential/optional split. |
 | `DownloadUrlFactory` / `SdkDownloadUrlFactory` | `:data:downloads` | Every URL the pipeline fetches, behind a seam (a real `ApiClient` has no base URL in a JVM test). |
@@ -306,6 +307,7 @@ delete do not.
 | `DownloadSessionGateTest` | cold-start restore, no-session parking, a token-less client |
 | `DownloadErrorCopyTest` | every failure maps to user copy; SDK internals never reach the row |
 | `DownloadEnqueuerTest` | full re-fetch, parent caching, `source = DOWNLOAD`, queue position, re-enqueue |
+| `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
 | `DownloadsViewModelTest` | tab split, grouping, actions, reorder bounds |

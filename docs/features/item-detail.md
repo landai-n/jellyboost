@@ -73,6 +73,7 @@ ItemDetailScreen(
     viewModel = hiltViewModel(),          // ItemDetailViewModel, @HiltViewModel
     onItemClick = { navController.navigate(Routes.ItemDetail(it.id)) },
     onBack = navController::popBackStack,
+    onHome = navController::navigateHome,
 )
 ```
 
@@ -82,6 +83,21 @@ route's arguments under.
 
 Tapping a season, an episode or a related item pushes another `ItemDetail` for it, so the same
 screen handles the whole series → season → episode drill-down.
+
+### Getting out of the chain
+
+Because every hop pushes another `ItemDetail` and a pushed destination shows no app bar, that
+drill-down is the one place in the app that can get ten entries deep with Back as the only exit.
+The overlaid controls at the top-start corner are therefore a **Row of two**: Back (pops one) and
+Home (leaves the whole chain). Both sit inside a single `windowInsetsPadding(WindowInsets.statusBars)`
+so the backdrop still draws edge-to-edge underneath them.
+
+Home calls `AppScaffold.navigateHome` — `navigate(Routes.Home, topLevelNavOptions())`, byte-for-byte
+what tapping the Home tab does. A `popBackStack(Routes.Home, inclusive = false)` would read more
+directly but fails silently (returns `false`, moves nothing) if Home is ever absent from the stack;
+a `navigate` still lands the user on Home. `:feature:library`'s grid and `:feature:settings` carry
+the same pair in their `TopAppBar`'s `navigationIcon` slot; the player is excluded, since leaving
+playback belongs to its own chrome.
 
 ## Key classes
 

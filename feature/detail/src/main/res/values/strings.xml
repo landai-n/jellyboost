@@ -2,6 +2,7 @@
 <resources>
     <!-- Navigation / actions -->
     <string name="detail_back">Back</string>
+    <string name="detail_home">Home</string>
     <string name="detail_play">Play</string>
     <string name="detail_resume">Resume</string>
     <string name="detail_download">Download</string>

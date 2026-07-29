@@ -28,7 +28,8 @@ offline toggle — is already correct here without any cross-screen wiring.
 
 ```
 JellyfinNavHost
-  composable<Routes.Settings> → SettingsScreen(viewModel = hiltViewModel(), onBack = popBackStack)
+  composable<Routes.Settings> → SettingsScreen(viewModel = hiltViewModel(),
+                                               onBack = popBackStack, onHome = navigateHome)
                                      │
                                      ▼
                             SettingsViewModel  ── AppPreferences        (6 keys, read + write)

@@ -90,8 +90,14 @@ and hands the width to `PosterCard`, so cards fill their column instead of overf
 top bar renders before the first page arrives. `LibraryViewModel` reads both from `SavedStateHandle`
 under the property names `libraryId` / `libraryName`.
 
-`LibraryGridScreen(viewModel, onItemClick, onBack, modifier)` — the ViewModel is passed in so
-`:app` owns the `hiltViewModel()` call, as it does for home.
+`LibraryGridScreen(viewModel, onItemClick, onBack, onHome, modifier)` — the ViewModel is passed in
+so `:app` owns the `hiltViewModel()` call, as it does for home.
+
+The top bar's `navigationIcon` slot holds **both** navigation affordances — Back and Home — rather
+than just Back, because a pushed destination hides the app bar's tabs and this grid is the entry to
+detail chains that can get many entries deep. `onHome` is `AppScaffold.navigateHome`; see
+docs/features/item-detail.md, "Getting out of the chain", for why it navigates rather than pops.
+`actions` stays reserved for sort and filter.
 
 ## Offline behaviour
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,11 +62,14 @@ import dev.jellyfinnative.data.downloads.model.StorageVolumeOption
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call.
  * @param onBack pops this destination off the back stack.
+ * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
+ *   `AppScaffold.navigateHome`.
  */
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,6 +88,7 @@ fun SettingsScreen(
                 onSignOut = viewModel::signOut,
             ),
         onBack = onBack,
+        onHome = onHome,
         modifier = modifier,
     )
 }
@@ -115,6 +120,7 @@ fun SettingsContent(
     state: SettingsUiState,
     actions: SettingsActions,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var confirmingSignOut by remember { mutableStateOf(false) }
@@ -125,11 +131,21 @@ fun SettingsContent(
             TopAppBar(
                 title = { Text(text = stringResource(R.string.settings_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.settings_back),
-                        )
+                    // Same two-affordance navigation slot the other pushed screens carry, so the
+                    // way out of a pushed destination is in one place wherever the user is.
+                    Row {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.settings_back),
+                            )
+                        }
+                        IconButton(onClick = onHome) {
+                            Icon(
+                                imageVector = Icons.Filled.Home,
+                                contentDescription = stringResource(R.string.settings_home),
+                            )
+                        }
                     }
                 },
             )
@@ -591,6 +607,7 @@ private fun SettingsPreview() {
                     onSignOut = {},
                 ),
             onBack = {},
+            onHome = {},
         )
     }
 }

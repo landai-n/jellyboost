@@ -3,6 +3,7 @@ package dev.jellyfinnative.feature.library
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,6 +61,9 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call,
  *   as it does for home.
+ * @param onBack pops one entry — the plain back affordance.
+ * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
+ *   `AppScaffold.navigateHome`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +71,7 @@ fun LibraryGridScreen(
     viewModel: LibraryViewModel,
     onItemClick: (JellyfinItem) -> Unit,
     onBack: () -> Unit,
+    onHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,11 +90,22 @@ fun LibraryGridScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.library_back),
-                        )
+                    // Both navigation affordances live in this slot rather than in `actions`,
+                    // which sort and filter already own: Home belongs *next to* Back, and a
+                    // pushed destination shows no app-level tab bar to escape through.
+                    Row {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.library_back),
+                            )
+                        }
+                        IconButton(onClick = onHome) {
+                            Icon(
+                                imageVector = Icons.Filled.Home,
+                                contentDescription = stringResource(R.string.library_home),
+                            )
+                        }
                     }
                 },
                 actions = {

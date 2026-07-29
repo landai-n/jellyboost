@@ -100,6 +100,7 @@ internal fun JellyfinNavHost(
             SettingsScreen(
                 viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
             )
         }
 
@@ -108,6 +109,7 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
                 onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
             )
         }
 
@@ -121,6 +123,7 @@ internal fun JellyfinNavHost(
                     )
                 },
                 onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
             )
         }
 

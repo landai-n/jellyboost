@@ -157,8 +157,36 @@ private fun NavHostController.navigateToTab(route: Any) {
 }
 
 /**
- * The options every tab switch navigates with: keep one copy of each tab's back stack, restore it
- * on return, and never pile up duplicate destinations from repeated taps on the same tab.
+ * The Home affordance every pushed screen carries next to its Back button: one tap out of a chain
+ * of any depth, landing on the Home tab.
+ *
+ * It is deliberately the *same* call as tapping the Home tab in [AppTopBar] — a `navigate` with
+ * [topLevelNavOptions] — and deliberately **not** `popBackStack(Routes.Home, inclusive = false)`,
+ * which is the shorter-looking way to say "pop everything above Home".
+ *
+ * The difference is what happens when Home is *not* on the back stack. `popBackStack` to an absent
+ * destination returns `false` and does nothing at all: the user taps Home and stays exactly where
+ * they are, with no feedback — the same silent-no-op failure mode that produced duplicate
+ * `HomeViewModel`s before 649a7c8 (see [topLevelNavOptions]). `navigate` cannot fail that way: the
+ * `popUpTo` clause may no-op, but the navigation itself still puts Home on screen. The affordance
+ * therefore always does what its icon promises.
+ *
+ * On both launch shapes Home *is* in fact on the stack whenever a pushed screen is reachable — a
+ * signed-in launch starts at Home, and a signed-out launch starts at `Routes.ServerSetup` but
+ * reaches the signed-in area only through `navigateClearingBackStack(Routes.Home)`, which leaves
+ * Home as the single entry — so the pop path is the one that normally runs, and `launchSingleTop`
+ * keeps it from stacking a second Home on top of the one it just uncovered. The `navigate` form is
+ * chosen for the case that analysis does not cover: a future deep link, a restored process, or any
+ * new entry point into a detail chain that does not pass through Home.
+ */
+internal fun NavHostController.navigateHome() {
+    navigate(Routes.Home, topLevelNavOptions())
+}
+
+/**
+ * The options every tab switch — and the pushed screens' Home affordance ([navigateHome]) —
+ * navigates with: keep one copy of each tab's back stack, restore it on return, and never pile up
+ * duplicate destinations from repeated taps on the same tab.
  *
  * The pop target is [Routes.Home] — the root of the signed-in area — and deliberately **not**
  * `graph.findStartDestination()`, which is what the standard tabbed-navigation snippet uses. This

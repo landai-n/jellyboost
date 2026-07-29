@@ -2,13 +2,26 @@ package dev.jellyfinnative.data.downloads.plan
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
 import dev.jellyfinnative.core.common.model.DownloadQuality
+import dev.jellyfinnative.data.downloads.isFolderItem
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.ceil
+
+/**
+ * An item that is a folder, not a video — a series, a season, a box set.
+ *
+ * `/Items/{id}/Download` answers `400` for one of these, which is the error the user saw when
+ * tapping Download on a season used to enqueue the season itself (docs/POLISH.md, DECISIONS.md
+ * 2026-07-29). The queue turns this into copy that says so, instead of quoting the status code.
+ */
+internal class NotDownloadableException(
+    itemId: UUID,
+) : IllegalStateException("$itemId is a folder, not a downloadable file")
 
 /**
  * One file the pipeline intends to fetch, before anything has touched Room or the disk.
@@ -60,6 +73,10 @@ class DownloadFilePlanner
          *
          * @return an ordered list; an item whose media source is missing still yields the media
          *   entry, because the download endpoint does not need one.
+         * @throws NotDownloadableException when [item] is a folder rather than a video. Callers
+         *   expand containers into their episodes before they ever get here ([isFolderItem]); this
+         *   is the guard that makes a caller which forgot fail *before* a URL exists rather than as
+         *   an unexplained `400` from the server halfway down the queue.
          */
         fun plan(
             item: BaseItemDto,
@@ -67,6 +84,8 @@ class DownloadFilePlanner
             downloadAllowed: Boolean = true,
             quality: DownloadQuality = DownloadQuality.ORIGINAL,
         ): List<PlannedFile> {
+            if (item.isFolderItem) throw NotDownloadableException(item.id)
+
             val mediaSource = item.mediaSources?.firstOrNull()
             val mediaSourceId = mediaSource?.id
 

@@ -167,7 +167,7 @@ class DownloadRepositoryImplTest {
     @Test
     fun `enqueue caches the item and then starts the queue`() =
         runTest {
-            coEvery { enqueuer.enqueue(uuid(1), uuid(99)) } returns AppResult.Success(download())
+            coEvery { enqueuer.enqueue(uuid(1), uuid(99)) } returns AppResult.Success(listOf(download()))
 
             repository().enqueue(uuid(1).toString()).shouldBeInstanceOf<AppResult.Success<Unit>>()
 
@@ -185,6 +185,19 @@ class DownloadRepositoryImplTest {
             repository().enqueue(uuid(1).toString()).shouldBeInstanceOf<AppResult.Failure>()
 
             coVerify(exactly = 0) { scheduler.ensureRunning() }
+        }
+
+    @Test
+    fun `enqueueing a season starts the queue once, however many episodes it expanded to`() =
+        runTest {
+            // The repository does not know or care that one tap became ten downloads: the queue is
+            // idempotent and drains whatever Room holds (DECISIONS.md, 2026-07-29).
+            coEvery { enqueuer.enqueue(uuid(11), uuid(99)) } returns
+                AppResult.Success(listOf(download(itemId = uuid(2)), download(itemId = uuid(3))))
+
+            repository().enqueue(uuid(11).toString()).shouldBeInstanceOf<AppResult.Success<Unit>>()
+
+            coVerify(exactly = 1) { scheduler.ensureRunning() }
         }
 
     @Test

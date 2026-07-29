@@ -16,8 +16,8 @@ import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.PlaybackTrack
 import dev.jellyfinnative.player.report.PlaybackReporter
 import dev.jellyfinnative.player.resolve.ExoMediaSourceFactory
-import dev.jellyfinnative.player.resolve.PlaybackInfoResolver
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
+import dev.jellyfinnative.player.resolve.PlaybackSourceResolver
 import dev.jellyfinnative.player.session.FakePlayerHandle
 import dev.jellyfinnative.player.session.PlayerEvent
 import io.kotest.matchers.collections.shouldContainExactly
@@ -53,7 +53,7 @@ import org.junit.jupiter.api.Test
 class PlayerViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val repository = mockk<JellyfinRepository>()
-    private val resolver = mockk<PlaybackInfoResolver>()
+    private val resolver = mockk<PlaybackSourceResolver>()
     private val mediaSourceFactory = mockk<ExoMediaSourceFactory>()
     private val reporter = mockk<PlaybackReporter>(relaxed = true)
     private val playerHandle = FakePlayerHandle()
@@ -359,6 +359,101 @@ class PlayerViewModelTest {
             model.releaseSession()
 
             coVerify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+        }
+
+    // ---- M8, playing a download -------------------------------------------------------------------
+
+    @Test
+    fun `a downloaded item opens off its file with no quality control on screen`() =
+        runTest(dispatcher) {
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.isLocalPlayback shouldBe true
+            model.uiState.value.playMethod shouldBe PlayMethod.DIRECT_PLAY
+            model.uiState.value.errorMessage
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `the quality picker is inert for a download, so it cannot reload the file`() =
+        runTest(dispatcher) {
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectQuality(PlaybackQuality.LOW)
+            advanceUntilIdle()
+
+            // There is no bitrate to cap, so nothing is re-resolved and nothing reloads.
+            coVerify(exactly = 1) { resolver.resolve(any()) }
+            model.uiState.value.quality shouldBe PlaybackQuality.AUTO
+        }
+
+    @Test
+    fun `a track switch on a download is recorded on the local source`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = true
+            coEvery { resolver.resolve(any()) } returns
+                AppResult.Success(
+                    PlayerFixtures.localSource(
+                        audioTracks =
+                            listOf(
+                                PlaybackTrack(index = 1, label = "English", language = "eng", codec = "ac3"),
+                                PlaybackTrack(index = 2, label = "French", language = "fra", codec = "aac"),
+                            ),
+                        selectedAudioIndex = 1,
+                    ),
+                )
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectAudioTrack(2)
+            model.selectSubtitleTrack(3)
+            advanceUntilIdle()
+
+            model.uiState.value.selectedAudioIndex shouldBe 2
+            model.uiState.value.selectedSubtitleIndex shouldBe 3
+            // Locally satisfied, so nothing is renegotiated — same as a direct play online.
+            coVerify(exactly = 1) { resolver.resolve(any()) }
+        }
+
+    @Test
+    fun `leaving a downloaded item still hands the stop report to the detached scope`() =
+        runTest(dispatcher) {
+            // Offline that report writes nothing but the local position — which is the only record
+            // of where the user got to.
+            val local = PlayerFixtures.localSource()
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(local)
+            playerHandle.snapshot = PlaybackSnapshot(positionMs = 45_000L)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.releaseSession()
+
+            coVerify(exactly = 1) { reporter.reportStopDetached(local, any()) }
+        }
+
+    @Test
+    fun `a track the local file cannot satisfy goes back to the resolver`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val requests = mutableListOf<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(requests)) } returns
+                AppResult.Success(PlayerFixtures.localSource())
+
+            model.selectAudioTrack(2)
+            advanceUntilIdle()
+
+            // A local source carries no bitrate cap, so the re-request must not invent one.
+            requests.last().audioStreamIndex shouldBe 2
+            requests.last().maxStreamingBitrate.shouldBeNull()
         }
 
     private fun viewModel() =

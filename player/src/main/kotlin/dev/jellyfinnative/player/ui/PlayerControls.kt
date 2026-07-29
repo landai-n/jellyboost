@@ -211,11 +211,14 @@ private fun BottomBar(
                     icon = Icons.Outlined.ClosedCaption,
                 )
             }
-            SheetButton(
-                label = stringResource(R.string.player_quality),
-                onClick = { onOpenSheet(PlayerSheet.QUALITY) },
-                icon = Icons.Outlined.HighQuality,
-            )
+            // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
+            if (!state.isLocalPlayback) {
+                SheetButton(
+                    label = stringResource(R.string.player_quality),
+                    onClick = { onOpenSheet(PlayerSheet.QUALITY) },
+                    icon = Icons.Outlined.HighQuality,
+                )
+            }
         }
     }
 }

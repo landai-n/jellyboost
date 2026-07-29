@@ -200,4 +200,45 @@ class ExoMediaSourceFactoryTest {
         spec.shouldNotBeNull()
         spec.subtitles.shouldBeEmpty()
     }
+
+    // ---- M8, local sources ----------------------------------------------------------------------
+
+    @Test
+    fun `a downloaded item is opened straight off the file, with no URL construction`() {
+        val spec = factory.create(PlayerFixtures.localSource())
+
+        spec.shouldNotBeNull()
+        spec.uri shouldBe PlayerFixtures.LOCAL_MEDIA_URI
+        // Left unset: ExoPlayer sniffs a local container far more reliably than a guess from the
+        // filename the download pipeline copied off the server.
+        spec.mimeType.shouldBeNull()
+        spec.mediaId shouldBe PlayerFixtures.ITEM_ID.toString()
+    }
+
+    @Test
+    fun `a downloaded sidecar keeps its file URI instead of being prefixed with the server`() {
+        val spec =
+            factory.create(
+                PlayerFixtures.localSource(
+                    externalSubtitles =
+                        listOf(
+                            ExternalSubtitle(
+                                index = 3,
+                                url = "file:///downloads/Arrival/subtitle.3.eng.srt",
+                                mimeType = MimeTypes.APPLICATION_SUBRIP,
+                                label = "English",
+                                language = "eng",
+                            ),
+                        ),
+                ),
+            )
+
+        spec.shouldNotBeNull()
+        val subtitle = spec.subtitles.single()
+        // Running this through `absoluteUrl` would produce `https://serverfile:///…`.
+        subtitle.uri shouldBe "file:///downloads/Arrival/subtitle.3.eng.srt"
+        // The same track-id convention as online, so `TrackSelectionController` needs no branch.
+        subtitle.id shouldBe "external:3"
+        subtitle.mimeType shouldBe MimeTypes.APPLICATION_SUBRIP
+    }
 }

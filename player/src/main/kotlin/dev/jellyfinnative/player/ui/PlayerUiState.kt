@@ -10,12 +10,24 @@ import dev.jellyfinnative.player.model.PlaybackTrack
  * [playMethod] is on screen deliberately: "is this direct playing or transcoding" is the single
  * most useful thing to know when playback misbehaves, and the M5 definition of done is checked
  * against exactly that value in the server dashboard.
+ *
+ * [isLocalPlayback] is the *only* thing on this screen that differs between a streamed item and a
+ * downloaded one, and it hides exactly one control — see its own documentation.
  */
 data class PlayerUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val title: String = "",
     val playMethod: PlayMethod? = null,
+    /**
+     * `true` while the bytes come off this device rather than off the server (M8).
+     *
+     * It suppresses the quality picker, which caps a *streaming* bitrate and therefore has nothing
+     * to act on for a local file — offering it would be a control that visibly does nothing. Track
+     * and subtitle pickers are deliberately untouched: those work identically either way, which is
+     * the plan's "player UI byte-identical online/offline".
+     */
+    val isLocalPlayback: Boolean = false,
     val isPlaying: Boolean = false,
     val isBuffering: Boolean = false,
     val positionMs: Long = 0L,

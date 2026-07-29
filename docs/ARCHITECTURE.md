@@ -177,3 +177,62 @@ taxonomy) and below the features. Home, library and search depend on it read-onl
   multi-gigabyte transfer holds one response open for an hour) and redirects followed. Separate
   from the SDK's client and from `:player`'s.
 <!-- END: Downloads (M7) -->
+
+<!-- BEGIN: Offline playback + sync (M8) -->
+## Offline playback + sync (M8)
+
+Full detail: [`docs/features/offline-playback.md`](features/offline-playback.md).
+
+**The rule the architecture enforces:** a completed download is played from disk *regardless of
+connectivity*, and nothing above `PlaybackMediaSource` knows which half it is holding. Offline is not
+a mode here either — it is which subtype the resolver returned.
+
+### Module additions
+
+| module | added at M8 |
+|---|---|
+| `:core:database` | `DownloadDao.getWithFiles(itemId)` — one download with its file rows. No schema change; **still v4**. |
+| `:data:downloads` | `offline/DownloadedMediaProvider` + `offline/DownloadedMedia` — "what is on disk for this item", Room joined with a real filesystem check. |
+| `:player` | `model/LocalPlaybackMediaSource`, `model/LocalTrickplay`; `resolve/LocalPlaybackResolver`, `resolve/PlaybackSourceResolver`; `ExoMediaSourceFactory` and `PlaybackReporter` and `DecoderFallbackHandler` widened to the sealed type; `PlayerUiState.isLocalPlayback`. |
+| `:data` | `userdata/UserDataSyncer` (most-recent-wins), `userdata/UserDataSyncTrigger`; `UserDataSyncWorker` is no longer a stub. |
+| `:app` | `JellyfinNativeApplication` starts `UserDataSyncTrigger`. |
+
+### Layering
+
+```
+PlayerViewModel ──► PlaybackSourceResolver
+                       ├── LocalPlaybackResolver ──► DownloadedMediaProvider ──► DownloadDao
+                       │        (:player)                (:data:downloads)         ItemDao
+                       │                                                           + File.isFile
+                       └── PlaybackInfoResolver ──► jellyfin-sdk
+
+PlaybackReporter ──► PlayerApi            (only when remote AND ConnectionState.ONLINE)
+                 └─► UserDataRepository   (always)
+                          └─► user_data (toBeSynced = true)
+                                  ▲
+ConnectionStateProvider ──► UserDataSyncTrigger ──► WorkManager ──► UserDataSyncWorker
+                                                                        └── UserDataSyncer
+```
+
+`:player` still does not depend on `:core:database`; the DAO work sits in `:data:downloads`, which
+already owns the download schema, and crosses the boundary as a plain `DownloadedMedia` value
+(`DECISIONS.md`, 2026-07-29).
+
+### Cross-cutting mechanisms introduced
+
+- **`PlaybackMediaSource` finally has two implementations**, which is what the sealed type was
+  declared for at M5. `withSelectedAudio` / `withSelectedSubtitle` were added to the interface so a
+  track switch can be recorded without the state holder knowing the variant — the one place a
+  `copy()` would have forced an online/offline branch into `PlayerViewModel`.
+- **`ConnectionState` reaches `:player`.** It was previously read only by
+  `DelegatingJellyfinRepository` and the banner; `PlaybackReporter` now reads it too, to skip reports
+  that cannot arrive, and `PlaybackSourceResolver` to fail a no-local-copy playback fast instead of
+  waiting on a socket timeout. Still one `StateFlow`, still nothing else branching on connectivity.
+- **`file://` URIs as first-class sources.** `DefaultDataSource` already resolved them (wired at M5);
+  M8 adds `localFileUri`, which builds them through `java.net.URI` so a `#` or a space in a filename
+  named after the media survives. Local URIs bypass `StreamUrlFactory` entirely.
+- **A trigger for work nobody failed at.** `UserDataSyncTrigger` is the first thing in the app that
+  schedules work from a *connectivity transition* rather than from a failed operation. It is started
+  from `Application.onCreate` because a device coming back online with the app backgrounded is
+  precisely the case the milestone's definition of done exercises.
+<!-- END: Offline playback + sync (M8) -->

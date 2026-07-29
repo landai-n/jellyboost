@@ -1,12 +1,12 @@
 # STATUS
 
-## Current milestone: M8 — Offline playback + sync (next up)
+## Current milestone: M8 — Offline playback + sync (built, awaiting device DoD)
 
 **DoD (M8):** airplane-mode playback to 50% → reconnect → server shows 50% resume.
 
 ### Next
-- M8 agent: `LocalPlaybackResolver`, `UserDataSyncWorker` most-recent-wins drain,
-  offline trickplay. Offline home/library/search already work (M6+M7).
+- Device DoD walk by the orchestrator after merge — see the M8 block at the bottom of
+  this file for the exact adb / logcat commands.
 - Test material already on the tablet: The Body (2.0 GB), Backrooms (2.9 GB),
   Ouistreham (0.6 GB), Bref S1:E1+E2 — downloaded and left in place for M8.
 
@@ -466,3 +466,82 @@ honoured; delete frees bytes.
 - The queue runs one item at a time by design; there is no concurrency setting.
 
 <!-- END M7 (downloads) -->
+
+<!-- BEGIN M8 (offline playback + sync) — appended by the M8 worktree; keep as one block when merging -->
+
+### M8 — Offline playback + sync (built on a parallel worktree branch, awaiting device DoD)
+
+**DoD (M8):** airplane-mode playback to 50% → reconnect → server shows 50% resume.
+
+**Done**
+- `:player` offline playback: `LocalPlaybackMediaSource` (second variant of the M5 sealed
+  type, `DIRECT_PLAY` by construction) + `LocalTrickplay`; `LocalPlaybackResolver`;
+  `PlaybackSourceResolver` — **a completed download always wins, whatever the connection
+  is doing**; no local copy + offline → immediate `AppError.Network`, never a hang.
+  `ExoMediaSourceFactory`, `PlaybackReporter` and `DecoderFallbackHandler` widened to the
+  sealed type; local `file://` URIs (media + subtitle sidecars) bypass `StreamUrlFactory`.
+- `:data:downloads` `offline/DownloadedMediaProvider` — the playable/not-playable gate:
+  row `DOWNLOADED`, media file row `DOWNLOADED`, **and** the bytes still on disk;
+  optional files filtered one by one. Keeps `:player` free of DAOs.
+- `:core:database` `DownloadDao.getWithFiles(itemId)`. **No schema change — still v4.**
+- Offline reporting guard: the server triad and `stopEncodingProcess` are skipped for a
+  local source *and* whenever `ConnectionState` is offline; `setPosition` / `setPlayed`
+  still run on every tick and on stop, so an airplane-mode session leaves exactly the
+  `toBeSynced = true` rows the worker drains.
+- `:data` `UserDataSyncer` — real most-recent-wins (server `lastPlayedDate` vs local
+  `updatedAt`, both via `SdkDateTime`): local newer → push the whole row through
+  markPlayed/markFavorite/`updateItemUserData` in that order; server newer or tied →
+  adopt + emit on the event bus; `null`/absent server data → push; transport failure →
+  keep the flag + `Result.retry()`; 404 → abandon the row. `UserDataSyncWorker` is no
+  longer a stub.
+- `:data` `UserDataSyncTrigger` + `JellyfinNativeApplication.onCreate` — enqueues the
+  drain at app start and on every return to `ONLINE`, guarded on `countPendingSync()`.
+  Without it the DoD path has nothing to enqueue the worker.
+- Offline trickplay tile URIs + geometry reachable on the local source
+  (`LocalTrickplay.tileFor(positionMs)` → sheet/column/row); the scrubber itself is M9.
+- Player UI is identical online/offline except one control: the quality picker is hidden
+  for a local source (nothing to cap). Track/subtitle pickers unchanged.
+- **+74 unit tests** (13 `:data:downloads`, 22 new + 14 extended `:player`, 24 `:data`,
+  +1 `:feature:detail`); project total **661**, 0 failures. Full gate green in one run
+  (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+- 7 DECISIONS entries; `docs/features/offline-playback.md`, `user-data.md` sync section
+  rewritten, delimited ARCHITECTURE section.
+
+**Next — device DoD walk (orchestrator)**
+1. `./gradlew installDebug`, launch, confirm the four downloads are still `DOWNLOADED`
+   (`adb shell run-as dev.jellyfinnative.app.debug sqlite3 databases/jellyfin.db 'SELECT itemName,status FROM downloads;'`).
+2. Note the server's current position for the test film
+   (`/Users/{userId}/Items/{itemId}` → `UserData.PlaybackPositionTicks`).
+3. `adb shell cmd connectivity airplane-mode enable`; confirm the offline banner.
+4. Open the film's detail page → **Play**. Expect in logcat:
+   `Playing <itemId> from local storage` and **no** `POST /Items/{id}/PlaybackInfo`.
+   The player badge reads *Direct play*; there is **no** quality button.
+5. Seek to ~50 %, leave it playing ≥ 15 s, then back out of the player. Expect
+   `Playing <itemId> locally; nothing to report to the server` at debug level and **zero**
+   `Sessions/Playing` requests.
+6. Confirm the pending row:
+   `adb shell run-as … sqlite3 databases/jellyfin.db 'SELECT itemId,playbackPositionTicks,toBeSynced FROM user_data WHERE toBeSynced=1;'`
+   — one row, position ≈ 50 % of runtime in ticks.
+7. `adb shell cmd connectivity airplane-mode disable`. Watch for
+   `… user-data row(s) pending and the server is reachable; scheduling a sync` then
+   `Reconciling N pending user-data row(s)` and `Pushed the local user data for <itemId> (it was newer)`.
+   (the OEM ROM can delay WorkManager; `adb shell cmd jobscheduler run -f dev.jellyfinnative.app.debug <id>`
+   forces it.)
+8. Re-read the server item — `PlaybackPositionTicks` should now match step 6, and the
+   detail screen in jellyfin-web should show the ~50 % progress bar. Re-query `user_data`:
+   `toBeSynced` back to 0.
+9. Reverse check while online: mark the film watched in jellyfin-web, then toggle
+   *Mark watched* off in the app while offline with an **older** local timestamp, reconnect,
+   and confirm the app adopts the server value (`Adopted the server's user data for <itemId>`).
+10. Tablet/landscape sanity check on the player while playing locally.
+
+**Known issues (M8)**
+- Trickplay tiles are reachable but nothing renders them — M9's scrubber.
+- The quality picker is absent during local playback by design (DECISIONS.md); there is no
+  "play the server copy instead" affordance for a downloaded item.
+- A local file this device cannot decode falls back to a server transcode, so offline it
+  simply fails — there is no local transcode and never will be.
+- Carried over from M6: screens loaded while offline keep their offline data until
+  re-entered; a refresh-on-reconnect is still M9.
+
+<!-- END M8 (offline playback + sync) -->

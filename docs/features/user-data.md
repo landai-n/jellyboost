@@ -132,33 +132,68 @@ Collectors today:
 Replay is deliberately off: a screen that loads after a toggle reads the current value from its own
 request, and a replayed stale change would fight with it.
 
-## `UserDataSyncWorker` — stubbed until M8
+## `UserDataSyncWorker` — real since M8
 
-The milestone list says M4 delivers "local-first writes + EventBus; **sync worker stubbed**".
-Everything around the worker is real — `NetworkType.CONNECTED`, exponential backoff,
-`enqueueUniqueWork(KEEP)` (the worker drains whatever is pending when it runs, so a burst of failed
-toggles must not push the one scheduled run further out), and `UserDataDao.getPendingSync()`.
-`doWork` logs the pending count and returns success; M8 fills in most-recent-wins conflict
-resolution.
+The milestone list said M4 delivers "local-first writes + EventBus; **sync worker stubbed**". M8
+filled in the drain; everything around the worker was already real and is unchanged —
+`NetworkType.CONNECTED`, exponential backoff from 30 s, `enqueueUniqueWork(KEEP)` under the name
+`user-data-sync` (the worker drains whatever is pending when it runs, so a burst of failed toggles
+must not push the one scheduled run further out), and `UserDataDao.getPendingSync()`.
+
+The worker itself is three lines of mapping — `SyncOutcome.NOTHING_PENDING`/`DRAINED` →
+`Result.success()`, `RETRY` (and any unexpected throwable) → `Result.retry()`, never
+`Result.failure()`. The rule lives in **`UserDataSyncer`**, which runs on the JVM and is where
+most-recent-wins is actually decided.
+
+### Most-recent-wins, per pending row
+
+The server's `userData` is fetched (`GET /Users/{userId}/Items/{itemId}`) and compared against the
+row:
+
+| Server state | Decision |
+|---|---|
+| `lastPlayedDate` **after** `row.updatedAt` | **adopt** — upsert with `toBeSynced = false`, publish on the event bus |
+| exactly equal | **adopt** — the server already holds this instant; adopting is idempotent |
+| `lastPlayedDate` **before** `row.updatedAt` | **push**, then `clearPendingSync(itemId, userId, updatedAt)` |
+| `lastPlayedDate` is `null` | **push** — a server that never played it cannot outrank a local change |
+| no `userData` at all | **push** |
+| transport failure | **keep the flag**; the drain returns `Result.retry()` |
+| `404` | **abandon** — clear the flag and log; the item is gone from the server |
+
+The comparison is the local `updatedAt` against the server's `lastPlayedDate`, deliberately not the
+two `lastPlayedDate`s: a favourite toggle never touches `lastPlayedDate`, so comparing those would
+make every offline favourite lose to a film watched last week. Both go through `SdkDateTime`.
+
+A push sends the **whole row** — `markPlayedItem`/`markUnplayedItem`, then the favourite endpoints,
+then `updateItemUserData` with the full desired state, in that order (`markPlayedItem` clears the
+server's resume position, so the position has to be asserted after it). The worker cannot know which
+operation produced a pending row, because an offline session batches several into one. See
+`DECISIONS.md`, 2026-07-29.
+
+One row failing never abandons the rest; the rows that succeeded are already clear and do not come
+back on the retry.
+
+### When it runs
+
+| Trigger | Owner |
+|---|---|
+| A local write whose push failed | `UserDataRepositoryImpl` (M4) |
+| App start, when rows are already pending | `UserDataSyncTrigger` (M8) |
+| Every transition back to `ConnectionState.ONLINE` | `UserDataSyncTrigger` (M8) |
+
+The last two are what deliver M8's definition of done: on an airplane-mode session there is no failed
+push to enqueue anything, and `NetworkType.CONNECTED` only re-runs work that was enqueued in the
+first place. `UserDataSyncTrigger` collects `ConnectionStateProvider.state` on the application scope
+— started from `JellyfinNativeApplication.onCreate`, so it works with no screen showing — and guards
+the enqueue on `countPendingSync() > 0`.
 
 `WorkManagerUserDataSyncScheduler` swallows and logs an enqueue failure: losing the scheduled retry
 must never break the local write that triggered it — the row keeps `toBeSynced = true` and the next
 successful push clears it.
 
-### Integration required in `:app`
-
-`UserDataSyncWorker` is a `@HiltWorker`, so before it can actually run, `:app` needs:
-
-- `implementation(libs.androidx.work.runtime.ktx)` + `implementation(libs.androidx.hilt.work)` and
-  `ksp(libs.androidx.hilt.compiler)`;
-- `JellyfinNativeApplication : Configuration.Provider` returning a `Configuration` built with the
-  injected `HiltWorkerFactory`;
-- the default WorkManager initialiser removed from the manifest
-  (`<provider android:name="androidx.startup.InitializationProvider" tools:node="remove">`, or the
-  `androidx.work.WorkManagerInitializer` entry) so the Hilt-aware configuration wins.
-
-Until that lands the enqueue is harmless (it is caught and logged) and the worker body is a no-op,
-so nothing is lost at M4.
+The `:app` integration the worker needs (`HiltWorkerFactory` in a `Configuration.Provider`, the
+WorkManager work-runtime and hilt-work dependencies, the default initialiser removed from the
+manifest) has been in place since M0.
 
 ## Key classes
 
@@ -167,16 +202,19 @@ so nothing is lost at M4.
 | `UserDataRepository` / `UserDataRepositoryImpl` | `:data` | The local-first write path |
 | `UserDataEventBus` / `UserDataChange` | `:data` | App-wide broadcast of local changes |
 | `UserDataSyncScheduler` / `WorkManagerUserDataSyncScheduler` | `:data` | Retry scheduling |
-| `UserDataSyncWorker` | `:data` | Drains pending rows (stub until M8) |
+| `UserDataSyncWorker` | `:data` | Maps a drain onto a WorkManager result |
+| `UserDataSyncer` / `SyncOutcome` | `:data` | Most-recent-wins, per pending row (M8) |
+| `UserDataSyncTrigger` | `:data` | Enqueues on app start and on reconnection (M8) |
 | `UserDataEntity` / `UserDataDao` | `:core:database` | The `user_data` table |
 | `InstantConverter` | `:core:database` | `Instant` ↔ epoch millis |
 | `BrowseCacheWriter` | `:data` | Refreshes non-pending rows from every server read |
 
 ## Offline behaviour
 
-Already correct: the write path never requires a network. With no connectivity the Room row is
-written, the UI patches, the push fails, the flag stays set and the worker is enqueued behind
-`NetworkType.CONNECTED`. What is missing until M8 is the drain itself.
+The write path never requires a network. With no connectivity the Room row is written, the UI
+patches, the push fails (or, since M8, is not attempted at all while `PlaybackReporter` knows the app
+is offline), the flag stays set, and the drain runs on the next return to `ONLINE`. See
+[`docs/features/offline-playback.md`](offline-playback.md) for the playback half of that loop.
 
 ## Verification
 

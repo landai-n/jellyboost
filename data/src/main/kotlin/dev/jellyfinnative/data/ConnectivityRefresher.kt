@@ -15,9 +15,10 @@ import javax.inject.Singleton
  * until the user leaves and comes back (STATUS.md, M6 known issues). Screens collect this and re-run
  * whatever load they already have.
  *
- * The type is a `Flow<Unit>` and nothing else on purpose. Feature modules depend on `:data`, not on
- * `:core:network`, so exposing `ConnectionState` here would drag connectivity types into every
- * ViewModel that only wants to know "refresh now".
+ * The signal is a `Flow<Unit>`, and the state a `Boolean`, on purpose. Feature modules depend on
+ * `:data`, not on `:core:network`, so exposing `ConnectionState` here would drag connectivity types
+ * — and the reason taxonomy, which only the offline banner has any use for — into every ViewModel
+ * that wants to know "refresh now" or "is there a server to ask".
  *
  * It fires on **both** edges — reachable again, and no longer reachable — but never for the
  * connection state a screen starts with; see [onlineStateChanges].
@@ -26,9 +27,20 @@ import javax.inject.Singleton
 class ConnectivityRefresher
     @Inject
     constructor(
-        connectionStateProvider: ConnectionStateProvider,
+        private val connectionStateProvider: ConnectionStateProvider,
     ) {
         /** Fires once per change of online-ness, in either direction. Never completes. */
         val connectivityChanged: Flow<Unit> =
             connectionStateProvider.state.onlineStateChanges().map { }
+
+        /**
+         * Whether the app is online *right now*.
+         *
+         * A point read rather than a flow: the callers are one-shot decisions taken inside a
+         * coroutine that is about to fetch — "is this request worth making at all" — for which
+         * collecting a state flow would be ceremony around `.value`. Screens that need to *react*
+         * to the connection changing collect [connectivityChanged] instead.
+         */
+        val isOnline: Boolean
+            get() = connectionStateProvider.state.value.isOnline
     }

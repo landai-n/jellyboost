@@ -28,8 +28,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -52,9 +54,13 @@ class HomeViewModelTest {
 
     /** The connectivity-change signal (M9); fires only when a test says the server came back. */
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Online unless a test says otherwise; read by the membership refresh before it fetches. */
+    private var online = true
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {
             every { connectivityChanged } returns connectivityChanges
+            every { isOnline } answers { online }
         }
 
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
@@ -318,17 +324,44 @@ class HomeViewModelTest {
             advanceUntilIdle()
             viewModel.uiState.value.resume
                 .single()
-                .userData.played shouldBe false
+                .userData.isFavorite shouldBe false
 
-            eventBus.emit(UserDataChange("e1", UserData(played = true)))
+            eventBus.emit(UserDataChange("e1", UserData(isFavorite = true)))
             advanceUntilIdle()
 
             viewModel.uiState.value.resume
                 .single()
-                .userData.played shouldBe true
-            // The whole point: no second round-trip for any row.
+                .userData.isFavorite shouldBe true
+            // The whole point: a change that cannot move an item between rows costs no round-trip
+            // at all — not even after the membership-refresh window has long passed.
             coVerify(exactly = 1) { repository.getUserViews() }
             coVerify(exactly = 1) { repository.getResumeItems(any()) }
+            coVerify(exactly = 1) { repository.getNextUp(any()) }
+        }
+
+    @Test
+    fun `a position report does not refetch`() =
+        runTest(dispatcher) {
+            val resumeItem = episode("e1", "Trompe L'Oeil")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(resumeItem))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            // `PlaybackReporter` writes one of these every five seconds; a refetch per tick would
+            // be a poll for the length of the film.
+            repeat(3) { tick ->
+                eventBus.emit(UserDataChange("e1", UserData(playbackPositionTicks = (tick + 1) * 100L)))
+                advanceUntilIdle()
+            }
+
+            viewModel.uiState.value.resume
+                .single()
+                .userData.playbackPositionTicks shouldBe 300L
+            coVerify(exactly = 1) { repository.getResumeItems(any()) }
+            coVerify(exactly = 1) { repository.getNextUp(any()) }
         }
 
     @Test
@@ -378,6 +411,190 @@ class HomeViewModelTest {
             advanceUntilIdle()
 
             viewModel.uiState.value shouldBe before
+        }
+
+    // ---- Watched state moves items between rows ------------------------------------------------
+
+    @Test
+    fun `marking a resume item watched drops it from continue watching in the same frame`() =
+        runTest(dispatcher) {
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            eventBus.emit(UserDataChange("m1", UserData(played = true)))
+            runCurrent()
+
+            // Instant and request-free: *Continue watching* holds unfinished items, so a played
+            // item does not belong in it — no server round-trip is needed to know that.
+            viewModel.uiState.value.resume
+                .shouldBeEmpty()
+            coVerify(exactly = 1) { repository.getResumeItems(any()) }
+        }
+
+    @Test
+    fun `advances next up to the following episode after a watched toggle`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(episode("e1", "The Original")))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            // Which episode is "next" is the server's answer, not something a patch can synthesise.
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(episode("e2", "Chestnut")))
+            eventBus.emit(UserDataChange("e1", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.nextUp
+                .map { it.id }
+                .shouldContainExactly(listOf("e2"))
+            coVerify(exactly = 2) { repository.getNextUp(any()) }
+            coVerify(exactly = 2) { repository.getResumeItems(any()) }
+            // The rest of the screen is left alone: what is *recently added* does not depend on
+            // what has been watched, and the libraries call is not repeated either.
+            coVerify(exactly = 1) { repository.getUserViews() }
+            coVerify(exactly = 1) { repository.getLatestMedia(any(), any()) }
+        }
+
+    @Test
+    fun `refreshes the rows when a series no row shows is marked watched`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(episode("e1", "The Original")))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            // *Mark watched* on a series or season page publishes the container's id, which no
+            // episode card matches — the patch alone can never fix these rows.
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(emptyList())
+            eventBus.emit(UserDataChange("series-1", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.nextUp
+                .shouldBeEmpty()
+            coVerify(exactly = 2) { repository.getNextUp(any()) }
+        }
+
+    @Test
+    fun `collapses a burst of watched toggles into a single refresh`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+
+            HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            // Marking a season watched is one write per episode.
+            repeat(TOGGLE_BURST) { index ->
+                eventBus.emit(UserDataChange("e$index", UserData(played = true)))
+                advanceTimeBy(WITHIN_DEBOUNCE_MS)
+            }
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { repository.getResumeItems(any()) }
+            coVerify(exactly = 2) { repository.getNextUp(any()) }
+        }
+
+    @Test
+    fun `does not refresh the rows while offline`() =
+        runTest(dispatcher) {
+            online = false
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            eventBus.emit(UserDataChange("m1", UserData(played = true)))
+            advanceUntilIdle()
+
+            // The rows are the downloads Room already answered with, and the write has nowhere to
+            // have been adopted — but the item still leaves the row.
+            viewModel.uiState.value.resume
+                .shouldBeEmpty()
+            coVerify(exactly = 1) { repository.getResumeItems(any()) }
+            coVerify(exactly = 1) { repository.getNextUp(any()) }
+        }
+
+    @Test
+    fun `keeps the local watched state when the refetched row is still stale`() =
+        runTest(dispatcher) {
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            // The server still answers with the pre-toggle row: the push is slow, or it failed and
+            // is queued for `UserDataSyncWorker`. A local write that is still pending outranks it.
+            eventBus.emit(UserDataChange("m1", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.resume
+                .shouldBeEmpty()
+            coVerify(exactly = 2) { repository.getResumeItems(any()) }
+        }
+
+    @Test
+    fun `a pull-to-refresh takes the server's answer over an earlier local toggle`() =
+        runTest(dispatcher) {
+            val movie = movie("m1", "Dune")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(movies))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(movie))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+            eventBus.emit(UserDataChange("m1", UserData(played = true)))
+            advanceUntilIdle()
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            // Asking for a reload means asking the server; the local overrides stop applying, and
+            // anything genuinely unsynced comes back on the bus once `UserDataSyncer` resolves it.
+            viewModel.uiState.value.resume
+                .map { it.id }
+                .shouldContainExactly(listOf("m1"))
+        }
+
+    @Test
+    fun `leaves the rows untouched when the silent refresh fails`() =
+        runTest(dispatcher) {
+            val resumeItem = movie("m1", "Dune")
+            val nextUpItem = episode("e1", "The Original")
+            stubEverythingEmpty()
+            coEvery { repository.getUserViews() } returns AppResult.Success(listOf(shows))
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Success(listOf(resumeItem))
+            coEvery { repository.getNextUp(any()) } returns AppResult.Success(listOf(nextUpItem))
+
+            val viewModel = HomeViewModel(repository, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            coEvery { repository.getResumeItems(any()) } returns AppResult.Failure(AppError.Server(503))
+            coEvery { repository.getNextUp(any()) } returns AppResult.Failure(AppError.Network())
+            eventBus.emit(UserDataChange("series-1", UserData(played = true)))
+            advanceUntilIdle()
+
+            // Silent means silent: the user toggled something on another screen, so a failure here
+            // must not empty a shelf or raise an error the user did not ask for.
+            val state = viewModel.uiState.value
+            state.resume shouldContainExactly listOf(resumeItem)
+            state.nextUp shouldContainExactly listOf(nextUpItem)
+            state.errorMessage.shouldBeNull()
+            state.isRefreshing shouldBe false
         }
 
     // ---- M7: download badges -------------------------------------------------------------------
@@ -474,4 +691,12 @@ class HomeViewModelTest {
         id: String,
         name: String,
     ) = JellyfinItem(id = id, name = name, type = ItemType.MOVIE)
+
+    private companion object {
+        /** Episodes toggled in one go — "mark season watched" is one write per episode. */
+        const val TOGGLE_BURST = 5
+
+        /** Spacing between those toggles: short enough that the debounce window never elapses. */
+        const val WITHIN_DEBOUNCE_MS = 500L
+    }
 }

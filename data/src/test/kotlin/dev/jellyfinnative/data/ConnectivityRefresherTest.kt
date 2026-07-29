@@ -72,6 +72,30 @@ class ConnectivityRefresherTest {
         }
 
     @Test
+    fun `reports the current online state`() {
+        val refresher = ConnectivityRefresher(provider)
+
+        refresher.isOnline shouldBe true
+    }
+
+    @Test
+    fun `reports every offline reason as not online`() {
+        val refresher = ConnectivityRefresher(provider)
+
+        listOf(
+            ConnectionState.OFFLINE_NO_NETWORK,
+            ConnectionState.OFFLINE_SERVER_UNREACHABLE,
+            ConnectionState.OFFLINE_FORCED,
+        ).forEach { offline ->
+            state.value = offline
+
+            // Read live, not captured at construction: the same instance answers for the app's
+            // whole lifetime, and a stale `true` would let a screen fire doomed requests.
+            refresher.isOnline shouldBe false
+        }
+    }
+
+    @Test
     fun `fires when the user pins offline mode`() =
         runTest {
             ConnectivityRefresher(provider).connectivityChanged.test {

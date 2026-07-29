@@ -141,11 +141,33 @@ interface DownloadDao {
      *
      * Run when the download worker starts: a row still marked `DOWNLOADING` from a previous process
      * would otherwise be indistinguishable from the one the current worker is actually running.
+     *
+     * The `WHERE` clause is the whole point: a row the user paused (or one that finished, or
+     * failed) is *not* interrupted, and must keep the status it was given.
      */
     @Query(
         "UPDATE downloads SET status = 'QUEUED', updatedAt = :updatedAt WHERE status = 'DOWNLOADING'",
     )
     suspend fun requeueInterrupted(updatedAt: Instant)
+
+    /**
+     * Puts **one** row back in the queue, and only while it is still transferring.
+     *
+     * What the queue runs when its coroutine is cancelled. The status test belongs in the statement
+     * rather than in a read-then-write in Kotlin because the two racers are exactly a user pressing
+     * *Pause* — which writes `PAUSED` and *then* cancels the work — and this handler reacting to
+     * that cancellation. An unconditional write here overwrites the `PAUSED` the user asked for
+     * with `QUEUED`, and `nextRunnable` picks the item straight back up (docs/POLISH.md,
+     * "pausing a download doesn't work").
+     */
+    @Query(
+        "UPDATE downloads SET status = 'QUEUED', updatedAt = :updatedAt " +
+            "WHERE itemId = :itemId AND status = 'DOWNLOADING'",
+    )
+    suspend fun requeueIfDownloading(
+        itemId: UUID,
+        updatedAt: Instant,
+    )
 
     // ---- files ---------------------------------------------------------------------------------
 

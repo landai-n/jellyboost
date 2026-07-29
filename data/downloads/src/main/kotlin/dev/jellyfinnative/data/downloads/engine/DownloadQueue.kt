@@ -80,8 +80,9 @@ internal class MissingMetadataException(
  * ### Cancellation
  * A cancelled coroutine (the user paused, WorkManager withdrew the network constraint, the process
  * is going away) leaves the partial file exactly where it is and the row back in
- * [DownloadStatus.QUEUED]. The next run resumes it from its byte offset, which is the property the
- * milestone's definition of done measures.
+ * [DownloadStatus.QUEUED] — *unless* something already gave it another status, which is what a
+ * pause does. The next run resumes it from its byte offset, which is the property the milestone's
+ * definition of done measures.
  *
  * ### The session
  * Nothing here can build a URL until the API client knows its server, and on a cold start this
@@ -152,8 +153,12 @@ class DownloadQueue
                 // cancellation continue to unwind. `NonCancellable` because a suspending Room write
                 // inside an already-cancelled coroutine would itself be cancelled, and the row
                 // would stay `DOWNLOADING` for a process that is going away.
+                //
+                // Conditional on the row still being DOWNLOADING, because the most common cause of
+                // this cancellation is the user pressing *Pause*, which writes `PAUSED` and then
+                // cancels the work: an unconditional re-queue here would undo their own request.
                 withContext(NonCancellable) {
-                    downloadDao.setStatus(download.itemId, DownloadStatus.QUEUED, clock.instant())
+                    downloadDao.requeueIfDownloading(download.itemId, clock.instant())
                 }
                 throw cancellation
             } catch (

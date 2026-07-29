@@ -31,6 +31,9 @@ data class ItemDetailUiState(
      * Kept next to the item rather than folded into `JellyfinItem.downloadState` because it comes
      * from a *different* Flow — Room's download table — and updates several times a second while a
      * transfer runs, whereas the item itself is fetched once.
+     *
+     * For a season it is not this item's own state at all but the *aggregate* of its episodes',
+     * because a season is downloaded by downloading its episodes ([aggregateDownloadState]).
      */
     val downloadState: DownloadState = DownloadState.NotDownloaded,
     /** Set only when the item itself could not be loaded — a related row failing is silent. */
@@ -65,7 +68,67 @@ data class ItemDetailUiState(
                 ItemType.SEASON -> episodes.firstOrNull { !it.userData.played } ?: episodes.firstOrNull()
                 else -> item
             }
+
+    /**
+     * `true` when Download on this page means "download the episodes under this".
+     *
+     * A season and a series are folders: the server has no file to send for one, and the pipeline
+     * expands them into episode downloads (DECISIONS.md, 2026-07-29). The button therefore acts on
+     * [downloadTargets], not on the item's own id.
+     */
+    val isDownloadContainer: Boolean get() = item?.type == ItemType.SERIES || item?.type == ItemType.SEASON
+
+    /**
+     * The ids a *delete* or *cancel* from the Download button acts on.
+     *
+     * For a movie or an episode that is the item itself; for a season it is its episodes, since
+     * those are the rows that exist. A season page that has not loaded its episodes yields nothing,
+     * which is correct — there is nothing on the device to remove that this page knows about.
+     */
+    val downloadTargets: List<String>
+        get() =
+            when {
+                item == null -> emptyList()
+                isDownloadContainer -> episodes.map { it.id }
+                else -> listOf(item.id)
+            }
 }
+
+/**
+ * One download state for a container, from the states of the episodes under it.
+ *
+ * The order of the cases is the order of what the user would want the button to do next: finish
+ * what is running, retry what failed, and only then offer to remove what is complete.
+ *
+ * - **everything downloaded** → *Downloaded*, and the button offers to remove it;
+ * - **anything transferring** → *Downloading*, with the progress of the whole container: episodes
+ *   already done count as one, ones not started as zero, so a season at "3 of 10" reads ~30 % and
+ *   not 100 % of whichever episode happens to be moving;
+ * - **anything waiting or paused** → *Queued*;
+ * - **anything failed**, with nothing left running → *Failed*, and the button retries;
+ * - **anything else**, including a container only partly downloaded with nothing in the queue →
+ *   *NotDownloaded*, so the next tap enqueues the episodes that are still missing.
+ */
+internal fun aggregateDownloadState(states: List<DownloadState>): DownloadState =
+    when {
+        states.isEmpty() -> DownloadState.NotDownloaded
+        states.all { it is DownloadState.Downloaded } -> DownloadState.Downloaded
+        states.any { it is DownloadState.Downloading } ->
+            DownloadState.Downloading(progress = states.sumOf { it.fraction.toDouble() }.toFloat() / states.size)
+
+        states.any { it is DownloadState.Queued || it is DownloadState.Paused } -> DownloadState.Queued
+        states.any { it is DownloadState.Failed } -> DownloadState.Failed
+        else -> DownloadState.NotDownloaded
+    }
+
+/** How much of one item is on the device, `0f..1f` — the term each episode contributes above. */
+private val DownloadState.fraction: Float
+    get() =
+        when (this) {
+            is DownloadState.Downloaded -> 1f
+            is DownloadState.Downloading -> progress
+            else -> 0f
+        }
 
 /** Where playback should start for [item]: its resume position, or the beginning. */
 fun playbackStartTicks(item: JellyfinItem): Long =
@@ -121,13 +184,29 @@ internal fun ItemDetailUiState.withUserData(
  */
 internal fun ItemDetailUiState.withDownloadStates(states: Map<String, DownloadState>): ItemDetailUiState =
     copy(
-        downloadState = item?.id?.let { states[it] } ?: DownloadState.NotDownloaded,
+        downloadState = resolveDownloadState(states),
         item = item?.withDownloadState(states),
         seasons = seasons.withDownloadStates(states),
         episodes = episodes.withDownloadStates(states),
         nextUp = nextUp?.withDownloadState(states),
         similar = similar.withDownloadStates(states),
     )
+
+/**
+ * What the header's Download button reads.
+ *
+ * A season has no download row of its own — the pipeline expands it into its episodes — so its
+ * state is theirs, aggregated. Everything else, including a season page whose episodes have not
+ * arrived yet, reads its own row.
+ */
+private fun ItemDetailUiState.resolveDownloadState(states: Map<String, DownloadState>): DownloadState {
+    val current = item ?: return DownloadState.NotDownloaded
+
+    if (isDownloadContainer && episodes.isNotEmpty()) {
+        return aggregateDownloadState(episodes.map { states[it.id] ?: DownloadState.NotDownloaded })
+    }
+    return states[current.id] ?: DownloadState.NotDownloaded
+}
 
 private fun JellyfinItem.withDownloadState(states: Map<String, DownloadState>): JellyfinItem {
     val next = states[id] ?: DownloadState.NotDownloaded

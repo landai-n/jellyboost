@@ -4,8 +4,11 @@ import dev.jellyfinnative.core.common.model.DownloadFileType
 import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
+import dev.jellyfinnative.data.downloads.DownloadFixtures.season
+import dev.jellyfinnative.data.downloads.DownloadFixtures.series
 import dev.jellyfinnative.data.downloads.DownloadFixtures.subtitleStream
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -57,6 +60,35 @@ class DownloadFilePlannerTest {
         val plan = planner.plan(movie(primaryTag = null), DIRECTORY)
 
         plan.map { it.type } shouldContainExactly listOf(DownloadFileType.MEDIA)
+    }
+
+    // ---- folders are not files --------------------------------------------------------------------
+
+    @Test
+    fun `a season is refused before a URL is ever built`() {
+        // `/Items/{seasonId}/Download` answers 400, which reached the user as "The server couldn't
+        // send this download (error 400)". Callers expand a container into its episodes; this is
+        // the guard that makes forgetting fail here, with a reason, instead of there.
+        shouldThrow<NotDownloadableException> { planner.plan(season(), DIRECTORY) }
+    }
+
+    @Test
+    fun `a series is refused too`() {
+        shouldThrow<NotDownloadableException> { planner.plan(series(), DIRECTORY) }
+    }
+
+    @Test
+    fun `an item the server flags as a folder is refused whatever its type says`() {
+        shouldThrow<NotDownloadableException> {
+            planner.plan(movie().copy(isFolder = true), DIRECTORY)
+        }
+    }
+
+    @Test
+    fun `a movie with no media source at all is still planned`() {
+        // "No media sources" is not the same question as "is a folder": a lean field set drops them
+        // from a perfectly downloadable film.
+        planner.plan(movie(mediaSourceId = null), DIRECTORY).media().url shouldBe "download://${uuid(1)}"
     }
 
     // ---- the media file -------------------------------------------------------------------------

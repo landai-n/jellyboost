@@ -86,6 +86,41 @@ object DownloadFixtures {
         )
 
     /**
+     * A season — a **folder**, which is the whole point of the fixture: it has no `mediaSources`,
+     * and `isFolder` is what the server sends for one.
+     */
+    fun season(
+        id: UUID = uuid(11),
+        seriesId: UUID? = uuid(10),
+        seriesName: String? = "Westworld",
+        name: String = "Season 1",
+        seasonNumber: Int? = 1,
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.SEASON,
+            name = name,
+            seriesId = seriesId,
+            seriesName = seriesName,
+            indexNumber = seasonNumber,
+            isFolder = true,
+            imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
+        )
+
+    /** A series — the other folder a Download button can be tapped on. */
+    fun series(
+        id: UUID = uuid(10),
+        name: String = "Westworld",
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.SERIES,
+            name = name,
+            isFolder = true,
+            imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
+        )
+
+    /**
      * `MediaSourceInfo` has no defaulted constructor, so every fixture goes through this one
      * builder rather than repeating twenty irrelevant flags.
      */

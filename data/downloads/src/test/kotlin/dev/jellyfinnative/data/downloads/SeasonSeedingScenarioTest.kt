@@ -292,8 +292,8 @@ class SeasonSeedingScenarioTest {
         every { storage.resolve(any(), any()) } answers { File("/tmp/downloads/${secondArg<String>()}") }
         every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
         every { urls.imageUrl(any(), any(), any(), any()) } returns IMAGE_URL
-        coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any()) } returns MEDIA_BYTES
-        coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any()) } returns IMAGE_BYTES
+        coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) } returns MEDIA_BYTES
+        coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any(), any()) } returns IMAGE_BYTES
         coEvery { sessionGate.ensureSession() } returns true
     }
 

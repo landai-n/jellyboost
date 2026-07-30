@@ -186,19 +186,23 @@ class MkvClusterScanner {
      * Reads `TimestampScale` (nanoseconds per tick) if the bytes are all there and plausible.
      *
      * Only ever called before the first cluster, so this cannot be fooled by frame data.
+     *
+     * The size is read as a full varint rather than as a single byte: nothing in the format says a
+     * muxer must spell "3" as `0x83` when `0x40 0x03` is equally legal, and reading only the
+     * one-byte form silently left every later timestamp on the default scale
+     * (docs/notes/audit-2026-07.md, MKV-08).
      */
     private fun readTimestampScale(
         buffer: ByteArray,
         start: Int,
         end: Int,
     ) {
-        if (start >= end) return
-        val lengthByte = buffer[start].toInt() and BYTE_MASK
-        if (lengthByte < MIN_VALUE_LENGTH_BYTE || lengthByte > MAX_VALUE_LENGTH_BYTE) return
-        val valueLength = lengthByte and VARINT_VALUE_MASK
-        if (start + 1 + valueLength > end) return
+        val size = readVarInt(buffer, start, end) ?: return
+        if (size.unknown || size.value < 1L || size.value > MAX_VARINT_LENGTH) return
+        val valueLength = size.value.toInt()
+        if (start + size.length + valueLength > end) return
 
-        val scale = readUnsigned(buffer, start + 1, valueLength) ?: return
+        val scale = readUnsigned(buffer, start + size.length, valueLength) ?: return
         // A scale outside this range is not a Matroska file we can reason about; keep the default
         // rather than turning every later timestamp into nonsense.
         if (scale in MIN_TIMESTAMP_SCALE_NANOS..MAX_TIMESTAMP_SCALE_NANOS) timestampScaleNanos = scale
@@ -226,6 +230,12 @@ class MkvClusterScanner {
          * its [TIMESTAMP_ID] on every file this will ever see.
          */
         const val CRC32_ID = 0xBF
+
+        /** A CRC-32 is four bytes, and the spec allows it to be spelled no other way. */
+        const val CRC32_BYTES = 4
+
+        /** `0x84` — a one-byte varint carrying [CRC32_BYTES]. */
+        const val CRC32_LENGTH_BYTE = 0x84
 
         /** Matroska's default, and what ffmpeg writes: one tick is one millisecond. */
         const val DEFAULT_TIMESTAMP_SCALE_NANOS = 1_000_000L
@@ -274,6 +284,11 @@ class MkvClusterScanner {
         /**
          * Steps over a cluster's `CRC-32` child when it has one.
          *
+         * A `CRC-32` is a 32-bit checksum and nothing else, so its length has to be exactly four —
+         * `0x84`. Accepting 1..8 the way a general integer would made a `BF` byte followed by any
+         * plausible length a step this would take, which is one fewer byte that has to line up for a
+         * random `1F 43 B6 75` to be believed (docs/notes/audit-2026-07.md, MKV-09).
+         *
          * @param at the index of the cluster's first child.
          * @return the index of the first child that is not a `CRC-32`, or `null` when one is there
          *   but malformed or not yet fully arrived — in which case the carry buffer will retry the
@@ -286,9 +301,8 @@ class MkvClusterScanner {
         ): Int? {
             if (at >= end || (buffer[at].toInt() and BYTE_MASK) != CRC32_ID) return at
             if (at + 1 >= end) return null
-            val lengthByte = buffer[at + 1].toInt() and BYTE_MASK
-            if (lengthByte < MIN_VALUE_LENGTH_BYTE || lengthByte > MAX_VALUE_LENGTH_BYTE) return null
-            return at + 2 + (lengthByte and VARINT_VALUE_MASK)
+            if ((buffer[at + 1].toInt() and BYTE_MASK) != CRC32_LENGTH_BYTE) return null
+            return at + 2 + CRC32_BYTES
         }
 
         fun matches(

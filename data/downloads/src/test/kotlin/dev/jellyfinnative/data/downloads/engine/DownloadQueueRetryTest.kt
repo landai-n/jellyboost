@@ -73,7 +73,7 @@ class DownloadQueueRetryTest {
         every { itemMapper.toDtoOrNull(any()) } returns movie()
         every { urls.mediaUrl(any()) } returns "https://server/download"
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
-        coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
+        coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
         coEvery { sweeper.sweep() } returns 0L
@@ -87,7 +87,7 @@ class DownloadQueueRetryTest {
             // The finding, in one test: a proxy 502 or a reset connection used to move the row to
             // ERROR under a message promising a retry that nothing performed.
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 IOException("connection reset")
 
             queue().drain(listener) shouldBe DrainOutcome.RETRY
@@ -106,7 +106,7 @@ class DownloadQueueRetryTest {
             val second = download(itemId = uuid(2), queuePosition = 1)
             coEvery { downloadDao.nextRunnable() } returnsMany
                 listOf(withFiles(first), withFiles(second), null)
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("502")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws IOException("502")
 
             queue().drain(listener) shouldBe DrainOutcome.RETRY
 
@@ -121,11 +121,11 @@ class DownloadQueueRetryTest {
             // restarting, the second meets one that is back. Nothing about the row's own bytes
             // changed in between, which is the point of leaving it QUEUED.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("502")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws IOException("502")
             queue().drain(listener) shouldBe DrainOutcome.RETRY
 
             queueWith(download(attemptCount = 1))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
@@ -138,7 +138,7 @@ class DownloadQueueRetryTest {
             // The retry is performed by a *new* worker run, in a process that may not be this one;
             // a counter in memory would hand every restart a full budget and never stop trying.
             queueWith(download(attemptCount = 2))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("502")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws IOException("502")
 
             queue().drain(listener)
 
@@ -151,7 +151,7 @@ class DownloadQueueRetryTest {
             // Bounded, or a server that is simply gone keeps a foreground service alive all
             // afternoon on WorkManager's backoff.
             queueWith(download(attemptCount = DownloadQueue.MAX_ATTEMPTS - 1))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("502")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws IOException("502")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
@@ -168,7 +168,7 @@ class DownloadQueueRetryTest {
             val second = download(itemId = uuid(2), queuePosition = 1)
             coEvery { downloadDao.nextRunnable() } returnsMany
                 listOf(withFiles(first), withFiles(second), null)
-            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 404, url = "https://server/download")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
@@ -197,7 +197,8 @@ class DownloadQueueRetryTest {
             // Pause is the commonest cancellation in the app. Spending a retry on it would mean a
             // download the user paused five times could never be resumed again.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("paused")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
+                CancellationException("paused")
 
             assertThrows<CancellationException> { queue().drain(listener) }
 
@@ -217,7 +218,7 @@ class DownloadQueueRetryTest {
             var overlapped = false
             var inFlight = false
             queueWith(download(itemId = uuid(1)), download(itemId = uuid(2), queuePosition = 1))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } coAnswers {
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } coAnswers {
                 if (inFlight) overlapped = true
                 inFlight = true
                 released.await()
@@ -240,12 +241,13 @@ class DownloadQueueRetryTest {
     fun `a cancelled drain hands the lease on rather than keeping it`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("replaced")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
+                CancellationException("replaced")
 
             val subject = queue()
             runCatching { subject.drain(listener) }
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
 
             subject.drain(listener) shouldBe DrainOutcome.COMPLETED
         }

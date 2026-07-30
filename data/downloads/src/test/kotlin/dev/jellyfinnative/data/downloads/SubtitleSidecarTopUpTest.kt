@@ -79,7 +79,7 @@ class SubtitleSidecarTopUpTest {
         every { storage.resolve(any(), any()) } answers { File(directory, secondArg<String>()) }
         coEvery { downloadDao.insertFile(capture(inserted)) } returns FILE_ID
         coEvery { downloadDao.updateFile(capture(updated)) } just Runs
-        coEvery { downloader.download(capture(requested), any(), any(), any(), any()) } coAnswers {
+        coEvery { downloader.download(capture(requested), any(), any(), any(), any(), any()) } coAnswers {
             secondArg<File>().writeText("1\n00:00:01,000 --> 00:00:02,000\nbonjour\n")
             SIDECAR_BYTES
         }
@@ -177,7 +177,7 @@ class SubtitleSidecarTopUpTest {
 
             topUp().topUp(listOf(movie(streams = listOf(subtitleStream(index = 6, external = false))))) shouldBe 0
 
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -226,7 +226,7 @@ class SubtitleSidecarTopUpTest {
         runTest {
             given(files = listOf(mediaFile()))
             coEvery {
-                downloader.download(match { it.endsWith("6.srt") }, any(), any(), any(), any())
+                downloader.download(match { it.endsWith("6.srt") }, any(), any(), any(), any(), any())
             } throws IOException("404")
 
             topUp().topUp(listOf(elementaire())) shouldBe 1

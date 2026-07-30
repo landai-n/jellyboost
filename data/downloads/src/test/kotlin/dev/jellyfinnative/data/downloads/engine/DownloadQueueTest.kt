@@ -90,7 +90,7 @@ class DownloadQueueTest {
         every { itemMapper.toDtoOrNull(any()) } returns movie()
         every { urls.mediaUrl(any()) } returns "https://server/download"
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
-        coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
+        coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
         // Nothing to seed from unless a test says otherwise.
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
@@ -141,7 +141,7 @@ class DownloadQueueTest {
         runTest {
             // Otherwise a 2 GB film would jump to 100 % while its 40 KB poster finished.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 500L
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 500L
 
             queue().drain(listener)
 
@@ -176,7 +176,7 @@ class DownloadQueueTest {
 
             coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.ERROR, any(), any()) }
             coVerify(exactly = 0) { downloadDao.nextRunnable() }
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -201,7 +201,7 @@ class DownloadQueueTest {
             // Once its retry budget is spent: a transport failure on a row with attempts left is
             // requeued instead (see the retry-policy section below), which is the STAB-01 fix.
             queueWith(download(attemptCount = DownloadQueue.MAX_ATTEMPTS - 1))
-            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any(), any()) } throws
                 IOException("connection reset")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
@@ -223,7 +223,7 @@ class DownloadQueueTest {
             // The device walk found a queue row reading "Download failed: Required value baseUrl is
             // null. Provide it by setting ApiClient.baseUrl." — SDK internals on screen.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
                 IllegalStateException("Required value baseUrl is null. Provide it by setting ApiClient.baseUrl.")
             val message = slot<String>()
             coEvery {
@@ -241,7 +241,7 @@ class DownloadQueueTest {
         runTest {
             // The plan's optional-file rule: the file row goes ERROR, the item stays playable.
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any(), any()) } throws
                 IOException("404")
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
@@ -253,7 +253,7 @@ class DownloadQueueTest {
     fun `a failing file is recorded on its own row`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any()) } throws
+            coEvery { downloader.download(match { it.contains("image") }, any(), any(), any(), any(), any()) } throws
                 IOException("404")
 
             queue().drain(listener)
@@ -266,13 +266,13 @@ class DownloadQueueTest {
         runTest {
             queueWith(download())
             every { urls.videoStreamUrl(any(), any()) } returns "https://server/videos/stream"
-            coEvery { downloader.download("https://server/download", any(), any(), any(), any()) } throws
+            coEvery { downloader.download("https://server/download", any(), any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 403, url = "https://server/download")
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             // Same bytes, a route the server does not gate on `enableContentDownloading`.
-            coVerify { downloader.download("https://server/videos/stream", any(), any(), any(), any()) }
+            coVerify { downloader.download("https://server/videos/stream", any(), any(), any(), any(), any()) }
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
         }
 
@@ -284,7 +284,7 @@ class DownloadQueueTest {
             // send the same failure twice. The row is still worth another *attempt* (a 500 is
             // transient), which is the outcome below.
             queueWith(download())
-            coEvery { downloader.download("https://server/download", any(), any(), any(), any()) } throws
+            coEvery { downloader.download("https://server/download", any(), any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 500, url = "https://server/download")
 
             queue().drain(listener) shouldBe DrainOutcome.RETRY
@@ -317,8 +317,9 @@ class DownloadQueueTest {
             // hand the user the original file they asked the server to shrink.
             queueWith(download(quality = DownloadQuality.LOW))
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
-            coEvery { downloader.download("https://server/videos/stream.mkv", any(), any(), any(), any()) } throws
-                DownloadHttpException(code = 403, url = "https://server/videos/stream.mkv")
+            coEvery {
+                downloader.download("https://server/videos/stream.mkv", any(), any(), any(), any(), any())
+            } throws DownloadHttpException(code = 403, url = "https://server/videos/stream.mkv")
 
             queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
 
@@ -333,9 +334,9 @@ class DownloadQueueTest {
             // bytes and the queue tab would read 100 % from the first chunk.
             queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
             every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } coAnswers {
-                // The fifth argument, not the last: MockK hands a suspending call its continuation.
-                arg<ProgressCallback>(4).onProgress(300L, 0L)
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } coAnswers {
+                // The sixth argument, not the last: MockK hands a suspending call its continuation.
+                arg<ProgressCallback>(5).onProgress(300L, 0L)
                 300L
             }
 
@@ -352,7 +353,7 @@ class DownloadQueueTest {
             // Every file has reported a real size by the end, so the estimate is dropped and the
             // exact sum wins — a download that ends at 90 % of a guess is worse than no guess.
             queueWith(download(bytesTotal = 10_000L))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } returns 100L
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
 
             queue().drain(listener)
 
@@ -513,7 +514,7 @@ class DownloadQueueTest {
     fun `an item that failed seeds nothing, since it measured nothing`() =
         runTest {
             queueWith(download(seriesName = "Westworld"))
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws IOException("boom")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws IOException("boom")
 
             queue().drain(listener)
 
@@ -538,7 +539,8 @@ class DownloadQueueTest {
     fun `cancellation puts the row back in the queue rather than failing it`() =
         runTest {
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("paused")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
+                CancellationException("paused")
 
             runCatching { queue().drain(listener) }
 
@@ -556,7 +558,8 @@ class DownloadQueueTest {
             // `nextRunnable` picked the item straight back up — pause looked like it did nothing.
             // The status test lives in the statement (`requeueIfDownloading`) so it cannot race.
             queueWith(download())
-            coEvery { downloader.download(any(), any(), any(), any(), any()) } throws CancellationException("paused")
+            coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } throws
+                CancellationException("paused")
 
             runCatching { queue().drain(listener) }
 
@@ -625,7 +628,7 @@ class DownloadQueueTest {
             // Nothing new was inserted: the second run re-used every row the first one wrote.
             rows.size shouldBe firstPlan.size
             val target = File("/tmp/downloads/Backrooms.2026.MULTi-BATGirl.mkv")
-            coVerify { downloader.download(any(), target, any(), any(), any()) }
+            coVerify { downloader.download(any(), target, any(), any(), any(), any()) }
         }
 
     @Test
@@ -653,7 +656,7 @@ class DownloadQueueTest {
 
             queue().drain(listener)
 
-            coVerify { downloader.download("https://server/download", any(), any(), any(), any()) }
+            coVerify { downloader.download("https://server/download", any(), any(), any(), any(), any()) }
         }
 
     // ---- deletion while downloading ---------------------------------------------------------------
@@ -669,7 +672,7 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any()) }
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any(), any()) }
             // Nothing is "downloaded": the item is gone, not finished.
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, any(), any()) }
         }
@@ -740,11 +743,11 @@ class DownloadQueueTest {
         clusterMillis: Long?,
         reportedBytes: Long,
     ) {
-        coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any()) } returns 400L
-        coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any()) } coAnswers {
+        coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any(), any()) } returns 400L
+        coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) } coAnswers {
             val body = clusterMillis?.let(::clusterBytes) ?: ByteArray(16) { 0x11 }
             arg<MediaChunkSink?>(3)?.onChunk(body, 0, body.size)
-            arg<ProgressCallback>(4).onProgress(reportedBytes, 0L)
+            arg<ProgressCallback>(5).onProgress(reportedBytes, 0L)
             reportedBytes
         }
     }

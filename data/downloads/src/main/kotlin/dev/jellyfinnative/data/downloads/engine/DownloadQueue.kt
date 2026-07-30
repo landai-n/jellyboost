@@ -506,10 +506,13 @@ class DownloadQueue
             downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADING)
             val throttle = ProgressThrottle()
             val sink = projector?.let { MediaChunkSink(it::consume) }
+            // Only the media file of a transcoded row is the live encode; its sidecars and images
+            // are ordinary files the server already holds, and they resume like any other.
+            val transcoded = download.quality.isTranscoded && file.type == DownloadFileType.MEDIA
 
             try {
                 val written =
-                    downloader.download(file.url, target, ioDispatcher, sink) { bytes, total ->
+                    downloader.download(file.url, target, ioDispatcher, sink, transcoded) { bytes, total ->
                         progress.update(file.id, bytes, total)
                         val now = clock.millis()
                         if (throttle.shouldWrite(bytes, total, now)) {

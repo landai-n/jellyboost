@@ -139,6 +139,88 @@ class FileDownloaderTest {
             samples shouldContainExactly listOf(11L to 11L)
         }
 
+    // ---- the transfer that cannot be resumed ---------------------------------------------------
+
+    @Test
+    fun `a transcode never asks the server to resume it`() =
+        runTest {
+            val target = file("movie.mkv", content = "half of one encode")
+            val downloader = downloader(respondWith = ok("a whole other encode".toByteArray()))
+
+            downloader.download(
+                URL,
+                target,
+                UnconfinedTestDispatcher(testScheduler),
+                transcoded = true,
+            ) { _, _ -> }
+
+            // The partial file is a bookmark into an encode that no longer exists anywhere.
+            requests.single().header("Range").shouldBeNull()
+        }
+
+    @Test
+    fun `a transcode the server answers 206 for is still restarted from zero`() =
+        runTest {
+            val target = file("movie.mkv", content = "half of one encode")
+            // A server that honours `Range` on a live transcode hands back the *second* encode's
+            // bytes labelled as a continuation of the first. Appending them makes a file that still
+            // opens, still ends in Cues, and would earn a SeekHead pointing into the wrong encode
+            // (docs/notes/audit-2026-07.md, MKV-10).
+            val downloader =
+                downloader(respondWith = partial("a whole other encode".toByteArray(), from = 18, total = 38))
+
+            val written =
+                downloader.download(
+                    URL,
+                    target,
+                    UnconfinedTestDispatcher(testScheduler),
+                    transcoded = true,
+                ) { _, _ -> }
+
+            written shouldBe 20L
+            target.readText() shouldBe "a whole other encode"
+        }
+
+    @Test
+    fun `a restarted transcode is fed to the chunk sink from its first byte`() =
+        runTest {
+            val target = file("movie.mkv", content = "half of one encode")
+            val body = "a whole other encode".toByteArray()
+            val downloader = downloader(respondWith = partial(body, from = 18, total = 38))
+            val seen = mutableListOf<Byte>()
+
+            downloader.download(
+                URL,
+                target,
+                UnconfinedTestDispatcher(testScheduler),
+                chunkSink = { buffer, offset, length -> seen += buffer.copyOfRange(offset, offset + length).toList() },
+                transcoded = true,
+            ) { _, _ -> }
+
+            // The scanner is only wired up for a body that starts at byte zero. Before the restart
+            // was made unconditional, a 206 here silently switched the size projection off.
+            seen.toByteArray().contentEquals(body) shouldBe true
+        }
+
+    @Test
+    fun `a file the server already holds is still resumed`() =
+        runTest {
+            val target = file("movie.mkv", content = "hello ")
+            val downloader = downloader(respondWith = partial("world".toByteArray(), from = 6, total = 11))
+
+            downloader.download(
+                URL,
+                target,
+                UnconfinedTestDispatcher(testScheduler),
+                transcoded = false,
+            ) { _, _ -> }
+
+            // The restart is for transcodes only; an ORIGINAL download is the same bytes every time
+            // and resuming one is the whole point of the engine.
+            requests.single().header("Range") shouldBe "bytes=6-"
+            target.readText() shouldBe "hello world"
+        }
+
     // ---- progress -----------------------------------------------------------------------------
 
     @Test

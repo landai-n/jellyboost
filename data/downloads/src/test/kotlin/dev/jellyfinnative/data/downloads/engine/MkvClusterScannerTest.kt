@@ -104,6 +104,22 @@ class MkvClusterScannerTest {
         scanner.mediaMillisReceived shouldBe 4_000L
     }
 
+    @Test
+    fun `a CRC-32 that is not four bytes long is not a CRC-32`() {
+        val scanner = MkvClusterScanner()
+        // `BF 85 <5>` — a checksum length the spec does not have. Accepting 1..8 the way a general
+        // integer would made one more byte of a random four-byte hit free to be anything
+        // (docs/notes/audit-2026-07.md, MKV-09).
+        val wrongCrc =
+            Ebml.CLUSTER_ID +
+                byteArrayOf(0x8B.toByte(), 0xBF.toByte(), 0x85.toByte(), 0x01, 0x02, 0x03, 0x04, 0x05) +
+                byteArrayOf(0xE7.toByte(), 0x82.toByte(), 0x27, 0x10)
+
+        scanner.consume(Ebml.cluster(ticks = 4_000L) + wrongCrc)
+
+        scanner.mediaMillisReceived shouldBe 4_000L
+    }
+
     // ---- chunk boundaries ------------------------------------------------------------------------
 
     @Test
@@ -314,6 +330,23 @@ class MkvClusterScannerTest {
     }
 
     @Test
+    fun `a scale whose own size is a wider varint is read just the same`() {
+        val scanner = MkvClusterScanner()
+
+        // `40 04` is a two-byte varint carrying 4 — as legal a spelling of "four bytes follow" as
+        // `84`, and one the scanner used to walk straight past, leaving every later timestamp on
+        // the default scale (docs/notes/audit-2026-07.md, MKV-08).
+        scanner.consume(
+            Ebml.header() +
+                Ebml.timestampScale(1_000_000_000L, sizeWidth = 2) +
+                Ebml.cluster(ticks = 3L, ticksWidth = 1),
+        )
+
+        // One second per tick, so three ticks is three seconds and not three milliseconds.
+        scanner.mediaMillisReceived shouldBe 3_000L
+    }
+
+    @Test
     fun `an implausible scale is ignored in favour of the default`() {
         val scanner = MkvClusterScanner()
 
@@ -338,10 +371,29 @@ class MkvClusterScannerTest {
                 ByteArray(0x1F) { (it * 7).toByte() } +
                 byteArrayOf(0x18, 0x53, 0x80.toByte(), 0x67, 0xFF.toByte())
 
-        /** `TimestampScale` carrying [nanos] nanoseconds per tick. */
-        fun timestampScale(nanos: Long): ByteArray {
+        /**
+         * `TimestampScale` carrying [nanos] nanoseconds per tick.
+         *
+         * @param sizeWidth how many bytes to spell the element's own length in. One is what every
+         *   muxer writes; anything up to eight is equally legal EBML, which is the point of asking.
+         */
+        fun timestampScale(
+            nanos: Long,
+            sizeWidth: Int = 1,
+        ): ByteArray {
             val value = unsigned(nanos, width = 4)
-            return TIMESTAMP_SCALE_ID + byteArrayOf((0x80 or value.size).toByte()) + value
+            return TIMESTAMP_SCALE_ID + varIntLength(value.size, sizeWidth) + value
+        }
+
+        /** [value] as an EBML length varint spelled in exactly [width] bytes. */
+        private fun varIntLength(
+            value: Int,
+            width: Int,
+        ): ByteArray {
+            val bytes = unsigned(value.toLong(), width)
+            // The width marker: a single set bit `width` places from the top of the first byte.
+            bytes[0] = (bytes[0].toInt() or (0x100 shr width)).toByte()
+            return bytes
         }
 
         /**

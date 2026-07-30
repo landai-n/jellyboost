@@ -25,7 +25,7 @@ class DownloadErrorCopyTest {
 
         copy shouldNotContain "baseUrl"
         copy shouldNotContain "ApiClient"
-        copy shouldBe "Something went wrong. The download will retry."
+        copy shouldBe "Something went wrong. Try the download again."
     }
 
     @Test

@@ -54,6 +54,9 @@ class DownloadsViewModelTest {
         coEvery { downloads.pause(any()) } returns AppResult.Success(Unit)
         coEvery { downloads.resume(any()) } returns AppResult.Success(Unit)
         coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+        coEvery { downloads.pauseAll(any()) } returns AppResult.Success(Unit)
+        coEvery { downloads.resumeAll(any()) } returns AppResult.Success(Unit)
+        coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
         coEvery { downloads.move(any(), any()) } returns AppResult.Success(Unit)
     }
 
@@ -326,11 +329,8 @@ class DownloadsViewModelTest {
             model.pauseAll()
             advanceUntilIdle()
 
-            coVerify { downloads.pause("1") }
-            coVerify { downloads.pause("2") }
-            coVerify(exactly = 0) { downloads.pause("3") }
-            coVerify(exactly = 0) { downloads.pause("4") }
-            coVerify(exactly = 0) { downloads.pause("5") }
+            coVerify { downloads.pauseAll(listOf("1", "2")) }
+            coVerify(exactly = 0) { downloads.pause(any()) }
         }
 
     @Test
@@ -388,13 +388,13 @@ class DownloadsViewModelTest {
             model.pauseAll()
             advanceUntilIdle()
 
-            coVerify(exactly = 0) { downloads.pause(any()) }
+            coVerify(exactly = 0) { downloads.pauseAll(any()) }
         }
 
     @Test
     fun `a failed pause outranks the transcode message`() =
         runTest(dispatcher) {
-            coEvery { downloads.pause(any()) } returns AppResult.Failure(AppError.Storage())
+            coEvery { downloads.pauseAll(any()) } returns AppResult.Failure(AppError.Storage())
             items.value =
                 listOf(
                     item("1", "Arrival", status = DownloadStatus.DOWNLOADING),
@@ -427,11 +427,8 @@ class DownloadsViewModelTest {
             model.resumeAll()
             advanceUntilIdle()
 
-            coVerify { downloads.resume("1") }
-            coVerify { downloads.resume("2") }
-            coVerify { downloads.resume("3") }
-            coVerify(exactly = 0) { downloads.resume("4") }
-            coVerify(exactly = 0) { downloads.resume("5") }
+            coVerify { downloads.resumeAll(listOf("1", "2", "3")) }
+            coVerify(exactly = 0) { downloads.resume(any()) }
             model.uiState.value.userMessage shouldBe null
         }
 
@@ -448,13 +445,13 @@ class DownloadsViewModelTest {
             model.resumeAll()
             advanceUntilIdle()
 
-            coVerify(exactly = 0) { downloads.resume(any()) }
+            coVerify(exactly = 0) { downloads.resumeAll(any()) }
         }
 
     @Test
     fun `a failed bulk resume reports it`() =
         runTest(dispatcher) {
-            coEvery { downloads.resume(any()) } returns AppResult.Failure(AppError.Storage())
+            coEvery { downloads.resumeAll(any()) } returns AppResult.Failure(AppError.Storage())
             items.value = listOf(item("1", "Arrival", status = DownloadStatus.PAUSED))
 
             val model = viewModel()
@@ -477,6 +474,7 @@ class DownloadsViewModelTest {
 
             model.uiState.value.showCancelAllConfirmation shouldBe true
             coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
         }
 
     @Test
@@ -492,6 +490,7 @@ class DownloadsViewModelTest {
 
             model.uiState.value.showCancelAllConfirmation shouldBe false
             coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
         }
 
     @Test
@@ -515,19 +514,15 @@ class DownloadsViewModelTest {
             model.confirmCancelAll()
             advanceUntilIdle()
 
-            coVerify { downloads.delete("3") }
-            coVerify { downloads.delete("4") }
-            coVerify { downloads.delete("5") }
-            coVerify { downloads.delete("6") }
-            coVerify(exactly = 0) { downloads.delete("1") }
-            coVerify(exactly = 0) { downloads.delete("2") }
+            coVerify { downloads.deleteAll(listOf("3", "4", "5", "6")) }
+            coVerify(exactly = 0) { downloads.delete(any()) }
             model.uiState.value.showCancelAllConfirmation shouldBe false
         }
 
     @Test
     fun `a failed bulk delete raises the delete message`() =
         runTest(dispatcher) {
-            coEvery { downloads.delete(any()) } returns AppResult.Failure(AppError.Storage())
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Failure(AppError.Storage())
             items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADING))
 
             val model = viewModel()
@@ -559,8 +554,11 @@ class DownloadsViewModelTest {
             // In particular the dialog cannot be opened over an empty queue.
             model.uiState.value.showCancelAllConfirmation shouldBe false
             coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
             coVerify(exactly = 0) { downloads.pause(any()) }
+            coVerify(exactly = 0) { downloads.pauseAll(any()) }
             coVerify(exactly = 0) { downloads.resume(any()) }
+            coVerify(exactly = 0) { downloads.resumeAll(any()) }
         }
 
     // ---- reordering -----------------------------------------------------------------------------

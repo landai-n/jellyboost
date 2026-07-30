@@ -123,11 +123,10 @@ class DownloadsViewModel
             val stillTranscoding = state.unpausableCount
 
             viewModelScope.launch {
-                // `map` then `any`, never `any` alone: the check must not short-circuit the pauses.
-                val failed = targets.map { downloads.pause(it.itemId) }.any { it is AppResult.Failure }
+                val result = downloads.pauseAll(targets.map { it.itemId })
                 val message =
                     when {
-                        failed -> DownloadsMessage.ActionFailed
+                        result is AppResult.Failure -> DownloadsMessage.ActionFailed
                         stillTranscoding > 0 ->
                             DownloadsMessage.PausedKeepingTranscodes(
                                 pausedCount = targets.size,
@@ -151,8 +150,7 @@ class DownloadsViewModel
             if (targets.isEmpty()) return
 
             viewModelScope.launch {
-                val failed = targets.map { downloads.resume(it.itemId) }.any { it is AppResult.Failure }
-                if (failed) _uiState.update { it.copy(userMessage = DownloadsMessage.ActionFailed) }
+                report(downloads.resumeAll(targets.map { it.itemId }), DownloadsMessage.ActionFailed)
             }
         }
 
@@ -168,7 +166,8 @@ class DownloadsViewModel
         }
 
         /**
-         * Empties the queue: every row it holds is deleted, one existing [delete] each.
+         * Empties the queue: every row it holds is removed in a single batched
+         * [DownloadRepository.deleteAll] call.
          *
          * **Finished downloads are never touched** — not by a filter here, but by construction: the
          * queue tab is `toQueue()`, which excludes `DOWNLOADED` rows, so there is no id in this list
@@ -181,8 +180,7 @@ class DownloadsViewModel
             if (targets.isEmpty()) return
 
             viewModelScope.launch {
-                val failed = targets.map { downloads.delete(it.itemId) }.any { it is AppResult.Failure }
-                if (failed) _uiState.update { it.copy(userMessage = DownloadsMessage.DeleteFailed) }
+                report(downloads.deleteAll(targets.map { it.itemId }), DownloadsMessage.DeleteFailed)
             }
         }
 

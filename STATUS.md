@@ -1,6 +1,33 @@
 # STATUS
 
-## Current milestone: M10 — Release hardening (IN PROGRESS, started 2026-07-30)
+## Current milestone: M10 — Release hardening (**COMPLETE**, 2026-07-30, tag `m10`)
+
+**DoD walk (all five items verified on the test tablet):**
+1. **R8 rules** — `assembleRelease` green; 12/12 minified checks pass on device
+   with zero `ClassNotFoundException`/`NoClassDefFoundError`/`NoSuchMethodError`/
+   Room `_Impl`/serialization errors. SDK serializers, Room, Hilt, Media3 (incl.
+   the reflectively-loaded `FfmpegAudioRenderer`) and Coil's ServiceLoader
+   fetchers all survive full-mode minification + `shrinkResources`.
+2. **Baseline profile** — `569b8ac`, 21 497 rules captured on the device,
+   compiled into the release APK as `assets/dexopt/baseline.prof`.
+3. **CI** — `.github/workflows/ci.yml`, valid YAML, one `gate` job running
+   assemble + detekt + test with report/mapping upload. Authored only: the repo
+   has no GitHub remote, so it cannot be exercised here (recorded deviation).
+4. **Signing** — release config reads all four `RELEASE_*` properties
+   all-or-none from local.properties/env, falls back to debug-signing with a
+   `-debugsigned` version suffix; no keystore or secret in the tree.
+5. **M5/M8 re-verified on the minified build** — direct play, forced transcode,
+   audio switch, subtitles rendering; 873 MB download, offline playback from
+   disk, user-data sync, Coil posters. Plus SEC-01: a real search left zero
+   traces of the term, server name, UUIDs or tokens in release logcat.
+
+**Device-verified fixes shipped during M10:** offline sidecar subtitles
+(`190dc03`), forced-remote go-home (`d3f408f` — B.3 re-walk PASSED on device
+2026-07-30: picking English streamed, re-picking French returned to local
+storage, Quality control disappeared, server progress posts stopped), clickable
+download rows (`a60274d`).
+
+## Previous milestone: M10 — Release hardening (started 2026-07-30)
 
 **DoD (M10, docs/PLAN.md):** R8 rules (SDK serializers/Room/Hilt/Media3), baseline
 profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8

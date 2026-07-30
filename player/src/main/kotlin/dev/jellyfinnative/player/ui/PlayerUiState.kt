@@ -95,6 +95,14 @@ enum class PlayerMessage {
     /** A track had to be re-requested from the server, so playback restarted. */
     RestartedForTrackChange,
 
+    /**
+     * The downloaded file does not contain that track, and offline there is no server to ask.
+     *
+     * The alternative — reopening the file — cannot produce a track that is not in it, so it would
+     * only restart playback for nothing (`PlayerViewModel.refuseLocalTrackChange`).
+     */
+    TrackUnavailableOffline,
+
     /** Nothing left to fall back to. */
     PlaybackFailed,
 }

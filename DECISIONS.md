@@ -1191,3 +1191,42 @@ Seeded from the approved plan; listed for traceability, no divergence:
   Full gate green (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
 
 <!-- END -->
+
+## 2026-07-30 — offline track picker tells the truth about transcoded downloads; a local track change is refused, not reopened
+
+- **Scope:** `:data:downloads` (`DownloadedMedia.quality`/`isTranscoded`, `DownloadedMediaProvider`),
+  `:player` (`LocalPlaybackResolver`, `PlayerViewModel.selectAudioTrack`/`selectSubtitleTrack` +
+  `refuseLocalTrackChange`, `PlayerMessage.TrackUnavailableOffline`, `PlayerScreen`, strings). Tests:
+  `TrackSelectionControllerTest` (new, 6), `LocalPlaybackResolverTest` 14 → 20,
+  `PlayerViewModelTest` 35 → 37 net, `DownloadedMediaProviderTest` 15 → 17.
+- **Plan said:** offline playback builds its pickers from the cached `BaseItemDto` streams so online
+  and offline produce identical track lists; when local track selection fails, the ViewModel
+  re-resolves with the requested index (the online fallback for tracks the current stream lacks).
+- **Done instead:** for a *transcoded* download the resolver now offers only what the file on disk
+  holds — one audio track (the source's default, which the server baked in because the download URL
+  names no `audioStreamIndex`) and no embedded subtitles; sidecars are unaffected. And a failed
+  track selection on any `LocalPlaybackMediaSource` is refused with a message instead of reopening:
+  a `file://` re-resolve returns the same file with the same tracks, so the reopen was a visible
+  restart that changed nothing (the user-reported bug, repro'd on the device — the MEDIUM Élémentaire
+  row's MKV holds exactly one AAC track and zero subtitle tracks, verified by parsing its Matroska
+  `Tracks` element, while the cached blob describes 3×AC3 + 5 subtitle streams).
+- **Test changed, not weakened:** `PlayerViewModelTest#a track the local file cannot satisfy goes
+  back to the resolver` asserted precisely the reopen loop this fix removes. Inverted to
+  `#an audio track the local file cannot satisfy is refused instead of reloading it` (+ a subtitle
+  twin); its other assertion — the re-request must not invent a bitrate cap — is preserved verbatim
+  in the new `#a streamed item still re-requests a track the current stream cannot satisfy`, which
+  pins that the online path still reopens.
+- **Known imprecisions, accepted:** (1) the transcoded picker entry keeps the source stream's
+  `displayTitle` ("FR VFF : AC3 5.1 …") though the bytes are stereo AAC — right language, wrong
+  codec name; recording the baked shape needs a schema change, deferred with the enqueue-side
+  sketch. (2) The stale-selection clamp (`selectedAudioIndex`/`selectedSubtitleIndex` dropped when
+  absent from the offered list) applies at every quality, not only transcoded; it can only fire when
+  the requested index is not offered, so no valid ORIGINAL path changes. (3) External-sidecar id
+  matching (`external:<n>`) was verified NOT broken — Media3 1.9.0 copies the id onto the synthesized
+  `Format` in both subtitle branches (checked in bytecode) and the new controller test pins it — so
+  no change was made there.
+- **Deferred (needs schema/design sign-off):** pinning `audioStreamIndex` at enqueue, extracting
+  embedded text subtitles as sidecars, recording the baked codec/channels, or probing the container's
+  own `Tracks` element during the existing MKV header pass. Sketch recorded in STATUS.md.
+
+<!-- END -->

@@ -12,17 +12,25 @@ verification on the minified build.
   1095 → 1110; execution record + a new Low PERF-13 appended to
   `docs/notes/audit-2026-07.md` §6).
 
-### In flight
-- **Offline track-selection bug (user-reported 2026-07-30):** subtitle + audio
-  switching dead during offline playback of *transcoded* downloads. Diagnosed by
-  the orchestrator: the offline picker is built from the ORIGINAL's cached
-  MediaStreams while a MEDIUM/LOW/HIGH file has one baked AAC track and (likely)
-  no embedded subs, so unsatisfiable selections fall through to a pointless
-  `reopen()` restart loop (repro: Élémentaire (2023), MEDIUM; logcat + Room dump
-  in session scratchpad). Fix agent running: truthful picker for transcoded
-  rows, no offline reopen fallback, external-sidecar id round-trip check;
-  enqueue-side improvements (pin audioStreamIndex, extract embedded text subs)
-  deliberately deferred to a design decision.
+- **Offline track-selection bug fixed, 2026-07-30** (user-reported): the offline
+  picker now offers only what a transcoded file actually holds (one baked audio
+  track, no embedded subs — confirmed by parsing the repro MKV's `Tracks` element
+  off the device), and a track the local file cannot supply is refused with a
+  message instead of the pointless `reopen()` restart loop. External-sidecar
+  `external:<n>` id matching verified NOT broken (Media3 bytecode + new
+  controller test). DECISIONS.md entry covers the one inverted test. Net +16
+  tests. **Device walk still owed** (batched M10 session below).
+
+### Awaiting user design decision
+- **Enqueue-side follow-ups to the track fix** (sketched by the fix agent, not
+  implemented): (1) pin `audioStreamIndex` at enqueue + record it in a new
+  column (Room migration; prerequisite for choosing the download language);
+  (2) extract embedded *text* subtitles as sidecars by dropping the
+  `isExternal` filter in `DownloadFilePlanner` (no schema change, but old rows
+  would hold fewer subs than fresh ones — the DECISIONS question); (3) record
+  baked codec/channels for exact labels (cosmetic, folds into 1); (4) or probe
+  the container's own `Tracks` element during the existing MKV header pass,
+  which subsumes 1+3 with no server semantics.
 
 ### Next
 1. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient

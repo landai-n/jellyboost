@@ -1,6 +1,7 @@
 package dev.jellyfinnative.data.downloads.offline
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
@@ -144,6 +145,30 @@ class DownloadedMediaProviderTest {
                 .mediaStreams
                 ?.single()
                 ?.index shouldBe 3
+        }
+
+    @Test
+    fun `carries the quality the row was downloaded at`() =
+        runTest {
+            // The cached blob describes the *source*; only this tells the player that the bytes on
+            // disk are a re-encode holding one audio track and no embedded subtitles.
+            stored(quality = DownloadQuality.MEDIUM, files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
+
+            val resolved = provider.get(itemId).shouldNotBeNull()
+
+            resolved.quality shouldBe DownloadQuality.MEDIUM
+            resolved.isTranscoded shouldBe true
+        }
+
+    @Test
+    fun `an original download is not marked as transcoded`() =
+        runTest {
+            stored(files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
+
+            val resolved = provider.get(itemId).shouldNotBeNull()
+
+            resolved.quality shouldBe DownloadQuality.ORIGINAL
+            resolved.isTranscoded shouldBe false
         }
 
     // ---- the seek index a transcoded download arrives without -----------------------------------
@@ -328,13 +353,14 @@ class DownloadedMediaProviderTest {
     private fun stored(
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
         mediaSourceId: String = "source-1",
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
         files: List<DownloadFileEntity>,
     ) {
         coEvery { downloadDao.getWithFiles(itemId) } returns
             DownloadWithFiles(
                 download =
                     DownloadFixtures
-                        .download(itemId = itemId, status = status)
+                        .download(itemId = itemId, status = status, quality = quality)
                         .copy(mediaSourceId = mediaSourceId),
                 files = files,
             )

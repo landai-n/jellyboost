@@ -21,6 +21,17 @@ verification on the minified build.
   controller test). DECISIONS.md entry covers the one inverted test. Net +16
   tests. **Device walk still owed** (batched M10 session below).
 
+### Queued (user-requested 2026-07-30, launch after player decomposition + phase 0/1 land)
+- **Connectivity-aware track picker for downloaded items:** when online, the
+  picker for a downloaded item shows the full source track list, and selecting
+  a track the local file cannot supply reopens via the *streaming* path with
+  the requested index (needs an explicit force-remote re-resolve — a plain
+  reopen re-resolves back to the local file); when offline, tracks the file +
+  sidecars cannot play are not shown at all (picker reacts to
+  ConnectionStateProvider). `TrackUnavailableOffline` stays only as a backstop
+  for the went-offline-mid-tap race. Nice-to-have: selecting a locally
+  available track while in such a forced stream returns to local playback.
+
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in
   `docs/notes/offline-multitrack-design.md`. One file with all tracks is

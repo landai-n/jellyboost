@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.MediaSegmentKind
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.fallback.DecoderFallbackHandler
 import dev.jellyfinnative.player.fallback.FallbackDecision
@@ -19,6 +20,8 @@ import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
+import dev.jellyfinnative.player.model.audioTracksFor
+import dev.jellyfinnative.player.model.subtitleTracksFor
 import dev.jellyfinnative.player.model.ticksToMillis
 import dev.jellyfinnative.player.pip.PipController
 import dev.jellyfinnative.player.pip.PipState
@@ -93,6 +96,7 @@ class PlayerViewModel
         private val segmentLoader: MediaSegmentLoader,
         private val preferences: AppPreferences,
         private val pipController: PipController,
+        private val connectionState: ConnectionStateProvider,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val sessionStore = PlayerSessionStore(savedStateHandle)
@@ -134,6 +138,36 @@ class PlayerViewModel
         /** The currently playing source; `null` until the first resolve succeeds. */
         private var source: PlaybackMediaSource? = null
 
+        /**
+         * The downloaded copy of this item, once one has been resolved.
+         *
+         * Kept for the whole session rather than read off [source], because a forced-remote track
+         * change replaces [source] with the *server's* copy — and it is precisely then that the two
+         * questions this answers arise: which tracks the file could still play (so choosing one of
+         * them can go home instead of streaming on), and what to fall back to if the server turns
+         * out not to be there after all.
+         */
+        private var localSource: LocalPlaybackMediaSource? = null
+
+        /**
+         * `true` while the app believes it can reach the server.
+         *
+         * Kept in step with [ConnectionStateProvider] for as long as playback lasts, because it
+         * decides what the pickers *offer*: the source's full track list while there is a server to
+         * stream a missing track from, and only what the downloaded file holds when there is not.
+         * A sheet that is already open therefore reacts to the network dropping.
+         */
+        private var isOnline = true
+
+        /**
+         * `true` while this session is deliberately streaming an item that is also on disk.
+         *
+         * Carried into every later re-negotiation ([asRequest]) so that changing quality — or a
+         * decoder fallback — does not silently drop back to the local file and lose the track the
+         * user went to the server for.
+         */
+        private var forcedRemote = false
+
         private var reportingJob: Job? = null
         private var uiTickerJob: Job? = null
 
@@ -155,6 +189,7 @@ class PlayerViewModel
         init {
             observePlayerEvents()
             observePreferences()
+            observeConnectivity()
             loadTitle()
             openSession(
                 PlaybackResolveRequest(
@@ -203,6 +238,25 @@ class PlayerViewModel
             }
         }
 
+        /**
+         * Keeps the pickers honest about what can still be reached.
+         *
+         * A downloaded item's audio and subtitle pickers show two different lists depending on the
+         * answer — the source's full set online, the file's own set offline — and the network can
+         * perfectly well drop while the sheet is on screen. Collected rather than read once for
+         * exactly that: the state flow replays its current value, so the first emission is the
+         * initial answer and every later one re-derives the lists under the source that is playing.
+         */
+        private fun observeConnectivity() {
+            viewModelScope.launch {
+                connectionState.state.collect { state ->
+                    isOnline = state.isOnline
+                    val current = source ?: return@collect
+                    _uiState.update { it.withTracks(current, isOnline) }
+                }
+            }
+        }
+
         // ---- user actions -------------------------------------------------------------------------
 
         fun togglePlayPause() {
@@ -224,7 +278,8 @@ class PlayerViewModel
          * Switches audio track.
          *
          * Tried locally first; while transcoding the server only ever sent the one audio track it
-         * was asked for, so the switch falls through to a re-resolve and a visible reload.
+         * was asked for, so the switch falls through to a re-resolve and a visible reload. For a
+         * downloaded item that re-resolve has to be told to bypass the file — see [needsServer].
          */
         fun selectAudioTrack(jellyfinIndex: Int) {
             val current = source ?: return
@@ -233,10 +288,11 @@ class PlayerViewModel
                 _uiState.update { it.copy(selectedAudioIndex = jellyfinIndex) }
                 return
             }
-            if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
+            if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
+            val remote = needsServer(current, localSource?.playsAudioLocally(jellyfinIndex) == true)
             reopenSession(
-                current.asRequest().copy(audioStreamIndex = jellyfinIndex),
-                PlayerMessage.RestartedForTrackChange,
+                current.asRequest(remote).copy(audioStreamIndex = jellyfinIndex),
+                trackChangeMessage(current, remote),
             )
         }
 
@@ -248,13 +304,54 @@ class PlayerViewModel
                 _uiState.update { it.copy(selectedSubtitleIndex = jellyfinIndex) }
                 return
             }
-            if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
+            if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
+            val remote = needsServer(current, localSource?.playsSubtitleLocally(jellyfinIndex) == true)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
             reopenSession(
-                current.asRequest().copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
-                PlayerMessage.RestartedForTrackChange,
+                current.asRequest(remote).copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
+                trackChangeMessage(current, remote),
             )
         }
+
+        /**
+         * Whether the reopen that satisfies a track change has to bypass the download on disk.
+         *
+         * Three cases, and only the middle one is new:
+         *
+         * - **playing the local file:** the player has just refused the track, so the file cannot
+         *   supply it whatever its stream list claims — only the server can, and by the time this is
+         *   asked we already know there is one;
+         * - **streaming an item that is also downloaded** (a previous forced-remote switch): a track
+         *   the file *does* hold goes home. Reopening without the flag lets `PlaybackSourceResolver`
+         *   pick the local copy again, which costs no bandwidth and survives the network dropping —
+         *   the whole reason the download exists. Anything else keeps streaming;
+         * - **an item that was never downloaded:** nothing to bypass; this is M5's path untouched.
+         */
+        private fun needsServer(
+            current: PlaybackMediaSource,
+            fileHoldsTrack: Boolean,
+        ): Boolean =
+            when {
+                current is LocalPlaybackMediaSource -> true
+                else -> localSource != null && !fileHoldsTrack
+            }
+
+        /**
+         * What to tell the user about the restart they are about to see.
+         *
+         * Leaving a downloaded file to stream is a different thing from the server re-encoding a
+         * stream it is already sending, and it is worth saying so: the item plays from the network
+         * from now on. Both are said *after* the fact, in the snackbar, exactly as a quality change
+         * is — the pickers themselves stay a plain list of languages.
+         */
+        private fun trackChangeMessage(
+            current: PlaybackMediaSource,
+            remote: Boolean,
+        ): PlayerMessage =
+            when {
+                remote && current is LocalPlaybackMediaSource -> PlayerMessage.StreamingForTrackChange
+                else -> PlayerMessage.RestartedForTrackChange
+            }
 
         /**
          * Declines a track the downloaded file cannot produce, instead of restarting it for nothing.
@@ -266,10 +363,12 @@ class PlayerViewModel
          * restarted for it. That loop is what a transcoded download did on every attempt to change
          * language or subtitles.
          *
-         * With the resolver no longer offering tracks a transcoded file does not hold, this should
-         * be unreachable from the pickers. It stays as the honest answer for whatever slips past —
-         * a selection restored from a previous session, or a container whose streams disagree with
-         * the cached blob.
+         * Since the pickers became connectivity-aware this is the **offline** answer only: online
+         * the same tap is satisfied by streaming the item ([needsServer]). Offline the picker offers
+         * nothing the file cannot play, so this should be unreachable from it, and it stays as the
+         * honest answer for whatever slips past — a selection restored from a previous session, a
+         * container whose streams disagree with the cached blob, or the network dropping between the
+         * picker being drawn and the row being tapped.
          */
         private fun refuseLocalTrackChange(current: LocalPlaybackMediaSource) {
             Timber.i("Downloaded file %s cannot supply that track; leaving playback alone", current.itemId)
@@ -290,7 +389,7 @@ class PlayerViewModel
             val current = source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
             _uiState.update { it.copy(quality = quality) }
-            reopenSession(current.asRequest().copy(maxStreamingBitrate = quality.maxStreamingBitrate))
+            reopenSession(current.asRequest(forcedRemote).copy(maxStreamingBitrate = quality.maxStreamingBitrate))
         }
 
         /**
@@ -447,6 +546,7 @@ class PlayerViewModel
         ) {
             val previous = source ?: return
             val snapshot = playerHandle.snapshot()
+            forcedRemote = request.forceRemote
             setReportingActive(false)
             val resumed =
                 request.copy(
@@ -477,13 +577,14 @@ class PlayerViewModel
             message: PlayerMessage?,
         ) {
             when (result) {
-                is SessionOpenResult.ResolveFailed -> fail(result.error.toMessage())
+                is SessionOpenResult.ResolveFailed -> onResolveFailed(result.error)
 
                 SessionOpenResult.UnsupportedSource -> fail(UNSUPPORTED_SOURCE)
 
                 is SessionOpenResult.Opened -> {
                     val resolved = result.source
                     source = resolved
+                    (resolved as? LocalPlaybackMediaSource)?.let { localSource = it }
                     stopReported = false
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed the user
                     // chose belongs to the session, not to the media item.
@@ -491,7 +592,7 @@ class PlayerViewModel
                         .takeIf { !it.isNormal }
                         ?.let { playerHandle.setPlaybackSpeed(it.rate) }
                     _videoPlayer.value = playerHandle.player
-                    _uiState.update { it.withSource(resolved, message) }
+                    _uiState.update { it.withSource(resolved, isOnline, message) }
                     positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
 
                     reporter.reportStart(resolved, playerHandle.snapshot())
@@ -499,6 +600,26 @@ class PlayerViewModel
                     loadPlaybackExtras(resolved)
                 }
             }
+        }
+
+        /**
+         * A resolve that produced nothing to play.
+         *
+         * Normally that is the end of the session and the error goes on screen. There is one case
+         * worth recovering from: the user asked for a track only the server has, and the server
+         * turned out not to be there — the network died between the picker being drawn and the
+         * request going out, or it was the *server* rather than the network, which
+         * `ConnectionStateProvider` cannot know until a probe says so. Playback was fine a second
+         * ago and the file is still on the device, so the item goes back to playing off it with the
+         * same message a refused offline switch gets. The retry is not forced, so it can only
+         * resolve locally, and a second failure falls through to the error.
+         */
+        private fun onResolveFailed(error: AppError) {
+            val downloaded = localSource
+            if (!forcedRemote || downloaded == null) return fail(error.toMessage())
+
+            Timber.i("Streaming %s for a track change failed; returning to the file on disk", downloaded.itemId)
+            reopenSession(downloaded.asRequest(forceRemote = false), PlayerMessage.TrackUnavailableOffline)
         }
 
         /**
@@ -569,7 +690,7 @@ class PlayerViewModel
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
                 is FallbackDecision.ForceTranscode ->
                     reopenSession(
-                        current.asRequest().copy(
+                        current.asRequest(forcedRemote).copy(
                             startPositionTicks = decision.positionTicks,
                             enableDirectPlay = false,
                             enableDirectStream = false,
@@ -579,7 +700,7 @@ class PlayerViewModel
 
                 is FallbackDecision.LowerBitrate ->
                     reopenSession(
-                        current.asRequest().copy(
+                        current.asRequest(forcedRemote).copy(
                             startPositionTicks = decision.positionTicks,
                             maxStreamingBitrate = decision.maxStreamingBitrate,
                         ),
@@ -702,18 +823,25 @@ class PlayerViewModel
  * track, fallback — from silently dropping a setting the previous one had established. A local
  * source has no bitrate cap to carry over, so it contributes `null` and the server picks freely if
  * the re-negotiation ends up there.
+ *
+ * @param forceRemote whether this re-negotiation must keep bypassing the download on disk. It is a
+ *   parameter rather than something read off the source because the source cannot know: a streamed
+ *   `RemotePlaybackMediaSource` looks the same whether it is an item nobody downloaded or the
+ *   server's copy of one the user is deliberately streaming for a track the file lacks.
  */
-private fun PlaybackMediaSource.asRequest(): PlaybackResolveRequest =
+private fun PlaybackMediaSource.asRequest(forceRemote: Boolean): PlaybackResolveRequest =
     PlaybackResolveRequest(
         itemId = itemId,
         mediaSourceId = mediaSourceId,
         maxStreamingBitrate = (this as? RemotePlaybackMediaSource)?.maxStreamingBitrate,
         audioStreamIndex = selectedAudioIndex,
         subtitleStreamIndex = selectedSubtitleIndex,
+        forceRemote = forceRemote,
     )
 
 private fun PlayerUiState.withSource(
     source: PlaybackMediaSource,
+    online: Boolean,
     message: PlayerMessage?,
 ): PlayerUiState =
     copy(
@@ -724,12 +852,25 @@ private fun PlayerUiState.withSource(
         playMethod = source.playMethod,
         isLocalPlayback = source is LocalPlaybackMediaSource,
         durationMs = source.runTimeTicks.ticksToMillis(),
-        audioTracks = source.audioTracks,
-        subtitleTracks = source.subtitleTracks,
         selectedAudioIndex = source.selectedAudioIndex,
         selectedSubtitleIndex = source.selectedSubtitleIndex,
         quality = PlaybackQuality.forBitrate((source as? RemotePlaybackMediaSource)?.maxStreamingBitrate),
         userMessage = message ?: userMessage,
+    ).withTracks(source, online)
+
+/**
+ * The two picker lists, under the source that is playing and the connection there is.
+ *
+ * Separate from [withSource] because connectivity changes on its own timetable: a network that drops
+ * while the audio sheet is open has to re-derive exactly these two fields and touch nothing else.
+ */
+private fun PlayerUiState.withTracks(
+    source: PlaybackMediaSource,
+    online: Boolean,
+): PlayerUiState =
+    copy(
+        audioTracks = source.audioTracksFor(online),
+        subtitleTracks = source.subtitleTracksFor(online),
     )
 
 /** Turns the domain failure taxonomy into copy a user can act on. */

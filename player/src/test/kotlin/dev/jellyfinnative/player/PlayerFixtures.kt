@@ -176,6 +176,8 @@ internal object PlayerFixtures {
         audioTracks: List<PlaybackTrack> = emptyList(),
         subtitleTracks: List<PlaybackTrack> = emptyList(),
         externalSubtitles: List<ExternalSubtitle> = emptyList(),
+        allAudioTracks: List<PlaybackTrack> = audioTracks,
+        allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
         selectedAudioIndex: Int? = null,
         selectedSubtitleIndex: Int? = null,
         trickplay: LocalTrickplay? = null,
@@ -189,10 +191,62 @@ internal object PlayerFixtures {
             audioTracks = audioTracks,
             subtitleTracks = subtitleTracks,
             externalSubtitles = externalSubtitles,
+            allAudioTracks = allAudioTracks,
+            allSubtitleTracks = allSubtitleTracks,
             selectedAudioIndex = selectedAudioIndex,
             selectedSubtitleIndex = selectedSubtitleIndex,
             trickplay = trickplay,
         )
+
+    /**
+     * A transcoded download of the Élémentaire repro item, as `LocalPlaybackResolver` builds it.
+     *
+     * The file on disk holds one AAC track (the French VFF the download baked in) and the two
+     * subtitles whose sidecars came with it; the *source* has three audio tracks and four
+     * subtitles. That gap is the whole subject of the connectivity-aware pickers, so it is worth
+     * having in one place rather than re-listed per test.
+     */
+    fun downloadedFilm(
+        selectedAudioIndex: Int? = BAKED_AUDIO_INDEX,
+        selectedSubtitleIndex: Int? = null,
+    ): LocalPlaybackMediaSource =
+        localSource(
+            audioTracks = listOf(track(BAKED_AUDIO_INDEX, "French VFF", "fra")),
+            subtitleTracks =
+                listOf(track(0, "English", "eng", external = true), track(1, "French", "fra", external = true)),
+            allAudioTracks =
+                listOf(
+                    track(BAKED_AUDIO_INDEX, "French VFF", "fra"),
+                    track(4, "French VFQ", "fra"),
+                    track(STREAMED_AUDIO_INDEX, "English VO", "eng"),
+                ),
+            allSubtitleTracks =
+                listOf(
+                    track(0, "English", "eng", external = true),
+                    track(1, "French", "fra", external = true),
+                    track(6, "French forced", "fra"),
+                    track(STREAMED_SUBTITLE_INDEX, "French full", "fra"),
+                ),
+            selectedAudioIndex = selectedAudioIndex,
+            selectedSubtitleIndex = selectedSubtitleIndex,
+        )
+
+    /** The audio stream the transcoded download baked into the file — the only one it can play. */
+    const val BAKED_AUDIO_INDEX = 3
+
+    /** An audio stream of the source the download dropped; only the server can supply it. */
+    const val STREAMED_AUDIO_INDEX = 5
+
+    /** An embedded subtitle whose sidecar was never fetched; likewise server-only. */
+    const val STREAMED_SUBTITLE_INDEX = 7
+
+    private fun track(
+        index: Int,
+        label: String,
+        language: String,
+        external: Boolean = false,
+    ): PlaybackTrack =
+        PlaybackTrack(index = index, label = label, language = language, codec = "ac3", isExternal = external)
 
     /** What `DownloadedMediaProvider` hands `LocalPlaybackResolver`. */
     @Suppress("LongParameterList")

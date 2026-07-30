@@ -7,6 +7,8 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.MediaSegmentKind
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
+import dev.jellyfinnative.core.network.ConnectionState
+import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.PlayerFixtures
@@ -29,6 +31,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -55,6 +58,19 @@ internal abstract class PlayerViewModelFixture {
     protected val trickplayResolver = mockk<TrickplayResolver>()
     protected val segmentLoader = mockk<MediaSegmentLoader>()
     protected val pipController = PipController()
+
+    /**
+     * The app's online/offline verdict, writable so a test can drop the network mid-session.
+     *
+     * Online by default: that is the everyday state, and it is the one under which a downloaded
+     * item's pickers offer the source's full track list.
+     */
+    protected val connection = MutableStateFlow(ConnectionState.ONLINE)
+
+    protected val connectionState =
+        mockk<ConnectionStateProvider> {
+            every { state } returns connection
+        }
 
     /** The M9 preferences at their defaults; individual tests override what they exercise. */
     protected val preferences =
@@ -127,6 +143,7 @@ internal abstract class PlayerViewModelFixture {
             segmentLoader = segmentLoader,
             preferences = preferences,
             pipController = pipController,
+            connectionState = connectionState,
             savedStateHandle = savedStateHandle,
         )
 

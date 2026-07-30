@@ -29,7 +29,8 @@ data class PlayerUiState(
      * It suppresses the quality picker, which caps a *streaming* bitrate and therefore has nothing
      * to act on for a local file — offering it would be a control that visibly does nothing. Track
      * and subtitle pickers are deliberately untouched: those work identically either way, which is
-     * the plan's "player UI byte-identical online/offline".
+     * the plan's "player UI byte-identical online/offline". What varies is their *content*, and
+     * that is decided by connectivity rather than by this flag — see [audioTracks].
      */
     val isLocalPlayback: Boolean = false,
     val isPlaying: Boolean = false,
@@ -43,7 +44,17 @@ data class PlayerUiState(
      * scrubber measure the fast state *against*.
      */
     val durationMs: Long = 0L,
+    /**
+     * What the audio picker offers — already narrowed to what can actually be played.
+     *
+     * For a streamed item that is the source's track list. For a **downloaded** one it depends on
+     * the connection: online it is still the source's full list, and choosing a track the file does
+     * not hold streams the item instead; offline it is only what the file and its sidecars can
+     * supply, because a row that cannot do anything is worse than one fewer language. The ViewModel
+     * re-derives both lists whenever connectivity changes, so a sheet that is already open follows.
+     */
     val audioTracks: List<PlaybackTrack> = emptyList(),
+    /** What the subtitle picker offers, narrowed the same way as [audioTracks]. */
     val subtitleTracks: List<PlaybackTrack> = emptyList(),
     /** Jellyfin stream index of the active audio track. */
     val selectedAudioIndex: Int? = null,
@@ -120,10 +131,20 @@ enum class PlayerMessage {
     RestartedForTrackChange,
 
     /**
-     * The downloaded file does not contain that track, and offline there is no server to ask.
+     * A downloaded item left its file to stream, because the track the user picked is not in it.
      *
-     * The alternative — reopening the file — cannot produce a track that is not in it, so it would
-     * only restart playback for nothing (`PlayerViewModel.refuseLocalTrackChange`).
+     * Distinct from [RestartedForTrackChange] because the consequence is different and worth saying:
+     * the item plays off the network from now on (`PlayerViewModel.selectAudioTrack`).
+     */
+    StreamingForTrackChange,
+
+    /**
+     * The downloaded file does not contain that track, and there is no server to ask.
+     *
+     * Raised when the app is offline — where the alternative, reopening the file, cannot produce a
+     * track that is not in it and would only restart playback for nothing
+     * (`PlayerViewModel.refuseLocalTrackChange`) — and when streaming for the track was tried and
+     * the server turned out to be unreachable after all.
      */
     TrackUnavailableOffline,
 

@@ -103,6 +103,11 @@ A switch is applied locally when the track is already in the stream. When it is 
 transcoding case, where the server sent only the track it was asked for — the source is
 re-resolved with the new stream index and playback restarts at the current position.
 
+For a **downloaded** item that re-resolve would return the same file and the same tracks, so the
+request carries `forceRemote` and the item switches to streaming for the track it was asked for; the
+pickers themselves show the source's full track list online and only the file's own tracks offline.
+The whole rule lives in docs/features/offline-playback.md, *"…and which tracks are shown"*.
+
 ## Decoder fallback
 
 The device profile is built from what `MediaCodecList` *claims*; some decoders accept a format and

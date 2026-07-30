@@ -128,6 +128,32 @@ class PlaybackSourceResolverTest {
         }
 
     @Test
+    fun `a track only the server has skips the download and streams the item`() =
+        runTest {
+            coEvery { local.resolve(any()) } returns PlayerFixtures.localSource()
+
+            val result = resolver.resolve(request.copy(forceRemote = true, audioStreamIndex = 5))
+
+            // Rule 1 would hand back the same file and the same tracks, which is the loop the flag
+            // exists to break — the requested index has to reach the server.
+            result.shouldBeInstanceOf<AppResult.Success<*>>()
+            result.value.shouldBeInstanceOf<RemotePlaybackMediaSource>()
+            coVerify(exactly = 0) { local.resolve(any()) }
+            coVerify(exactly = 1) { remote.resolve(match { it.audioStreamIndex == 5 }) }
+        }
+
+    @Test
+    fun `forcing the server with no server to reach fails rather than quietly playing the file`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_NO_NETWORK
+            coEvery { local.resolve(any()) } returns PlayerFixtures.localSource()
+
+            // Succeeding here would return the file *without* the track that was asked for, and the
+            // player would have restarted for nothing. The caller decides what to do with this.
+            resolver.resolve(request.copy(forceRemote = true)).shouldBeInstanceOf<AppResult.Failure>()
+        }
+
+    @Test
     fun `a server failure is surfaced unchanged`() =
         runTest {
             coEvery { remote.resolve(any()) } returns AppResult.Failure(AppError.Server(statusCode = 500))

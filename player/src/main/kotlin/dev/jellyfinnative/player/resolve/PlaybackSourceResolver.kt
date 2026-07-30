@@ -33,11 +33,17 @@ import javax.inject.Singleton
  * [DelegatingJellyfinRepository] puts on every browse call, and a resolve that hits it reports the
  * failure so the reachability probe demotes the server before the user taps Play again.
  *
- * ### The one exception to rule 1
+ * ### The two exceptions to rule 1
  * A request that has explicitly forbidden direct play is [DecoderFallbackHandler]'s
  * "this device cannot decode these bytes" verdict, and the bytes on disk are the same bytes. Such a
  * request skips the local copy and goes to the server, which is the only party that can transcode —
  * and offline it surfaces the error instead of looping over a file that has already failed.
+ *
+ * [PlaybackResolveRequest.forceRemote] is the second, and it is the user asking rather than a
+ * failure: online, the pickers offer every track of the *source*, and one the downloaded file does
+ * not hold can only come from the server. Rule 1 would hand back the same file and the same tracks,
+ * which is precisely the loop `PlayerMessage.TrackUnavailableOffline` was invented to stop. Offline
+ * it fails like any other request with nothing to reach, and the caller falls back to the file.
  */
 @Singleton
 class PlaybackSourceResolver
@@ -49,7 +55,7 @@ class PlaybackSourceResolver
     ) {
         /** Resolves [request] into something the player can open, wherever it lives. */
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<PlaybackMediaSource> {
-            if (request.enableDirectPlay != false) {
+            if (request.enableDirectPlay != false && !request.forceRemote) {
                 local.resolve(request)?.let { return AppResult.Success(it) }
             }
 

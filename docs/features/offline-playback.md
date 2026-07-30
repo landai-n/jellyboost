@@ -73,7 +73,8 @@ sealed `PlaybackMediaSource`, so nothing above it branches on online/offline:
 | `mediaUri` | `DownloadFileEntity.path` of the `MEDIA` file, as a `file://` URI |
 | `playMethod` | `DIRECT_PLAY`, by construction — there is nothing to remux or transcode |
 | `runTimeTicks` | the cached `MediaSourceInfo`, falling back to the item's own runtime |
-| `audioTracks` / `subtitleTracks` | the cached blob's `mediaStreams`, through the **same** `toTrack` mapper the online resolver uses |
+| `audioTracks` / `subtitleTracks` | the cached blob's `mediaStreams` **filtered to what the file can play**, through the **same** `toTrack` mapper the online resolver uses |
+| `allAudioTracks` / `allSubtitleTracks` | the same streams *unfiltered* — every track the source has |
 | `externalSubtitles` | the downloaded sidecars, MIME type from the stream's codec (or the file's extension) |
 | `trickplay` | the downloaded tile sheets plus the server's geometry |
 
@@ -110,6 +111,48 @@ leaving the picker pointing at nothing.
 An item whose cached blob no longer decodes still plays — with no track lists. Refusing to open a
 film because its metadata is unreadable would be the worse failure.
 
+### …and which tracks are *shown*, which is not the same question
+
+The table above is what the **file** can play. What the picker offers depends on whether there is a
+server to fall back on, and `PlayerViewModel` derives it from (source, `ConnectionStateProvider`):
+
+| | audio / subtitle picker shows | a row the file cannot play does |
+|---|---|---|
+| Downloaded item, **online** | `allAudioTracks` / `allSubtitleTracks` — everything the item has | reopen with `forceRemote`, streaming that track from the server |
+| Downloaded item, **offline** | `audioTracks` / `subtitleTracks` — only what the file and its sidecars hold | cannot be offered; if one is tapped anyway it is refused |
+| Streamed item | its own lists, unchanged since M5 | re-resolve, exactly as M5 |
+
+The connection is **collected**, not read once: dropping the network with the audio sheet open
+withdraws the rows that just became unreachable, and getting it back restores them.
+
+`PlaybackResolveRequest.forceRemote` is what makes the streaming half possible. A plain re-resolve
+of a downloaded item hits rule 1 above and returns the same file with the same tracks — the loop
+`PlayerMessage.TrackUnavailableOffline` exists to stop — so the request carries an explicit "skip the
+local copy" that `PlaybackSourceResolver` honours. It is deliberately distinct from
+`enableDirectPlay = false`, which says *these bytes cannot be decoded* and therefore also forbids the
+server's own direct play. The reopen goes through the usual path, so the outgoing transcode is
+stopped first and the position is carried over.
+
+Three consequences that are decisions rather than mechanics:
+
+- **The flag is sticky for the session.** `PlayerViewModel.forcedRemote` is carried into every later
+  re-negotiation, so changing quality — or a decoder fallback — while streaming a downloaded item
+  does not silently drop back to the file and lose the track that was gone to the server for.
+- **Choosing a track the file *does* hold goes home.** The file is offline-proof and free, so a
+  forced-remote session that no longer needs the server reopens without the flag and
+  `PlaybackSourceResolver` picks the download again. `PlayerViewModel` keeps the last
+  `LocalPlaybackMediaSource` of the session precisely to answer "could the file have done this".
+- **A server that is not there does not cost the session.** Between the picker being drawn and the
+  request going out the network can die — and a *server* that died reads as online until a probe
+  says otherwise, so the connectivity check cannot catch every case. A failed forced-remote resolve
+  therefore reopens the local file rather than showing an error over playback that was fine a second
+  ago, with the same `TrackUnavailableOffline` message a refused offline switch gets.
+
+`refuseLocalTrackChange` remains the offline backstop: with the picker no longer offering
+unplayable rows it should be unreachable from the UI, and it stays the honest answer for a selection
+restored from a previous session, a container that disagrees with the cached blob, or a tap that
+lands in the moment the network drops.
+
 ### URIs
 
 `localFileUri` builds `file:///…` through `java.net.URI("file", "", path, null, null)`, which
@@ -126,7 +169,17 @@ Sidecars keep the same `external:<jellyfinIndex>` track-id convention as online,
 
 `PlayerUiState.isLocalPlayback` hides the quality picker, which caps a *streaming* bitrate and has
 nothing to act on for a local file. Everything else — track pickers, subtitle sheet, play-method
-badge, transport controls, seek bar — is identical (`DECISIONS.md`, 2026-07-29).
+badge, transport controls, seek bar — is identical (`DECISIONS.md`, 2026-07-29). The pickers'
+*contents* vary with the connection, as above, but their shape does not, and no row is marked or
+decorated: a track that will restart playback as a stream looks like any other, and the restart is
+announced afterwards in the snackbar (`PlayerMessage.StreamingForTrackChange`, "That track isn't in
+the download — streaming it from your server"). That is exactly how the quality picker communicates
+its own restart, and the player deliberately has no other idiom for "this control reloads".
+
+One visible knock-on, and it is the right one: `PlayerControls` only draws the audio button when
+there is more than one track and the subtitle button when there is at least one, so a transcoded
+download — one baked audio track — grows an audio button when the app is online and loses it again
+when it goes offline.
 
 ### Trickplay
 
@@ -225,7 +278,7 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 
 | Class | Module | Responsibility |
 |---|---|---|
-| `PlaybackSourceResolver` | `:player` | Local vs server, per playback |
+| `PlaybackSourceResolver` | `:player` | Local vs server, per playback; `forceRemote` is how a caller overrides it |
 | `LocalPlaybackResolver` | `:player` | Builds a `LocalPlaybackMediaSource` from what is on disk |
 | `LocalPlaybackMediaSource` / `LocalTrickplay` | `:player` | The offline half of the sealed source type |
 | `ExoMediaSourceFactory` | `:player` | Now handles both variants; local URIs pass through untouched |
@@ -241,17 +294,18 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 | Class | Tests | Covers |
 |---|---|---|
 | `DownloadedMediaProviderTest` | 19 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, the baked audio index carried through (and absent on a pre-v8 row), and the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway |
-| `LocalPlaybackResolverTest` | 27 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing; the baked audio index driving the transcoded picker (with the legacy-`NULL` and unknown-index fallbacks); an embedded subtitle offered from its sidecar and flagged side-loaded, one without a sidecar still withheld |
-| `PlaybackSourceResolverTest` | 8 | The full selection matrix incl. the forced-transcode exception and the immediate offline failure |
+| `LocalPlaybackResolverTest` | 31 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing; the baked audio index driving the transcoded picker (with the legacy-`NULL` and unknown-index fallbacks); an embedded subtitle offered from its sidecar and flagged side-loaded, one without a sidecar still withheld; the source's full lists carried alongside the playable ones and labelled from the source's own defaults |
+| `PlaybackSourceResolverTest` | 12 | The full selection matrix incl. the forced-transcode exception, `forceRemote` skipping the local resolver, and the immediate offline failure |
 | `PlaybackReporterTest` | +7 | Local and offline sessions report nothing and still write every position |
 | `UserDataSyncerTest` | 17 | The whole most-recent-wins matrix, push ordering, the timezone round trip, partial batch failure |
 | `UserDataSyncTriggerTest` | 7 | App start, reconnection edges, the pending guard, idempotent `start()` |
 | `ExoMediaSourceFactoryTest` | +2 | Local URIs and sidecars pass through unprefixed |
-| `PlayerViewModelTest` | +5 | `isLocalPlayback`, the inert quality picker, local track switching, the detached stop |
+| `PlayerViewModelTest` | +3 | `isLocalPlayback`, the inert quality picker, the detached stop |
+| `PlayerTrackPickerTest` | 13 | The whole picker rule: full list online / playable list offline, the live connectivity flip, a missing track streamed with `forceRemote` at the current position, a track the file holds going back to the download, the flag surviving a quality change, the offline refusals, and the fallback when the server turns out not to be there |
 | `ItemDetailViewModelTest` | +1 | An offline position turns the button into *Resume* with no refetch |
 
 ## Offline behaviour
 
-Everything in this document *is* the offline behaviour. The one thing that still needs a network is
-an item that was never downloaded: offline the Play button fails fast with "Can't reach your server",
-rather than hanging.
+Everything in this document *is* the offline behaviour. Two things still need a network: an item that
+was never downloaded — offline the Play button fails fast with "Can't reach your server" rather than
+hanging — and a track a downloaded file does not contain, which offline is simply not offered.

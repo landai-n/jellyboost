@@ -7,11 +7,17 @@ import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.player.PlayerFixtures
 import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
 import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -24,6 +30,7 @@ import org.junit.jupiter.api.Test
  * would notice: a downloaded film must not stream, an item with no local copy must still stream,
  * and neither of those may end in a spinner that never resolves.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackSourceResolverTest {
     private val local = mockk<LocalPlaybackResolver>()
     private val remote = mockk<PlaybackInfoResolver>()
@@ -37,6 +44,7 @@ class PlaybackSourceResolverTest {
     @BeforeEach
     fun setUp() {
         every { connectionState.state } returns state
+        every { connectionState.reportFailure() } just runs
         coEvery { local.resolve(any()) } returns null
         coEvery { remote.resolve(any()) } returns AppResult.Success(PlayerFixtures.remoteSource())
     }
@@ -130,4 +138,43 @@ class PlaybackSourceResolverTest {
                 .error
                 .shouldBeInstanceOf<AppError.Server>()
         }
+
+    // ---- the call ceiling ----------------------------------------------------------------------
+
+    @Test
+    fun `a negotiation that never answers is cut off at the ceiling instead of hanging`() =
+        runTest {
+            coEvery { remote.resolve(any()) } coAnswers {
+                // A server that died since the last browse call still reads as online: nothing has
+                // probed it since, so Play goes out and rides the SDK's own socket timeout.
+                delay(SOCKET_TIMEOUT_MS)
+                AppResult.Success(PlayerFixtures.remoteSource())
+            }
+
+            val start = testScheduler.currentTime
+            val result = resolver.resolve(request)
+
+            result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Network>()
+            (testScheduler.currentTime - start) shouldBe PlaybackSourceResolver.RESOLVE_TIMEOUT_MS
+            // Demoting the server is what stops the next tap paying the same ceiling again.
+            verify(exactly = 1) { connectionState.reportFailure() }
+        }
+
+    @Test
+    fun `a negotiation that answers in time is left alone`() =
+        runTest {
+            coEvery { remote.resolve(any()) } coAnswers {
+                delay(PlaybackSourceResolver.RESOLVE_TIMEOUT_MS - 1)
+                AppResult.Success(PlayerFixtures.remoteSource())
+            }
+
+            resolver.resolve(request).shouldBeInstanceOf<AppResult.Success<*>>()
+
+            verify(exactly = 0) { connectionState.reportFailure() }
+        }
+
+    private companion object {
+        /** The SDK's own default socket timeout — the hang the ceiling exists to rule out. */
+        const val SOCKET_TIMEOUT_MS = 30_000L
+    }
 }

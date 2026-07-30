@@ -1560,3 +1560,25 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - Unit-proven; device re-walk of B.3 owed next session.
 
 <!-- END -->
+
+## 2026-07-30 — baseline profile generated on the test tablet (M10 DoD)
+
+- **Scope:** `app/src/main/generated/baselineProfiles/baseline-prof.txt` (21 497
+  rules, 1 278 of them ours — `AppScaffold`, session/connection observation,
+  `:core` + `:app` startup path — the rest the Compose runtime it exercises).
+  Verified compiled into the release APK as `assets/dexopt/baseline.prof` +
+  `.profm`; `assembleRelease` 10.3 MiB, green.
+- **Obstacle worth recording (not a code issue):** the OEM ROM/the OEM ROM shows an
+  "Install via USB" confirmation (`com.the OEM ROM.securitycenter/
+  com.the OEM ROM.permcenter.install.AdbInstallActivity`) for each *new* package, with
+  a 9-second auto-decline. Gradle's installer cannot answer it and fails with
+  `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user` — which looks like
+  a build/device-support failure and is not one. Route used: install
+  `baselineprofile-nonMinifiedRelease.apk` and `app-nonMinifiedRelease.apk` by
+  hand once (approving the dialog), then re-run `:app:generateBaselineProfile`.
+  The rooted-AVD fallback in the M10 plan was NOT needed.
+- Disabling the confirmation via `settings put secure adb_install_need_confirm`
+  was deliberately not done — device-security setting, out of scope for an
+  agent to change on the user's tablet.
+
+<!-- END -->

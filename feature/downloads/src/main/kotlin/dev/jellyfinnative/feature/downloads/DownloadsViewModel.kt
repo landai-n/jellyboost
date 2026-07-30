@@ -4,13 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.network.di.DefaultDispatcher
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.downloads.model.DownloadItem
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,6 +33,20 @@ import javax.inject.Inject
  *
  * The only derived value is the transfer speed, computed by [DownloadSpeedTracker] from successive
  * emissions — see its KDoc for why it is not a column.
+ *
+ * ### What the state is split into, and why
+ * [projection] is everything Room and DataStore answer; [local] is everything only a tap changes
+ * (the tab, the *Cancel all* dialog, the snackbar). They are separate flows so that the projection
+ * can be **stopped**: it is shared with [SharingStarted.WhileSubscribed], so leaving the screen
+ * unsubscribes from it, and with it from the download list and the storage walk it pulls. Before,
+ * a single collector launched in `init` kept those queries running from the first visit until
+ * process death — with the screen off, and with the tab switch that "left" the screen saving rather
+ * than popping it (docs/notes/audit-2026-07.md, PERF-03). [STOP_TIMEOUT_MS] of grace means a
+ * rotation or a brief navigation away re-uses the running projection instead of restarting it.
+ *
+ * The projection itself runs on [DefaultDispatcher]. Grouping, sorting and the per-comparison
+ * `lowercase()` in [toGroups] used to run in the collector's context — `Main.immediate` — at the
+ * throttle's two-to-six emissions a second for the whole of a transfer.
  */
 @HiltViewModel
 class DownloadsViewModel
@@ -33,52 +54,61 @@ class DownloadsViewModel
     constructor(
         private val downloads: DownloadRepository,
         private val clock: Clock,
+        @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
     ) : ViewModel() {
-        private val speedTracker = DownloadSpeedTracker()
-        private val progressRatchet = DownloadProgressRatchet()
-        private val _uiState = MutableStateFlow(DownloadsUiState())
+        private val local = MutableStateFlow(LocalState())
 
         /** The single source of truth for [DownloadsScreen]. */
-        val uiState: StateFlow<DownloadsUiState> = _uiState.asStateFlow()
+        val uiState: StateFlow<DownloadsUiState> =
+            combine(projection(), local, DownloadsProjection::toUiState)
+                .stateIn(
+                    scope = viewModelScope,
+                    started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+                    initialValue = DownloadsUiState(),
+                )
 
-        init {
-            viewModelScope.launch {
-                combine(
-                    downloads.observeDownloads(),
-                    downloads.observeStorage(),
-                    downloads.wifiOnly,
-                ) { items, storage, wifiOnly -> Triple(items, storage, wifiOnly) }
-                    // Without this the screen's failure mode is a spinner that never stops:
-                    // `isLoading` starts `true` and only a first emission clears it, so one throw
-                    // upstream — a corrupt dto blob raising `SQLiteBlobTooBigException` is the real
-                    // one — leaves the user staring at it forever, with no way to tell a slow query
-                    // from a broken one. A collapsed flow cannot recover on its own, so the state
-                    // says so and the screen offers the failure instead of the spinner.
-                    .catch { error ->
-                        Timber.e(error, "The downloads projection failed; showing the error state")
-                        _uiState.update { it.copy(isLoading = false, loadFailed = true) }
-                    }.collect { (items, storage, wifiOnly) ->
-                        val speeds = speedTracker.update(items, clock.millis())
-                        val progress = progressRatchet.update(items)
-                        _uiState.update { state ->
-                            state.copy(
-                                downloaded = items.toGroups(),
-                                queue = items.toQueue(),
-                                speeds = speeds,
-                                progress = progress,
-                                storage = storage,
-                                wifiOnly = wifiOnly,
-                                isLoading = false,
-                                loadFailed = false,
-                            )
-                        }
-                    }
+        /**
+         * Everything the screen draws that comes from storage.
+         *
+         * The speed tracker and the ratchet are built *inside* the flow, once per subscription:
+         * both derive from successive emissions, and a tracker carried over from a subscription that
+         * ended minutes ago would report a speed measured against a stale timestamp.
+         */
+        private fun projection(): Flow<DownloadsProjection> =
+            flow {
+                val speedTracker = DownloadSpeedTracker()
+                val progressRatchet = DownloadProgressRatchet()
+                emitAll(
+                    combine(
+                        downloads.observeDownloads(),
+                        downloads.observeStorage(),
+                        downloads.wifiOnly,
+                    ) { items, storage, wifiOnly ->
+                        DownloadsProjection(
+                            downloaded = items.toGroups(),
+                            queue = items.toQueue(),
+                            speeds = speedTracker.update(items, clock.millis()),
+                            progress = progressRatchet.update(items),
+                            storage = storage,
+                            wifiOnly = wifiOnly,
+                        )
+                    },
+                )
             }
-        }
+                // Without this the screen's failure mode is a spinner that never stops:
+                // `isLoading` starts `true` and only a first emission clears it, so one throw
+                // upstream — a corrupt dto blob raising `SQLiteBlobTooBigException` is the real
+                // one — leaves the user staring at it forever, with no way to tell a slow query
+                // from a broken one. A collapsed flow cannot recover on its own, so the state
+                // says so and the screen offers the failure instead of the spinner.
+                .catch { error ->
+                    Timber.e(error, "The downloads projection failed; showing the error state")
+                    emit(DownloadsProjection(loadFailed = true))
+                }.flowOn(defaultDispatcher)
 
         /** Switches between the *Downloaded* and *Queue* tabs. */
         fun selectTab(tab: DownloadsTab) {
-            _uiState.update { it.copy(selectedTab = tab) }
+            local.update { it.copy(selectedTab = tab) }
         }
 
         /** Restricts downloads to unmetered networks, or lifts the restriction. */
@@ -117,7 +147,7 @@ class DownloadsViewModel
          * after *Pause all* would otherwise read as the button having failed.
          */
         fun pauseAll() {
-            val state = _uiState.value
+            val state = uiState.value
             val targets = state.pauseAllTargets
             if (targets.isEmpty()) return
             val stillTranscoding = state.unpausableCount
@@ -135,7 +165,7 @@ class DownloadsViewModel
 
                         else -> null
                     }
-                if (message != null) _uiState.update { it.copy(userMessage = message) }
+                if (message != null) local.update { it.copy(userMessage = message) }
             }
         }
 
@@ -146,7 +176,7 @@ class DownloadsViewModel
          * says it better than a snackbar over them would.
          */
         fun resumeAll() {
-            val targets = _uiState.value.resumeAllTargets
+            val targets = uiState.value.resumeAllTargets
             if (targets.isEmpty()) return
 
             viewModelScope.launch {
@@ -156,13 +186,13 @@ class DownloadsViewModel
 
         /** *Cancel all* was tapped — ask first; [confirmCancelAll] is what actually removes anything. */
         fun requestCancelAll() {
-            if (_uiState.value.queue.isEmpty()) return
-            _uiState.update { it.copy(showCancelAllConfirmation = true) }
+            if (uiState.value.queue.isEmpty()) return
+            local.update { it.copy(showCancelAllConfirmation = true) }
         }
 
         /** The *Cancel all* dialog was dismissed; the queue is untouched. */
         fun dismissCancelAll() {
-            _uiState.update { it.copy(showCancelAllConfirmation = false) }
+            local.update { it.copy(showCancelAllConfirmation = false) }
         }
 
         /**
@@ -175,8 +205,8 @@ class DownloadsViewModel
          * "Cancel on a season keeps the episodes that already finished") applied to the whole queue.
          */
         fun confirmCancelAll() {
-            val targets = _uiState.value.queue
-            _uiState.update { it.copy(showCancelAllConfirmation = false) }
+            val targets = uiState.value.queue
+            local.update { it.copy(showCancelAllConfirmation = false) }
             if (targets.isEmpty()) return
 
             viewModelScope.launch {
@@ -198,7 +228,7 @@ class DownloadsViewModel
             item: DownloadItem,
             offset: Int,
         ) {
-            val queue = _uiState.value.queue
+            val queue = uiState.value.queue
             val index = queue.indexOfFirst { it.itemId == item.itemId }
             if (index < 0) return
             val target = (index + offset).coerceIn(0, queue.lastIndex)
@@ -211,7 +241,7 @@ class DownloadsViewModel
 
         /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
-            _uiState.update { it.copy(userMessage = null) }
+            local.update { it.copy(userMessage = null) }
         }
 
         private fun report(
@@ -219,7 +249,18 @@ class DownloadsViewModel
             message: DownloadsMessage,
         ) {
             if (result is AppResult.Failure) {
-                _uiState.update { it.copy(userMessage = message) }
+                local.update { it.copy(userMessage = message) }
             }
+        }
+
+        internal companion object {
+            /**
+             * How long the projection keeps running after the last subscriber leaves.
+             *
+             * Long enough to cover a rotation and a there-and-back navigation — restarting the
+             * download list and the storage walk for either would cost more than keeping them —
+             * and short enough that a screen genuinely left behind stops pulling them.
+             */
+            const val STOP_TIMEOUT_MS = 5_000L
         }
     }

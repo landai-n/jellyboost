@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.database.entities.DownloadedItemKey
 import dev.jellyfinnative.core.database.entities.ItemCacheKey
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
@@ -48,7 +49,8 @@ interface ItemDao {
     suspend fun getItems(ids: List<UUID>): List<ItemEntity>
 
     /**
-     * One page of the offline library grid: every downloaded item of the given kinds.
+     * The offline library grid's whole result set, in sort order, as the columns a **filter** is
+     * decided from — and nothing else.
      *
      * **There is deliberately no library predicate.** It used to filter on
      * `parentId = <library id>` (plus `seriesId IN (children of the library)`), and on a real device
@@ -58,27 +60,46 @@ interface ItemDao {
      * belongs to is decided by its **type** instead, in `OfflineJellyfinRepository`, which is exact
      * for the movie/TV libraries v1 supports (DECISIONS.md 2026-07-28).
      *
+     * **No `LIMIT`, and no whole rows.** The filters the grid applies are not all expressible in
+     * one statement — `genres` is a newline-joined column, and SQLite has no way to intersect it
+     * with a bound list — so the predicate is applied in Kotlin, and a `LIMIT` here would page over
+     * the *unfiltered* set: a page could come back short and Paging would read that as the end of
+     * the library (`ItemPagingSource`). Reading the whole set is affordable precisely because this
+     * projection leaves out the multi-kilobyte `dto` blob; the page's blobs are then read by
+     * [getItems], the same shape [latestDownloadedKeys] uses.
+     *
+     * The `user_data` join is a `LEFT JOIN` with `COALESCE`, so an item this user has never played
+     * is *unwatched* rather than missing — which is what the watched/unwatched filter has to mean.
+     *
+     * @param userId whose playback state the watched/favourite columns describe; `null` (nobody
+     *   signed in) leaves every row unwatched and unfavourited.
      * @param descending `true` sorts Z→A; the two `CASE` arms are how one statement serves both
      *   directions (SQLite cannot bind a sort direction).
      */
     @Query(
         """
-        SELECT * FROM items
-        WHERE source = :source
-          AND type IN (:types)
+        SELECT
+          i.id AS id,
+          i.genres AS genres,
+          i.productionYear AS productionYear,
+          i.officialRating AS officialRating,
+          COALESCE(u.played, 0) AS played,
+          COALESCE(u.isFavorite, 0) AS isFavorite
+        FROM items AS i
+        LEFT JOIN user_data AS u ON u.itemId = i.id AND u.userId = :userId
+        WHERE i.source = :source
+          AND i.type IN (:types)
         ORDER BY
-          CASE WHEN :descending = 0 THEN sortName END COLLATE NOCASE ASC,
-          CASE WHEN :descending = 1 THEN sortName END COLLATE NOCASE DESC
-        LIMIT :limit OFFSET :offset
+          CASE WHEN :descending = 0 THEN i.sortName END COLLATE NOCASE ASC,
+          CASE WHEN :descending = 1 THEN i.sortName END COLLATE NOCASE DESC
         """,
     )
-    suspend fun pagingDownloaded(
+    suspend fun downloadedListKeys(
         source: ItemSource,
         types: List<ItemType>,
+        userId: UUID?,
         descending: Boolean,
-        limit: Int,
-        offset: Int,
-    ): List<ItemEntity>
+    ): List<DownloadedItemKey>
 
     /**
      * Offline search. Matches the item's own name and — so that typing a show's title finds its

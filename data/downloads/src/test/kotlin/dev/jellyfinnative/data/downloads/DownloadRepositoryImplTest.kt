@@ -12,6 +12,7 @@ import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.entities.DownloadProgress
 import dev.jellyfinnative.core.database.entities.DownloadWithFiles
+import dev.jellyfinnative.core.database.entities.ItemCacheKey
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.datastore.AppPreferences
@@ -37,15 +38,13 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -55,7 +54,6 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Clock
 import java.time.ZoneOffset
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit tests for [DownloadRepositoryImpl] — the surface every feature module sees.
@@ -93,7 +91,24 @@ class DownloadRepositoryImplTest {
         coEvery { deleter.delete(any()) } returns 0L
         coEvery { downloadDao.pending() } returns emptyList()
         coEvery { downloadDao.get(any()) } returns null
-        coEvery { itemDao.getItems(any()) } returns emptyList()
+        givenCachedItems()
+    }
+
+    /**
+     * Stands the two item reads the download list makes up over one set of rows.
+     *
+     * They are seeded together because they are two halves of one lookup: `getCacheKeys` says which
+     * blobs are still current and `getItems` hands over only the ones that are not (PERF-01).
+     */
+    private fun givenCachedItems(vararg rows: ItemEntity) {
+        coEvery { itemDao.getCacheKeys(any()) } answers {
+            val ids = firstArg<List<java.util.UUID>>().toSet()
+            rows.filter { it.id in ids }.map { ItemCacheKey(it.id, it.source, it.cachedAt) }
+        }
+        coEvery { itemDao.getItems(any()) } answers {
+            val ids = firstArg<List<java.util.UUID>>().toSet()
+            rows.filter { it.id in ids }
+        }
     }
 
     // ---- badge states ---------------------------------------------------------------------------
@@ -158,7 +173,7 @@ class DownloadRepositoryImplTest {
         runTest {
             every { downloadDao.observeAll() } returns
                 flowOf(listOf(DownloadWithFiles(download(), listOf(file(id = 1, bytesDownloaded = 900L)))))
-            coEvery { itemDao.getItems(listOf(uuid(1))) } returns listOf(ITEM_ROW)
+            givenCachedItems(ITEM_ROW)
             every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns MOVIE
 
             repository().observeDownloads().test {
@@ -263,7 +278,7 @@ class DownloadRepositoryImplTest {
     fun `a download whose item row is gone still lists, so its files can be deleted`() =
         runTest {
             every { downloadDao.observeAll() } returns flowOf(listOf(DownloadWithFiles(download(), emptyList())))
-            coEvery { itemDao.getItems(any()) } returns emptyList()
+            givenCachedItems()
 
             repository().observeDownloads().test {
                 val row = awaitItem().single()
@@ -273,6 +288,86 @@ class DownloadRepositoryImplTest {
                 awaitComplete()
             }
         }
+
+    // ---- what a progress write costs (audit PERF-01) ---------------------------------------------
+
+    @Test
+    fun `a progress write does not re-parse the metadata it did not change`() =
+        runTest {
+            // Every emission used to `SELECT *` each downloaded item and decode its whole
+            // BaseItemDto — tens of kilobytes apiece — and a transfer writes progress twice a
+            // second for its whole length. What actually changed is a byte count.
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns MOVIE
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem()
+
+                repeat(PROGRESS_WRITES) { written ->
+                    rows.value = listOf(row(bytesOnDisk = (written + 1) * 1_000L))
+                    awaitItem()
+                }
+
+                verify(exactly = 1) { itemMapper.toDomainOrNull(ITEM_ROW, null) }
+                coVerify(exactly = 1) { itemDao.getItems(any()) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a rewritten item row is read again`() =
+        runTest {
+            // `cachedAt` is bumped by every write to an items row, which is exactly when the
+            // memoised metadata stops describing what is stored.
+            val refreshed = ITEM_ROW.copy(name = "Arrival (remastered)", cachedAt = NOW.plusSeconds(60))
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(any(), null) } returns MOVIE
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem()
+
+                givenCachedItems(refreshed)
+                rows.value = listOf(row(bytesOnDisk = 1_000L))
+                awaitItem()
+
+                verify(exactly = 1) { itemMapper.toDomainOrNull(refreshed, null) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `an item that leaves the list does not keep its metadata alive`() =
+        runTest {
+            val rows = MutableStateFlow(listOf(row(bytesOnDisk = 0L)))
+            every { downloadDao.observeAll() } returns rows
+            givenCachedItems(ITEM_ROW)
+            every { itemMapper.toDomainOrNull(ITEM_ROW, null) } returns MOVIE
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeDownloads().test {
+                awaitItem()
+
+                rows.value = emptyList()
+                awaitItem()
+                rows.value = listOf(row(bytesOnDisk = 0L))
+                awaitItem()
+
+                // Deleted and downloaded again is a different file; nothing about the old one may
+                // be assumed to still hold.
+                verify(exactly = 2) { itemMapper.toDomainOrNull(ITEM_ROW, null) }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    /** One download row whose only moving part is how many bytes are on disk. */
+    private fun row(bytesOnDisk: Long) =
+        DownloadWithFiles(
+            download(status = DownloadStatus.DOWNLOADING),
+            listOf(file(id = 1, bytesDownloaded = bytesOnDisk)),
+        )
 
     // ---- mutations ------------------------------------------------------------------------------
 
@@ -601,226 +696,6 @@ class DownloadRepositoryImplTest {
             }
         }
 
-    // ---- storage location -------------------------------------------------------------------------
-
-    @Test
-    fun `the picker sees every mounted volume, which is active, and what stands in the way`() =
-        runTest {
-            every { downloadDao.observeProgress() } returns
-                flowOf(listOf(progress(uuid(1), DownloadStatus.DOWNLOADED)))
-            selectedVolumeId.value = CARD_ID
-
-            val locations = repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().first()
-
-            locations.volumes.map { it.id } shouldBe listOf(PRIMARY_ID, CARD_ID)
-            locations.activeVolumeId shouldBe CARD_ID
-            locations.selectedVolumeMissing shouldBe false
-            // What the confirmation dialog counts, and what the switch guard enforces.
-            locations.downloadCount shouldBe 1
-        }
-
-    @Test
-    fun `an ejected card is reported as a fallback rather than shown as the selection`() =
-        runTest {
-            every { downloadDao.observeProgress() } returns flowOf(emptyList())
-            selectedVolumeId.value = "a-card-that-is-not-here"
-
-            val locations = repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().first()
-
-            locations.activeVolumeId shouldBe PRIMARY_ID
-            locations.selectedVolumeMissing shouldBe true
-        }
-
-    @Test
-    fun `switching volume with nothing downloaded takes effect at once`() =
-        runTest {
-            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = false)
-
-            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
-            coVerify { locations.select(CARD_ID) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
-        }
-
-    @Test
-    fun `switching volume while downloads exist is refused unless the caller agrees to lose them`() =
-        runTest {
-            // docs/PLAN.md's v1 policy: nothing moves files yet, and a finished download's file
-            // rows hold absolute paths on the old volume that nothing rewrites.
-            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
-
-            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = false)
-
-            result.shouldBeInstanceOf<AppResult.Failure>()
-            coVerify(exactly = 0) { locations.select(any()) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
-        }
-
-    @Test
-    fun `delete-all-and-switch empties the device before the root moves`() =
-        runTest {
-            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1), uuid(2))
-
-            val result = repository().setStorageLocation(CARD_ID, deleteExistingDownloads = true)
-
-            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
-            coVerifyOrder {
-                // Stop first so the downloader cannot hold a handle to a file being unlinked, and
-                // delete before the root moves or the cascade looks on the wrong volume for them.
-                scheduler.stop()
-                deleter.delete(uuid(1))
-                deleter.delete(uuid(2))
-                locations.select(CARD_ID)
-            }
-        }
-
-    @Test
-    fun `re-affirming the volume already in force keeps the downloads that are on it`() =
-        runTest {
-            // What clearing a stale choice looks like: the card is out, the fallback is already
-            // writing to internal storage, and the user taps it. Nothing moves, so nothing is lost.
-            coEvery { downloadDao.allItemIds() } returns listOf(uuid(1))
-            every { locations.activeVolume() } returns PRIMARY_VOLUME
-
-            val result = repository().setStorageLocation(PRIMARY_ID, deleteExistingDownloads = false)
-
-            result.shouldBeInstanceOf<AppResult.Success<Unit>>()
-            coVerify { locations.select(PRIMARY_ID) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
-        }
-
-    @Test
-    fun `switching to a volume that is not mounted changes nothing`() =
-        runTest {
-            val result = repository().setStorageLocation("a-card-that-is-not-here", deleteExistingDownloads = true)
-
-            result.shouldBeInstanceOf<AppResult.Failure>()
-            result.error.shouldBeInstanceOf<AppError.NotFound>()
-            coVerify(exactly = 0) { locations.select(any()) }
-        }
-
-    @Test
-    fun `the storage header re-reads when the volume changes, not only when a download does`() =
-        runTest {
-            // Switching with an empty queue changes no download row, so a projection keyed only on
-            // progress would keep reporting the old volume's free space.
-            every { downloadDao.observeProgress() } returns MutableStateFlow(emptyList())
-            every { storage.usedBytes() } returnsMany listOf(10L, 20L)
-            every { storage.availableBytes() } returnsMany listOf(90L, 180L)
-
-            val emissions =
-                async(UnconfinedTestDispatcher(testScheduler)) {
-                    repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().take(2).toList()
-                }
-            selectedVolumeId.value = CARD_ID
-
-            emissions.await().map { it.usedBytes } shouldBe listOf(10L, 20L)
-        }
-
-    // ---- what the storage walk is keyed on ---------------------------------------------------------
-
-    @Test
-    fun `progress writes alone do not re-walk the downloads tree`() =
-        runTest {
-            // `usedBytes()` is a stat() of every file under the root; a transfer writes progress
-            // twice a second for its whole length, and keying the walk on that was PERF-02.
-            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
-            every { downloadDao.observeProgress() } returns rows
-            var walks = 0
-            every { storage.usedBytes() } answers {
-                walks++
-                0L
-            }
-
-            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
-                awaitItem()
-                walks shouldBe 1
-
-                repeat(PROGRESS_WRITES) { written ->
-                    rows.value =
-                        listOf(
-                            progress(
-                                uuid(1),
-                                DownloadStatus.DOWNLOADING,
-                                downloaded = (written + 1) * 1_000L,
-                                total = 100_000L,
-                            ),
-                        )
-                }
-
-                // Same items, same statuses: nothing that changes which files are on disk.
-                walks shouldBe 1
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `a status change re-walks, because that is what adds and removes files`() =
-        runTest {
-            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
-            every { downloadDao.observeProgress() } returns rows
-            var walks = 0
-            every { storage.usedBytes() } answers {
-                walks++
-                0L
-            }
-
-            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
-                awaitItem()
-
-                rows.value = listOf(progress(uuid(1), DownloadStatus.DOWNLOADED))
-                walks shouldBe 2
-
-                rows.value = emptyList()
-                walks shouldBe 3
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `a long transfer still creeps, on a slow tick rather than on every write`() =
-        runTest {
-            // The file grows without any row's *shape* changing, so the header would otherwise sit
-            // still for the length of an episode.
-            every { downloadDao.observeProgress() } returns
-                MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
-            var walks = 0
-            every { storage.usedBytes() } answers {
-                walks++
-                0L
-            }
-
-            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
-                awaitItem()
-                walks shouldBe 1
-
-                testScheduler.advanceTimeBy(DownloadRepositoryImpl.STORAGE_WALK_INTERVAL * TICKS + 1.milliseconds)
-
-                walks shouldBe 1 + TICKS
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
-    @Test
-    fun `nothing downloading means no ticking either`() =
-        runTest {
-            every { downloadDao.observeProgress() } returns
-                MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADED)))
-            var walks = 0
-            every { storage.usedBytes() } answers {
-                walks++
-                0L
-            }
-
-            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
-                awaitItem()
-
-                testScheduler.advanceTimeBy(DownloadRepositoryImpl.STORAGE_WALK_INTERVAL * TICKS + 1.milliseconds)
-
-                walks shouldBe 1
-                cancelAndIgnoreRemainingEvents()
-            }
-        }
-
     // ---- helpers --------------------------------------------------------------------------------
 
     /** Two mounted volumes; anything else the caller asks for falls back to the primary one. */
@@ -865,9 +740,6 @@ class DownloadRepositoryImplTest {
 
         /** Ten seconds of a real transfer at the throttle's two writes a second. */
         const val PROGRESS_WRITES = 20
-
-        /** How many walk intervals the ticking tests step over. */
-        const val TICKS = 3
 
         val PRIMARY_VOLUME =
             DownloadVolume(

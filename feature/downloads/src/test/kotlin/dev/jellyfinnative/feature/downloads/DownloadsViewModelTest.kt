@@ -17,9 +17,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -242,6 +248,9 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             model.selectTab(DownloadsTab.QUEUE)
+            // The tab is no longer written straight into the state: it rides the same combine as
+            // the projection, so it lands on the next dispatch rather than in the tap itself.
+            advanceUntilIdle()
 
             model.uiState.value.selectedTab shouldBe DownloadsTab.QUEUE
         }
@@ -291,6 +300,7 @@ class DownloadsViewModelTest {
             model.delete(row)
             advanceUntilIdle()
             model.consumeMessage()
+            advanceUntilIdle()
 
             model.uiState.value.userMessage shouldBe null
         }
@@ -654,9 +664,99 @@ class DownloadsViewModelTest {
             model.uiState.value.loadFailed shouldBe false
         }
 
+    // ---- what the projection costs while nobody is looking (audit PERF-03) -----------------------
+
+    /**
+     * The projection used to be launched in `init` and never unsubscribed, so from the first visit
+     * until process death it kept pulling the download list (a full metadata join) and the storage
+     * figures — with the screen off, and with a tab switch *saving* this screen rather than popping
+     * it.
+     */
+    @Test
+    fun `the download queries only run while something is collecting the state`() =
+        runTest(dispatcher) {
+            var subscriptions = 0
+            var completions = 0
+            every { downloads.observeDownloads() } returns
+                items
+                    .onStart { subscriptions++ }
+                    .onCompletion { completions++ }
+
+            val model =
+                DownloadsViewModel(
+                    downloads = downloads,
+                    clock = FIXED_CLOCK,
+                    defaultDispatcher = dispatcher,
+                )
+            advanceUntilIdle()
+
+            subscriptions shouldBe 0
+
+            val screen = launch { model.uiState.collect {} }
+            advanceUntilIdle()
+            subscriptions shouldBe 1
+
+            screen.cancel()
+            // Inside the grace window a rotation re-uses the running projection …
+            advanceTimeBy(DownloadsViewModel.STOP_TIMEOUT_MS / 2)
+            runCurrent()
+            completions shouldBe 0
+
+            // … and past it the queries stop.
+            advanceUntilIdle()
+            completions shouldBe 1
+        }
+
+    @Test
+    fun `the last state stays readable after the projection stops`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADED))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val screen = launch { model.uiState.collect {} }
+            advanceUntilIdle()
+            screen.cancel()
+            advanceUntilIdle()
+
+            // An action fired from a row the user can still see must not read an empty list back.
+            model.uiState.value.downloaded
+                .flatMap { it.items }
+                .map { it.itemId } shouldContainExactly listOf("1")
+        }
+
+    @Test
+    fun `the tab survives the projection stopping and starting again`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            model.selectTab(DownloadsTab.QUEUE)
+
+            val screen = launch { model.uiState.collect {} }
+            advanceUntilIdle()
+            screen.cancel()
+            advanceUntilIdle()
+
+            model.uiState.value.selectedTab shouldBe DownloadsTab.QUEUE
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
 
-    private fun viewModel() = DownloadsViewModel(downloads = downloads, clock = FIXED_CLOCK)
+    /**
+     * A ViewModel with a live subscriber on its state.
+     *
+     * The subscriber is the point: the projection is shared with `WhileSubscribed`, so with nothing
+     * collecting `uiState` there is deliberately no Room query and no state to assert on (audit
+     * PERF-03). `backgroundScope` is what the screen's collection stands in for — it is cancelled
+     * when the test ends, so the never-completing projection cannot hang `runTest`.
+     */
+    private fun TestScope.viewModel(): DownloadsViewModel =
+        DownloadsViewModel(
+            downloads = downloads,
+            clock = FIXED_CLOCK,
+            defaultDispatcher = dispatcher,
+        ).also { model -> backgroundScope.launch { model.uiState.collect {} } }
 
     // ---- the ratcheted progress the rows draw (schema v6) ----------------------------------------
 

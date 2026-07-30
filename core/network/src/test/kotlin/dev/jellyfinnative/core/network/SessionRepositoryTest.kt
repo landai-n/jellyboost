@@ -19,6 +19,7 @@ import dev.jellyfinnative.core.network.model.SessionState
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -54,6 +55,7 @@ class SessionRepositoryTest {
     }
 
     private fun givenCompleteDatabaseRows() {
+        every { secureCredentialStore.consumeLostSession() } returns false
         coEvery { serverDao.getServer(SERVER_ID) } returns
             ServerEntity(id = SERVER_ID, name = SERVER_NAME, version = SERVER_VERSION)
         coEvery { serverDao.getAddresses(SERVER_ID) } returns
@@ -139,6 +141,82 @@ class SessionRepositoryTest {
 
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    // ---- involuntary session loss (audit SEC-03) ------------------------------------------------
+
+    @Test
+    @DisplayName("a first run is not reported as a session the user lost")
+    fun firstRunIsNotALoss() =
+        runTest {
+            coEvery { secureCredentialStore.read() } returns null
+
+            repository.restoreSession()
+
+            repository.consumeInvoluntarySignOut() shouldBe false
+        }
+
+    @Test
+    @DisplayName("a credential store that had to wipe itself is reported as an involuntary sign-out")
+    fun wipedStoreIsAnInvoluntarySignOut() =
+        runTest {
+            // The store answers `null` after recreating an undecryptable file, which is exactly
+            // what a first run answers — so it says separately that it destroyed something.
+            coEvery { secureCredentialStore.read() } returns null
+            every { secureCredentialStore.consumeLostSession() } returns true
+
+            repository.restoreSession()
+
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+            repository.consumeInvoluntarySignOut() shouldBe true
+        }
+
+    @Test
+    @DisplayName("a transient storage failure signs this run out and says so")
+    fun transientFailureIsAnInvoluntarySignOut() =
+        runTest {
+            coEvery { secureCredentialStore.read() } throws IOException("volume busy")
+
+            repository.restoreSession()
+
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+            repository.consumeInvoluntarySignOut() shouldBe true
+            // The stored session is *not* the casualty of a busy disk.
+            coVerify(exactly = 0) { secureCredentialStore.clear() }
+        }
+
+    @Test
+    @DisplayName("a stored token whose rows are gone is reported as an involuntary sign-out")
+    fun missingRowsAreAnInvoluntarySignOut() =
+        runTest {
+            coEvery { secureCredentialStore.read() } returns storedSession
+            coEvery { serverDao.getServer(SERVER_ID) } returns null
+
+            repository.restoreSession()
+
+            repository.consumeInvoluntarySignOut() shouldBe true
+        }
+
+    @Test
+    @DisplayName("the involuntary-sign-out flag is one-shot")
+    fun involuntarySignOutIsConsumed() =
+        runTest {
+            coEvery { secureCredentialStore.read() } throws IOException("volume busy")
+
+            repository.restoreSession()
+
+            repository.consumeInvoluntarySignOut() shouldBe true
+            // A rotation must not make the auth screen accuse the store a second time.
+            repository.consumeInvoluntarySignOut() shouldBe false
+        }
+
+    @Test
+    @DisplayName("signing out is not an involuntary sign-out")
+    fun signOutIsVoluntary() =
+        runTest {
+            repository.signOut()
+
+            repository.consumeInvoluntarySignOut() shouldBe false
         }
 
     @Test

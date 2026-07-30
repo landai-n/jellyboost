@@ -108,6 +108,53 @@ data class DownloadsUiState(
 }
 
 /**
+ * The half of [DownloadsUiState] that comes from storage.
+ *
+ * Kept apart from the half a tap changes ([LocalState]) so that the Room and DataStore flows behind
+ * it can be shared with `WhileSubscribed` and actually **stop** when the screen goes away — see
+ * `DownloadsViewModel`. Reaching this type at all means the projection answered, which is why
+ * `isLoading` is not a field here: it is `false` by construction.
+ */
+internal data class DownloadsProjection(
+    val downloaded: List<DownloadGroup> = emptyList(),
+    val queue: List<DownloadItem> = emptyList(),
+    val speeds: Map<String, Long> = emptyMap(),
+    val progress: Map<String, Float> = emptyMap(),
+    val storage: StorageUsage = StorageUsage(),
+    val wifiOnly: Boolean = true,
+    /** `true` for the one value the projection's `.catch` emits after it collapsed (audit STAB-10). */
+    val loadFailed: Boolean = false,
+)
+
+/**
+ * The half of [DownloadsUiState] nothing but a tap changes.
+ *
+ * It survives the projection being stopped and restarted: which tab the user was on must not depend
+ * on whether a Room query happens to be subscribed.
+ */
+internal data class LocalState(
+    val selectedTab: DownloadsTab = DownloadsTab.DOWNLOADED,
+    val showCancelAllConfirmation: Boolean = false,
+    val userMessage: DownloadsMessage? = null,
+)
+
+/** Folds the two halves into the one state the screen reads. */
+internal fun DownloadsProjection.toUiState(local: LocalState): DownloadsUiState =
+    DownloadsUiState(
+        selectedTab = local.selectedTab,
+        downloaded = downloaded,
+        queue = queue,
+        speeds = speeds,
+        progress = progress,
+        storage = storage,
+        wifiOnly = wifiOnly,
+        isLoading = false,
+        loadFailed = loadFailed,
+        showCancelAllConfirmation = local.showCancelAllConfirmation,
+        userMessage = local.userMessage,
+    )
+
+/**
  * `true` when this queue row offers *Resume*: paused and failed rows both do, because retrying a
  * failure is the same operation, and for an original download the partial file means it costs only
  * the bytes that are missing.

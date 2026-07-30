@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.CollectionKind
 import dev.jellyfinnative.core.common.model.FilterFacets
+import dev.jellyfinnative.core.common.model.FilterOptions
 import dev.jellyfinnative.core.common.model.ItemQuery
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
@@ -15,6 +16,7 @@ import dev.jellyfinnative.core.common.model.SortOrder
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
+import dev.jellyfinnative.core.database.entities.DownloadedItemKey
 import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.database.entities.LatestDownloadKey
@@ -196,26 +198,72 @@ class OfflineJellyfinRepository
                     if (!term.isNullOrEmpty()) {
                         // Search is deliberately library-wide: offline there are a handful of items
                         // and finding one you downloaded matters more than which grid you were in.
+                        // It carries no filters because no surface sets both — the filter sheet
+                        // belongs to the library grid, and the search screen has none.
                         itemDao.searchDownloaded(ItemSource.DOWNLOAD, requested, term, query.limit)
                     } else {
-                        itemDao.pagingDownloaded(
-                            source = ItemSource.DOWNLOAD,
-                            types = typesOf(query.parentId?.toUuidOrNull(), requested),
-                            descending = query.sortOrder == SortOrder.DESCENDING,
-                            limit = query.limit,
-                            offset = query.startIndex,
-                        )
+                        gridPage(query, requested)
                     }
                 rows.withLocalUserData(currentUserId())
             }
 
+        /**
+         * One page of the offline library grid, filters and all.
+         *
+         * Filter, *then* page — not the other way round. `query.filters` used to be ignored here
+         * entirely: the grid re-queried on every *Apply* and rendered the identical unfiltered list
+         * under an "1 active" badge (docs/notes/audit-2026-07.md, ARCH-01). It cannot be done in the
+         * statement because `genres` is a newline-joined column with no SQL intersection against a
+         * bound list, and a half-SQL/half-Kotlin predicate would be worse than either: a `LIMIT`
+         * over the unfiltered set returns short pages, and a short page is how `ItemPagingSource`
+         * recognises the end of the library — the grid would simply stop early.
+         *
+         * So the ordering and the cheap columns come from Room ([ItemDao.downloadedListKeys], which
+         * carries no `dto` blob), the whole set is narrowed here, and only the surviving page's rows
+         * are read in full. `sortBy` still degrades to `sortName` offline — that half is the logged
+         * divergence (DECISIONS.md 2026-07-28) and is untouched.
+         */
+        private suspend fun gridPage(
+            query: ItemQuery,
+            requested: List<ItemType>,
+        ): List<ItemEntity> {
+            val page =
+                itemDao
+                    .downloadedListKeys(
+                        source = ItemSource.DOWNLOAD,
+                        types = typesOf(query.parentId?.toUuidOrNull(), requested),
+                        userId = currentUserId(),
+                        descending = query.sortOrder == SortOrder.DESCENDING,
+                    ).filter { it.matches(query.filters) }
+                    .drop(query.startIndex)
+                    .take(query.limit)
+
+            if (page.isEmpty()) return emptyList()
+
+            // `getItems` answers in no particular order, so the sort the statement applied is
+            // re-imposed from the key list rather than re-derived.
+            val rows = itemDao.getItems(page.map { it.id }).associateBy { it.id }
+            return page.mapNotNull { rows[it.id] }
+        }
+
+        /**
+         * The facets the offline filter sheet offers — scoped to the library that asked.
+         *
+         * [parentId] used to be ignored, so a film library's sheet listed the genres of downloaded
+         * *television* and filtering by one of them could only ever produce an empty grid
+         * (docs/notes/audit-2026-07.md, ARCH-01). Scoping is by type, for the reason
+         * [typesOf] documents.
+         */
         override suspend fun getFilterFacets(
             parentId: String?,
             itemTypes: List<ItemType>,
         ): AppResult<FilterFacets> =
             onIo {
                 val rows =
-                    itemDao.allBySource(ItemSource.DOWNLOAD, itemTypes.ifEmpty { LIST_ITEM_TYPES })
+                    itemDao.allBySource(
+                        ItemSource.DOWNLOAD,
+                        typesOf(parentId?.toUuidOrNull(), itemTypes.ifEmpty { LIST_ITEM_TYPES }),
+                    )
                 FilterFacets(
                     genres = rows.flatMap { it.genres }.distinct().sorted(),
                     years = rows.mapNotNull { it.productionYear }.distinct().sortedDescending(),
@@ -376,5 +424,19 @@ class OfflineJellyfinRepository
  */
 private fun unavailable(id: String): JellyfinItem =
     JellyfinItem(id = id, name = "", type = ItemType.UNKNOWN, available = false)
+
+/**
+ * Whether a downloaded row survives [filters].
+ *
+ * Values inside one facet are OR-ed and the facets are AND-ed — jellyfin-web's own reading, and the
+ * server's, so a filter means the same thing offline as online. An empty facet is not a filter at
+ * all: [FilterOptions.isEmpty] holding means every row matches.
+ */
+private fun DownloadedItemKey.matches(filters: FilterOptions): Boolean =
+    (filters.genres.isEmpty() || genres.any { it in filters.genres }) &&
+        (filters.years.isEmpty() || productionYear in filters.years) &&
+        (filters.officialRatings.isEmpty() || officialRating in filters.officialRatings) &&
+        (filters.isPlayed == null || played == filters.isPlayed) &&
+        (filters.isFavorite == null || isFavorite == filters.isFavorite)
 
 private fun String.toUuidOrNull(): UUID? = runCatching { UUID.fromString(this) }.getOrNull()

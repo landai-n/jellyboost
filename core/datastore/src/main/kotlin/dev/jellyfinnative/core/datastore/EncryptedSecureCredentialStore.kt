@@ -8,8 +8,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.io.IOException
-import java.security.GeneralSecurityException
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -26,10 +24,10 @@ import javax.inject.Singleton
  * Opening (or first creating) the encrypted preferences does disk I/O and talks to the Android
  * Keystore, so every operation — including the lazy creation itself — runs on [Dispatchers.IO].
  *
- * If the encrypted preferences fail to open (e.g. after a backup/restore onto a different
- * device, or the Keystore key being cleared by the OS), the underlying file is deleted and
- * creation is retried once. Losing a stored session this way just means the user has to sign
- * in again — recreating the file is strictly better than crashing on every app start.
+ * What happens when it will not open is [EncryptedPreferencesOpener]'s decision, and it is not one
+ * decision but two: an undecryptable file is deleted and recreated (better than crashing on every
+ * app start), a file that merely could not be read right now is left exactly where it is. Either
+ * way the loss is *recorded* rather than silent — see [consumeLostSession].
  */
 @Suppress("DEPRECATION")
 @Singleton
@@ -40,6 +38,16 @@ class EncryptedSecureCredentialStore
     ) : SecureCredentialStore {
         @Volatile
         private var prefs: SharedPreferences? = null
+
+        @Volatile
+        private var lostStoredSession = false
+
+        private val opener =
+            EncryptedPreferencesOpener(
+                create = ::buildEncryptedPreferences,
+                deleteStore = { context.deleteSharedPreferences(PreferenceKeys.SECURE_STORE_NAME) },
+                onSessionLost = { lostStoredSession = true },
+            )
 
         override suspend fun save(session: StoredSession) {
             withContext(Dispatchers.IO) {
@@ -61,15 +69,18 @@ class EncryptedSecureCredentialStore
                 if (serverId == null || userId == null || accessToken == null) {
                     return@withContext null
                 }
-                runCatching {
+                try {
                     StoredSession(
                         serverId = UUID.fromString(serverId),
                         userId = UUID.fromString(userId),
                         accessToken = accessToken,
                     )
-                }.getOrElse { error ->
+                } catch (error: IllegalArgumentException) {
+                    // Decrypted, but not a session: two ids that are no longer UUIDs. The row is
+                    // unusable and is dropped — which costs the user their session, so it counts.
                     Timber.w(error, "Stored session was present but unparseable; clearing it")
                     clear(current)
+                    lostStoredSession = true
                     null
                 }
             }
@@ -80,6 +91,12 @@ class EncryptedSecureCredentialStore
             }
         }
 
+        override fun consumeLostSession(): Boolean {
+            val lost = lostStoredSession
+            lostStoredSession = false
+            return lost
+        }
+
         private fun clear(target: SharedPreferences) {
             target.edit().clear().apply()
         }
@@ -87,27 +104,8 @@ class EncryptedSecureCredentialStore
         /** Must only be called while already dispatched on [Dispatchers.IO]. */
         private fun preferences(): SharedPreferences =
             prefs ?: synchronized(this) {
-                prefs ?: createPreferences().also { prefs = it }
+                prefs ?: opener.open().also { prefs = it }
             }
-
-        private fun createPreferences(): SharedPreferences =
-            try {
-                buildEncryptedPreferences()
-            } catch (error: GeneralSecurityException) {
-                recreateAfterCorruption(error)
-            } catch (error: IOException) {
-                recreateAfterCorruption(error)
-            }
-
-        private fun recreateAfterCorruption(error: Exception): SharedPreferences {
-            Timber.w(
-                error,
-                "Encrypted credential store could not be opened; deleting and recreating it " +
-                    "(any stored session is lost, user will need to sign in again)",
-            )
-            context.deleteSharedPreferences(PreferenceKeys.SECURE_STORE_NAME)
-            return buildEncryptedPreferences()
-        }
 
         private fun buildEncryptedPreferences(): SharedPreferences {
             val masterKey =

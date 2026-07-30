@@ -113,6 +113,28 @@ verification on the minified build.
   owed** (30 s: stream a non-downloaded track on Minions 2, re-pick French →
   Quality control disappears as it returns to Direct play).
 
+- **Minified-build (R8 full mode) verification DONE, 2026-07-30 — M10 DoD.**
+  `app-release.apk` (10.3 MiB, debug-signed fallback) installed as
+  `dev.jellyfinnative.app`, logged in via Quick Connect. **All 12 checks pass;
+  zero `ClassNotFoundException`/`NoClassDefFoundError`/`NoSuchMethodError`/
+  `Cannot find implementation`/serialization errors across the whole session.**
+  M5: direct play (badge + position advancing), forced transcode via the
+  quality picker, audio switch (channel count 6→2) and subtitles rendering
+  (French SDH), `Loaded FfmpegAudioRenderer.` present — the reflectively-loaded
+  decoder survived R8. M8: 873 MB download completed (proves HiltWorkerFactory
+  injection + Room `_Impl` lookup), **offline playback from disk verified**
+  (airplane ON, Direct play badge, 4:24 → 4:37), user-data sync wrote back
+  (detail page "19 min left"), Coil posters on home + Films grid.
+  **SEC-01 acceptance check PASS:** a real search (`zorglubwidget`) left the
+  release logcat with 0 occurrences of the search term, the server name, any
+  UUID, and any `ApiKey`/token across 543 buffered lines.
+  UDP discovery = NOT-TESTABLE (would require signing out of the session).
+  Evidence: scratchpad `minified/` + `off*.png`/`sec1*.png`.
+- **UX gap found by testing, fix requested by the user:** rows in the Downloads
+  screen's *Downloaded* list are not tappable (only a delete button), so the
+  only route to playing a download is the item detail page. Two separate agents
+  tripped over it. Clickable-to-play rows are being added.
+
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in
   `docs/notes/offline-multitrack-design.md`. One file with all tracks is
@@ -133,9 +155,12 @@ verification on the minified build.
    `DownloadedMediaProvider` go internal, and
    `DownloadEnqueuer.removeDoomedContainerRow`'s broad catch (both flagged in
    the structural DECISIONS entry); multi-track Phase 2 decision (below).
-2. **DoD items left:** baseline profile generation on the test tablet (fallback:
-   rooted API-34+ AVD), then re-run M5/M8 verification on the minified
-   `assembleRelease` build on the device (R8 build itself verified green).
+2. ~~**DoD items left**~~ — ALL DONE: baseline profile captured on the test tablet (`569b8ac`, 21 497 rules, compiled into the release APK) and the
+   M5/M8 re-verification on the minified build passed 12/12 (see above).
+   **M10 is ready to close** once the clickable-download-row fix lands; the
+   only outstanding device item is the 30-second B.3 re-walk on the debug
+   build (stream a non-downloaded track on Minions 2 → re-pick French →
+   Quality control disappears as it returns to Direct play).
 3. ~~**HEVC `VideoProfileNotSupported` investigation**~~ — CLOSED 2026-07-30, not a
    bug: every HEVC decoder on the device (c2.mtk.hevc.decoder, its .secure variant,
    c2.android.hevc.decoder) reports Main profile only, no Main 10 (`dumpsys

@@ -31,6 +31,15 @@ verification on the minified build.
   watch, PERF-04 recomposition count.
 - **Debug installs get an orange launcher icon** (`chore(app)`) — adaptive-icon
   overlay in `app/src/debug/res` only; release resource table untouched.
+- **Tier 2 downloads-engine batch landed, 2026-07-30** (`fix(downloads)`,
+  b92fe3a): STAB-01 transient retry classification (attemptCount, schema v7,
+  MAX_ATTEMPTS=5 on WorkManager backoff — one blip no longer ERRORs the whole
+  queue), STAB-04 awaited stop + OrphanSweeper, STAB-09 mutex drain lease +
+  batched repo bulk actions. DECISIONS entry covers the two re-pointed tests
+  and the lease-shape divergence. :data:downloads 344 → 383. Follow-up agent
+  running: DownloadsViewModel batched wiring + UNKNOWN copy honesty fix.
+  Device-owed: blip-mid-queue retry walk, cancel-orphan sweep check, bulk
+  actions on a 20+ queue (after wiring), v6→v7 upgrade over a live queue.
 
 ### Queued (user-requested 2026-07-30, launch after phase 0/1 lands — player half now landed)
 - **Connectivity-aware track picker for downloaded items:** when online, the

@@ -74,6 +74,9 @@ on every run (the server's base address rotates between LAN and remote addresses
 rebuilds it with `quality = download.quality`, the value on the row. Changing the setting in Settings
 therefore affects the *next* download the user starts, never the one already queued or running.
 
+The one thing decided per *row* rather than per tap is whether the transcode that preference names is
+worth asking the server for at all — see *"When a transcode is not worth making"* below.
+
 ---
 
 ## Why the quality lives on the row, not read live
@@ -97,6 +100,61 @@ reason, as the file name `DownloadQueue.reconcile`'s KDoc already documents keep
 retries (a re-plan that renamed a 1.38 GB partial file orphaned it and restarted the transfer from
 zero, found on the M7 device walk — see that KDoc). Both are cases of the same rule: once bytes exist on disk under a
 name, at a quality, the plan that produced them is the only plan allowed to keep touching them.
+
+---
+
+## When a transcode is not worth making
+
+A quality step is a **ceiling, not a target**. Asking `HIGH` of a source that is already 1080p H.264
+under 20 Mbps does not shrink it — the server spends an encode (or, with `allowVideoStreamCopy=true`,
+a stream copy) and hands back a file about the size of the one it already had, minus whatever extra
+audio tracks were dropped and plus a generation of quality loss. The user asked for a smaller file
+and got a worse copy of the same file, having also given up the exact size and the byte-level resume
+`ORIGINAL` comes with.
+
+`DownloadEnqueuer.planQuality` refuses that trade. When the chosen quality is transcoded and
+
+```
+estimatedTranscodeBytes >= 0.9 × mediaSources[0].size
+```
+
+the row is written with `quality = ORIGINAL` instead, and everything downstream follows from the
+column alone: `DownloadFilePlanner.media` plans `/Items/{id}/Download`, `bytesTotal` is the exact
+size the server measured, `sizeIsExact` is `true`, `DownloadItem.isPausable` is `true` again, and no
+size projector or sibling seed is ever built for the row. There are no partial states, because the
+decision is taken *before* `toDownloadRow` — the quality, the size, the certainty flag and the file
+plan are one consistent set or none of them are.
+
+**The threshold is `0.9`** (`DownloadEnqueuer.ORIGINAL_THRESHOLD`): a transcode has to save at least
+about a tenth of the file to be worth making. What it costs is fixed and known — the re-encode, the
+server's CPU for the length of the transfer, no resume, and a size the queue can only estimate —
+and a saving the user could not pick out on a storage bar does not buy any of that back. The margin
+also leans the right way against the estimate's own slack: a real re-encode's figure is an upper
+bound, so a transcode judged *just* under the threshold usually saves rather more than the
+arithmetic promised, while one at or over it cannot save meaningfully less than nothing.
+
+**Both figures are the ones that would actually be stamped**, not a separate rule invented for the
+comparison. The transcoded side is `sizeEstimate(preference)` — including the `remuxBytes` stream-copy
+path, which is the case this rule catches most often, since a remux is by construction about the size
+of the source's own video track — and the original side is `sizeEstimate(ORIGINAL)`, i.e.
+`mediaSources[0].size`. Comparing anything else would let a row be downgraded on the strength of a
+number nothing else in the pipeline uses.
+
+**Both figures have to exist.** An unknown source size (the server reported none) or an uncomputable
+estimate (an item with no `runTimeTicks`) leaves the user's choice exactly as it was: the preference
+is the default, and half a comparison is not grounds for overriding it.
+
+**The decision is per row, not per tap.** `write` is handed a whole season at a time (container
+expansion, above), and the episodes under it need not agree — a 30 Mbps episode is worth transcoding
+while the 3.5 Mbps one beside it is not, and each gets the answer its own file deserves. This is the
+one thing that varies across rows written by a single enqueue; the *preference* is still read exactly
+once per tap, and a row can only ever move **towards** `ORIGINAL`, never between transcoded steps.
+
+A practical consequence worth stating: because a real transcode's estimate is
+`runtime × min(cap, source bitrate)`, any source whose own bitrate already sits under the chosen
+step's cap estimates at roughly its own size and is therefore downloaded as the original. That is
+precisely the intent — "the source is already at or below the quality you asked for" is exactly when
+a transcode has nothing to do.
 
 ---
 
@@ -485,7 +543,7 @@ tap, and nothing downstream reconsiders it.
 | `SettingsViewModelTest` | the download quality picker writing through to the preference store; a download quality changed upstream being picked up while the screen is open |
 | `MkvClusterScannerTest` | reading a cluster timestamp out of a single chunk, out of a stream fed one byte at a time, and out of a cluster or timestamp element split across a chunk boundary; the newest of several clusters winning and a repeated timestamp being harmless, which is what makes re-scanning the carry safe; a multi-byte timestamp decoded big-endian; `TimestampScale` defaulting to one millisecond per tick, being read once from Segment Info, and never being moved by a byte pattern occurring after the first cluster; and every rejection path — a cluster id occurring inside payload data, an invalid size varint, a first child that is not the timestamp, an implausible cluster size, a timestamp length Matroska cannot store, a timestamp going backwards, and one beyond any real runtime — leaving the last known value in place, alongside an unknown-size cluster (a live mux's own sentinel) being accepted |
 | `TranscodeSizeProjectorTest` | no projection before the first cluster or the first byte; a zero media clock treated as no evidence rather than divided by; the projection reading as the observed bitrate extended over the whole runtime, and converging on the true size as more of the file arrives; the projection never exceeding the enqueue-time ceiling and never falling below the bytes already on disk; bytes past a ceiling that was too small projecting to themselves; a longer item projecting a larger file from the same measured bitrate; and bytes handed to the projector being passed straight through to the scanner |
-| `DownloadEnqueuerSizeTest` | (split out of `DownloadEnqueuerTest` to keep that class under detekt's size limit) an original download's size being exact because the server measured it, against a re-encoded download's size being only ever a ceiling; a stream-copyable source being sized as video plus one AAC track, exactly, and every way a source fails to qualify — the wrong video codec, taller than the quality's `maxHeight`, above the quality's video bitrate, no per-stream bitrate at all, no video stream at all, an `avi` container — falling back to the ordinary ceiling instead, with an original download never treated as a remux whatever its streams say; sibling seeding from the median of finished episodes at the same quality, an even sibling count averaging the two middle rates, the seed scaled by this episode's own runtime rather than the siblings', the seed never exceeding the ceiling, siblings downloaded at another quality not counting as evidence, a series' first episode having nothing to be seeded from, a sibling whose runtime is not cached being skipped rather than guessed at, and a film, an original download, and a remux-exact episode each never being seeded |
+| `DownloadEnqueuerSizeTest` | (split out of `DownloadEnqueuerTest` to keep that class under detekt's size limit) ("when a transcode is not worth making") a transcode estimated within a tenth of the original being written as an `ORIGINAL` row instead — exact size, exact flag, no projection — a transcode saving just over a tenth (0.89 of the file, one point on the useful side of the threshold) keeping the quality that was asked for, a stream copy that weighs what the original does carrying the *original's* size rather than the remux figure the comparison used, an unknown source size and an unknown estimate each leaving the preference alone, an `ORIGINAL` preference never reconsidered, and one episode of a season falling back while another keeps the transcode. Then: an original download's size being exact because the server measured it, against a re-encoded download's size being only ever a ceiling; a stream-copyable source being sized as video plus one AAC track, exactly, and every way a source fails to qualify — the wrong video codec, taller than the quality's `maxHeight`, above the quality's video bitrate, no per-stream bitrate at all, no video stream at all, an `avi` container — falling back to the ordinary ceiling instead, with an original download never treated as a remux whatever its streams say; sibling seeding from the median of finished episodes at the same quality, an even sibling count averaging the two middle rates, the seed scaled by this episode's own runtime rather than the siblings', the seed never exceeding the ceiling, siblings downloaded at another quality not counting as evidence, a series' first episode having nothing to be seeded from, a sibling whose runtime is not cached being skipped rather than guessed at, and a film, an original download, and a remux-exact episode each never being seeded |
 | `SiblingSeederTest` | the median rate of finished siblings sizing one item, scaled by that item's own runtime and clamped to its ceiling; an item never being evidence for itself, a film never being asked about, an original download never being seeded, a sibling whose runtime is not cached being skipped, and a row with no ceiling having nothing to clamp to; and the pass a finished episode triggers — every waiting row of the same show seeded, each against its own runtime and its own ceiling, only the show and quality that finished being asked for, a waiting row with no cached runtime or no ceiling left alone, nothing written when nothing is waiting or when no sibling can be turned into a rate, and a finished film or original download seeding nothing |
 | `SeasonSeedingScenarioTest` | the user-reported scenario end to end over a map standing in for Room: a season queued in one tap starting with nothing to be seeded from (and every row carrying the `seriesName` the sibling query matches on); the first episode to finish seeding the ones still waiting behind it, within its ceiling and without touching `bytesTotal`; a row already carrying a projection not being overwritten by a later sibling; rows of another show or another quality left alone; and `DOWNLOADED` or `ERROR` rows not counting as rows waiting for a size |
 | `DownloadProgressRatchetTest` | a rising percentage passing straight through; a growing projection unable to make the bar retreat; the highest percentage reached this session being the one that keeps being shown; a transferring item held at 99 % however far it has run, and only a finished download drawing a full bar; a paused item keeping the height it reached rather than dropping; a restarted transcode holding its bar instead of falling back to zero; an item that leaves the list being forgotten, so a re-download starts over; each item ratcheting on its own; and an unknown total reading as zero rather than as complete |

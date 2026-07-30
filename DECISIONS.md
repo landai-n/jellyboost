@@ -1134,3 +1134,59 @@ Seeded from the approved plan; listed for traceability, no divergence:
   (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
 
 <!-- END -->
+
+<!-- BEGIN a pointless transcode is downloaded as the original -->
+
+## 2026-07-30 — a transcode that would not save space is downloaded as the **original** instead
+
+- **Scope:** `:data:downloads` (`DownloadEnqueuer.planQuality`, `ORIGINAL_THRESHOLD`, the new
+  `PlannedQuality` holder), `DownloadEnqueuerSizeTest`, `DownloadEnqueuerTest` and
+  `SeasonSeedingScenarioTest` fixtures, `docs/features/download-quality.md`. No downstream module
+  changes: the planner, the queue and the UI all read the row's `quality` column and were already
+  correct for every value of it.
+- **Plan said:** docs/PLAN.md line 7 — "**Not v1:** … transcoded downloads" — so the plan says
+  nothing about this at all. What it refines is this log's own *"transcoded downloads ship after all,
+  as a download quality setting"* (2026-07-29) and the estimate formula settled in *"the transcode
+  size estimate uses the source bitrate when it is under the cap"* (2026-07-29): the quality the user
+  picked was, until now, stamped on every row unconditionally.
+- **Done instead:** at enqueue time, per row, the transcoded size estimate is compared with the
+  source file's own size, and when `estimate >= 0.9 × mediaSources[0].size` the row is written with
+  `quality = ORIGINAL`. Both figures come from the *same* `sizeEstimate` the row would have been
+  stamped with — the transcoded one including the `remuxBytes` stream-copy path, the original one
+  being `mediaSources[0].size` — so the comparison is against what would actually be downloaded.
+  Either figure being unknown (no reported source size, or no runtime to estimate from) leaves the
+  user's preference alone. The swap happens before `toDownloadRow`, so `quality`, `bytesTotal`,
+  `sizeIsExact`, the projector/seed gates and the file plan are consistent by construction, and it is
+  taken **per row** because `write` is handed a whole season at once and its episodes need not agree.
+- **Reason:** a quality step is a ceiling, not a target. A `HIGH` download of a 1080p H.264 source
+  already under 20 Mbps is a stream copy that lands within a percent of the file the server already
+  has: the user pays a re-encode, the server's CPU for the whole transfer, the loss of byte-level
+  resume and of an exact size — and saves nothing. The threshold is `0.9` rather than `1.0` because a
+  saving under about a tenth is not a trade either — invisible on a storage bar, next to costs that
+  are fixed and certain — and because the estimate being an upper bound means a transcode judged just
+  under the line usually saves rather more than the arithmetic promised.
+- **Deliberate consequence:** since a real re-encode is estimated at `runtime × min(cap, source
+  bitrate)`, *any* source whose own bitrate already sits under the chosen step's cap now downloads as
+  the original. That is the rule working as intended — "the source is already at or below the quality
+  you asked for" is exactly when a transcode has nothing to do — but it does mean the
+  `min(cap, source)` branch of the estimate is, for a row whose size is known, mostly a step on the
+  way to this decision rather than a figure that ends up on a row.
+- **Tests:** `DownloadEnqueuerSizeTest` 20 → 27, all seven new: the downgrade itself (row `ORIGINAL`,
+  exact size, no projection), the 0.89 boundary keeping the transcode, a stream copy that weighs what
+  the original does carrying the *original's* size rather than the remux figure the comparison used,
+  an unknown source size and an item with no runtime each keeping the preference, an `ORIGINAL`
+  preference never reconsidered, and a season where one episode falls back while another keeps the
+  transcode. **No assertion was weakened or removed.** Five existing fixtures did have to change, and
+  all five were internally contradictory in a way the new rule made load-bearing — they described a
+  file size that did not match the bitrate they declared for the same source
+  (`movie(sourceBitRate = 6_500_000, sizeBytes = 2_100_000_000, runTimeTicks = 1h)` is a 6.5 Mbps
+  hour weighing 4.7 Mbps). Each now states a size consistent with its own bitrate and runtime; one
+  (*"a transcoded download of a source under the cap is sized from the source bitrate"*) reports no
+  size at all, which is the case that leaves the preference alone; and the assertions on top of them
+  are unchanged bar one — *"a source whose video codec is not h264 is not a stream copy"* now expects
+  the cap-bound ceiling, because its source had to move above the cap for the transcode to be worth
+  making at all. `SeasonSeedingScenarioTest`'s and `DownloadEnqueuerSizeTest`'s episode fixtures
+  gained the file size their 30–40 Mbps sources imply, which is what keeps those rows transcoded.
+  Full gate green (`ktlintCheck detekt testDebugUnitTest assembleDebug`).
+
+<!-- END -->

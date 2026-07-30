@@ -18,6 +18,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.season
 import dev.jellyfinnative.data.downloads.DownloadFixtures.series
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import dev.jellyfinnative.data.downloads.DownloadFixtures.videoStream
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -46,6 +47,10 @@ import java.util.UUID
  * for a transcode the server will answer by *copying* the video track; and, for a real re-encode, a
  * deterministic ceiling optionally improved by what finished episodes of the same show actually
  * weighed (docs/notes/download-size-estimation.md, schema v6).
+ *
+ * The same arithmetic then decides something larger than a number: a transcode estimated to weigh
+ * what the source already does is not requested at all, and the row is written as an `ORIGINAL`
+ * download instead (docs/features/download-quality.md, "When a transcode is not worth making").
  */
 class DownloadEnqueuerSizeTest {
     private val api = mockk<DownloadApi>()
@@ -124,9 +129,14 @@ class DownloadEnqueuerSizeTest {
                 AppResult.Success(
                     listOf(
                         movie(
-                            // Well under HIGH's cap, so the source's own total bitrate is what the
-                            // old estimate would have used — and it is the wrong number here.
-                            sourceBitRate = 6_500_000,
+                            // A 6 Mbps H.264 picture under a pile of lossless audio: 13,5 Mbps and
+                            // 6 GB in total, which is well under HIGH's cap — so the source's own
+                            // total bitrate is what the old estimate would have used, and it is the
+                            // wrong number here. Dropping the audio tracks is also what makes this
+                            // remux worth asking for at all, rather than a copy of a file the
+                            // fall-back-to-original rule would send us to fetch whole.
+                            sourceBitRate = 13_500_000,
+                            sizeBytes = 6_075_000_000L,
                             runTimeTicks = HOUR_TICKS,
                             streams = listOf(videoStream(bitRate = videoBitRate, height = 1080)),
                         ),
@@ -150,7 +160,10 @@ class DownloadEnqueuerSizeTest {
                 AppResult.Success(
                     listOf(
                         movie(
-                            sourceBitRate = 6_500_000,
+                            // A 30 Mbps remux, above HIGH's cap, so the transcode is worth making
+                            // and the row is not sent back to the original file instead.
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
                             runTimeTicks = HOUR_TICKS,
                             streams = listOf(videoStream(codec = "hevc")),
                         ),
@@ -160,9 +173,10 @@ class DownloadEnqueuerSizeTest {
             enqueuer().enqueue(uuid(1), USER)
 
             // `SupportedVideoCodecs` is our `videoCodec=h264` and the server's test is exact string
-            // equality, so an HEVC source is re-encoded however small it is.
+            // equality, so an HEVC source is re-encoded however small it is — and the figure is the
+            // ordinary ceiling, here the quality's own cap since the source sits above it.
             row.sizeIsExact shouldBe false
-            row.bytesTotal shouldBe 3_600L * 6_500_000 / 8
+            row.bytesTotal shouldBe 3_600L * DownloadQuality.HIGH.totalBitRate!! / 8
         }
 
     @Test
@@ -213,7 +227,8 @@ class DownloadEnqueuerSizeTest {
                 AppResult.Success(
                     listOf(
                         movie(
-                            sourceBitRate = 5_000_000,
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
                             runTimeTicks = HOUR_TICKS,
                             streams = listOf(videoStream(bitRate = null)),
                         ),
@@ -233,7 +248,15 @@ class DownloadEnqueuerSizeTest {
         runTest {
             downloadQuality.value = DownloadQuality.HIGH
             coEvery { api.getFullItems(any()) } returns
-                AppResult.Success(listOf(movie(sourceBitRate = 5_000_000, runTimeTicks = HOUR_TICKS)))
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
 
             enqueuer().enqueue(uuid(1), USER)
 
@@ -248,6 +271,8 @@ class DownloadEnqueuerSizeTest {
                 AppResult.Success(
                     listOf(
                         movie(
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
                             runTimeTicks = HOUR_TICKS,
                             sourceContainer = "avi",
                             streams = listOf(videoStream(bitRate = 4_000_000)),
@@ -281,6 +306,189 @@ class DownloadEnqueuerSizeTest {
             // server's own file size, untouched by any of this.
             row.bytesTotal shouldBe 2_100_000_000L
             row.sizeIsExact shouldBe true
+        }
+
+    // ---- a transcode that would not save space is downloaded as the original ---------------------
+
+    @Test
+    fun `a transcode that would not save space is downloaded as the original instead`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            // A 3,5 Mbps source asked for at LOW (3 Mbps + 192 kbps of audio): the transcode is
+            // estimated at 91 % of the file the server already has. Nine percent is not worth an
+            // encode, a lost resume and a generation of quality.
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = MODEST_BITRATE,
+                            sizeBytes = MODEST_BYTES_PER_HOUR,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // Stamped `ORIGINAL`, so everything downstream follows from the row alone: the download
+            // endpoint, a `Range`-resumable transfer, and the exact size the server measured.
+            row.quality shouldBe DownloadQuality.ORIGINAL
+            row.bytesTotal shouldBe MODEST_BYTES_PER_HOUR
+            row.sizeIsExact shouldBe true
+            row.projectedBytes.shouldBeNull()
+        }
+
+    @Test
+    fun `a transcode saving just over a tenth of the file keeps the quality that was asked for`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            val ceiling = 3_600L * DownloadQuality.LOW.totalBitRate!! / Byte.SIZE_BITS
+            // Exactly 0,89 of the original: one point on the useful side of the 0,9 threshold, so
+            // this pins the boundary rather than the comfortable case above it.
+            val originalBytes = (ceiling / 0.89).toLong()
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = (originalBytes * Byte.SIZE_BITS / 3_600L).toInt(),
+                            sizeBytes = originalBytes,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.quality shouldBe DownloadQuality.LOW
+            row.bytesTotal shouldBe ceiling
+            row.sizeIsExact shouldBe false
+        }
+
+    @Test
+    fun `a stream copy that weighs what the original does is downloaded as the original`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.HIGH
+            // 1080p H.264 at 6 Mbps with one ordinary audio track: HIGH would copy the video
+            // through untouched and re-encode only the audio, landing within half a percent of the
+            // source file. This is the case the rule exists for — paying the server for a copy of
+            // what it already has.
+            val videoBitRate = 6_000_000
+            val sourceBitRate = videoBitRate + 220_000
+            val originalBytes = 3_600L * sourceBitRate / Byte.SIZE_BITS
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = sourceBitRate,
+                            sizeBytes = originalBytes,
+                            runTimeTicks = HOUR_TICKS,
+                            streams = listOf(videoStream(bitRate = videoBitRate, height = 1080)),
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The remux figure the comparison used (2 786 400 000) is *not* what the row carries:
+            // the size that goes with the quality actually stamped is the one that is stored.
+            row.quality shouldBe DownloadQuality.ORIGINAL
+            row.bytesTotal shouldBe originalBytes
+            row.sizeIsExact shouldBe true
+        }
+
+    @Test
+    fun `a source the server reports no size for keeps the quality the user chose`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = MODEST_BITRATE,
+                            sizeBytes = null,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The same source as the first case in this section, minus the one figure the
+            // comparison needs. The preference is the default and a guess is not grounds for
+            // overriding it, so the transcode the user asked for is what is queued.
+            row.quality shouldBe DownloadQuality.LOW
+            row.bytesTotal shouldBe 3_600L * DownloadQuality.LOW.totalBitRate!! / Byte.SIZE_BITS
+        }
+
+    @Test
+    fun `an item with no runtime keeps the quality the user chose, having nothing to compare`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            // A tiny file a transcode could not possibly beat — but with no runtime there is no
+            // estimate to weigh it against, and half a comparison decides nothing.
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(movie(sizeBytes = 1_000_000L, runTimeTicks = null)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.quality shouldBe DownloadQuality.LOW
+            row.bytesTotal shouldBe 0L
+        }
+
+    @Test
+    fun `an original download is stamped as asked, whatever a transcode would have weighed`() =
+        runTest {
+            // The preference is `ORIGINAL` throughout this test: the rule only ever moves a row
+            // *towards* the original, so there is nothing here for it to reconsider.
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
+                            runTimeTicks = HOUR_TICKS,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.quality shouldBe DownloadQuality.ORIGINAL
+            row.bytesTotal shouldBe SOURCE_BYTES_PER_HOUR
+            row.sizeIsExact shouldBe true
+        }
+
+    @Test
+    fun `one episode of a season falls back to the original while another keeps the transcode`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            givenSeasonOf(
+                // A 30 Mbps remux: LOW saves 92 % of it, and is worth every cycle it costs.
+                episode(
+                    id = uuid(2),
+                    runTimeTicks = HOUR_TICKS,
+                    sourceBitRate = SOURCE_BITRATE,
+                    sizeBytes = SOURCE_BYTES_PER_HOUR,
+                ),
+                // A 3,5 Mbps episode of the same season: LOW would save nine percent of it.
+                episode(
+                    id = uuid(3),
+                    episodeNumber = 3,
+                    runTimeTicks = HOUR_TICKS,
+                    sourceBitRate = MODEST_BITRATE,
+                    sizeBytes = MODEST_BYTES_PER_HOUR,
+                ),
+            )
+
+            enqueuer().enqueue(uuid(11), USER)
+
+            // One tap, one preference — but the decision is taken per episode, because the episodes
+            // of one season are not the same file twice.
+            rows.map { it.itemId to it.quality } shouldContainExactly
+                listOf(uuid(2) to DownloadQuality.LOW, uuid(3) to DownloadQuality.ORIGINAL)
+            rows.map { it.sizeIsExact } shouldContainExactly listOf(false, true)
+            rows.map { it.bytesTotal } shouldContainExactly
+                listOf(3_600L * DownloadQuality.LOW.totalBitRate!! / Byte.SIZE_BITS, MODEST_BYTES_PER_HOUR)
         }
 
     // ---- sibling seeding (schema v6) -------------------------------------------------------------
@@ -426,6 +634,10 @@ class DownloadEnqueuerSizeTest {
     /**
      * The episode `uuid(2)` of *Westworld*, an hour long, at a bitrate every transcoded step has to
      * re-encode — so the ceiling is a ceiling, and seeding is allowed to improve on it.
+     *
+     * Its file size is the one that bitrate implies over that runtime, which is also what keeps
+     * these rows transcoded at all: a source this far above every cap has a great deal of space to
+     * save, so the fall-back-to-original rule never fires on it.
      */
     private fun givenTranscodedEpisode(
         runTimeTicks: Long = HOUR_TICKS,
@@ -433,10 +645,26 @@ class DownloadEnqueuerSizeTest {
     ) {
         coEvery { api.getFullItems(listOf(uuid(2))) } returns
             AppResult.Success(
-                listOf(episode(runTimeTicks = runTimeTicks, sourceBitRate = 40_000_000, streams = streams)),
+                listOf(
+                    episode(
+                        runTimeTicks = runTimeTicks,
+                        sizeBytes = runTimeTicks / TICKS_PER_SECOND * SOURCE_BITRATE / Byte.SIZE_BITS,
+                        sourceBitRate = SOURCE_BITRATE,
+                        streams = streams,
+                    ),
+                ),
             )
         coEvery { api.getFullItems(listOf(uuid(10), uuid(11))) } returns
             AppResult.Success(listOf(series(), season()))
+    }
+
+    /** The season `uuid(11)` of *Westworld*, as the server answers for it, with these episodes. */
+    private fun givenSeasonOf(vararg episodes: BaseItemDto) {
+        coEvery { api.getFullItems(listOf(uuid(11))) } returns AppResult.Success(listOf(season()))
+        coEvery { api.getEpisodeIds(uuid(10), uuid(11)) } returns AppResult.Success(episodes.map { it.id })
+        coEvery { api.getFullItems(episodes.map { it.id }) } returns AppResult.Success(episodes.toList())
+        // The season is already being cached by the expansion, so only the series is fetched.
+        coEvery { api.getFullItems(listOf(uuid(10))) } returns AppResult.Success(listOf(series()))
     }
 
     /**
@@ -502,5 +730,26 @@ class DownloadEnqueuerSizeTest {
 
         /** One hour in `runTimeTicks` (100 ns each). */
         const val HOUR_TICKS = 36_000_000_000L
+
+        /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
+        const val TICKS_PER_SECOND = 10_000_000L
+
+        /**
+         * A 30 Mbps source — above every quality step's cap, so a transcode of it genuinely saves
+         * space and the row is not sent back to the original file (`DownloadEnqueuer.planQuality`).
+         */
+        const val SOURCE_BITRATE = 30_000_000
+
+        /** What [SOURCE_BITRATE] weighs over an hour: the file size that bitrate implies. */
+        const val SOURCE_BYTES_PER_HOUR = 3_600L * SOURCE_BITRATE / Byte.SIZE_BITS
+
+        /**
+         * A 3,5 Mbps source — barely above `LOW`'s own ceiling, so a `LOW` transcode of it would
+         * save about nine percent and is not worth making.
+         */
+        const val MODEST_BITRATE = 3_500_000
+
+        /** What [MODEST_BITRATE] weighs over an hour. */
+        const val MODEST_BYTES_PER_HOUR = 3_600L * MODEST_BITRATE / Byte.SIZE_BITS
     }
 }

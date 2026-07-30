@@ -219,6 +219,9 @@ class DownloadEnqueuer
          * not re-read a preference the user can change while the transfer it describes is
          * half-written (DECISIONS.md, 2026-07-29). Enqueuing a whole season therefore fixes one
          * quality for the season, which is also the only answer a user would expect.
+         *
+         * The one thing decided *per row* is whether that quality is worth asking the server for at
+         * all — see [planQuality].
          */
         private suspend fun write(
             userId: UUID,
@@ -245,11 +248,13 @@ class DownloadEnqueuer
                 val rows =
                     targets.map { dto ->
                         val existing = downloadDao.get(dto.id)
-                        val estimate = dto.sizeEstimate(quality)
+                        // Per row, not per tap: a season's 4K episode can be worth transcoding
+                        // while the SD one next to it is not.
+                        val (rowQuality, estimate) = dto.planQuality(quality)
                         val row =
                             dto.toDownloadRow(
                                 userId = userId,
-                                quality = quality,
+                                quality = rowQuality,
                                 now = now,
                                 existing = existing,
                                 position = existing?.queuePosition ?: nextPosition++,
@@ -261,7 +266,7 @@ class DownloadEnqueuer
                                 // why enqueue time is not the only moment seeding happens:
                                 // `SiblingSeeder.seedPendingSiblingsOf` comes back to these rows
                                 // as each episode lands (docs/features/download-quality.md).
-                                projected = dto.siblingSeed(quality, estimate),
+                                projected = dto.siblingSeed(rowQuality, estimate),
                             )
                         downloadDao.upsert(row)
                         row
@@ -303,6 +308,56 @@ class DownloadEnqueuer
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
             )
+
+        /**
+         * The quality this one row is actually written at, and the size that goes with it.
+         *
+         * The user's preference is the answer for every row except one case: a **transcode that
+         * would not save space**. A quality step is a ceiling, not a target — asking `HIGH` of a
+         * source that is already 1080p H.264 under 20 Mbps buys nothing, and the server would spend
+         * an encode (or a stream copy) to hand back a file the size of the one it already has, minus
+         * the extra audio tracks and plus a generation of quality loss. When the arithmetic says
+         * that is what is about to happen, this stamps [DownloadQuality.ORIGINAL] on the row
+         * instead, which is strictly better on every axis the pipeline measures: the exact size the
+         * server reported, a resumable `Range`-honouring transfer, no server CPU, no re-encode.
+         *
+         * ### The comparison
+         * Both halves are computed the way they would be *stamped*, not by a separate rule of their
+         * own: the transcoded figure is [sizeEstimate] of the preferred quality — including the
+         * [remuxBytes] stream-copy path, which is the case this rule catches most often, since a
+         * remux is by construction about the size of the source's own video track — and the original
+         * figure is [sizeEstimate] of [DownloadQuality.ORIGINAL], `mediaSources[0].size`. Comparing
+         * anything other than what would actually be downloaded would let the row be downgraded on
+         * the strength of a number nothing else in the pipeline uses.
+         *
+         * Both figures have to exist. An unknown original size (the server reported none) or an
+         * uncomputable estimate (an item with no runtime) leaves the user's choice alone: the
+         * preference is the default, and a guess is not grounds for overriding it.
+         *
+         * The decision is per row because [write] is handed a whole season at a time and the
+         * episodes under it need not agree — a 4K episode may deserve the transcode while the SD one
+         * beside it does not — and it is made *before* [toDownloadRow] so that `quality`,
+         * `bytesTotal`, `sizeIsExact`, the projector gate and the file plan all describe the same
+         * download.
+         */
+        private fun BaseItemDto.planQuality(preferred: DownloadQuality): PlannedQuality {
+            val chosen = PlannedQuality(preferred, sizeEstimate(preferred))
+            if (!preferred.isTranscoded) return chosen
+
+            val transcodedBytes = chosen.estimate.bytes ?: return chosen
+            val original = sizeEstimate(DownloadQuality.ORIGINAL)
+            val originalBytes = original.bytes?.takeIf { it > 0L } ?: return chosen
+            if (transcodedBytes < ORIGINAL_THRESHOLD * originalBytes) return chosen
+
+            Timber.i(
+                "%s: a %s transcode is estimated at %d bytes against an original of %d — downloading the original",
+                name,
+                preferred,
+                transcodedBytes,
+                originalBytes,
+            )
+            return PlannedQuality(DownloadQuality.ORIGINAL, original)
+        }
 
         /**
          * How big the media file is expected to be, and whether that figure is the size the file
@@ -446,6 +501,22 @@ class DownloadEnqueuer
 
             /** The one input container `CanStreamCopyVideo` has a special case for. */
             const val AVI_CONTAINER = "avi"
+
+            /**
+             * The share of the original file's size a transcode has to come in **under** to be
+             * worth making at all — see [planQuality].
+             *
+             * `0.9`: a transcode that saves less than about a tenth of the file is not a trade, it
+             * is a loss. What it costs is fixed and known — a generation of re-encoding, the
+             * server's CPU for the length of the transfer, no byte-level resume, and a size the
+             * queue can only estimate — and none of that is bought back by a saving the user would
+             * struggle to notice on a storage bar. The margin also absorbs the estimate's own
+             * slack in the right direction: the figure being compared is an upper bound for a real
+             * re-encode, so a transcode judged *just* under the threshold is likely to save rather
+             * more than the arithmetic promises, while one at or over it cannot save meaningfully
+             * less than nothing.
+             */
+            const val ORIGINAL_THRESHOLD = 0.9
         }
     }
 
@@ -463,4 +534,23 @@ class DownloadEnqueuer
 internal data class SizeEstimate(
     val bytes: Long?,
     val exact: Boolean,
+)
+
+/**
+ * The quality one row is written at, together with the size prediction that belongs to *that*
+ * quality.
+ *
+ * The pair is what `DownloadEnqueuer.planQuality` answers, and it travels as a pair for the same
+ * reason [SizeEstimate]'s two fields do: a row downgraded to [DownloadQuality.ORIGINAL] whose
+ * `bytesTotal` was still the transcode's estimate would be a row promising a size for a file it is
+ * not going to fetch.
+ *
+ * @property quality what `DownloadEntity.quality` is stamped with — the user's preference, unless
+ *   the transcode it asks for would not have saved space.
+ * @property estimate the size that [quality] implies, exactly as if it had been the preference all
+ *   along.
+ */
+private data class PlannedQuality(
+    val quality: DownloadQuality,
+    val estimate: SizeEstimate,
 )

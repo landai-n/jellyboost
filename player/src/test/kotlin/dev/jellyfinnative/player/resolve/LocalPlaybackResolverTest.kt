@@ -246,6 +246,8 @@ class LocalPlaybackResolverTest {
     private fun transcodedFilm(
         defaultAudioStreamIndex: Int? = 3,
         defaultSubtitleStreamIndex: Int? = null,
+        bakedAudioStreamIndex: Int? = null,
+        sidecars: List<Int> = listOf(0, 1),
     ) = downloaded(
         mediaSource =
             PlayerFixtures.mediaSourceInfo(
@@ -254,26 +256,52 @@ class LocalPlaybackResolverTest {
                 defaultSubtitleStreamIndex = defaultSubtitleStreamIndex,
             ),
         quality = DownloadQuality.MEDIUM,
-        subtitles =
-            listOf(
-                DownloadedSubtitle(streamIndex = 0, uri = "file:///downloads/s.0.eng.srt"),
-                DownloadedSubtitle(streamIndex = 1, uri = "file:///downloads/s.1.fra.srt"),
-            ),
+        bakedAudioStreamIndex = bakedAudioStreamIndex,
+        subtitles = sidecars.map { DownloadedSubtitle(streamIndex = it, uri = "file:///downloads/s.$it.srt") },
     )
 
     @Test
-    fun `a transcoded download offers only the one audio track the server baked in`() =
+    fun `a transcoded download offers only the one audio track the file holds`() =
         runTest {
+            // No pin on the row — a download written before schema v8. That request named no
+            // audioStreamIndex either, so the server encoded the source's default and dropped the
+            // other two, and assuming that default is exactly right for these rows.
             transcodedFilm()
 
-            // The download URL names no audioStreamIndex, so the server encoded the source's default
-            // and dropped the other two. Offering them is offering a switch that cannot happen.
             val source = resolver.resolve(request).shouldNotBeNull()
 
             source.audioTracks.map { it.index } shouldContainExactly listOf(3)
             source.audioTracks.single().label shouldBe "French VFF"
             source.audioTracks.single().isDefault shouldBe true
             source.selectedAudioIndex shouldBe 3
+        }
+
+    @Test
+    fun `a transcoded download offers the audio track its row recorded, not the source's default`() =
+        runTest {
+            // The download asked for stream 5, so stream 5 is what is in the file — whatever the
+            // source calls default. This is the assumption the M10 track fix flagged, now a record.
+            transcodedFilm(defaultAudioStreamIndex = 3, bakedAudioStreamIndex = 5)
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(5)
+            source.audioTracks.single().label shouldBe "English VO"
+            source.selectedAudioIndex shouldBe 5
+        }
+
+    @Test
+    fun `a pin naming a stream the blob no longer has falls back rather than offering nothing`() =
+        runTest {
+            // The server renumbered its streams between the download and this play; an empty audio
+            // picker on a film that plainly has sound is the worse of the two answers.
+            transcodedFilm(defaultAudioStreamIndex = 3, bakedAudioStreamIndex = 99)
+
+            resolver
+                .resolve(request)
+                .shouldNotBeNull()
+                .audioTracks
+                .map { it.index } shouldContainExactly listOf(3)
         }
 
     @Test
@@ -309,6 +337,81 @@ class LocalPlaybackResolverTest {
                 .shouldNotBeNull()
                 .selectedSubtitleIndex
                 .shouldBeNull()
+        }
+
+    // ---- embedded subtitles that came back as sidecars (phase 0) ---------------------------------
+
+    @Test
+    fun `a transcoded download offers an embedded subtitle whose sidecar is on disk`() =
+        runTest {
+            // Élémentaire's streams 6 and 7 are embedded French SRTs. The transcode dropped them
+            // from the file, and the download fetched each as its own `.srt` — so they are back.
+            transcodedFilm(sidecars = listOf(0, 1, 6, 7))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
+            source.subtitleTracks.single { it.index == 6 }.label shouldBe "French forced"
+            source.externalSubtitles.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
+        }
+
+    @Test
+    fun `a sidecar-backed embedded track is marked side-loaded, so selection matches it by id`() =
+        runTest {
+            transcodedFilm(sidecars = listOf(6))
+
+            val track =
+                resolver
+                    .resolve(request)
+                    .shouldNotBeNull()
+                    .subtitleTracks
+                    .single { it.index == 6 }
+
+            // The stream itself says `isExternal = false`. What the flag has to describe here is how
+            // the track reaches ExoPlayer, because `TrackSelectionController` counts anything not
+            // flagged among the *container's* text groups — of which a transcode has none.
+            track.isExternal shouldBe true
+        }
+
+    @Test
+    fun `an embedded subtitle with no sidecar is still withheld from a transcoded download`() =
+        runTest {
+            transcodedFilm(sidecars = listOf(6))
+
+            // Stream 7 was never fetched — an older row, or an optional file that failed. Offering
+            // it would be a picker entry that cannot be satisfied and no server to re-ask.
+            resolver
+                .resolve(request)
+                .shouldNotBeNull()
+                .subtitleTracks
+                .map { it.index } shouldContainExactly
+                listOf(6)
+        }
+
+    @Test
+    fun `a default subtitle the sidecar restored is preselected again`() =
+        runTest {
+            transcodedFilm(defaultSubtitleStreamIndex = 6, sidecars = listOf(6))
+
+            resolver.resolve(request).shouldNotBeNull().selectedSubtitleIndex shouldBe 6
+        }
+
+    @Test
+    fun `an original download's embedded track is not marked side-loaded`() =
+        runTest {
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(mediaStreams = transcodedFilmStreams(), defaultAudioStreamIndex = 3),
+                quality = DownloadQuality.ORIGINAL,
+            )
+
+            // It plays out of the container, and the planner deliberately fetches no sidecar for it.
+            resolver
+                .resolve(request)
+                .shouldNotBeNull()
+                .subtitleTracks
+                .single { it.index == 6 }
+                .isExternal shouldBe false
         }
 
     @Test
@@ -419,10 +522,12 @@ class LocalPlaybackResolverTest {
             trickplay.tileFor(positionMs = 0L).shouldNotBeNull().uri shouldBe "file:///t.0.jpg"
         }
 
+    @Suppress("LongParameterList")
     private fun downloaded(
         mediaSource: MediaSourceInfo? = PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true),
         runTimeTicks: Long = PlayerFixtures.RUN_TIME_TICKS,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
+        bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ) {
@@ -431,6 +536,7 @@ class LocalPlaybackResolverTest {
                 mediaSource = mediaSource,
                 runTimeTicks = runTimeTicks,
                 quality = quality,
+                bakedAudioStreamIndex = bakedAudioStreamIndex,
                 subtitles = subtitles,
                 trickplay = trickplay,
             )

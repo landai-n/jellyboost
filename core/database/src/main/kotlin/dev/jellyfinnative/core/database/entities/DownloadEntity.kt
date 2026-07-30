@@ -59,6 +59,15 @@ import java.util.UUID
  *   (docs/notes/audit-2026-07.md, STAB-01). Enqueue writes a whole row, and *Resume* clears the
  *   column, so a user-initiated attempt always starts from a full budget. Column default `0`, which
  *   is what every row written before v7 means: nothing has failed on it yet.
+ * @property bakedAudioStreamIndex the **absolute** `MediaStream.index` of the one audio track a
+ *   transcoded download asked the server to encode (schema v8). `null` for an `ORIGINAL` row, which
+ *   holds every audio track of the source and needs no pin; `null` too for a row the
+ *   transcode-fallback downgraded to `ORIGINAL` before it was written, and for a transcoded item
+ *   with no audio streams at all. It exists because the cached `BaseItemDto` describes the *source*:
+ *   without it, offline playback can only guess which of the source's tracks survived into the file,
+ *   and the guess it used to make (`MediaSourceInfo.defaultAudioStreamIndex`) is exactly the
+ *   assumption the M10 track fix flagged. Rows written before v8 read back `NULL` and keep that
+ *   fallback.
  * @property errorMessage last failure, kept so the queue tab can say *why* an item is in
  *   [DownloadStatus.ERROR] instead of just that it is.
  * @property createdAt when the item was enqueued; the *Downloaded* tab's default ordering.
@@ -87,6 +96,7 @@ data class DownloadEntity(
     val queuePosition: Int = 0,
     @ColumnInfo(defaultValue = "0")
     val attemptCount: Int = 0,
+    val bakedAudioStreamIndex: Int? = null,
     /** Directory name under the storage root, e.g. `Westworld - S01E02 - Chestnut`. */
     val directoryName: String,
     val itemName: String,

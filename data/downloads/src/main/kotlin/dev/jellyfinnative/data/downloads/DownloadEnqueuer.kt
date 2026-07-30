@@ -11,6 +11,7 @@ import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.plan.DownloadPaths
+import dev.jellyfinnative.data.downloads.plan.downloadAudioStreamIndex
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -300,6 +301,11 @@ class DownloadEnqueuer
                 bytesTotal = estimate.bytes ?: existing?.bytesTotal ?: 0L,
                 projectedBytes = projected,
                 sizeIsExact = estimate.exact,
+                // Only a transcode bakes one track in, and [quality] here is what the row is
+                // *actually* written at — so a row the fallback in [planQuality] downgraded to
+                // ORIGINAL records no pin, which is correct: that file will hold every audio
+                // track of the source.
+                bakedAudioStreamIndex = downloadAudioStreamIndex.takeIf { quality.isTranscoded },
                 queuePosition = position,
                 directoryName = DownloadPaths.itemDirectoryName(this),
                 itemName = name.orEmpty().ifBlank { id.toString() },
@@ -405,6 +411,11 @@ class DownloadEnqueuer
          * arithmetic rather than a guess: the source's own video bytes, plus the one AAC track we
          * always ask for at [DownloadQuality.AUDIO_BITRATE] (`allowAudioStreamCopy=false`, so audio
          * is re-encoded whatever the source was). Matroska's own overhead is well under a percent.
+         *
+         * Naming an `audioStreamIndex` (schema v8) does not disturb this: the request still yields
+         * exactly one AAC track at the same bitrate, and the index it names is the one the server
+         * would have chosen for itself. The estimate therefore still describes what is actually
+         * requested — which is the property `planQuality` compares against the original's size.
          *
          * ### The conditions, and how far they are verified
          * Checked against `EncodingHelper.CanStreamCopyVideo` in jellyfin `release-10.11.z` (the

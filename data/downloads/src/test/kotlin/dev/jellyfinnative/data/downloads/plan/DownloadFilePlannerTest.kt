@@ -2,6 +2,7 @@ package dev.jellyfinnative.data.downloads.plan
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
 import dev.jellyfinnative.core.common.model.DownloadQuality
+import dev.jellyfinnative.data.downloads.DownloadFixtures.audioStream
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.season
@@ -15,6 +16,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import org.junit.jupiter.api.Test
@@ -153,14 +155,90 @@ class DownloadFilePlannerTest {
     }
 
     @Test
-    fun `quality changes the media file and nothing else`() {
+    fun `quality changes the media file and the embedded-subtitle sidecars, and nothing else`() {
         val item = movie(backdropTag = "backdrop", streams = listOf(subtitleStream(index = 3)))
 
         val original = planner.plan(item, DIRECTORY)
         val transcoded = planner.plan(item, DIRECTORY, quality = DownloadQuality.HIGH)
 
+        // The item's one subtitle here is genuinely external, so it is fetched at either quality —
+        // artwork and tiles are quality-independent, and this pins that they stay so.
         original.filterNot { it.type == DownloadFileType.MEDIA } shouldContainExactly
             transcoded.filterNot { it.type == DownloadFileType.MEDIA }
+    }
+
+    // ---- the baked audio track (schema v7) ------------------------------------------------------
+
+    @Test
+    fun `a transcode names the audio track it wants baked in`() {
+        // `/Videos/{id}/stream.mkv` takes exactly one audioStreamIndex and drops every other track.
+        // Naming it is what lets the download row record which one survived.
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)), defaultAudioStreamIndex = 2),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
+
+        plan.media().url shouldContain "audioStreamIndex=2"
+    }
+
+    @Test
+    fun `a transcode falls back to the first audio stream when the item declares no default`() {
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1), audioStream(index = 2))),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
+
+        plan.media().url shouldContain "audioStreamIndex=1"
+    }
+
+    @Test
+    fun `a default that names no audio stream is ignored rather than passed on`() {
+        // A stale or subtitle-shaped index would ask the server to encode a track that is not audio.
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1)), defaultAudioStreamIndex = 9),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
+
+        plan.media().url shouldContain "audioStreamIndex=1"
+    }
+
+    @Test
+    fun `an item with no audio streams asks for no audio track at all`() {
+        val plan = planner.plan(movie(), DIRECTORY, quality = DownloadQuality.MEDIUM)
+
+        plan.media().url shouldNotContain "audioStreamIndex"
+    }
+
+    @Test
+    fun `an original download names no audio track, because it keeps them all`() {
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1)), defaultAudioStreamIndex = 1),
+                DIRECTORY,
+            )
+
+        plan.media().url shouldBe "download://${uuid(1)}"
+    }
+
+    @Test
+    fun `an explicit audio index overrides the item's own default`() {
+        // The seam a preferred-audio-language choice enters through: only the download row would
+        // remember it, and only the row can hand it back on a later re-plan.
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)), defaultAudioStreamIndex = 1),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+                audioStreamIndex = 2,
+            )
+
+        plan.media().url shouldContain "audioStreamIndex=2"
     }
 
     // ---- images ---------------------------------------------------------------------------------
@@ -212,10 +290,48 @@ class DownloadFilePlannerTest {
     }
 
     @Test
-    fun `embedded subtitle streams are skipped`() {
-        // An embedded track travels inside the media file; fetching it separately would be a
-        // second copy of bytes we already have.
+    fun `an original download skips embedded subtitle streams`() {
+        // The file it is about to fetch *is* the source, embedded track and all; a sidecar would be
+        // a second copy of bytes we already have — and a second route to one picker entry.
         val plan = planner.plan(movie(streams = listOf(subtitleStream(index = 3, external = false))), DIRECTORY)
+
+        plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a transcode fetches a sidecar for every embedded text subtitle`() {
+        // The transcoder maps at most one subtitle and drops the rest, so on this path the sidecar
+        // is the only copy there will ever be (docs/notes/offline-multitrack-design.md, phase 0).
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(
+                            subtitleStream(index = 6, codec = "subrip", language = "fra", external = false),
+                            subtitleStream(index = 7, codec = "subrip", language = "fra", external = false),
+                        ),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
+
+        plan.filter { it.type == DownloadFileType.SUBTITLE }.map { it.fileName } shouldContainExactly
+            listOf("subtitle.6.fra.srt", "subtitle.7.fra.srt")
+    }
+
+    @Test
+    fun `a stream the server will not hand over separately is never asked for`() {
+        // `supportsExternalStream = false` is the server saying it cannot extract this one; asking
+        // anyway is a 404 the queue would log for every optional file of every download.
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(subtitleStream(index = 3, external = false, supportsExternalStream = false)),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
 
         plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
     }
@@ -227,6 +343,41 @@ class DownloadFilePlannerTest {
         val plan = planner.plan(movie(streams = listOf(subtitleStream(index = 3, codec = "pgssub"))), DIRECTORY)
 
         plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a bitmap subtitle stays skipped at a transcoded quality, embedded or not`() {
+        // The one genuine casualty of a transcode: no OCR, and no side-loading a `.sup`. It survives
+        // in an ORIGINAL download and nowhere else.
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(
+                            subtitleStream(index = 8, codec = "pgssub", external = false),
+                            subtitleStream(index = 9, codec = "dvdsub", external = true),
+                        ),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.LOW,
+            )
+
+        plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `an external sidecar is fetched at every quality`() {
+        DownloadQuality.entries.forEach { quality ->
+            val plan =
+                planner.plan(
+                    movie(streams = listOf(subtitleStream(index = 3, language = "eng"))),
+                    DIRECTORY,
+                    quality = quality,
+                )
+
+            plan.filter { it.type == DownloadFileType.SUBTITLE }.map { it.fileName } shouldContainExactly
+                listOf("subtitle.3.eng.srt")
+        }
     }
 
     @Test
@@ -331,8 +482,11 @@ private class FakeDownloadUrlFactory : DownloadUrlFactory {
         itemId: UUID,
         mediaSourceId: String?,
         quality: DownloadQuality,
+        audioStreamIndex: Int?,
     ) = "transcode://$itemId?mediaSourceId=$mediaSourceId&quality=${quality.name}" +
-        "&videoBitRate=${quality.videoBitRate}&maxHeight=${quality.maxHeight}"
+        "&videoBitRate=${quality.videoBitRate}&maxHeight=${quality.maxHeight}" +
+        // Absent rather than `audioStreamIndex=null`, so a test can assert on either.
+        audioStreamIndex?.let { "&audioStreamIndex=$it" }.orEmpty()
 
     override fun imageUrl(
         itemId: UUID,

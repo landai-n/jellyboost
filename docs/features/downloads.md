@@ -61,6 +61,7 @@ DownloadRepository.enqueue(itemId)
 | `DownloadEnqueuer` | `:data:downloads` | The full-fields re-fetch, the `source = DOWNLOAD` cache write for the item **and its parents**, the `DownloadEntity` rows — and the expansion of a season or series into one download per episode. |
 | `DownloadApi` / `SdkDownloadApi` | `:data:downloads` | The SDK calls the pipeline makes (`getItems` for the full DTOs, `/Shows/{id}/Episodes` for a container's children), behind a seam so enqueueing is unit-testable. |
 | `DownloadedMetadataRefresher` | `:data:downloads` | **Ongoing sync, not dead migration code.** Re-runs the enqueuer's cache write for **every** downloaded item (and its parents) once per stretch of connectivity, so a download's cached metadata keeps tracking the server's — retitles, artwork changes, corrected overviews, renumbered episodes. Healing rows an older build gutted is the first thing it happens to do, not its purpose. See `docs/features/offline-read.md`, "Downloaded metadata stays current". |
+| `SubtitleSidecarTopUp` | `:data:downloads` | Fetches the subtitle sidecars a **finished** download is missing — an older row whose file plan predates a planner change, or an optional file that failed. Driven by `DownloadedMetadataRefresher`; never touches the media file. See [Repairing a finished download](#repairing-a-finished-download). |
 | `isFolderItem` (`FolderItems.kt`) | `:data:downloads` | The one predicate for "this is a folder, not a video" — `isFolder`, with a kind list as the fallback. |
 | `DownloadFilePlanner` | `:data:downloads` | `BaseItemDto` → ordered `List<PlannedFile>`, with the essential/optional split. |
 | `DownloadUrlFactory` / `SdkDownloadUrlFactory` | `:data:downloads` | Every URL the pipeline fetches, behind a seam (a real `ApiClient` has no base URL in a JVM test). |
@@ -138,9 +139,17 @@ Order is the contract:
 3. **`IMAGE_BACKDROP`** — `backdrop.webp`, 1280 px (the offline detail header draws it full-bleed).
 4. **`IMAGE_SERIES_PRIMARY`** — `series-primary.webp`, 300 px; lets a downloaded episode render its
    show offline without the series being downloaded.
-5. **`SUBTITLE`** — `subtitle.<index>.<lang>.<ext>`, one per *external text* stream. Embedded tracks
-   are skipped (they travel inside the media file); bitmap formats (PGS, VobSub) are skipped because
-   ExoPlayer cannot play them from a sidecar file.
+5. **`SUBTITLE`** — `subtitle.<index>.<lang>.<ext>`, one per text stream the server will hand over
+   separately (`MediaStream.supportsExternalStream`). Which streams those are depends on the
+   quality:
+   - an **external** stream is its own file already and is fetched at every quality;
+   - an **embedded** stream is fetched **only for a transcoded download**, because the transcoder
+     drops it and the sidecar becomes the only copy. At `ORIGINAL` it is skipped: the file being
+     fetched already contains it, so a sidecar would be a duplicate — and a second route to one
+     picker entry.
+
+   Bitmap formats (PGS, VobSub) are skipped at every quality because ExoPlayer cannot play them
+   from a sidecar file; they survive in an `ORIGINAL` download and nowhere else.
 6. **`TRICKPLAY_TILE`** — `trickplay.<width>.<index>.jpg`, only the widest resolution the server
    generated. The tile count is derived: `ceil(thumbnailCount / (tileWidth × tileHeight))`.
 
@@ -175,6 +184,29 @@ video stream. See DECISIONS.md, 2026-07-28.
 **URLs are rebuilt on every run**, never read back from the row: `ServerReachabilityProbe` rotates
 the base URL between LAN and remote, so an item queued at home and run elsewhere must be fetched
 from the address that answers *now*.
+
+---
+
+### Repairing a finished download
+
+The file plan is not fixed for all time, and an optional file is allowed to fail. Both leave a
+finished download poorer than the same item downloaded today — an older transcoded row holds fewer
+subtitles than a fresh one, and there is nothing in the queue that ever revisits a `DOWNLOADED` row.
+
+`SubtitleSidecarTopUp` closes that, driven by `DownloadedMetadataRefresher` (once per stretch of
+connectivity, with the fresh DTOs that pass already fetched). For each **finished** row it re-plans
+at *the row's own quality*, keeps the `SUBTITLE` entries whose file is not on disk, and fetches
+those and nothing else.
+
+It is deliberately not "put the row back in the queue". The queue walks every file of the plan, and
+the media file of a transcoded row cannot be resumed — the server ignores `Range` on a live
+transcode, answers `200`, and `FileDownloader` truncates and rewrites from zero. Re-queueing to
+collect a 40 KB subtitle would spend the whole download again.
+
+Guarantees: a complete sidecar is never re-fetched (so a pass over a healthy device costs one Room
+read per item); the media file is never touched; a row still in the queue is left entirely to the
+queue; and nothing it does can throw — a failure leaves exactly the gap that was already there, and
+the next connectivity edge tries again.
 
 ---
 
@@ -369,14 +401,15 @@ delete do not.
 | Suite | Covers |
 |---|---|
 | `DownloadPathsTest` | naming, exFAT sanitising, the ` - ` separator, filename fallbacks |
-| `DownloadFilePlannerTest` | plan order, essential split, subtitle/trickplay selection, the 403 fallback URL |
+| `DownloadFilePlannerTest` | plan order, essential split, subtitle/trickplay selection, the 403 fallback URL, the embedded-subtitle sidecars a transcode adds (and an `ORIGINAL` download does not), `supportsExternalStream = false` and bitmap codecs excluded at every quality, the baked `audioStreamIndex` |
 | `FileDownloaderTest` | `200` / `206` / `416` / error, the `Range` header, the auth header, resume offsets, cancellation leaving the partial file |
 | `ProgressThrottleTest` | the 500 ms-or-1 % rule, unknown totals |
 | `DownloadQueueTest` | status machine, essential vs optional failure, the 403 retry, cancellation re-queue, plan reuse across retries, the session gate, deletion mid-transfer |
 | `DownloadSessionGateTest` | cold-start restore, no-session parking, a token-less client |
 | `DownloadErrorCopyTest` | every failure maps to user copy; SDK internals never reach the row |
 | `DownloadEnqueuerTest` | full re-fetch, parent caching, `source = DOWNLOAD`, queue position, re-enqueue |
-| `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write) |
+| `SubtitleSidecarTopUpTest` | a finished transcode gaining the sidecars it was downloaded without; the media file never being among the fetches; the fetched file recorded as downloaded with its bytes; a failed sidecar retried on its existing row and under its existing name; a row whose file vanished re-fetched; a complete sidecar left alone; an `ORIGINAL` download given nothing; a row still in the queue left to the queue; a bitmap track never repaired; one sidecar failing not costing the next; an unavailable volume and a folder item survived |
+| `DownloadedMetadataRefresherTest` | when it fires (app start online, the return of the connection, never while offline, once per stretch, re-armed by losing it, no API call with nothing downloaded); what it writes (`source = DOWNLOAD`, parents, batching at 50, `cachedAt` preserved for an existing row and stamped for a new one); what it survives (a failing fetch, one failing batch of several, a remotely deleted item, a failing parent fetch, no session, an unreadable table, a failing write); and the file top-up (each pass offering its fresh DTOs, parents excluded, nothing offered when the fetch failed, a failing top-up not costing the metadata write) |
 | `DownloadDeleterTest` | file-before-rows ordering, the surviving-parent set, user-data prune |
 | `DownloadRepositoryImplTest` | status → badge mapping, mutation ordering, reordering |
 | `DownloadsViewModelTest` | tab split, grouping, actions, reorder bounds, the queue-wide actions (which statuses each one touches, the transcode message, the cancel-all confirmation) |

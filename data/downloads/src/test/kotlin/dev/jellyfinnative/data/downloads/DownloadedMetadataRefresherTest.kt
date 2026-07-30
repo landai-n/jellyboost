@@ -68,6 +68,7 @@ class DownloadedMetadataRefresherTest {
     private val downloadDao = mockk<DownloadDao>()
     private val itemDao = mockk<ItemDao>(relaxUnitFun = true)
     private val mapper = mockk<ItemEntityMapper>()
+    private val sidecars = mockk<SubtitleSidecarTopUp>()
     private val clock = Clock.fixed(REFRESHED_AT, ZoneOffset.UTC)
 
     private val upserted = slot<List<ItemEntity>>()
@@ -78,6 +79,7 @@ class DownloadedMetadataRefresherTest {
         coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { itemDao.getCacheKeys(any()) } returns emptyList()
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
+        coEvery { sidecars.topUp(any()) } returns 0
         // `toEntity` is overloaded (items and library views), so the argument types are explicit.
         every { mapper.toEntity(any<BaseItemDto>(), any<ItemSource>(), any<Instant>()) } answers {
             entity(firstArg(), secondArg(), thirdArg())
@@ -274,6 +276,57 @@ class DownloadedMetadataRefresherTest {
             upserted.captured.size shouldBe 120
         }
 
+    // ---- the file top-up -------------------------------------------------------------------------
+
+    @Test
+    fun `each pass offers its fresh DTOs to the sidecar top-up`() =
+        runTest {
+            givenDownloads(uuid(1))
+
+            refresher().refresh()
+
+            // The DTOs, not the ids: the top-up plans from them, and a stale cached blob is exactly
+            // what would plan the wrong stream set.
+            coVerify(exactly = 1) { sidecars.topUp(match { items -> items.map { it.id } == listOf(uuid(1)) }) }
+        }
+
+    @Test
+    fun `parents are not offered to the top-up, having no files of their own`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(2))
+            coEvery { api.getFullItems(listOf(uuid(2))) } returns AppResult.Success(listOf(episode()))
+            coEvery { api.getFullItems(listOf(uuid(10), uuid(11))) } returns
+                AppResult.Success(listOf(series(), season()))
+
+            refresher().refresh()
+
+            coVerify { sidecars.topUp(match { items -> items.map { it.id } == listOf(uuid(2)) }) }
+        }
+
+    @Test
+    fun `a failing fetch tops up nothing either`() =
+        runTest {
+            givenDownloads(uuid(1))
+            coEvery { api.getFullItems(any()) } returns AppResult.Failure(AppError.Network())
+
+            refresher().refresh()
+
+            coVerify(exactly = 0) { sidecars.topUp(any()) }
+        }
+
+    @Test
+    fun `a failing top-up does not cost the metadata pass its write`() =
+        runTest {
+            givenDownloads(uuid(1))
+            coEvery { sidecars.topUp(any()) } throws IOException("no storage volume")
+
+            refresher().refresh()
+
+            // The write already happened; a small optional file failing must not undo it, and the
+            // next connectivity edge tries the top-up again anyway.
+            coVerify(exactly = 1) { itemDao.upsert(any()) }
+        }
+
     // ---- what it survives ------------------------------------------------------------------------
 
     @Test
@@ -404,6 +457,7 @@ class DownloadedMetadataRefresherTest {
             downloadDao = downloadDao,
             itemDao = itemDao,
             mapper = mapper,
+            sidecars = sidecars,
             clock = clock,
             scope = backgroundScope,
             ioDispatcher = UnconfinedTestDispatcher(testScheduler),

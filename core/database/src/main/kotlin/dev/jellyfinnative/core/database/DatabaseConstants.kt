@@ -19,6 +19,8 @@ object DatabaseConstants {
      *   `downloads.sizeIsExact` default `0`), by `@AutoMigration(5, 6)`.
      * - v7 — bounded retry of transient download failures (`downloads.attemptCount`, default `0`),
      *   by `@AutoMigration(6, 7)`.
+     * - v8 — the audio track a transcode baked in (`downloads.bakedAudioStreamIndex`, nullable),
+     *   by `@AutoMigration(7, 8)`.
      */
-    const val DATABASE_VERSION = 7
+    const val DATABASE_VERSION = 8
 }

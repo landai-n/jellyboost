@@ -13,6 +13,7 @@ import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
+import dev.jellyfinnative.data.downloads.DownloadFixtures.audioStream
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.season
@@ -21,6 +22,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
@@ -255,6 +257,96 @@ class DownloadEnqueuerTest {
             // Stored, not re-read later: the queue plans every run from this column, so a user who
             // changes the setting mid-transfer cannot make the pipeline append incompatible bytes.
             row.quality shouldBe DownloadQuality.MEDIUM
+        }
+
+    // ---- the baked audio track (schema v8) -------------------------------------------------------
+
+    @Test
+    fun `a transcoded row records the audio track the download asked the server to bake in`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.MEDIUM
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            streams = listOf(audioStream(index = 1), audioStream(index = 2, language = "fra")),
+                            defaultAudioStreamIndex = 2,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The file will hold exactly one audio track; the cached blob still describes three, so
+            // this column is the only thing that knows which of them survived.
+            row.bakedAudioStreamIndex shouldBe 2
+        }
+
+    @Test
+    fun `a transcoded row falls back to the first audio stream when nothing is default`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)))))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.bakedAudioStreamIndex shouldBe 1
+        }
+
+    @Test
+    fun `an original row records no baked track, because it keeps them all`() =
+        runTest {
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(movie(streams = listOf(audioStream(index = 1)), defaultAudioStreamIndex = 1)),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.bakedAudioStreamIndex.shouldBeNull()
+        }
+
+    @Test
+    fun `a transcoded item with no audio streams records no baked track either`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.MEDIUM
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The URL names no index either; a pin for a track that does not exist would be a lie
+            // the offline picker would then label from.
+            row.bakedAudioStreamIndex.shouldBeNull()
+        }
+
+    @Test
+    fun `each episode of a season records its own baked track`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.MEDIUM
+            givenSeason(episodeIds = listOf(uuid(2), uuid(3)))
+            coEvery { api.getFullItems(listOf(uuid(2), uuid(3))) } returns
+                AppResult.Success(
+                    listOf(
+                        episode(
+                            id = uuid(2),
+                            streams = listOf(audioStream(index = 1), audioStream(index = 2)),
+                            defaultAudioStreamIndex = 2,
+                        ),
+                        episode(
+                            id = uuid(3),
+                            episodeNumber = 3,
+                            streams = listOf(audioStream(index = 1), audioStream(index = 4)),
+                            defaultAudioStreamIndex = 4,
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(11), USER)
+
+            // One quality for the whole season, but the stream numbering is each episode's own —
+            // a season-wide index would name a different language halfway through the show.
+            rows.map { it.bakedAudioStreamIndex } shouldContainExactly listOf(2, 4)
         }
 
     @Test

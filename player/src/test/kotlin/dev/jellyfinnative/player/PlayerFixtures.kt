@@ -195,10 +195,12 @@ internal object PlayerFixtures {
         )
 
     /** What `DownloadedMediaProvider` hands `LocalPlaybackResolver`. */
+    @Suppress("LongParameterList")
     fun downloadedMedia(
         mediaSource: MediaSourceInfo? = mediaSourceInfo(supportsDirectPlay = true),
         runTimeTicks: Long = RUN_TIME_TICKS,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
+        bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ): DownloadedMedia =
@@ -209,6 +211,7 @@ internal object PlayerFixtures {
             mediaUri = LOCAL_MEDIA_URI,
             runTimeTicks = runTimeTicks,
             quality = quality,
+            bakedAudioStreamIndex = bakedAudioStreamIndex,
             subtitles = subtitles,
             trickplay = trickplay,
         )

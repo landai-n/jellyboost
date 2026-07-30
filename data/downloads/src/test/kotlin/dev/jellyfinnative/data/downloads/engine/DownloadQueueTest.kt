@@ -298,13 +298,15 @@ class DownloadQueueTest {
     fun `the plan is built from the quality on the row, not from the live preference`() =
         runTest {
             queueWith(download(quality = DownloadQuality.MEDIUM))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
+            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
             // The bytes already on disk were fetched at this quality; re-reading the preference
             // here is what would let a setting change corrupt a half-finished file.
-            verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM) }
+            // The fourth argument is the baked audio track (schema v7); this fixture's movie has no
+            // audio streams at all, so the request names none rather than an index of nothing.
+            verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM, null) }
             coVerify(exactly = 0) { urls.mediaUrl(any()) }
         }
 
@@ -314,7 +316,7 @@ class DownloadQueueTest {
             // That fallback exists to route around `enableContentDownloading`; taking it here would
             // hand the user the original file they asked the server to shrink.
             queueWith(download(quality = DownloadQuality.LOW))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
+            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
             coEvery { downloader.download("https://server/videos/stream.mkv", any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 403, url = "https://server/videos/stream.mkv")
 
@@ -330,7 +332,7 @@ class DownloadQueueTest {
             // running. Without the estimate the item's total would collapse onto its downloaded
             // bytes and the queue tab would read 100 % from the first chunk.
             queueWith(download(quality = DownloadQuality.MEDIUM, bytesTotal = 4_000L))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns "https://server/videos/stream.mkv"
+            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
             coEvery { downloader.download(any(), any(), any(), any(), any()) } coAnswers {
                 // The fifth argument, not the last: MockK hands a suspending call its continuation.
                 arg<ProgressCallback>(4).onProgress(300L, 0L)
@@ -441,7 +443,7 @@ class DownloadQueueTest {
         runTest {
             every { itemMapper.toDtoOrNull(any()) } returns movie(runTimeTicks = null)
             queueWith(download(quality = DownloadQuality.LOW, bytesTotal = 10_000_000L))
-            every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
+            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
             givenMediaStream(clusterMillis = 3_600_000L, reportedBytes = 2_000L)
 
             queue().drain(listener)
@@ -714,7 +716,7 @@ class DownloadQueueTest {
         seriesName: String? = null,
     ) {
         every { itemMapper.toDtoOrNull(any()) } returns movie(runTimeTicks = HOUR_TICKS)
-        every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
+        every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
         queueWith(
             download(
                 quality = DownloadQuality.LOW,

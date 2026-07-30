@@ -1338,3 +1338,46 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `SecureCredentialStore.consumeLostSession()` / `SessionRepository.consumeInvoluntarySignOut()`.
 
 <!-- END -->
+
+## 2026-07-30 — offline multi-track phases 0–1: embedded text subtitles as sidecars, the baked audio track pinned and recorded (user-approved)
+
+- **Scope:** `data/downloads` (`DownloadFilePlanner`, `DownloadUrlFactory`, `DownloadEnqueuer`,
+  new `SubtitleSidecarTopUp` + `plan/DownloadAudioSelection`, `DownloadedMetadataRefresher`,
+  offline provider), `core/database` (schema **v8**: `downloads.bakedAudioStreamIndex`, nullable,
+  `@AutoMigration(7, 8)`), `player/resolve` (`LocalPlaybackResolver`, `toTrack` gains
+  `sideLoaded`), feature docs. Spec: `docs/notes/offline-multitrack-design.md` (user approved
+  phases 0+1 in-session; deviations recorded in the note's header and here).
+- **Plan said:** the file plan fetches sidecars for *external* text subtitles only
+  (`stream.isExternal`); a finished download is immutable; the transcode URL names no
+  `audioStreamIndex`; the design note said "drop the isExternal filter" unconditionally,
+  "selection needs no work", and migration "6→7".
+- **Done instead:**
+  1. A transcoded download fetches a server-extracted sidecar for **every** text subtitle with
+     `supportsExternalStream` — embedded ones included; at ORIGINAL only genuinely external
+     streams are fetched (the file already holds the embedded ones; a sidecar would duplicate
+     bytes and give the picker two routes to one track, the `external:` id silently winning).
+     Bitmap subtitles stay ORIGINAL-only.
+  2. **"Downloaded" is no longer immutable:** `SubtitleSidecarTopUp` (behind the metadata
+     refresher's once-per-online-stretch gate) fetches missing subtitle sidecars for
+     `DOWNLOADED` rows — subtitle files only, absent-or-not-on-disk only, never the media file
+     (a transcode ignores `Range`, so re-queueing would re-download the film). Repair-path
+     question answered as *silent top-up*, no UI.
+  3. The transcode request pins `audioStreamIndex` (item default → first audio → omitted) and
+     records it in `bakedAudioStreamIndex`; nulled for ORIGINAL rows including
+     fallback-downgraded ones. The offline picker labels the baked track from the row, falling
+     back to the legacy default-then-first chain for pre-v8 rows.
+  4. `PlaybackTrack.isExternal`'s meaning narrows to "reaches ExoPlayer side-loaded": a
+     sidecar-backed *embedded* track is flagged side-loaded so selection routes through the
+     `external:<index>` id instead of miscounting container groups ("selection needs no work"
+     was wrong upstream of the controller).
+  5. Migration is 7→8, not the note's 6→7 — the retry work landed `attemptCount` as v7 first.
+- **Tests renamed, not weakened:** `embedded subtitle streams are skipped` →
+  `an original download skips embedded subtitle streams` (the fixture's
+  `supportsExternalStream` no longer falsely derives from `isExternal`, so the test now passes
+  for the right reason); `…the one audio track the server baked in` → `…the one audio track the
+  file holds` (now exercises the legacy-NULL path). Assertions preserved.
+- **Follow-up owed:** once the queue fence lifts, `DownloadQueue.reconcile` should pass
+  `download.bakedAudioStreamIndex` into `plan()` instead of re-deriving it — required the day a
+  preferred-language preference exists; today both routes derive the same index from the same DTO.
+
+<!-- END -->

@@ -290,7 +290,7 @@ class SeasonSeedingScenarioTest {
     private fun givenTheTransfer() {
         every { storage.prepareItemDirectory(any()) } returns File("/tmp/downloads")
         every { storage.resolve(any(), any()) } answers { File("/tmp/downloads/${secondArg<String>()}") }
-        every { urls.transcodedVideoUrl(any(), any(), any()) } returns TRANSCODE_URL
+        every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
         every { urls.imageUrl(any(), any(), any(), any()) } returns IMAGE_URL
         coEvery { downloader.download(TRANSCODE_URL, any(), any(), any(), any()) } returns MEDIA_BYTES
         coEvery { downloader.download(IMAGE_URL, any(), any(), any(), any()) } returns IMAGE_BYTES

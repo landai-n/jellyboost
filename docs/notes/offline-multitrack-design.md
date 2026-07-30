@@ -1,5 +1,36 @@
 # Offline multi-track downloads — design study (2026-07-30)
 
+> **Implemented 2026-07-30 (phases 0–1).** Phase 2 is untouched and still awaits the `/Audio`
+> endpoint check. Where the code differs from what is written below:
+>
+> - **Phase 0 is quality-conditional, not unconditional.** The `stream.isExternal` filter is gone
+>   as described, but an *embedded* stream only earns a sidecar when the row's quality is
+>   **transcoded**. At `ORIGINAL` the file being fetched already contains that track, so a sidecar
+>   would be a duplicate download — and a second route to one picker entry, with the `external:`
+>   id-match silently winning over the container's own copy. External streams are unchanged at every
+>   quality.
+> - **Selection did need work after all**, though not in `TrackSelectionController`, which already
+>   tries the id-match first and is therefore correct by construction. What was missing was upstream:
+>   `MediaStream.isExternal` is `false` for a sidecar-played *embedded* track, so the resolver would
+>   have handed the controller a track flagged embedded and had it counted among container groups a
+>   transcode does not have. `toTrack` gained a `sideLoaded` parameter and `LocalPlaybackResolver`
+>   passes "has a sidecar". Pinned by two new `TrackSelectionControllerTest` cases.
+> - **The DECISIONS question is answered: silent top-up.** `SubtitleSidecarTopUp`, driven by
+>   `DownloadedMetadataRefresher`, fetches the missing sidecars of *finished* rows once per stretch of
+>   connectivity. Re-queueing the row — the obvious alternative — would re-download the whole film:
+>   a transcode ignores `Range`, so `FileDownloader` truncates and rewrites from zero. No UI action
+>   was added.
+> - **Phase 1 records the pin at enqueue and derives it at plan time.** `DownloadEntity`
+>   `bakedAudioStreamIndex` (schema v8, `@AutoMigration(7, 8)` — the note below says 6→7, but the
+>   retry work landed `attemptCount` as v7 first) is written by `DownloadEnqueuer`;
+>   `DownloadFilePlanner` derives the same index from the same DTO through the shared
+>   `BaseItemDto.downloadAudioStreamIndex` rule, because `DownloadQueue` (which rebuilds the plan on
+>   every run) could not be touched in this change. `plan(audioStreamIndex = …)` is the seam for
+>   passing the row's own column — and for the preferred-language choice phase 1 deliberately does
+>   not ship.
+> - The pin is `null` for `ORIGINAL`, **including** a row the transcode-fallback downgraded, and for
+>   an item with no audio streams (the URL then omits the parameter).
+
 Research follow-up to the offline track-selection fix (commit `27e9edc`). Question:
 can a transcoded download keep all audio tracks and subtitles? **Not as a single
 file — the server API makes that impossible — but yes overall, via sidecars.**

@@ -470,7 +470,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Scope:** `:player` (`api/StreamUrlFactory`, `api/SdkStreamUrlFactory`, `trickplay/TrickplayResolver`)
 - **Plan said:** nothing specific; the established pattern in `:player` is that media requests are authenticated by `JellyfinAuthInterceptor`, which adds the Jellyfin `Authorization` header to the player's own OkHttp client.
 - **Done instead:** `StreamUrlFactory.trickplayTileUrl` returns the SDK's tile URL with the access token appended as the `ApiKey` query parameter (`ApiClient.QUERY_ACCESS_TOKEN`).
-- **Reason:** trickplay sheets are fetched by **Coil**, not by ExoPlayer, and Coil's image loader is configured in `:core:ui` with no knowledge of the Jellyfin session — the interceptor never sees the request. The alternatives were to thread an `Authorization` header through the composable (jellyfin-android's approach, which puts session details in the UI layer and defeats the `StreamUrlFactory` seam the scrubber is unit-tested through) or to configure a second app-wide image loader. Jellyfin accepts the token as a query parameter for exactly this case, so the seam stays a plain `String` any loader can take. The token is not written to a log or to disk by this path; the URL is a cache key inside Coil's in-memory cache.
+- **Reason:** trickplay sheets are fetched by **Coil**, not by ExoPlayer, and Coil's image loader is configured in `:core:ui` with no knowledge of the Jellyfin session — the interceptor never sees the request. The alternatives were to thread an `Authorization` header through the composable (jellyfin-android's approach, which puts session details in the UI layer and defeats the `StreamUrlFactory` seam the scrubber is unit-tested through) or to configure a second app-wide image loader. Jellyfin accepts the token as a query parameter for exactly this case, so the seam stays a plain `String` any loader can take. The token is not written to a log by this path. *[Corrected 2026-07-30, audit SEC-02:* the original claim that the URL was only an in-memory cache key was wrong — the tokened URL was also handed to Coil's **disk** cache as its default key. No token was found at rest (Coil sha256-hashes disk keys), but that rested on undocumented Coil internals, and token rotation orphaned every cached tile. Since 2026-07-30, `TrickplayPreview` sets explicit token-stripped `diskCacheKey`/`memoryCacheKey`, so cache identity no longer involves the token at all.*]*
 
 ## 2026-07-29 — M9: the player controls now hide themselves, and gestures own the bare surface
 - **Scope:** `:player` (`ui/PlayerScreen`, `ui/PlayerGestureLayer`, `gesture/PlayerGestureController`)
@@ -1468,5 +1468,36 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `UserDataRepositoryImpl.storeLocally`/`clearPendingFlag` are pure-Room catches
   still missing the `CancellationException` rethrow — same shape as ARCH-08 but
   outside the audited seven.
+
+<!-- END -->
+
+## 2026-07-30 — perf/UI Lows batch (PERF-06/07/08/09/11/12/13, SEC-02/07, ARCH-07/11)
+
+- **Scope:** DownloadsUiState filters computed once per emission; one shared
+  `stateIn(WhileSubscribed(5s))` `observeStates()` in the download repository
+  (was four duplicate Room observers; `@ApplicationScope` added to the ctor,
+  `by lazy` so tests that never touch it need no stub); `contentType` on the two
+  heterogeneous LazyColumns; player clock/scrubber `String.format` keyed on the
+  displayed second + lambda `offset {}`; property-gated report-only Compose
+  compiler metrics (`-Pjellyfinnative.composeCompilerMetrics=true`); notification
+  rebuild guard keyed on user-visible `NotificationProgress`; storage locations
+  re-keyed on `downloadShape()`; trickplay Coil requests get token-stripped
+  `diskCacheKey`/`memoryCacheKey`; download notification `VISIBILITY_PRIVATE` +
+  generic public version; `resolveBatchMessage` extracted with :core:ui's first
+  tests; `formatBytes` ×3 consolidated into `core/common/ByteFormat.kt` (the one
+  existing test moved verbatim, all 5 assertions intact).
+- **Doc corrections made with this landing (SEC-02):** the 2026-07-29 trickplay
+  entry above and STATUS.md's M9 known issue both claimed the tokened URL was
+  "in-memory only" — it also reached Coil's disk cache as its default key; both
+  corrected in place.
+- **Divergences:** (1) PERF-11 covers modules on the compose convention plugin
+  only — `:app` applies the Compose plugin directly and is left for the
+  structural batch; (2) four `observeStates()` tests use
+  `runTest(UnconfinedTestDispatcher())` + backgroundScope collectors instead of
+  the file's Turbine style (wall-clock timeout vs shared-scheduler conflict), and
+  the test helper's `ioDispatcher` default now shares the test scheduler in both
+  repository test files — assertions unchanged, nothing weakened; (3) PERF-06
+  computed in the UiState constructor rather than in the projection (equivalent:
+  once per emission).
 
 <!-- END -->

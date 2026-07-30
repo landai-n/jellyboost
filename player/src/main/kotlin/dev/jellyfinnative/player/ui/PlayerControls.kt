@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.ui.theme.Dimens
@@ -249,6 +250,12 @@ private fun BottomBar(
  *
  * Its own composable so that collecting the position confines the twice-a-second recomposition to
  * two `Text`s, instead of dragging the picker row it sits in along with it (audit PERF-04).
+ *
+ * The elapsed text is `remember`ed against the *whole second*, not the raw position: `asClock()`
+ * already truncates to seconds, so most of the twice-a-second ticks land on a second this composable
+ * already formatted, and `String.format` had been re-run for a string identical to the one still on
+ * screen (audit PERF-09). Keying on the second means the cached value — and the `Text` reading it —
+ * only changes when the number displayed actually does.
  */
 @Composable
 private fun Clock(
@@ -257,15 +264,18 @@ private fun Clock(
     modifier: Modifier = Modifier,
 ) {
     val current by position.collectAsStateWithLifecycle()
+    val elapsedSeconds = current.positionMs.coerceAtLeast(0L) / MILLIS_PER_SECOND
+    val elapsedText = remember(elapsedSeconds) { (elapsedSeconds * MILLIS_PER_SECOND).asClock() }
+    val totalText = remember(durationMs) { durationMs.asClock() }
 
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         Text(
-            text = current.positionMs.asClock(),
+            text = elapsedText,
             style = MaterialTheme.typography.labelMedium,
             color = Color.White,
         )
         Text(
-            text = " / ${durationMs.asClock()}",
+            text = " / $totalText",
             style = MaterialTheme.typography.labelMedium,
             color = Color.White.copy(alpha = DIM_ALPHA),
         )
@@ -284,6 +294,13 @@ private fun Clock(
  * The position arrives as a flow and is collected here rather than passed down as a value: this is
  * one of the two places on the screen that wants it twice a second, and reading it any higher up
  * recomposes everything between (audit PERF-04).
+ *
+ * Two more things follow from a drag firing this at up to 90 Hz (audit PERF-09): the preview's clock
+ * text is `remember`ed against the whole second the same way [Clock] is, rather than reformatted on
+ * every frame of the drag, and the floating preview is positioned with the *lambda* `offset {}`
+ * overload rather than `offset(x = Dp, y = Dp)` — the lambda is read during placement, not
+ * composition, so a drag no longer has to recompose this modifier chain to move the preview; moving
+ * it is layout's job.
  */
 @Composable
 private fun Scrubber(
@@ -304,19 +321,23 @@ private fun Scrubber(
         if (tiles != null && thumbnail != null) {
             val previewWidth = TRICKPLAY_PREVIEW_HEIGHT * tiles.aspectRatio
             val slack = (maxWidth - previewWidth).coerceAtLeast(0.dp)
+            val previewSeconds = scrubMs.coerceAtLeast(0L) / MILLIS_PER_SECOND
+            val previewText = remember(previewSeconds) { (previewSeconds * MILLIS_PER_SECOND).asClock() }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier =
                     Modifier
                         .align(Alignment.TopStart)
-                        .offset(
-                            x = (maxWidth * fraction - previewWidth / 2).coerceIn(0.dp, slack),
-                            y = -(TRICKPLAY_PREVIEW_HEIGHT + PREVIEW_GAP + PREVIEW_LABEL_HEIGHT),
-                        ),
+                        .offset {
+                            IntOffset(
+                                x = (maxWidth * fraction - previewWidth / 2).coerceIn(0.dp, slack).roundToPx(),
+                                y = -(TRICKPLAY_PREVIEW_HEIGHT + PREVIEW_GAP + PREVIEW_LABEL_HEIGHT).roundToPx(),
+                            )
+                        },
             ) {
                 TrickplayPreview(tiles = tiles, thumbnail = thumbnail)
                 Text(
-                    text = scrubMs.asClock(),
+                    text = previewText,
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White,
                 )
@@ -372,6 +393,7 @@ internal fun Long.asClock(): String {
 
 private const val MINUTES_PER_HOUR = 60L
 private const val SECONDS_PER_MINUTE = 60L
+private const val MILLIS_PER_SECOND = 1_000L
 private const val SKIP_BACK_MS = 10_000L
 private const val SKIP_FORWARD_MS = 30_000L
 private const val DIM_ALPHA = 0.7f

@@ -277,7 +277,7 @@ private fun DetailSections(
         contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
-        item(key = SECTION_BACKDROP) {
+        item(key = SECTION_BACKDROP, contentType = DetailContentType.SECTION) {
             // No title here — DetailFacts (below, in the header section) already renders the
             // headline once; drawing it again over the backdrop duplicated it.
             BackdropHeader(
@@ -286,7 +286,7 @@ private fun DetailSections(
             )
         }
 
-        item(key = SECTION_HEADER) {
+        item(key = SECTION_HEADER, contentType = DetailContentType.SECTION) {
             DetailHeader(
                 item = detail,
                 isWide = isWide,
@@ -296,7 +296,7 @@ private fun DetailSections(
         }
 
         state.nextUp?.let { next ->
-            item(key = SECTION_NEXT_UP) {
+            item(key = SECTION_NEXT_UP, contentType = DetailContentType.SECTION) {
                 MediaRow(
                     title = stringResource(R.string.detail_section_next_up),
                     items = listOf(next),
@@ -306,7 +306,7 @@ private fun DetailSections(
         }
 
         if (state.seasons.isNotEmpty()) {
-            item(key = SECTION_SEASONS) {
+            item(key = SECTION_SEASONS, contentType = DetailContentType.SECTION) {
                 MediaRow(
                     title = stringResource(R.string.detail_section_seasons),
                     items = state.seasons,
@@ -316,10 +316,14 @@ private fun DetailSections(
         }
 
         if (state.episodes.isNotEmpty()) {
-            item(key = SECTION_EPISODES) {
+            item(key = SECTION_EPISODES, contentType = DetailContentType.SECTION) {
                 SectionTitle(text = stringResource(R.string.detail_section_episodes))
             }
-            items(items = state.episodes, key = JellyfinItem::id) { episode ->
+            items(
+                items = state.episodes,
+                key = JellyfinItem::id,
+                contentType = { DetailContentType.EPISODE },
+            ) { episode ->
                 val id = episode.id
                 // One derived flag per row, so toggling one episode invalidates one row rather than
                 // the forty a season can hold — the same idiom `LibraryGridScreen` uses.
@@ -348,7 +352,7 @@ private fun DetailSections(
         }
 
         if (state.similar.isNotEmpty()) {
-            item(key = SECTION_SIMILAR) {
+            item(key = SECTION_SIMILAR, contentType = DetailContentType.SECTION) {
                 MediaRow(
                     title = stringResource(R.string.detail_section_similar),
                     items = state.similar,
@@ -357,6 +361,24 @@ private fun DetailSections(
             }
         }
     }
+}
+
+/**
+ * The two node shapes this screen's `LazyColumn` draws (audit PERF-08).
+ *
+ * `SECTION` covers the backdrop, the header, and every `MediaRow`/`SectionTitle` block: each is
+ * structurally different, but none of them repeats — there is exactly one of each per screen — so
+ * there is nothing to gain from telling them apart further, and one shared type keeps a header slot
+ * from being compared against a `MediaRow` slot as if reuse between them were ever on the table.
+ * `EPISODE` is the one node shape that *does* repeat, up to a season's worth of times, and is the
+ * one this exists for: without it, a `LazyColumn` with no `contentType` at all defaults every node
+ * to the same type regardless of shape, so scrolling a section into a slot the recycler last held an
+ * episode row in (or the reverse) could not reuse the composition — it had to be thrown away and
+ * rebuilt from scratch.
+ */
+private enum class DetailContentType {
+    SECTION,
+    EPISODE,
 }
 
 @Composable

@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -300,6 +301,66 @@ class DownloadRepositoryStorageTest {
             }
         }
 
+    // ---- what observeStorageLocations is keyed on (audit PERF-13) ---------------------------------
+
+    @Test
+    fun `progress writes alone do not re-resolve the storage locations`() =
+        runTest {
+            // `locations.resolve()` re-scans the mounted volumes; it used to be keyed on raw
+            // `observeProgress()`, the same 2/s hot path PERF-02 moved the storage walk off of.
+            // Only the download *count* is read here, and that does not move on a byte-count tick.
+            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
+            every { downloadDao.observeProgress() } returns rows
+            var resolves = 0
+            every { locations.resolve(any()) } answers {
+                resolves++
+                selectionFor(firstArg())
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().test {
+                awaitItem().downloadCount shouldBe 1
+                resolves shouldBe 1
+
+                repeat(PROGRESS_WRITES) { written ->
+                    rows.value =
+                        listOf(
+                            progress(
+                                uuid(1),
+                                DownloadStatus.DOWNLOADING,
+                                downloaded = (written + 1) * 1_000L,
+                                total = 100_000L,
+                            ),
+                        )
+                }
+
+                // Same item, same status: the count `downloadCount` reports has not changed either.
+                resolves shouldBe 1
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a status change re-resolves, because the download count can have changed`() =
+        runTest {
+            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
+            every { downloadDao.observeProgress() } returns rows
+            var resolves = 0
+            every { locations.resolve(any()) } answers {
+                resolves++
+                selectionFor(firstArg())
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorageLocations().test {
+                awaitItem()
+
+                rows.value =
+                    listOf(progress(uuid(1), DownloadStatus.DOWNLOADED), progress(uuid(2), DownloadStatus.QUEUED))
+                awaitItem().downloadCount shouldBe 2
+                resolves shouldBe 2
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
 
     /** Two mounted volumes; anything else the caller asks for falls back to the primary one. */
@@ -315,7 +376,14 @@ class DownloadRepositoryStorageTest {
 
     // The dispatcher is a parameter only so the storage-location tests can share `runTest`'s
     // scheduler: they collect a projection that never completes, which needs the two in step.
-    private fun repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) =
+    //
+    // `TestScope.repository`: `observeStates()` shares a `stateIn` over `@ApplicationScope`
+    // (PERF-07), and `backgroundScope` is `runTest`'s stand-in for it — none of these tests collect
+    // `observeStates()`, but the constructor still needs a real `CoroutineScope` to hand it. The
+    // default dispatcher ties to the same `testScheduler` `backgroundScope` uses, matching every
+    // explicit `UnconfinedTestDispatcher(testScheduler)` below — coroutines-test throws the moment
+    // two different schedulers are exercised in one hierarchy.
+    private fun TestScope.repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler)) =
         DownloadRepositoryImpl(
             downloadDao = downloadDao,
             itemDao = itemDao,
@@ -329,6 +397,7 @@ class DownloadRepositoryStorageTest {
             sessionRepository = sessionRepository,
             clock = clock,
             ioDispatcher = ioDispatcher,
+            appScope = backgroundScope,
         )
 
     private fun progress(

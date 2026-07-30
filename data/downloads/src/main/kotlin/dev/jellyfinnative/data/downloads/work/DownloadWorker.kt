@@ -70,14 +70,17 @@ class DownloadWorker
                     bytesDownloaded: Long,
                     bytesTotal: Long,
                 ) {
-                    promote {
-                        notifier.foregroundInfo(
+                    // `null` means nothing the user would see changed since the last post — the
+                    // throttle calls this at up to six times a second, and the whole percent it
+                    // renders moves far less often than that (docs/notes/audit-2026-07.md, PERF-12).
+                    val info =
+                        notifier.foregroundInfoIfChanged(
                             itemId = download.itemId,
                             title = download.notificationTitle(),
                             bytesDownloaded = bytesDownloaded,
                             bytesTotal = bytesTotal,
-                        )
-                    }
+                        ) ?: return
+                    promote { info }
                 }
 
                 override suspend fun onIdle() = Unit

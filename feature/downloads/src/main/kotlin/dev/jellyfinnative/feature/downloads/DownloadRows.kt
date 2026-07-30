@@ -26,12 +26,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.jellyfinnative.core.common.formatBytes
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.ui.component.JellyfinAsyncImage
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.data.downloads.model.DownloadItem
 import dev.jellyfinnative.data.downloads.model.SizeCertainty
-import java.util.Locale
 
 /** Artwork size for a list row — a small poster, not a card. */
 private val THUMB_SIZE = 48.dp
@@ -274,25 +274,3 @@ private fun DownloadItem.expectedSizeText(bytes: Long): String =
         SizeCertainty.APPROXIMATE -> stringResource(R.string.downloads_size_approx, formatBytes(bytes))
         SizeCertainty.CEILING -> stringResource(R.string.downloads_size_capped, formatBytes(bytes))
     }
-
-/**
- * Human-readable bytes.
- *
- * Deliberately not `android.text.format.Formatter`, which needs a `Context` and would make every
- * one of these composables untestable and unpreviewable for the sake of a string. Powers of 1000
- * with SI prefixes, which is what a media server reports and what a user comparing "2.1 GB" against
- * their free space expects.
- */
-internal fun formatBytes(bytes: Long): String {
-    if (bytes < UNIT) return "$bytes B"
-    var value = bytes.toDouble()
-    var index = -1
-    while (value >= UNIT && index < UNITS.lastIndex) {
-        value /= UNIT
-        index++
-    }
-    return String.format(Locale.getDefault(), "%.1f %s", value, UNITS[index])
-}
-
-private const val UNIT = 1000.0
-private val UNITS = listOf("kB", "MB", "GB", "TB")

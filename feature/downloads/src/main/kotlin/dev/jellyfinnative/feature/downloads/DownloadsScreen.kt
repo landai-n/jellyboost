@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.jellyfinnative.core.common.formatBytes
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.ui.component.EmptyState
 import dev.jellyfinnative.core.ui.component.LoadingState
@@ -224,11 +225,18 @@ private fun DownloadedTab(
             // as one more row of that series (the bug docs/POLISH.md's "Downloads page duplicate
             // movie header" entry did not cover, since it only ever looked at a film on its own).
             if (group.isSeries || group.isMoviesSection) {
-                item(key = "header-${if (group.isMoviesSection) "movies-section" else group.title}") {
+                item(
+                    key = "header-${if (group.isMoviesSection) "movies-section" else group.title}",
+                    contentType = DownloadsContentType.HEADER,
+                ) {
                     GroupHeader(group = group)
                 }
             }
-            items(items = group.items, key = { it.itemId }) { item ->
+            items(
+                items = group.items,
+                key = { it.itemId },
+                contentType = { DownloadsContentType.ROW },
+            ) { item ->
                 DownloadedRow(
                     item = item,
                     onDelete = { pendingDelete = item },
@@ -523,6 +531,19 @@ private fun WifiOnlyToggle(
         )
         Switch(checked = enabled, onCheckedChange = null)
     }
+}
+
+/**
+ * The two node shapes the *Downloaded* tab's `LazyColumn` draws (audit PERF-08).
+ *
+ * Without a `contentType`, Compose's default (every item shares one type) means scrolling a header
+ * into a slot the last recycled node held a row in — or the reverse — cannot reuse the composition
+ * at all; it has to throw it away and start over. The queue tab's list is left alone: it draws one
+ * row shape only, so it already gets this for free.
+ */
+private enum class DownloadsContentType {
+    HEADER,
+    ROW,
 }
 
 private fun DownloadsTab.titleRes(): Int =

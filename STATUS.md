@@ -1020,7 +1020,10 @@ nothing in `:feature:settings`.
 - Auto-skipping an outro that runs to the end of the file ends the item and closes the player; there
   is no queue to advance to the next episode (out of scope until a queue exists).
 - The trickplay tile URL carries the access token as an `ApiKey` query parameter so Coil can fetch
-  it (DECISIONS.md 2026-07-29); it lives only in Coil's in-memory cache key.
+  it (DECISIONS.md 2026-07-29). ~~it lives only in Coil's in-memory cache key~~ — corrected
+  2026-07-30 (audit SEC-02): the tokened URL also reached Coil's disk cache as its default key;
+  since the SEC-02 fix `TrickplayPreview` sets explicit token-stripped `diskCacheKey`/
+  `memoryCacheKey`, so neither cache keys on the token and rotation no longer orphans tiles.
 - Brightness is a window override and is not remembered between sessions — jellyfin-android has a
   `rememberBrightness` preference, this branch does not.
 - The double-tap seek has no ripple/animation feedback yet; the position simply moves.

@@ -22,9 +22,14 @@ import dev.jellyfinnative.data.downloads.storage.DownloadVolume
 import dev.jellyfinnative.data.downloads.storage.StorageLocationManager
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -33,6 +38,8 @@ import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [DownloadRepository] over Room, the storage backend and WorkManager.
@@ -81,18 +88,62 @@ class DownloadRepositoryImpl
                 .distinctUntilChanged()
                 .flowOn(ioDispatcher)
 
-        // The selected volume is a second trigger, not decoration: switching location with an empty
-        // queue changes no download row, so keying only on progress would leave the Downloads
-        // header reporting the *old* volume's free space until the next enqueue.
+        /**
+         * How much of the volume the downloads root occupies, and how much of it is left.
+         *
+         * `usedBytes()` is a `stat()` of *every* file under the root — media, subtitles, artwork and
+         * one per trickplay tile — so what it may not be keyed on is `observeProgress` itself, which
+         * lands twice a second for the whole of a transfer and would pay for the walk on each of them
+         * (docs/notes/audit-2026-07.md, PERF-02; the `distinctUntilChanged` below suppresses the
+         * recomposition but not the walk). Three coarser things move the number instead:
+         *
+         * - the **shape** of the download table — which items exist and what status each is in. That
+         *   is what actually adds and removes files, and it changes a handful of times per download
+         *   rather than hundreds;
+         * - a slow [STORAGE_WALK_INTERVAL] tick while something is `DOWNLOADING`, because the file on
+         *   disk grows without any row's *shape* changing, and the header would otherwise sit still
+         *   for the length of an episode;
+         * - the selected volume, which is a trigger and not decoration: switching location with an
+         *   empty queue changes no download row, so keying only on the table would leave the header
+         *   reporting the *old* volume's free space until the next enqueue.
+         *
+         * `StatFs` is cheap, but it rides the same cadence: it describes the same volume as the walk,
+         * and reporting the two from different instants would only make the header disagree with
+         * itself.
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
         override fun observeStorage(): Flow<StorageUsage> =
-            combine(downloadDao.observeProgress(), locations.selectedVolumeId) { _, _ ->
-                StorageUsage(
-                    usedBytes = storage.usedBytes(),
-                    availableBytes = storage.availableBytes(),
-                    rootPath = storage.rootPath,
-                )
-            }.distinctUntilChanged()
+            combine(downloadShape(), locations.selectedVolumeId) { shape, _ -> shape }
+                .flatMapLatest { shape -> if (shape.transferring) walkTicks() else flowOf(Unit) }
+                .map {
+                    StorageUsage(
+                        usedBytes = storage.usedBytes(),
+                        availableBytes = storage.availableBytes(),
+                        rootPath = storage.rootPath,
+                    )
+                }.distinctUntilChanged()
                 .flowOn(ioDispatcher)
+
+        /** The download table reduced to what changes which files exist. */
+        private fun downloadShape(): Flow<DownloadShape> =
+            downloadDao
+                .observeProgress()
+                .map { rows -> DownloadShape(rows.mapTo(mutableSetOf()) { it.itemId to it.status }) }
+                .distinctUntilChanged()
+
+        /**
+         * A heartbeat for as long as a transfer is running, starting with the moment it starts.
+         *
+         * The first emission is immediate so a status change is reflected at once; everything after
+         * it exists only so the number creeps while the bytes do.
+         */
+        private fun walkTicks(): Flow<Unit> =
+            flow {
+                while (true) {
+                    emit(Unit)
+                    delay(STORAGE_WALK_INTERVAL)
+                }
+            }
 
         override fun observeStorageLocations(): Flow<StorageLocations> =
             combine(downloadDao.observeProgress(), locations.selectedVolumeId) { rows, selectedId ->
@@ -283,7 +334,31 @@ class DownloadRepositoryImpl
         }
 
         private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
+
+        internal companion object {
+            /**
+             * How often the downloads tree is re-walked while something is downloading.
+             *
+             * Long enough that the walk costs nothing measurable over a transfer, short enough that
+             * the Downloads header is never more than a quarter-minute stale — which is the whole of
+             * what the number is for.
+             */
+            val STORAGE_WALK_INTERVAL: Duration = 15.seconds
+        }
     }
+
+/**
+ * The coarse shape of the download table: which items exist, and what each of them is doing.
+ *
+ * Byte counts are deliberately absent. They are the part that changes twice a second, and what they
+ * do to the files on disk is already covered by the tick that runs while anything is transferring.
+ */
+private data class DownloadShape(
+    val rows: Set<Pair<UUID, DownloadStatus>>,
+) {
+    /** Whether some file is being written right now, and so is growing between two walks. */
+    val transferring: Boolean get() = rows.any { (_, status) -> status == DownloadStatus.DOWNLOADING }
+}
 
 /**
  * A volume as the settings picker sees it.

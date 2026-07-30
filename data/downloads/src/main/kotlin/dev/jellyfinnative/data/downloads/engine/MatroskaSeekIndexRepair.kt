@@ -69,7 +69,9 @@ import javax.inject.Singleton
  * - no `Cues` element ending exactly at the end of the file → [Outcome.NO_CUES] — a download
  *   interrupted before ffmpeg's trailer has no index to point at, and inventing one is not on offer;
  * - no reserved Void big enough → [Outcome.NO_ROOM]; growing the header would move every cluster in
- *   the file and invalidate every offset in the `Cues`.
+ *   the file and invalidate every offset in the `Cues`. A Void *too* large is refused by the same
+ *   rule: past a few kilobytes it is not a muxer's reservation, it is a length an untrusted file
+ *   declared, and the byte counts derived from it would overflow (`MAX_VOID_BYTES`).
  *
  * After writing, the patched regions are read back and the header re-walked. If either disagrees
  * with what was intended the original bytes are put back, because a download that seeks badly is a
@@ -111,12 +113,31 @@ class MatroskaSeekIndexRepair
         fun ensureSeekable(
             file: File,
             runtimeMillis: Long,
+        ): Outcome = ensureSeekable(file, runtimeMillis, PatchWriter.Direct)
+
+        /**
+         * [ensureSeekable] with the seam a fault-injection test writes through — see [PatchWriter].
+         *
+         * Internal rather than a constructor parameter because the class is `@Inject`-constructed:
+         * Hilt has nothing to bind a writer to, and a default argument would not change that.
+         */
+        @Suppress("TooGenericExceptionCaught")
+        internal fun ensureSeekable(
+            file: File,
+            runtimeMillis: Long,
+            writer: PatchWriter,
         ): Outcome {
             val outcome =
                 try {
-                    RandomAccessFile(file, "rw").use { media -> index(media, runtimeMillis) }
+                    RandomAccessFile(file, "rw").use { media -> index(media, runtimeMillis, writer) }
                 } catch (error: IOException) {
                     Timber.w(error, "Could not index %s for seeking", file.name)
+                    Outcome.FAILED
+                } catch (error: RuntimeException) {
+                    // This runs inside the coroutine that is opening a file for playback, and the
+                    // input is a file off a server. A header we cannot make sense of is a file we
+                    // decline to repair — never an exception thrown through the player.
+                    Timber.e(error, "Could not index %s for seeking", file.name)
                     Outcome.FAILED
                 }
             when (outcome) {
@@ -131,6 +152,7 @@ class MatroskaSeekIndexRepair
         private fun index(
             media: RandomAccessFile,
             runtimeMillis: Long,
+            writer: PatchWriter,
         ): Outcome {
             val length = media.length()
             val segment = segment(media, length) ?: return Outcome.NOT_MATROSKA
@@ -139,12 +161,17 @@ class MatroskaSeekIndexRepair
             val reserved = header.void ?: return Outcome.NO_ROOM
             val cues = findCues(media, length) ?: return Outcome.NO_CUES
 
+            // The order is the crash-safety property, not a style: `Duration` first and the
+            // `SeekHead` last, because each patch on its own leaves a file that still parses, and the
+            // `SeekHead` is the marker that says "already repaired". A run torn between the two —
+            // an IOException, a power cut — therefore leaves a file that is still playable and still
+            // *re-repairable* on the next play, rather than one that is neither.
             val patches =
                 buildList {
-                    add(Patch(reserved.start, seekHead(reserved.length.toInt(), cues - segment.contentStart)))
                     duration(media, header.info, runtimeMillis)?.let(::add)
+                    add(Patch(reserved.start, seekHead(reserved.length.toInt(), cues - segment.contentStart)))
                 }
-            return write(media, length, segment.contentStart, patches)
+            return write(media, length, segment.contentStart, patches, writer)
         }
 
         // ---- writing ------------------------------------------------------------------------------
@@ -155,29 +182,46 @@ class MatroskaSeekIndexRepair
          * The read-back catches a short write; the second header walk catches a patch that is
          * well-formed on its own but does not chain — the two ways a header can be left worse than it
          * was found. Either one puts the original bytes back.
+         *
+         * So does **anything thrown**. The original bytes are read before the first write and held in
+         * memory for exactly as long as the file is in a half-patched state, and a write that dies
+         * part-way has to be treated the same as one that verifies wrong: leaving the file as it lies
+         * would cost the user a downloaded gigabyte that no longer parses, with a Room row still
+         * saying `DOWNLOADED` (docs/notes/audit-2026-07.md, STAB-08/MKV-03). What this cannot cover is
+         * the process dying between the two — which is what the patch order in [index] is for.
          */
+        @Suppress("TooGenericExceptionCaught")
         private fun write(
             media: RandomAccessFile,
             length: Long,
             segmentContent: Long,
             patches: List<Patch>,
+            writer: PatchWriter,
         ): Outcome {
             val originals = patches.map { patch -> Patch(patch.start, read(media, patch.start, patch.bytes.size)) }
-            patches.forEach { patch ->
-                media.seek(patch.start)
-                media.write(patch.bytes)
-            }
-            media.fd.sync()
+            val indexed =
+                try {
+                    patches.forEach { patch -> writer.write(media, patch.start, patch.bytes) }
+                    media.fd.sync()
+                    // A short write is caught by the read-back; a patch that is well-formed but does
+                    // not chain, by the walk.
+                    patches.all { patch -> read(media, patch.start, patch.bytes.size).contentEquals(patch.bytes) } &&
+                        walkHeader(media, length, segmentContent)?.seekHead != null
+                } catch (error: Exception) {
+                    Timber.e(error, "Seek index write failed part-way")
+                    false
+                }
+            if (indexed) return Outcome.INDEXED
 
-            val landed = patches.all { patch -> read(media, patch.start, patch.bytes.size).contentEquals(patch.bytes) }
-            if (landed && walkHeader(media, length, segmentContent)?.seekHead != null) return Outcome.INDEXED
-
-            Timber.e("Seek index did not verify; restoring the original header")
-            originals.forEach { patch ->
-                media.seek(patch.start)
-                media.write(patch.bytes)
+            Timber.e("Seek index did not land; restoring the original header")
+            try {
+                originals.forEach { patch -> writer.write(media, patch.start, patch.bytes) }
+                media.fd.sync()
+            } catch (error: Exception) {
+                // Nothing more can be done from here: the bytes are known, the file will not take
+                // them, and the outcome is a failure either way. Saying so loudly is the remedy.
+                Timber.e(error, "Could not restore the original header; the file may no longer parse")
             }
-            media.fd.sync()
             return Outcome.FAILED
         }
 
@@ -486,6 +530,30 @@ class MatroskaSeekIndexRepair
             val bytes: ByteArray,
         )
 
+        /**
+         * The one way bytes reach the file, so that a test can make a write fail where it hurts.
+         *
+         * The rollback path is unreachable from the outside — it needs an I/O error to happen between
+         * two writes, on the one file the code is holding open — and it is also the path that decides
+         * whether a failed repair costs the user a download. A seam is the only way to pin it.
+         */
+        internal fun interface PatchWriter {
+            fun write(
+                media: RandomAccessFile,
+                at: Long,
+                bytes: ByteArray,
+            )
+
+            companion object {
+                /** What production uses: seek, write, and nothing else. */
+                val Direct =
+                    PatchWriter { media, at, bytes ->
+                        media.seek(at)
+                        media.write(bytes)
+                    }
+            }
+        }
+
         private companion object {
             /** `EBML`, the header every Matroska file opens with. */
             const val ID_EBML_VALUE = 0x1A45DFA3L
@@ -577,15 +645,31 @@ class MatroskaSeekIndexRepair
             const val MAX_VARINT_BYTES = 8
 
             /**
+             * The largest Void this will write into.
+             *
+             * A reservation is a muxer setting aside room for a header it means to come back and
+             * write: ffmpeg's are 152 and 11 bytes, and nothing that behaves like a reservation is
+             * anywhere near this. A *declared* length beyond it is a number in a file we did not
+             * make, and it is also the number every one of the byte counts below is derived from —
+             * `toInt()` on a Void of more than two gigabytes wraps negative, and the padding
+             * `ByteArray` sized from it is either a `NegativeArraySizeException` or a two-gigabyte
+             * allocation, thrown out of a coroutine that was opening a file for playback
+             * (docs/notes/audit-2026-07.md, MKV-02). Refusing the Void instead costs a file that
+             * could not have been a live transcode nothing but a repair it never needed.
+             */
+            const val MAX_VOID_BYTES = 64L * 1024L
+
+            /**
              * Whether [total] bytes of Void can hold [payload] bytes and still be legal.
              *
              * Either the payload fills it exactly, or what is left has to be a Void of its own — and
-             * the smallest Void there is, an id and a zero length, is two bytes.
+             * the smallest Void there is, an id and a zero length, is two bytes. A Void larger than
+             * [MAX_VOID_BYTES] is refused whatever it would hold: see there.
              */
             fun fits(
                 total: Long,
                 payload: Int,
-            ): Boolean = total == payload.toLong() || total >= payload + VOID_SHORT_HEADER
+            ): Boolean = total <= MAX_VOID_BYTES && (total == payload.toLong() || total >= payload + VOID_SHORT_HEADER)
 
             /** A one-byte EBML length carrying [value] — valid for 0..126. */
             fun length(value: Int): ByteArray = byteArrayOf((HIGH_BIT or value).toByte())

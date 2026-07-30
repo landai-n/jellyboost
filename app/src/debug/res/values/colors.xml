@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Debug-only launcher background so a debug install is visually distinguishable
+        from release on a device. Deliberately NOT named "background" — that resource
+        also drives the app window background and splash screen (see main themes.xml);
+        this is a separate, launcher-icon-only color so the in-app UI stays untouched.
+    -->
+    <color name="launcher_background_debug">#FFFF6D00</color>
+</resources>

@@ -1,7 +1,10 @@
 package dev.jellyfinnative.player.ui
 
+import dev.jellyfinnative.player.model.PlaybackMediaSource
+import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.millisToTicks
 import dev.jellyfinnative.player.syncplay.SyncPlayController
+import dev.jellyfinnative.player.syncplay.SyncPlayLocalSession
 import dev.jellyfinnative.player.syncplay.SyncPlayMessage
 import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayPlaybackHost
@@ -10,6 +13,7 @@ import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyfinnative.player.syncplay.model.SyncPlayShuffleMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 
 /**
@@ -34,6 +38,7 @@ import kotlinx.coroutines.flow.map
  */
 internal class PlayerSyncPlayBridge(
     private val controller: SyncPlayController,
+    private val localSession: SyncPlayLocalSession,
     private val host: SyncPlayPlaybackHost,
 ) {
     private var attached = false
@@ -60,6 +65,20 @@ internal class PlayerSyncPlayBridge(
     val messages: Flow<PlayerMessage> = controller.messages.map { it.toPlayerMessage() }
 
     /**
+     * Group membership *changing*, as the one bit that changes what gets reported.
+     *
+     * Distinct from [states] on purpose: that flow changes on every participant, phase and queue
+     * edit, and the server-visible session only cares about joining and leaving (M11 Phase 6). The
+     * current value is dropped because it is not news — whatever group the player opened into is
+     * accounted for by the session open itself, which reconciles before it reports the start.
+     */
+    val membership: Flow<Boolean> =
+        controller.state
+            .map { it is SyncPlayState.InGroup }
+            .distinctUntilChanged()
+            .drop(1)
+
+    /**
      * Offers this player to the group.
      *
      * A no-op outside a group beyond recording the offer — the controller keeps the host either way,
@@ -81,6 +100,25 @@ internal class PlayerSyncPlayBridge(
         if (!attached) return
         attached = false
         controller.detachHost(host)
+    }
+
+    /**
+     * Reconciles what the server has been told about a **downloaded** item with the group.
+     *
+     * Called from the two moments that can change the answer — a session opening, and the group
+     * being joined or left — and a no-op for anything streamed, which reports on its own session
+     * either way. See [SyncPlayLocalSession].
+     */
+    suspend fun syncServerSession(
+        source: PlaybackMediaSource?,
+        snapshot: PlaybackSnapshot,
+    ) {
+        localSession.reconcile(source, snapshot)
+    }
+
+    /** The player screen is going away; the group may well outlive it. */
+    fun onSessionClosed() {
+        localSession.onSessionClosed()
     }
 
     /** Tells the group this member is re-negotiating, so it waits rather than plays on without us. */

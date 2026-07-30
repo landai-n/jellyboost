@@ -267,3 +267,41 @@ reporting and playback do not.
 | `pip_on_leave` | `Boolean` | `true` |
 
 <!-- END: Player polish (M9) -->
+
+<!-- BEGIN: SyncPlay (M11) -->
+## M11 — what changes while the session is in a SyncPlay group
+
+The whole feature is documented in [`syncplay.md`](syncplay.md); this section is only the part that
+changes **this** pipeline. Outside a group nothing below applies: `PlayerSyncPlayBridge.isInGroup` is
+`false` and every branch falls through to what M5–M10 built, which is what the unchanged
+`PlayerViewModelTest` / `PlayerTrackPickerTest` / `PlaybackReporterTest` suites pin.
+
+**Transport is routed, not applied.** `togglePlayPause`, `seekTo`, `seekBy`, the skip-intro button
+and the item-ended handler all become requests to the server through `PlayerSyncPlayBridge`; the
+player moves only when the group's rebroadcast command reaches `SyncPlayCommandScheduler`. The seek
+bar deliberately does not jump ahead of it — an optimistic position would show a place this player
+is not at, and would never be corrected if the group refused the seek.
+
+**Two features are suppressed**, both because they would silently desynchronise this member:
+
+- the **speed picker** (a request to change speed in a group is refused with a message), and
+- **segment auto-skip** — an intro skipped locally puts this device ~90 s ahead of everyone.
+  The manual *Skip intro* button still works, as a group seek.
+
+**A third is added:** a WAITING overlay while the group waits on a member, and a group icon in the
+controls opening `SyncPlayGroupSheet` (participants, shuffle/repeat, leave) and the queue sheet.
+
+**Re-negotiation tells the group.** `reopenSession` — a quality change, a track change the server
+has to perform, a decoder fallback — calls `syncPlay.onBuffering()` first, so the group waits rather
+than playing on without this member. `PlayerEvent.Ready` then re-enters the handshake.
+
+**The reporter's one exception.** A `LocalPlaybackMediaSource` normally tells the server nothing
+(see [`offline-playback.md`](offline-playback.md)). In a group, and while online, it reports
+start / progress / stop like any other session, keyed on a play session id minted by a single
+profile-less `POST /Items/{id}/PlaybackInfo` (`PlaybackInfoResolver.mintPlaySessionId`, driven by
+`SyncPlayLocalSession` from `PlayerViewModel.publish` — before the start report, since the id has to
+be in it). A failed mint reports without an id rather than not at all. `stopTranscoding` stays
+remote-only: a file on disk started no encoder. Leaving the group mid-film sends one closing stop
+report and then goes quiet, while playback carries on solo. Every local position write is untouched
+in all of these cases. See DECISIONS.md, 2026-07-30.
+<!-- END: SyncPlay (M11) -->

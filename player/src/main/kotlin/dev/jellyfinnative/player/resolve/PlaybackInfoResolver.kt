@@ -97,6 +97,55 @@ class PlaybackInfoResolver
                 AppResult.Failure(AppError.Unknown(error))
             }
 
+        /**
+         * Opens a play session for an item that will be played **off disk**, and nothing else.
+         *
+         * A `LocalPlaybackMediaSource` has no play session by construction, which is exactly why
+         * local playback tells the server nothing. In a SyncPlay group that silence is wrong: the
+         * other members are watching together with this device, and the dashboard should say so
+         * (docs/notes/syncplay-m11-plan.md, key decision 9). One `PlaybackInfo` POST is enough to
+         * get the id every report is keyed on.
+         *
+         * Two things it deliberately does *not* do, because both would put load on a server whose
+         * bytes we are not going to use:
+         *
+         * - **no device profile.** With none the server has nothing to build a transcode plan from,
+         *   so the response is a bare description of the item. The id is the only field read.
+         * - **no live stream.** `autoOpenLiveStream` stays `false`; opening one would allocate a
+         *   tuner or a stream the file on disk makes pointless.
+         *
+         * An encoder can only start when the transcoding URL is *fetched*, and nothing here fetches
+         * anything — so the worst case is a session row the stop report closes.
+         *
+         * @return the server's play session id, or `null` if the mint failed. `null` is a normal
+         *   outcome and not an error: reporting degrades to sending no session id (the server keys
+         *   the session on the authenticated device anyway), which is still better than silence.
+         */
+        @Suppress("TooGenericExceptionCaught")
+        suspend fun mintPlaySessionId(
+            itemId: UUID,
+            mediaSourceId: String?,
+        ): String? =
+            try {
+                api
+                    .getPlaybackInfo(
+                        itemId = itemId,
+                        request =
+                            PlaybackInfoDto(
+                                // The dash-less quirk applies here too; see toPlaybackInfoDto.
+                                mediaSourceId =
+                                    mediaSourceId?.replace("-", "")
+                                        ?: itemId.toString().replace("-", ""),
+                                autoOpenLiveStream = false,
+                            ),
+                    ).playSessionId
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.w(error, "Could not mint a play session id for %s; reporting without one", itemId)
+                null
+            }
+
         private fun PlaybackResolveRequest.toPlaybackInfoDto(): PlaybackInfoDto =
             PlaybackInfoDto(
                 // THE DASH-LESS QUIRK. The server looks media sources up by a *dash-less* id, and

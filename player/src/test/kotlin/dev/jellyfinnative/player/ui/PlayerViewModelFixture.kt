@@ -25,6 +25,7 @@ import dev.jellyfinnative.player.segments.MediaSegmentLoader
 import dev.jellyfinnative.player.session.FakePlayerHandle
 import dev.jellyfinnative.player.session.PlaybackSessionController
 import dev.jellyfinnative.player.syncplay.SyncPlayController
+import dev.jellyfinnative.player.syncplay.SyncPlayLocalSession
 import dev.jellyfinnative.player.syncplay.SyncPlayMessage
 import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
@@ -104,6 +105,15 @@ internal abstract class PlayerViewModelFixture {
             every { messages } returns syncPlayMessages
         }
 
+    /**
+     * The server-visible session of a downloaded item in a group (M11 Phase 6).
+     *
+     * Relaxed and recording: what the ViewModel owes it is *when* it is reconciled — a session
+     * opening, and a group being joined or left — and the reconciliation itself is pinned in
+     * `SyncPlayLocalSessionTest` against a real resolver double.
+     */
+    protected val syncPlayLocalSession = mockk<SyncPlayLocalSession>(relaxed = true)
+
     /** The M9 preferences at their defaults; individual tests override what they exercise. */
     protected val preferences =
         mockk<AppPreferences> {
@@ -177,6 +187,7 @@ internal abstract class PlayerViewModelFixture {
             pipController = pipController,
             connectionState = connectionState,
             syncPlayController = syncPlayController,
+            syncPlayLocalSession = syncPlayLocalSession,
             savedStateHandle = savedStateHandle,
         )
 

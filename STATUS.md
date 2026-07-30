@@ -59,6 +59,39 @@ verification on the minified build.
   back to the file if the server is gone); offline, only playable tracks are
   listed, live. Device walk owed (see device session).
 
+- **Offline sidecar-subtitle regression fixed + installed** (`fix(player)`,
+  190dc03): Media3's `MergingMediaSource` re-ids every track as
+  `<child>:<id>`, so the `external:<n>` match never fired once sidecar tracks
+  were (correctly) flagged external — offline, every downloaded subtitle was
+  refused as "not in the downloaded file" (Les Minions 2 walk; sidecars
+  verified present on-device). One-function fix + 3 merged-id tests; design
+  note corrected (b5769ab). **User re-walk owed on the device.**
+- **Cleanup-wave: MKV batch landed** (`fix(downloads)`, b8b7ae0): MKV-11
+  fixtures (real-ffmpeg oracle, runtime 2.5 GiB sparse, unknown-size-Cluster →
+  new honest `UNSUPPORTED_HEADER`), MKV-04 Duration back-fill (with a CRC-32
+  refusal rider), MKV-10 transcodes never send Range / 206 restarts from zero,
+  MKV-05/07/08/09 spec hygiene. +19 tests, ~65 ms.
+- **Cleanup-wave: hygiene batch landed** (`fix(hygiene)`, bf63b19):
+  ARCH-50/51/52 dead deps, ARCH-53/54/55/56 dead code/strings/suppressions,
+  ARCH-06 all OkHttp bindings qualified, ARCH-08 seven catches narrowed,
+  ARCH-12 home layout cleared on sign-out, SEC-05/06 log hygiene, SEC-09
+  password-safe toString, STAB-11 null-intent restart guard.
+- **Cleanup-wave: perf/UI batch landed** (`fix(perf)`, cb913e9): PERF-06/07/08/
+  09/11/12/13 (one shared badge subscription, notification change guard,
+  clock-per-second formatting, Compose-metrics flag, shape-keyed storage
+  locations), SEC-02 token-stripped trickplay cache keys (+ both stale
+  "in-memory only" doc claims corrected), SEC-07 private lockscreen
+  notification, ARCH-07 first :core:ui tests, ARCH-11 one formatBytes.
+- **Cleanup-wave: structural batch landed** (`refactor(arch)`, 973ae02):
+  ARCH-04 api→implementation, ARCH-05 package cycles broken by moves +
+  `PackageDependencyTest` (layer order + acyclicity enforced), ARCH-13
+  internal repo impls with `ONLINE_CALL_TIMEOUT_MS` on the contract, ARCH-09
+  reflective delegation test, drain plans with the row's
+  `bakedAudioStreamIndex` (multi-track follow-up closed), last cancellation
+  rethrows. `assembleRelease` (R8 full) verified green.
+- **HEVC `VideoProfileNotSupported` closed as correct behavior** (e76a94d) —
+  see Next §3.
+
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in
   `docs/notes/offline-multitrack-design.md`. One file with all tracks is
@@ -72,13 +105,16 @@ verification on the minified build.
   divergence or M11 is the user's call.
 
 ### Next
-1. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient
-   retry classification, PERF-01/PERF-03 progress-tick hot path, ARCH-01 offline
-   filters (or honest-empty fallback + /diverge), SEC-03 credential-store catch split.
-   ARCH-13 must also relocate the resolve-timeout constant (see audit §6 rider).
-2. **DoD items:** R8 rules + minified build, signing config, baseline profile,
-   CI workflow (authored only — repo has no GitHub remote, cannot be exercised),
-   then re-run M5/M8 verification on the minified build on the test tablet.
+1. ~~**Audit backlog Tier 2 + cleanup wave**~~ — DONE. All Tier 1 (11), all Tier 2
+   headliners, and the entire cleanup wave (MKV/hygiene/perf/structural batches)
+   are landed; every deviation is in DECISIONS.md. Remaining code-side backlog:
+   the interface seam that would let `DownloadedMetadataRefresher`/
+   `DownloadedMediaProvider` go internal, and
+   `DownloadEnqueuer.removeDoomedContainerRow`'s broad catch (both flagged in
+   the structural DECISIONS entry); multi-track Phase 2 decision (below).
+2. **DoD items left:** baseline profile generation on the test tablet (fallback:
+   rooted API-34+ AVD), then re-run M5/M8 verification on the minified
+   `assembleRelease` build on the device (R8 build itself verified green).
 3. ~~**HEVC `VideoProfileNotSupported` investigation**~~ — CLOSED 2026-07-30, not a
    bug: every HEVC decoder on the device (c2.mtk.hevc.decoder, its .secure variant,
    c2.android.hevc.decoder) reports Main profile only, no Main 10 (`dumpsys

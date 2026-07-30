@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="downloads_title">Downloads</string>
     <string name="downloads_tab_downloaded">Downloaded</string>
     <string name="downloads_tab_queue">Queue</string>
     <string name="downloads_wifi_only">Wi‑Fi only</string>

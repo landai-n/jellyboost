@@ -413,7 +413,6 @@ class DownloadQueue
          * the meantime wins; the returned row carries the seed so the in-memory `ItemProgress`
          * starts from it too, instead of waiting for the next drain to pick it up from Room.
          */
-        @Suppress("ReturnCount")
         private suspend fun seedIfUnseeded(
             download: DownloadEntity,
             dto: BaseItemDto,

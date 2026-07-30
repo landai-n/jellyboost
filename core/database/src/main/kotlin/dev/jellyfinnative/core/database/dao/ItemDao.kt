@@ -25,7 +25,6 @@ import java.util.UUID
  * "Confirmed decisions" → offline browse scope) while `getItem` deliberately also serves cached
  * rows, and making the caller say which it wants keeps that distinction visible at the call site.
  */
-@Suppress("TooManyFunctions")
 @Dao
 interface ItemDao {
     /** Inserts the rows, replacing any existing row with the same id. */

@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.cache
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
@@ -143,7 +144,6 @@ class BrowseCacheWriter
             now: Instant,
             full: Boolean,
         ) {
-            @Suppress("TooGenericExceptionCaught")
             try {
                 val existing = itemDao.getCacheKeys(dtos.map { it.id }).associateBy { it.id }
 
@@ -186,7 +186,7 @@ class BrowseCacheWriter
                 itemDao.upsert(rows)
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (error: Exception) {
+            } catch (error: SQLiteException) {
                 Timber.w(error, "Could not write %d items through to the browse cache", dtos.size)
             }
         }
@@ -207,7 +207,6 @@ class BrowseCacheWriter
             val fromServer = dtos.mapNotNull { dto -> dto.userData?.let { dto.id to it } }
             if (fromServer.isEmpty()) return
 
-            @Suppress("TooGenericExceptionCaught")
             try {
                 val pending = userDataDao.getPendingSyncIds(fromServer.map { it.first }, userId).toSet()
                 val rows =
@@ -219,7 +218,7 @@ class BrowseCacheWriter
                 userDataDao.upsertAll(rows)
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (error: Exception) {
+            } catch (error: SQLiteException) {
                 Timber.w(error, "Could not refresh %d user-data rows from the server", fromServer.size)
             }
         }
@@ -228,7 +227,6 @@ class BrowseCacheWriter
 
         /** The actual library-view write. */
         suspend fun writeViews(dtos: List<BaseItemDto>) {
-            @Suppress("TooGenericExceptionCaught")
             try {
                 val now = clock.instant()
                 val rows = dtos.mapIndexedNotNull { index, dto -> mapper.toEntity(dto, index, now) }
@@ -240,7 +238,7 @@ class BrowseCacheWriter
                 libraryViewDao.deleteExcept(rows.map { it.id })
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (error: Exception) {
+            } catch (error: SQLiteException) {
                 Timber.w(error, "Could not write the library list through to the cache")
             }
         }

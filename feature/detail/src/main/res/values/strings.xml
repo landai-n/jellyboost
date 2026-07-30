@@ -20,7 +20,6 @@
     <string name="detail_section_next_up">Next up</string>
     <string name="detail_section_episodes">Episodes</string>
     <string name="detail_section_similar">More like this</string>
-    <string name="detail_section_cast">Cast &amp; crew</string>
 
     <!-- Metadata -->
     <string name="detail_runtime_minutes">%1$d min</string>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Libraries tab (integration) -->
-    <string name="libraries_title">Libraries</string>
     <string name="libraries_empty">No libraries yet. Add one on the server.</string>
 
     <!-- Top bar -->
@@ -34,16 +33,11 @@
     <string name="library_filters_apply">Show results</string>
     <string name="library_filters_none">This library offered nothing to filter by.</string>
     <string name="library_filters_loading">Loading filters…</string>
-    <plurals name="library_filters_active">
-        <item quantity="one">%d filter</item>
-        <item quantity="other">%d filters</item>
-    </plurals>
 
     <!-- States -->
     <string name="library_empty">Nothing to show here.</string>
     <string name="library_empty_filtered">No item matches these filters.</string>
     <string name="library_empty_clear_filters">Clear filters</string>
-    <string name="library_append_failed">Couldn\'t load more items.</string>
     <string name="library_retry">Retry</string>
 
     <!-- Errors -->

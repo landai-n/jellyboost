@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.cache
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.dao.LibraryViewDao
 import dev.jellyfinnative.core.database.dao.UserDataDao
@@ -384,7 +385,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `a failing user-data refresh still leaves the metadata cached`() =
         runTest {
-            coEvery { userDataDao.getPendingSyncIds(any(), any()) } throws IllegalStateException("disk full")
+            coEvery { userDataDao.getPendingSyncIds(any(), any()) } throws SQLiteException("disk full")
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
 
@@ -394,7 +395,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `a failing metadata write still refreshes the user data`() =
         runTest {
-            coEvery { itemDao.upsert(any()) } throws IllegalStateException("disk full")
+            coEvery { itemDao.upsert(any()) } throws SQLiteException("disk full")
 
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
 
@@ -415,7 +416,7 @@ class BrowseCacheWriterTest {
     @Test
     fun `a failed cache write is swallowed, never surfaced to the caller`() =
         runTest {
-            coEvery { itemDao.upsert(any()) } throws IllegalStateException("disk full")
+            coEvery { itemDao.upsert(any()) } throws SQLiteException("disk full")
 
             // The caller already has its data; a broken cache must not fail their read.
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))

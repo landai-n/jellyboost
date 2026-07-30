@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data
 
+import android.database.sqlite.SQLiteException
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -395,9 +396,7 @@ class OfflineJellyfinRepository
                     AppResult.Success(block())
                 } catch (cancellation: CancellationException) {
                     throw cancellation
-                } catch (
-                    @Suppress("TooGenericExceptionCaught") error: Exception,
-                ) {
+                } catch (error: SQLiteException) {
                     Timber.e(error, "Offline read failed")
                     AppResult.Failure(AppError.Storage(error))
                 }

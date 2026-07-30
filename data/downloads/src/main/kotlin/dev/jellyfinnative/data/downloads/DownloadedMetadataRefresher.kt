@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
@@ -177,12 +178,11 @@ class DownloadedMetadataRefresher
 
         /** Every id with a download row, or an empty list when the table cannot be read. */
         private suspend fun downloadedItemIds(): List<UUID> =
-            @Suppress("TooGenericExceptionCaught")
             try {
                 downloadDao.allItemIds()
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (error: Exception) {
+            } catch (error: SQLiteException) {
                 Timber.w(error, "Could not list the downloaded items to refresh")
                 emptyList()
             }
@@ -238,7 +238,6 @@ class DownloadedMetadataRefresher
             val unique = dtos.distinctBy { it.id }
             if (unique.isEmpty()) return
 
-            @Suppress("TooGenericExceptionCaught")
             try {
                 val now = clock.instant()
                 val existing = itemDao.getCacheKeys(unique.map { it.id }).associateBy { it.id }
@@ -254,7 +253,7 @@ class DownloadedMetadataRefresher
                 Timber.i("Refreshed the cached metadata of %d downloaded item(s) and parent(s)", rows.size)
             } catch (cancellation: CancellationException) {
                 throw cancellation
-            } catch (error: Exception) {
+            } catch (error: SQLiteException) {
                 Timber.w(error, "Could not store the refreshed metadata of %d item(s)", unique.size)
             }
         }

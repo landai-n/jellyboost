@@ -13,7 +13,6 @@ dependencies {
     api(libs.okhttp)
     implementation(projects.core.database)
     implementation(projects.core.datastore)
-    implementation(libs.okhttp.logging)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)

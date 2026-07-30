@@ -45,6 +45,10 @@ class SharedPreferencesHomeLayoutStore
                 .apply()
         }
 
+        override fun clear() {
+            preferences.edit().remove(KEY_SECTIONS).apply()
+        }
+
         private companion object {
             const val STORE_NAME = "home_layout"
             const val KEY_SECTIONS = "sections"

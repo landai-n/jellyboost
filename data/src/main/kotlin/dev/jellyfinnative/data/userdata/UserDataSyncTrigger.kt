@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.userdata
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.di.ApplicationScope
@@ -66,13 +67,12 @@ class UserDataSyncTrigger
 
         /** Enqueues the drain, but only when there is something to drain. */
         suspend fun enqueueIfPending() {
-            @Suppress("TooGenericExceptionCaught")
             val pending =
                 try {
                     withContext(ioDispatcher) { userDataDao.countPendingSync() }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
-                } catch (error: Exception) {
+                } catch (error: SQLiteException) {
                     Timber.w(error, "Could not count pending user-data rows")
                     return
                 }

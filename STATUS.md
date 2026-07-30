@@ -22,15 +22,16 @@ verification on the minified build.
   tests. **Device walk still owed** (batched M10 session below).
 
 ### Awaiting user design decision
-- **Enqueue-side follow-ups to the track fix** (sketched by the fix agent, not
-  implemented): (1) pin `audioStreamIndex` at enqueue + record it in a new
-  column (Room migration; prerequisite for choosing the download language);
-  (2) extract embedded *text* subtitles as sidecars by dropping the
-  `isExternal` filter in `DownloadFilePlanner` (no schema change, but old rows
-  would hold fewer subs than fresh ones — the DECISIONS question); (3) record
-  baked codec/channels for exact labels (cosmetic, folds into 1); (4) or probe
-  the container's own `Tracks` element during the existing MKV header pass,
-  which subsumes 1+3 with no server semantics.
+- **Offline multi-track downloads** — full design study in
+  `docs/notes/offline-multitrack-design.md`. One file with all tracks is
+  impossible (server API takes exactly one `audioStreamIndex`/
+  `subtitleStreamIndex`); the study phases the workaround: Phase 0 extract
+  embedded text subs as sidecars (small, no schema change, closes most of the
+  complaint), Phase 1 pin + record the baked audio track (small migration),
+  Phase 2 extra audio tracks as `.mka` sidecars merged via
+  `MergingMediaSource` (device-risky, moves source assembly out of the pure
+  factory). Each phase needs a DECISIONS entry; none fits M10 as scoped —
+  divergence or M11 is the user's call.
 
 ### Next
 1. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient

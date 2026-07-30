@@ -27,18 +27,55 @@
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
-## Up next: M11 — SyncPlay (group watch) — planned & approved, not started
+## Current milestone: M11 — SyncPlay (IN PROGRESS: all 6 phases landed 2026-07-30, device DoD owed)
 
-M11 planned and user-approved 2026-07-30 (full scope: group queue management,
-dedicated SyncPlay section, downloaded items playing from disk while in a
-group; movies & episodes only). Governance landed: DECISIONS.md entry
-"M11 SyncPlay milestone approved" (incl. four pre-logged design decisions —
-note the amended one: confirmed connection loss mid-group → **pause** +
-manual solo resume, not keep-playing), PLAN.md M11 milestone + DoD appended.
-Implementation was gated on M10 closing — that gate has lifted; phases 1-6
-(protocol plumbing → coordinator → player integration → group queue →
-dedicated section → local-file reporting) follow the approved M11 plan
-document, delegated per project convention.
+Full plan: `docs/notes/syncplay-m11-plan.md`; feature doc `docs/features/syncplay.md`.
+All implementation phases committed same-day, each `/verify`-green
+(suite 1231 → **1598** unit tests; every phase's divergences in DECISIONS.md):
+1. `671a758` protocol plumbing — API/socket facades over SDK 1.8.12 (surface
+   verified from real artifacts, 7 deltas logged), domain models, NTP-style
+   time sync; all SDK `LocalDateTime` conversion confined to
+   `SyncPlayDtoMapping.kt`.
+2. `ea54549` coordinator — `SyncPlayController` state machine, one-slot
+   command scheduler, 2 s drift monitor, pinger (3×1 s then 5 s); socket
+   collected *before* the join REST (stash/replay); **confirmed connection
+   loss → pause + teardown + "Left SyncPlay — connection lost", manual solo
+   resume** (amended decision 10).
+3. `062e46c` player integration — `PlayerSyncPlayBridge`, in-group transport
+   routes to API only (zero local calls, tests pin both halves), speed hidden
+   + auto-skip → manual button in-group, WAITING overlay, group sheet.
+4. `42ac3f0` group queue — queue sheet (up/down reorder), reconciliation by
+   `playingItemIndex` with one-skip-per-slot guard, `SyncPlaySession`
+   contract in `:core:common`, detail-screen group actions (movies/episodes).
+5. `3e99e5a` dedicated section — groups screen (10 s poll, 403 → disabled
+   state), `Routes.SyncPlay`, NavHost launch-request effect (dup-nav
+   guarded), top-bar Groups icon + active badge.
+6. `5797af2` local-file in-group reporting — `ServerReportTarget` in the
+   reporter (local+online+inGroup reports w/ minted-or-null playSessionId;
+   `stopTranscoding` stays remote-only; existing reporter tests
+   byte-untouched), `mintPlaySessionId` (no device profile, no stream URL),
+   leave-mid-playback = one final stop then silence; R8 release build
+   verified (50 SyncPlay SDK classes + serializers kept, zero new keep
+   rules; REST polling exercised on-device minified, clean logcat).
+
+### Owed to the M11 device DoD session (two clients: test tablet + jellyfin-web)
+- **Full DoD walk** (PLAN.md M11): lockstep play/pause/seek <~1 s both
+  directions; downloaded item plays from disk in-group — dashboard shows both
+  sessions, zero stream traffic, web commands land; WAITING overlay on peer
+  stall; queue add/reorder/remove/next/prev/shuffle from tablet visible on
+  web; commands applied while backgrounded; **Wi-Fi kill mid-group → pause +
+  message, manual resume solo from disk**; sign-out leaves group; minified
+  build receives GroupUpdates over the websocket (only REST polling was
+  exercised under R8); SyncPlay-disabled account → 403 copy.
+- **Protocol assumptions to confirm live** (phase 2 record): socket-open-
+  before-join delivers GroupJoined/PlayQueueUpdate (5 s Connected wait
+  enough?); Seek does not imply pause; `ready` without prior `buffering`
+  accepted + `ignoreWait(false)` re-arms on re-attach; null-positionTicks
+  Unpause fallback; stale-playlistItemId next/prev harmless; self-leave
+  `Left` event no-ops; ping-before-first-ready tolerated.
+- Ended-in-group with a continuing queue keeps the screen open and reloads
+  in place (phase 4 seam) — watch it on device; drift threshold (2 s) may
+  need tuning; groups-screen poll lifecycle across rotation/background.
 
 ## Previous milestone: M10 — Release hardening (started 2026-07-30)
 

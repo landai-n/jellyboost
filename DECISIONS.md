@@ -1610,3 +1610,55 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `!played` half of `isResumable` fails the fully-watched case.
 
 <!-- END -->
+
+## 2026-07-30 — M11 SyncPlay milestone approved (beyond plan v1 scope)
+
+- **Scope:** new milestone M11 in `docs/PLAN.md`; future package
+  `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/`, a
+  `SyncPlaySession` contract in `:core:common`, and a narrow exception in
+  `player/.../report/PlaybackReporter.kt`. Full plan:
+  `~/.claude/plans/would-it-be-possible-immutable-meadow.md` (M11 summary
+  appended to `docs/PLAN.md`).
+- **Plan said:** "**v1 scope:** Movies & TV shows only. Extras: Quick Connect
+  login. NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI,
+  transcoded downloads, Android TV." SyncPlay was absent from scope entirely;
+  M10 (release hardening) was the final planned milestone.
+- **Done instead:** user-approved (AskUserQuestion, 2026-07-30) addition of
+  **M11 — SyncPlay (server-coordinated group watch)** as a full post-M10
+  milestone: in-app group queue management (next/previous/shuffle/repeat), a
+  dedicated SyncPlay section plus player integration, and downloaded items
+  playing **from disk while in a group** (device online, lockstep with the
+  group). Movies & episodes only, matching app scope. Implementation is gated
+  on M10 closing; only this governance entry + PLAN/STATUS notes land now.
+- **Reason:** user request; feasibility confirmed against the pinned SDK
+  1.8.12 (`syncPlayApi` complete, `timeSyncApi`, `SocketApi` with SyncPlay
+  subscriptions and built-in reconnect — no version bump needed). The official
+  jellyfin-android app has no native SyncPlay to reference; built from the
+  protocol via the SDK.
+- **Key pre-logged design decisions** (recorded now so implementation
+  divergences are measurable against them):
+  1. *Group membership survives leaving the player screen* — on host detach
+     send `syncPlaySetIgnoreWait(true)` (jellyfin-web's own mechanism) so a
+     backgrounded member never gates the group; a later `PlayQueueUpdate`
+     re-launches the player via a `launchRequests` flow.
+  2. *Local-file-in-group playback DOES report to the server* —
+     `PlaybackReporter`'s local-source silence gets exactly one exception
+     (local + online + in-group), with a playSessionId minted via one
+     `PlaybackInfo` POST (no stream URL fetched, so no encoder starts);
+     mint failure tolerated with a null id. `stopTranscoding` stays
+     remote-only.
+  3. *Confirmed connection loss mid-group → pause + manual solo resume*
+     (user decision 2026-07-30, amending the drafted keep-playing-solo
+     behavior): pause the player, message "Left SyncPlay — connection lost";
+     manual resume plays solo (from disk if downloaded). Trigger only on
+     confirmed loss (connectivity offline or socket reconnect exhausted),
+     never on a transient blip the SDK socket recovers from. Rationale:
+     group watch is social — silently continuing silently drifts from the
+     group; an explicit pause + one-tap resume is honest.
+  4. *In-group user transport never acts locally* — play/pause/seek/next/
+     previous/queue edits become SyncPlay API calls; only the server's
+     rebroadcast `SendCommand`/`PlayQueueUpdate` moves the player. Speed
+     picker and segment auto-skip disabled in-group; skip-intro routes
+     through requestSeek.
+
+<!-- END -->

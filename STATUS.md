@@ -27,6 +27,19 @@
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Up next: M11 — SyncPlay (group watch) — planned & approved, not started
+
+M11 planned and user-approved 2026-07-30 (full scope: group queue management,
+dedicated SyncPlay section, downloaded items playing from disk while in a
+group; movies & episodes only). Governance landed: DECISIONS.md entry
+"M11 SyncPlay milestone approved" (incl. four pre-logged design decisions —
+note the amended one: confirmed connection loss mid-group → **pause** +
+manual solo resume, not keep-playing), PLAN.md M11 milestone + DoD appended.
+Implementation was gated on M10 closing — that gate has lifted; phases 1-6
+(protocol plumbing → coordinator → player integration → group queue →
+dedicated section → local-file reporting) follow the approved M11 plan
+document, delegated per project convention.
+
 ## Previous milestone: M10 — Release hardening (started 2026-07-30)
 
 **DoD (M10, docs/PLAN.md):** R8 rules (SDK serializers/Room/Hilt/Media3), baseline

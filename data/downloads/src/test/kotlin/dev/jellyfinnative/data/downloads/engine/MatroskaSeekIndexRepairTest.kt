@@ -145,9 +145,69 @@ class MatroskaSeekIndexRepairTest {
         val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true)
         val file = write(fixture)
 
+        // No runtime, so nothing at all is owed and the file is byte-for-byte as it was. The
+        // `SeekHead` it came with is never second-guessed, whatever it points at.
+        repair.ensureSeekable(file, runtimeMillis = 0L) shouldBe Outcome.ALREADY_INDEXED
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `a file that already has both a SeekHead and a Duration is not touched`() {
+        val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true, existingDurationTicks = 99.0)
+        val file = write(fixture)
+
         repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.ALREADY_INDEXED
 
         file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    // ---- the Duration an already-indexed file may still be missing ---------------------------------
+
+    @Test
+    fun `the Duration missing from an already-indexed file is filled in on a later play`() {
+        // The MKV-04 shape: a transcode repaired once before its runtime was known keeps its index
+        // for ever and used to keep its unwritten Duration for ever with it, so the media
+        // notification and PiP never learned how long the file was.
+        val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true)
+        val file = write(fixture)
+        repair.ensureSeekable(file, runtimeMillis = 0L) shouldBe Outcome.ALREADY_INDEXED
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.ALREADY_INDEXED
+
+        val patched = file.readBytes()
+        Reader(patched).duration() shouldBe RUNTIME_MILLIS.toDouble()
+        // Still ALREADY_INDEXED, and rightly so: the outcome names the seek index, and only the
+        // Void reserved for the Duration changed.
+        patched.size shouldBe fixture.bytes.size
+        unchanged(fixture.bytes, patched, 0, fixture.infoVoid)
+        unchanged(fixture.bytes, patched, fixture.infoVoidEnd, fixture.bytes.size.toLong())
+    }
+
+    @Test
+    fun `a Duration back-fill that fails part-way puts every original byte back`() {
+        val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true)
+        val file = write(fixture)
+        // The one patch of the back-fill dies; the rollback that follows it is write two.
+        val writer = FaultyWriter(failAt = setOf(1)) { IOException("the volume went away") }
+
+        repair.ensureSeekable(file, RUNTIME_MILLIS, writer) shouldBe Outcome.FAILED
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `a Duration is never written into an Info the muxer checksummed`() {
+        // A `CRC-32` covers every byte of its parent, Voids included: filling one in would leave a
+        // file a strict parser is entitled to reject. The seek index goes in regardless — it lives
+        // outside `Info`, in the Void the muxer reserved at the top of the Segment.
+        val file = write(Mkv.transcode(infoCrc32 = true))
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.INDEXED
+
+        val patched = file.readBytes()
+        Reader(patched).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()
+        Reader(patched).duration().shouldBeNull()
     }
 
     @Test
@@ -190,6 +250,58 @@ class MatroskaSeekIndexRepairTest {
         file.length() shouldBe 0L
     }
 
+    // ---- headers this declines to walk --------------------------------------------------------------
+
+    @Test
+    fun `an unknown-size Cluster is refused as a header, not as a foreign file`() {
+        // Legal Matroska that a live remux would write, and a header this cannot step through: the
+        // element after an unknown-size Cluster cannot be found without parsing the cluster itself.
+        // The veto is the right answer; calling it NOT_MATROSKA was not (audit MKV-01).
+        val fixture = Mkv.transcode(unknownSizeCluster = true)
+        val file = write(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.UNSUPPORTED_HEADER
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `a header that stops parsing behind its SeekHead is still an indexed file`() {
+        // The walk goes past the `SeekHead` now, to reach the `Info` a back-fill would need — so it
+        // can also fail past it. The seek index was settled before that happened, and nothing here
+        // is worth writing to the file.
+        val fixture = Mkv.transcode(seekHeadInsteadOfVoid = true, unknownSizeCluster = true)
+        val file = write(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.ALREADY_INDEXED
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `an element id of all ones vetoes the header`() {
+        // `0xFF` is the reserved id RFC 8794 gives no element. Stepping over it and writing into the
+        // file anyway meant trusting a header that had already said something impossible (MKV-07).
+        val fixture = Mkv.transcode(forbiddenIdByte = 0xFF.toByte())
+        val file = write(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.UNSUPPORTED_HEADER
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `an element id of all zeroes vetoes the header`() {
+        // `0x80` carries no value bits at all: a four-byte id spelled in one, which the format
+        // forbids because an id must have exactly one encoding.
+        val fixture = Mkv.transcode(forbiddenIdByte = 0x80.toByte())
+        val file = write(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.UNSUPPORTED_HEADER
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
     // ---- lengths a file we did not write may declare ------------------------------------------------
 
     @Test
@@ -219,6 +331,54 @@ class MatroskaSeekIndexRepairTest {
             media.readFully(header)
             header.contentEquals(prefix) shouldBe true
         }
+    }
+
+    @Test
+    fun `a film past two gigabytes gets a sixty-four bit index`() {
+        // Every offset in the repair is a `Long`, and this is the one that has to survive the round
+        // trip into the file: a 2.5 GiB transcode's `Cues` sit past `Int.MAX_VALUE`, and a
+        // `SeekPosition` that wrapped there would point Media3 at the wrong end of the film.
+        // Sparse: only the header and the trailer are ever written, so this costs a few blocks.
+        val fixture = Mkv.sparse(clusterBytes = HUGE_CLUSTER_BYTES)
+        val file = sparseFile(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.INDEXED
+
+        val written = read(file, fixture.segmentContent, SEEK_HEAD_BYTES)
+        val expected = fixture.cuesOffset - fixture.segmentContent
+        (expected > Int.MAX_VALUE.toLong()) shouldBe true
+        written.toHex() shouldBe "114d9b74954dbb9253ab841c53bb6b53ac88" + "%016x".format(expected)
+        // The file did not grow by a byte, so every offset the Cues already carry is still right.
+        file.length() shouldBe fixture.length
+    }
+
+    // ---- how far back the Cues may be ---------------------------------------------------------------
+
+    @Test
+    fun `Cues further from the end than one window are still found`() {
+        // Two megabytes of `Tags` behind the index — a chapter list, an attachment — used to push
+        // the `Cues` out of the single window the search read, and a perfectly good file was
+        // reported as having no index at all (audit MKV-05).
+        val fixture = Mkv.transcode(tagsAfterCues = true, tagsBytes = 2 * 1024 * 1024)
+        val file = write(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.INDEXED
+
+        val patched = file.readBytes()
+        val seekHead = Reader(patched).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()
+        Reader(patched).cuesPosition(seekHead) shouldBe fixture.cuesOffset - fixture.segmentContent
+    }
+
+    @Test
+    fun `Cues further back than the search will reach are given up on rather than searched for`() {
+        // The bound on the walk back. Past it this is not looking for a trailer any more, and the
+        // answer that costs nothing — "no index here" — is the one to give.
+        val fixture = Mkv.sparseTrailer(tagsBytes = 32L * 1024L * 1024L)
+        val file = sparseFile(fixture)
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.NO_CUES
+
+        read(file, 0L, fixture.prefix.size).contentEquals(fixture.prefix) shouldBe true
     }
 
     // ---- a write that dies part-way -----------------------------------------------------------------
@@ -354,7 +514,110 @@ class MatroskaSeekIndexRepairTest {
         Reader(patched).duration() shouldBe RUNTIME_MILLIS.toDouble()
     }
 
+    // ---- a whole file ffmpeg actually wrote ---------------------------------------------------------
+
+    @Test
+    fun `a real Matroska file that already carries its index is left exactly as it is`() {
+        val file = File(directory, "media.mkv").apply { writeBytes(realMkv()) }
+
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.ALREADY_INDEXED
+
+        // Nothing is owed: the `SeekHead` is ffmpeg's own, the `Duration` is ffmpeg's own, and the
+        // `Info` carries a real `CRC-32` that a back-fill would have invalidated.
+        file.readBytes().contentEquals(realMkv()) shouldBe true
+        Reader(realMkv()).duration() shouldBe REAL_DURATION
+    }
+
+    @Test
+    fun `a real ffmpeg file without its SeekHead is indexed at the offset ffmpeg itself recorded`() {
+        val real = realMkv()
+        // ffmpeg's own answer to the question this class exists to answer, read out of the file it
+        // wrote: the `SeekPosition` of its `Cues` entry. Nothing here computes it — it is the oracle.
+        val ffmpegsAnswer =
+            Reader(real).cuesPosition(Reader(real).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()).shouldNotBeNull()
+        val file = File(directory, "media.mkv").apply { writeBytes(liveMux(real)) }
+
+        // 1. Scan — the download engine's own reading of the bytes as they would have arrived.
+        val scanner = MkvClusterScanner()
+        val stream = file.readBytes()
+        var at = 0
+        while (at < stream.size) {
+            val length = minOf(SCAN_CHUNK_BYTES, stream.size - at)
+            scanner.consume(stream, at, length)
+            at += length
+        }
+        scanner.mediaMillisReceived shouldBe REAL_LAST_CLUSTER_MILLIS
+
+        // 2. Repair.
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.INDEXED
+
+        // 3. Verify — the whole file still parses, and the twenty-six bytes written are the ones
+        //    ffmpeg would have written itself.
+        val patched = file.readBytes()
+        patched.size shouldBe real.size
+        val seekHead = Reader(patched).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()
+        seekHead.start shouldBe REAL_SEGMENT_CONTENT.toLong()
+        Reader(patched).cuesPosition(seekHead) shouldBe ffmpegsAnswer
+        patched.copyOfRange(REAL_SEGMENT_CONTENT, REAL_SEGMENT_CONTENT + SEEK_HEAD_BYTES).toHex() shouldBe
+            "114d9b74954dbb9253ab841c53bb6b53ac88" + "%016x".format(ffmpegsAnswer)
+        // ffmpeg's own `Duration` is still there and was not rewritten; its `Info` is checksummed.
+        Reader(patched).duration() shouldBe REAL_DURATION
+
+        // 4. And again — the playback path runs this on every open.
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.ALREADY_INDEXED
+        file.readBytes().contentEquals(patched) shouldBe true
+    }
+
     // ---- helpers ------------------------------------------------------------------------------------
+
+    /**
+     * Thirteen kilobytes of unmodified `ffmpeg 7.1.1` output: six seconds of H.264 in Matroska, six
+     * clusters, and a `Cues` index ffmpeg built from the frames it actually encoded — the one thing
+     * no synthetic fixture in this file can claim. It is committed rather than generated because a
+     * unit test may not depend on an ffmpeg being on the machine.
+     */
+    private fun realMkv(): ByteArray = checkNotNull(javaClass.getResourceAsStream("/ffmpeg-matroska.mkv")).readBytes()
+
+    /**
+     * [real] with its `SeekHead` replaced by a Void of exactly the same length — which is the shape
+     * jellyfin-ffmpeg lands on the device, and the shape `ffmpeg-transcode-header.bin` was cut from.
+     *
+     * A Void where a `SeekHead` was is ordinary Matroska: `ffprobe` reads the result, and `ffmpeg`
+     * decodes all six seconds of it, both before and after the repair — checked when the fixture was
+     * made. Deriving it here rather than committing it keeps the committed bytes ffmpeg's own, which
+     * is what lets the test above use ffmpeg's `SeekPosition` as an independent answer.
+     */
+    private fun liveMux(real: ByteArray): ByteArray {
+        val seekHead = Reader(real).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()
+        val total = (seekHead.end - seekHead.start).toInt()
+        return real.copyOfRange(0, seekHead.start.toInt()) +
+            Mkv.void(total) +
+            real.copyOfRange(seekHead.end.toInt(), real.size)
+    }
+
+    /** Writes a [Mkv.Sparse] fixture: the header, the trailer, and a hole between them. */
+    private fun sparseFile(fixture: Mkv.Sparse): File {
+        val file = File(directory, "media.mkv")
+        RandomAccessFile(file, "rw").use { media ->
+            media.write(fixture.prefix)
+            media.setLength(fixture.length)
+            media.seek(fixture.cuesOffset)
+            media.write(fixture.cues)
+        }
+        return file
+    }
+
+    private fun read(
+        file: File,
+        at: Long,
+        count: Int,
+    ): ByteArray =
+        RandomAccessFile(file, "r").use { media ->
+            val bytes = ByteArray(count)
+            media.seek(at)
+            media.readFully(bytes)
+            bytes
+        }
 
     private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
@@ -425,10 +688,14 @@ class MatroskaSeekIndexRepairTest {
             infoVoidBytes: Int = INFO_VOID_BYTES,
             timestampScaleNanos: Long = 1_000_000L,
             existingDurationTicks: Double? = null,
+            infoCrc32: Boolean = false,
             cues: Boolean = true,
             tagsAfterCues: Boolean = false,
+            tagsBytes: Int = 64,
             seekHeadInsteadOfVoid: Boolean = false,
             decoyCuesInCluster: Boolean = false,
+            unknownSizeCluster: Boolean = false,
+            forbiddenIdByte: Byte? = null,
         ): Fixture {
             val header = element(ID_EBML, ByteArray(35) { 0x22 }) + ID_SEGMENT + UNKNOWN_SIZE
             val segmentContent = header.size.toLong()
@@ -440,25 +707,36 @@ class MatroskaSeekIndexRepairTest {
                     void(reservedVoidBytes)
                 }
             val infoBody =
-                void(infoVoidBytes) +
+                (if (infoCrc32) crc32() else ByteArray(0)) +
+                    void(infoVoidBytes) +
                     element(ID_TIMESTAMP_SCALE, unsigned(timestampScaleNanos)) +
                     (existingDurationTicks?.let { element(ID_DURATION, bigEndian(it.toRawBits())) } ?: ByteArray(0))
+
+            val firstCluster =
+                if (unknownSizeCluster) {
+                    // The size a live remux writes when it does not yet know how long its cluster
+                    // will be. Legal Matroska, and a header this cannot step through.
+                    ID_CLUSTER + UNKNOWN_SIZE + clusterPayload(decoyCuesInCluster)
+                } else {
+                    element(ID_CLUSTER, clusterPayload(decoyCuesInCluster))
+                }
 
             val prefix =
                 header + reserved + element(ID_INFO, infoBody) +
                     element(ID_TRACKS, ByteArray(64) { 0x11 }) +
-                    element(ID_CLUSTER, clusterPayload(decoyCuesInCluster)) +
+                    (forbiddenIdByte?.let { byteArrayOf(it) + wideLength(4L) + ByteArray(4) } ?: ByteArray(0)) +
+                    firstCluster +
                     element(ID_CLUSTER, ByteArray(4_096) { (it % 97).toByte() })
 
             val tail =
                 when {
                     !cues -> ByteArray(0)
-                    tagsAfterCues -> cues() + element(ID_TAGS, ByteArray(64) { 0x44 })
+                    tagsAfterCues -> cues() + element(ID_TAGS, ByteArray(tagsBytes) { 0x44 })
                     else -> cues()
                 }
 
             val reservedVoidEnd = segmentContent + reserved.size
-            val infoVoid = reservedVoidEnd + HEADER_BYTES
+            val infoVoid = reservedVoidEnd + HEADER_BYTES + (if (infoCrc32) CRC32_BYTES else 0)
             return Fixture(
                 bytes = prefix + tail,
                 segmentContent = segmentContent,
@@ -471,6 +749,64 @@ class MatroskaSeekIndexRepairTest {
 
         /** One cluster, to hang off a real ffmpeg header. */
         fun cluster(): ByteArray = element(ID_CLUSTER, ByteArray(4_096) { (it % 97).toByte() })
+
+        /** The four-byte checksum a muxer writes over everything its parent contains. */
+        fun crc32(): ByteArray = byteArrayOf(ID_CRC32, 0x84.toByte()) + ByteArray(CRC32_BYTES)
+
+        /**
+         * A transcode whose one cluster *declares* [clusterBytes] of frame data without a byte of it
+         * being written, so a film past `Int.MAX_VALUE` costs a few blocks of disk to build.
+         *
+         * The caller writes [prefix] at zero, sets the length to [length], and puts [cues] at
+         * [cuesOffset]; everything between is a hole.
+         */
+        fun sparse(clusterBytes: Long): Sparse {
+            val header = element(ID_EBML, ByteArray(35) { 0x22 }) + ID_SEGMENT + UNKNOWN_SIZE
+            val infoBody = void(INFO_VOID_BYTES) + element(ID_TIMESTAMP_SCALE, unsigned(1_000_000L))
+            val prefix =
+                header + void(RESERVED_VOID_BYTES) + element(ID_INFO, infoBody) +
+                    element(ID_TRACKS, ByteArray(64) { 0x11 }) +
+                    ID_CLUSTER + wideLength(clusterBytes)
+            val cues = cues()
+            val cuesOffset = prefix.size + clusterBytes
+            return Sparse(
+                prefix = prefix,
+                cues = cues,
+                segmentContent = header.size.toLong(),
+                cuesOffset = cuesOffset,
+                length = cuesOffset + cues.size,
+            )
+        }
+
+        /**
+         * A trailer that *declares* [tagsBytes] of `Tags` behind the `Cues` without writing them,
+         * which is how a file whose index sits tens of megabytes from the end is built cheaply.
+         */
+        fun sparseTrailer(tagsBytes: Long): Sparse {
+            val header = element(ID_EBML, ByteArray(35) { 0x22 }) + ID_SEGMENT + UNKNOWN_SIZE
+            val infoBody = void(INFO_VOID_BYTES) + element(ID_TIMESTAMP_SCALE, unsigned(1_000_000L))
+            val prefix =
+                header + void(RESERVED_VOID_BYTES) + element(ID_INFO, infoBody) +
+                    element(ID_TRACKS, ByteArray(64) { 0x11 }) +
+                    element(ID_CLUSTER, ByteArray(4_096) { (it % 97).toByte() })
+            val cues = cues() + ID_TAGS + wideLength(tagsBytes)
+            return Sparse(
+                prefix = prefix,
+                cues = cues,
+                segmentContent = header.size.toLong(),
+                cuesOffset = prefix.size.toLong(),
+                length = prefix.size + cues.size + tagsBytes,
+            )
+        }
+
+        /** A file too big to hold in memory: what to write, where, and how long it ends up. */
+        class Sparse(
+            val prefix: ByteArray,
+            val cues: ByteArray,
+            val segmentContent: Long,
+            val cuesOffset: Long,
+            val length: Long,
+        )
 
         /**
          * An EBML header and an unknown-size Segment, then a Void that *declares* [content] bytes of
@@ -499,7 +835,7 @@ class MatroskaSeekIndexRepairTest {
             payload: ByteArray,
         ): ByteArray = id + wideLength(payload.size.toLong()) + payload
 
-        private fun void(total: Int): ByteArray =
+        fun void(total: Int): ByteArray =
             when {
                 total < VOID_LONG_FORM_MIN ->
                     byteArrayOf(ID_VOID, (0x80 or (total - 2)).toByte()) + ByteArray(total - 2)
@@ -518,7 +854,7 @@ class MatroskaSeekIndexRepairTest {
         }
 
         /** The eight-byte EBML length form, so every element header in a fixture is the same width. */
-        private fun wideLength(value: Long): ByteArray = bigEndian(value).also { it[0] = 0x01 }
+        fun wideLength(value: Long): ByteArray = bigEndian(value).also { it[0] = 0x01 }
 
         private fun bigEndian(value: Long): ByteArray =
             ByteArray(Long.SIZE_BYTES) { (value ushr ((Long.SIZE_BYTES - 1 - it) * Byte.SIZE_BITS)).toByte() }
@@ -528,6 +864,9 @@ class MatroskaSeekIndexRepairTest {
 
         private const val VOID_LONG_FORM_MIN = 10
         private const val DECOY_OFFSET = 700
+
+        /** A CRC-32 is four bytes, and the spec allows it to be spelled no other way. */
+        const val CRC32_BYTES = 4
 
         private val ID_EBML = byteArrayOf(0x1A, 0x45, 0xDF.toByte(), 0xA3.toByte())
         private val ID_SEGMENT = byteArrayOf(0x18, 0x53, 0x80.toByte(), 0x67)
@@ -540,6 +879,7 @@ class MatroskaSeekIndexRepairTest {
         private val ID_TIMESTAMP_SCALE = byteArrayOf(0x2A, 0xD7.toByte(), 0xB1.toByte())
         private val ID_DURATION = byteArrayOf(0x44, 0x89.toByte())
         private const val ID_VOID = 0xEC.toByte()
+        private const val ID_CRC32 = 0xBF.toByte()
 
         /** An eight-byte size with every value bit set: what a live mux writes for its Segment. */
         private val UNKNOWN_SIZE = byteArrayOf(0x01, -1, -1, -1, -1, -1, -1, -1)
@@ -558,14 +898,19 @@ class MatroskaSeekIndexRepairTest {
 
         fun topLevel(id: Long): Element? = walk().firstOrNull { it.id == id }
 
-        /** The `SeekPosition` of the entry naming `Cues`, or `null` when there is no such entry. */
-        fun cuesPosition(seekHead: Element): Long? {
-            val seek = children(seekHead).firstOrNull { it.id == ID_SEEK } ?: return null
-            val entries = children(seek)
-            val target = entries.firstOrNull { it.id == ID_SEEK_ID } ?: return null
-            if (unsignedOf(target) != ID_CUES) return null
-            return entries.firstOrNull { it.id == ID_SEEK_POSITION }?.let(::unsignedOf)
-        }
+        /**
+         * The `SeekPosition` of the entry naming `Cues`, or `null` when there is no such entry.
+         *
+         * Every `Seek` child is searched, not just the first: what this code writes has one entry,
+         * but what ffmpeg writes has four and opens with a `CRC-32`.
+         */
+        fun cuesPosition(seekHead: Element): Long? =
+            children(seekHead)
+                .filter { it.id == ID_SEEK }
+                .map(::children)
+                .firstOrNull { entry -> entry.any { it.id == ID_SEEK_ID && unsignedOf(it) == ID_CUES } }
+                ?.firstOrNull { it.id == ID_SEEK_POSITION }
+                ?.let(::unsignedOf)
 
         /** The `Duration` inside `Info`, or `null` when it is still an unwritten Void. */
         fun duration(): Double? {
@@ -676,5 +1021,17 @@ class MatroskaSeekIndexRepairTest {
 
         /** 2.5 GiB: past `Int.MAX_VALUE`, which is the whole point of it. */
         const val HUGE_VOID_BYTES = 2_684_354_560L
+
+        /** 2.5 GiB of declared frame data, so the `Cues` behind it land past `Int.MAX_VALUE` too. */
+        const val HUGE_CLUSTER_BYTES = 2_684_354_560L
+
+        /** The `Duration` ffmpeg wrote into the real fixture: six seconds, at a tick per ms. */
+        const val REAL_DURATION = 6_000.0
+
+        /** The timestamp of the last of that file's six clusters, as its own bytes give it. */
+        const val REAL_LAST_CLUSTER_MILLIS = 5_533L
+
+        /** Small enough that the real file crosses several chunk boundaries on the way in. */
+        const val SCAN_CHUNK_BYTES = 4_096
     }
 }

@@ -1411,3 +1411,37 @@ Seeded from the approved plan; listed for traceability, no divergence:
   pinning tests.
 
 <!-- END -->
+\n\n## 2026-07-30 — MKV batch landing: fixtures, Duration back-fill, transcode-resume fix (MKV-11/04/10/05/07/08/09)
+
+- **Scope:** `MatroskaSeekIndexRepair`, `MkvClusterScanner`, `FileDownloader`,
+  `DownloadQueue` (3-line call site), +19 tests incl. a committed 13.8 KB real
+  ffmpeg-7.1.1 fixture (`ffmpeg-matroska.mkv`) used as an independent oracle
+  (the test reads ffmpeg's own recorded Cues offset and asserts our 26 written
+  bytes carry exactly that number); the >2 GiB fixture is runtime-generated
+  sparse (8 KiB on disk, 9 ms).
+- **Audit said / done instead, per item:**
+  - MKV-04 required `walkHeader` to stop short-circuiting at the `SeekHead`; an
+    already-indexed file now gets a missing `Duration` back-filled. **One existing
+    test's contract moved** (not weakened): `a file that already has a SeekHead is
+    not touched` now runs with `runtimeMillis = 0` — nothing owed, byte-identity
+    still asserted — and a new `…has both a SeekHead and a Duration…` test pins the
+    untouched case with a runtime supplied. Outcome stays `ALREADY_INDEXED` (it
+    names the seek index); a failed back-fill is `FAILED` after rollback.
+  - New `Outcome.UNSUPPORTED_HEADER` split out of `NOT_MATROSKA` (sanctioned by the
+    MKV-01 Tier-3 "improve the label" note); sole consumer ignores the return.
+  - **Safety rider not in the audit:** `duration()` refuses an `Info` carrying a
+    written `CRC-32` — the back-fill newly exposes ORIGINAL (likelier-checksummed)
+    files to a write inside a CRC-covered Void.
+  - MKV-10 implemented as `FileDownloader.download(transcoded=)`: a transcode never
+    sends `Range` and a `206` answered anyway is truncate-and-restart; the queue
+    passes `quality.isTranscoded && type == MEDIA` so sidecars/images still resume.
+    Bonus: the chunk sink now survives a transcode restart.
+  - MKV-05 windowed backward Cues scan, bounded `MAX_CUES_SCAN_BYTES = 16 MiB`
+    (implementation choice); MKV-07/08/09 as specified.
+- **Recorded risk, no action:** ffmpeg 7.1.1 on non-seekable output writes an
+  upfront `SeekHead` *without* `Cues` — a shape our KDoc claimed no muxer writes;
+  such a file earns `ALREADY_INDEXED` and stays unseekable. jellyfin-ffmpeg does
+  not write it (verified against the committed transcode header), so nothing
+  shipping is affected — revisit if the server's bundled ffmpeg ever changes.
+
+<!-- END -->

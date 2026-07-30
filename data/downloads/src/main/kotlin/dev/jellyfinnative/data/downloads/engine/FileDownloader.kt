@@ -79,6 +79,15 @@ fun interface MediaChunkSink {
  *   from zero rather than silently corrupted by appending a second copy;
  * - `416 Range Not Satisfiable` → the file was already complete; nothing is transferred.
  *
+ * ### The one thing that cannot be resumed
+ * A **transcode** is not a file; it is an encode the server runs while it answers. A second run
+ * produces different bytes at the same offset, so appending its body to the first run's prefix
+ * splices two encodes into one container: a file that still opens, still has `Cues` ending exactly
+ * at its last byte, and would earn a `SeekHead` pointing into the middle of the wrong encode
+ * (docs/notes/audit-2026-07.md, MKV-10). The server usually says so itself by ignoring `Range` and
+ * answering `200` — but that is the server being careful, not this client. So a transcoded
+ * download never asks to resume: see [download]'s `transcoded` parameter.
+ *
  * ### Cancellation
  * Cancelling the coroutine cancels the OkHttp call and stops the write loop, leaving the partial
  * file in place — that is precisely what makes it resumable. Nothing here ever deletes a file.
@@ -96,22 +105,30 @@ class FileDownloader
          * @param chunkSink an optional tap on the body as it is written; see [MediaChunkSink]. It
          *   is deliberately declared before [onProgress] so the callback stays a trailing lambda at
          *   every call site.
+         * @param transcoded whether [url] is a live transcode rather than a file the server already
+         *   holds. One is un-resumable by nature, so no `Range` is asked for and a `206` answered
+         *   anyway is treated exactly like a `200`: truncate and start over. Half of a discarded
+         *   encode costs bandwidth; splicing two encodes together costs the download
+         *   (docs/notes/audit-2026-07.md, MKV-10).
          * @return the total number of bytes the file holds once this call returns.
          * @throws IOException on any transport or HTTP failure the caller should treat as a
          *   download failure.
          */
+        @Suppress("LongParameterList")
         suspend fun download(
             url: String,
             target: File,
             dispatcher: CoroutineDispatcher,
             chunkSink: MediaChunkSink? = null,
+            transcoded: Boolean = false,
             onProgress: ProgressCallback,
         ): Long =
             withContext(dispatcher) {
                 target.parentFile?.mkdirs()
                 val existing = if (target.exists()) target.length() else 0L
+                val resumeFrom = if (transcoded) 0L else existing
 
-                val response = execute(url, existing)
+                val response = execute(url, resumeFrom)
                 response.use {
                     when (response.code) {
                         HTTP_RANGE_NOT_SATISFIABLE -> {
@@ -121,7 +138,7 @@ class FileDownloader
                             return@withContext existing
                         }
 
-                        HTTP_PARTIAL -> writeBody(response, target, existing, chunkSink, onProgress)
+                        HTTP_PARTIAL -> writeBody(response, target, resumeFrom, chunkSink, onProgress)
 
                         HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
 
@@ -164,8 +181,8 @@ class FileDownloader
          * A [chunkSink] is only wired up when [appendFrom] is `0`. A sink reads the stream from its
          * beginning — a resumed body starts in the middle of a container it never saw the head of,
          * and feeding it that would produce a confident wrong answer instead of no answer. In
-         * practice a transcode always lands here: the server ignores `Range` on one, answers `200`,
-         * and this method rewrites the file from zero.
+         * practice a transcode always lands here: it never asks to resume, so its body is always the
+         * whole file and this method always rewrites from zero.
          */
         private suspend fun writeBody(
             response: Response,

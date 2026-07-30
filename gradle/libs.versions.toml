@@ -51,6 +51,7 @@ coil = "3.4.0"
 # Monitoring
 timber = "5.0.1"
 slf4jAndroid = "2.0.17-0"
+slf4j = "2.0.17"
 
 # Testing
 junit = "6.1.2"
@@ -160,8 +161,11 @@ coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp"
 
 # Monitoring
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
-# Runtime SLF4J binding for jellyfin-sdk's kotlin-logging calls; routes them to Logcat.
+# Runtime SLF4J binding for jellyfin-sdk's kotlin-logging calls; routes them to Logcat. Debug only.
 slf4j-android = { group = "uk.uuid.slf4j", name = "slf4j-android", version.ref = "slf4jAndroid" }
+# No-op SLF4J binding for release: keeps slf4j-api on the classpath (the SDK needs it) while
+# discarding the SDK's request-URL logging instead of writing it to Logcat.
+slf4j-nop = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j" }
 
 # Testing
 junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }

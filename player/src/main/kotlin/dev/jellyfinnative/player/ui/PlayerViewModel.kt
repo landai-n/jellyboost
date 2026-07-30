@@ -280,16 +280,21 @@ class PlayerViewModel
          * Tried locally first; while transcoding the server only ever sent the one audio track it
          * was asked for, so the switch falls through to a re-resolve and a visible reload. For a
          * downloaded item that re-resolve has to be told to bypass the file — see [needsServer].
+         *
+         * The one case that does *not* try the player first is [goesHome]: a forced-remote session
+         * whose file can serve the selection has somewhere better to be than this stream, and an
+         * in-stream switch that happens to succeed would strand it there.
          */
         fun selectAudioTrack(jellyfinIndex: Int) {
             val current = source ?: return
-            if (playerHandle.selectAudioTrack(current, jellyfinIndex)) {
+            val home = goesHome(current, audioIndex = jellyfinIndex, subtitleIndex = current.selectedSubtitleIndex)
+            if (!home && playerHandle.selectAudioTrack(current, jellyfinIndex)) {
                 source = current.withSelectedAudio(jellyfinIndex)
                 _uiState.update { it.copy(selectedAudioIndex = jellyfinIndex) }
                 return
             }
             if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
-            val remote = needsServer(current, localSource?.playsAudioLocally(jellyfinIndex) == true)
+            val remote = needsServer(current, home)
             reopenSession(
                 current.asRequest(remote).copy(audioStreamIndex = jellyfinIndex),
                 trackChangeMessage(current, remote),
@@ -299,19 +304,45 @@ class PlayerViewModel
         /** Switches subtitle track; [jellyfinIndex] `null` turns subtitles off. */
         fun selectSubtitleTrack(jellyfinIndex: Int?) {
             val current = source ?: return
-            if (playerHandle.selectSubtitleTrack(current, jellyfinIndex)) {
+            val home = goesHome(current, audioIndex = current.selectedAudioIndex, subtitleIndex = jellyfinIndex)
+            if (!home && playerHandle.selectSubtitleTrack(current, jellyfinIndex)) {
                 source = current.withSelectedSubtitle(jellyfinIndex)
                 _uiState.update { it.copy(selectedSubtitleIndex = jellyfinIndex) }
                 return
             }
             if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
-            val remote = needsServer(current, localSource?.playsSubtitleLocally(jellyfinIndex) == true)
+            val remote = needsServer(current, home)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
             reopenSession(
                 current.asRequest(remote).copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
                 trackChangeMessage(current, remote),
             )
         }
+
+        /**
+         * Whether this track change should return the item to the download it is streaming past.
+         *
+         * Asked *before* the player is offered the switch, which is the whole point. A forced-remote
+         * session is not necessarily a transcode: when the server direct-plays the original file the
+         * stream carries every track, so `PlayerHandle.selectAudioTrack` succeeds — and a session that
+         * only left the file for one track it lacked would then stay on the network for good, still
+         * paying for a stream of bytes that are already on the disk. That is the M10 device finding
+         * (check B.3): the transcoded case reached the re-resolve below and went home, the
+         * direct-played one never got there.
+         *
+         * Both selections are weighed, not just the one being changed, because going home has to
+         * take the *whole* session with it. Turning subtitles off during a session that went remote
+         * for an audio track the file lacks must not drag playback back to a file that cannot produce
+         * that audio — the same guarantee [selectQuality] gets from carrying [forcedRemote].
+         */
+        private fun goesHome(
+            current: PlaybackMediaSource,
+            audioIndex: Int?,
+            subtitleIndex: Int?,
+        ): Boolean =
+            forcedRemote &&
+                current !is LocalPlaybackMediaSource &&
+                localSource?.plays(audioIndex, subtitleIndex) == true
 
         /**
          * Whether the reopen that satisfies a track change has to bypass the download on disk.
@@ -321,19 +352,20 @@ class PlayerViewModel
          * - **playing the local file:** the player has just refused the track, so the file cannot
          *   supply it whatever its stream list claims — only the server can, and by the time this is
          *   asked we already know there is one;
-         * - **streaming an item that is also downloaded** (a previous forced-remote switch): a track
-         *   the file *does* hold goes home. Reopening without the flag lets `PlaybackSourceResolver`
-         *   pick the local copy again, which costs no bandwidth and survives the network dropping —
-         *   the whole reason the download exists. Anything else keeps streaming;
+         * - **streaming an item that is also downloaded** (a previous forced-remote switch): a
+         *   selection the file *does* hold goes home ([goesHome]). Reopening without the flag lets
+         *   `PlaybackSourceResolver` pick the local copy again, which costs no bandwidth and survives
+         *   the network dropping — the whole reason the download exists. Anything else keeps
+         *   streaming;
          * - **an item that was never downloaded:** nothing to bypass; this is M5's path untouched.
          */
         private fun needsServer(
             current: PlaybackMediaSource,
-            fileHoldsTrack: Boolean,
+            goesHome: Boolean,
         ): Boolean =
             when {
                 current is LocalPlaybackMediaSource -> true
-                else -> localSource != null && !fileHoldsTrack
+                else -> localSource != null && !goesHome
             }
 
         /**
@@ -838,6 +870,18 @@ private fun PlaybackMediaSource.asRequest(forceRemote: Boolean): PlaybackResolve
         subtitleStreamIndex = selectedSubtitleIndex,
         forceRemote = forceRemote,
     )
+
+/**
+ * Whether the bytes on disk can serve this whole selection, with no server in the loop.
+ *
+ * A `null` index is "nothing being asked for" on either side — the server chose no audio stream, or
+ * subtitles are off — and neither of those needs a stream to satisfy. Both are weighed together
+ * because the caller is deciding where the *session* plays from, not where one track comes from.
+ */
+private fun LocalPlaybackMediaSource.plays(
+    audioIndex: Int?,
+    subtitleIndex: Int?,
+): Boolean = (audioIndex == null || playsAudioLocally(audioIndex)) && playsSubtitleLocally(subtitleIndex)
 
 private fun PlayerUiState.withSource(
     source: PlaybackMediaSource,

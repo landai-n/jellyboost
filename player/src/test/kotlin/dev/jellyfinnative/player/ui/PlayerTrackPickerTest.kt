@@ -8,6 +8,7 @@ import dev.jellyfinnative.player.PlayerFixtures
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.PlaybackTrack
+import dev.jellyfinnative.player.model.RemotePlaybackMediaSource
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -264,6 +265,121 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
         }
 
     @Test
+    fun `a direct-played stream of a download still goes home for a track the file holds`() =
+        runTest(dispatcher) {
+            // The M10 device finding (check B.3): the server was direct-playing the original file,
+            // so the stream carried every track and the in-stream switch *succeeded* — which is
+            // exactly why it must not be offered one. Only the transcoded case reached the
+            // re-resolve, which is why the transcoded walk above looked fine.
+            playerHandle.trackSelectionSucceeds = true
+            playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
+            val model = streamingDownloadedItem()
+
+            val requests = mutableListOf<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(requests)) } returns
+                AppResult.Success(PlayerFixtures.downloadedFilm())
+
+            model.selectAudioTrack(PlayerFixtures.BAKED_AUDIO_INDEX)
+            advanceUntilIdle()
+
+            requests.last().forceRemote shouldBe false
+            requests.last().audioStreamIndex shouldBe PlayerFixtures.BAKED_AUDIO_INDEX
+            // The film picks up where it was, exactly as the outbound trip did.
+            requests.last().startPositionTicks shouldBe 300_000_000L
+            model.uiState.value.isLocalPlayback shouldBe true
+            // The player was never offered the switch: taking it would have stranded the session on
+            // the network with the bytes already on the disk.
+            playerHandle.selectedAudioIndices shouldContainExactly listOf(PlayerFixtures.STREAMED_AUDIO_INDEX)
+        }
+
+    @Test
+    fun `after going home the item is a download again, not a stream it is stuck on`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = true
+            val model = streamingDownloadedItem()
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.downloadedFilm())
+            model.selectAudioTrack(PlayerFixtures.BAKED_AUDIO_INDEX)
+            advanceUntilIdle()
+
+            // Leaving the file again has to be a fresh decision, not a flag left standing.
+            playerHandle.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source)
+
+            model.selectAudioTrack(PlayerFixtures.STREAMED_AUDIO_INDEX)
+            advanceUntilIdle()
+
+            // This copy is only reachable from a source the ViewModel considers local.
+            model.uiState.value.userMessage shouldBe PlayerMessage.StreamingForTrackChange
+            model.uiState.value.isLocalPlayback shouldBe false
+        }
+
+    @Test
+    fun `while streaming a download, another track the file lacks is switched in the stream`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = true
+            val model = streamingDownloadedItem()
+
+            // Index 4 is the second server-only audio track: the file cannot serve it either, so
+            // there is nowhere to go home to and a reopen would buy nothing but a black frame.
+            model.selectAudioTrack(SECOND_STREAMED_AUDIO_INDEX)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { resolver.resolve(any()) }
+            model.uiState.value.selectedAudioIndex shouldBe SECOND_STREAMED_AUDIO_INDEX
+            model.uiState.value.isLocalPlayback shouldBe false
+        }
+
+    @Test
+    fun `a subtitle the file holds takes a direct-played stream of a download home`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = true
+            val model = streamingDownloadedItem(streamed = streamedForSubtitle, pick = pickStreamedSubtitle)
+
+            val requests = mutableListOf<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(requests)) } returns
+                AppResult.Success(PlayerFixtures.downloadedFilm())
+
+            model.selectSubtitleTrack(SIDECAR_SUBTITLE_INDEX)
+            advanceUntilIdle()
+
+            requests.last().forceRemote shouldBe false
+            requests.last().subtitleStreamIndex shouldBe SIDECAR_SUBTITLE_INDEX
+            model.uiState.value.isLocalPlayback shouldBe true
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(PlayerFixtures.STREAMED_SUBTITLE_INDEX)
+        }
+
+    @Test
+    fun `while streaming a download, another subtitle the file lacks is switched in the stream`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = true
+            val model = streamingDownloadedItem(streamed = streamedForSubtitle, pick = pickStreamedSubtitle)
+
+            // Index 6 is embedded in the source and its sidecar was never fetched.
+            model.selectSubtitleTrack(SECOND_STREAMED_SUBTITLE_INDEX)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { resolver.resolve(any()) }
+            model.uiState.value.selectedSubtitleIndex shouldBe SECOND_STREAMED_SUBTITLE_INDEX
+            model.uiState.value.isLocalPlayback shouldBe false
+        }
+
+    @Test
+    fun `turning subtitles off does not drag a stream home away from the audio it went for`() =
+        runTest(dispatcher) {
+            // The file trivially "holds" no subtitles, but it cannot hold the audio this session
+            // left for — so going home would silently undo the switch the user asked for.
+            playerHandle.trackSelectionSucceeds = true
+            val model = streamingDownloadedItem()
+
+            model.selectSubtitleTrack(null)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { resolver.resolve(any()) }
+            model.uiState.value.isLocalPlayback shouldBe false
+            model.uiState.value.selectedAudioIndex shouldBe PlayerFixtures.STREAMED_AUDIO_INDEX
+        }
+
+    @Test
     fun `changing quality while streaming a downloaded item does not drop back to the file`() =
         runTest(dispatcher) {
             val model = streamingDownloadedItem()
@@ -310,19 +426,53 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
     /**
      * A session that started on the downloaded file and is now streaming it for a track the file
      * does not hold — the state every "while streaming a download" test starts from.
+     *
+     * @param streamed what the server hands back, carrying the selection it was asked for exactly as
+     *   a real `PlaybackInfo` answer echoes it. That echo is not decoration: a later track change
+     *   weighs *both* selections when it decides whether the file could take the whole session back,
+     *   so a stream that has forgotten what it was opened for would answer the wrong question.
+     * @param pick the tap that left the file.
      */
-    private fun TestScope.streamingDownloadedItem(): PlayerViewModel {
+    private fun TestScope.streamingDownloadedItem(
+        streamed: RemotePlaybackMediaSource = source.copy(selectedAudioIndex = PlayerFixtures.STREAMED_AUDIO_INDEX),
+        pick: PlayerViewModel.() -> Unit = { selectAudioTrack(PlayerFixtures.STREAMED_AUDIO_INDEX) },
+    ): PlayerViewModel {
         val handle = playerHandle.trackSelectionSucceeds
         playerHandle.trackSelectionSucceeds = false
         coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.downloadedFilm())
         val model = viewModel()
         advanceUntilIdle()
 
-        coEvery { resolver.resolve(any()) } returns AppResult.Success(source)
-        model.selectAudioTrack(PlayerFixtures.STREAMED_AUDIO_INDEX)
+        coEvery { resolver.resolve(any()) } returns AppResult.Success(streamed)
+        model.pick()
         advanceUntilIdle()
 
         playerHandle.trackSelectionSucceeds = handle
         return model
     }
+
+    private companion object {
+        /** The source's other server-only audio track; the download baked in neither. */
+        const val SECOND_STREAMED_AUDIO_INDEX = 4
+
+        /** An embedded subtitle of the source whose sidecar was never fetched. */
+        const val SECOND_STREAMED_SUBTITLE_INDEX = 6
+
+        /** A subtitle the download did fetch as a sidecar — the file can serve it alone. */
+        const val SIDECAR_SUBTITLE_INDEX = 1
+    }
+
+    /**
+     * The stream a session that left the file for a *subtitle* lands on: the audio is still the one
+     * baked into the download, and only the subtitle is server-only.
+     */
+    private val streamedForSubtitle
+        get() =
+            source.copy(
+                selectedAudioIndex = PlayerFixtures.BAKED_AUDIO_INDEX,
+                selectedSubtitleIndex = PlayerFixtures.STREAMED_SUBTITLE_INDEX,
+            )
+
+    private val pickStreamedSubtitle: PlayerViewModel.() -> Unit =
+        { selectSubtitleTrack(PlayerFixtures.STREAMED_SUBTITLE_INDEX) }
 }

@@ -303,6 +303,9 @@ class SeasonSeedingScenarioTest {
             runTimeTicks = HOUR_TICKS,
             // Far above `LOW`'s cap, so the row gets a genuine ceiling rather than a remux figure.
             sourceBitRate = 40_000_000,
+            // The file that bitrate implies over an hour — 18 GB against a 1,4 GB transcode, so the
+            // row stays `LOW` instead of falling back to the original (`DownloadEnqueuer.planQuality`).
+            sizeBytes = 3_600L * 40_000_000 / 8,
         )
 
     private fun cached(

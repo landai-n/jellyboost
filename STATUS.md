@@ -12,6 +12,21 @@ verification on the minified build.
   vs `MediaCodecList` on the Helio G100).
 - Note: the repo has no GitHub remote — CI can be authored but not exercised.
 
+## Pointless transcodes fall back to the original (post-M9, 2026-07-30 — built, gate green, **not yet device-verified**)
+
+`DownloadEnqueuer.planQuality`: when the chosen quality is transcoded and the estimate comes to
+`>= 0.9 ×` the source file's own size, the row is written as `ORIGINAL` instead — exact size,
+resumable, no server CPU, no quality loss. Per row (a season's episodes decide separately), decided
+before the row is built, and only ever *towards* the original. An unknown source size or an
+uncomputable estimate keeps the user's preference. No downstream change: everything already reads
+the row's `quality` column. Docs: `docs/features/download-quality.md` ("When a transcode is not
+worth making"), `DECISIONS.md` (2026-07-30). Tests: `DownloadEnqueuerSizeTest` 20 → 27.
+
+- **Known issue / next:** device walk on the test tablet — with quality set to *High*, download a
+  1080p H.264 item already under the cap and confirm the row shows a plain exact size, offers
+  *Pause*, and lands as the source's own file name/container rather than a `(high).mkv`; then a
+  25–40 Mbps remux at *Low* to confirm it still transcodes.
+
 ## Batch selection (post-M9 feature, 2026-07-29 — built, gate green, **not yet device-verified**)
 
 Long-press → selection mode on the **library grid** and the **season page's episode list**, with

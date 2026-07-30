@@ -276,7 +276,9 @@ class DownloadEnqueuerTest {
                 AppResult.Success(
                     listOf(
                         movie(
-                            sizeBytes = 2_100_000_000L,
+                            // What that source bitrate weighs over an hour: twice the estimate
+                            // below, so the transcode is worth making and the row keeps it.
+                            sizeBytes = 3_600L * DownloadQuality.MEDIUM.totalBitRate!! * 2 / 8,
                             // Above the MEDIUM cap, so the cap — not the source — bounds the estimate.
                             sourceBitRate = DownloadQuality.MEDIUM.totalBitRate!! * 2,
                             runTimeTicks = HOUR_TICKS,
@@ -303,7 +305,10 @@ class DownloadEnqueuerTest {
                 AppResult.Success(
                     listOf(
                         movie(
-                            sizeBytes = 2_100_000_000L,
+                            // No size reported for this source, so the fall-back-to-original rule
+                            // has nothing to compare the estimate against and leaves the user's
+                            // choice alone — this test is about the arithmetic, not that rule.
+                            sizeBytes = null,
                             sourceBitRate = sourceBitRate,
                             runTimeTicks = HOUR_TICKS,
                         ),

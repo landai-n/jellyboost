@@ -1308,3 +1308,33 @@ Seeded from the approved plan; listed for traceability, no divergence:
   pinned assertion was updated to the new string; nothing else weakened.
 
 <!-- END -->
+
+## 2026-07-30 — offline grid filters filter before paging (ARCH-01), progress-tick hot path closed, credential-store catch split
+
+- **Scope:** `core/database` (`ItemDao.downloadedListKeys` replaces `pagingDownloaded`),
+  `data` (`OfflineJellyfinRepository` filter-then-page), `data/downloads`
+  (`DownloadRepositoryImpl` per-subscription metadata cache), `feature/downloads`
+  (projection + `WhileSubscribed(5s)` state), `core/datastore`/`core/network`/`feature/auth`
+  (SEC-03 `EncryptedPreferencesOpener`, involuntary-logout surfacing).
+- **Plan said:** docs/PLAN.md line 73 — "Offline: `ItemDao.pagingDownloaded` behind same Pager".
+- **Done instead:** `pagingDownloaded` is removed. The offline grid reads a dto-free ordered key
+  projection (`downloadedListKeys`, with genres/year/rating/played/favorite via LEFT JOIN),
+  filters in Kotlin, pages the filtered list, then loads only the surviving page's blobs — still
+  behind the same Pager/ItemPagingSource. Reason: genre membership lives in a newline-joined
+  column no SQL bound-list can intersect, and any LIMIT before filtering yields short pages that
+  Paging reads as end-of-library. Facet semantics mirror the server (OR within, AND across);
+  facets are scoped by parentId.
+- **SEC-03 consequence:** a `GeneralSecurityException` opening the encrypted store deletes and
+  recreates it AND tells the user (new `server_setup_session_lost` line); an `IOException`
+  propagates and deletes nothing — the old code wiped the session on a busy disk against
+  `SessionRepository`'s documented contract.
+- **Accepted deviations:** (1) `feature/downloads` gains an `implementation(core.network)` edge
+  solely for the `@DefaultDispatcher` qualifier — revisit by relocating dispatcher qualifiers to
+  `core:common` if the edge bothers anyone; (2) existing tests adapted, not weakened: four
+  OfflineJellyfinRepositoryTest grid tests re-pointed at the new DAO seam with assertions
+  preserved, two DownloadsViewModelTest tests gained `advanceUntilIdle()` (stateIn makes local
+  state land on the next dispatch), the test helper now subscribes on `backgroundScope`
+  (WhileSubscribed: no subscriber ⇒ no state); (3) new public API
+  `SecureCredentialStore.consumeLostSession()` / `SessionRepository.consumeInvoluntarySignOut()`.
+
+<!-- END -->

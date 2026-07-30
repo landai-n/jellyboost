@@ -13,6 +13,7 @@
     <string name="server_setup_address_placeholder">demo.jellyfin.org or 192.168.1.10:8096</string>
     <string name="server_setup_connect">Connect</string>
     <string name="server_setup_connecting">Contacting the server…</string>
+    <string name="server_setup_session_lost">Your saved sign-in could not be restored, so you have been signed out. Please sign in again.</string>
 
     <!-- Login -->
     <string name="login_title">Sign in</string>

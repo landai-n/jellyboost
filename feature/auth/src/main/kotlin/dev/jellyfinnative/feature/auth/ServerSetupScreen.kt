@@ -100,6 +100,17 @@ private fun ServerSetupContent(
             color = MaterialTheme.colorScheme.onBackground,
         )
 
+        if (state.sessionWasLost) {
+            // Above the form, not in the error slot below it: this is why the screen is here at
+            // all, and it must not be mistaken for the last connection attempt having failed.
+            Text(
+                text = stringResource(R.string.server_setup_session_lost),
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+
         DiscoveredServersSection(
             servers = state.discoveredServers,
             isDiscovering = state.isDiscovering,

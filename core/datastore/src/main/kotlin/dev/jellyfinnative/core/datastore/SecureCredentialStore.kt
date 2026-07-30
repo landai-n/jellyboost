@@ -17,6 +17,10 @@ interface SecureCredentialStore {
     /**
      * Returns the stored session, or `null` if none is stored or the stored data is
      * incomplete/unparseable.
+     *
+     * A *transient* storage failure is deliberately not folded into `null` here: `null` means
+     * "there is nothing to restore", and a busy disk is not that. It propagates, and the session
+     * layer signs this run out without touching what is stored.
      */
     suspend fun read(): StoredSession?
 
@@ -24,4 +28,17 @@ interface SecureCredentialStore {
      * Wipes the stored session, if any. Used on sign-out.
      */
     suspend fun clear()
+
+    /**
+     * Whether the store itself destroyed a stored session since this was last asked — reading it
+     * clears the flag.
+     *
+     * The distinction it exists for is the one the user can see: a store that could not be
+     * decrypted (a cleared Keystore key, a restored backup, a tampered file) is wiped and recreated,
+     * which is indistinguishable from a first run unless somebody says so. The session layer turns
+     * this into the one-shot message the auth screen shows (docs/notes/audit-2026-07.md, SEC-03).
+     *
+     * Not `suspend`: it reads a flag the last [read] already set.
+     */
+    fun consumeLostSession(): Boolean
 }

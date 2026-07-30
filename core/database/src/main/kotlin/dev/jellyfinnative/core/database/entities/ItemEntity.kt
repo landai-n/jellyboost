@@ -106,6 +106,27 @@ data class ItemCacheKey(
 )
 
 /**
+ * One downloaded row reduced to what a library-grid **filter** is decided from.
+ *
+ * A projection rather than whole rows because the offline grid has to filter the *whole* result set
+ * before it can take a page of it — a genre filter is not expressible in the statement, so a `LIMIT`
+ * there would page the unfiltered list (see [dev.jellyfinnative.core.database.dao.ItemDao
+ * .downloadedListKeys]) — and reading every downloaded item's multi-kilobyte [ItemEntity.dto] blob
+ * to answer a question about five small columns would be a needless megabyte of I/O.
+ *
+ * [played] and [isFavorite] come from a `LEFT JOIN` on `user_data` and are `false` when this user
+ * has no row for the item, which is what "unwatched" means.
+ */
+data class DownloadedItemKey(
+    val id: UUID,
+    val genres: List<String>,
+    val productionYear: Int?,
+    val officialRating: String?,
+    val played: Boolean,
+    val isFavorite: Boolean,
+)
+
+/**
  * One downloaded row reduced to the two ids the offline *Latest* shelf needs: the row itself, and
  * the **card** it collapses into.
  *

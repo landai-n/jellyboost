@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.network.ServerDiscoveryRepository
+import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.model.DiscoveredServer
 import dev.jellyfinnative.core.network.model.ResolvedServer
 import io.kotest.matchers.collections.shouldContainExactly
@@ -34,14 +35,42 @@ class ServerSetupViewModelTest {
 
     private val discoveryRepository = mockk<ServerDiscoveryRepository>()
     private val pendingServerStore = PendingServerStore()
+    private val sessionRepository = mockk<SessionRepository>()
 
-    private fun viewModel(discovered: Flow<DiscoveredServer> = emptyFlow()): ServerSetupViewModel {
+    private fun viewModel(
+        discovered: Flow<DiscoveredServer> = emptyFlow(),
+        sessionWasLost: Boolean = false,
+    ): ServerSetupViewModel {
         every { discoveryRepository.discoverLocalServers() } returns discovered
+        every { sessionRepository.consumeInvoluntarySignOut() } returns sessionWasLost
         return ServerSetupViewModel(
             serverDiscoveryRepository = discoveryRepository,
             pendingServerStore = pendingServerStore,
+            sessionRepository = sessionRepository,
         )
     }
+
+    @Test
+    @DisplayName("a session lost to an unreadable credential store is said out loud, not implied")
+    fun involuntarySignOutIsSurfaced() =
+        runTest {
+            // Before: the store wiped itself, the user landed here, and nothing distinguished that
+            // from a first run (audit SEC-03).
+            val viewModel = viewModel(sessionWasLost = true)
+            advanceUntilIdle()
+
+            viewModel.uiState.value.sessionWasLost shouldBe true
+        }
+
+    @Test
+    @DisplayName("a first run says nothing about a lost session")
+    fun firstRunSaysNothing() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.sessionWasLost shouldBe false
+        }
 
     @Test
     @DisplayName("discovered servers accumulate in arrival order and repeats are ignored")

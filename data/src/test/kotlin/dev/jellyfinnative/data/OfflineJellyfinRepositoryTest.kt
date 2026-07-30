@@ -349,15 +349,7 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `the library grid pages downloaded items with the query's offset and direction`() =
         runTest {
-            coEvery {
-                itemDao.pagingDownloaded(
-                    source = ItemSource.DOWNLOAD,
-                    types = listOf(ItemType.MOVIE),
-                    descending = true,
-                    limit = 50,
-                    offset = 100,
-                )
-            } returns listOf(entity(movieDto(uuid(1), "Arrival")))
+            val grid = stubGrid(itemDao, (1..101).map { entity(movieDto(uuid(it), "Film $it")) })
 
             val result =
                 repository.getItems(
@@ -370,17 +362,17 @@ class OfflineJellyfinRepositoryTest {
                     ),
                 )
 
-            result.getOrNull()!! shouldHaveNames listOf("Arrival")
+            // Offset and page size are applied to the ordered set the statement answered with.
+            result.getOrNull()!! shouldHaveNames listOf("Film 101")
+            // The direction is still the statement's job — SQLite owns the NOCASE collation.
+            grid.descending.single() shouldBe true
         }
 
     @Test
     fun `the films grid lists a downloaded film whose parentId is NULL`() =
         runTest {
             // "Nothing to show here." on a device with a fully downloaded film was the symptom.
-            val types = mutableListOf<List<ItemType>>()
-            coEvery {
-                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
-            } returns listOf(entity(movieDto(uuid(1), "The Body", parentId = null)))
+            val grid = stubGrid(itemDao, listOf(entity(movieDto(uuid(1), "The Body", parentId = null))))
 
             val result =
                 repository.getItems(
@@ -393,16 +385,13 @@ class OfflineJellyfinRepositoryTest {
 
             result.getOrNull()!! shouldHaveNames listOf("The Body")
             // The grid asks for both kinds whatever the library; a film library shows films.
-            types.single() shouldContainExactly listOf(ItemType.MOVIE)
+            grid.types.single() shouldContainExactly listOf(ItemType.MOVIE)
         }
 
     @Test
     fun `a TV library's grid is narrowed to shows`() =
         runTest {
-            val types = mutableListOf<List<ItemType>>()
-            coEvery {
-                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
-            } returns emptyList()
+            val grid = stubGrid(itemDao, emptyList())
 
             repository.getItems(
                 ItemQuery(
@@ -412,16 +401,13 @@ class OfflineJellyfinRepositoryTest {
                 ),
             )
 
-            types.single() shouldContainExactly listOf(ItemType.SERIES)
+            grid.types.single() shouldContainExactly listOf(ItemType.SERIES)
         }
 
     @Test
     fun `an unknown library narrows nothing rather than showing nothing`() =
         runTest {
-            val types = mutableListOf<List<ItemType>>()
-            coEvery {
-                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
-            } returns emptyList()
+            val grid = stubGrid(itemDao, emptyList())
 
             repository.getItems(
                 ItemQuery(
@@ -431,7 +417,7 @@ class OfflineJellyfinRepositoryTest {
                 ),
             )
 
-            types.single() shouldContainExactly listOf(ItemType.MOVIE, ItemType.SERIES)
+            grid.types.single() shouldContainExactly listOf(ItemType.MOVIE, ItemType.SERIES)
         }
 
     @Test
@@ -445,21 +431,19 @@ class OfflineJellyfinRepositoryTest {
                 listOf("Arrival")
 
             coVerify(exactly = 0) {
-                itemDao.pagingDownloaded(any(), any(), any(), any(), any())
+                itemDao.downloadedListKeys(any(), any(), any(), any())
             }
         }
 
     @Test
     fun `an empty type list falls back to the kinds an offline list can contain`() =
         runTest {
-            val types = mutableListOf<List<ItemType>>()
-            coEvery {
-                itemDao.pagingDownloaded(any(), capture(types), any(), any(), any())
-            } returns emptyList()
+            val grid = stubGrid(itemDao, emptyList())
 
             repository.getItems(ItemQuery(limit = 50))
 
-            types.single() shouldContainExactly listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+            grid.types.single() shouldContainExactly
+                listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
         }
 
     @Test

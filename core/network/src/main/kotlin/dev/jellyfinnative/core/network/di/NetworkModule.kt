@@ -55,6 +55,11 @@ internal object NetworkDispatchersModule {
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
+    /** The dispatcher CPU-bound projection work hops onto, so that it never runs on Main. */
+    @Provides
+    @DefaultDispatcher
+    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+
     /**
      * The process-lifetime scope for work that outlives any screen: the connectivity monitor, the
      * reachability probe loop, and the fire-and-forget browse-cache write-through.

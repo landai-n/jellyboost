@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.datastore.SecureCredentialStore
 import dev.jellyfinnative.core.network.model.SessionState
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,6 +36,8 @@ class SessionRepository
          */
         val sessionState: StateFlow<SessionState> = sessionStateHolder.state
 
+        private val involuntarySignOut = AtomicBoolean(false)
+
         /**
          * Restores the stored session, if any, and configures the API client for it.
          *
@@ -42,16 +45,32 @@ class SessionRepository
          * database, a restored backup): the token is discarded and the user signs in again.
          * A transient storage failure, by contrast, leaves the stored session alone and only
          * reports [SessionState.LoggedOut] for this app run.
+         *
+         * Every path that signs the user out **without them asking** records it, so that the auth
+         * screen can say what happened rather than presenting an unexplained sign-in form
+         * (docs/notes/audit-2026-07.md, SEC-03) — see [consumeInvoluntarySignOut]. Having *no*
+         * stored session is not one of those paths: that is a first run.
          */
         suspend fun restoreSession() {
             when (val result = storageCall { readStoredSession() }) {
                 is AppResult.Success -> sessionStateHolder.update(result.value)
                 is AppResult.Failure -> {
                     Timber.e("Could not read the stored session: %s", result.error)
+                    involuntarySignOut.set(true)
                     sessionStateHolder.update(SessionState.LoggedOut)
                 }
             }
         }
+
+        /**
+         * Whether the last restore lost a session the user never signed out of — reading it clears
+         * the flag, so the message it drives is shown once.
+         *
+         * Read by the first auth screen the user lands on. It is a poll rather than an event stream
+         * because the answer is settled before that screen can exist: the splash is held until
+         * [restoreSession] has finished (`MainActivity`).
+         */
+        fun consumeInvoluntarySignOut(): Boolean = involuntarySignOut.getAndSet(false)
 
         /**
          * Signs out: tells the server the session ended (best effort — a failure here must not
@@ -79,6 +98,13 @@ class SessionRepository
 
         private suspend fun readStoredSession(): SessionState {
             val stored = secureCredentialStore.read()
+            // Asked whatever `read` answered: a store that had to be wiped to be opened at all
+            // answers `null`, which is exactly what a first run answers too.
+            if (secureCredentialStore.consumeLostSession()) {
+                Timber.w("The credential store destroyed a stored session it could not read")
+                involuntarySignOut.set(true)
+            }
+
             if (stored == null) {
                 Timber.i("No stored session; starting signed out")
                 return SessionState.LoggedOut
@@ -91,6 +117,7 @@ class SessionRepository
             if (server == null || user == null || address == null) {
                 Timber.w("Stored session has no matching server/user rows; discarding it")
                 secureCredentialStore.clear()
+                involuntarySignOut.set(true)
                 return SessionState.LoggedOut
             }
 

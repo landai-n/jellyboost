@@ -4,6 +4,7 @@ import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.DownloadStatus
+import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.database.dao.DownloadDao
 import dev.jellyfinnative.core.database.dao.ItemDao
 import dev.jellyfinnative.core.database.entities.DownloadProgress
@@ -27,6 +28,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -35,6 +37,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.Clock
+import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -78,10 +81,27 @@ class DownloadRepositoryImpl
                 .distinctUntilChanged()
                 .flowOn(ioDispatcher)
 
+        /**
+         * The download list, with each row joined to the item it belongs to.
+         *
+         * The join is **memoised** per subscription. Rebuilding it from scratch meant a `SELECT *`
+         * over every downloaded item and a `Json.decodeFromString` of each one's full
+         * `BaseItemDto` — tens of kilobytes apiece — on every emission, which is two to six times a
+         * second for the whole length of a transfer; the `distinctUntilChanged` below suppressed the
+         * recomposition but none of the parsing (docs/notes/audit-2026-07.md, PERF-01). What a
+         * progress write actually changes is a byte count, and metadata is keyed on `cachedAt`, so
+         * [DownloadMetadataCache] re-reads a blob only when the row behind it was rewritten.
+         *
+         * The cache is created *inside* the flow rather than held as a field: it is then touched
+         * only by this flow's own collector, which is what makes it safe without a lock, and it dies
+         * with the subscription instead of holding every downloaded item's metadata for the life of
+         * the process.
+         */
         override fun observeDownloads(): Flow<List<DownloadItem>> =
-            downloadDao
-                .observeAll()
-                .map(::toDownloadItems)
+            flow {
+                val metadata = DownloadMetadataCache(itemDao, itemMapper)
+                emitAll(downloadDao.observeAll().map { rows -> toDownloadItems(rows, metadata) })
+            }
                 // `observeAll` is a `@Transaction` over two tables, so one throttled progress
                 // update re-emits it two or three times — once for the file row, once for the item
                 // row. Only the emissions that actually changed something are worth a recomposition.
@@ -352,18 +372,17 @@ class DownloadRepositoryImpl
         /**
          * Joins download rows to the cached items they belong to.
          *
-         * One `getItems` for the whole list rather than one per row: the Downloads screen re-reads
-         * on every throttled progress write, and a per-row query would make that N round trips
-         * through Room twice a second.
+         * One lookup for the whole list rather than one per row: the Downloads screen re-reads on
+         * every throttled progress write, and a per-row query would make that N round trips through
+         * Room twice a second.
          */
-        private suspend fun toDownloadItems(rows: List<DownloadWithFiles>): List<DownloadItem> {
+        private suspend fun toDownloadItems(
+            rows: List<DownloadWithFiles>,
+            metadata: DownloadMetadataCache,
+        ): List<DownloadItem> {
+            // Asked even for an empty list, which is what lets the cache forget a deleted download.
+            val items = metadata.itemsFor(rows.map { it.download.itemId })
             if (rows.isEmpty()) return emptyList()
-
-            val items =
-                itemDao
-                    .getItems(rows.map { it.download.itemId })
-                    .mapNotNull { entity -> itemMapper.toDomainOrNull(entity)?.let { entity.id to it } }
-                    .toMap()
 
             return rows.map { row ->
                 DownloadItem(
@@ -395,6 +414,57 @@ class DownloadRepositoryImpl
             val STORAGE_WALK_INTERVAL: Duration = 15.seconds
         }
     }
+
+/**
+ * The parsed metadata of the downloaded items, kept across the emissions of one subscription.
+ *
+ * `cachedAt` is the whole key: it is bumped by every write to an `items` row and by nothing else,
+ * so an entry survives exactly as long as the blob it was decoded from. [ItemDao.getCacheKeys]
+ * reads that column *without* the `dto` blob — the projection exists for this shape — which is what
+ * makes the steady state of a transfer one narrow query per emission instead of a full re-parse.
+ *
+ * A failed parse is cached as a `null` item rather than dropped: a corrupt blob would otherwise be
+ * re-decoded (and re-failed) on every progress write for as long as the row exists.
+ *
+ * Not thread-safe by design — see [DownloadRepositoryImpl.observeDownloads] for why it does not
+ * need to be.
+ */
+private class DownloadMetadataCache(
+    private val itemDao: ItemDao,
+    private val itemMapper: ItemEntityMapper,
+) {
+    private val parsed = mutableMapOf<UUID, CachedMetadata>()
+
+    /** The items behind [ids], parsing only the rows whose cached blob changed since last time. */
+    suspend fun itemsFor(ids: List<UUID>): Map<UUID, JellyfinItem> {
+        if (ids.isEmpty()) {
+            parsed.clear()
+            return emptyMap()
+        }
+
+        val keys = itemDao.getCacheKeys(ids)
+        val stale = keys.filter { parsed[it.id]?.cachedAt != it.cachedAt }.map { it.id }
+
+        if (stale.isNotEmpty()) {
+            itemDao.getItems(stale).forEach { entity ->
+                parsed[entity.id] = CachedMetadata(entity.cachedAt, itemMapper.toDomainOrNull(entity))
+            }
+        }
+
+        // A deleted download must not keep its metadata alive for the rest of the subscription.
+        parsed.keys.retainAll(keys.mapTo(mutableSetOf()) { it.id })
+
+        return buildMap {
+            keys.forEach { key -> parsed[key.id]?.item?.let { put(key.id, it) } }
+        }
+    }
+}
+
+/** One item's decoded metadata, together with the blob revision it was decoded from. */
+private class CachedMetadata(
+    val cachedAt: Instant,
+    val item: JellyfinItem?,
+)
 
 /**
  * The coarse shape of the download table: which items exist, and what each of them is doing.

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.network.ServerDiscoveryRepository
+import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.model.DiscoveredServer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -31,6 +32,15 @@ internal data class ServerSetupUiState(
     /** True while an address is being probed. */
     val isConnecting: Boolean = false,
     val error: AuthErrorMessage? = null,
+    /**
+     * True when this screen is being shown because a stored session was lost, rather than because
+     * the user has never signed in.
+     *
+     * Without it the two are indistinguishable: an unreadable credential store used to be wiped and
+     * recreated in silence, and the user simply found themselves at server setup
+     * (docs/notes/audit-2026-07.md, SEC-03).
+     */
+    val sessionWasLost: Boolean = false,
 ) {
     /** The Connect button is only live for a non-blank address outside an in-flight probe. */
     val canConnect: Boolean get() = address.isNotBlank() && !isConnecting
@@ -51,8 +61,15 @@ internal class ServerSetupViewModel
     constructor(
         private val serverDiscoveryRepository: ServerDiscoveryRepository,
         private val pendingServerStore: PendingServerStore,
+        sessionRepository: SessionRepository,
     ) : ViewModel() {
-        private val mutableUiState = MutableStateFlow(ServerSetupUiState())
+        private val mutableUiState =
+            MutableStateFlow(
+                // Read once, here: the splash is held until the session restore has answered, so by
+                // the time this screen exists the answer is settled. It is consumed rather than
+                // observed so that signing out and coming back does not replay it.
+                ServerSetupUiState(sessionWasLost = sessionRepository.consumeInvoluntarySignOut()),
+            )
 
         /** State of the server-setup screen. */
         val uiState: StateFlow<ServerSetupUiState> = mutableUiState.asStateFlow()

@@ -6,22 +6,39 @@
 profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8
 verification on the minified build.
 
+### Done (M10 so far)
+- **Audit Tier 1 — all 11 items landed, 2026-07-30** (4 commits: `fix(player)`,
+  `fix(downloads)`, `fix(stability)`, `build(logging)`; full gate green, suite
+  1095 → 1110; execution record + a new Low PERF-13 appended to
+  `docs/notes/audit-2026-07.md` §6).
+
+### In flight
+- **Offline track-selection bug (user-reported 2026-07-30):** subtitle + audio
+  switching dead during offline playback of *transcoded* downloads. Diagnosed by
+  the orchestrator: the offline picker is built from the ORIGINAL's cached
+  MediaStreams while a MEDIUM/LOW/HIGH file has one baked AAC track and (likely)
+  no embedded subs, so unsatisfiable selections fall through to a pointless
+  `reopen()` restart loop (repro: Élémentaire (2023), MEDIUM; logcat + Room dump
+  in session scratchpad). Fix agent running: truthful picker for transcoded
+  rows, no offline reopen fallback, external-sidecar id round-trip check;
+  enqueue-side improvements (pin audioStreamIndex, extract embedded text subs)
+  deliberately deferred to a design decision.
+
 ### Next
-1. **Audit backlog Tier 1** (`docs/notes/audit-2026-07.md` §6) — 11 verified S-effort
-   fixes, worked first in parallel subagent groups:
-   player (STAB-02/STAB-03/ARCH-02), downloads-data (PERF-02/STAB-08/MKV-02),
-   stability sweep (STAB-06/STAB-07/STAB-10/PERF-05), build (SEC-01).
-2. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient
+1. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient
    retry classification, PERF-01/PERF-03 progress-tick hot path, ARCH-01 offline
    filters (or honest-empty fallback + /diverge), SEC-03 credential-store catch split.
-3. **DoD items:** R8 rules + minified build, signing config, baseline profile,
+   ARCH-13 must also relocate the resolve-timeout constant (see audit §6 rider).
+2. **DoD items:** R8 rules + minified build, signing config, baseline profile,
    CI workflow (authored only — repo has no GitHub remote, cannot be exercised),
    then re-run M5/M8 verification on the minified build on the test tablet.
-4. **HEVC `VideoProfileNotSupported` investigation** (from Known issues): device
+3. **HEVC `VideoProfileNotSupported` investigation** (from Known issues): device
    profile CodecProfile conditions vs `MediaCodecList` on the Helio G100 — note
    memory: tablet decoder is HEVC Main-only (no Main 10), transcode may be correct.
-5. Outstanding device walk: batch selection (long-press, contextual bar, mixed
-   batch, offline) — fold into an M10 device session.
+4. **M10 device session** (batched): batch-selection walk; Tier 1 checks owed to
+   the device — SEC-01 release logcat during a search, STAB-02 Play→Home on a
+   slow server, STAB-03 am-kill position restore, STAB-06 Pause not logged at
+   ERROR; plus the track-selection fix walk once merged.
 
 ## Pre-M10 multi-dimension audit (2026-07-30 — DONE, report committed)
 

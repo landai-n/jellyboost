@@ -52,6 +52,8 @@ data class JellyfinItem(
     val studios: List<String> = emptyList(),
     /** Cast and crew. Detail-only. */
     val people: List<Person> = emptyList(),
+    /** Media file size in bytes, from the item's first media source. Detail-only. */
+    val sizeBytes: Long? = null,
     val userData: UserData = UserData(),
     val downloadState: DownloadState = DownloadState.NotDownloaded,
     /**

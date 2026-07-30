@@ -36,8 +36,10 @@ row draws a synopsis.
 
 - **Backdrop hero** (`BackdropHeader`) with the item's backdrop → thumb → primary artwork.
 - **Header block**: poster, title, subtitle (`S1:E4 · Title` for an episode, series name for a
-  season), metadata line (`2016 · 116 min · PG-13 · 8.4 · 4 seasons · 32 min left`), resume
-  progress bar, action buttons, tagline, overview, credit line, genre chips.
+  season), metadata line (`2016 · 116 min · 552.4 MB · PG-13 · 8.4 · 4 seasons · 32 min left`),
+  resume progress bar, action buttons, tagline, overview, credit line, genre chips. The size fact
+  only appears for items with a media source of their own (movies, episodes) — series and seasons
+  omit it.
 - **Rows**: *Next up* → *Seasons* → *Episodes* → *More like this*.
 
 On a viewport wider than 720.dp the poster moves beside the text instead of above it — the same
@@ -133,7 +135,7 @@ never has a stack worth restoring. The cost is that unwinding through another ta
 | `DetailHeader` / `EpisodeRow` | `:feature:detail` | Header block and episode list rows |
 | `ItemDetailViewModel` / `ItemDetailUiState` | `:feature:detail` | Loads the item and its rows, owns the toggles |
 | `JellyfinRepository` (M4 section) | `:data` | `getItem`, `getSeasons`, `getEpisodes`, `getNextUpForSeries`, `getSimilarItems` |
-| `ItemMapper` | `:data` | Adds taglines, child count, premiere date, studios and people |
+| `ItemMapper` | `:data` | Adds taglines, child count, premiere date, studios, people and media file size |
 | `UserDataRepository` | `:data` | The watched / favourite writes |
 
 ## Offline behaviour

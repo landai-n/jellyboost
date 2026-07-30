@@ -68,6 +68,7 @@ class ItemMapper
                 premiereDate = dto.premiereDate?.toSdkInstant(),
                 studios = dto.studios.orEmpty().mapNotNull { it.name },
                 people = dto.people.orEmpty().map { it.toDomain() },
+                sizeBytes = dto.mediaSources?.firstOrNull()?.size,
                 userData = dto.userData.toDomain(),
             )
 

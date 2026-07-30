@@ -1,6 +1,7 @@
 package dev.jellyfinnative.player.resolve
 
 import androidx.media3.common.MimeTypes
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.data.downloads.offline.DownloadedMediaProvider
 import dev.jellyfinnative.data.downloads.offline.DownloadedSubtitle
 import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
@@ -223,6 +224,128 @@ class LocalPlaybackResolverTest {
                 .shouldBeNull()
         }
 
+    // ---- a transcoded download is not the file the cached blob describes -------------------------
+
+    /**
+     * The streams of the repro item (Élémentaire, a MEDIUM download): two external SRT sidecars, the
+     * video, three AC3 tracks with the French VFF one default, and two embedded French SRTs. The
+     * file on disk holds one AAC track and no subtitles at all — verified by reading its Matroska
+     * `Tracks` element off the device.
+     */
+    private fun transcodedFilmStreams() =
+        listOf(
+            PlayerFixtures.subtitleStream(index = 0, language = "eng", displayTitle = "English"),
+            PlayerFixtures.subtitleStream(index = 1, language = "fra", displayTitle = "French"),
+            PlayerFixtures.audioStream(index = 3, language = "fra", displayTitle = "French VFF"),
+            PlayerFixtures.audioStream(index = 4, language = "fra", displayTitle = "French VFQ"),
+            PlayerFixtures.audioStream(index = 5, language = "eng", displayTitle = "English VO"),
+            PlayerFixtures.subtitleStream(index = 6, isExternal = false, displayTitle = "French forced"),
+            PlayerFixtures.subtitleStream(index = 7, isExternal = false, displayTitle = "French full"),
+        )
+
+    private fun transcodedFilm(
+        defaultAudioStreamIndex: Int? = 3,
+        defaultSubtitleStreamIndex: Int? = null,
+    ) = downloaded(
+        mediaSource =
+            PlayerFixtures.mediaSourceInfo(
+                mediaStreams = transcodedFilmStreams(),
+                defaultAudioStreamIndex = defaultAudioStreamIndex,
+                defaultSubtitleStreamIndex = defaultSubtitleStreamIndex,
+            ),
+        quality = DownloadQuality.MEDIUM,
+        subtitles =
+            listOf(
+                DownloadedSubtitle(streamIndex = 0, uri = "file:///downloads/s.0.eng.srt"),
+                DownloadedSubtitle(streamIndex = 1, uri = "file:///downloads/s.1.fra.srt"),
+            ),
+    )
+
+    @Test
+    fun `a transcoded download offers only the one audio track the server baked in`() =
+        runTest {
+            transcodedFilm()
+
+            // The download URL names no audioStreamIndex, so the server encoded the source's default
+            // and dropped the other two. Offering them is offering a switch that cannot happen.
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3)
+            source.audioTracks.single().label shouldBe "French VFF"
+            source.audioTracks.single().isDefault shouldBe true
+            source.selectedAudioIndex shouldBe 3
+        }
+
+    @Test
+    fun `a transcoded download falls back to the first audio stream when none is default`() =
+        runTest {
+            transcodedFilm(defaultAudioStreamIndex = null)
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3)
+            source.selectedAudioIndex shouldBe 3
+        }
+
+    @Test
+    fun `a transcoded download offers no embedded subtitles, because the file has none`() =
+        runTest {
+            transcodedFilm()
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // Only the two sidecars, which are their own files on disk and unaffected by the encode.
+            source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 1)
+            source.externalSubtitles.map { it.index } shouldContainExactly listOf(0, 1)
+        }
+
+    @Test
+    fun `a transcoded download never preselects an embedded subtitle the server dropped`() =
+        runTest {
+            transcodedFilm(defaultSubtitleStreamIndex = 6)
+
+            resolver
+                .resolve(request)
+                .shouldNotBeNull()
+                .selectedSubtitleIndex
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `an original download still offers every track of the source file`() =
+        runTest {
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(
+                        mediaStreams = transcodedFilmStreams(),
+                        defaultAudioStreamIndex = 3,
+                    ),
+                quality = DownloadQuality.ORIGINAL,
+                subtitles = listOf(DownloadedSubtitle(streamIndex = 0, uri = "file:///downloads/s.0.eng.srt")),
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
+            // Index 1's sidecar is missing, so it is withheld; the embedded pair is untouched.
+            source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
+        }
+
+    @Test
+    fun `drops a requested track the downloaded file does not hold`() =
+        runTest {
+            transcodedFilm()
+
+            // A stale selection carried in from a previous session or a re-resolve.
+            val source =
+                resolver
+                    .resolve(request.copy(audioStreamIndex = 5, subtitleStreamIndex = 7))
+                    .shouldNotBeNull()
+
+            source.selectedAudioIndex shouldBe 3
+            source.selectedSubtitleIndex.shouldBeNull()
+        }
+
     @Test
     fun `plays an item whose cached blob can no longer be decoded`() =
         runTest {
@@ -299,6 +422,7 @@ class LocalPlaybackResolverTest {
     private fun downloaded(
         mediaSource: MediaSourceInfo? = PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true),
         runTimeTicks: Long = PlayerFixtures.RUN_TIME_TICKS,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ) {
@@ -306,6 +430,7 @@ class LocalPlaybackResolverTest {
             PlayerFixtures.downloadedMedia(
                 mediaSource = mediaSource,
                 runTimeTicks = runTimeTicks,
+                quality = quality,
                 subtitles = subtitles,
                 trickplay = trickplay,
             )

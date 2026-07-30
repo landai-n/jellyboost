@@ -28,10 +28,19 @@ import javax.inject.Singleton
  * [dev.jellyfinnative.player.PlayMethod.DIRECT_PLAY] or it is nothing.
  *
  * ### What is offered, and what is quietly withheld
- * Embedded tracks are all offered — ExoPlayer reads them straight out of the container. An
- * *external* subtitle stream is only offered when its sidecar was actually downloaded: the download
- * pipeline skips bitmap formats and an optional file is allowed to fail, and a picker entry that
- * cannot do anything is worse than one fewer language.
+ * An *external* subtitle stream is only offered when its sidecar was actually downloaded: the
+ * download pipeline skips bitmap formats and an optional file is allowed to fail, and a picker entry
+ * that cannot do anything is worse than one fewer language.
+ *
+ * The same rule is what makes a **transcoded** download honest. `DownloadUrlFactory` asks the server
+ * for `stream.mkv` with neither an `audioStreamIndex` nor a `subtitleStreamIndex`, so the file that
+ * comes back holds exactly one audio track — the source's default, re-encoded to stereo AAC — and no
+ * subtitle streams whatsoever; every other audio track and every embedded subtitle of the original
+ * was dropped on the server. The cached `BaseItemDto` still describes the *source*, so taking its
+ * stream list at face value offers tracks that are not in the file: selecting one cannot be
+ * satisfied, and offline there is no server to re-ask. [DownloadedMedia.isTranscoded] is therefore
+ * consulted before anything embedded is offered. The sidecars are unaffected — they are separate
+ * files on disk and work identically at either quality.
  */
 @Singleton
 class LocalPlaybackResolver
@@ -49,15 +58,25 @@ class LocalPlaybackResolver
 
             val streams = downloaded.mediaSource?.mediaStreams.orEmpty()
             val sidecars = downloaded.subtitles.associateBy { it.streamIndex }
+            val transcoded = downloaded.isTranscoded
 
-            val audio = streams.filter { it.type == MediaStreamType.AUDIO }
+            val audio = streams.audioTracksInFile(downloaded)
             val subtitles =
                 streams.filter { stream ->
                     stream.type == MediaStreamType.SUBTITLE &&
-                        (!stream.isExternal || stream.index in sidecars)
+                        when {
+                            // A sidecar is its own file; the media file's own quality is irrelevant.
+                            stream.isExternal -> stream.index in sidecars
+                            // Embedded streams only survive into a file the server did not re-encode.
+                            else -> !transcoded
+                        }
                 }
 
-            val defaultAudioIndex = downloaded.mediaSource?.defaultAudioStreamIndex
+            val defaultAudioIndex =
+                when {
+                    transcoded -> audio.firstOrNull()?.index
+                    else -> downloaded.mediaSource?.defaultAudioStreamIndex
+                }
             val defaultSubtitleIndex =
                 downloaded.mediaSource
                     ?.defaultSubtitleStreamIndex
@@ -72,13 +91,35 @@ class LocalPlaybackResolver
                 audioTracks = audio.map { it.toTrack(defaultAudioIndex) },
                 subtitleTracks = subtitles.map { it.toTrack(defaultSubtitleIndex) },
                 externalSubtitles = downloaded.toExternalSubtitles(streams),
-                selectedAudioIndex = request.audioStreamIndex ?: defaultAudioIndex,
+                // A request can carry a track index from a previous session or from a re-resolve;
+                // one this file does not hold must not leave the picker pointing at nothing.
+                selectedAudioIndex =
+                    request.audioStreamIndex?.takeIf { index -> audio.any { it.index == index } }
+                        ?: defaultAudioIndex,
                 // -1 is the caller's explicit "no subtitles"; null lets the item's default stand.
                 selectedSubtitleIndex =
-                    request.subtitleStreamIndex?.takeIf { it >= 0 }
+                    request.subtitleStreamIndex
+                        ?.takeIf { index -> index >= 0 && subtitles.any { it.index == index } }
                         ?: defaultSubtitleIndex.takeIf { request.subtitleStreamIndex == null },
                 trickplay = downloaded.trickplay?.toLocalTrickplay(),
             )
+        }
+
+        /**
+         * The audio streams the file on disk actually contains.
+         *
+         * For an original download that is every audio stream of the source. For a transcoded one it
+         * is exactly one: the server was given no `audioStreamIndex`, so it encoded the source's
+         * *default* audio and dropped the rest. The picker entry is therefore labelled from that
+         * stream — which names the right language and the right mix even though the bytes are now
+         * stereo AAC — rather than from something the download row does not record.
+         */
+        private fun List<MediaStream>.audioTracksInFile(downloaded: DownloadedMedia): List<MediaStream> {
+            val audio = filter { it.type == MediaStreamType.AUDIO }
+            if (!downloaded.isTranscoded) return audio
+
+            val default = downloaded.mediaSource?.defaultAudioStreamIndex
+            return listOfNotNull(audio.firstOrNull { it.index == default } ?: audio.firstOrNull())
         }
 
         /**

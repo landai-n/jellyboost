@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads.offline
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.MediaSourceInfo
 import java.net.URI
 import java.util.UUID
@@ -17,9 +18,17 @@ import java.util.UUID
  * subtitle pickers are built from, and it is the *same* type the online path negotiates, which is
  * what makes the two produce identical track lists.
  *
+ * [quality] is the one thing that stops [mediaSource] from being taken at face value. It records
+ * what was *asked of the server*, and for anything but [DownloadQuality.ORIGINAL] the file on disk
+ * is a re-encode that no longer matches the streams the cached blob describes — one AAC track of the
+ * server's own choosing and no embedded subtitles at all, because the download URL names neither an
+ * `audioStreamIndex` nor a `subtitleStreamIndex`. `LocalPlaybackResolver` needs it to keep the
+ * offline pickers from offering tracks that are not in the file.
+ *
  * @property mediaUri `file://` URI of the video file itself.
  * @property runTimeTicks runtime in Jellyfin ticks, `0` when neither the media source nor the item
  *   declares one (the player then takes the container's duration once ExoPlayer reports it).
+ * @property quality the download-quality step the row was enqueued at.
  */
 data class DownloadedMedia(
     val itemId: UUID,
@@ -27,9 +36,13 @@ data class DownloadedMedia(
     val mediaSource: MediaSourceInfo?,
     val mediaUri: String,
     val runTimeTicks: Long,
+    val quality: DownloadQuality = DownloadQuality.ORIGINAL,
     val subtitles: List<DownloadedSubtitle> = emptyList(),
     val trickplay: DownloadedTrickplay? = null,
-)
+) {
+    /** `true` when the bytes on disk are a server re-encode rather than the source file. */
+    val isTranscoded: Boolean get() = quality.isTranscoded
+}
 
 /**
  * One downloaded external subtitle file.

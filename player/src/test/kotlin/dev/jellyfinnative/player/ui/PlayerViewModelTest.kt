@@ -31,6 +31,7 @@ import dev.jellyfinnative.player.session.PlayerEvent
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -462,21 +463,58 @@ class PlayerViewModelTest {
         }
 
     @Test
-    fun `a track the local file cannot satisfy goes back to the resolver`() =
+    fun `an audio track the local file cannot satisfy is refused instead of reloading it`() =
         runTest(dispatcher) {
             playerHandle.trackSelectionSucceeds = false
             coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
             val model = viewModel()
             advanceUntilIdle()
 
+            model.selectAudioTrack(2)
+            advanceUntilIdle()
+
+            // Re-resolving a file:// URI runs the local resolver over the same file and returns the
+            // same tracks: the switch still cannot be applied and playback has restarted for it.
+            coVerify(exactly = 1) { resolver.resolve(any()) }
+            playerHandle.prepared shouldHaveSize 1
+            model.uiState.value.selectedAudioIndex
+                .shouldBeNull()
+            model.uiState.value.userMessage shouldBe PlayerMessage.TrackUnavailableOffline
+        }
+
+    @Test
+    fun `a subtitle the local file cannot satisfy is refused instead of reloading it`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectSubtitleTrack(6)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { resolver.resolve(any()) }
+            playerHandle.prepared shouldHaveSize 1
+            model.uiState.value.selectedSubtitleIndex
+                .shouldBeNull()
+            model.uiState.value.userMessage shouldBe PlayerMessage.TrackUnavailableOffline
+        }
+
+    @Test
+    fun `a streamed item still re-requests a track the current stream cannot satisfy`() =
+        runTest(dispatcher) {
+            // The offline guard must not reach the online path, where a re-resolve is the whole
+            // mechanism for getting a different audio track out of a transcode.
+            playerHandle.trackSelectionSucceeds = false
+            val model = viewModel()
+            advanceUntilIdle()
+
             val requests = mutableListOf<PlaybackResolveRequest>()
-            coEvery { resolver.resolve(capture(requests)) } returns
-                AppResult.Success(PlayerFixtures.localSource())
+            coEvery { resolver.resolve(capture(requests)) } returns AppResult.Success(source)
 
             model.selectAudioTrack(2)
             advanceUntilIdle()
 
-            // A local source carries no bitrate cap, so the re-request must not invent one.
             requests.last().audioStreamIndex shouldBe 2
             requests.last().maxStreamingBitrate.shouldBeNull()
         }

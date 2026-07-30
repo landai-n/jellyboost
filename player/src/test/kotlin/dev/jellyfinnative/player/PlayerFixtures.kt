@@ -1,5 +1,6 @@
 package dev.jellyfinnative.player
 
+import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.data.downloads.offline.DownloadedMedia
 import dev.jellyfinnative.data.downloads.offline.DownloadedSubtitle
 import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
@@ -197,6 +198,7 @@ internal object PlayerFixtures {
     fun downloadedMedia(
         mediaSource: MediaSourceInfo? = mediaSourceInfo(supportsDirectPlay = true),
         runTimeTicks: Long = RUN_TIME_TICKS,
+        quality: DownloadQuality = DownloadQuality.ORIGINAL,
         subtitles: List<DownloadedSubtitle> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ): DownloadedMedia =
@@ -206,6 +208,7 @@ internal object PlayerFixtures {
             mediaSource = mediaSource,
             mediaUri = LOCAL_MEDIA_URI,
             runTimeTicks = runTimeTicks,
+            quality = quality,
             subtitles = subtitles,
             trickplay = trickplay,
         )

@@ -84,6 +84,10 @@ class DownloadedMediaProvider
                     mediaSource = mediaSource,
                     mediaUri = localFileUri(mediaFile.path),
                     runTimeTicks = runTimeTicks,
+                    // Carried through because the cached blob describes the *source* file: at any
+                    // transcoded step the bytes on disk hold one audio track and no embedded
+                    // subtitles, and only this row remembers that.
+                    quality = stored.download.quality,
                     subtitles = stored.files.toSubtitles(),
                     trickplay = stored.files.toTrickplay(dto),
                 )

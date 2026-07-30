@@ -245,6 +245,7 @@ class PlayerViewModel
                 _uiState.update { it.copy(selectedAudioIndex = jellyfinIndex) }
                 return
             }
+            if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
             reopen(
                 current.asRequest().copy(audioStreamIndex = jellyfinIndex),
                 PlayerMessage.RestartedForTrackChange,
@@ -259,11 +260,32 @@ class PlayerViewModel
                 _uiState.update { it.copy(selectedSubtitleIndex = jellyfinIndex) }
                 return
             }
+            if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
             reopen(
                 current.asRequest().copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
                 PlayerMessage.RestartedForTrackChange,
             )
+        }
+
+        /**
+         * Declines a track the downloaded file cannot produce, instead of restarting it for nothing.
+         *
+         * A re-resolve is how the *online* player obtains a track the current stream lacks: it asks
+         * the server for a different one. There is no server behind a `file://` URI, so re-resolving
+         * a [LocalPlaybackMediaSource] runs `LocalPlaybackResolver` over the very same file and hands
+         * back the very same tracks — the switch still cannot be applied, and playback has visibly
+         * restarted for it. That loop is what a transcoded download did on every attempt to change
+         * language or subtitles.
+         *
+         * With the resolver no longer offering tracks a transcoded file does not hold, this should
+         * be unreachable from the pickers. It stays as the honest answer for whatever slips past —
+         * a selection restored from a previous session, or a container whose streams disagree with
+         * the cached blob.
+         */
+        private fun refuseLocalTrackChange(current: LocalPlaybackMediaSource) {
+            Timber.i("Downloaded file %s cannot supply that track; leaving playback alone", current.itemId)
+            _uiState.update { it.copy(userMessage = PlayerMessage.TrackUnavailableOffline) }
         }
 
         /**

@@ -7,6 +7,18 @@ profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8
 verification on the minified build.
 
 ### Done (M10 so far)
+- **Tier 2 data batch landed** (`fix(data)`, d44661c): PERF-01 metadata
+  memoisation, PERF-03 WhileSubscribed projection, ARCH-01 offline filters
+  filter-before-paging (DECISIONS logs the PLAN naming change), SEC-03
+  credential-store catch split + involuntary-logout copy.
+- **Release-build DoD landed** (`build(release)`, 19e1dd9): R8 (10.3 MiB
+  release), signing fallback, CI authored, :baselineprofile scaffold, SEC-04
+  extraction+backup rules. Seven deviations in DECISIONS.
+- **Multi-track phases 0-1 landed** (`feat(downloads)`, c5f9ffd): embedded
+  text subs as sidecars + silent top-up of old rows; audioStreamIndex pinned
+  and recorded (schema v8). Phase 2 awaits the /Audio endpoint check.
+- **Bulk actions batched in the ViewModel + honest UNKNOWN copy**
+  (`fix(downloads)`, c8b23cc).
 - **Audit Tier 1 — all 11 items landed, 2026-07-30** (4 commits: `fix(player)`,
   `fix(downloads)`, `fix(stability)`, `build(logging)`; full gate green, suite
   1095 → 1110; execution record + a new Low PERF-13 appended to
@@ -41,16 +53,11 @@ verification on the minified build.
   Device-owed: blip-mid-queue retry walk, cancel-orphan sweep check, bulk
   actions on a 20+ queue (after wiring), v6→v7 upgrade over a live queue.
 
-### Queued (user-requested 2026-07-30, launch after phase 0/1 lands — player half now landed)
-- **Connectivity-aware track picker for downloaded items:** when online, the
-  picker for a downloaded item shows the full source track list, and selecting
-  a track the local file cannot supply reopens via the *streaming* path with
-  the requested index (needs an explicit force-remote re-resolve — a plain
-  reopen re-resolves back to the local file); when offline, tracks the file +
-  sidecars cannot play are not shown at all (picker reacts to
-  ConnectionStateProvider). `TrackUnavailableOffline` stays only as a backstop
-  for the went-offline-mid-tap race. Nice-to-have: selecting a locally
-  available track while in such a forced stream returns to local playback.
+### In flight
+- **Connectivity-aware track picker** (user-requested): agent launching now —
+  online, a downloaded item's picker shows the full source track list and a
+  track the file lacks reopens via a force-remote re-resolve; offline, only
+  playable tracks are shown (picker reacts to ConnectionStateProvider).
 
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in

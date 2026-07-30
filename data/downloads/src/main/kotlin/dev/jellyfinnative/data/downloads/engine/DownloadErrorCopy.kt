@@ -68,7 +68,9 @@ internal object DownloadErrorCopy {
     private const val NOT_A_FILE =
         "This is a show or a season, not a single video. Remove it and download the episodes."
 
-    private const val UNKNOWN = "Something went wrong. The download will retry."
+    // Unknown failures are classified PERMANENT (DownloadFailure.kt), so this must not promise a
+    // retry the queue will not attempt — that was the exact lie an unclassified NPE used to tell.
+    private const val UNKNOWN = "Something went wrong. Try the download again."
 
     private const val HTTP_UNAUTHORIZED = 401
     private const val HTTP_FORBIDDEN = 403

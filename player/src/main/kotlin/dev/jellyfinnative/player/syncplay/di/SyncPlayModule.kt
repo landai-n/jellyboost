@@ -5,6 +5,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.jellyfinnative.core.common.syncplay.SyncPlaySession
+import dev.jellyfinnative.player.syncplay.ControllerSyncPlaySession
 import dev.jellyfinnative.player.syncplay.api.SdkSyncPlayApi
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
 import dev.jellyfinnative.player.syncplay.socket.SdkSyncPlaySocket
@@ -37,6 +39,17 @@ internal interface SyncPlayModule {
     @Binds
     @Singleton
     fun bindSyncPlaySocket(impl: SdkSyncPlaySocket): SyncPlaySocket
+
+    /**
+     * The cross-feature contract (M11 Phase 4, key decision 2).
+     *
+     * Bound here rather than in `:app` because this is where the implementation is: Hilt aggregates
+     * modules across the whole app graph, so `:feature:detail` — which cannot see `:player` at all —
+     * gets the binding simply by being in the same application component.
+     */
+    @Binds
+    @Singleton
+    fun bindSyncPlaySession(impl: ControllerSyncPlaySession): SyncPlaySession
 }
 
 /** The scope SyncPlay coordination runs in. */

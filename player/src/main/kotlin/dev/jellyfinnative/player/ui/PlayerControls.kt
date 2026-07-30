@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -246,6 +247,17 @@ private fun BottomBar(
                     label = stringResource(R.string.player_syncplay_group),
                     onClick = actions.onOpenGroupSheet,
                     icon = Icons.Outlined.Groups,
+                )
+            }
+            // A control of its own rather than a row inside the group sheet: what the group watches
+            // next is edited far more often than its shuffle mode, and two taps to reach a queue is
+            // one too many while a film is running (M11 Phase 4). Offered only once the group has a
+            // queue — before the first `PlayQueueUpdate` the sheet would have nothing in it.
+            if (state.syncPlay.inGroup && state.syncPlay.hasQueue) {
+                SheetButton(
+                    label = stringResource(R.string.player_syncplay_queue),
+                    onClick = actions.onOpenQueueSheet,
+                    icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
                 )
             }
             // A downloaded file has no streaming bitrate to cap, so the picker would be inert.

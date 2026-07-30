@@ -333,6 +333,12 @@ class ItemDetailSelectionTest {
             userDataRepository = userDataRepository,
             downloads = downloads,
             connectivityRefresher = connectivityRefresher,
+            // No group: batch selection has nothing to do with SyncPlay, and a relaxed double keeps
+            // it that way (M11 Phase 4).
+            syncPlaySession =
+                mockk(relaxed = true) {
+                    every { activeGroup } returns MutableStateFlow(null)
+                },
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 

@@ -41,6 +41,18 @@ internal class PlayerSyncPlayBridge(
     /** `true` while this session is part of a group, and therefore not its own master. */
     val isInGroup: Boolean get() = controller.state.value is SyncPlayState.InGroup
 
+    /**
+     * `true` when the group's queue has somewhere to go after the item playing now.
+     *
+     * Read at exactly one moment — the item ending (M11 Phase 4). The controller answers an ended
+     * item by asking the server for the next one, whose `PlayQueueUpdate` reloads *this* session
+     * through `SyncPlayPlaybackHost.loadItem`; a screen that popped itself in the meantime would
+     * close the player the group is about to fill, and force the launch-request path to open a new
+     * one a second later.
+     */
+    val hasNextInQueue: Boolean
+        get() = (controller.state.value as? SyncPlayState.InGroup)?.queue?.hasFollowingEntry == true
+
     /** The group, as the player screen draws it; conflated, so a re-anchor changes nothing. */
     val states: Flow<PlayerSyncPlayState> = controller.state.map { it.toPlayerState() }.distinctUntilChanged()
 

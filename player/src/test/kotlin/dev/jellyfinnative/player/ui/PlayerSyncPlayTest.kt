@@ -10,6 +10,7 @@ import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.millisToTicks
 import dev.jellyfinnative.player.model.ticksToMillis
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
+import dev.jellyfinnative.player.session.PlayerEvent
 import dev.jellyfinnative.player.syncplay.SyncPlayAnchor
 import dev.jellyfinnative.player.syncplay.SyncPlayMessage
 import dev.jellyfinnative.player.syncplay.SyncPlayPhase
@@ -24,6 +25,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.verify
@@ -326,6 +328,52 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             model.uiState.value.userMessage shouldBe PlayerMessage.SyncPlayConnectionLost
         }
 
+    // ---- the end of an item, in a group (M11 Phase 4) -----------------------------------------------
+
+    @Test
+    fun `an item ending with more group queue behind it does not close the screen`() =
+        runTest(dispatcher) {
+            syncPlayState.value = inGroup(queue = queue(entryCount = 2))
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            // `hasEnded` is what `PlayerScreen` turns into `onBack()`; the group's next item is
+            // loaded into *this* session, so popping here would close the player it lands in.
+            model.uiState.value.hasEnded shouldBe false
+            model.uiState.value.isPlaying shouldBe false
+            // The outgoing item is still reported, exactly as it is solo.
+            coVerify { reporter.reportStop(any(), match { it.hasEnded }) }
+        }
+
+    @Test
+    fun `an item ending on the group's last item closes the screen as it does solo`() =
+        runTest(dispatcher) {
+            syncPlayState.value = inGroup(queue = queue())
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            model.uiState.value.hasEnded shouldBe true
+        }
+
+    @Test
+    fun `a repeating group queue keeps the screen open on its only item`() =
+        runTest(dispatcher) {
+            syncPlayState.value = inGroup(queue = queue(repeat = SyncPlayRepeatMode.All))
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.Ended)
+            advanceUntilIdle()
+
+            model.uiState.value.hasEnded shouldBe false
+        }
+
     // ---- fixture ------------------------------------------------------------------------------------
 
     private fun inGroup(
@@ -336,8 +384,16 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     private fun queue(
         shuffle: SyncPlayShuffleMode = SyncPlayShuffleMode.Sorted,
         repeat: SyncPlayRepeatMode = SyncPlayRepeatMode.None,
+        entryCount: Int = 1,
     ) = SyncPlayGroupQueue(
-        entries = listOf(SyncPlayQueueEntry(PlayerFixtures.ITEM_ID, playlistItemId)),
+        entries =
+            List(entryCount) { index ->
+                if (index == 0) {
+                    SyncPlayQueueEntry(PlayerFixtures.ITEM_ID, playlistItemId)
+                } else {
+                    SyncPlayQueueEntry(otherItemId, UUID.nameUUIDFromBytes(byteArrayOf(index.toByte())))
+                }
+            },
         playingItemIndex = 0,
         startPositionTicks = 0L,
         isPlaying = false,

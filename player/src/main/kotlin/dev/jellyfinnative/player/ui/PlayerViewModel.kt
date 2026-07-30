@@ -850,9 +850,23 @@ class PlayerViewModel
             }
         }
 
+        /**
+         * The item finished.
+         *
+         * Solo, that is the end of the screen: `hasEnded` is what `PlayerScreen` turns into a
+         * `onBack()`. **In a group with a queue behind it, it is not** — `SyncPlayController` has
+         * already asked the server for the next item and its `PlayQueueUpdate` reloads this very
+         * session, so popping the screen here would close the player the group is about to fill and
+         * make the launch-request path re-open one a second later (DECISIONS.md, 2026-07-30). When
+         * the group's queue really is finished, the ordinary behaviour stands.
+         *
+         * The stop report is unconditional either way: the outgoing item has to be recorded and its
+         * encoder killed whether or not something follows it.
+         */
         private fun onEnded() {
             val current = source ?: return
-            _uiState.update { it.copy(hasEnded = true, isPlaying = false) }
+            val groupContinues = syncPlay.isInGroup && syncPlay.hasNextInQueue
+            _uiState.update { it.copy(hasEnded = !groupContinues, isPlaying = false) }
             setReportingActive(false)
             if (stopReported) return
             stopReported = true

@@ -136,6 +136,15 @@ class SyncPlayController
         /** The slot the host currently has open, so a repeated `PlayQueueUpdate` reloads nothing. */
         private var loadedPlaylistItemId: UUID? = null
 
+        /**
+         * Slots this device could not open and has already asked the group to move past.
+         *
+         * The loop guard for [onEntryUnplayable]: skipping is itself a request that produces another
+         * `PlayQueueUpdate`, so without a memory a queue of unplayable items would cycle for ever.
+         * Cleared as soon as anything opens successfully.
+         */
+        private val skippedSlots = mutableSetOf<UUID>()
+
         /** `true` once the group has been told to stop waiting on us, so re-attaching can undo it. */
         private var ignoreWaitSent = false
 
@@ -243,6 +252,7 @@ class SyncPlayController
             if (this.host !== host) return
             this.host = null
             loadedPlaylistItemId = null
+            skippedSlots.clear()
             scheduler.cancel()
             if (_state.value !is SyncPlayState.InGroup) return
             setPhase(SyncPlayPhase.Paused)
@@ -384,6 +394,7 @@ class SyncPlayController
             closeSession()
             timeSync.reset()
             loadedPlaylistItemId = null
+            skippedSlots.clear()
             ignoreWaitSent = false
             pendingGroup = null
             pendingQueue = null
@@ -505,9 +516,17 @@ class SyncPlayController
         /**
          * Makes the player show what the group is on.
          *
-         * Three outcomes: nothing to do (the slot is already open), adopt what the host has (the
-         * user opened this very item, so reloading it would restart playback for nothing), or run
-         * the buffering/ready handshake around [SyncPlayPlaybackHost.loadItem].
+         * Four outcomes: nothing to do (the slot is already open — which is every reorder, removal,
+         * shuffle and repeat change that leaves the playing item alone), ask the app to open a
+         * player (nothing attached), adopt what the host has (the user opened this very item, so
+         * reloading it would restart playback for nothing), or run the buffering/ready handshake
+         * around [SyncPlayPlaybackHost.loadItem].
+         *
+         * The slot, not the item, is the identity: the same episode queued twice is two slots, and a
+         * group jumping from one to the other has to start it again rather than carry on where the
+         * first copy had got to. Adoption is therefore only offered before this controller has
+         * loaded anything of its own — [loadedPlaylistItemId] is `null` on a fresh join and after a
+         * detach, which are exactly the two moments the host might already hold the right item.
          */
         private suspend fun reconcile(queue: SyncPlayGroupQueue) {
             val entry = queue.playingEntry
@@ -525,8 +544,8 @@ class SyncPlayController
             }
 
             val snapshot = hostSnapshot()
-            if (snapshot?.itemId == entry.itemId) {
-                loadedPlaylistItemId = entry.playlistItemId
+            if (loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
+                onEntryOpened(entry)
                 reportReady(entry, snapshot.positionTicks)
                 return
             }
@@ -538,11 +557,38 @@ class SyncPlayController
             }.onFailure { Timber.w(it, "Could not report SyncPlay buffering") }
 
             val loaded = runCatching { attached.loadItem(entry.itemId, queue.startPositionTicks) }.getOrElse { false }
-            if (!loaded) {
-                Timber.w("SyncPlay could not open item %s", entry.itemId)
-                loadedPlaylistItemId = null
-                _messages.tryEmit(SyncPlayMessage.ItemUnavailable)
+            if (loaded) onEntryOpened(entry) else onEntryUnplayable(entry)
+        }
+
+        /** A slot is open on the host; whatever was skipped to get here is forgiven. */
+        private fun onEntryOpened(entry: SyncPlayQueueEntry) {
+            loadedPlaylistItemId = entry.playlistItemId
+            skippedSlots.clear()
+        }
+
+        /**
+         * The group is on something this device cannot open.
+         *
+         * A group's queue is not filtered for this client: it can hold an audio track, an item whose
+         * file has gone, or something this account may not see — and the resolver refuses all three,
+         * which is what `loadItem` returning `false` means here. The controller cannot tell them
+         * apart (it holds item ids, not metadata) and does not need to: the answer is the same, say
+         * so and ask the group to move on rather than sit there gating everyone.
+         *
+         * Asking to move on is also how this turns into a loop, so each slot is skipped **once**
+         * (M11 Phase 4, DECISIONS.md 2026-07-30). A queue of unplayable items therefore costs one
+         * pass and then stops, instead of cycling for as long as the group exists.
+         */
+        private suspend fun onEntryUnplayable(entry: SyncPlayQueueEntry) {
+            Timber.w("SyncPlay could not open item %s", entry.itemId)
+            loadedPlaylistItemId = null
+            _messages.tryEmit(SyncPlayMessage.ItemUnavailable)
+            if (!skippedSlots.add(entry.playlistItemId)) {
+                Timber.w("Not skipping past SyncPlay slot %s twice", entry.playlistItemId)
+                return
             }
+            runCatching { api.requestNextItem(entry.playlistItemId) }
+                .onFailure { Timber.w(it, "Could not skip past an unplayable SyncPlay item") }
         }
 
         // Player -------------------------------------------------------------------------------------

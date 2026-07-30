@@ -3,7 +3,7 @@ package dev.jellyfinnative.player.resolve
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
-import dev.jellyfinnative.data.DelegatingJellyfinRepository
+import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.model.PlaybackMediaSource
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
@@ -30,8 +30,8 @@ import javax.inject.Singleton
  *
  * Rule 2 carries the other half of that guarantee. A server that died *after* the last browse call
  * still reads as online — nothing has probed it since — so the resolve gets the same ceiling
- * [DelegatingJellyfinRepository] puts on every browse call, and a resolve that hits it reports the
- * failure so the reachability probe demotes the server before the user taps Play again.
+ * [JellyfinRepository.ONLINE_CALL_TIMEOUT_MS] puts on every browse call, and a resolve that hits it
+ * reports the failure so the reachability probe demotes the server before the user taps Play again.
  *
  * ### The two exceptions to rule 1
  * A request that has explicitly forbidden direct play is [DecoderFallbackHandler]'s
@@ -86,6 +86,6 @@ class PlaybackSourceResolver
              * `PlaybackInfo` POST is the one server call the user is actively waiting behind, so it
              * has no business being allowed to run longer than the calls that merely fill a grid.
              */
-            const val RESOLVE_TIMEOUT_MS = DelegatingJellyfinRepository.ONLINE_CALL_TIMEOUT_MS
+            const val RESOLVE_TIMEOUT_MS = JellyfinRepository.ONLINE_CALL_TIMEOUT_MS
         }
     }

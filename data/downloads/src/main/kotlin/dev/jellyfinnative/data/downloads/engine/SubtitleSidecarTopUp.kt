@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.engine
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
 import dev.jellyfinnative.core.common.model.DownloadStatus
@@ -7,7 +7,6 @@ import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.DownloadFileEntity
 import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.network.di.IoDispatcher
-import dev.jellyfinnative.data.downloads.engine.FileDownloader
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage

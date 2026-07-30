@@ -103,6 +103,23 @@ interface JellyfinRepository {
 
         /** Row size jellyfin-web uses for the per-library *Latest* rows. */
         const val DEFAULT_LATEST_LIMIT = 16
+
+        /**
+         * Ceiling on any single server call made through this repository, in milliseconds.
+         *
+         * Comfortably above a slow library page on a remote server, comfortably below the SDK's
+         * own 30-second socket timeout — which is the number the M6 definition of done rules out
+         * ("server-down (Wi-Fi up) degrades without a 30s hang"). `DelegatingJellyfinRepository`
+         * is what enforces it.
+         *
+         * Declared on the interface rather than on that implementation because it is a property of
+         * the *contract* — how long a caller may be made to wait — and callers outside `:data`
+         * legitimately need the number (`:player`'s `PlaybackSourceResolver` deliberately reuses
+         * it). The implementations are `internal` so that the delegate's ceiling and offline
+         * fallback cannot be bypassed by injecting one of them directly (audit ARCH-13); this
+         * constant is the one piece of them that was public for a reason.
+         */
+        const val ONLINE_CALL_TIMEOUT_MS = 10_000L
     }
 
     // ---- M3 — library & search ---------------------------------------------------------------

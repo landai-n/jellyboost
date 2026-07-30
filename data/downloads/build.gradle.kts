@@ -17,9 +17,12 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.datastore)
     implementation(projects.core.network)
-    // `api`, not `implementation`: `DownloadItem` carries a `JellyfinItem`, and the feature modules
-    // that render it must see the type.
-    api(projects.data)
+    // `implementation`, not `api` (audit ARCH-04). The old comment justified `api` with
+    // "`DownloadItem` carries a `JellyfinItem`, and the feature modules that render it must see the
+    // type" — but `JellyfinItem` lives in `:core:common`, which is api'd two lines up. Nothing in
+    // this module's *public* surface names a `:data` type: `ItemEntityMapper` appears only in
+    // constructors of classes consumers never build themselves.
+    implementation(projects.data)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)

@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -19,6 +20,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -26,6 +28,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import kotlin.reflect.KType
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.valueParameters
 
 /**
  * Unit tests for [DelegatingJellyfinRepository] — the per-call online/offline decision every
@@ -190,7 +196,7 @@ class DelegatingJellyfinRepositoryTest {
             repository.getResumeItems(12).names() shouldContainExactly listOf("cache")
 
             (testScheduler.currentTime - start) shouldBe
-                DelegatingJellyfinRepository.ONLINE_CALL_TIMEOUT_MS
+                JellyfinRepository.ONLINE_CALL_TIMEOUT_MS
             verify(exactly = 1) { connectionState.reportFailure() }
         }
 
@@ -227,6 +233,61 @@ class DelegatingJellyfinRepositoryTest {
             repository.getFilterFacets(null, listOf(ItemType.MOVIE)).shouldBeInstanceOf<AppResult.Success<*>>()
 
             coVerify(exactly = 0) { online.getUserViews() }
+        }
+
+    /**
+     * The same guarantee as the test above, but derived from the interface instead of typed out.
+     *
+     * The hand-written list is worth keeping — it asserts the *values* come back, not just that
+     * something was called — but it is only ever as complete as whoever last extended
+     * [JellyfinRepository] remembered to make it, and it was not: `getResumeItems` was missing for
+     * three milestones (audit ARCH-09). This walks every member the interface declares, calls it
+     * reflectively on the delegate, and demands the identically-named member fire on the offline
+     * implementation. A member added tomorrow and forgotten in `DelegatingJellyfinRepository`
+     * cannot compile at all (Kotlin requires the override); a member added and *stubbed out* —
+     * `TODO()`, `AppResult.Success(emptyList())`, a delegate to the wrong side — fails here.
+     *
+     * [sampleFor] deliberately throws on a parameter type it has never seen, so a new parameter
+     * shape is a loud failure asking for one line rather than a silently skipped member.
+     */
+    @Test
+    fun `every member the interface declares reaches a delegate, by reflection over the interface`() =
+        runTest {
+            state.value = ConnectionState.OFFLINE_NO_NETWORK
+            val members = JellyfinRepository::class.declaredMemberFunctions
+            // Guards the whole test against a reflection change that hands back nothing to walk.
+            // A floor rather than an exact count: adding a member must fail *routing*, not this.
+            members.size shouldBeGreaterThan MINIMUM_INTERFACE_MEMBERS
+
+            members.forEach { member ->
+                val arguments = member.valueParameters.map { sampleFor(it.type) }.toTypedArray()
+
+                if (member.isSuspend) {
+                    coEvery { member.callSuspend(offline, *arguments) } returns AppResult.Success(Unit)
+                    member.callSuspend(repository, *arguments)
+                    coVerify(exactly = 1) { member.callSuspend(offline, *arguments) }
+                } else {
+                    every { member.call(offline, *arguments) } returns flowOf(PagingData.from(fromCache))
+                    @Suppress("UNCHECKED_CAST")
+                    (member.call(repository, *arguments) as Flow<Any?>).first()
+                    verify(exactly = 1) { member.call(offline, *arguments) }
+                }
+            }
+        }
+
+    /**
+     * A value to call a repository member with, chosen only so the call is well-formed.
+     *
+     * Nothing asserts on these: the question this test asks is *where the call went*, and MockK
+     * matches the same constants on the way in and on the way out.
+     */
+    private fun sampleFor(type: KType): Any =
+        when (type.classifier) {
+            Int::class -> 1
+            String::class -> "id"
+            List::class -> listOf(ItemType.MOVIE)
+            ItemQuery::class -> ItemQuery()
+            else -> error("No sample value for $type — add one so this member is really exercised")
         }
 
     // ---- the paged grid -----------------------------------------------------------------------
@@ -291,5 +352,11 @@ class DelegatingJellyfinRepositoryTest {
     private companion object {
         /** The SDK's own default socket timeout — the number M6's definition of done rules out. */
         const val SOCKET_TIMEOUT_MS = 30_000L
+
+        /**
+         * Below the surface the interface has ever had, so the structural walk cannot pass on an
+         * empty member list, and above nothing that a real extension would trip over.
+         */
+        const val MINIMUM_INTERFACE_MEMBERS = 10
     }
 }

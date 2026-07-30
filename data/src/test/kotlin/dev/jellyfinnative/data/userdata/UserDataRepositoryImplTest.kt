@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.userdata
 
+import android.database.sqlite.SQLiteException
 import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
@@ -9,6 +10,7 @@ import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.model.SessionState
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -23,6 +25,7 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -345,7 +348,7 @@ class UserDataRepositoryImplTest {
     @Test
     fun `a failed local write is a Storage failure and publishes nothing`() =
         runTest {
-            coEvery { userDataDao.upsert(any()) } throws IllegalStateException("disk full")
+            coEvery { userDataDao.upsert(any()) } throws SQLiteException("disk full")
 
             eventBus.changes.test {
                 val result = repository.setPlayed(itemId, played = true)
@@ -355,6 +358,30 @@ class UserDataRepositoryImplTest {
                 cancelAndIgnoreRemainingEvents()
             }
             coVerify(exactly = 0) { playStateApi.markPlayedItem(any(), any(), any()) }
+        }
+
+    /**
+     * A cancelled write has not written anything, so reporting `AppError.Storage` would tell the
+     * caller the disk failed — and would swallow the cancellation the parent job is owed. Both
+     * Room catches on this path rethrow it (audit ARCH-08).
+     */
+    @Test
+    fun `a cancelled local write propagates instead of being reported as a storage failure`() =
+        runTest {
+            coEvery { userDataDao.upsert(any()) } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { repository.setPlayed(itemId, played = true) }
+        }
+
+    @Test
+    fun `a cancelled pending-flag clear propagates instead of being swallowed as best effort`() =
+        runTest {
+            // This one really is best effort — the row simply stays pending and the sync trigger
+            // drains it later — but "best effort" must not extend to eating a cancellation.
+            coEvery { userDataDao.clearPendingSync(any(), any(), any()) } throws
+                CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { repository.setPlayed(itemId, played = true) }
         }
 
     @Test

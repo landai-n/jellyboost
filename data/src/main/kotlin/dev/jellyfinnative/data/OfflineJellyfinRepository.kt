@@ -63,7 +63,7 @@ import javax.inject.Singleton
  * lists are empty on a real device — the behaviour is pinned by unit tests that seed Room instead.
  */
 @Singleton
-class OfflineJellyfinRepository
+internal class OfflineJellyfinRepository
     @Inject
     constructor(
         private val itemDao: ItemDao,

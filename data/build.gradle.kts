@@ -23,4 +23,7 @@ dependencies {
     ksp(libs.androidx.hilt.compiler)
 
     testImplementation(libs.androidx.paging.testing)
+    // Walks `JellyfinRepository`'s members so a new one cannot be forgotten by the delegate
+    // (audit ARCH-09, `DelegatingJellyfinRepositoryTest`). Test-only, by design.
+    testImplementation(libs.kotlin.reflect)
 }

@@ -15,8 +15,6 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
 import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
-import dev.jellyfinnative.data.downloads.OrphanSweeper
-import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage

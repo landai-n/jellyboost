@@ -2,7 +2,6 @@ package dev.jellyfinnative.data.downloads.plan
 
 import dev.jellyfinnative.core.common.model.DownloadFileType
 import dev.jellyfinnative.core.common.model.DownloadQuality
-import dev.jellyfinnative.data.downloads.isFolderItem
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.MediaStream
@@ -79,12 +78,14 @@ class DownloadFilePlanner
          *   is the guard that makes a caller which forgot fail *before* a URL exists rather than as
          *   an unexplained `400` from the server halfway down the queue.
          *
-         * @param audioStreamIndex the one audio track a transcode should bake in. Defaults to the
-         *   rule [downloadAudioStreamIndex] states, which is the same rule `DownloadEnqueuer`
-         *   records on the row — so a plan rebuilt on a later run reproduces the URL the row's
-         *   `bakedAudioStreamIndex` describes without the queue having to pass it. It is a
-         *   parameter rather than a private detail so a future preferred-language choice, which
-         *   only the row remembers, has somewhere to enter.
+         * @param audioStreamIndex the one audio track a transcode should bake in, or `null` for no
+         *   pin at all (an `ORIGINAL` download, which keeps every track, or an item with no audio
+         *   streams). Defaults to the rule [downloadAudioStreamIndex] states, which is the rule
+         *   `DownloadEnqueuer` applies when it stamps `bakedAudioStreamIndex` on the row — so a
+         *   caller with no row in hand still gets the enqueue-time answer. Every caller that *has*
+         *   a row passes that column instead: the DTO's default audio stream is the server's
+         *   current answer and can move between the tap and the drain, while the column is what
+         *   the download actually asked for (DECISIONS.md, 2026-07-30).
          */
         @Suppress("LongParameterList")
         fun plan(

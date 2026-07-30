@@ -7,8 +7,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.data.downloads.DownloadApi
 import dev.jellyfinnative.data.downloads.DownloadRepository
-import dev.jellyfinnative.data.downloads.DownloadRepositoryImpl
 import dev.jellyfinnative.data.downloads.SdkDownloadApi
+import dev.jellyfinnative.data.downloads.engine.DownloadHttpClient
+import dev.jellyfinnative.data.downloads.impl.DownloadRepositoryImpl
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.plan.SdkDownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.AndroidStorageVolumeProvider
@@ -20,7 +21,6 @@ import dev.jellyfinnative.data.downloads.work.WorkManagerDownloadScheduler
 import okhttp3.Call
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-import javax.inject.Qualifier
 import javax.inject.Singleton
 
 /** Hilt bindings for `:data:downloads`. */
@@ -57,11 +57,6 @@ internal interface DownloadsModule {
     @Singleton
     fun bindDownloadScheduler(impl: WorkManagerDownloadScheduler): DownloadScheduler
 }
-
-/** Marks the OkHttp client the download engine transfers on. */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class DownloadHttpClient
 
 /** Provides the HTTP client the download engine uses. */
 @Module

@@ -1,5 +1,6 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.impl
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.DownloadQuality
@@ -10,8 +11,12 @@ import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.DownloadApi
+import dev.jellyfinnative.data.downloads.engine.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadPaths
 import dev.jellyfinnative.data.downloads.plan.downloadAudioStreamIndex
+import dev.jellyfinnative.data.downloads.plan.isFolderItem
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -50,7 +55,7 @@ import javax.inject.Singleton
  * place the rule lives, so no caller can reintroduce the bug by enqueuing a folder.
  */
 @Singleton
-class DownloadEnqueuer
+internal class DownloadEnqueuer
     @Inject
     constructor(
         private val api: DownloadApi,
@@ -232,7 +237,6 @@ class DownloadEnqueuer
             val now = clock.instant()
             val quality = appPreferences.downloadQuality.first()
 
-            @Suppress("TooGenericExceptionCaught")
             return try {
                 // The items and their parents in one upsert: a partially-cached hierarchy is the
                 // state that makes offline navigation dead-end halfway up.
@@ -273,7 +277,17 @@ class DownloadEnqueuer
                         row
                     }
                 AppResult.Success(rows)
-            } catch (error: Exception) {
+            } catch (cancellation: CancellationException) {
+                // The enqueue runs in the caller's coroutine — a ViewModel scope that dies with the
+                // screen. Reporting a cancelled scope as `AppError.Storage` would put a "could not
+                // download" message on a screen the user has already left, and would swallow the
+                // cancellation the structured-concurrency machinery is owed (the audit's ARCH-08
+                // rule).
+                throw cancellation
+            } catch (error: SQLiteException) {
+                // Narrowed to Room's own failure: the block above is `upsert` calls and arithmetic,
+                // so anything else escaping it is a bug in this class rather than a full disk, and
+                // should surface as a crash instead of a swallowed "could not enqueue".
                 Timber.e(error, "Could not enqueue %s", targets.firstOrNull()?.id)
                 AppResult.Failure(AppError.Storage(error))
             }

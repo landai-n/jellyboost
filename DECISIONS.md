@@ -1501,3 +1501,42 @@ Seeded from the approved plan; listed for traceability, no divergence:
   once per emission).
 
 <!-- END -->
+
+## 2026-07-30 — structural batch (ARCH-04/05/09/13, reconcile pin, rethrow stragglers)
+
+- **Scope:** `api(projects.data)` → `implementation` (zero-consumer blast radius
+  re-confirmed); `:data:downloads` package cycles broken by moves only
+  (`FolderItems`→`.plan`; `SiblingSeeder`/`OrphanSweeper`/`SubtitleSidecarTopUp`
+  →`.engine`; `DownloadDeleter`/`DownloadEnqueuer`/`DownloadRepositoryImpl`→new
+  `.impl`; the `DownloadHttpClient` qualifier →`engine/`, which closed a third
+  cycle the audit did not name) with a new `PackageDependencyTest` enforcing a
+  strict layer order + acyclicity; `ONLINE_CALL_TIMEOUT_MS` relocated to the
+  `JellyfinRepository` companion (a property of the contract; `:player` reuses
+  it) before `Online/Offline/DelegatingJellyfinRepository` and `DataModule` went
+  `internal`; ARCH-09 delegation test made structural via kotlin-reflect (proved:
+  un-routing `getSimilarItems` fails only the new test — the exact audit gap);
+  `DownloadQueue.reconcile` + the 403 fallback now pass
+  `download.bakedAudioStreamIndex` into `plan()` (closes the multi-track
+  follow-up above — the drain can no longer re-pin a half-downloaded transcode
+  onto moved server metadata); `DownloadEnqueuer.write` +
+  `UserDataRepositoryImpl.storeLocally`/`clearPendingFlag` gained the
+  cancellation rethrow and `SQLiteException` narrowing; Compose-metrics flag
+  extended to `:app`.
+- **Divergences:** (1) only 3 of the 5 `ItemEntityMapper`-exposing classes could
+  go `internal` — `DownloadedMetadataRefresher` (`:app`) and
+  `DownloadedMediaProvider` (`:player`) are injected cross-module; hiding them
+  needs an interface seam (backlog). (2) `DownloadWorker` also went `internal`
+  (public class cannot take an internal ctor param; WorkManager resolves by name,
+  unaffected). (3) The root package is not a leaf — it keeps the module's public
+  API; the enforced property is total layer order + acyclicity, which is what
+  "a future cycle fails a test" needs. (4) `kotlin-reflect` added as a
+  test-only dependency for the structural test. (5) Two existing tests changed
+  their *injected* exception type IllegalStateException→SQLiteException as the
+  direct consequence of the narrowing; assertions verbatim. (6) The optional
+  dispatcher-qualifier relocation was skipped: `core:common` deliberately has no
+  DI dependency, so it is not a mechanical sweep — the accepted
+  `feature/downloads → core.network` edge stands.
+- **Flagged for a future pass:** `DownloadEnqueuer.removeDoomedContainerRow`
+  keeps a broad catch (filesystem + Room mixed) with no cancellation rethrow.
+
+<!-- END -->

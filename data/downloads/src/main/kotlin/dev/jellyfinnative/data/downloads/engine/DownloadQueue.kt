@@ -10,8 +10,6 @@ import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
-import dev.jellyfinnative.data.downloads.OrphanSweeper
-import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
@@ -122,7 +120,7 @@ internal class MissingMetadataException(
  * drain, before any row is touched.
  */
 @Singleton
-class DownloadQueue
+internal class DownloadQueue
     @Inject
     constructor(
         private val downloadDao: DownloadDao,
@@ -311,8 +309,21 @@ class DownloadQueue
         ): List<DownloadFileEntity> {
             storage.prepareItemDirectory(download.directoryName)
             // The quality comes from the row, never from the live preference: the bytes already on
-            // disk were fetched at it (DECISIONS.md, 2026-07-29).
-            val planned = planner.plan(dto, download.directoryName, quality = download.quality)
+            // disk were fetched at it (DECISIONS.md, 2026-07-29). The baked audio track comes from
+            // the row for the same reason and one more: the DTO's default audio stream is the
+            // server's *current* answer, and re-deriving it here would silently re-plan a
+            // half-downloaded transcode onto a different track if the server's metadata moved
+            // between the tap and the drain. `bakedAudioStreamIndex` is what the enqueue actually
+            // asked for, and it is null exactly when there was no pin to make — an ORIGINAL row,
+            // or an item with no audio streams — which is the same thing the planner does with an
+            // absent index (DECISIONS.md, 2026-07-30).
+            val planned =
+                planner.plan(
+                    dto,
+                    download.directoryName,
+                    quality = download.quality,
+                    audioStreamIndex = download.bakedAudioStreamIndex,
+                )
 
             return planned.map { file ->
                 val previous =
@@ -486,8 +497,12 @@ class DownloadQueue
                 Timber.i("Download endpoint denied for %s; falling back to the video stream", download.itemName)
                 val fallback =
                     planner
-                        .plan(dto, download.directoryName, downloadAllowed = false)
-                        .first { it.type == DownloadFileType.MEDIA }
+                        .plan(
+                            dto,
+                            download.directoryName,
+                            downloadAllowed = false,
+                            audioStreamIndex = download.bakedAudioStreamIndex,
+                        ).first { it.type == DownloadFileType.MEDIA }
                 val retried = file.copy(url = fallback.url)
                 downloadDao.updateFile(retried)
                 downloadOne(download, retried, progress, projector, listener)

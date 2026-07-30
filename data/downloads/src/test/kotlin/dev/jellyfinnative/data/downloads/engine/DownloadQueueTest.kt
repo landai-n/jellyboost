@@ -14,12 +14,11 @@ import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
 import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
+import dev.jellyfinnative.data.downloads.DownloadFixtures.audioStream
 import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.file
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
-import dev.jellyfinnative.data.downloads.OrphanSweeper
-import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.storage.DownloadStorage
@@ -308,6 +307,44 @@ class DownloadQueueTest {
             // audio streams at all, so the request names none rather than an index of nothing.
             verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM, null) }
             coVerify(exactly = 0) { urls.mediaUrl(any()) }
+        }
+
+    @Test
+    fun `the baked audio track comes from the row, not from the DTO's current default`() =
+        runTest {
+            // The reconcile step re-plans on every drain. Re-deriving the pin from the DTO would
+            // make a resumed transcode ask for a *different* track than the bytes already on disk
+            // hold, the moment the server's default audio stream moved between the tap and the
+            // drain — a re-encode, a re-tag, a metadata refresh. `bakedAudioStreamIndex` is the
+            // record of what was actually asked for (DECISIONS.md, 2026-07-30).
+            every { itemMapper.toDtoOrNull(any()) } returns
+                movie(
+                    streams = listOf(audioStream(index = 1), audioStream(index = 3)),
+                    defaultAudioStreamIndex = 1,
+                )
+            queueWith(download(quality = DownloadQuality.MEDIUM, bakedAudioStreamIndex = 3))
+            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns "https://server/videos/stream.mkv"
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            verify { urls.transcodedVideoUrl(uuid(1), "source-1", DownloadQuality.MEDIUM, 3) }
+            verify(exactly = 0) { urls.transcodedVideoUrl(any(), any(), any(), 1) }
+        }
+
+    @Test
+    fun `an ORIGINAL row plans no audio pin at all, whatever the DTO's default says`() =
+        runTest {
+            // The null half of the same rule: `bakedAudioStreamIndex` is null for an ORIGINAL row
+            // because that file keeps every track, and the planner must read that as "no pin"
+            // rather than fall back to the DTO — which is exactly what the old default did.
+            every { itemMapper.toDtoOrNull(any()) } returns
+                movie(streams = listOf(audioStream(index = 1)), defaultAudioStreamIndex = 1)
+            queueWith(download(quality = DownloadQuality.ORIGINAL))
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            coVerify { urls.mediaUrl(uuid(1)) }
+            verify(exactly = 0) { urls.transcodedVideoUrl(any(), any(), any(), any()) }
         }
 
     @Test

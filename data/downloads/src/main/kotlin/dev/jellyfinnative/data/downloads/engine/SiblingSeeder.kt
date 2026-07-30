@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.engine
 
 import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.database.dao.DownloadDao

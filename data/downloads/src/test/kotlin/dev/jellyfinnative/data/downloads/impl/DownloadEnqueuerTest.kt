@@ -1,5 +1,6 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.impl
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.DownloadQuality
@@ -12,6 +13,8 @@ import dev.jellyfinnative.core.database.entities.ItemEntity
 import dev.jellyfinnative.core.database.entities.ItemSource
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.DownloadApi
+import dev.jellyfinnative.data.downloads.DownloadFixtures
 import dev.jellyfinnative.data.downloads.DownloadFixtures.NOW
 import dev.jellyfinnative.data.downloads.DownloadFixtures.audioStream
 import dev.jellyfinnative.data.downloads.DownloadFixtures.episode
@@ -19,6 +22,8 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.season
 import dev.jellyfinnative.data.downloads.DownloadFixtures.series
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.engine.SiblingSeeder
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -32,6 +37,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -236,12 +242,27 @@ class DownloadEnqueuerTest {
     fun `a failing cache write fails the enqueue rather than queueing an invisible download`() =
         runTest {
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
-            coEvery { itemDao.upsert(any()) } throws IllegalStateException("disk full")
+            coEvery { itemDao.upsert(any()) } throws SQLiteException("disk full")
 
             val result = enqueuer().enqueue(uuid(1), USER)
 
             result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Storage>()
             coVerify(exactly = 0) { downloadDao.upsert(any()) }
+        }
+
+    /**
+     * The enqueue runs in the caller's scope — a ViewModel's, which dies with the screen. Turning
+     * that cancellation into `AppError.Storage` would put a "could not download" message on a
+     * screen the user has already left, and would swallow the cancellation the parent job is owed
+     * (audit ARCH-08).
+     */
+    @Test
+    fun `a cancelled enqueue propagates instead of being reported as a storage failure`() =
+        runTest {
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+            coEvery { itemDao.upsert(any()) } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { enqueuer().enqueue(uuid(1), USER) }
         }
 
     // ---- download quality (M9) ------------------------------------------------------------------

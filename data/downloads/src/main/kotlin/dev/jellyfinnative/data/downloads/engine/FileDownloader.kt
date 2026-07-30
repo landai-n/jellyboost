@@ -1,6 +1,5 @@
 package dev.jellyfinnative.data.downloads.engine
 
-import dev.jellyfinnative.data.downloads.di.DownloadHttpClient
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine

@@ -109,6 +109,14 @@ data class RemotePlaybackMediaSource(
  * @property mediaUri `file://` URI of the downloaded video file.
  * @property trickplay downloaded scrubbing thumbnails, when the server generated any. The scrubber
  *   that draws them arrives with M9; M8 only carries the data (DECISIONS.md 2026-07-29).
+ * @property allAudioTracks / @property allSubtitleTracks every track of the **source**, as the
+ *   cached blob describes it — a superset of [audioTracks] / [subtitleTracks], which are only what
+ *   the file and its sidecars can actually play. The two lists are what makes the picker
+ *   connectivity-aware: online it offers the source's full set and reaches anything extra by
+ *   streaming it (`PlaybackResolveRequest.forceRemote`), offline it offers the playable subset and
+ *   nothing else. They are deliberately *not* on [PlaybackMediaSource]: for a remote source the two
+ *   sets are the same list, and every other collaborator — `TrackSelectionController` above all —
+ *   must keep reading the playable one.
  */
 data class LocalPlaybackMediaSource(
     override val itemId: UUID,
@@ -119,6 +127,8 @@ data class LocalPlaybackMediaSource(
     override val audioTracks: List<PlaybackTrack> = emptyList(),
     override val subtitleTracks: List<PlaybackTrack> = emptyList(),
     override val externalSubtitles: List<ExternalSubtitle> = emptyList(),
+    val allAudioTracks: List<PlaybackTrack> = audioTracks,
+    val allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
     override val selectedAudioIndex: Int? = null,
     override val selectedSubtitleIndex: Int? = null,
     val trickplay: LocalTrickplay? = null,
@@ -130,7 +140,29 @@ data class LocalPlaybackMediaSource(
 
     override fun withSelectedSubtitle(jellyfinIndex: Int?): PlaybackMediaSource =
         copy(selectedSubtitleIndex = jellyfinIndex)
+
+    /** `true` when the bytes on disk can supply this audio track with no server in the loop. */
+    fun playsAudioLocally(jellyfinIndex: Int): Boolean = audioTracks.any { it.index == jellyfinIndex }
+
+    /** `true` when the file or one of its sidecars can supply this subtitle; `null` is "off". */
+    fun playsSubtitleLocally(jellyfinIndex: Int?): Boolean =
+        jellyfinIndex == null || subtitleTracks.any { it.index == jellyfinIndex }
 }
+
+/**
+ * The audio tracks the picker should offer, given what the app can currently reach.
+ *
+ * Online, a downloaded item offers every track of the source: one the file does not hold is
+ * satisfied by streaming it instead (`PlaybackResolveRequest.forceRemote`). Offline it offers only
+ * what the file and its sidecars can play, because a picker entry that cannot do anything is worse
+ * than one fewer language. A streamed source has one list either way.
+ */
+fun PlaybackMediaSource.audioTracksFor(online: Boolean): List<PlaybackTrack> =
+    (this as? LocalPlaybackMediaSource)?.takeIf { online }?.allAudioTracks ?: audioTracks
+
+/** The subtitle tracks the picker should offer; see [audioTracksFor]. */
+fun PlaybackMediaSource.subtitleTracksFor(online: Boolean): List<PlaybackTrack> =
+    (this as? LocalPlaybackMediaSource)?.takeIf { online }?.allSubtitleTracks ?: subtitleTracks
 
 /**
  * Downloaded trickplay tile sheets and the geometry needed to index into them.

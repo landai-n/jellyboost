@@ -16,6 +16,12 @@ import java.util.UUID
  *   whereas `null` lets the server choose the item's default.
  * @param enableDirectPlay / @param enableDirectStream `false` forbids that delivery method, which
  *   is how `DecoderFallbackHandler` forces a transcode after a renderer failure.
+ * @param forceRemote skips the download on disk and goes to the server even for an item that is
+ *   fully downloaded. It exists for exactly one caller: a track change an online user asked for that
+ *   the downloaded file cannot supply. Without it the re-resolve would run `LocalPlaybackResolver`
+ *   over the same file and hand back the same tracks, so the switch could never be applied — see
+ *   `PlayerViewModel.selectAudioTrack`. Distinct from `enableDirectPlay = false`, which says "these
+ *   *bytes* cannot be decoded" and therefore also forbids the server's own direct play.
  */
 data class PlaybackResolveRequest(
     val itemId: UUID,
@@ -26,4 +32,5 @@ data class PlaybackResolveRequest(
     val subtitleStreamIndex: Int? = null,
     val enableDirectPlay: Boolean? = null,
     val enableDirectStream: Boolean? = null,
+    val forceRemote: Boolean = false,
 )

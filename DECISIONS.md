@@ -1381,3 +1381,33 @@ Seeded from the approved plan; listed for traceability, no divergence:
   preferred-language preference exists; today both routes derive the same index from the same DTO.
 
 <!-- END -->
+
+## 2026-07-30 — connectivity-aware track picker for downloaded items (user-requested)
+
+- **Scope:** `player/resolve` (`PlaybackResolveRequest.forceRemote`, honoured by
+  `PlaybackSourceResolver` as the second exception to prefer-local),
+  `LocalPlaybackResolver` (`allAudioTracks`/`allSubtitleTracks` on
+  `LocalPlaybackMediaSource` only — putting unplayable tracks in the playable lists would
+  mis-map the controller's positional matching), `PlayerViewModel` (connectivity collected
+  live; pickers derive from (source, online); `refuseLocalTrackChange` only fires offline),
+  new `PlayerMessage.StreamingForTrackChange`, feature docs.
+- **Plan said / was:** a track change on a `LocalPlaybackMediaSource` is always refused
+  (2026-07-30 entry above); pickers show only what the file holds.
+- **Done instead:** online, the pickers show the source's full track list and a track the
+  file cannot supply reopens with `forceRemote` at the current position (snackbar: "That
+  track isn't in the download — streaming it from your server"); offline, the pickers show
+  only what the file + sidecars can play, reacting live to connectivity; the refusal stays
+  as the went-offline-mid-tap backstop. Selecting a track the file does hold while in such a
+  stream returns to local playback.
+- **Beyond the brief, accepted as correctness for newly-reachable states:** (1) the
+  `forcedRemote` flag is sticky across quality changes and decoder fallbacks — otherwise a
+  quality change would silently revert to the local file and lose the chosen track; (2) a
+  failed forced-remote resolve falls back to reopening the local file instead of erroring
+  (server-died-but-connectivity-says-online hole).
+- **Tests adapted, not weakened:** the two refusal tests set the connection OFFLINE
+  explicitly and are renamed `offline, …` (assertions byte-identical — online the same tap
+  is now correctly a stream); 4 tests moved verbatim to the new `PlayerTrackPickerTest`
+  (detekt LargeClass). Mutation-checked: always-false `needsServer` fails exactly the 4
+  pinning tests.
+
+<!-- END -->

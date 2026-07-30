@@ -45,6 +45,16 @@ import javax.inject.Singleton
  * selecting one cannot be satisfied, and offline there is no server to re-ask.
  * [DownloadedMedia.isTranscoded] is therefore consulted before anything embedded is offered, and
  * [DownloadedMedia.bakedAudioStreamIndex] names the one audio track that did survive.
+ *
+ * ### …and what is offered anyway, when there is a server
+ * The withheld tracks are not discarded, they are set aside:
+ * [LocalPlaybackMediaSource.allAudioTracks] and `allSubtitleTracks` carry the source's **full**
+ * stream list, built from the same cached blob by the same mapper. Online, the picker draws that
+ * list and a track the file does not hold is reached by streaming the item instead
+ * ([PlaybackResolveRequest.forceRemote]); offline the picker draws the playable subset above and the
+ * extra list is never looked at. Building both here costs one more pass over a list that is already
+ * in memory, and keeps "what is in the file" and "what the item has" from being two different
+ * classes' opinions.
  */
 @Singleton
 class LocalPlaybackResolver
@@ -98,6 +108,22 @@ class LocalPlaybackResolver
                 subtitleTracks =
                     subtitles.map { it.toTrack(defaultSubtitleIndex, sideLoaded = it.index in sidecars) },
                 externalSubtitles = downloaded.toExternalSubtitles(streams),
+                // The source's own lists, for the picker to draw while there is a server to ask.
+                // Labelled off the source's defaults rather than the file's, because that is what
+                // they describe — the item, not the copy of it on this device.
+                allAudioTracks =
+                    streams
+                        .filter { it.type == MediaStreamType.AUDIO }
+                        .map { it.toTrack(downloaded.mediaSource?.defaultAudioStreamIndex) },
+                allSubtitleTracks =
+                    streams
+                        .filter { it.type == MediaStreamType.SUBTITLE }
+                        .map {
+                            it.toTrack(
+                                downloaded.mediaSource?.defaultSubtitleStreamIndex,
+                                sideLoaded = it.index in sidecars || it.isExternal,
+                            )
+                        },
                 // A request can carry a track index from a previous session or from a re-resolve;
                 // one this file does not hold must not leave the picker pointing at nothing.
                 selectedAudioIndex =

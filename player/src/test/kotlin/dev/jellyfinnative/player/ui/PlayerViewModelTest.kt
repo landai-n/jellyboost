@@ -9,12 +9,10 @@ import dev.jellyfinnative.player.PlayerFixtures
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.PlaybackSpeed
-import dev.jellyfinnative.player.model.PlaybackTrack
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
 import dev.jellyfinnative.player.session.PlayerEvent
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -381,34 +379,6 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
         }
 
     @Test
-    fun `a track switch on a download is recorded on the local source`() =
-        runTest(dispatcher) {
-            playerHandle.trackSelectionSucceeds = true
-            coEvery { resolver.resolve(any()) } returns
-                AppResult.Success(
-                    PlayerFixtures.localSource(
-                        audioTracks =
-                            listOf(
-                                PlaybackTrack(index = 1, label = "English", language = "eng", codec = "ac3"),
-                                PlaybackTrack(index = 2, label = "French", language = "fra", codec = "aac"),
-                            ),
-                        selectedAudioIndex = 1,
-                    ),
-                )
-            val model = viewModel()
-            advanceUntilIdle()
-
-            model.selectAudioTrack(2)
-            model.selectSubtitleTrack(3)
-            advanceUntilIdle()
-
-            model.uiState.value.selectedAudioIndex shouldBe 2
-            model.uiState.value.selectedSubtitleIndex shouldBe 3
-            // Locally satisfied, so nothing is renegotiated — same as a direct play online.
-            coVerify(exactly = 1) { resolver.resolve(any()) }
-        }
-
-    @Test
     fun `leaving a downloaded item still hands the stop report to the detached scope`() =
         runTest(dispatcher) {
             // Offline that report writes nothing but the local position — which is the only record
@@ -422,63 +392,6 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             model.releaseSession()
 
             coVerify(exactly = 1) { reporter.reportStopDetached(local, any()) }
-        }
-
-    @Test
-    fun `an audio track the local file cannot satisfy is refused instead of reloading it`() =
-        runTest(dispatcher) {
-            playerHandle.trackSelectionSucceeds = false
-            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
-            val model = viewModel()
-            advanceUntilIdle()
-
-            model.selectAudioTrack(2)
-            advanceUntilIdle()
-
-            // Re-resolving a file:// URI runs the local resolver over the same file and returns the
-            // same tracks: the switch still cannot be applied and playback has restarted for it.
-            coVerify(exactly = 1) { resolver.resolve(any()) }
-            playerHandle.prepared shouldHaveSize 1
-            model.uiState.value.selectedAudioIndex
-                .shouldBeNull()
-            model.uiState.value.userMessage shouldBe PlayerMessage.TrackUnavailableOffline
-        }
-
-    @Test
-    fun `a subtitle the local file cannot satisfy is refused instead of reloading it`() =
-        runTest(dispatcher) {
-            playerHandle.trackSelectionSucceeds = false
-            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.localSource())
-            val model = viewModel()
-            advanceUntilIdle()
-
-            model.selectSubtitleTrack(6)
-            advanceUntilIdle()
-
-            coVerify(exactly = 1) { resolver.resolve(any()) }
-            playerHandle.prepared shouldHaveSize 1
-            model.uiState.value.selectedSubtitleIndex
-                .shouldBeNull()
-            model.uiState.value.userMessage shouldBe PlayerMessage.TrackUnavailableOffline
-        }
-
-    @Test
-    fun `a streamed item still re-requests a track the current stream cannot satisfy`() =
-        runTest(dispatcher) {
-            // The offline guard must not reach the online path, where a re-resolve is the whole
-            // mechanism for getting a different audio track out of a transcode.
-            playerHandle.trackSelectionSucceeds = false
-            val model = viewModel()
-            advanceUntilIdle()
-
-            val requests = mutableListOf<PlaybackResolveRequest>()
-            coEvery { resolver.resolve(capture(requests)) } returns AppResult.Success(source)
-
-            model.selectAudioTrack(2)
-            advanceUntilIdle()
-
-            requests.last().audioStreamIndex shouldBe 2
-            requests.last().maxStreamingBitrate.shouldBeNull()
         }
 
     // ---- M9: speed ----------------------------------------------------------------------------

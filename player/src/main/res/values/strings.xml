@@ -29,6 +29,7 @@
     <string name="player_message_transcode">Your device couldn\'t decode this file, so the server is transcoding it.</string>
     <string name="player_message_lower_quality">The stream stalled — retrying at a lower quality.</string>
     <string name="player_message_track_restart">The server had to re-encode the stream for that track.</string>
+    <string name="player_message_track_streaming">That track isn\'t in the download — streaming it from your server.</string>
     <string name="player_message_track_offline">That track isn\'t in the downloaded file.</string>
     <string name="player_message_failed">Playback failed.</string>
 </resources>

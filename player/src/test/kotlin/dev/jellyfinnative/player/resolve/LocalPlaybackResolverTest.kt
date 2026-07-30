@@ -434,6 +434,68 @@ class LocalPlaybackResolverTest {
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
         }
 
+    // ---- the source's own lists, for the connectivity-aware picker -------------------------------
+
+    @Test
+    fun `carries the source's full track lists alongside the ones the file can play`() =
+        runTest {
+            transcodedFilm(sidecars = listOf(0, 1))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // What the picker draws online: everything the item has, whatever the encode dropped.
+            source.allAudioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
+            source.allSubtitleTracks.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
+            // What it draws offline, unchanged: only what the file and its sidecars hold.
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3)
+            source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 1)
+        }
+
+    @Test
+    fun `labels the full audio list from the source's own default, not the baked track`() =
+        runTest {
+            transcodedFilm(defaultAudioStreamIndex = 3, bakedAudioStreamIndex = 5)
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // The extra list describes the *item*; the file's own idea of default is the other one.
+            source.allAudioTracks.single { it.isDefault }.index shouldBe 3
+            source.allAudioTracks.map { it.label } shouldContainExactly
+                listOf("French VFF", "French VFQ", "English VO")
+            source.audioTracks.single().index shouldBe 5
+        }
+
+    @Test
+    fun `an original download's two lists are the same list`() =
+        runTest {
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(mediaStreams = transcodedFilmStreams(), defaultAudioStreamIndex = 3),
+                quality = DownloadQuality.ORIGINAL,
+                subtitles = listOf(DownloadedSubtitle(streamIndex = 0, uri = "file:///downloads/s.0.eng.srt")),
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // Nothing was dropped except the one sidecar that is missing, so being online adds
+            // exactly that one entry and the picker is otherwise identical either way.
+            source.allAudioTracks.map { it.index } shouldContainExactly source.audioTracks.map { it.index }
+            source.allSubtitleTracks.map { it.index } shouldContainExactly listOf(0, 1, 6, 7)
+            source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
+        }
+
+    @Test
+    fun `an item whose cached blob is gone offers nothing to stream either`() =
+        runTest {
+            downloaded(mediaSource = null)
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // There is no stream list to draw an online picker from; it plays anyway.
+            source.allAudioTracks.shouldBeEmpty()
+            source.allSubtitleTracks.shouldBeEmpty()
+        }
+
     @Test
     fun `drops a requested track the downloaded file does not hold`() =
         runTest {

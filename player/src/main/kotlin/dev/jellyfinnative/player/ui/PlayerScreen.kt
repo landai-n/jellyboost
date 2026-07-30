@@ -272,6 +272,7 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.SwitchedToTranscode -> R.string.player_message_transcode
         PlayerMessage.RetryingAtLowerQuality -> R.string.player_message_lower_quality
         PlayerMessage.RestartedForTrackChange -> R.string.player_message_track_restart
+        PlayerMessage.StreamingForTrackChange -> R.string.player_message_track_streaming
         PlayerMessage.TrackUnavailableOffline -> R.string.player_message_track_offline
         PlayerMessage.PlaybackFailed -> R.string.player_message_failed
     }

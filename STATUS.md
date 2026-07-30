@@ -130,10 +130,13 @@ verification on the minified build.
   UUID, and any `ApiKey`/token across 543 buffered lines.
   UDP discovery = NOT-TESTABLE (would require signing out of the session).
   Evidence: scratchpad `minified/` + `off*.png`/`sec1*.png`.
-- **UX gap found by testing, fix requested by the user:** rows in the Downloads
-  screen's *Downloaded* list are not tappable (only a delete button), so the
-  only route to playing a download is the item detail page. Two separate agents
-  tripped over it. Clickable-to-play rows are being added.
+- **Downloaded rows play on tap** (`feat(downloads)`, a60274d) — UX gap found by
+  the device testing (two agents assumed it worked), fix requested by the user.
+  Reuses the detail page's `Routes.Player` call and resume rule verbatim; only
+  completed rows are clickable (`QueueRow` has no `onPlay` at all); the delete
+  icon stays an independent target. PLAN divergence logged (PLAN.md:76 listed
+  the Downloaded tab as grouped/sizes/delete only). **Device-verified**: tapping
+  a Pat' Patrouille row started playback immediately, no crash.
 
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in

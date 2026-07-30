@@ -12,7 +12,7 @@ verification on the minified build.
   vs `MediaCodecList` on the Helio G100).
 - Note: the repo has no GitHub remote — CI can be authored but not exercised.
 
-## Pointless transcodes fall back to the original (post-M9, 2026-07-30 — built, gate green, **not yet device-verified**)
+## Pointless transcodes fall back to the original (post-M9, 2026-07-30 — built, gate green, **device-verified**)
 
 `DownloadEnqueuer.planQuality`: when the chosen quality is transcoded and the estimate comes to
 `>= 0.9 ×` the source file's own size, the row is written as `ORIGINAL` instead — exact size,
@@ -22,12 +22,15 @@ uncomputable estimate keeps the user's preference. No downstream change: everyth
 the row's `quality` column. Docs: `docs/features/download-quality.md` ("When a transcode is not
 worth making"), `DECISIONS.md` (2026-07-30). Tests: `DownloadEnqueuerSizeTest` 20 → 27.
 
-- **Known issue / next:** device walk on the test tablet — with quality set to *High*, download a
-  1080p H.264 item already under the cap and confirm the row shows a plain exact size, offers
-  *Pause*, and lands as the source's own file name/container rather than a `(high).mkv`; then a
-  25–40 Mbps remux at *Low* to confirm it still transcodes.
+- **Device walk done (2026-07-30, test tablet, all-pass).** At *High*, a 2,9 GB film logged
+  `Backrooms: a HIGH transcode is estimated at 4101763080 bytes against an original of 2935082241 —
+  downloading the original`; its queue row read `326,8 MB of 2,9 GB` (plain, no `~`), offered
+  *Pause* (which paused and re-offered *Resume*), and landed on disk as the source's own
+  `Backrooms.2026.…x265-[PSA]-BATGirl.mkv`, not a `(high).mkv`. Counter-case at *Low*: an 11 Mbps
+  film kept its transcode — row `263,3 MB of ~3,0 GB`, no *Pause* button, no enqueuer log line,
+  file `Ballerina (2025) (low).mkv`. Both cancelled; files removed.
 
-## Detail-page media size + downloaded badge icon (post-M9, 2026-07-30 — built, gate green, **not yet device-verified**)
+## Detail-page media size + downloaded badge icon (post-M9, 2026-07-30 — built, gate green, **device-verified**)
 
 The detail header's metadata line now shows the media file size (`2016 · 116 min · 552.4 MB · …`)
 for items with a media source of their own (movies, episodes; series/seasons omit it), online and
@@ -36,9 +39,12 @@ copy in `:feature:detail`. Episode *rows* stay lean (no MediaSources in `EPISODE
 `Downloaded` badge on item cards is now `DownloadForOffline` (circular down-arrow) instead of the
 checkmark. Docs: `docs/features/item-detail.md`. Tests: `ItemMapperTest` +3, `FormatBytesTest` +5.
 
-- **Known issue / next:** device walk on the test tablet — size on a movie and an episode detail
-  page (and its absence on a series/season page), offline size on a downloaded item, and the new
-  badge glyph on the library grid.
+- **Device walk done (2026-07-30, test tablet, all-pass).** Movie `2026 · 110 min · 2,9 GB · FR-12 ·
+  7.1` and episode `2019 · 53 min · 1,0 GB · 7.8`; series (`2019 · FR-16 · 8.3 · 3 seasons`) and
+  season (`2026 · 8 episodes`) carry no size. Landscape keeps the line intact with the poster beside
+  the text. In airplane mode a downloaded film still read `2026 · 101 min · 5,2 GB · FR-TP · 9.0`
+  from cache, and the app came back online cleanly. Badges on the library grid and Home render the
+  circular down-arrow for completed downloads and the progress ring while one is running.
 
 ## Batch selection (post-M9 feature, 2026-07-29 — built, gate green, **not yet device-verified**)
 

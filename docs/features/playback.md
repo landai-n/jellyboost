@@ -96,7 +96,11 @@ server dashboard.
 Jellyfin numbers every stream of a file in one sequence; ExoPlayer numbers tracks per type and
 only sees the streams it was given. Two bridges close the gap:
 
-- **Side-loaded subtitles** carry the track id `external:<jellyfinIndex>`.
+- **Side-loaded subtitles** carry the track id `external:<jellyfinIndex>`. The player reports it
+  back with a `<childIndex>:` prefix — side-loading anything makes the source a
+  `MergingMediaSource`, whose period re-ids every format as `"<childIndex>:<originalId>"` — so
+  `jellyfinIndexOfTrackId` strips a leading numeric prefix before reading the index. Matching the
+  raw id refused every downloaded sidecar as "not in the downloaded file".
 - **Embedded streams** are matched by position among the embedded streams of the same type.
 
 A switch is applied locally when the track is already in the stream. When it is not — the

@@ -27,11 +27,16 @@ import org.junit.jupiter.api.Test
  *
  * The groups here are built the way Media3 builds them for a side-loaded subtitle: `MediaItems`
  * hands `MediaItem.SubtitleConfiguration.setId("external:<index>")` to the player, and
- * `DefaultMediaSourceFactory` copies that id straight onto the `Format` it synthesises for the
- * subtitle source (`Format.Builder.setId(subtitleConfiguration.id)`, in both the
- * parse-during-extraction branch and the `SingleSampleMediaSource` one). So a text `Format` carrying
- * `external:1` is exactly what the player reports, and matching it is what makes a downloaded
- * sidecar selectable offline — the only subtitles a transcoded download has at all.
+ * `DefaultMediaSourceFactory` copies that id onto the `Format` it synthesises for the subtitle
+ * source (`Format.Builder.setId(subtitleConfiguration.id)`, in both the parse-during-extraction
+ * branch and the `SingleSampleMediaSource` one).
+ *
+ * That is not the end of the id's journey, and assuming it was is what made a downloaded sidecar
+ * unselectable offline. Side-loading a subtitle wraps everything in a `MergingMediaSource`, and
+ * `MergingMediaPeriod.onPrepared` rebuilds every format of every child as
+ * `setId(childIndex + ":" + format.id)` before publishing the merged groups — so what the player
+ * reports is `1:external:1`, never `external:1`. Both shapes are exercised here: the merged one
+ * because it is what a device produces, the bare one because nothing should depend on the wrapping.
  */
 class TrackSelectionControllerTest {
     private val player = mockk<Player>(relaxed = true)
@@ -202,6 +207,79 @@ class TrackSelectionControllerTest {
             .id shouldBe "embedded-deu"
     }
 
+    // ---- the ids Media3 actually reports once a subtitle is side-loaded --------------------------
+
+    @Test
+    fun `selects a sidecar subtitle through the id a merged source reports`() {
+        // "Les Minions 2", transcoded MEDIUM: the encode dropped both French text subtitles from the
+        // container, so `subtitle.1.fra.srt` and `subtitle.2.fra.srt` are the only text there is —
+        // and side-loading them is what makes the player a `MergingMediaSource`. Its period re-ids
+        // *every* format as "<childIndex>:<originalId>", so `external:2` is never what comes back.
+        val forced = textGroup(mergedTrackId(1, externalSubtitleTrackId(1)))
+        val full = textGroup(mergedTrackId(2, externalSubtitleTrackId(2)))
+        val controller = controller(forced, full)
+
+        val source =
+            PlayerFixtures.localSource(
+                subtitleTracks =
+                    listOf(
+                        sidecarTrack(index = 1, label = "French forced"),
+                        sidecarTrack(index = 2, label = "French"),
+                    ),
+            )
+
+        controller.selectSubtitle(source, jellyfinIndex = 2) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe mergedTrackId(2, externalSubtitleTrackId(2))
+    }
+
+    @Test
+    fun `a merged sidecar group is still excluded from the embedded count`() {
+        // Same re-id, on the mixed case: counting the side-loaded group as embedded puts stream 6 on
+        // the sidecar's group and plays the wrong language.
+        val controller =
+            controller(
+                textGroup(mergedTrackId(1, externalSubtitleTrackId(7))),
+                textGroup(mergedTrackId(0, "embedded-fra")),
+            )
+
+        val source =
+            PlayerFixtures.localSource(
+                subtitleTracks =
+                    listOf(
+                        sidecarTrack(index = 7, label = "French full"),
+                        PlaybackTrack(index = 6, label = "French forced", language = "fra", codec = "srt"),
+                    ),
+            )
+
+        controller.selectSubtitle(source, jellyfinIndex = 6) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe mergedTrackId(0, "embedded-fra")
+    }
+
+    @Test
+    fun `a container track whose merged id merely looks numeric is not read as one of ours`() {
+        // Matroska names its tracks "1", "2", …; merged they become "0:1", "0:2". Nothing in them is
+        // a Jellyfin stream index, and treating one as such would select an arbitrary language.
+        val controller = controller(textGroup(mergedTrackId(0, "2")))
+
+        val source =
+            PlayerFixtures.localSource(
+                subtitleTracks =
+                    listOf(sidecarTrack(index = 2, label = "French")),
+            )
+
+        controller.selectSubtitle(source, jellyfinIndex = 2) shouldBe false
+    }
+
     @Test
     fun `turning subtitles off disables the text renderer rather than failing`() {
         val controller = controller(textGroup(externalSubtitleTrackId(0)))
@@ -276,6 +354,24 @@ class TrackSelectionControllerTest {
                 .setSampleMimeType(MimeTypes.AUDIO_AC3)
                 .build(),
         )
+
+    /** A subtitle track as `LocalPlaybackResolver` builds one for a sidecar on disk. */
+    private fun sidecarTrack(
+        index: Int,
+        label: String,
+    ): PlaybackTrack = PlaybackTrack(index = index, label = label, language = "fra", codec = "srt", isExternal = true)
+
+    /**
+     * The id `MergingMediaPeriod` exposes for a format of the [childIndex]-th merged source.
+     *
+     * Not a guess: `MergingMediaPeriod.onPrepared` rebuilds every `Format` with
+     * `setId(childIndex + ":" + format.id)` before publishing the merged `TrackGroupArray`, and the
+     * player has one merged source per side-loaded subtitle plus the container at 0.
+     */
+    private fun mergedTrackId(
+        childIndex: Int,
+        id: String,
+    ): String = "$childIndex:$id"
 
     private fun group(format: Format): Tracks.Group =
         Tracks.Group(

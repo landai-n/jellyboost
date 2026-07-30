@@ -22,6 +22,12 @@ import timber.log.Timber
  * Two bridges close the gap: side-loaded subtitles carry an `external:<jellyfinIndex>` track id
  * (set by `ExoMediaSourceFactory`), and embedded streams are matched by their position among the
  * *embedded* streams of the same type, which is the order ExoPlayer exposes them in.
+ *
+ * The id the player hands back is not the id that went in — merging a side-loaded source prefixes
+ * it with the child's index — which is why the read goes through [jellyfinIndexOfTrackId] and never
+ * compares strings here. Both branches depend on it: an id it fails to decode is not merely a
+ * missed exact match, it also makes a side-loaded group indistinguishable from a container one and
+ * so shifts the positional count for everything else.
  */
 internal class TrackSelectionController(
     private val player: Player,

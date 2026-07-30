@@ -88,6 +88,10 @@ class DownloadedMediaProvider
                     // transcoded step the bytes on disk hold one audio track and no embedded
                     // subtitles, and only this row remembers that.
                     quality = stored.download.quality,
+                    // …and which audio track that was. `null` on a row written before schema v8,
+                    // which is what makes the resolver's legacy fallback a real code path rather
+                    // than dead defensiveness.
+                    bakedAudioStreamIndex = stored.download.bakedAudioStreamIndex,
                     subtitles = stored.files.toSubtitles(),
                     trickplay = stored.files.toTrickplay(dto),
                 )

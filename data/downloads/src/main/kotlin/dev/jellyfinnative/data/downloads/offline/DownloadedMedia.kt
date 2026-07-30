@@ -20,15 +20,20 @@ import java.util.UUID
  *
  * [quality] is the one thing that stops [mediaSource] from being taken at face value. It records
  * what was *asked of the server*, and for anything but [DownloadQuality.ORIGINAL] the file on disk
- * is a re-encode that no longer matches the streams the cached blob describes — one AAC track of the
- * server's own choosing and no embedded subtitles at all, because the download URL names neither an
- * `audioStreamIndex` nor a `subtitleStreamIndex`. `LocalPlaybackResolver` needs it to keep the
- * offline pickers from offering tracks that are not in the file.
+ * is a re-encode that no longer matches the streams the cached blob describes — exactly one audio
+ * track and no embedded subtitles at all, because the endpoint takes one `audioStreamIndex` and
+ * drops everything else. `LocalPlaybackResolver` needs it to keep the offline pickers from offering
+ * tracks that are not in the file. [bakedAudioStreamIndex] says *which* audio track that is; the
+ * subtitles that survive come back as [subtitles], one sidecar file each.
  *
  * @property mediaUri `file://` URI of the video file itself.
  * @property runTimeTicks runtime in Jellyfin ticks, `0` when neither the media source nor the item
  *   declares one (the player then takes the container's duration once ExoPlayer reports it).
  * @property quality the download-quality step the row was enqueued at.
+ * @property bakedAudioStreamIndex the absolute `MediaStream.index` of the single audio track a
+ *   transcode encoded (schema v8). `null` for an `ORIGINAL` download, which holds them all, and for
+ *   a transcoded row written before v8 — those fall back to assuming the source's
+ *   `defaultAudioStreamIndex`, which is what the server would have picked with no index named.
  */
 data class DownloadedMedia(
     val itemId: UUID,
@@ -37,6 +42,7 @@ data class DownloadedMedia(
     val mediaUri: String,
     val runTimeTicks: Long,
     val quality: DownloadQuality = DownloadQuality.ORIGINAL,
+    val bakedAudioStreamIndex: Int? = null,
     val subtitles: List<DownloadedSubtitle> = emptyList(),
     val trickplay: DownloadedTrickplay? = null,
 ) {

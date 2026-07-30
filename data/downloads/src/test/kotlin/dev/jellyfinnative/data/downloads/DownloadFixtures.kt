@@ -42,6 +42,7 @@ object DownloadFixtures {
         runTimeTicks: Long? = null,
         streams: List<MediaStream> = emptyList(),
         sourceContainer: String? = "mkv",
+        defaultAudioStreamIndex: Int? = null,
         primaryTag: String? = "primary-tag",
         backdropTag: String? = null,
         trickplay: Map<String, Map<String, TrickplayInfoDto>>? = null,
@@ -66,6 +67,7 @@ object DownloadFixtures {
                             bitrate = sourceBitRate,
                             streams = streams,
                             container = sourceContainer,
+                            defaultAudioStreamIndex = defaultAudioStreamIndex,
                         ),
                     )
                 },
@@ -85,6 +87,7 @@ object DownloadFixtures {
         sizeBytes: Long? = 1_000L,
         sourceBitRate: Int? = null,
         streams: List<MediaStream> = emptyList(),
+        defaultAudioStreamIndex: Int? = null,
     ): BaseItemDto =
         BaseItemDto(
             id = id,
@@ -102,7 +105,13 @@ object DownloadFixtures {
             imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
             mediaSources =
                 listOf(
-                    mediaSource(id = "source-2", size = sizeBytes, bitrate = sourceBitRate, streams = streams),
+                    mediaSource(
+                        id = "source-2",
+                        size = sizeBytes,
+                        bitrate = sourceBitRate,
+                        streams = streams,
+                        defaultAudioStreamIndex = defaultAudioStreamIndex,
+                    ),
                 ),
         )
 
@@ -151,6 +160,7 @@ object DownloadFixtures {
         bitrate: Int? = null,
         streams: List<MediaStream> = emptyList(),
         container: String? = "mkv",
+        defaultAudioStreamIndex: Int? = null,
     ): MediaSourceInfo =
         MediaSourceInfo(
             id = id,
@@ -158,6 +168,7 @@ object DownloadFixtures {
             bitrate = bitrate,
             container = container,
             mediaStreams = streams,
+            defaultAudioStreamIndex = defaultAudioStreamIndex,
             type = MediaSourceType.DEFAULT,
             protocol = MediaProtocol.FILE,
             isRemote = false,
@@ -207,11 +218,22 @@ object DownloadFixtures {
             supportsExternalStream = false,
         )
 
+    /**
+     * A subtitle stream.
+     *
+     * [external] and [supportsExternalStream] are separate parameters because they answer separate
+     * questions, and conflating them is what hid a whole class of downloadable subtitles: the first
+     * is *"is this already a file next to the video?"*, the second is the server's *"I will extract
+     * this on demand"*, which it says for embedded SRTs too (the Élémentaire finding in
+     * docs/notes/offline-multitrack-design.md). It defaults to `true` for that reason — a real text
+     * subtitle stream advertises it whether or not it is external.
+     */
     fun subtitleStream(
         index: Int,
         codec: String = "subrip",
         language: String? = "eng",
         external: Boolean = true,
+        supportsExternalStream: Boolean = true,
     ): MediaStream =
         MediaStream(
             index = index,
@@ -224,7 +246,27 @@ object DownloadFixtures {
             isForced = false,
             isHearingImpaired = false,
             isTextSubtitleStream = true,
-            supportsExternalStream = external,
+            supportsExternalStream = supportsExternalStream,
+        )
+
+    /** A source audio track — what the baked-audio pin is chosen from (schema v8). */
+    fun audioStream(
+        index: Int,
+        language: String? = "eng",
+        codec: String? = "ac3",
+    ): MediaStream =
+        MediaStream(
+            index = index,
+            type = MediaStreamType.AUDIO,
+            codec = codec,
+            language = language,
+            isExternal = false,
+            isInterlaced = false,
+            isDefault = false,
+            isForced = false,
+            isHearingImpaired = false,
+            isTextSubtitleStream = false,
+            supportsExternalStream = false,
         )
 
     fun download(
@@ -237,6 +279,7 @@ object DownloadFixtures {
         sizeIsExact: Boolean = false,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
         attemptCount: Int = 0,
+        bakedAudioStreamIndex: Int? = null,
         directoryName: String = "Arrival (2016)",
         itemName: String = "Arrival",
         seriesName: String? = null,
@@ -252,6 +295,7 @@ object DownloadFixtures {
             bytesTotal = bytesTotal,
             projectedBytes = projectedBytes,
             sizeIsExact = sizeIsExact,
+            bakedAudioStreamIndex = bakedAudioStreamIndex,
             queuePosition = queuePosition,
             attemptCount = attemptCount,
             directoryName = directoryName,

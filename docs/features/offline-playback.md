@@ -77,9 +77,35 @@ sealed `PlaybackMediaSource`, so nothing above it branches on online/offline:
 | `externalSubtitles` | the downloaded sidecars, MIME type from the stream's codec (or the file's extension) |
 | `trickplay` | the downloaded tile sheets plus the server's geometry |
 
-Subtitle tracks are filtered: every *embedded* stream is offered (ExoPlayer reads them out of the
-container) but an *external* one only when its sidecar is on disk. A default subtitle index that is
-not in the offered set is dropped rather than selected.
+### Which tracks are offered
+
+The cached blob describes the **source**. The file on disk may not be the source, so its stream list
+is filtered rather than trusted:
+
+| Track | Offered when |
+|---|---|
+| Audio, `ORIGINAL` download | always — the file is the source file |
+| Audio, transcoded download | exactly one: the stream `DownloadEntity.bakedAudioStreamIndex` names, since `/Videos/{id}/stream.mkv` encodes exactly one `audioStreamIndex` and drops the rest |
+| Subtitle, any quality | **its sidecar is on disk** — whatever the stream's own `isExternal` says |
+| Subtitle, embedded, no sidecar | only in a download the server did not re-encode |
+
+Two consequences worth stating outright:
+
+- **An embedded subtitle can be offered from a sidecar.** Since the phase-0 planner change, a
+  transcoded download fetches an extracted `.srt` for every embedded text subtitle the server will
+  hand over (`docs/features/downloads.md`, file plan). Those tracks are marked `isExternal = true` on
+  the `PlaybackTrack` even though the *stream* is embedded, because that flag describes how the track
+  reaches ExoPlayer: `TrackSelectionController` matches side-loaded groups by their
+  `external:<index>` id and counts everything else by position among the container's text groups — of
+  which a transcode has none. `toTrack(defaultIndex, sideLoaded = …)` is where that is decided.
+- **The baked audio track is read, not guessed.** For a row written before schema v8 the column is
+  `NULL`; those downloads named no `audioStreamIndex` either, so the server used the source's
+  `defaultAudioStreamIndex` and the resolver falls back to exactly that — then to the first audio
+  stream. See `docs/features/download-quality.md`, *"One audio track, and which one"*.
+
+A default subtitle index that is not in the offered set is dropped rather than selected, and a
+requested audio or subtitle index the file cannot supply falls back to the default rather than
+leaving the picker pointing at nothing.
 
 An item whose cached blob no longer decodes still plays — with no track lists. Refusing to open a
 film because its metadata is unreadable would be the worse failure.
@@ -93,7 +119,8 @@ and a bare `#` in a concatenated URI is parsed as a fragment and truncates the p
 running them through `StreamUrlFactory.absoluteUrl` would produce `https://serverfile:///…`.
 
 Sidecars keep the same `external:<jellyfinIndex>` track-id convention as online, so
-`TrackSelectionController` needs no branch at all.
+`TrackSelectionController` needs no branch at all — including for a sidecar extracted from an
+*embedded* stream, which is precisely why the resolver marks such a track side-loaded.
 
 ### The one UI difference
 
@@ -213,8 +240,8 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 
 | Class | Tests | Covers |
 |---|---|---|
-| `DownloadedMediaProviderTest` | 15 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, and the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway |
-| `LocalPlaybackResolverTest` | 14 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing |
+| `DownloadedMediaProviderTest` | 19 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, the baked audio index carried through (and absent on a pre-v8 row), and the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway |
+| `LocalPlaybackResolverTest` | 27 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing; the baked audio index driving the transcoded picker (with the legacy-`NULL` and unknown-index fallbacks); an embedded subtitle offered from its sidecar and flagged side-loaded, one without a sidecar still withheld |
 | `PlaybackSourceResolverTest` | 8 | The full selection matrix incl. the forced-transcode exception and the immediate offline failure |
 | `PlaybackReporterTest` | +7 | Local and offline sessions report nothing and still write every position |
 | `UserDataSyncerTest` | 17 | The whole most-recent-wins matrix, push ordering, the timezone round trip, partial batch failure |

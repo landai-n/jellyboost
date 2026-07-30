@@ -180,7 +180,39 @@ shape:
 | `maxAudioChannels` | `2` | a downloaded file is watched on the device's own speakers or headphones, never a home-theatre rig |
 | `allowVideoStreamCopy` | `true` | if the source already fits the request (a 1080p H.264 file asked for at HIGH), the server copies the video track instead of re-encoding — a free remux |
 | `allowAudioStreamCopy` | `false` | audio always re-encodes to the fixed AAC target, so every transcoded file's audio is uniform regardless of the source |
+| `audioStreamIndex` | the item's `defaultAudioStreamIndex`, else its first audio stream | which of the source's audio tracks the one baked-in track will be — see below. Omitted for an item with no audio streams |
 | `context` | `EncodingContext.STATIC` | see below |
+
+### One audio track, and which one (schema v8)
+
+`/Videos/{id}/stream.{container}` takes exactly **one** `audioStreamIndex` and exactly one
+`subtitleStreamIndex`. There is no repeatable form and no "all tracks" parameter, so a transcode
+keeps one audio track and drops the rest — that is a ceiling of the server API, not a choice this
+client makes (docs/notes/offline-multitrack-design.md, "Hard ceiling").
+
+The parameter used to be omitted, and the server then picked the source's default for itself. The
+bytes were the same; what was missing was a *record*. Offline, the cached `BaseItemDto` still lists
+every audio stream of the source, so the player had to guess which one the file held — and the guess
+it made (`MediaSourceInfo.defaultAudioStreamIndex`) was an assumption nothing verified.
+
+So the index is now named at enqueue, by the rule `BaseItemDto.downloadAudioStreamIndex` states — the
+item's own `defaultAudioStreamIndex` when it names a real audio stream, the first audio stream
+otherwise, and `null` (parameter omitted) for an item with no audio at all — and written to
+`DownloadEntity.bakedAudioStreamIndex`. Same track, same size estimate, same file; now with the one
+fact offline playback needs (`docs/features/offline-playback.md`).
+
+Two rules keep the column honest:
+
+- **`null` for an `ORIGINAL` row**, including one the fallback in `DownloadEnqueuer.planQuality`
+  downgraded from a transcode. That file holds every audio track of the source; a pin would claim
+  otherwise. The decision is taken *before* the row is built, so the quality, the size estimate, the
+  file plan and the pin all describe the same download.
+- **`null` on a pre-v8 row.** Those downloads named no index either, so the server did pick the
+  source's default — and the old assumption is exactly right for them. The resolver keeps it as its
+  fallback rather than treating a legacy row as unknown.
+
+No language-preference UI comes with this; a preferred-audio-language choice is a later phase, and
+`DownloadFilePlanner.plan(audioStreamIndex = …)` is the seam it enters through.
 
 **`context = STATIC` is the one non-obvious parameter, and it is the one that matters most.** A
 `STREAMING` transcode is throttled by the server to roughly real time — the pace a player consumes
@@ -512,6 +544,10 @@ and an existing install's whole queue reads back exactly as it did before the up
 row already mid-transfer simply starts the new session with no projection and its old "up to" wording,
 and picks up the new one on its very next progress sample.
 
+Schema v8 adds one column, `bakedAudioStreamIndex`, a nullable `INTEGER` with no default — `NULL`
+is already the right reading of every pre-v8 row, as described above — so the bump stays an
+`@AutoMigration(7, 8)` and `DatabaseConstants.DATABASE_VERSION` moves 7 → 8.
+
 ---
 
 ## The settings UI
@@ -549,4 +585,4 @@ tap, and nothing downstream reconsiders it.
 | `DownloadProgressRatchetTest` | a rising percentage passing straight through; a growing projection unable to make the bar retreat; the highest percentage reached this session being the one that keeps being shown; a transferring item held at 99 % however far it has run, and only a finished download drawing a full bar; a paused item keeping the height it reached rather than dropping; a restarted transcode holding its bar instead of falling back to zero; an item that leaves the list being forgotten, so a re-download starts over; each item ratcheting on its own; and an unknown total reading as zero rather than as complete |
 | `DownloadRepositoryImplTest` | a projected size reaching the row that has to divide by it (denominator *and* wording together); a row with no projection still reporting its ceiling and saying so; a stream-copy row carried through as exact rather than as a ceiling — the three columns the wording is decided from surviving the Room round trip intact |
 | `DownloadRowsTest` | which size a queue row shows — the ceiling with no projection, the projection replacing it, the projection clamped to the bytes already on disk and to the ceiling, and progress measured against the projection rather than the ceiling — and the four states its wording can be in: an original download and a stream copy both stating the figure plainly, a projection hedged as `~`, a bound stated as "up to", and a projection on an exact row unable to downgrade it. ("no resume") an original download offering *Pause*, and every transcoded step offering none |
-| `SchemaMigrationTest` | (in `:core:database`, which has no androidTest source set, so this diffs the exported schema JSONs instead of running a real migration) the exported schema being the version the constants declare; v5 to v6 adding the projection columns and touching nothing else; v5 to v6 dropping no column and changing no type; `projectedBytes` being nullable, so an older row simply has no projection; `sizeIsExact` being `NOT NULL` with a SQL default, which is what keeps the bump automatic; and v6 adding no table and removing none |
+| `SchemaMigrationTest` | (in `:core:database`, which has no androidTest source set, so this diffs the exported schema JSONs instead of running a real migration) the exported schema being the version the constants declare; v5 to v6 adding the projection columns and touching nothing else; v5 to v6 dropping no column and changing no type; `projectedBytes` being nullable, so an older row simply has no projection; `sizeIsExact` being `NOT NULL` with a SQL default, which is what keeps the bump automatic; and v6 adding no table and removing none; v7 to v8 adding the baked-audio column and touching nothing else; v7 to v8 dropping no column and changing no type; `bakedAudioStreamIndex` being nullable, so an older row simply records no pin; and v8 adding no table and removing none |

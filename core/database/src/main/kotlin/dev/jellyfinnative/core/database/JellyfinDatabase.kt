@@ -70,6 +70,11 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         // back as "nothing has failed on this yet", which is the only honest reading of a build
         // that had no retry policy at all.
         AutoMigration(from = 6, to = 7),
+        // v7 → v8 adds `downloads.bakedAudioStreamIndex` (nullable, so it needs no default). An
+        // older transcoded row reads back as NULL, which is exactly what it always meant: nothing
+        // recorded which audio track the server picked, so playback falls back to assuming the
+        // source's `DefaultAudioStreamIndex` — the behaviour that build had.
+        AutoMigration(from = 7, to = 8),
     ],
 )
 @TypeConverters(

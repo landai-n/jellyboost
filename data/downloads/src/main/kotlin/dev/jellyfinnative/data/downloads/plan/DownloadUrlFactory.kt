@@ -58,11 +58,18 @@ interface DownloadUrlFactory {
      *
      * @param quality must be a transcoded step; [DownloadQuality.ORIGINAL] has no stream URL and is
      *   served by [mediaUrl] instead.
+     * @param audioStreamIndex the absolute `MediaStream.index` of the single audio track to encode.
+     *   The endpoint takes exactly one and the transcoder drops every other track, so naming it is
+     *   the difference between "the track the user wanted" and "whatever the server chose"
+     *   (see [downloadAudioStreamIndex]). `null` omits the parameter, which is what an item with no
+     *   audio streams needs — sending an index that names nothing is a request the server has no
+     *   sensible answer for.
      */
     fun transcodedVideoUrl(
         itemId: UUID,
         mediaSourceId: String?,
         quality: DownloadQuality,
+        audioStreamIndex: Int?,
     ): String
 
     /** An item image at a fixed width — artwork is stored small, not at source resolution. */
@@ -113,6 +120,7 @@ internal class SdkDownloadUrlFactory
             itemId: UUID,
             mediaSourceId: String?,
             quality: DownloadQuality,
+            audioStreamIndex: Int?,
         ): String =
             apiClient.videosApi.getVideoStreamByContainerUrl(
                 itemId = itemId,
@@ -129,6 +137,10 @@ internal class SdkDownloadUrlFactory
                 playSessionId = UUID.randomUUID().toString(),
                 videoCodec = DownloadQuality.VIDEO_CODEC,
                 audioCodec = DownloadQuality.AUDIO_CODEC,
+                // The one track the muxed file will hold. Omitted (`null`) the server picks the
+                // source's default, which is the same track — but nothing would have *recorded*
+                // which one that was, and offline there is no server left to ask.
+                audioStreamIndex = audioStreamIndex,
                 videoBitRate = quality.videoBitRate,
                 maxHeight = quality.maxHeight,
                 audioBitRate = DownloadQuality.AUDIO_BITRATE,

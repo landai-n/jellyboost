@@ -80,6 +80,42 @@ class SchemaMigrationTest {
         tables(6) shouldContainExactly tables(5)
     }
 
+    @Test
+    fun `v7 to v8 adds the baked audio column and touches nothing else`() {
+        val before = columns(7, "downloads")
+        val after = columns(8, "downloads")
+
+        // One column: which audio track a transcode asked the server to bake in
+        // (docs/features/download-quality.md, docs/features/offline-playback.md).
+        (after.keys - before.keys) shouldContainExactly setOf("bakedAudioStreamIndex")
+    }
+
+    @Test
+    fun `v7 to v8 drops no column and changes no type`() {
+        val before = columns(7, "downloads")
+        val after = columns(8, "downloads")
+
+        (before.keys - after.keys).shouldBeEmpty()
+        before.forEach { (name, column) -> after.getValue(name) shouldBe column }
+    }
+
+    @Test
+    fun `bakedAudioStreamIndex is nullable, so an older row simply records no pin`() {
+        val column = columns(8, "downloads").getValue("bakedAudioStreamIndex")
+
+        column.affinity shouldBe "INTEGER"
+        column.notNull shouldBe false
+        // Nullable needs no default, and `NULL` is the honest reading of every row written before
+        // v8: that download named no audioStreamIndex, so nothing recorded which track it got.
+        // Offline playback keeps its old `defaultAudioStreamIndex` assumption for exactly those.
+        column.defaultValue shouldBe null
+    }
+
+    @Test
+    fun `v8 adds no table and removes none`() {
+        tables(8) shouldContainExactly tables(7)
+    }
+
     // ---- reading the exported schemas -------------------------------------------------------------
 
     /** One column as Room recorded it — the fields an auto-migration is derived from. */

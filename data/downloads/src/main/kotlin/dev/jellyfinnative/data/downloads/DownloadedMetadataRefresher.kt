@@ -56,6 +56,16 @@ import javax.inject.Singleton
  * season rows behind a downloaded episode go stale (and were gutted) for the same reasons, and they
  * are what the offline "walk up to the show" path reads.
  *
+ * ### The files, too
+ * Metadata is not the only thing a finished download can be missing. The *file plan* moves as well —
+ * phase 0 of the offline multi-track work taught it to fetch a sidecar for every embedded text
+ * subtitle of a transcoded download — and an optional file is allowed to fail outright. A row on
+ * disk would otherwise stay permanently poorer than the same item downloaded today, with no repair
+ * short of deleting and re-downloading it. So each pass hands its freshly-fetched DTOs to
+ * [SubtitleSidecarTopUp], which fetches only the small files that are genuinely absent and never
+ * touches the media file. It fits here and nowhere else: this is the one place in the app that is
+ * online, holds current DTOs for every downloaded item, and runs at a cadence a repair can afford.
+ *
  * ### When it runs
  * The shape is [dev.jellyfinnative.data.userdata.UserDataSyncTrigger]'s, deliberately: collect
  * [ConnectionStateProvider.state], map to online-ness, `distinctUntilChanged`, and act on **every**
@@ -93,6 +103,7 @@ class DownloadedMetadataRefresher
         private val downloadDao: DownloadDao,
         private val itemDao: ItemDao,
         private val mapper: ItemEntityMapper,
+        private val sidecars: SubtitleSidecarTopUp,
         private val clock: Clock,
         @ApplicationScope private val scope: CoroutineScope,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -150,6 +161,18 @@ class DownloadedMetadataRefresher
 
             val parents = fetch(parentIdsOf(items, known = items.mapTo(mutableSetOf()) { it.id }))
             store(items + parents)
+            // …and, with the same fresh DTOs already in hand, the optional files those downloads
+            // never got. Deliberately after the metadata write and never gating it: a sidecar that
+            // could not be fetched must not cost the whole table its refresh, and the next
+            // connectivity edge tries again for free.
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                sidecars.topUp(items)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (error: Exception) {
+                Timber.w(error, "Could not top up the files of %d downloaded item(s)", items.size)
+            }
         }
 
         /** Every id with a download row, or an empty list when the table cannot be read. */

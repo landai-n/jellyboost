@@ -171,6 +171,36 @@ class DownloadedMediaProviderTest {
             resolved.isTranscoded shouldBe false
         }
 
+    @Test
+    fun `carries the audio track the transcode baked in`() =
+        runTest {
+            // The cached blob lists every audio stream of the source; this column is the only
+            // record of which one the file on disk actually holds (schema v8).
+            stored(
+                quality = DownloadQuality.MEDIUM,
+                bakedAudioStreamIndex = 5,
+                files = listOf(mediaFile(path = write("a.mkv").absolutePath)),
+            )
+
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .bakedAudioStreamIndex shouldBe 5
+        }
+
+    @Test
+    fun `a row written before the column existed carries no baked track`() =
+        runTest {
+            stored(quality = DownloadQuality.MEDIUM, files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
+
+            // `null`, not `0`: the resolver's legacy fallback keys on exactly this.
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .bakedAudioStreamIndex
+                .shouldBeNull()
+        }
+
     // ---- the seek index a transcoded download arrives without -----------------------------------
 
     @Test
@@ -354,14 +384,19 @@ class DownloadedMediaProviderTest {
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
         mediaSourceId: String = "source-1",
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
+        bakedAudioStreamIndex: Int? = null,
         files: List<DownloadFileEntity>,
     ) {
         coEvery { downloadDao.getWithFiles(itemId) } returns
             DownloadWithFiles(
                 download =
                     DownloadFixtures
-                        .download(itemId = itemId, status = status, quality = quality)
-                        .copy(mediaSourceId = mediaSourceId),
+                        .download(
+                            itemId = itemId,
+                            status = status,
+                            quality = quality,
+                            bakedAudioStreamIndex = bakedAudioStreamIndex,
+                        ).copy(mediaSourceId = mediaSourceId),
                 files = files,
             )
     }

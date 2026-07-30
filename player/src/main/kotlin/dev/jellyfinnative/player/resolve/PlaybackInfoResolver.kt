@@ -188,15 +188,26 @@ class PlaybackInfoResolver
  * the very same `MediaStream` shape (read out of the cached item blob instead of off a
  * `PlaybackInfo` response), and the two must agree label for label — that identity is what makes
  * the player UI the same online and offline.
+ *
+ * @param sideLoaded whether the track reaches ExoPlayer as its own source rather than out of the
+ *   container — which is what [PlaybackTrack.isExternal] actually drives, since
+ *   `TrackSelectionController` matches side-loaded groups by their `external:<index>` id and counts
+ *   everything else by position among the *embedded* groups. It defaults to
+ *   [MediaStream.isExternal] because online the two coincide. Offline they need not: a transcoded
+ *   download side-loads a sidecar for an **embedded** subtitle the server extracted for it, and
+ *   calling that track embedded would have it looked for among container groups the encode dropped.
  */
-internal fun MediaStream.toTrack(defaultIndex: Int?): PlaybackTrack =
+internal fun MediaStream.toTrack(
+    defaultIndex: Int?,
+    sideLoaded: Boolean = isExternal,
+): PlaybackTrack =
     PlaybackTrack(
         index = index,
         label = displayTitle ?: title ?: language ?: codec.orEmpty(),
         language = language,
         codec = codec,
         isDefault = index == defaultIndex,
-        isExternal = isExternal,
+        isExternal = sideLoaded,
     )
 
 /**

@@ -106,6 +106,74 @@ class TrackSelectionControllerTest {
     }
 
     @Test
+    fun `selects an embedded subtitle the download side-loaded as a sidecar`() {
+        // Phase 0: a transcoded download fetches an extracted `.srt` for each *embedded* text
+        // subtitle, because the encode drops them from the container. Stream 7 is one of those —
+        // `MediaStream.isExternal` is false and the file has no text track at all, yet the picker
+        // offers it and selecting it has to work.
+        val controller = controller(textGroup(externalSubtitleTrackId(7)))
+
+        val source =
+            PlayerFixtures.localSource(
+                subtitleTracks =
+                    listOf(
+                        PlaybackTrack(
+                            index = 7,
+                            label = "French full",
+                            language = "fra",
+                            codec = "srt",
+                            // What `LocalPlaybackResolver` sets for a track its sidecar backs,
+                            // whatever the stream itself claimed to be.
+                            isExternal = true,
+                        ),
+                    ),
+            )
+
+        controller.selectSubtitle(source, jellyfinIndex = 7) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe externalSubtitleTrackId(7)
+    }
+
+    @Test
+    fun `a sidecar-backed track is never counted among the embedded ones`() {
+        // The failure this guards: if the resolver called such a track embedded, it would shift the
+        // positional count for every genuinely embedded track after it — and here it would push
+        // stream 6 onto the wrong group entirely.
+        val controller =
+            controller(
+                textGroup(externalSubtitleTrackId(7)),
+                textGroup(id = "embedded-fra"),
+            )
+
+        val source =
+            PlayerFixtures.localSource(
+                subtitleTracks =
+                    listOf(
+                        PlaybackTrack(
+                            index = 7,
+                            label = "French full",
+                            language = "fra",
+                            codec = "srt",
+                            isExternal = true,
+                        ),
+                        PlaybackTrack(index = 6, label = "French forced", language = "fra", codec = "srt"),
+                    ),
+            )
+
+        controller.selectSubtitle(source, jellyfinIndex = 6) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .getFormat(0)
+            .id shouldBe "embedded-fra"
+    }
+
+    @Test
     fun `matches an embedded subtitle by its position among the embedded ones`() {
         // The side-loaded group is in the same list and must not be counted.
         val controller =

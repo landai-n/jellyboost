@@ -49,7 +49,7 @@ data class PlannedFile(
  * 1. the primary image, so the queue row and the notification have artwork within a second;
  * 2. the media file, the item's whole point and usually 99.9 % of the bytes;
  * 3. the backdrop and the parent series' poster, which the offline detail page draws;
- * 4. external text subtitles, one per stream;
+ * 4. text subtitle sidecars, one per stream;
  * 5. trickplay tiles, for offline scrubbing (M9 renders them).
  *
  * Only step 2 is essential. Everything else failing degrades the offline experience without making
@@ -59,8 +59,9 @@ data class PlannedFile(
  *   download endpoint for the static video stream — same bytes, a route the server does not gate on
  *   that policy.
  * @param quality the *download quality* stamped on the row when the user tapped Download (M9).
- *   Anything but [DownloadQuality.ORIGINAL] replaces the media entry with a server-side transcode
- *   and nothing else — artwork, subtitles and trickplay tiles are the same files either way.
+ *   Anything but [DownloadQuality.ORIGINAL] replaces the media entry with a server-side transcode —
+ *   and, since the transcode drops every embedded subtitle, adds a sidecar for each embedded text
+ *   subtitle the server can extract. Artwork and trickplay tiles are the same files either way.
  */
 @Singleton
 class DownloadFilePlanner
@@ -77,12 +78,21 @@ class DownloadFilePlanner
          *   expand containers into their episodes before they ever get here ([isFolderItem]); this
          *   is the guard that makes a caller which forgot fail *before* a URL exists rather than as
          *   an unexplained `400` from the server halfway down the queue.
+         *
+         * @param audioStreamIndex the one audio track a transcode should bake in. Defaults to the
+         *   rule [downloadAudioStreamIndex] states, which is the same rule `DownloadEnqueuer`
+         *   records on the row — so a plan rebuilt on a later run reproduces the URL the row's
+         *   `bakedAudioStreamIndex` describes without the queue having to pass it. It is a
+         *   parameter rather than a private detail so a future preferred-language choice, which
+         *   only the row remembers, has somewhere to enter.
          */
+        @Suppress("LongParameterList")
         fun plan(
             item: BaseItemDto,
             directoryName: String,
             downloadAllowed: Boolean = true,
             quality: DownloadQuality = DownloadQuality.ORIGINAL,
+            audioStreamIndex: Int? = item.downloadAudioStreamIndex,
         ): List<PlannedFile> {
             if (item.isFolderItem) throw NotDownloadableException(item.id)
 
@@ -91,11 +101,11 @@ class DownloadFilePlanner
 
             return buildList {
                 primaryImage(item)?.let(::add)
-                add(media(item, directoryName, mediaSourceId, downloadAllowed, quality))
+                add(media(item, directoryName, mediaSourceId, downloadAllowed, quality, audioStreamIndex))
                 backdropImage(item)?.let(::add)
                 seriesImage(item)?.let(::add)
                 if (mediaSourceId != null) {
-                    addAll(subtitles(item, mediaSourceId, mediaSource.mediaStreams.orEmpty()))
+                    addAll(subtitles(item, mediaSourceId, mediaSource.mediaStreams.orEmpty(), quality))
                 }
                 addAll(trickplayTiles(item))
             }
@@ -114,19 +124,22 @@ class DownloadFilePlanner
          * its way out of but a user plugging the tablet into a computer does not. The quality goes
          * in the name too, so a re-download at another step cannot land on the old file.
          */
+        @Suppress("LongParameterList")
         private fun media(
             item: BaseItemDto,
             directoryName: String,
             mediaSourceId: String?,
             downloadAllowed: Boolean,
             quality: DownloadQuality,
+            audioStreamIndex: Int?,
         ): PlannedFile =
             PlannedFile(
                 type = DownloadFileType.MEDIA,
                 fileName = DownloadPaths.mediaFileName(item, directoryName, quality),
                 url =
                     when {
-                        quality.isTranscoded -> urls.transcodedVideoUrl(item.id, mediaSourceId, quality)
+                        quality.isTranscoded ->
+                            urls.transcodedVideoUrl(item.id, mediaSourceId, quality, audioStreamIndex)
                         downloadAllowed -> urls.mediaUrl(item.id)
                         else -> urls.videoStreamUrl(item.id, mediaSourceId)
                     },
@@ -165,24 +178,44 @@ class DownloadFilePlanner
         }
 
         /**
-         * External text subtitle tracks, one file each.
+         * Text subtitle tracks fetched as sidecar files, one file each.
          *
-         * Streams are selected by [MediaStream.isExternal] rather than by `deliveryMethod`: the
-         * latter is only populated by playback-info negotiation, while a download works from a
-         * plain item request. Bitmap formats (PGS, VobSub) are skipped because ExoPlayer cannot
-         * play them from a standalone sidecar file — the same restriction jellyfin-android's
-         * download engine applies.
+         * Three filters, and each answers a different question:
+         *
+         * - **[MediaStream.supportsExternalStream]** — *can the server hand this stream over on its
+         *   own?* `/Videos/{id}/{msId}/Subtitles/{index}/Stream.{format}` extracts an embedded
+         *   track with ffmpeg on demand, and this flag is the server's own statement that it will.
+         *   It replaces the old [MediaStream.isExternal] test, which asked a different question
+         *   (*is this already a file next to the video?*) and answered `false` for every embedded
+         *   SRT — the reason a transcoded download used to lose subtitles it could perfectly well
+         *   have kept (docs/notes/offline-multitrack-design.md, phase 0). `deliveryMethod` is used
+         *   for neither: it is only populated by playback-info negotiation, and a download works
+         *   from a plain item request.
+         * - **[TEXT_SUBTITLE_CODECS]** — *can ExoPlayer play it from a standalone file?* Bitmap
+         *   formats (PGS, VobSub) cannot be side-loaded at all, so a sidecar for one would be a
+         *   track that exists and never renders. They survive only in an `ORIGINAL` download, which
+         *   is the honest trade the quality picker makes.
+         * - **the row's [quality]**, for embedded streams only — *would this sidecar be a second
+         *   copy of bytes we already have?* An `ORIGINAL` download **is** the source file, embedded
+         *   subtitles and all; fetching them again would spend bandwidth on a duplicate and give the
+         *   picker two routes to one track (the side-loaded copy silently winning, since
+         *   `TrackSelectionController` matches `external:<index>` ids before anything else). A
+         *   transcode drops them on the server, so there the sidecar is the only copy there will
+         *   ever be. Genuinely external streams are their own file at every quality and are
+         *   unaffected by this.
          */
         private fun subtitles(
             item: BaseItemDto,
             mediaSourceId: String,
             streams: List<MediaStream>,
+            quality: DownloadQuality,
         ): List<PlannedFile> =
             streams
                 .filter { stream ->
                     stream.type == MediaStreamType.SUBTITLE &&
-                        stream.isExternal &&
-                        stream.codec?.lowercase() in TEXT_SUBTITLE_CODECS
+                        stream.supportsExternalStream &&
+                        stream.codec?.lowercase() in TEXT_SUBTITLE_CODECS &&
+                        (stream.isExternal || quality.isTranscoded)
                 }.map { stream ->
                     val format = SUBTITLE_FORMATS[stream.codec?.lowercase()] ?: DEFAULT_SUBTITLE_FORMAT
                     val language = stream.language?.takeIf { it.isNotBlank() } ?: UNDEFINED_LANGUAGE

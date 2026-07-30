@@ -6,6 +6,7 @@ import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.PlaybackTrack
 import dev.jellyfinnative.player.model.TrickplayTiles
 import dev.jellyfinnative.player.segments.MediaSegment
+import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
 
 /**
  * Everything the player screen draws **except** the position, which ticks twice a second and lives
@@ -84,9 +85,69 @@ data class PlayerUiState(
     val hasEnded: Boolean = false,
     /** One-shot message for the snackbar; cleared through `PlayerViewModel.consumeMessage`. */
     val userMessage: PlayerMessage? = null,
+    /** The group this session is watching with, or its default "no group" value (M11). */
+    val syncPlay: PlayerSyncPlayState = PlayerSyncPlayState(),
 ) {
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
+}
+
+/**
+ * The group, as much of it as the player screen draws (M11 Phase 3).
+ *
+ * Derived from `SyncPlayController.state` by [PlayerSyncPlayBridge] and deliberately smaller than
+ * it: no group id, no playlist item ids, and — see [PlayerSyncPlayPhase] — no drift anchor. What is
+ * here is what changes a control on screen.
+ */
+data class PlayerSyncPlayState(
+    /**
+     * `true` while the server, not this device, decides when playback moves.
+     *
+     * It is the flag every in-group behaviour hangs off: the transport becomes a set of requests,
+     * the speed picker disappears (there is no per-member playback rate in SyncPlay), and segment
+     * auto-skip stops seeking on its own.
+     */
+    val inGroup: Boolean = false,
+    val groupName: String = "",
+    /** Display names of everyone in the group, this user included. */
+    val participants: List<String> = emptyList(),
+    val phase: PlayerSyncPlayPhase = PlayerSyncPlayPhase.NONE,
+    /** How many items the group has queued; `0` before the first `PlayQueueUpdate`. */
+    val queueSize: Int = 0,
+    /** `true` once the group is actually on an item, rather than merely formed. */
+    val hasQueue: Boolean = false,
+    val isShuffled: Boolean = false,
+    val repeatMode: SyncPlayRepeatMode = SyncPlayRepeatMode.None,
+) {
+    /**
+     * `true` while the group is not playing because someone — possibly this member — is not ready.
+     *
+     * Both phases mean the same thing to the user ("nothing is happening and it is not your fault"),
+     * and the difference between them is which end is loading, so the overlay draws one state.
+     */
+    val isWaitingForGroup: Boolean
+        get() = inGroup && (phase == PlayerSyncPlayPhase.WAITING || phase == PlayerSyncPlayPhase.BUFFERING)
+}
+
+/**
+ * What this member is doing inside the group, with the protocol detail taken out.
+ *
+ * A flat enum rather than `SyncPlayPhase` because that type's `Playing` carries the drift anchor,
+ * which is replaced on every group unpause — putting it in [PlayerUiState] would make the whole
+ * control surface recompose for a value nothing draws (audit PERF-04).
+ */
+enum class PlayerSyncPlayPhase {
+    /** Not in a group at all. */
+    NONE,
+
+    /** Prepared and waiting for the server to say go. */
+    WAITING,
+
+    /** Loading the group's item; the group has been told. */
+    BUFFERING,
+
+    PLAYING,
+    PAUSED,
 }
 
 /**
@@ -150,6 +211,29 @@ enum class PlayerMessage {
 
     /** Nothing left to fall back to. */
     PlaybackFailed,
+
+    /**
+     * The connection dropped while in a group, so the group was left and playback paused.
+     *
+     * Key decision 10 as amended (docs/notes/syncplay-m11-plan.md): resuming from here plays solo —
+     * from the downloaded file if there is one — and rejoining is a deliberate act.
+     */
+    SyncPlayConnectionLost,
+
+    /** The group could not be joined; nothing changed. */
+    SyncPlayJoinFailed,
+
+    /** The group ended — the last other member left, or the server restarted. */
+    SyncPlayGroupEnded,
+
+    /** The server says this session is no longer in the group. */
+    SyncPlayRemoved,
+
+    /** The group moved to something this account may not see. */
+    SyncPlayLibraryAccessDenied,
+
+    /** The group's current item could not be opened on this device. */
+    SyncPlayItemUnavailable,
 }
 
 /** Everything the controls can do, bundled so the composables stay under the parameter limit. */
@@ -163,6 +247,11 @@ data class PlayerActions(
     val onSelectSpeed: (PlaybackSpeed) -> Unit,
     val onSkipSegment: () -> Unit,
     val onBack: () -> Unit,
+    /** Opens the group sheet; only ever reachable while [PlayerSyncPlayState.inGroup] (M11). */
+    val onOpenGroupSheet: () -> Unit = {},
+    val onSetGroupShuffle: (Boolean) -> Unit = {},
+    val onSetGroupRepeat: (SyncPlayRepeatMode) -> Unit = {},
+    val onLeaveGroup: () -> Unit = {},
 )
 
 /** The four pickers the player offers. */

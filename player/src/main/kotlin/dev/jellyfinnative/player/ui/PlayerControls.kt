@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.outlined.ClosedCaption
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Speed
@@ -82,7 +83,7 @@ internal fun PlayerControls(
         BottomBar(
             state = state,
             position = position,
-            onSeekTo = actions.onSeekTo,
+            actions = actions,
             onOpenSheet = { openSheet = it },
             modifier = Modifier.align(Alignment.BottomCenter),
         )
@@ -186,7 +187,7 @@ private fun TransportRow(
 private fun BottomBar(
     state: PlayerUiState,
     position: StateFlow<PlaybackPosition>,
-    onSeekTo: (Long) -> Unit,
+    actions: PlayerActions,
     onOpenSheet: (PlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -203,7 +204,7 @@ private fun BottomBar(
             position = position,
             durationMs = state.durationMs,
             trickplay = state.trickplay,
-            onSeekTo = onSeekTo,
+            onSeekTo = actions.onSeekTo,
         )
 
         Row(
@@ -226,13 +227,27 @@ private fun BottomBar(
                     icon = Icons.Outlined.ClosedCaption,
                 )
             }
-            SheetButton(
-                // The current rate replaces the word once it is not 1×, so the control says what it
-                // is doing without needing a second badge next to it.
-                label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
-                onClick = { onOpenSheet(PlayerSheet.SPEED) },
-                icon = Icons.Outlined.Speed,
-            )
+            // No per-member playback rate exists in SyncPlay: playing faster than the group is
+            // drifting from it, so the control is not offered rather than offered and refused
+            // (docs/notes/syncplay-m11-plan.md, key decision 11).
+            if (!state.syncPlay.inGroup) {
+                SheetButton(
+                    // The current rate replaces the word once it is not 1×, so the control says what
+                    // it is doing without needing a second badge next to it.
+                    label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
+                    onClick = { onOpenSheet(PlayerSheet.SPEED) },
+                    icon = Icons.Outlined.Speed,
+                )
+            }
+            // Watching with other people is worth a permanent control, not a badge: it is where the
+            // participants, the group's shuffle/repeat and the way out live (M11 Phase 3).
+            if (state.syncPlay.inGroup) {
+                SheetButton(
+                    label = stringResource(R.string.player_syncplay_group),
+                    onClick = actions.onOpenGroupSheet,
+                    icon = Icons.Outlined.Groups,
+                )
+            }
             // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
             if (!state.isLocalPlayback) {
                 SheetButton(

@@ -24,6 +24,9 @@ import dev.jellyfinnative.player.segments.MediaSegment
 import dev.jellyfinnative.player.segments.MediaSegmentLoader
 import dev.jellyfinnative.player.session.FakePlayerHandle
 import dev.jellyfinnative.player.session.PlaybackSessionController
+import dev.jellyfinnative.player.syncplay.SyncPlayController
+import dev.jellyfinnative.player.syncplay.SyncPlayMessage
+import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
 import io.mockk.coEvery
 import io.mockk.every
@@ -31,6 +34,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -70,6 +75,33 @@ internal abstract class PlayerViewModelFixture {
     protected val connectionState =
         mockk<ConnectionStateProvider> {
             every { state } returns connection
+        }
+
+    /**
+     * The group this session is in, writable so a test can put the player in one (M11 Phase 3).
+     *
+     * `Idle` by default, which is what makes every other test in this package a *solo* test: the
+     * ViewModel's SyncPlay branches all hang off this flow's current value, so leaving it alone is
+     * the assertion that group support changed nothing about playing something on your own.
+     */
+    protected val syncPlayState = MutableStateFlow<SyncPlayState>(SyncPlayState.Idle)
+
+    protected val syncPlayMessages =
+        MutableSharedFlow<SyncPlayMessage>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /**
+     * The coordinator, mocked rather than assembled.
+     *
+     * A real one runs a ping loop and a drift monitor for as long as it is in a group, and
+     * `advanceUntilIdle()` — which every test in this package relies on — never returns while
+     * something is scheduled for ever. What these tests are about is which *intent* a user action
+     * produces, and a recording double states that directly; the controller's own behaviour is
+     * pinned next door in `SyncPlayControllerTest`.
+     */
+    protected val syncPlayController =
+        mockk<SyncPlayController>(relaxed = true) {
+            every { state } returns syncPlayState
+            every { messages } returns syncPlayMessages
         }
 
     /** The M9 preferences at their defaults; individual tests override what they exercise. */
@@ -144,6 +176,7 @@ internal abstract class PlayerViewModelFixture {
             preferences = preferences,
             pipController = pipController,
             connectionState = connectionState,
+            syncPlayController = syncPlayController,
             savedStateHandle = savedStateHandle,
         )
 

@@ -4,6 +4,7 @@ import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.di.IoDispatcher
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -69,6 +70,8 @@ class UserDataSyncTrigger
             val pending =
                 try {
                     withContext(ioDispatcher) { userDataDao.countPendingSync() }
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
                 } catch (error: Exception) {
                     Timber.w(error, "Could not count pending user-data rows")
                     return

@@ -9,6 +9,7 @@ import dev.jellyfinnative.core.network.SessionRepository
 import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.userdata.toEntity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -183,6 +184,8 @@ class BrowseCacheWriter
                     }
 
                 itemDao.upsert(rows)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (error: Exception) {
                 Timber.w(error, "Could not write %d items through to the browse cache", dtos.size)
             }
@@ -214,6 +217,8 @@ class BrowseCacheWriter
                 if (rows.isEmpty()) return
 
                 userDataDao.upsertAll(rows)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (error: Exception) {
                 Timber.w(error, "Could not refresh %d user-data rows from the server", fromServer.size)
             }
@@ -233,6 +238,8 @@ class BrowseCacheWriter
                 // Libraries the user lost access to must not linger in the offline list. Guarded on
                 // a non-empty result above, so a filtered-to-nothing response cannot wipe the table.
                 libraryViewDao.deleteExcept(rows.map { it.id })
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (error: Exception) {
                 Timber.w(error, "Could not write the library list through to the cache")
             }

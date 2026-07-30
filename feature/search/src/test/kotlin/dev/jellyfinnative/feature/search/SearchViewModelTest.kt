@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -361,6 +362,35 @@ class SearchViewModelTest {
             viewModel.uiState.value.movies
                 .single()
                 .downloadState shouldBe DownloadState.Downloaded
+        }
+
+    /**
+     * A badge is decoration; the screen behind it is not. Unguarded, a throw from the badge flow
+     * killed the collector and froze every badge at its last value for the life of the screen —
+     * marks the user would read as current (audit STAB-10). All four badge collectors share this
+     * shape, so this pins the pattern.
+     */
+    @Test
+    fun `a failing download-state flow degrades to no badges and leaves the results intact`() =
+        runTest(dispatcher) {
+            every { downloads.observeStates() } returns
+                flow {
+                    emit(mapOf("m1" to DownloadState.Downloaded))
+                    error("badge flow died")
+                }
+            coEvery { repository.getItems(any()) } returns AppResult.Success(listOf(movie("m1", "Dune")))
+
+            val viewModel = startedViewModel()
+            viewModel.onQueryChange("dune")
+            advanceUntilIdle()
+
+            // The result row is still there and still rendered; only its badge fell back.
+            viewModel.uiState.value.movies
+                .single()
+                .downloadState shouldBe DownloadState.NotDownloaded
+            viewModel.uiState.value
+                .error
+                .shouldBeNull()
         }
 
     private fun movie(

@@ -13,6 +13,7 @@ import dev.jellyfinnative.data.downloads.DownloadRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -56,6 +57,14 @@ class SettingsViewModel
                     storageLocations = locations,
                     account = session.toAccountInfo(),
                 )
+            }.catch { error ->
+                // `stateIn` rethrows into `viewModelScope`, and a ViewModel scope has no handler —
+                // so an upstream throw here did not degrade the Settings screen, it took the
+                // process down with it (audit STAB-10). The screen falls back to its defaults: it
+                // is a projection with no local copy, so defaults are the honest thing to draw and
+                // every write path below still works.
+                Timber.e(error, "The settings projection failed; falling back to the defaults")
+                emit(SettingsUiState())
             }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS),

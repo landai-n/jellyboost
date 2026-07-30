@@ -85,6 +85,13 @@ fun DownloadsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val message = state.userMessage?.let { downloadsMessageText(it) }
 
+    // Remembered, not rebuilt per composition. These bundles are `equals`-compared by Compose to
+    // decide whether a row can skip, and a fresh instance every time is never equal to the last —
+    // so a queue that writes progress two to six times a second recomposed *every* visible row on
+    // every write, however little that row changed (audit PERF-05).
+    val actions = remember(viewModel) { downloadsActions(viewModel) }
+    val bulk = remember(viewModel) { queueBulkActions(viewModel) }
+
     LaunchedEffect(message) {
         if (message != null) {
             snackbarHostState.showSnackbar(message)
@@ -99,8 +106,8 @@ fun DownloadsScreen(
     ) { innerPadding ->
         DownloadsContent(
             state = state,
-            actions = downloadsActions(viewModel),
-            bulk = queueBulkActions(viewModel),
+            actions = actions,
+            bulk = bulk,
             onWifiOnlyChange = viewModel::setWifiOnly,
             modifier = Modifier.padding(innerPadding),
         )
@@ -179,6 +186,10 @@ fun DownloadsContent(
 
         when {
             state.isLoading -> LoadingState()
+
+            // Ahead of the tabs: the projection both of them read is the thing that failed, so
+            // neither has anything trustworthy to draw.
+            state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
 
             state.selectedTab == DownloadsTab.DOWNLOADED ->
                 DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete)

@@ -17,6 +17,7 @@ import dev.jellyfinnative.data.cache.CacheFixtures.entity
 import dev.jellyfinnative.data.cache.CacheFixtures.mapper
 import dev.jellyfinnative.data.cache.CacheFixtures.movieDto
 import dev.jellyfinnative.data.cache.CacheFixtures.uuid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -27,6 +28,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -417,6 +419,42 @@ class BrowseCacheWriterTest {
 
             // The caller already has its data; a broken cache must not fail their read.
             writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
+        }
+
+    /**
+     * A cancellation is not a failed write: these guards run on the never-cancelled application
+     * scope today, but swallowing one turns any future structured cancellation of this writer into
+     * a silent no-op that logs a warning and reports success (audit STAB-06).
+     */
+    @Test
+    fun `a cancelled item write propagates instead of being logged as a failure`() =
+        runTest {
+            coEvery { itemDao.upsert(any()) } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> {
+                writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
+            }
+        }
+
+    @Test
+    fun `a cancelled user-data refresh propagates`() =
+        runTest {
+            coEvery { userDataDao.getPendingSyncIds(any(), any()) } throws
+                CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> {
+                writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
+            }
+        }
+
+    @Test
+    fun `a cancelled library-view write propagates`() =
+        runTest {
+            coEvery { libraryViewDao.upsert(any()) } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> {
+                writer().writeViews(listOf(library(MOVIES_LIBRARY, "Films", CollectionType.MOVIES)))
+            }
         }
 
     // ---- library views ------------------------------------------------------------------------

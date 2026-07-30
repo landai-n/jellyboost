@@ -23,6 +23,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -352,6 +353,53 @@ class SettingsViewModelTest {
                 downloads.delete("2")
                 sessionRepository.signOut()
             }
+        }
+
+    // ---- a collapsed projection (audit STAB-10) --------------------------------------------------
+
+    /**
+     * The crash, pinned where it happens. `stateIn` runs the projection in `viewModelScope`, whose
+     * `SupervisorJob` isolates siblings but *handles* nothing — so an upstream throw escapes the
+     * scope entirely, and on a device that is the process dying. It escapes here too: without the
+     * guard this test does not read a wrong value, it fails with `storage gone`.
+     *
+     * The clock is advanced **inside** the Turbine block on purpose. `WhileSubscribed` only starts
+     * the projection while someone is collecting, so advancing after the collector has gone means
+     * the upstream never runs at all and the test passes for the wrong reason.
+     */
+    @Test
+    fun `an upstream failure never escapes the ViewModel scope`() =
+        runTest(dispatcher) {
+            every { downloads.observeStorage() } returns flow { error("storage gone") }
+
+            val model = viewModel()
+            model.uiState.test {
+                awaitItem() shouldBe SettingsUiState()
+                advanceUntilIdle()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            // The defaults are what a screen with no readable sources honestly shows.
+            model.uiState.value shouldBe SettingsUiState()
+        }
+
+    /** And the screen stays usable: every write path is independent of the failed projection. */
+    @Test
+    fun `a screen whose projection failed can still write preferences`() =
+        runTest(dispatcher) {
+            every { downloads.observeStorageLocations() } returns flow { error("volumes gone") }
+
+            val model = viewModel()
+            model.uiState.test {
+                awaitItem() shouldBe SettingsUiState()
+                advanceUntilIdle()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            model.setPipOnLeave(false)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { appPreferences.setPipOnLeave(false) }
         }
 
     // ---- helpers ----------------------------------------------------------------------------------

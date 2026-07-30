@@ -25,9 +25,11 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -110,10 +112,19 @@ class HomeViewModel
          */
         private fun observeDownloadStates() {
             viewModelScope.launch {
-                downloads.observeStates().collect { states ->
-                    downloadStates = states
-                    _uiState.update { it.withDownloadStates(states) }
-                }
+                downloads
+                    .observeStates()
+                    // A badge is decoration; the screen behind it is not. An unguarded throw here
+                    // used to freeze every badge on the screen at its last value with no way back
+                    // (audit STAB-10), so a collapsed flow degrades to "nothing is downloaded"
+                    // rather than to stale marks the user cannot trust.
+                    .catch { error ->
+                        Timber.w(error, "The download-state flow failed; clearing the home badges")
+                        emit(emptyMap())
+                    }.collect { states ->
+                        downloadStates = states
+                        _uiState.update { it.withDownloadStates(states) }
+                    }
             }
         }
 

@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -156,6 +157,8 @@ class DownloadedMetadataRefresher
             @Suppress("TooGenericExceptionCaught")
             try {
                 downloadDao.allItemIds()
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (error: Exception) {
                 Timber.w(error, "Could not list the downloaded items to refresh")
                 emptyList()
@@ -226,6 +229,8 @@ class DownloadedMetadataRefresher
 
                 itemDao.upsert(rows)
                 Timber.i("Refreshed the cached metadata of %d downloaded item(s) and parent(s)", rows.size)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
             } catch (error: Exception) {
                 Timber.w(error, "Could not store the refreshed metadata of %d item(s)", unique.size)
             }

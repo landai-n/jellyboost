@@ -20,10 +20,12 @@ import dev.jellyfinnative.player.deviceprofile.PlatformMediaCodecProbe
 import dev.jellyfinnative.player.session.ExoPlayerHandle
 import dev.jellyfinnative.player.session.JellyfinAuthInterceptor
 import dev.jellyfinnative.player.session.PlayerHandle
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import javax.inject.Singleton
 
 /** Wires the `:player` implementations to the interfaces the rest of the module depends on. */
@@ -56,11 +58,22 @@ internal object PlayerProvidersModule {
      *
      * `SupervisorJob` so one failed report cannot cancel the next session's, and it is never
      * cancelled — the whole point is that it outlives whatever screen started the playback.
+     *
+     * The [CoroutineExceptionHandler] catches what the supervisor does not: a supervisor isolates
+     * siblings from a failure, but an *unhandled* one still reaches the default handler and kills
+     * the process. A stop-report that throws must cost the report, not the app.
      */
     @Provides
     @Singleton
     @DetachedPlayerScope
-    fun provideDetachedPlayerScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideDetachedPlayerScope(): CoroutineScope =
+        CoroutineScope(
+            SupervisorJob() +
+                Dispatchers.Default +
+                CoroutineExceptionHandler { _, error ->
+                    Timber.e(error, "Uncaught exception in a detached player-scope coroutine")
+                },
+        )
 
     /**
      * OkHttp client for media requests only.

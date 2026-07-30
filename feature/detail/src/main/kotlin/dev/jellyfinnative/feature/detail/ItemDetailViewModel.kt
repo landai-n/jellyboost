@@ -25,8 +25,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -114,13 +116,20 @@ class ItemDetailViewModel
          */
         private fun observeDownloadState() {
             viewModelScope.launch {
-                downloads.observeStates().collect { states ->
-                    // Held so that a later load — which replaces every item in the state — can
-                    // re-apply them. `observeStates()` is distinct-until-changed and would not
-                    // re-emit just because this screen refetched.
-                    downloadStates = states
-                    _uiState.update { it.withDownloadStates(states) }
-                }
+                downloads
+                    .observeStates()
+                    // Degrade to no badges rather than freezing them — see
+                    // `HomeViewModel.observeDownloadStates` (audit STAB-10).
+                    .catch { error ->
+                        Timber.w(error, "The download-state flow failed; clearing the detail badges")
+                        emit(emptyMap())
+                    }.collect { states ->
+                        // Held so that a later load — which replaces every item in the state — can
+                        // re-apply them. `observeStates()` is distinct-until-changed and would not
+                        // re-emit just because this screen refetched.
+                        downloadStates = states
+                        _uiState.update { it.withDownloadStates(states) }
+                    }
             }
         }
 

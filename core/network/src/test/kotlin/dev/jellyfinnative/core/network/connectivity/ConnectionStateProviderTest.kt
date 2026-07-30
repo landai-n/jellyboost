@@ -1,5 +1,6 @@
 package dev.jellyfinnative.core.network.connectivity
 
+import app.cash.turbine.test
 import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.core.datastore.AppPreferences
@@ -366,6 +367,67 @@ class ConnectionStateProviderTest {
             advanceUntilIdle()
 
             coVerify(exactly = 2) { probe.isServerReachable() }
+        }
+
+    // ---- a throwing probe must not take the loop with it (STAB-07) --------------------------------
+
+    /**
+     * The probe consumer is the app's only offline detector and it runs for the life of the
+     * process. Before this guard one throw ended the loop for good: the state froze on its last
+     * verdict and no *Retry* tap, reconnect or sign-in could ever move it again.
+     */
+    @Test
+    fun `survives a probe that throws and keeps answering later ones`() =
+        runTest {
+            coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
+            val provider = newProvider()
+            advanceUntilIdle()
+
+            // The loop is still there to serve the next request, and it answers it.
+            coEvery { probe.isServerReachable() } returns false
+            provider.refresh()
+            advanceUntilIdle()
+
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+            coVerify(exactly = 2) { probe.isServerReachable() }
+        }
+
+    /**
+     * A probe that threw learnt nothing, so it must not be read as "unreachable" — that would put
+     * an offline banner in front of the user on the strength of a bug.
+     */
+    @Test
+    fun `keeps the last verdict when a probe throws`() =
+        runTest {
+            val provider = newProvider()
+            advanceUntilIdle()
+            provider.state.value shouldBe ConnectionState.ONLINE
+
+            coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
+            provider.refresh()
+            advanceUntilIdle()
+
+            provider.state.value shouldBe ConnectionState.ONLINE
+        }
+
+    /** The state flow itself must stay collectable — a dead loop used to strand every collector. */
+    @Test
+    fun `leaves the state flow alive and collectable after a throwing probe`() =
+        runTest {
+            coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
+            val provider = newProvider()
+            advanceUntilIdle()
+
+            provider.state.test {
+                awaitItem() shouldBe ConnectionState.ONLINE
+
+                hasNetworkFlow.value = false
+                advanceUntilIdle()
+
+                // A live collector still receives the next change, which is the whole claim.
+                awaitItem() shouldBe ConnectionState.OFFLINE_NO_NETWORK
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     private companion object {

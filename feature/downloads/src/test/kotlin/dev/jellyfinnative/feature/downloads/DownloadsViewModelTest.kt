@@ -16,6 +16,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -604,6 +605,55 @@ class DownloadsViewModelTest {
             advanceUntilIdle()
 
             coVerify(exactly = 0) { downloads.move(any(), any()) }
+        }
+
+    // ---- a collapsed projection (audit STAB-10) --------------------------------------------------
+
+    /**
+     * The worst failure this screen had: `isLoading` starts `true` and only a first emission clears
+     * it, so a throw upstream — `SQLiteBlobTooBigException` on a corrupt dto blob is the real one —
+     * left a spinner turning forever with nothing to tell the user and no way to retry.
+     */
+    @Test
+    fun `an upstream failure leaves an error state, never a spinner`() =
+        runTest(dispatcher) {
+            every { downloads.observeDownloads() } returns flow { error("corrupt blob") }
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.isLoading shouldBe false
+            model.uiState.value.loadFailed shouldBe true
+        }
+
+    /** A failure part-way through must not leave the last good rows on screen unmarked. */
+    @Test
+    fun `a failure after a good emission still raises the error state`() =
+        runTest(dispatcher) {
+            every { downloads.observeDownloads() } returns
+                flow {
+                    emit(listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADED)))
+                    error("corrupt blob")
+                }
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.isLoading shouldBe false
+            model.uiState.value.loadFailed shouldBe true
+        }
+
+    /** A healthy projection must not be marked as failed — the flag is not just "not loading". */
+    @Test
+    fun `a healthy projection never sets the error state`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1", "Arrival", status = DownloadStatus.DOWNLOADED))
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.isLoading shouldBe false
+            model.uiState.value.loadFailed shouldBe false
         }
 
     // ---- helpers --------------------------------------------------------------------------------

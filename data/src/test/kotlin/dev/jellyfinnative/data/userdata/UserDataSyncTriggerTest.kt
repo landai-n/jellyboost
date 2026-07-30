@@ -3,10 +3,12 @@ package dev.jellyfinnative.data.userdata
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -122,6 +124,22 @@ class UserDataSyncTriggerTest {
 
             trigger().start()
             runCurrent()
+
+            verify(exactly = 0) { scheduler.enqueue() }
+        }
+
+    /**
+     * The broad guard above must not also swallow a cancellation: the count runs inside
+     * `withContext`, so a cancelled application scope arrives here as a `CancellationException`,
+     * and treating it as "could not count" would log a warning for an ordinary shutdown and let the
+     * caller carry on inside a cancelled coroutine (audit STAB-06 / ARCH-08).
+     */
+    @Test
+    fun `a cancelled count propagates rather than being logged as a failure`() =
+        runTest {
+            coEvery { userDataDao.countPendingSync() } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { trigger().enqueueIfPending() }
 
             verify(exactly = 0) { scheduler.enqueue() }
         }

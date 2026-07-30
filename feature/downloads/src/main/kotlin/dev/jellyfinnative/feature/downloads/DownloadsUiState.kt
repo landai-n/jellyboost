@@ -64,6 +64,15 @@ data class DownloadsUiState(
     val wifiOnly: Boolean = true,
     val isLoading: Boolean = true,
     /**
+     * `true` once the projection itself collapsed — the Room/DataStore combine threw and will not
+     * emit again.
+     *
+     * Distinct from an empty screen: "nothing downloaded" is an answer, this is the absence of one,
+     * and the two must not look alike. It exists because the alternative was the worst possible
+     * failure mode, a spinner that never stops (audit STAB-10).
+     */
+    val loadFailed: Boolean = false,
+    /**
      * `true` while the *Cancel all* dialog is up.
      *
      * In the state rather than `remember`ed in the list, unlike the *Downloaded* tab's per-row

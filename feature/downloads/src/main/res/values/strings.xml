@@ -61,6 +61,9 @@
     <!-- Empty states and messages -->
     <string name="downloads_empty_downloaded">Nothing downloaded yet. Tap Download on a film or episode to keep it on this device.</string>
     <string name="downloads_empty_queue">The download queue is empty.</string>
+    <!-- Shown when the downloads projection itself failed, so neither tab has anything to show.
+         Deliberately not phrased as an empty library: nothing was read, so nothing is known. -->
+    <string name="downloads_load_failed">Couldn\'t read your downloads. Reopen this screen to try again.</string>
     <string name="downloads_message_delete_failed">Couldn\'t delete that download.</string>
     <string name="downloads_message_action_failed">Couldn\'t update the queue.</string>
     <!-- After "Pause all" when the queue also held transcodes, which cannot be paused without

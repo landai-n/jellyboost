@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.database.entities.DownloadEntity
 import dev.jellyfinnative.data.downloads.engine.DownloadQueue
 import dev.jellyfinnative.data.downloads.engine.DownloadQueueListener
 import dev.jellyfinnative.data.downloads.engine.DrainOutcome
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
@@ -59,6 +60,11 @@ class DownloadWorker
                         Result.retry()
                     }
                 }
+            } catch (cancellation: CancellationException) {
+                // Every Pause cancels this worker, and a cancelled worker is not a failed one:
+                // WorkManager already decides what happens next. Logging it at ERROR and asking for
+                // a retry misreported the app's most ordinary download action as machinery failure.
+                throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
             ) {
@@ -94,10 +100,21 @@ class DownloadWorker
          * a short window on some OEM builds, and after the user revokes the notification
          * permission. Losing the *notification* is survivable; losing the download because of it is
          * not.
+         *
+         * A cancellation is not a refusal: `runCatching` used to swallow the one every Pause
+         * produces here too, turning a stop into "could not show the notification" and letting the
+         * worker carry on inside a cancelled coroutine.
          */
         private suspend fun promote(info: () -> androidx.work.ForegroundInfo) {
-            runCatching { setForeground(info()) }
-                .onFailure { Timber.w(it, "Could not show the download notification") }
+            try {
+                setForeground(info())
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (
+                @Suppress("TooGenericExceptionCaught") error: Throwable,
+            ) {
+                Timber.w(error, "Could not show the download notification")
+            }
         }
     }
 

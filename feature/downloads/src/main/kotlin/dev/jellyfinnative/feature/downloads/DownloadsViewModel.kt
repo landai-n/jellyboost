@@ -9,9 +9,11 @@ import dev.jellyfinnative.data.downloads.model.DownloadItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.Clock
 import javax.inject.Inject
 
@@ -46,7 +48,16 @@ class DownloadsViewModel
                     downloads.observeStorage(),
                     downloads.wifiOnly,
                 ) { items, storage, wifiOnly -> Triple(items, storage, wifiOnly) }
-                    .collect { (items, storage, wifiOnly) ->
+                    // Without this the screen's failure mode is a spinner that never stops:
+                    // `isLoading` starts `true` and only a first emission clears it, so one throw
+                    // upstream — a corrupt dto blob raising `SQLiteBlobTooBigException` is the real
+                    // one — leaves the user staring at it forever, with no way to tell a slow query
+                    // from a broken one. A collapsed flow cannot recover on its own, so the state
+                    // says so and the screen offers the failure instead of the spinner.
+                    .catch { error ->
+                        Timber.e(error, "The downloads projection failed; showing the error state")
+                        _uiState.update { it.copy(isLoading = false, loadFailed = true) }
+                    }.collect { (items, storage, wifiOnly) ->
                         val speeds = speedTracker.update(items, clock.millis())
                         val progress = progressRatchet.update(items)
                         _uiState.update { state ->
@@ -58,6 +69,7 @@ class DownloadsViewModel
                                 storage = storage,
                                 wifiOnly = wifiOnly,
                                 isLoading = false,
+                                loadFailed = false,
                             )
                         }
                     }

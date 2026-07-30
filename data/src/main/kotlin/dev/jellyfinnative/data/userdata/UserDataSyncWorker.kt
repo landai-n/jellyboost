@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dev.jellyfinnative.core.network.session.SessionGate
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
@@ -58,6 +59,10 @@ class UserDataSyncWorker
                     SyncOutcome.NOTHING_PENDING, SyncOutcome.DRAINED -> Result.success()
                     SyncOutcome.RETRY -> Result.retry()
                 }
+            } catch (cancellation: CancellationException) {
+                // A cancelled worker is not a failed one — WorkManager stopped it, and reporting
+                // that as an unexpected failure would ask for a retry of work nobody asked to run.
+                throw cancellation
             } catch (error: Exception) {
                 // Room or the SDK throwing something outside the mapped taxonomy must not kill the
                 // work chain — the pending rows are untouched and the next attempt sees them again.

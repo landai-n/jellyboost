@@ -13,10 +13,12 @@ import dev.jellyfinnative.core.network.connectivity.ConnectivityMonitor
 import dev.jellyfinnative.core.network.connectivity.SdkServerProbeApi
 import dev.jellyfinnative.core.network.connectivity.ServerProbeApi
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.jellyfin.sdk.api.client.ApiClient
+import timber.log.Timber
 import javax.inject.Singleton
 
 /**
@@ -59,13 +61,26 @@ internal object NetworkDispatchersModule {
      *
      * A [SupervisorJob] so one failing child cannot take the app's connectivity monitoring down
      * with it. Never cancelled — it dies with the process.
+     *
+     * The [CoroutineExceptionHandler] is the other half of that promise. `SupervisorJob` stops a
+     * failing child from cancelling its siblings, but it does not *handle* the exception: without a
+     * handler an uncaught throw from any child reaches the thread's default handler and takes the
+     * process down. Every current child is defensive, but nothing keeps the next one so, and the
+     * most exposed of them is the reachability probe loop — the app's only offline detector.
      */
     @Provides
     @Singleton
     @ApplicationScope
     fun provideApplicationScope(
         @IoDispatcher dispatcher: CoroutineDispatcher,
-    ): CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
+    ): CoroutineScope =
+        CoroutineScope(
+            SupervisorJob() +
+                dispatcher +
+                CoroutineExceptionHandler { _, error ->
+                    Timber.e(error, "Uncaught exception in an application-scope coroutine")
+                },
+        )
 }
 
 /**

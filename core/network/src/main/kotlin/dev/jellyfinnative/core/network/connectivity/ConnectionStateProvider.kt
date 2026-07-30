@@ -5,6 +5,7 @@ import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.SessionStateHolder
 import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.model.SessionState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -104,10 +105,29 @@ class ConnectionStateProvider
             probeRequests.trySend(Unit)
         }
 
+        /**
+         * The single probe consumer. It must outlive anything one probe can do to it.
+         *
+         * This loop is the app's only offline detector, and it runs for the lifetime of the
+         * process: if one iteration throws, the loop dies and the app is left permanently on
+         * whatever verdict it happened to be holding — no further probe, no recovery, no banner.
+         * [ServerReachabilityProbe] is careful, but "the probe never throws" is not a property this
+         * loop should be depending on, so a failed iteration costs its own verdict and nothing more.
+         * The last verdict is kept deliberately: a probe that threw learnt nothing, and inventing
+         * "unreachable" from it would show an offline banner on the strength of a bug.
+         */
         private suspend fun consumeProbeRequests() {
             while (true) {
                 probeRequests.receive()
-                serverReachable.value = probe.isServerReachable()
+                try {
+                    serverReachable.value = probe.isServerReachable()
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") error: Throwable,
+                ) {
+                    Timber.w(error, "A reachability probe failed unexpectedly; keeping the last verdict")
+                }
                 // The pause is the debounce: requests that arrive while it runs are conflated into
                 // the single token waiting in the channel.
                 delay(PROBE_DEBOUNCE_MS)

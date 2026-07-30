@@ -28,12 +28,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -147,7 +149,14 @@ class LibraryViewModel
 
         private fun observeDownloadStates() {
             viewModelScope.launch {
-                downloads.observeStates().collect { states -> downloadStates.value = states }
+                downloads
+                    .observeStates()
+                    // Degrade to no badges rather than freezing them — see
+                    // `HomeViewModel.observeDownloadStates` (audit STAB-10).
+                    .catch { error ->
+                        Timber.w(error, "The download-state flow failed; clearing the library badges")
+                        emit(emptyMap())
+                    }.collect { states -> downloadStates.value = states }
             }
         }
 

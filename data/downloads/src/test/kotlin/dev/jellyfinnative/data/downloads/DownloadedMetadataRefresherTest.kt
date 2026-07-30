@@ -18,6 +18,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.season
 import dev.jellyfinnative.data.downloads.DownloadFixtures.series
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -27,6 +28,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
@@ -355,6 +357,30 @@ class DownloadedMetadataRefresherTest {
             refresher().refresh()
 
             coVerify(exactly = 1) { itemDao.upsert(any()) }
+        }
+
+    /**
+     * The two guards above tolerate everything a disk or a server can do, and must keep tolerating
+     * it — but not a cancellation, which is the scope shutting the refresher down rather than a
+     * failure to work around (audit STAB-06).
+     */
+    @Test
+    fun `a cancelled table read propagates instead of degrading to an empty list`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { refresher().refresh() }
+
+            coVerify(exactly = 0) { api.getFullItems(any()) }
+        }
+
+    @Test
+    fun `a cancelled write propagates instead of being swallowed`() =
+        runTest {
+            givenDownloads(uuid(1))
+            coEvery { itemDao.upsert(any()) } throws CancellationException("scope cancelled")
+
+            shouldThrow<CancellationException> { refresher().refresh() }
         }
 
     // ---- helpers ---------------------------------------------------------------------------------

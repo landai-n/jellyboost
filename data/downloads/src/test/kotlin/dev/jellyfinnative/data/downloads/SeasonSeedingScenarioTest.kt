@@ -76,6 +76,7 @@ class SeasonSeedingScenarioTest {
     private val mapper = mockk<ItemEntityMapper>()
     private val deleter = mockk<DownloadDeleter>()
     private val storage = mockk<DownloadStorage>()
+    private val sweeper = mockk<OrphanSweeper> { coEvery { sweep() } returns 0L }
     private val downloader = mockk<FileDownloader>()
     private val urls = mockk<DownloadUrlFactory>(relaxed = true)
     private val sessionGate = mockk<SessionGate>()
@@ -345,6 +346,7 @@ class SeasonSeedingScenarioTest {
             storage = storage,
             downloader = downloader,
             seeder = seeder(),
+            sweeper = sweeper,
             sessionGate = sessionGate,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),

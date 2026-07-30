@@ -81,6 +81,16 @@ interface DownloadDao {
     @Query("SELECT itemId FROM downloads")
     suspend fun allItemIds(): List<UUID>
 
+    /**
+     * Every item directory a download row still claims — the input to the orphan **file** sweep.
+     *
+     * Distinct from [allItemIds] because the thing on disk is keyed by name, not by id: the sweep
+     * has to decide whether a directory it found belongs to anything, and the row that would answer
+     * that may already be gone (docs/notes/audit-2026-07.md, STAB-04).
+     */
+    @Query("SELECT directoryName FROM downloads")
+    suspend fun allDirectoryNames(): List<String>
+
     /** Highest queue position in use, or `null` when the queue is empty. */
     @Query("SELECT MAX(queuePosition) FROM downloads")
     suspend fun maxQueuePosition(): Int?
@@ -180,6 +190,59 @@ interface DownloadDao {
         updatedAt: Instant,
         errorMessage: String? = null,
     )
+
+    /**
+     * Moves several downloads to one status in a single statement.
+     *
+     * What *Pause all* and *Cancel all* are made of. The batching is not a micro-optimisation: a
+     * bulk action used to issue one repository mutation per row, and each of those stopped and
+     * restarted the WorkManager job, so a forty-episode queue produced forty stop/start cycles and
+     * as many overlapping drains (docs/notes/audit-2026-07.md, STAB-09). One statement, one
+     * transition, one restart.
+     */
+    @Query("UPDATE downloads SET status = :status, updatedAt = :updatedAt WHERE itemId IN (:itemIds)")
+    suspend fun setStatusIn(
+        itemIds: List<UUID>,
+        status: DownloadStatus,
+        updatedAt: Instant,
+    )
+
+    /**
+     * Puts several rows back in the queue at the user's request — *Resume all*, and *Retry*.
+     *
+     * Clearing [DownloadEntity.attemptCount] is the point of having a separate statement from
+     * [setStatusIn]: a row that exhausted its retry budget must get a full one back when the user
+     * asks for it again, or *Retry* would be worth exactly one attempt.
+     */
+    @Query(
+        "UPDATE downloads SET status = 'QUEUED', errorMessage = NULL, attemptCount = 0, " +
+            "updatedAt = :updatedAt WHERE itemId IN (:itemIds)",
+    )
+    suspend fun requeueForUser(
+        itemIds: List<UUID>,
+        updatedAt: Instant,
+    )
+
+    /**
+     * Puts a row that failed *transiently* back in the queue, counting the attempt.
+     *
+     * The status test is what keeps this from resurrecting an item the user cancelled or paused
+     * while it was in flight — the same race [requeueIfDownloading] guards, for the same reason.
+     * The error message is cleared because the row is not failed: it is waiting for the next run.
+     */
+    @Query(
+        "UPDATE downloads SET status = 'QUEUED', errorMessage = NULL, attemptCount = :attemptCount, " +
+            "updatedAt = :updatedAt WHERE itemId = :itemId AND status = 'DOWNLOADING'",
+    )
+    suspend fun requeueForRetry(
+        itemId: UUID,
+        attemptCount: Int,
+        updatedAt: Instant,
+    )
+
+    /** Gives one row its full retry budget back — what a user-initiated *Resume* means. */
+    @Query("UPDATE downloads SET attemptCount = 0 WHERE itemId = :itemId")
+    suspend fun clearAttempts(itemId: UUID)
 
     /**
      * Writes one throttled progress sample.

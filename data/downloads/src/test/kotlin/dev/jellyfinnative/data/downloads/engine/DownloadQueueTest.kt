@@ -18,6 +18,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.download
 import dev.jellyfinnative.data.downloads.DownloadFixtures.file
 import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.OrphanSweeper
 import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
@@ -65,6 +66,7 @@ class DownloadQueueTest {
     private val storage = mockk<DownloadStorage>()
     private val downloader = mockk<FileDownloader>()
     private val seeder = mockk<SiblingSeeder>(relaxUnitFun = true)
+    private val sweeper = mockk<OrphanSweeper>()
     private val urls = mockk<DownloadUrlFactory>(relaxed = true)
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
@@ -92,6 +94,7 @@ class DownloadQueueTest {
         coEvery { sessionGate.ensureSession() } returns true
         // Nothing to seed from unless a test says otherwise.
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
+        coEvery { sweeper.sweep() } returns 0L
     }
 
     // ---- the happy path -------------------------------------------------------------------------
@@ -195,7 +198,9 @@ class DownloadQueueTest {
     @Test
     fun `a failing media file marks the item ERROR`() =
         runTest {
-            queueWith(download())
+            // Once its retry budget is spent: a transport failure on a row with attempts left is
+            // requeued instead (see the retry-policy section below), which is the STAB-01 fix.
+            queueWith(download(attemptCount = DownloadQueue.MAX_ATTEMPTS - 1))
             coEvery { downloader.download(match { it.contains("download") }, any(), any(), any(), any()) } throws
                 IOException("connection reset")
 
@@ -272,13 +277,17 @@ class DownloadQueueTest {
         }
 
     @Test
-    fun `a non-403 error on the media file is not retried`() =
+    fun `a non-403 error on the media file is not retried on the video stream`() =
         runTest {
+            // The *fallback* is what this rules out — a 500 is not the download-policy refusal the
+            // static-stream re-plan exists for, so re-issuing it against another URL would only
+            // send the same failure twice. The row is still worth another *attempt* (a 500 is
+            // transient), which is the outcome below.
             queueWith(download())
             coEvery { downloader.download("https://server/download", any(), any(), any(), any()) } throws
                 DownloadHttpException(code = 500, url = "https://server/download")
 
-            queue().drain(listener) shouldBe DrainOutcome.INCOMPLETE
+            queue().drain(listener) shouldBe DrainOutcome.RETRY
 
             coVerify(exactly = 0) { urls.videoStreamUrl(any(), any()) }
         }
@@ -760,6 +769,7 @@ class DownloadQueueTest {
             storage = storage,
             downloader = downloader,
             seeder = seeder,
+            sweeper = sweeper,
             sessionGate = sessionGate,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),

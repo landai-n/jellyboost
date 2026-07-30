@@ -3,6 +3,7 @@ package dev.jellyfinnative.data.downloads.work
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -21,10 +22,11 @@ import timber.log.Timber
  * this class is the bit in between that keeps a foreground notification current so Android lets the
  * transfer take as long as it takes.
  *
- * A failure inside the queue is not a worker failure: the item is already marked
+ * A *permanent* failure inside the queue is not a worker failure: the item is already marked
  * `DownloadStatus.ERROR` in Room and shown as such in the Queue tab, and retrying the whole job on
- * a permanently broken item (deleted on the server, unreadable file) would loop forever. Only a
- * failure of the *machinery* — storage vanishing, a Room error — is retried.
+ * a permanently broken item (deleted on the server, unreadable file) would loop forever. A failure
+ * of the *machinery* — storage vanishing, a Room error — is retried, and so is a **transient**
+ * one: see [toWorkerResult].
  *
  * The one other retry is [DrainOutcome.NO_SESSION]: on a cold start WorkManager can run this before
  * anything has restored the session, and `SessionGate` could not restore one either (the
@@ -47,19 +49,7 @@ class DownloadWorker
             promote { notifier.startingForegroundInfo() }
 
             return try {
-                when (queue.drain(listener)) {
-                    DrainOutcome.COMPLETED -> Result.success()
-
-                    DrainOutcome.INCOMPLETE -> {
-                        Timber.w("Download queue drained with at least one failed item")
-                        Result.success()
-                    }
-
-                    DrainOutcome.NO_SESSION -> {
-                        Timber.i("No session yet; the download queue will be retried")
-                        Result.retry()
-                    }
-                }
+                queue.drain(listener).toWorkerResult()
             } catch (cancellation: CancellationException) {
                 // Every Pause cancels this worker, and a cancelled worker is not a failed one:
                 // WorkManager already decides what happens next. Logging it at ERROR and asking for
@@ -115,6 +105,42 @@ class DownloadWorker
             ) {
                 Timber.w(error, "Could not show the download notification")
             }
+        }
+    }
+
+/**
+ * How a drain outcome reaches WorkManager.
+ *
+ * A top-level function so the ladder can be exercised on the JVM: constructing a `CoroutineWorker`
+ * needs a `Context` and a live `WorkerParameters`, and the decision worth pinning is which outcomes
+ * come back for another run.
+ *
+ * `Result.retry()` re-runs the job on the `EXPONENTIAL`/30 s backoff
+ * `WorkManagerDownloadScheduler` attaches, which is deliberately the only retry mechanism in the
+ * pipeline: [DrainOutcome.RETRY] means the queue kept the row `QUEUED` and counted the attempt, so
+ * WorkManager owns *when* the next try happens and `DownloadQueue.MAX_ATTEMPTS` owns *whether*
+ * there is one (docs/notes/audit-2026-07.md, STAB-01).
+ *
+ * [DrainOutcome.INCOMPLETE] is a success on purpose: the item is already `ERROR` in Room and shown
+ * as such, and re-running the job over a permanently broken item would loop forever.
+ */
+internal fun DrainOutcome.toWorkerResult(): ListenableWorker.Result =
+    when (this) {
+        DrainOutcome.COMPLETED -> ListenableWorker.Result.success()
+
+        DrainOutcome.INCOMPLETE -> {
+            Timber.w("Download queue drained with at least one failed item")
+            ListenableWorker.Result.success()
+        }
+
+        DrainOutcome.RETRY -> {
+            Timber.i("The download queue stopped on a transient failure; WorkManager will re-run it")
+            ListenableWorker.Result.retry()
+        }
+
+        DrainOutcome.NO_SESSION -> {
+            Timber.i("No session yet; the download queue will be retried")
+            ListenableWorker.Result.retry()
         }
     }
 

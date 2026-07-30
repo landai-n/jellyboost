@@ -37,6 +37,7 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -45,7 +46,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -367,6 +370,16 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
+    fun `resuming gives the row its full retry budget back`() =
+        runTest {
+            // Otherwise *Retry* on a row that exhausted its attempts against a server that was down
+            // would be worth exactly one more, and fail again on the first blip.
+            repository().resume(uuid(1).toString())
+
+            coVerify(exactly = 1) { downloadDao.clearAttempts(uuid(1)) }
+        }
+
+    @Test
     fun `deleting stops the queue before unlinking files`() =
         runTest {
             coEvery { deleter.delete(uuid(1)) } returns 2_100_000_000L
@@ -420,6 +433,119 @@ class DownloadRepositoryImplTest {
             coEvery { deleter.delete(any()) } throws IllegalStateException("volume ejected")
 
             val result = repository().delete(uuid(1).toString())
+
+            result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Storage>()
+        }
+
+    // ---- the awaited stop (STAB-04) --------------------------------------------------------------
+
+    @Test
+    fun `nothing is unlinked until the queue has actually stopped`() =
+        runTest {
+            // WorkManager's cancellation is asynchronous, and `FileDownloader` re-creates the item
+            // directory for every file it opens: a delete that runs while the transfer is still
+            // alive gets its directory put straight back by a `mkdirs()` and written into until the
+            // next `ensureActive()`. Those bytes are then invisible to the UI forever.
+            val stopped = CompletableDeferred<Unit>()
+            coEvery { scheduler.stop() } coAnswers { stopped.await() }
+
+            val repository = repository(ioDispatcher = StandardTestDispatcher(testScheduler))
+            val delete = async { repository.delete(uuid(1).toString()) }
+            runCurrent()
+            coVerify(exactly = 0) { deleter.delete(any()) }
+
+            stopped.complete(Unit)
+            delete.await()
+
+            coVerify(exactly = 1) { deleter.delete(uuid(1)) }
+        }
+
+    // ---- bulk actions (STAB-09) ------------------------------------------------------------------
+
+    @Test
+    fun `pausing everything is one status write and one restart, not one per row`() =
+        runTest {
+            // The finding: a bulk action built out of single-item mutations issued a stop/start
+            // cycle per row, so a forty-episode queue produced forty overlapping drains — each of
+            // them running `requeueInterrupted` over rows another drain was still writing.
+            val ids = listOf(uuid(1), uuid(2), uuid(3))
+
+            repository().pauseAll(ids.map(java.util.UUID::toString)) shouldBe AppResult.Success(Unit)
+
+            coVerifyOrder {
+                downloadDao.setStatusIn(ids, DownloadStatus.PAUSED, NOW)
+                scheduler.stop()
+                scheduler.ensureRunning()
+            }
+            coVerify(exactly = 1) { scheduler.stop() }
+            coVerify(exactly = 1) { scheduler.ensureRunning() }
+            coVerify(exactly = 0) { downloadDao.setStatus(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `resuming everything is one transition and one restart`() =
+        runTest {
+            val ids = listOf(uuid(1), uuid(2))
+
+            repository().resumeAll(ids.map(java.util.UUID::toString)) shouldBe AppResult.Success(Unit)
+
+            coVerifyOrder {
+                // One statement, and it clears the retry budget: a row that spent its attempts on a
+                // server that was down must be worth a full set again now the user has asked.
+                downloadDao.requeueForUser(ids, NOW)
+                scheduler.restart()
+            }
+            coVerify(exactly = 1) { scheduler.restart() }
+        }
+
+    @Test
+    fun `cancelling everything stops the queue once and starts it once`() =
+        runTest {
+            coEvery { deleter.delete(uuid(1)) } returns 100L
+            coEvery { deleter.delete(uuid(2)) } returns 200L
+
+            repository().deleteAll(listOf(uuid(1), uuid(2)).map(java.util.UUID::toString)) shouldBe
+                AppResult.Success(300L)
+
+            coVerifyOrder {
+                scheduler.stop()
+                deleter.delete(uuid(1))
+                deleter.delete(uuid(2))
+                scheduler.ensureRunning()
+            }
+            coVerify(exactly = 1) { scheduler.stop() }
+        }
+
+    @Test
+    fun `a bulk action with no targets left touches neither Room nor the scheduler`() =
+        runTest {
+            // The queue can drain while the user is reaching for the button; stopping and
+            // restarting the worker for an empty list would interrupt whatever took its place.
+            repository().pauseAll(emptyList()) shouldBe AppResult.Success(Unit)
+            repository().resumeAll(emptyList()) shouldBe AppResult.Success(Unit)
+            repository().deleteAll(emptyList()) shouldBe AppResult.Success(0L)
+
+            coVerify(exactly = 0) { scheduler.stop() }
+            coVerify(exactly = 0) { scheduler.restart() }
+            coVerify(exactly = 0) { deleter.delete(any()) }
+        }
+
+    @Test
+    fun `an unparseable id in a bulk action is a NotFound, and nothing is changed`() =
+        runTest {
+            val result = repository().pauseAll(listOf(uuid(1).toString(), "not-a-uuid"))
+
+            result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.NotFound>()
+            coVerify(exactly = 0) { downloadDao.setStatusIn(any(), any(), any()) }
+            coVerify(exactly = 0) { scheduler.stop() }
+        }
+
+    @Test
+    fun `a failing bulk delete is a Storage failure, not an exception`() =
+        runTest {
+            coEvery { deleter.delete(any()) } throws IllegalStateException("volume ejected")
+
+            val result = repository().deleteAll(listOf(uuid(1).toString()))
 
             result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.Storage>()
         }

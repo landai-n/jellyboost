@@ -78,6 +78,34 @@ interface DownloadRepository {
     suspend fun resume(itemId: String): AppResult<Unit>
 
     /**
+     * Pauses several items at once — *Pause all*.
+     *
+     * Not a loop over [pause], and that is the entire point. Every single-item mutation stops and
+     * restarts the WorkManager job, so a bulk action built out of them issued one stop/start cycle
+     * per row: forty overlapping `REPLACE` enqueues, each starting a drain while the previous one
+     * was still unwinding, and each of those drains running `requeueInterrupted` over rows another
+     * drain was still writing (docs/notes/audit-2026-07.md, STAB-09). This writes one status
+     * transition and touches the scheduler once.
+     *
+     * Ids that name nothing are simply not matched; the call still succeeds.
+     */
+    suspend fun pauseAll(itemIds: List<String>): AppResult<Unit>
+
+    /** Puts several paused or failed items back in the queue — one transition, one restart. */
+    suspend fun resumeAll(itemIds: List<String>): AppResult<Unit>
+
+    /**
+     * Removes several items entirely — *Cancel all*, and the queue half of a storage switch.
+     *
+     * The queue is stopped **once**, before anything is unlinked, and started again once at the
+     * end. Files have to go one item at a time (each has its own directory and its own cascade),
+     * but the scheduler churn a per-item loop produced does not.
+     *
+     * @return total bytes freed on disk.
+     */
+    suspend fun deleteAll(itemIds: List<String>): AppResult<Long>
+
+    /**
      * Removes [itemId] entirely — files, rows and orphaned metadata.
      *
      * The same operation backs *Cancel* on a queued item and *Delete* on a finished one: both mean

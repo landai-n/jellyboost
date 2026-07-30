@@ -53,6 +53,12 @@ import java.util.UUID
  *   default `0`, which is the honest reading of every row written before v6: unknown means capped.
  * @property queuePosition ordering key for the queue tab; the queue always takes the pending row
  *   with the lowest value. Reordering rewrites this column and nothing else.
+ * @property attemptCount how many times a *transient* failure has put this row back in the queue
+ *   since the last thing the user did to it (schema v7). It is the cap that keeps the retry policy
+ *   bounded: past it the row goes [DownloadStatus.ERROR] rather than being retried forever
+ *   (docs/notes/audit-2026-07.md, STAB-01). Enqueue writes a whole row, and *Resume* clears the
+ *   column, so a user-initiated attempt always starts from a full budget. Column default `0`, which
+ *   is what every row written before v7 means: nothing has failed on it yet.
  * @property errorMessage last failure, kept so the queue tab can say *why* an item is in
  *   [DownloadStatus.ERROR] instead of just that it is.
  * @property createdAt when the item was enqueued; the *Downloaded* tab's default ordering.
@@ -79,6 +85,8 @@ data class DownloadEntity(
     @ColumnInfo(defaultValue = "0")
     val sizeIsExact: Boolean = false,
     val queuePosition: Int = 0,
+    @ColumnInfo(defaultValue = "0")
+    val attemptCount: Int = 0,
     /** Directory name under the storage root, e.g. `Westworld - S01E02 - Chestnut`. */
     val directoryName: String,
     val itemName: String,

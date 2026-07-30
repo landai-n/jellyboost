@@ -215,7 +215,9 @@ class DownloadRepositoryImpl
 
         override suspend fun enqueue(itemId: String): AppResult<Unit> {
             val id = itemId.toUuidOrNull() ?: return AppResult.Failure(AppError.NotFound(itemId))
-            val userId = currentUserId() ?: return AppResult.Failure(AppError.Unauthorized())
+            val userId =
+                (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
+                    ?: return AppResult.Failure(AppError.Unauthorized())
 
             return when (val result = enqueuer.enqueue(id, userId)) {
                 is AppResult.Failure -> result
@@ -238,24 +240,47 @@ class DownloadRepositoryImpl
         override suspend fun resume(itemId: String): AppResult<Unit> =
             mutate(itemId) { id ->
                 downloadDao.setStatus(id, DownloadStatus.QUEUED, clock.instant())
+                // A user asking again is a fresh start: a row that spent its retry budget on a
+                // server that was down must not be worth exactly one attempt now that it is back.
+                downloadDao.clearAttempts(id)
                 scheduler.restart()
             }
 
-        override suspend fun delete(itemId: String): AppResult<Long> {
-            val id = itemId.toUuidOrNull() ?: return AppResult.Failure(AppError.NotFound(itemId))
+        override suspend fun pauseAll(itemIds: List<String>): AppResult<Unit> =
+            mutateAll(itemIds) { ids ->
+                downloadDao.setStatusIn(ids, DownloadStatus.PAUSED, clock.instant())
+                // Same order as the single pause, once instead of once per row: the running job may
+                // be on any of these, and the restart picks up whatever is left.
+                scheduler.stop()
+                scheduler.ensureRunning()
+            }
+
+        override suspend fun resumeAll(itemIds: List<String>): AppResult<Unit> =
+            mutateAll(itemIds) { ids ->
+                downloadDao.requeueForUser(ids, clock.instant())
+                scheduler.restart()
+            }
+
+        override suspend fun delete(itemId: String): AppResult<Long> = deleteAll(listOf(itemId))
+
+        override suspend fun deleteAll(itemIds: List<String>): AppResult<Long> {
+            val ids = itemIds.map { it.toUuidOrNull() ?: return AppResult.Failure(AppError.NotFound(it)) }
+            // Nothing to unlink, so nothing worth stopping the queue for.
+            if (ids.isEmpty()) return AppResult.Success(0L)
 
             return withContext(ioDispatcher) {
                 @Suppress("TooGenericExceptionCaught")
                 try {
                     // Stopping the queue before unlinking files means the downloader cannot be
-                    // holding a handle to something we are about to remove.
+                    // holding a handle to something we are about to remove — and `stop()` waits for
+                    // the worker, so that is true by the time the first directory goes.
                     scheduler.stop()
-                    val freed = deleter.delete(id)
-                    // Something else may still be queued behind the deleted item.
+                    val freed = ids.sumOf { deleter.delete(it) }
+                    // Something else may still be queued behind the deleted items.
                     scheduler.ensureRunning()
                     AppResult.Success(freed)
                 } catch (error: Exception) {
-                    Timber.e(error, "Could not delete download %s", itemId)
+                    Timber.e(error, "Could not delete downloads %s", itemIds)
                     AppResult.Failure(AppError.Storage(error))
                 }
             }
@@ -299,6 +324,32 @@ class DownloadRepositoryImpl
         }
 
         /**
+         * [mutate] for a whole set of rows: the block is called **once**, with every id.
+         *
+         * An empty list is a success that does nothing — a bulk action whose targets all finished
+         * while the user was reaching for the button must not stop and restart the queue for
+         * nothing.
+         */
+        private suspend fun mutateAll(
+            itemIds: List<String>,
+            block: suspend (List<UUID>) -> Unit,
+        ): AppResult<Unit> {
+            val ids = itemIds.map { it.toUuidOrNull() ?: return AppResult.Failure(AppError.NotFound(it)) }
+            if (ids.isEmpty()) return AppResult.Success(Unit)
+
+            return withContext(ioDispatcher) {
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    block(ids)
+                    AppResult.Success(Unit)
+                } catch (error: Exception) {
+                    Timber.e(error, "Bulk download operation failed for %s", itemIds)
+                    AppResult.Failure(AppError.Storage(error))
+                }
+            }
+        }
+
+        /**
          * Joins download rows to the cached items they belong to.
          *
          * One `getItems` for the whole list rather than one per row: the Downloads screen re-reads
@@ -332,8 +383,6 @@ class DownloadRepositoryImpl
                 )
             }
         }
-
-        private fun currentUserId(): UUID? = (sessionRepository.sessionState.value as? SessionState.LoggedIn)?.userId
 
         internal companion object {
             /**

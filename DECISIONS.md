@@ -1230,3 +1230,37 @@ Seeded from the approved plan; listed for traceability, no divergence:
   own `Tracks` element during the existing MKV header pass. Sketch recorded in STATUS.md.
 
 <!-- END -->
+
+## 2026-07-30 — transient download failures retry instead of cascading the queue into ERROR (STAB-01), with two queue tests re-pointed
+
+- **Scope:** `:data:downloads` (`DownloadFailureClassifier` new, `DownloadQueue` fail/retry path +
+  process-wide drain lease, `OrphanSweeper` new, awaited `DownloadScheduler.stop()`, batched
+  repository bulk actions), `:core:database` (schema v6 → v7: `downloads.attemptCount`, additive
+  AutoMigration; 6 new DAO statements). Suite 1236 → 1275 in the agent's tree.
+- **Plan said:** the failure policy was "media file failing marks the item ERROR and moves on";
+  two `DownloadQueueTest` cases pinned exactly that. The audit (STAB-01, High, verified) found a
+  transient server blip therefore ERRORs an entire queue under copy that promises a retry nothing
+  performs.
+- **Done instead:** failures are classified against the same `AppError` taxonomy the user-facing
+  copy reads. Transient (transport, 408/429/5xx) leaves the row QUEUED with `attemptCount` raised
+  and stops the drain (worker → `Result.retry()` on WorkManager's existing exponential backoff);
+  ERROR only past `MAX_ATTEMPTS = 5` (~7½ min of blip tolerance) or on permanent failures
+  (401/403/404/other 4xx, missing metadata, not-downloadable, unknown). Resume/enqueue reset the
+  budget.
+- **Tests changed, not weakened:** (1) `a failing media file marks the item ERROR` now starts the
+  fixture at `attemptCount = MAX_ATTEMPTS - 1`, pinning the exhaustion case with all assertions
+  intact; (2) `a non-403 error on the media file is not retried` → renamed
+  `…is not retried on the video stream`, expected drain outcome INCOMPLETE → RETRY (a 500 is now
+  transient); its load-bearing assertion — the fallback `videoStreamUrl` is never used — is
+  unchanged. Both encoded the pre-fix behaviour the finding is about.
+- **Shape divergence from the audit, accepted:** STAB-09's drain lease is a process-wide `Mutex`
+  in the `@Singleton DownloadQueue`, not the suggested `claimedAt`/workerId column — one app
+  process means a column can record a claimant but never its liveness, and a time-based lease
+  either steals from a stalled-but-live transfer or delays crash-resume by the window. Removing
+  the mutex fails the two-drains-never-overlap test.
+- **Known gap, scheduled:** `DownloadsViewModel` still loops per-row instead of calling the new
+  batched `pauseAll`/`resumeAll`/`deleteAll`, and `DownloadErrorCopy.UNKNOWN` still says "will
+  retry" although unknown is classified permanent — both go to a follow-up wiring change (the
+  copy fix touches one existing assertion and is logged when it lands).
+
+<!-- END -->

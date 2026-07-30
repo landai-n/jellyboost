@@ -34,6 +34,16 @@ interface DownloadStorage {
     ): File
 
     /**
+     * The item directories that currently exist under the root.
+     *
+     * Only the orphan sweep needs this, and it needs it from here rather than from a `File` of its
+     * own: which volume the root is on, and whether one is mounted at all, is this interface's
+     * secret. An unmounted volume answers with an empty list, which makes the sweep a no-op rather
+     * than making everything look orphaned.
+     */
+    fun itemDirectoryNames(): List<String>
+
+    /**
      * Removes an item's directory and everything in it.
      *
      * @return how many bytes were actually freed — what the Downloads screen reports after a
@@ -90,6 +100,17 @@ class FileDownloadStorage
         ): File {
             val root = root() ?: error("No external storage volume is available for downloads")
             return File(File(root, directoryName), fileName)
+        }
+
+        override fun itemDirectoryNames(): List<String> {
+            val root = root() ?: return emptyList()
+            // `listFiles` returns null on an I/O error as well as on "not a directory"; either way
+            // the honest answer is "nothing found", never "everything is an orphan".
+            return root
+                .listFiles()
+                .orEmpty()
+                .filter { it.isDirectory }
+                .map { it.name }
         }
 
         override fun deleteItemDirectory(directoryName: String): Long {

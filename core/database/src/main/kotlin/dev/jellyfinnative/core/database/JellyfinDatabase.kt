@@ -66,6 +66,10 @@ import dev.jellyfinnative.core.database.entities.UserEntity
         // `downloads.sizeIsExact` (NOT NULL, SQL default `0`). Both are additive, and both read
         // back on an older row as "no projection, size is a ceiling" — what that row always meant.
         AutoMigration(from = 5, to = 6),
+        // v6 → v7 adds `downloads.attemptCount` (NOT NULL, SQL default `0`). An older row reads
+        // back as "nothing has failed on this yet", which is the only honest reading of a build
+        // that had no retry policy at all.
+        AutoMigration(from = 6, to = 7),
     ],
 )
 @TypeConverters(

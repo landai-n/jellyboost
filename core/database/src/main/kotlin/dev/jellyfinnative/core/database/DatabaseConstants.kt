@@ -17,6 +17,8 @@ object DatabaseConstants {
      * - v5 — M9 download quality (`downloads.quality`, default `ORIGINAL`), by `@AutoMigration(4, 5)`.
      * - v6 — live transcode size projection (`downloads.projectedBytes` nullable,
      *   `downloads.sizeIsExact` default `0`), by `@AutoMigration(5, 6)`.
+     * - v7 — bounded retry of transient download failures (`downloads.attemptCount`, default `0`),
+     *   by `@AutoMigration(6, 7)`.
      */
-    const val DATABASE_VERSION = 6
+    const val DATABASE_VERSION = 7
 }

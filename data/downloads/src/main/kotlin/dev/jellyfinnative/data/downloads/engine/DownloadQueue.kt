@@ -10,6 +10,7 @@ import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.session.SessionGate
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.OrphanSweeper
 import dev.jellyfinnative.data.downloads.SiblingSeeder
 import dev.jellyfinnative.data.downloads.plan.DownloadFilePlanner
 import dev.jellyfinnative.data.downloads.plan.PlannedFile
@@ -17,6 +18,8 @@ import dev.jellyfinnative.data.downloads.storage.DownloadStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
 import timber.log.Timber
@@ -41,15 +44,25 @@ interface DownloadQueueListener {
 /**
  * How a drain ended.
  *
- * The distinction the worker cares about is [NO_SESSION] versus the other two: a queue that could
- * not run is not a queue that ran badly, and it must be re-tried rather than reported.
+ * The distinction the worker cares about is between the outcomes it *reports* ([COMPLETED],
+ * [INCOMPLETE]) and the ones it must *re-run* ([RETRY], [NO_SESSION]): a queue that could not run,
+ * or one that stopped on something that may work in a minute, is not a queue that ran badly.
  */
 enum class DrainOutcome {
     /** Everything runnable finished. */
     COMPLETED,
 
-    /** The queue ran, and at least one item failed; its row carries the reason. */
+    /** The queue ran, and at least one item failed permanently; its row carries the reason. */
     INCOMPLETE,
+
+    /**
+     * An item failed in a way that another attempt may fix, and the drain stopped there.
+     *
+     * The rest of the queue is untouched and still `QUEUED`: the point of stopping is that whatever
+     * made the first item fail — a restarting server, a proxy answering `502`, a VPN handover — is
+     * about to do the same to every row behind it (docs/notes/audit-2026-07.md, STAB-01).
+     */
+    RETRY,
 
     /**
      * Nothing was attempted because this device has no usable session. No row was touched, so no
@@ -57,6 +70,9 @@ enum class DrainOutcome {
      */
     NO_SESSION,
 }
+
+/** How one item's turn ended — [DrainOutcome] for a single row. */
+private enum class ItemOutcome { SUCCEEDED, FAILED, RETRY }
 
 /** An item whose cached `BaseItemDto` is gone — the file plan cannot be built without it. */
 internal class MissingMetadataException(
@@ -74,9 +90,24 @@ internal class MissingMetadataException(
  * doubling the number of half-written files a kill can leave behind.
  *
  * ### Failure policy
- * The plan's essential/optional split is the whole of it. The media file failing marks the item
- * [DownloadStatus.ERROR] and moves on to the next item. Any other file failing marks *that file*
- * ERROR, is logged, and is otherwise ignored — a film without its backdrop is still a film.
+ * The plan's essential/optional split decides *which* failures matter: any file other than the
+ * media file failing marks *that file* ERROR, is logged, and is otherwise ignored — a film without
+ * its backdrop is still a film.
+ *
+ * The media file failing is then classified (see [DownloadFailureClassifier]). A **permanent**
+ * failure marks the item [DownloadStatus.ERROR] and the drain moves on to the next item. A
+ * **transient** one leaves the row `QUEUED` with its [DownloadEntity.attemptCount] raised and stops
+ * the drain, so the worker can ask WorkManager for a retry on its existing exponential backoff; the
+ * row only reaches ERROR once it has spent [MAX_ATTEMPTS]. Carrying on past a transient failure is
+ * what used to turn one server blip into a queue of forty failed episodes
+ * (docs/notes/audit-2026-07.md, STAB-01).
+ *
+ * ### One drain at a time
+ * [drain] holds a process-wide lease. Two drains overlapping is not hypothetical: every
+ * `ExistingWorkPolicy.REPLACE` enqueue starts the new worker while the old one is still unwinding,
+ * and both of them would run `requeueInterrupted` — the second claiming the very row the first
+ * still holds a `RandomAccessFile` on (docs/notes/audit-2026-07.md, STAB-09). Serialising them is
+ * also what makes "one item at a time" a property of the *process* rather than of one drain.
  *
  * ### Cancellation
  * A cancelled coroutine (the user paused, WorkManager withdrew the network constraint, the process
@@ -101,43 +132,72 @@ class DownloadQueue
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
         private val seeder: SiblingSeeder,
+        private val sweeper: OrphanSweeper,
         private val sessionGate: SessionGate,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
+         * Held for the length of a drain; see "One drain at a time" above.
+         *
+         * A lease rather than a database column because there is exactly one app process: a column
+         * could record *who* claimed a row but nothing in the schema can say whether that claimant
+         * is still alive, and a time-based lease has to choose between stealing a row from a
+         * stalled-but-live transfer and making resume-after-a-crash wait out the window.
+         */
+        private val drainLease = Mutex()
+
+        /**
          * Drains the queue.
          *
+         * Suspends while another drain holds the lease — which is the point: a `REPLACE` enqueue
+         * starts this worker before the previous one has finished unwinding, and a cancelled drain
+         * releases the lease as it goes.
+         *
          * @return [DrainOutcome.COMPLETED] when everything runnable finished,
-         *   [DrainOutcome.INCOMPLETE] when an item failed (its row says why), or
-         *   [DrainOutcome.NO_SESSION] when there is nothing to run *with* — the worker retries that
-         *   instead of leaving items marked failed.
+         *   [DrainOutcome.INCOMPLETE] when an item failed permanently (its row says why),
+         *   [DrainOutcome.RETRY] when it stopped on a failure worth another attempt, or
+         *   [DrainOutcome.NO_SESSION] when there is nothing to run *with* — the worker re-runs the
+         *   last two instead of leaving items marked failed.
          */
-        suspend fun drain(listener: DownloadQueueListener): DrainOutcome {
+        suspend fun drain(listener: DownloadQueueListener): DrainOutcome =
+            drainLease.withLock { drainExclusively(listener) }
+
+        private suspend fun drainExclusively(listener: DownloadQueueListener): DrainOutcome {
             // A row left DOWNLOADING belongs to a process that no longer exists. Putting it back in
             // the queue is what lets `nextRunnable` tell "mine" from "someone else's" — and it runs
             // before the session gate so that a parked queue still reads as "Waiting" rather than
             // showing a transfer that no process is performing.
             downloadDao.requeueInterrupted(clock.instant())
+            sweeper.sweep()
 
             if (!sessionGate.ensureSession()) {
                 listener.onIdle()
                 return DrainOutcome.NO_SESSION
             }
 
-            var allSucceeded = true
-            while (true) {
+            var outcome = DrainOutcome.COMPLETED
+            // Stopping on RETRY is not optional: a retried row is `QUEUED` again, so `nextRunnable`
+            // would hand back the same item forever. It is also the point — whatever failed is
+            // about to fail for every row behind it.
+            while (outcome != DrainOutcome.RETRY) {
                 val next = downloadDao.nextRunnable() ?: break
-                allSucceeded = process(next, listener) && allSucceeded
+                outcome =
+                    when (process(next, listener)) {
+                        // A success must not clear a failure an earlier item already recorded.
+                        ItemOutcome.SUCCEEDED -> outcome
+                        ItemOutcome.FAILED -> DrainOutcome.INCOMPLETE
+                        ItemOutcome.RETRY -> DrainOutcome.RETRY
+                    }
             }
             listener.onIdle()
-            return if (allSucceeded) DrainOutcome.COMPLETED else DrainOutcome.INCOMPLETE
+            return outcome
         }
 
         private suspend fun process(
             queued: DownloadWithFiles,
             listener: DownloadQueueListener,
-        ): Boolean {
+        ): ItemOutcome {
             val download = queued.download
             downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADING, clock.instant())
 
@@ -151,12 +211,12 @@ class DownloadQueue
                     downloadDao.setStatus(seeded.itemId, DownloadStatus.DOWNLOADED, clock.instant())
                     reseedSiblings(seeded)
                 }
-                true
+                ItemOutcome.SUCCEEDED
             } catch (cancellation: CancellationException) {
-                // Not a failure: put the row back so the next run resumes it, then let the
-                // cancellation continue to unwind. `NonCancellable` because a suspending Room write
-                // inside an already-cancelled coroutine would itself be cancelled, and the row
-                // would stay `DOWNLOADING` for a process that is going away.
+                // Not a failure, and never a retry: put the row back so the next run resumes it,
+                // then let the cancellation continue to unwind. `NonCancellable` because a
+                // suspending Room write inside an already-cancelled coroutine would itself be
+                // cancelled, and the row would stay `DOWNLOADING` for a process that is going away.
                 //
                 // Conditional on the row still being DOWNLOADING, because the most common cause of
                 // this cancellation is the user pressing *Pause*, which writes `PAUSED` and then
@@ -168,17 +228,46 @@ class DownloadQueue
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
             ) {
-                Timber.e(error, "Download of %s failed", download.itemName)
-                downloadDao.setStatus(
-                    itemId = download.itemId,
-                    status = DownloadStatus.ERROR,
-                    updatedAt = clock.instant(),
-                    // Deliberately not `error.message`: that string is rendered to the user, and
-                    // exception text is written for a log file (see [DownloadErrorCopy]).
-                    errorMessage = DownloadErrorCopy.forFailure(error),
-                )
-                false
+                fail(download, error)
             }
+        }
+
+        /**
+         * Records a failed attempt, and says whether the item deserves another one.
+         *
+         * The attempt counter lives on the row rather than in memory because the retry is performed
+         * by a *new* worker run — the process may not even be the same one.
+         */
+        private suspend fun fail(
+            download: DownloadEntity,
+            error: Exception,
+        ): ItemOutcome {
+            val attempt = download.attemptCount + 1
+            val retryable =
+                DownloadFailureClassifier.classify(error) == FailureKind.TRANSIENT && attempt < MAX_ATTEMPTS
+
+            if (retryable) {
+                Timber.w(
+                    error,
+                    "Download of %s failed transiently (attempt %d of %d); it stays queued",
+                    download.itemName,
+                    attempt,
+                    MAX_ATTEMPTS,
+                )
+                downloadDao.requeueForRetry(download.itemId, attempt, clock.instant())
+                return ItemOutcome.RETRY
+            }
+
+            Timber.e(error, "Download of %s failed", download.itemName)
+            downloadDao.setStatus(
+                itemId = download.itemId,
+                status = DownloadStatus.ERROR,
+                updatedAt = clock.instant(),
+                // Deliberately not `error.message`: that string is rendered to the user, and
+                // exception text is written for a log file (see [DownloadErrorCopy]).
+                errorMessage = DownloadErrorCopy.forFailure(error),
+            )
+            return ItemOutcome.FAILED
         }
 
         /** Reads back the full `BaseItemDto` the enqueue step cached with `source = DOWNLOAD`. */
@@ -482,11 +571,22 @@ class DownloadQueue
             url = url,
         )
 
-        private companion object {
+        internal companion object {
             const val HTTP_FORBIDDEN = 403
 
             /** A `runTimeTicks` tick is 100 ns, so there are ten thousand of them in a millisecond. */
             const val TICKS_PER_MILLI = 10_000L
+
+            /**
+             * How many attempts a transient failure is worth before the row is called failed.
+             *
+             * Each retry is a fresh worker run on WorkManager's existing `EXPONENTIAL`/30 s
+             * backoff, so five attempts span 30 s + 60 s + 120 s + 240 s — a little over seven
+             * minutes. Long enough to sit out a server restart, a proxy blip or a VPN handover;
+             * short enough that an address which is simply gone does not keep a foreground service
+             * alive all afternoon.
+             */
+            const val MAX_ATTEMPTS = 5
         }
     }
 

@@ -1662,3 +1662,64 @@ Seeded from the approved plan; listed for traceability, no divergence:
      through requestSeek.
 
 <!-- END -->
+
+## 2026-07-30 — M11 Phase 1: SyncPlay protocol shapes follow the SDK, not the plan sketch
+- **Scope:** new package `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/`
+  (`model/SyncPlayModels.kt`, `SyncPlayDtoMapping.kt`, `SyncPlayEnumMapping.kt`,
+  `api/`, `socket/`, `time/SyncPlayTimeSync.kt`, `di/SyncPlayModule.kt`);
+  `data/.../SdkDateTime.kt` `internal` → `public` (already in the plan, listed
+  here only for completeness).
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, "New package layout":
+  `GroupQueue` keyed on a `playingItemPlaylistId`;
+  `SyncPlayCommand(type, when: Instant, positionTicks, playlistItemId)` with
+  `emittedAt` optional; `SyncPlayGroupEvent` = Joined, StateChanged,
+  QueueChanged, UserJoined/Left, NotInGroup, GroupGone, LibraryAccessDenied;
+  socket mappers under `socket/`; "`SocketApi` with `subscribeSyncPlayCommands`
+  / `subscribe<SyncPlayGroupUpdateMessage>()`".
+- **Done instead:** shapes taken from the decompiled jellyfin-sdk 1.8.12
+  artifacts (`javap` over `jellyfin-model-jvm` / `jellyfin-api-jvm`), which
+  differ in seven ways:
+  1. `PlayQueueUpdate` identifies the playing slot by **index**
+     (`playingItemIndex: Int`), not by playlist-item id, and also carries
+     `reason`, `lastUpdate`, `startPositionTicks`, `isPlaying`. `SyncPlayGroupQueue`
+     mirrors all of it and derives `playingEntry` from the index.
+  2. `SendCommand.emittedAt` is **non-null** and `positionTicks` is **nullable**
+     — the reverse of the plan's sketch. `positionTicks` stays nullable in the
+     domain model: "seek to 0" and "no position given" are different orders.
+  3. `SendCommandType` is `UNPAUSE/PAUSE/STOP/SEEK` — there is no `Play`; the
+     domain enum uses the protocol's own spelling (`Unpause`).
+  4. The SDK has a ninth update, `SyncPlayGroupLeftUpdate`, so
+     `SyncPlayGroupEvent.Left(groupId)` was added.
+  5. `GroupUpdate` is a **sealed** interface, so the mapper is exhaustive with
+     no "unknown update" path — a server-side addition cannot arrive without an
+     SDK bump, which breaks the mapping at compile time instead.
+     `SyncPlayCommandMessage.data`, by contrast, is nullable, and a payload-less
+     command is dropped.
+  6. `SocketApi` has **no connect/disconnect** — only `state`, `subscribeAll()`
+     and `subscribe(KClass)`, with `DefaultSocketApi` reference-counting its
+     subscribers. So `SyncPlaySocket` has no lifecycle methods: "websocket
+     connected only while in a group" (key decision 3) is implemented by
+     collecting the flows for the lifetime of the group. `SocketApiState`
+     mirrors as a sealed `SyncPlaySocketState` whose `Disconnected` carries the
+     SDK's `Throwable?`, which Phase 2 needs to tell a dropped connection from
+     an orderly close.
+  7. Two extra domain enums exist because the SDK carries the information:
+     `SyncPlayRequestKind` (`PlaybackRequestType`, 17 values — why the group
+     entered a state) and `SyncPlayQueueUpdateReason` (`PlayQueueUpdateReason`).
+     Dropping them at the boundary would force Phase 2 to reopen it.
+  Additionally the SDK↔domain mapping is **two** files, not one under `socket/`:
+  `SyncPlayDtoMapping.kt` (the sole `LocalDateTime` boundary, per key decision 6)
+  and `SyncPlayEnumMapping.kt` (enum tables, no timestamps) — detekt's
+  per-file function threshold is 11 and the combined file held 15. The
+  single-time-boundary rule is unchanged and is now easier to enforce, since the
+  file that owns it stays small. Socket message mapping lives there too rather
+  than in `socket/`, so `SdkSyncPlaySocket` is pure wiring and every mapper is
+  testable without a socket.
+- **Reason:** the plan's shapes were written as intent before the artifacts were
+  inspected; the plan itself instructs Phase 1 to "verify exact SDK 1.8.12
+  subscribe signatures/DTO fields from sources" first and adapt. All 22
+  `syncPlayApi` operations, `timeSyncApi.getUtcTime()` and the SyncPlay socket
+  subscriptions exist exactly as the feasibility check claimed; only the field
+  and lifecycle details above differ.
+
+<!-- END -->

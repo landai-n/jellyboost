@@ -23,8 +23,7 @@ import java.time.ZoneId
  *
  * @param zone the zone the SDK serializer will apply; only tests ever pass it explicitly.
  */
-internal fun Instant.toSdkDateTime(zone: ZoneId = ZoneId.systemDefault()): LocalDateTime =
-    LocalDateTime.ofInstant(this, zone)
+fun Instant.toSdkDateTime(zone: ZoneId = ZoneId.systemDefault()): LocalDateTime = LocalDateTime.ofInstant(this, zone)
 
 /** Inverse of [toSdkDateTime]: reads an SDK date field back as the instant it denotes. */
-internal fun LocalDateTime.toSdkInstant(zone: ZoneId = ZoneId.systemDefault()): Instant = atZone(zone).toInstant()
+fun LocalDateTime.toSdkInstant(zone: ZoneId = ZoneId.systemDefault()): Instant = atZone(zone).toInstant()

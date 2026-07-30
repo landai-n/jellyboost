@@ -28,6 +28,9 @@ rootProject.name = "jellyfin-native"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
+// Instrumented macrobenchmark that records the release baseline profile (M10). Produces no
+// shipped code; its generation task is device-only — see baselineprofile/build.gradle.kts.
+include(":baselineprofile")
 include(":core:common")
 include(":core:ui")
 include(":core:network")

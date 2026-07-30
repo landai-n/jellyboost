@@ -21,7 +21,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.jellyfinnative.core.ui.theme.Dimens
-import java.util.Locale
 
 // The Settings screen's row vocabulary.
 //
@@ -202,24 +201,3 @@ private fun RowLabel(
         }
     }
 }
-
-/**
- * Human-readable bytes, in the same powers-of-1000 SI form the Downloads screen uses.
- *
- * Duplicated rather than shared: `:feature:downloads` keeps its copy `internal`, features never
- * depend on each other (docs/PLAN.md, "Project skeleton"), and promoting eight lines to `:core:ui`
- * to serve two call sites would put a formatting helper in the design system.
- */
-internal fun formatBytes(bytes: Long): String {
-    if (bytes < BYTE_UNIT) return "$bytes B"
-    var value = bytes.toDouble()
-    var index = -1
-    while (value >= BYTE_UNIT && index < BYTE_UNITS.lastIndex) {
-        value /= BYTE_UNIT
-        index++
-    }
-    return String.format(Locale.getDefault(), "%.1f %s", value, BYTE_UNITS[index])
-}
-
-private const val BYTE_UNIT = 1000.0
-private val BYTE_UNITS = listOf("kB", "MB", "GB", "TB")

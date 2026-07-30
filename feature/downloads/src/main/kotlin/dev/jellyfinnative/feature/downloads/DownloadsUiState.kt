@@ -84,27 +84,36 @@ data class DownloadsUiState(
     /** One-shot message for the snackbar; cleared by `DownloadsViewModel.consumeMessage`. */
     val userMessage: DownloadsMessage? = null,
 ) {
+    // Every value below is computed once, here, rather than recomputed on each read: before this
+    // (docs/notes/audit-2026-07.md, PERF-06) these were `get()`-computed properties, so a queue
+    // that writes progress two to six times a second re-filtered the same list on every one of the
+    // several call sites that read them per emission — `QueueActionsBar`'s two `enabled` reads, and
+    // `DownloadsViewModel.pauseAll()` reading both `pauseAllTargets` and `unpausableCount` off the
+    // same state. A plain `val` in the constructor body runs once, when this instance is built —
+    // exactly the ViewModel-projection step the audit asked for — and every read after that is a
+    // field access.
+
     /** `true` when there is nothing at all on the device and nothing queued. */
-    val isEmpty: Boolean get() = downloaded.isEmpty() && queue.isEmpty()
+    val isEmpty: Boolean = downloaded.isEmpty() && queue.isEmpty()
 
     /** The queue rows *Pause all* would pause — see [DownloadItem.isPauseTarget]. */
-    val pauseAllTargets: List<DownloadItem> get() = queue.filter { it.isPauseTarget }
+    val pauseAllTargets: List<DownloadItem> = queue.filter { it.isPauseTarget }
 
     /** The queue rows *Resume all* would put back in the queue — see [DownloadItem.isResumeTarget]. */
-    val resumeAllTargets: List<DownloadItem> get() = queue.filter { it.isResumeTarget }
+    val resumeAllTargets: List<DownloadItem> = queue.filter { it.isResumeTarget }
 
     /**
      * How many rows *Pause all* would deliberately leave running: transcodes, which cannot be
      * paused at all (`DownloadItem.isPausable`). This is the number the snackbar reports so a queue
      * that keeps moving after *Pause all* does not read as a bug.
      */
-    val unpausableCount: Int get() = queue.count { !it.isResumeTarget && !it.isPausable }
+    val unpausableCount: Int = queue.count { !it.isResumeTarget && !it.isPausable }
 
     /** `true` while at least one queue row can actually be paused. */
-    val canPauseAll: Boolean get() = pauseAllTargets.isNotEmpty()
+    val canPauseAll: Boolean = pauseAllTargets.isNotEmpty()
 
     /** `true` while at least one queue row is paused or failed. */
-    val canResumeAll: Boolean get() = resumeAllTargets.isNotEmpty()
+    val canResumeAll: Boolean = resumeAllTargets.isNotEmpty()
 }
 
 /**

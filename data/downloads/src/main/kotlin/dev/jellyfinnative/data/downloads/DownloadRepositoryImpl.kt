@@ -11,6 +11,7 @@ import dev.jellyfinnative.core.database.entities.DownloadProgress
 import dev.jellyfinnative.core.database.entities.DownloadWithFiles
 import dev.jellyfinnative.core.datastore.AppPreferences
 import dev.jellyfinnative.core.network.SessionRepository
+import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.cache.ItemEntityMapper
@@ -23,9 +24,12 @@ import dev.jellyfinnative.data.downloads.storage.DownloadVolume
 import dev.jellyfinnative.data.downloads.storage.StorageLocationManager
 import dev.jellyfinnative.data.downloads.work.DownloadScheduler
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
@@ -34,6 +38,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.Clock
@@ -71,8 +76,26 @@ class DownloadRepositoryImpl
         private val sessionRepository: SessionRepository,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+        @ApplicationScope private val appScope: CoroutineScope,
     ) : DownloadRepository {
-        override fun observeStates(): Flow<Map<String, DownloadState>> =
+        /**
+         * The one Room subscription every `DownloadBadge` in the app reads from.
+         *
+         * Four ViewModels (`LibraryViewModel`, `HomeViewModel`, `SearchViewModel`,
+         * `ItemDetailViewModel`) each used to call [observeStates] and get their own cold flow back
+         * — four independent `observeProgress()` collectors, each re-running the same map and
+         * `distinctUntilChanged` over the same rows (docs/notes/audit-2026-07.md, PERF-07). Sharing
+         * one [stateIn] here means Room is asked once no matter how many screens are showing badges
+         * at once. `WhileSubscribed` still lets it stop when nothing is: badges are not worth a
+         * standing query with every screen backgrounded.
+         *
+         * `by lazy`, not a plain `val`: this is a constructor property, and every one of this
+         * class's other ~40 unit tests constructs one without stubbing `observeProgress()` at all.
+         * Building the chain eagerly would call it unconditionally and fail every test that never
+         * touches [observeStates] — laziness defers the call to the first real subscriber, same as
+         * before.
+         */
+        private val downloadStates: StateFlow<Map<String, DownloadState>> by lazy {
             downloadDao
                 .observeProgress()
                 .map { rows -> rows.associate { it.itemId.toString() to it.toDownloadState() } }
@@ -80,6 +103,14 @@ class DownloadRepositoryImpl
                 // would recompose on each of them even when no badge actually changed.
                 .distinctUntilChanged()
                 .flowOn(ioDispatcher)
+                .stateIn(
+                    scope = appScope,
+                    started = SharingStarted.WhileSubscribed(STATES_STOP_TIMEOUT_MS),
+                    initialValue = emptyMap(),
+                )
+        }
+
+        override fun observeStates(): Flow<Map<String, DownloadState>> = downloadStates
 
         /**
          * The download list, with each row joined to the item it belongs to.
@@ -165,14 +196,20 @@ class DownloadRepositoryImpl
                 }
             }
 
+        /**
+         * `locations.resolve()` re-scans the mounted volumes, which is not free — and used to be
+         * keyed on raw `observeProgress()`, the same 2/s hot path [observeStorage] moved off of
+         * (PERF-02). Only the *count* of downloads matters here, and [downloadShape] already
+         * answers that at the rate it can actually change (docs/notes/audit-2026-07.md, PERF-13).
+         */
         override fun observeStorageLocations(): Flow<StorageLocations> =
-            combine(downloadDao.observeProgress(), locations.selectedVolumeId) { rows, selectedId ->
+            combine(downloadShape(), locations.selectedVolumeId) { shape, selectedId ->
                 val selection = locations.resolve(selectedId)
                 StorageLocations(
                     volumes = selection.volumes.map(DownloadVolume::toOption),
                     activeVolumeId = selection.active?.id,
                     selectedVolumeMissing = selection.selectionMissing,
-                    downloadCount = rows.size,
+                    downloadCount = shape.rows.size,
                 )
             }.distinctUntilChanged()
                 .flowOn(ioDispatcher)
@@ -412,6 +449,17 @@ class DownloadRepositoryImpl
              * what the number is for.
              */
             val STORAGE_WALK_INTERVAL: Duration = 15.seconds
+
+            /**
+             * How long [downloadStates] keeps its Room subscription open after the last badge stops
+             * collecting it.
+             *
+             * Long enough to survive a rotation or a there-and-back navigation between two screens
+             * that both show badges (a library grid to an item's detail page, say) without dropping
+             * and re-querying; short enough that leaving every badge-showing screen behind actually
+             * stops the query.
+             */
+            const val STATES_STOP_TIMEOUT_MS = 5_000L
         }
     }
 

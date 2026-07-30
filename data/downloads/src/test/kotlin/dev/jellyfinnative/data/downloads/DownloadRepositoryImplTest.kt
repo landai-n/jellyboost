@@ -45,7 +45,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -113,9 +115,18 @@ class DownloadRepositoryImplTest {
 
     // ---- badge states ---------------------------------------------------------------------------
 
+    // `observeStates()` shares its Room subscription over `@ApplicationScope` (PERF-07) instead of
+    // being a fresh cold flow per call, so these four tests run on an `UnconfinedTestDispatcher`
+    // rather than the suite's default `StandardTestDispatcher`: unconfined dispatch is what lets a
+    // `backgroundScope` collector — standing in for a screen subscribing — actually run the sharing
+    // coroutine `WhileSubscribed` starts, with no `advanceUntilIdle()` needed, in the same step that
+    // subscribes it. Turbine is deliberately not used here: its `awaitItem()` is bound by a
+    // *wall-clock* timeout, which a virtual-time suite cannot wait out if the assumption about when
+    // a background-scope coroutine actually runs turns out to be wrong.
+
     @Test
     fun `each status maps onto the badge state the UI draws`() =
-        runTest {
+        runTest(UnconfinedTestDispatcher()) {
             every { downloadDao.observeProgress() } returns
                 flowOf(
                     listOf(
@@ -127,43 +138,62 @@ class DownloadRepositoryImplTest {
                     ),
                 )
 
-            repository().observeStates().test {
-                awaitItem() shouldContainExactly
-                    mapOf(
-                        uuid(1).toString() to DownloadState.Queued,
-                        uuid(2).toString() to DownloadState.Downloading(progress = 0.25f),
-                        uuid(3).toString() to DownloadState.Paused,
-                        uuid(4).toString() to DownloadState.Downloaded,
-                        uuid(5).toString() to DownloadState.Failed,
-                    )
-                awaitComplete()
-            }
+            val collected = mutableListOf<Map<String, DownloadState>>()
+            backgroundScope.launch { repository().observeStates().collect { collected.add(it) } }
+
+            collected.last() shouldContainExactly
+                mapOf(
+                    uuid(1).toString() to DownloadState.Queued,
+                    uuid(2).toString() to DownloadState.Downloading(progress = 0.25f),
+                    uuid(3).toString() to DownloadState.Paused,
+                    uuid(4).toString() to DownloadState.Downloaded,
+                    uuid(5).toString() to DownloadState.Failed,
+                )
         }
 
     @Test
     fun `a cancelled row reads as not downloaded`() =
-        runTest {
+        runTest(UnconfinedTestDispatcher()) {
             // CANCELLED only exists between a cancel and the row's deletion; a badge for it would
             // be a badge for a state the user already asked to be rid of.
             every { downloadDao.observeProgress() } returns
                 flowOf(listOf(progress(uuid(1), DownloadStatus.CANCELLED)))
 
-            repository().observeStates().test {
-                awaitItem()[uuid(1).toString()] shouldBe DownloadState.NotDownloaded
-                awaitComplete()
-            }
+            val collected = mutableListOf<Map<String, DownloadState>>()
+            backgroundScope.launch { repository().observeStates().collect { collected.add(it) } }
+
+            collected.last()[uuid(1).toString()] shouldBe DownloadState.NotDownloaded
         }
 
     @Test
     fun `a download with no known size reports zero progress rather than complete`() =
-        runTest {
+        runTest(UnconfinedTestDispatcher()) {
             every { downloadDao.observeProgress() } returns
                 flowOf(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING, downloaded = 500L, total = 0L)))
 
-            repository().observeStates().test {
-                awaitItem()[uuid(1).toString()] shouldBe DownloadState.Downloading(progress = 0f)
-                awaitComplete()
-            }
+            val collected = mutableListOf<Map<String, DownloadState>>()
+            backgroundScope.launch { repository().observeStates().collect { collected.add(it) } }
+
+            collected.last()[uuid(1).toString()] shouldBe DownloadState.Downloading(progress = 0f)
+        }
+
+    @Test
+    fun `two callers of observeStates share one Room subscription`() =
+        runTest(UnconfinedTestDispatcher()) {
+            // Before this (docs/notes/audit-2026-07.md, PERF-07), `observeStates()` built a fresh
+            // cold flow on every call: four ViewModels — Library, Home, Search, ItemDetail — each
+            // calling it meant four independent `observeProgress()` collectors doing the same map
+            // and `distinctUntilChanged` over the same rows. The repository now holds one, shared
+            // no matter how many callers ask for it.
+            every { downloadDao.observeProgress() } returns
+                flowOf(listOf(progress(uuid(1), DownloadStatus.QUEUED)))
+
+            val repo = repository()
+
+            backgroundScope.launch { repo.observeStates().collect {} }
+            backgroundScope.launch { repo.observeStates().collect {} }
+
+            verify(exactly = 1) { downloadDao.observeProgress() }
         }
 
     // ---- the download list ----------------------------------------------------------------------
@@ -710,8 +740,19 @@ class DownloadRepositoryImplTest {
     }
 
     // The dispatcher is a parameter only so the storage-location tests can share `runTest`'s
-    // scheduler: they collect a projection that never completes, which needs the two in step.
-    private fun repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()) =
+    // scheduler: they collect a projection that never completes, which needs the two in step. The
+    // default now ties to `testScheduler` too rather than a bare `UnconfinedTestDispatcher()`:
+    // `appScope` below (`backgroundScope`) already shares that scheduler, and coroutines-test throws
+    // ("Detected use of different schedulers") the moment both are exercised in one hierarchy — the
+    // observeStates()` collection reaching Room through `ioDispatcher` and being shared through
+    // `appScope` at once.
+    //
+    // `TestScope.repository` rather than a bare function: `observeStates()` is now a `stateIn`
+    // shared over `@ApplicationScope` (PERF-07), and a `StateFlow` never completes on its own —
+    // `backgroundScope` is `runTest`'s stand-in for that scope, cancelled when the test ends rather
+    // than keeping the never-completing projection alive past it (same idiom as
+    // `DownloadedMetadataRefresherTest`/`DownloadsViewModelTest`).
+    private fun TestScope.repository(ioDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(testScheduler)) =
         DownloadRepositoryImpl(
             downloadDao = downloadDao,
             itemDao = itemDao,
@@ -725,6 +766,7 @@ class DownloadRepositoryImplTest {
             sessionRepository = sessionRepository,
             clock = clock,
             ioDispatcher = ioDispatcher,
+            appScope = backgroundScope,
         )
 
     private fun progress(

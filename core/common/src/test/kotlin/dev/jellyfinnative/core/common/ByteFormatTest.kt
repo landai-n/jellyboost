@@ -1,4 +1,4 @@
-package dev.jellyfinnative.feature.detail
+package dev.jellyfinnative.core.common
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.AfterEach
@@ -7,17 +7,18 @@ import org.junit.jupiter.api.Test
 import java.util.Locale
 
 /**
- * Unit tests for [formatBytes] — the media file size shown on [MetadataLine].
+ * Unit tests for [formatBytes].
  *
- * This is the third copy of the same formatter (`:feature:settings`, `:feature:downloads` each keep
- * their own — see the KDoc on `formatBytes` for why); these boundary cases mirror the ones the other
- * two copies would need, since the function itself is pure and testable outside Compose.
+ * Moved here from `:feature:detail` when the three duplicate copies (`:feature:settings`,
+ * `:feature:downloads`, `:feature:detail`) were consolidated into this one, shared function
+ * (docs/notes/audit-2026-07.md, ARCH-11) — only the `:feature:detail` copy had a test, so this is
+ * that test, unchanged, now covering all three former call sites at once.
  *
  * The function formats with `Locale.getDefault()` by design (it should read the way the user's own
  * device does), so the default locale is pinned for the run — otherwise these assertions would pass
  * or fail depending on the machine's region (e.g. a comma instead of a dot for the decimal point).
  */
-class FormatBytesTest {
+class ByteFormatTest {
     private val originalLocale: Locale = Locale.getDefault()
 
     @BeforeEach

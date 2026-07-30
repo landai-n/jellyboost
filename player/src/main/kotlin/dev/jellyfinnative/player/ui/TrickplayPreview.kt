@@ -13,8 +13,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
 import dev.jellyfinnative.player.model.TrickplayThumbnail
 import dev.jellyfinnative.player.model.TrickplayTiles
+import org.jellyfin.sdk.api.client.ApiClient
 
 /**
  * One scrubbing thumbnail, cropped out of the sprite sheet it lives on.
@@ -49,7 +52,23 @@ internal fun TrickplayPreview(
         AsyncImage(
             // Every cell of a sheet resolves to the same URL, so this is a cache hit for all but
             // the first thumbnail of each sheet — no request, no decode, no flicker.
-            model = thumbnail.uri,
+            //
+            // The cache keys are set explicitly, token-stripped: `thumbnail.uri` carries the access
+            // token as a query parameter (the only URL in the app that does — trickplay is fetched
+            // by Coil, which cannot ride `JellyfinAuthInterceptor`'s header). Coil's default cache
+            // key is the request's data, token and all, which means re-logging in — a fresh token —
+            // silently orphans every tile this item had ever cached, and the fact that today's token
+            // never reaches disk rests on undocumented internals of how Coil derives a *disk* key
+            // from that default, not on a key this app controls (docs/notes/audit-2026-07.md,
+            // SEC-02). Stripping the token here is a no-op for a downloaded item's `file://` URIs,
+            // which never carried one.
+            model =
+                ImageRequest
+                    .Builder(LocalPlatformContext.current)
+                    .data(thumbnail.uri)
+                    .diskCacheKey(thumbnail.uri.withoutAccessToken())
+                    .memoryCacheKey(thumbnail.uri.withoutAccessToken())
+                    .build(),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier =
@@ -58,6 +77,26 @@ internal fun TrickplayPreview(
                     .offset(x = -width * thumbnail.column, y = -height * thumbnail.row),
         )
     }
+}
+
+/**
+ * [uri] with the trickplay access-token query parameter removed.
+ *
+ * A no-op for a URL with no query string at all (a downloaded item's `file://` tile) and for any
+ * URL that never carried the token to begin with; the one caller that matters is the server-built
+ * sheet URL `TrickplayResolver`/`SdkStreamUrlFactory` appends [ApiClient.QUERY_ACCESS_TOKEN] to.
+ */
+internal fun String.withoutAccessToken(): String {
+    val queryStart = indexOf('?')
+    if (queryStart < 0) return this
+
+    val base = substring(0, queryStart)
+    val kept =
+        substring(queryStart + 1)
+            .split('&')
+            .filterNot { it.startsWith("${ApiClient.QUERY_ACCESS_TOKEN}=") }
+
+    return if (kept.isEmpty()) base else "$base?${kept.joinToString("&")}"
 }
 
 /**

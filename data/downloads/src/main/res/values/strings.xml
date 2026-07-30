@@ -8,6 +8,10 @@
     <string name="downloads_notification_preparing">Preparing downloads…</string>
     <string name="downloads_notification_downloading">Downloading…</string>
     <string name="downloads_notification_percent">%1$d%%</string>
+    <!-- Lockscreen-visible stand-in for the real title, which names what the user is downloading
+         (SEC-07); shown instead of it whenever the device is set to hide sensitive notification
+         content. -->
+    <string name="downloads_notification_generic_title">Downloading…</string>
     <string name="downloads_action_pause">Pause</string>
     <string name="downloads_action_cancel">Cancel</string>
 </resources>

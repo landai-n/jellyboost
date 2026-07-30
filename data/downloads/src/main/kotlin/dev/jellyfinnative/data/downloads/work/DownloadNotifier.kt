@@ -49,6 +49,9 @@ class DownloadNotifier
             manager.createNotificationChannel(channel)
         }
 
+        /** The last progress this notifier actually posted — see [foregroundInfoIfChanged]. */
+        private var lastPosted: NotificationProgress? = null
+
         /**
          * The foreground promotion for an actively transferring item.
          *
@@ -68,6 +71,29 @@ class DownloadNotifier
                 // permission live in this module's manifest.
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
             )
+
+        /**
+         * [foregroundInfo], or `null` when nothing the user would see has changed since the last
+         * call.
+         *
+         * The throttle posts progress at up to six times a second; the whole percentage it renders
+         * moves far less often than that. Every call used to rebuild the `Notification` and its two
+         * `PendingIntent`s regardless, which is work spent on byte deltas nobody sees
+         * (docs/notes/audit-2026-07.md, PERF-12). One item downloads at a time, so the single
+         * [lastPosted] field is all the state this needs — a new item's first call always differs
+         * from whatever the previous item last posted.
+         */
+        fun foregroundInfoIfChanged(
+            itemId: UUID,
+            title: String,
+            bytesDownloaded: Long,
+            bytesTotal: Long,
+        ): ForegroundInfo? {
+            val progress = notificationProgressOf(itemId, title, bytesDownloaded, bytesTotal)
+            if (progress == lastPosted) return null
+            lastPosted = progress
+            return foregroundInfo(itemId, title, bytesDownloaded, bytesTotal)
+        }
 
         /** The "queue is starting" state, before any item has reported a byte. */
         fun startingForegroundInfo(): ForegroundInfo =
@@ -90,24 +116,39 @@ class DownloadNotifier
             bytesDownloaded: Long,
             bytesTotal: Long,
         ): Notification {
-            val indeterminate = bytesTotal <= 0L
-            val percent =
-                if (indeterminate) 0 else ((bytesDownloaded * PERCENT) / bytesTotal).toInt().coerceIn(0, PERCENT)
+            val progress = notificationProgressOf(itemId, title, bytesDownloaded, bytesTotal)
+
+            // SEC-07: the real title names what the user is downloading — a show or a film — and
+            // that is exactly the kind of thing "sensitive content" lockscreen settings exist to
+            // hide. VISIBILITY_PRIVATE plus a generic public version means a locked device with that
+            // setting on shows "Downloading…" instead, never the title.
+            val publicVersion =
+                NotificationCompat
+                    .Builder(context, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setContentTitle(context.getString(R.string.downloads_notification_generic_title))
+                    .setProgress(PERCENT, progress.percent, progress.indeterminate)
+                    .setOngoing(true)
+                    .setSilent(true)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .build()
 
             return NotificationCompat
                 .Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentTitle(title)
                 .setContentText(
-                    if (indeterminate) {
+                    if (progress.indeterminate) {
                         context.getString(R.string.downloads_notification_downloading)
                     } else {
-                        context.getString(R.string.downloads_notification_percent, percent)
+                        context.getString(R.string.downloads_notification_percent, progress.percent)
                     },
-                ).setProgress(PERCENT, percent, indeterminate)
+                ).setProgress(PERCENT, progress.percent, progress.indeterminate)
                 .setOngoing(true)
                 .setSilent(true)
                 .setOnlyAlertOnce(true)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPublicVersion(publicVersion)
                 .addAction(
                     android.R.drawable.ic_media_pause,
                     context.getString(R.string.downloads_action_pause),
@@ -152,3 +193,39 @@ class DownloadNotifier
             const val PERCENT = 100
         }
     }
+
+/**
+ * Everything a downloads notification renders that the user can actually see: which item, and
+ * either a whole percentage or "indeterminate".
+ *
+ * Byte counts are deliberately absent — they are what changes on every throttled progress write,
+ * and `percent` already rounds almost all of those away. Two of these being `==` is the whole of
+ * [DownloadNotifier.foregroundInfoIfChanged]'s change guard (docs/notes/audit-2026-07.md, PERF-12),
+ * and keeping this a plain data class free of `Context`/`Notification` is what lets that guard's
+ * decision be pinned by a JVM test with none of the Android framework in the way.
+ */
+internal data class NotificationProgress(
+    val itemId: UUID,
+    val title: String,
+    val percent: Int,
+    val indeterminate: Boolean,
+)
+
+/** [NotificationProgress] for one progress report, rounding to the same whole percent the bar shows. */
+internal fun notificationProgressOf(
+    itemId: UUID,
+    title: String,
+    bytesDownloaded: Long,
+    bytesTotal: Long,
+): NotificationProgress {
+    val indeterminate = bytesTotal <= 0L
+    val percent =
+        if (indeterminate) {
+            0
+        } else {
+            ((bytesDownloaded * NOTIFICATION_PERCENT) / bytesTotal).toInt().coerceIn(0, NOTIFICATION_PERCENT)
+        }
+    return NotificationProgress(itemId, title, percent, indeterminate)
+}
+
+private const val NOTIFICATION_PERCENT = 100

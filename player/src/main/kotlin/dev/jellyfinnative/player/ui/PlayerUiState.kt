@@ -249,6 +249,8 @@ data class PlayerActions(
     val onBack: () -> Unit,
     /** Opens the group sheet; only ever reachable while [PlayerSyncPlayState.inGroup] (M11). */
     val onOpenGroupSheet: () -> Unit = {},
+    /** Opens the group queue sheet; only reachable once the group actually has a queue (M11). */
+    val onOpenQueueSheet: () -> Unit = {},
     val onSetGroupShuffle: (Boolean) -> Unit = {},
     val onSetGroupRepeat: (SyncPlayRepeatMode) -> Unit = {},
     val onLeaveGroup: () -> Unit = {},

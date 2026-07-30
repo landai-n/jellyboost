@@ -4,7 +4,10 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.kotlinx.coroutines.core)
+    // `api` rather than `implementation`: `SyncPlaySession.activeGroup` is a `StateFlow`, so
+    // coroutines are part of this module's own signature and every consumer compiles against them
+    // (M11 Phase 4).
+    api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.serialization.json)
 }
 

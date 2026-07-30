@@ -1837,3 +1837,91 @@ Seeded from the approved plan; listed for traceability, no divergence:
   wording leaves open.
 
 <!-- END -->
+
+## 2026-07-30 — M11 Phase 4: the group queue, the cross-feature contract, and the ended→next seam
+- **Scope:** `player/.../syncplay/SyncPlayController.kt`,
+  `player/.../syncplay/model/SyncPlayModels.kt`, new
+  `player/.../syncplay/ControllerSyncPlaySession.kt`,
+  `player/.../syncplay/di/SyncPlayModule.kt`, new
+  `player/.../syncplay/ui/SyncPlayQueueSheet.kt` and
+  `player/.../syncplay/ui/SyncPlayQueueViewModel.kt`,
+  `player/.../syncplay/ui/SyncPlayGroupSheet.kt`, `player/.../ui/PlayerSyncPlayBridge.kt`,
+  `player/.../ui/PlayerViewModel.kt`, `player/.../ui/PlayerUiState.kt`,
+  `player/.../ui/PlayerControls.kt`, `player/.../ui/PlayerScreen.kt`,
+  new `core/common/.../syncplay/SyncPlaySession.kt`, `core/common/build.gradle.kts`,
+  `feature/detail/.../ItemDetailViewModel.kt`, `.../ItemDetailUiState.kt`,
+  `.../ItemDetailHeader.kt`, `.../ItemDetailScreen.kt`, both `strings.xml`.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, "Phase 4 — Group queue
+  management": *"New `SyncPlayQueueSheet.kt`; controller queue intents +
+  QueueChanged reconciliation (playing entry changed → loadItem; resolver picks
+  disk copy per item); `core/common/.../syncplay/SyncPlaySession.kt`;
+  `feature/detail` "Play for group"/"Add to group queue"/"Play next" when a
+  group is active; queue titles via `JellyfinRepository.getItems`"*, and key
+  decision 2: *"Cross-feature contract `SyncPlaySession` in `:core:common`
+  (activeGroup StateFlow, playForGroup, addToGroupQueue)"*.
+- **Done instead:** five adaptations.
+  1. **An item ending in a group no longer pops the player screen when the
+     queue has somewhere to go.** `PlayerEvent.Ended` sets
+     `PlayerUiState.hasEnded`, and `PlayerScreen` turns that into `onBack()`.
+     In a group the controller answers the same event by asking the server for
+     the next item, whose `PlayQueueUpdate` reloads *this* session through
+     `SyncPlayPlaybackHost.loadItem` — so the screen would pop a beat before the
+     next episode arrived in it, and the group would then have to re-launch a
+     player it had just closed. `onEnded` therefore leaves `hasEnded` false
+     while `syncPlay.isInGroup && syncPlay.hasNextInQueue`
+     (`SyncPlayGroupQueue.hasFollowingEntry`: another slot after this one, or a
+     repeat mode that will replay one). The stop report is unchanged, so the
+     outgoing item is still reported and its encoder still killed. When the
+     group's queue really is finished the old behaviour stands and the screen
+     pops. **Phase 5 inherits this seam**: the launch-request path
+     (`SyncPlayController.launchRequests` → NavHost) still covers every case
+     where *no* host is attached, and it is now the only path that has to
+     re-open a player after the queue moves.
+  2. **The queue sheet resolves its own ViewModel with `hiltViewModel()`.**
+     The project convention is that `:app` owns every `hiltViewModel()` call
+     and hands ViewModels to screens; the queue sheet is not a navigation
+     destination but a panel *inside* the player screen, and threading a second
+     ViewModel through `PlayerScreen`'s signature would put a group-only
+     collaborator on the solo player's call site in `JellyfinNavHost`. It
+     follows `:feature:auth`'s `LoginScreen`/`ServerSetupScreen`, which resolve
+     their own for the same reason (a sub-surface, not a destination).
+  3. **Queue titles come from `JellyfinRepository.getItem`, one call per entry,
+     not from a `getItems(ids)`.** The plan names a method that does not exist:
+     `getItems` takes an `ItemQuery`, which has no id list, and adding one would
+     mean changing the repository interface, both implementations and the
+     delegating decorator for a screen that shows at most a queue's worth of
+     rows. `getItem` is also the call that already answers from the Room cache
+     when offline, which is what a downloaded item in a group needs. Fetches are
+     bounded (`QUEUE_FETCH_CONCURRENCY`) and cached per item id for the life of
+     the sheet's ViewModel, so a reorder re-renders without re-fetching.
+  4. **An entry this device cannot open is skipped at most once per slot.**
+     The plan says "non-video entries skipped with message" but not what stops a
+     queue of unplayable items from cycling for ever. The controller cannot know
+     an entry's *type* — it holds item ids, not metadata — so "cannot open" is
+     defined by what `loadItem` answers, which already covers a non-video item
+     (the resolver refuses it), a deleted file and a library this account cannot
+     see. On a refusal the controller emits `ItemUnavailable` and asks the
+     server to advance, but records the slot: a slot it has already skipped is
+     never skipped twice, so the worst case is one pass over the queue and then
+     a stop. A successful load clears the record.
+  5. **The "movies and episodes only" guard lives in `:feature:detail`, not in
+     `SyncPlaySession`.** The contract speaks item ids and nothing else — giving
+     it a type parameter would push the app's scope rule into `:core:common`,
+     where nothing can enforce it. The detail screen knows the type of what its
+     Play button resolves to and offers the group actions only for a movie or an
+     episode, which is the same place the rule is already applied to Play.
+- **Also worth recording (not divergences):** `SyncPlaySession.activeGroup`
+  carries a `SyncPlayGroupHandle` (id as `String`, name, participant count) —
+  a `:core:common` type, so `:feature:*` never sees a `:player` model, and
+  deliberately not the queue: a feature module has no business rendering one.
+  `core/common/build.gradle.kts` promotes `kotlinx-coroutines-core` from
+  `implementation` to `api` because the contract's `StateFlow` is part of its
+  signature. Queue reorder is up/down buttons rather than drag-and-drop: every
+  edit is a server request whose effect arrives asynchronously
+  (key decision 11), and a drag whose row does not follow the finger until the
+  server answers reads as a broken gesture.
+- **Reason:** each adaptation keeps the plan's intent — the queue is the
+  group's, the player follows it, and features stay off `:player` — while
+  closing a hole the plan's wording leaves open.
+
+<!-- END -->

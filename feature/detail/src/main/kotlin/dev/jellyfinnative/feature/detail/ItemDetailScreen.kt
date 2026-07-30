@@ -80,6 +80,9 @@ fun ItemDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val selectionState = viewModel.selection.collectAsStateWithLifecycle()
+    // Collected separately from [uiState] on purpose: the group changes a handful of times a
+    // session, the state several times a second while a download runs (M11 Phase 4).
+    val activeGroup by viewModel.activeGroup.collectAsStateWithLifecycle()
     // Only *whether* the mode is on is read in this scope — it flips twice per selection. Reading
     // the set here would recompose the page (and re-create the episode list's content lambda) on
     // every toggle; the count is read inside [SelectionOverlay]'s own scope.
@@ -110,6 +113,13 @@ fun ItemDetailScreen(
                     onDownload = viewModel::onDownloadClick,
                     onToggleWatched = viewModel::toggleWatched,
                     onToggleFavorite = viewModel::toggleFavorite,
+                    // Offered only when there is a group *and* something a group can play: a
+                    // series page resolves to its next-up episode, a library folder to nothing
+                    // (`ItemDetailUiState.groupTarget`).
+                    group =
+                        activeGroup
+                            ?.takeIf { state.groupTarget != null }
+                            ?.let { DetailGroupActions(it.name, viewModel::onGroupAction) },
                 ),
             selection = selectionState,
             onSelection = viewModel::onSelection,
@@ -411,6 +421,15 @@ private fun userMessageText(message: UserMessage): String =
             )
 
         is UserMessage.BatchFinished -> batchOutcomeText(message.report.action, message.report.outcome)
+
+        is UserMessage.GroupActionSent ->
+            stringResource(
+                when (message.action) {
+                    GroupAction.PLAY_FOR_GROUP -> R.string.detail_message_group_play
+                    GroupAction.PLAY_NEXT -> R.string.detail_message_group_play_next
+                    GroupAction.ADD_TO_QUEUE -> R.string.detail_message_group_queued
+                },
+            )
     }
 
 private const val SECTION_BACKDROP = "section-backdrop"

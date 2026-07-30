@@ -61,6 +61,7 @@ class SyncPlayControllerTest {
     private val itemId = UUID.fromString("00000000-0000-0000-0000-0000000000c1")
     private val otherItemId = UUID.fromString("00000000-0000-0000-0000-0000000000c2")
     private val playlistItemId = UUID.fromString("00000000-0000-0000-0000-0000000000d1")
+    private val otherPlaylistItemId = UUID.fromString("00000000-0000-0000-0000-0000000000d2")
 
     // Joining -------------------------------------------------------------------------------------
 
@@ -342,6 +343,110 @@ class SyncPlayControllerTest {
                 .ignoreWait shouldBe false
         }
 
+    // The group's queue (M11 Phase 4) --------------------------------------------------------------
+
+    @Test
+    fun `the group moving to another item opens it here, at the position the group named`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
+            fixture.host.loaded shouldBe listOf(itemId to 0L)
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(
+                    twoItemQueue(playingIndex = 1, startTicks = 45_000L.millisToTicks()),
+                ),
+            )
+            runCurrent()
+
+            fixture.host.loaded shouldBe
+                listOf(itemId to 0L, otherItemId to 45_000L.millisToTicks())
+            // Opened paused and handed to the ordinary handshake: buffering out, ready back.
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .last()
+                .playlistItemId shouldBe otherPlaylistItemId
+            fixture.player.hadNoTransportCalls shouldBe true
+        }
+
+    @Test
+    fun `a reorder that leaves the playing item where it is reloads nothing`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
+            fixture.host.loaded shouldBe listOf(itemId to 0L)
+
+            // The same two slots, swapped — the group is still on the same one, now at index 1.
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(
+                    twoItemQueue(playingIndex = 1, reason = SyncPlayQueueUpdateReason.MoveItem).let { moved ->
+                        moved.copy(entries = moved.entries.reversed())
+                    },
+                ),
+            )
+            runCurrent()
+
+            fixture.host.loaded shouldBe listOf(itemId to 0L)
+        }
+
+    @Test
+    fun `an entry this device cannot open is skipped, and never skipped twice`() =
+        runTest {
+            val fixture = fixture()
+            fixture.host.loadSucceeds = false
+
+            joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
+
+            fixture.messages shouldBe listOf(SyncPlayMessage.ItemUnavailable)
+            fixture.api.callsOf<SyncPlayCall.RequestNextItem>().map { it.playlistItemId } shouldBe
+                listOf(playlistItemId)
+
+            // The server re-sends the same slot — a queue of unplayable items must not cycle.
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(twoItemQueue(playingIndex = 0)))
+            runCurrent()
+
+            fixture.messages shouldBe listOf(SyncPlayMessage.ItemUnavailable, SyncPlayMessage.ItemUnavailable)
+            fixture.api.callsOf<SyncPlayCall.RequestNextItem>().map { it.playlistItemId } shouldBe
+                listOf(playlistItemId)
+        }
+
+    @Test
+    fun `an item that opens forgives the slot skipped to reach it`() =
+        runTest {
+            val fixture = fixture()
+            fixture.host.loadSucceeds = false
+            joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
+            fixture.api.clearCalls()
+
+            // The group moves on, this one opens, and then the first slot comes round again.
+            fixture.host.loadSucceeds = true
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(twoItemQueue(playingIndex = 1)))
+            runCurrent()
+            fixture.host.loadSucceeds = false
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(twoItemQueue(playingIndex = 0)))
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.RequestNextItem>().map { it.playlistItemId } shouldBe
+                listOf(playlistItemId)
+        }
+
+    @Test
+    fun `the same item queued twice is started again rather than adopted where it stands`() =
+        runTest {
+            val fixture = fixture()
+            val secondSlot = SyncPlayQueueEntry(itemId, otherPlaylistItemId)
+            val queue =
+                queue().copy(entries = listOf(SyncPlayQueueEntry(itemId, playlistItemId), secondSlot))
+
+            joinWithQueue(fixture, queue = queue)
+            fixture.host.loaded shouldBe listOf(itemId to 0L)
+
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue.copy(playingItemIndex = 1)))
+            runCurrent()
+
+            fixture.host.loaded shouldBe listOf(itemId to 0L, itemId to 0L)
+        }
+
     // Losing the group ------------------------------------------------------------------------------
 
     @Test
@@ -505,14 +610,15 @@ class SyncPlayControllerTest {
         fixture.player.hadNoTransportCalls shouldBe true
     }
 
-    /** Joins, and lets the server publish a queue with one entry. */
+    /** Joins, and lets the server publish a queue — one entry unless a test supplies another. */
     private suspend fun TestScope.joinWithQueue(
         fixture: Fixture,
         startTicks: Long = 0L,
+        queue: SyncPlayGroupQueue = queue(startTicks),
     ) {
         fixture.controller.joinGroup(group())
         runCurrent()
-        fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue(startTicks)))
+        fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue))
         runCurrent()
     }
 
@@ -551,6 +657,26 @@ class SyncPlayControllerTest {
             reason = SyncPlayQueueUpdateReason.NewPlaylist,
             lastUpdate = origin,
         )
+
+    /**
+     * Two slots holding two different items, with the group on [playingIndex].
+     *
+     * Two is the smallest queue that can tell "the group moved on" apart from "the queue was
+     * re-sent", which is the whole of Phase 4's reconciliation.
+     */
+    private fun twoItemQueue(
+        playingIndex: Int,
+        startTicks: Long = 0L,
+        reason: SyncPlayQueueUpdateReason = SyncPlayQueueUpdateReason.NewPlaylist,
+    ) = queue(startTicks).copy(
+        entries =
+            listOf(
+                SyncPlayQueueEntry(itemId, playlistItemId),
+                SyncPlayQueueEntry(otherItemId, otherPlaylistItemId),
+            ),
+        playingItemIndex = playingIndex,
+        reason = reason,
+    )
 
     /** Everything a test needs to drive the controller and to see what it did. */
     @Suppress("LongParameterList") // A test-only bag of collaborators; grouping them would only hide them.

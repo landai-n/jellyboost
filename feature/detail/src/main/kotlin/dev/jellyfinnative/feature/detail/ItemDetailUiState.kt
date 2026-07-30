@@ -71,6 +71,17 @@ data class ItemDetailUiState(
             }
 
     /**
+     * What a *group* action on this page acts on, or `null` when there is nothing to offer.
+     *
+     * The same resolution as [playTarget] — a series plays its next-up episode — narrowed to the
+     * types this app plays at all (docs/notes/syncplay-m11-plan.md: "Movies & episodes only"). The
+     * narrowing lives here rather than in `SyncPlaySession` because the contract speaks item ids and
+     * has no idea what type one is; this screen does (DECISIONS.md, 2026-07-30).
+     */
+    val groupTarget: JellyfinItem?
+        get() = playTarget?.takeIf { it.type == ItemType.MOVIE || it.type == ItemType.EPISODE }
+
+    /**
      * `true` when Download on this page means "download the episodes under this".
      *
      * A season and a series are folders: the server has no file to send for one, and the pipeline
@@ -131,6 +142,25 @@ private val DownloadState.fraction: Float
             else -> 0f
         }
 
+/**
+ * What this page can ask a SyncPlay group to do with the item on it (M11 Phase 4).
+ *
+ * Offered only while `SyncPlaySession.activeGroup` is non-null and [ItemDetailUiState.groupTarget]
+ * resolves — so the ordinary Play button is never replaced, only joined. Each one is a request to
+ * the server: nothing plays or queues on this device until the group's own update comes back
+ * (docs/notes/syncplay-m11-plan.md, key decision 11).
+ */
+enum class GroupAction {
+    /** Replace the group's queue with this item and start everyone on it. */
+    PLAY_FOR_GROUP,
+
+    /** Put it directly after whatever the group is watching now. */
+    PLAY_NEXT,
+
+    /** Append it to the end of the group's queue. */
+    ADD_TO_QUEUE,
+}
+
 /** Where playback should start for [item]: its resume position, or the beginning. */
 fun playbackStartTicks(item: JellyfinItem): Long =
     if (item.userData.isResumable) item.userData.playbackPositionTicks else 0L
@@ -168,6 +198,17 @@ sealed interface UserMessage {
 
     /** A watched / favourite toggle could not even be written locally. */
     data object UserDataWriteFailed : UserMessage
+
+    /**
+     * A group action was sent to the server (M11 Phase 4).
+     *
+     * Worth saying out loud precisely because nothing visible happens here: the group's queue
+     * changes on the server and the result arrives as a `PlayQueueUpdate`, so without this the tap
+     * would look like it did nothing at all.
+     */
+    data class GroupActionSent(
+        val action: GroupAction,
+    ) : UserMessage
 
     /**
      * A batch action over the selected episodes finished (docs/features/batch-selection.md).

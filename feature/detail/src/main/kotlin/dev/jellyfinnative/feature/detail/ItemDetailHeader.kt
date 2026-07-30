@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
+import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
@@ -21,9 +23,11 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Downloading
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
@@ -85,12 +89,31 @@ internal fun DetailHeader(
     }
 }
 
-/** The four things the header can do, bundled so the composables stay under the parameter limit. */
+/** The things the header can do, bundled so the composables stay under the parameter limit. */
 data class DetailActionHandlers(
     val onPlay: () -> Unit,
     val onDownload: () -> Unit,
     val onToggleWatched: () -> Unit,
     val onToggleFavorite: () -> Unit,
+    /**
+     * What this page can ask a SyncPlay group to do, or `null` when there is no group to ask —
+     * which is the ordinary case, and why the field is nullable rather than a flag beside a lambda
+     * (M11 Phase 4). Carried in this bundle so no composable between here and the buttons grows a
+     * parameter for a feature it does not otherwise know about.
+     */
+    val group: DetailGroupActions? = null,
+)
+
+/**
+ * The active group, and the one callback its three buttons share.
+ *
+ * [groupName] is here because the buttons name the group they act on: "Play for Film night" says
+ * what a tap does in a way "Play for group" cannot, and on a detail page a user may well have
+ * forgotten which group they joined.
+ */
+data class DetailGroupActions(
+    val groupName: String,
+    val onAction: (GroupAction) -> Unit,
 )
 
 @Composable
@@ -263,6 +286,44 @@ private fun DetailActions(
         }
 
         DownloadButton(state = downloadState, onClick = actions.onDownload)
+
+        actions.group?.let { group -> GroupActionButtons(group = group) }
+    }
+}
+
+/**
+ * The three group actions, drawn only while a SyncPlay group is active (M11 Phase 4).
+ *
+ * They *join* the Play button rather than replace it: being in a group does not stop someone
+ * watching something on their own, and a Play button that silently changed meaning would be the
+ * worst of both. *Play for group* is filled-tonal so it reads as the second primary action on the
+ * page, the two queue actions stay outlined beside it, and the whole set sits in the same
+ * `FlowRow`, so on a phone in portrait it simply wraps onto its own line.
+ */
+@Composable
+private fun GroupActionButtons(group: DetailGroupActions) {
+    FilledTonalButton(onClick = { group.onAction(GroupAction.PLAY_FOR_GROUP) }) {
+        Icon(imageVector = Icons.Outlined.Groups, contentDescription = null)
+        Text(
+            text = stringResource(R.string.detail_group_play, group.groupName),
+            modifier = Modifier.padding(start = Dimens.SpaceSmall),
+        )
+    }
+
+    OutlinedButton(onClick = { group.onAction(GroupAction.PLAY_NEXT) }) {
+        Icon(imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay, contentDescription = null)
+        Text(
+            text = stringResource(R.string.detail_group_play_next),
+            modifier = Modifier.padding(start = Dimens.SpaceSmall),
+        )
+    }
+
+    OutlinedButton(onClick = { group.onAction(GroupAction.ADD_TO_QUEUE) }) {
+        Icon(imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd, contentDescription = null)
+        Text(
+            text = stringResource(R.string.detail_group_add_to_queue),
+            modifier = Modifier.padding(start = Dimens.SpaceSmall),
+        )
     }
 }
 

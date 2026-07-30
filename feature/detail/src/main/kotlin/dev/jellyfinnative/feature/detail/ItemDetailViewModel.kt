@@ -16,6 +16,8 @@ import dev.jellyfinnative.core.common.selection.ItemSelection
 import dev.jellyfinnative.core.common.selection.SelectionAction
 import dev.jellyfinnative.core.common.selection.SelectionIntent
 import dev.jellyfinnative.core.common.selection.runBatch
+import dev.jellyfinnative.core.common.syncplay.SyncPlayGroupHandle
+import dev.jellyfinnative.core.common.syncplay.SyncPlaySession
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
@@ -53,6 +55,7 @@ class ItemDetailViewModel
         private val userDataRepository: UserDataRepository,
         private val downloads: DownloadRepository,
         private val connectivityRefresher: ConnectivityRefresher,
+        private val syncPlaySession: SyncPlaySession,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         /**
@@ -83,6 +86,17 @@ class ItemDetailViewModel
          * not also subscribed to the download progress this page re-emits several times a second.
          */
         val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
+
+        /**
+         * The SyncPlay group this device is in, or `null` (M11 Phase 4).
+         *
+         * Handed through as the session's own flow rather than folded into [uiState]: this page
+         * re-emits its state several times a second while a download runs, and a value that changes
+         * a handful of times a session has no business riding along with that. It also keeps the
+         * whole feature's dependency on SyncPlay to one `:core:common` interface — `:feature:*`
+         * modules never see `:player`.
+         */
+        val activeGroup: StateFlow<SyncPlayGroupHandle?> get() = syncPlaySession.activeGroup
 
         init {
             load(isRefresh = false)
@@ -142,7 +156,7 @@ class ItemDetailViewModel
         fun toggleWatched() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
-                report(userDataRepository.setPlayed(item.id, !item.userData.played))
+                report(userDataRepository.setPlayed(item.id, !item.userData.played), UserMessage.UserDataWriteFailed)
             }
         }
 
@@ -150,7 +164,10 @@ class ItemDetailViewModel
         fun toggleFavorite() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
-                report(userDataRepository.setFavorite(item.id, !item.userData.isFavorite))
+                report(
+                    userDataRepository.setFavorite(item.id, !item.userData.isFavorite),
+                    UserMessage.UserDataWriteFailed,
+                )
             }
         }
 
@@ -188,7 +205,7 @@ class ItemDetailViewModel
                         enqueue(item.id)
                     } else {
                         viewModelScope.launch {
-                            reportDownload(
+                            report(
                                 downloads.resume(item.id),
                                 success = UserMessage.DownloadQueued,
                                 failure = UserMessage.DownloadFailed,
@@ -219,7 +236,7 @@ class ItemDetailViewModel
 
         private fun enqueue(itemId: String) {
             viewModelScope.launch {
-                reportDownload(
+                report(
                     downloads.enqueue(itemId),
                     success = UserMessage.DownloadQueued,
                     failure = UserMessage.DownloadFailed,
@@ -272,16 +289,6 @@ class ItemDetailViewModel
             _uiState.update { it.copy(showDeleteConfirmation = false) }
         }
 
-        private fun reportDownload(
-            result: AppResult<*>,
-            success: UserMessage,
-            failure: UserMessage,
-        ) {
-            _uiState.update {
-                it.copy(userMessage = if (result is AppResult.Success) success else failure)
-            }
-        }
-
         /**
          * Everything the contextual selection bar over the episode list can ask for.
          *
@@ -323,15 +330,51 @@ class ItemDetailViewModel
             }
         }
 
+        /**
+         * Sends one group action for whatever this page's Play button resolves to (M11 Phase 4).
+         *
+         * One entry point rather than a method per action, exactly as [onSelection] is — and for the
+         * same reason as `runSelectionBatch` below, the dispatch itself is a top-level function: this
+         * class is at the project's function-count ceiling (detekt `TooManyFunctions`, threshold 20).
+         *
+         * Nothing local happens, and nothing here waits to see whether it worked in the sense of the
+         * group actually moving: the call is a request, the group's queue is the server's, and its
+         * result arrives on the SyncPlay websocket (key decision 11). The snackbar therefore reports
+         * that the request went out, which is the only thing this screen can honestly claim.
+         *
+         * A silent no-op when there is no group or nothing playable to send — the buttons are not
+         * drawn in either case, so reaching this is a race with the group ending, not a user error.
+         */
+        fun onGroupAction(action: GroupAction) {
+            val target = _uiState.value.groupTarget ?: return
+            if (syncPlaySession.activeGroup.value == null) return
+
+            viewModelScope.launch {
+                sendGroupAction(action, target, syncPlaySession)
+                _uiState.update { it.copy(userMessage = UserMessage.GroupActionSent(action)) }
+            }
+        }
+
         /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
             _uiState.update { it.copy(userMessage = null) }
         }
 
-        private fun report(result: AppResult<*>) {
-            if (result is AppResult.Failure) {
-                _uiState.update { it.copy(userMessage = UserMessage.UserDataWriteFailed) }
-            }
+        /**
+         * Turns one repository result into the snackbar, or into silence.
+         *
+         * One helper for both kinds of write this screen makes (audit: the class sits on detekt's
+         * function-count ceiling, so two near-identical reporters were one too many). A `null`
+         * [success] is what the watched / favourite toggles want: they are already visible on the
+         * page from the local write, so saying so again would be noise — only a failure is news.
+         */
+        private fun report(
+            result: AppResult<*>,
+            failure: UserMessage,
+            success: UserMessage? = null,
+        ) {
+            val message = if (result is AppResult.Success) success else failure
+            message?.let { next -> _uiState.update { it.copy(userMessage = next) } }
         }
 
         private fun observeUserDataChanges() {
@@ -468,6 +511,31 @@ private suspend fun runSelectionBatch(
             runBatch(targets, skipped = ids.size - targets.size) { downloads.enqueue(it) }
         }
     }
+
+/**
+ * Turns one [GroupAction] into the SyncPlay request that carries it.
+ *
+ * A top-level function for the same reason `runSelectionBatch` is one: `ItemDetailViewModel` is at
+ * detekt's function-count ceiling, and this dispatch depends on nothing but its arguments.
+ *
+ * *Play for group* deliberately carries the resume position, so watching something together starts
+ * where the person who chose it had got to — the same rule the ordinary Play button follows. The two
+ * queue actions do not: an item added to the back of a queue is not a resume, and the group would
+ * be surprised to find it starting in the middle.
+ */
+private suspend fun sendGroupAction(
+    action: GroupAction,
+    target: JellyfinItem,
+    session: SyncPlaySession,
+) {
+    when (action) {
+        GroupAction.PLAY_FOR_GROUP ->
+            session.playForGroup(target.id, startPositionTicks = playbackStartTicks(target))
+
+        GroupAction.PLAY_NEXT -> session.addToGroupQueue(target.id, next = true)
+        GroupAction.ADD_TO_QUEUE -> session.addToGroupQueue(target.id, next = false)
+    }
+}
 
 /** Turns the domain failure taxonomy into copy a user can act on. */
 internal fun AppError.toMessage(): String =

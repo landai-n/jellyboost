@@ -46,6 +46,14 @@
     </plurals>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 
+    <!-- M11 SyncPlay: what this page can ask the active group to do. -->
+    <string name="detail_group_play">Play for %1$s</string>
+    <string name="detail_group_play_next">Play next</string>
+    <string name="detail_group_add_to_queue">Add to queue</string>
+    <string name="detail_message_group_play">Asked the group to play this.</string>
+    <string name="detail_message_group_play_next">Queued next for the group.</string>
+    <string name="detail_message_group_queued">Added to the group\'s queue.</string>
+
     <!-- Delete-download confirmation -->
     <string name="detail_delete_download_dialog_title">Delete download?</string>
     <string name="detail_delete_download_dialog_message">This removes it from this device. You can download it again anytime.</string>

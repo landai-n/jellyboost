@@ -7,6 +7,7 @@ import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.UserData
+import dev.jellyfinnative.core.common.syncplay.SyncPlaySession
 import dev.jellyfinnative.data.ConnectivityRefresher
 import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
@@ -50,6 +51,17 @@ class ItemDetailViewModelTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+        }
+
+    /**
+     * No group, in every test in this class (M11 Phase 4).
+     *
+     * That is the point of leaving it alone: SyncPlay's arrival must change nothing about an
+     * ordinary detail page. The group actions themselves live in [ItemDetailGroupActionsTest].
+     */
+    private val syncPlaySession =
+        mockk<SyncPlaySession>(relaxed = true) {
+            every { activeGroup } returns MutableStateFlow(null)
         }
 
     /** The connectivity-change signal (M9); fires only when a test says the server came back. */
@@ -802,6 +814,7 @@ class ItemDetailViewModelTest {
             userDataRepository = userDataRepository,
             downloads = downloads,
             connectivityRefresher = connectivityRefresher,
+            syncPlaySession = syncPlaySession,
             savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
         )
 

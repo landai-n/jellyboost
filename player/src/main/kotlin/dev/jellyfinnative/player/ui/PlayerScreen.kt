@@ -49,6 +49,7 @@ import dev.jellyfinnative.core.ui.component.LoadingState
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.player.R
 import dev.jellyfinnative.player.syncplay.ui.SyncPlayGroupSheet
+import dev.jellyfinnative.player.syncplay.ui.SyncPlayQueueSheet
 import kotlinx.coroutines.delay
 
 /**
@@ -83,6 +84,7 @@ fun PlayerScreen(
     // Hoisted above the controls, and above the auto-hide, because the sheet must survive the
     // controls getting out of the way while the user is reading the participant list (M11).
     var groupSheetVisible by remember { mutableStateOf(false) }
+    var queueSheetVisible by remember { mutableStateOf(false) }
     // Rebuilt per composition, these method references are that many new unstable lambdas, and every
     // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
@@ -99,6 +101,7 @@ fun PlayerScreen(
                 onSkipSegment = viewModel::skipCurrentSegment,
                 onBack = onBack,
                 onOpenGroupSheet = { groupSheetVisible = true },
+                onOpenQueueSheet = { queueSheetVisible = true },
                 onSetGroupShuffle = viewModel::setGroupShuffle,
                 onSetGroupRepeat = viewModel::setGroupRepeat,
                 onLeaveGroup = viewModel::leaveGroup,
@@ -198,12 +201,20 @@ fun PlayerScreen(
 
     // Outside the video `Box`, so it is not covered by the controls and not drawn in the floating
     // window; never in picture-in-picture, where it would be wider than the window itself.
-    GroupSheetHost(
-        visible = groupSheetVisible && !inPictureInPicture,
-        syncPlay = state.syncPlay,
-        actions = actions,
-        onDismiss = { groupSheetVisible = false },
-    )
+    if (!inPictureInPicture) {
+        GroupSheetHost(
+            visible = groupSheetVisible,
+            syncPlay = state.syncPlay,
+            actions = actions,
+            onDismiss = { groupSheetVisible = false },
+        )
+
+        QueueSheetHost(
+            visible = queueSheetVisible,
+            syncPlay = state.syncPlay,
+            onDismiss = { queueSheetVisible = false },
+        )
+    }
 }
 
 /**
@@ -231,6 +242,24 @@ private fun GroupSheetHost(
         },
         onDismiss = onDismiss,
     )
+}
+
+/**
+ * Draws the group queue sheet, or nothing.
+ *
+ * Gated on membership like the group sheet, for the same reason — a group that ends takes its queue
+ * with it — and on there being a queue at all: the sheet's ViewModel reads the controller's queue,
+ * and a group that has not been given anything to watch yet has none (M11 Phase 4).
+ */
+@Composable
+private fun QueueSheetHost(
+    visible: Boolean,
+    syncPlay: PlayerSyncPlayState,
+    onDismiss: () -> Unit,
+) {
+    if (!visible || !syncPlay.inGroup) return
+
+    SyncPlayQueueSheet(onDismiss = onDismiss)
 }
 
 /**

@@ -442,3 +442,47 @@ a container, but a **single** item handed to it is always written back as `QUEUE
 on `DownloadState.isDownloadable` before calling, which is why that predicate lives in `:core:common`
 next to the state it reads rather than in either feature.
 <!-- END: Batch selection (post-M9) -->
+
+<!-- BEGIN: SyncPlay (M11) -->
+## SyncPlay (M11)
+
+Full detail: [`docs/features/syncplay.md`](features/syncplay.md).
+
+**No new module.** SyncPlay is a new package inside `:player`, because it needs exactly what
+`:player` already has — `PlayerHandle`, the resolvers, the reporter, and `:core:network`'s
+`ApiClient`, `SessionStateHolder` and `ConnectionStateProvider`. A module of its own would have had
+to depend on all of them and be depended on by `:player` in turn.
+
+```
+:player/syncplay
+ ├── api/     SyncPlayApi + SdkSyncPlayApi        (the single SDK-time boundary)
+ ├── socket/  SyncPlaySocket + SdkSyncPlaySocket  (the app's only websocket)
+ ├── model/   SyncPlayModels.kt                   (domain events, commands, queue)
+ ├── time/    SyncPlayTimeSync, SyncPlayPinger    (server clock offset)
+ ├── ui/      SyncPlayGroupsScreen + ViewModel, SyncPlayGroupSheet, SyncPlayQueueSheet + ViewModel
+ ├── di/      SyncPlayModule, SyncPlayScope
+ └──          SyncPlayController, SyncPlayCommandScheduler, SyncPlayDriftMonitor,
+              SyncPlayStatusHolder, SyncPlayLocalSession, SyncPlayPlaybackHost, SyncPlayState,
+              ControllerSyncPlaySession, SyncPlayDtoMapping / SyncPlayEnumMapping
+```
+
+**A coordinator that is not a screen.** `SyncPlayController` is a `@Singleton` with its own
+supervisor scope (`@SyncPlayScope`, modelled on `DetachedPlayerScope`) driving `PlayerHandle`
+directly. Group membership outlives the player screen and survives backgrounding, which a ViewModel
+cannot; `PlayerViewModel` gets a thin `PlayerSyncPlayBridge` and none of the protocol.
+
+**Three cross-cutting mechanisms this introduces.**
+
+| mechanism | where | why it is shaped that way |
+|---|---|---|
+| `SyncPlaySession` + `SyncPlayGroupHandle` | `:core:common` `syncplay/` | The cross-feature contract. `:feature:detail` offers "Play for group" / "Add to group queue" and `:app` draws the active-group badge without either depending on `:player`; `ControllerSyncPlaySession` binds it in `:player`. It speaks `String` ids and a participant count — no `:player` model escapes. (`:core:common` promotes `kotlinx-coroutines-core` to `api` for the `StateFlow`.) |
+| `SyncPlayStatusHolder` | `:player/syncplay` | Breaks a would-be DI cycle. `PlaybackReporter` must know whether this session is in a group; the controller must be able to drive playback, which reaches the reporter's world. Both depend on this two-field holder instead. |
+| `launchRequests` → NavHost | `:app` `SyncPlayLaunchViewModel` | "The group moved on and no player is open." The app collects it at the NavHost and navigates to `Routes.Player`, which is what lets a member back out of the player and still be pulled back in when the group starts the next episode. `:app` also owns `Routes.SyncPlay` and the Groups action on `AppTopBar` (DECISIONS.md 2026-07-30). |
+
+**The one edge that changed outside SyncPlay** is the reporter's rule: a `LocalPlaybackMediaSource`
+now reports to the server when the device is online **and** in a group, keyed on a play session id
+minted by one profile-less `PlaybackInfo` POST (`SyncPlayLocalSession` +
+`PlaybackInfoResolver.mintPlaySessionId`). `stopTranscoding` stays remote-only. Everything else about
+M8's local-first reporting — the unconditional local position write above all — is untouched.
+See DECISIONS.md, 2026-07-30.
+<!-- END: SyncPlay (M11) -->

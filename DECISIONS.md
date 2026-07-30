@@ -1954,4 +1954,54 @@ Seeded from the approved plan; listed for traceability, no divergence:
   itself have been the divergence, since that pattern was deliberately removed in M9 and nothing
   in `docs/PLAN.md` or the M11 plan calls for reinstating it.
 
+## 2026-07-30 — M11 Phase 6: a downloaded file reports to the server while, and only while, it is in a group
+- **Scope:** `player/.../report/PlaybackReporter.kt`, `player/.../resolve/PlaybackInfoResolver.kt`,
+  new `player/.../syncplay/SyncPlayLocalSession.kt`, `player/.../ui/PlayerSyncPlayBridge.kt`,
+  `player/.../ui/PlayerViewModel.kt`; new tests `PlaybackReporterSyncPlayTest`,
+  `SyncPlayLocalSessionTest`, `PlayerSyncPlayReportingTest`.
+- **Plan said:** `docs/PLAN.md` M8 made local playback silent by design ("no `playSessionId` by
+  construction … no progress report is keyed on anything the server issued"), and
+  `docs/notes/syncplay-m11-plan.md` key decision 9 + Phase 6 require the opposite inside a group:
+  *"Local-in-group playback DOES report start/progress/stop … mint a `playSessionId` via one
+  `PlaybackInfo` POST at load time … tolerate mint failure with `playSessionId = null`"*, replacing
+  the `RemotePlaybackMediaSource?` narrowing with a `ServerReportTarget`. The plan itself calls for
+  this entry.
+- **Done instead:** exactly that, plus four choices the plan leaves open:
+  1. **`ServerReportTarget` is a private data class built from either variant of the sealed source**,
+     not an interface on the model. The reporter is the only thing that needs the union of "item id,
+     media source id, play method, session id, stream indices, start position", and putting it on
+     `PlaybackMediaSource` would have given `LocalPlaybackMediaSource` a nullable `playSessionId`
+     field that nothing but reporting could ever set. `stopTranscoding` narrows to
+     `RemotePlaybackMediaSource` *before* asking for a target: a file on disk is direct play by
+     construction and started no encoder, so being in a group must not produce a
+     `DELETE /Videos/ActiveEncodings` for a session the server has no transcode for.
+  2. **The mint is placed in a new `SyncPlayLocalSession`, driven from `PlayerViewModel.publish`,
+     not in the resolve/session path.** The plan says "at load time"; the resolver and
+     `PlaybackSessionController` cannot see group membership, and giving them a SyncPlay dependency
+     would put a group concern on every solo open. `publish` is the one point that knows the
+     resolved source, has a snapshot, and runs immediately before the start report the minted id has
+     to be in. Placing it there also makes the "joined a group ten minutes into a downloaded film"
+     case fall out of the same call rather than needing a path of its own — the ViewModel reconciles
+     on session open **and** on every membership change (`PlayerSyncPlayBridge.membership`), so mint
+     and close are one idempotent reconciliation instead of four event handlers.
+  3. **Leaving a group mid-playback sends one final stop report and then goes silent.** The plan
+     does not say. Playback continues solo off the same file (key decision 10's manual resume), so
+     the alternatives were to keep reporting (a lie — this device is no longer part of anything the
+     server knows about, and the session was opened as a group member) or to fall silent with the
+     session left open (the dashboard would show the tablet frozen at the leave position until the
+     server reaped it). The stop is **server-only**: it does not write a local position or mark the
+     item played, because the film is still playing and the progress ticker keeps the resume
+     position current. It needs its own entry point (`reportGroupExitStop`) because by the time
+     anything can observe a group ending, `SyncPlayStatusHolder.inGroup` is already `false` and the
+     controller has cleared the minted id — so both are passed in explicitly.
+  4. **`PlaybackReporter`'s new `SyncPlayStatusHolder` parameter carries a default.** Hilt always
+     passes the singleton; the default exists so that constructing a reporter has the M8 meaning
+     (never in a group ⇒ local playback silent) without every existing test of the solo paths having
+     to name a SyncPlay collaborator. `PlaybackReporterTest` is therefore byte-for-byte unchanged,
+     which is the point: it is the regression test for the behaviour this change must not alter.
+- **Reason:** the exception is narrow and its three terms are all load-bearing — local **and**
+  online **and** in a group. Anything wider would resurrect the M8 failure mode (five-second connect
+  timeouts and a log full of warnings for an offline session); anything narrower would leave a group
+  member invisible on the dashboard, which is what the plan's decision 9 exists to prevent.
+
 <!-- END -->

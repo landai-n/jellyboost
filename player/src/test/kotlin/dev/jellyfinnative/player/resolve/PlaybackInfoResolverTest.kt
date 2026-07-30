@@ -351,6 +351,59 @@ class PlaybackInfoResolverTest {
             result.error.shouldBeInstanceOf<AppError.Unauthorized>()
         }
 
+    // ---- M11: minting a play session for a file that is already on disk -------------------------
+
+    @Test
+    fun `minting asks for the item once and answers with the play session id`() =
+        runTest {
+            val request = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(request)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo()))
+
+            val minted = resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = null)
+
+            minted shouldBe PlayerFixtures.PLAY_SESSION_ID
+            request.captured.mediaSourceId shouldBe PlayerFixtures.DASHLESS_ITEM_ID
+            // No profile to build a transcode plan from, and no live stream to allocate: the bytes
+            // are already on the device and nothing here will ever fetch a URL.
+            request.captured.deviceProfile.shouldBeNull()
+            request.captured.autoOpenLiveStream shouldBe false
+        }
+
+    @Test
+    fun `minting sends a named media source without its dashes too`() =
+        runTest {
+            val request = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(request)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo()))
+
+            resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = PlayerFixtures.ITEM_ID.toString())
+
+            request.captured.mediaSourceId shouldBe PlayerFixtures.DASHLESS_ITEM_ID
+        }
+
+    @Test
+    fun `a failed mint is null rather than an exception`() =
+        runTest {
+            coEvery { api.getPlaybackInfo(any(), any()) } throws TimeoutException("slow", null)
+
+            // The caller reports without a session id rather than not reporting at all; a group
+            // member missing from the dashboard is the worse failure (M11, key decision 9).
+            resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = null).shouldBeNull()
+        }
+
+    @Test
+    fun `a server that answers without a play session id mints nothing`() =
+        runTest {
+            coEvery { api.getPlaybackInfo(any(), any()) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(PlayerFixtures.mediaSourceInfo()),
+                    playSessionId = null,
+                )
+
+            resolver.mintPlaySessionId(PlayerFixtures.ITEM_ID, mediaSourceId = null).shouldBeNull()
+        }
+
     private suspend fun resolveWith(
         source: org.jellyfin.sdk.model.api.MediaSourceInfo,
         request: PlaybackResolveRequest = PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID),

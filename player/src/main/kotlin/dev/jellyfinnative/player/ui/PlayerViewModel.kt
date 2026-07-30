@@ -37,6 +37,7 @@ import dev.jellyfinnative.player.session.PlayerHandle
 import dev.jellyfinnative.player.session.SessionOpenResult
 import dev.jellyfinnative.player.syncplay.SyncPlayController
 import dev.jellyfinnative.player.syncplay.SyncPlayHostSnapshot
+import dev.jellyfinnative.player.syncplay.SyncPlayLocalSession
 import dev.jellyfinnative.player.syncplay.SyncPlayPlaybackHost
 import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
@@ -116,12 +117,13 @@ class PlayerViewModel
         private val pipController: PipController,
         private val connectionState: ConnectionStateProvider,
         syncPlayController: SyncPlayController,
+        syncPlayLocalSession: SyncPlayLocalSession,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel(),
         SyncPlayPlaybackHost {
         private val sessionStore = PlayerSessionStore(savedStateHandle)
 
-        private val syncPlay = PlayerSyncPlayBridge(syncPlayController, host = this)
+        private val syncPlay = PlayerSyncPlayBridge(syncPlayController, syncPlayLocalSession, host = this)
 
         private val positionTracker = PlaybackPositionTracker()
 
@@ -293,6 +295,12 @@ class PlayerViewModel
             }
             viewModelScope.launch {
                 syncPlay.messages.collect { message -> _uiState.update { it.copy(userMessage = message) } }
+            }
+            // A downloaded item joins the group's session when the group is joined, and leaves it
+            // when the group is (M11 Phase 6) — including in the middle of the film, which is the
+            // only moment anything has to be *sent* rather than simply started or stopped.
+            viewModelScope.launch {
+                syncPlay.membership.collect { syncPlay.syncServerSession(source, playerHandle.snapshot()) }
             }
         }
 
@@ -768,6 +776,9 @@ class PlayerViewModel
                     _uiState.update { it.withSource(resolved, isOnline, message) }
                     positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
 
+                    // Before the start report, not after: in a group a downloaded item reports too,
+                    // and the id that report is keyed on is minted here (M11, key decision 9).
+                    syncPlay.syncServerSession(resolved, playerHandle.snapshot())
                     reporter.reportStart(resolved, playerHandle.snapshot())
                     setReportingActive(true)
                     loadPlaybackExtras(resolved)
@@ -980,6 +991,9 @@ class PlayerViewModel
                 stopReported = true
                 reporter.reportStopDetached(current, playerHandle.snapshot())
             }
+            // After the stop report is handed over, never before: it is the one that closes the
+            // group's view of a downloaded item, and it reads the minted id on its way out.
+            syncPlay.onSessionClosed()
             _videoPlayer.value = null
             playerHandle.stop()
             playerHandle.release()

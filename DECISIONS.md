@@ -1924,4 +1924,34 @@ Seeded from the approved plan; listed for traceability, no divergence:
   group's, the player follows it, and features stay off `:player` — while
   closing a hole the plan's wording leaves open.
 
+## 2026-07-30 — M11 Phase 5: the Groups action lives in `:app`'s combined bar, not `:feature:home`
+- **Scope:** `app/src/main/kotlin/dev/jellyfinnative/app/AppTopBar.kt`, `AppScaffold.kt`,
+  `JellyfinNavHost.kt`, new `SyncPlayBadgeViewModel.kt` and `SyncPlayLaunchViewModel.kt`;
+  `core/common/.../Routes.kt` (`Routes.SyncPlay`); new
+  `player/.../syncplay/ui/SyncPlayGroupsScreen.kt` and `SyncPlayGroupsViewModel.kt`.
+  `feature/home` is untouched.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, "Phase 5 — Dedicated SyncPlay section":
+  *"home top-bar Groups icon + active badge via `SyncPlaySession.activeGroup`"*. The phase
+  briefing additionally floated a specific mechanism: *"`:feature:home` may inject
+  `SyncPlaySession` (it's a `:core:common` type bound from `:player` — verify the Hilt graph
+  resolves; `assembleDebug` proves it)"*.
+- **Done instead:** the Groups action (a `BadgedBox`-wrapped icon, badge lit by
+  `SyncPlayBadgeViewModel`'s view of `SyncPlaySession.activeGroup`) was added to `:app`'s
+  single `AppTopBar`, not to any composable inside `:feature:home` — that module was not
+  touched at all. Since M9 (DECISIONS.md 2026-07-29, "the top bar and the bottom navigation
+  bar are one combined bar"), `HomeScreen` has carried no top bar of its own; the combined
+  `AppTopBar` in `:app` *is* what the codebase already calls "the home top bar" (see
+  `ConnectionViewModel`'s own KDoc: "the offline-mode toggle in the home top bar"). `:app`
+  already depends on `:player` directly (it resolves `PlayerScreen`'s `hiltViewModel()`
+  there), so the new badge/launch ViewModels inject `SyncPlaySession`/`SyncPlayController`
+  at that same layer rather than threading the state through `:feature:home` and back out
+  through a new callback — `:feature:home` has no top-level chrome to attach the action to
+  post-M9. `Routes.SyncPlay` is a plain pushed destination (like `Routes.Settings`), and
+  `SyncPlayGroupsScreen` owns its own back+home `TopAppBar` the same way `SettingsScreen`
+  does. `./gradlew assembleDebug` confirms the Hilt graph resolves the injection.
+- **Reason:** faithfulness to the already-recorded M9 architecture rather than to the phase
+  briefing's speculative mechanism — adding a per-screen top bar inside `:feature:home` would
+  itself have been the divergence, since that pattern was deliberately removed in M9 and nothing
+  in `docs/PLAN.md` or the M11 plan calls for reinstating it.
+
 <!-- END -->

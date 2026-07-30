@@ -21,12 +21,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AirplanemodeActive
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -76,13 +79,18 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  * @param connectionState decides whether the offline status icon is drawn, and which one.
  * @param onConnectionStatusClick the status icon was tapped — `AppScaffold` explains the state in a
  *   snackbar with the action that fits it.
+ * @param hasActiveSyncPlayGroup lights the Groups action's badge (M11 Phase 5) — this device is a
+ *   member of a SyncPlay group right now, wherever in the app that happened.
+ * @param onOpenSyncPlayGroups the Groups action was tapped; opens the dedicated SyncPlay section.
  */
 @Composable
 internal fun AppTopBar(
     currentDestination: NavDestination?,
     connectionState: ConnectionState,
+    hasActiveSyncPlayGroup: Boolean,
     onSelectTab: (Any) -> Unit,
     onConnectionStatusClick: () -> Unit,
+    onOpenSyncPlayGroups: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onSetForceOffline: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -110,6 +118,10 @@ internal fun AppTopBar(
                 ConnectionStatusAction(
                     status = connectionState.toStatus(),
                     onClick = onConnectionStatusClick,
+                )
+                SyncPlayGroupsAction(
+                    hasActiveGroup = hasActiveSyncPlayGroup,
+                    onClick = onOpenSyncPlayGroups,
                 )
                 AppOverflowMenu(
                     forceOffline = connectionState == ConnectionState.OFFLINE_FORCED,
@@ -252,6 +264,34 @@ private fun ConnectionStatusAction(
                     MaterialTheme.colorScheme.error
                 },
         )
+    }
+}
+
+/**
+ * The way into the dedicated SyncPlay section (M11 Phase 5), badged while this device is a member
+ * of a group.
+ *
+ * The badge is a plain [Badge] dot rather than a participant count: what the icon has to say from
+ * here is only "you are in a group right now, wherever that happened" — the count, the name and
+ * everything else about it belongs to the section itself once opened.
+ */
+@Composable
+private fun SyncPlayGroupsAction(
+    hasActiveGroup: Boolean,
+    onClick: () -> Unit,
+) {
+    BadgedBox(
+        badge = { if (hasActiveGroup) Badge() },
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                imageVector = Icons.Filled.Groups,
+                contentDescription =
+                    stringResource(
+                        if (hasActiveGroup) R.string.syncplay_groups_action_active else R.string.syncplay_groups_action,
+                    ),
+            )
+        }
     }
 }
 

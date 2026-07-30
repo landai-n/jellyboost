@@ -57,6 +57,9 @@ internal fun AppScaffold(
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
     val connectionState by connectionViewModel.connectionState.collectAsStateWithLifecycle()
 
+    val syncPlayBadgeViewModel: SyncPlayBadgeViewModel = hiltViewModel()
+    val activeSyncPlayGroup by syncPlayBadgeViewModel.activeGroup.collectAsStateWithLifecycle()
+
     val snackbarHostState = remember { SnackbarHostState() }
     val showConnectionStatus =
         rememberConnectionStatusExplainer(
@@ -80,8 +83,10 @@ internal fun AppScaffold(
                 AppTopBar(
                     currentDestination = currentDestination,
                     connectionState = connectionState,
+                    hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
                     onSelectTab = navController::navigateToTab,
                     onConnectionStatusClick = showConnectionStatus,
+                    onOpenSyncPlayGroups = { navController.navigate(Routes.SyncPlay) },
                     onNavigateToSettings = { navController.navigate(Routes.Settings) },
                     onSetForceOffline = connectionViewModel::setForceOffline,
                 )

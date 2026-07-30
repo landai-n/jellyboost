@@ -194,6 +194,7 @@ private fun MetadataLine(
         buildList {
             item.productionYear?.let { add(it.toString()) }
             item.runtimeMinutes?.let { add(stringResource(R.string.detail_runtime_minutes, it)) }
+            item.sizeBytes?.let { add(formatBytes(it)) }
             item.officialRating?.let(::add)
             item.communityRating?.let { add(String.format(Locale.US, "%.1f", it)) }
             item.childCountLabel()?.let(::add)
@@ -379,3 +380,26 @@ private val WIDE_POSTER_WIDTH = 200.dp
 
 /** Long-form text stops growing here; a full-width paragraph on a tablet is unreadable. */
 private val TEXT_MAX_WIDTH = 680.dp
+
+/**
+ * Human-readable bytes, for the media file size on [MetadataLine].
+ *
+ * A third copy of the same eight lines that live in `:feature:settings` (`SettingsRows.kt`) and
+ * `:feature:downloads` (`DownloadRows.kt`) — see the KDoc on either for why the duplication is
+ * deliberate: features never depend on each other (docs/PLAN.md, "Project skeleton"), and
+ * promoting a formatting helper this small to `:core:ui` would put it in the design system for
+ * three call sites that would rather stay decoupled.
+ */
+internal fun formatBytes(bytes: Long): String {
+    if (bytes < UNIT) return "$bytes B"
+    var value = bytes.toDouble()
+    var index = -1
+    while (value >= UNIT && index < UNITS.lastIndex) {
+        value /= UNIT
+        index++
+    }
+    return String.format(Locale.getDefault(), "%.1f %s", value, UNITS[index])
+}
+
+private const val UNIT = 1000.0
+private val UNITS = listOf("kB", "MB", "GB", "TB")

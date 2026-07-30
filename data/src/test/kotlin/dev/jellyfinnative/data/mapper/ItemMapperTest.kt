@@ -13,6 +13,10 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.BaseItemPerson
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.MediaProtocol
+import org.jellyfin.sdk.model.api.MediaSourceInfo
+import org.jellyfin.sdk.model.api.MediaSourceType
+import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import org.junit.jupiter.api.AfterEach
@@ -309,6 +313,33 @@ class ItemMapperTest {
         item.people.shouldBeEmpty()
         item.childCount.shouldBeNull()
         item.premiereDate.shouldBeNull()
+        item.sizeBytes.shouldBeNull()
+    }
+
+    @Test
+    fun `maps the media file size from the first media source`() {
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MOVIE,
+                mediaSources = listOf(mediaSource(size = 4_500_000_000L), mediaSource(size = 999L)),
+            )
+
+        mapper.toDomain(dto).sizeBytes shouldBe 4_500_000_000L
+    }
+
+    @Test
+    fun `leaves the size null when the server reports no media sources`() {
+        val dto = BaseItemDto(id = movieId, type = BaseItemKind.MOVIE, mediaSources = null)
+
+        mapper.toDomain(dto).sizeBytes.shouldBeNull()
+    }
+
+    @Test
+    fun `leaves the size null when the media sources list is empty`() {
+        val dto = BaseItemDto(id = movieId, type = BaseItemKind.MOVIE, mediaSources = emptyList())
+
+        mapper.toDomain(dto).sizeBytes.shouldBeNull()
     }
 
     @Test
@@ -416,6 +447,28 @@ class ItemMapperTest {
         name = name,
         collectionType = collectionType,
     )
+
+    private fun mediaSource(size: Long?) =
+        MediaSourceInfo(
+            size = size,
+            type = MediaSourceType.DEFAULT,
+            protocol = MediaProtocol.FILE,
+            isRemote = false,
+            readAtNativeFramerate = false,
+            ignoreDts = false,
+            ignoreIndex = false,
+            genPtsInput = false,
+            supportsTranscoding = true,
+            supportsDirectStream = true,
+            supportsDirectPlay = true,
+            isInfiniteStream = false,
+            requiresOpening = false,
+            requiresClosing = false,
+            requiresLooping = false,
+            supportsProbing = true,
+            hasSegments = false,
+            transcodingSubProtocol = MediaStreamProtocol.HTTP,
+        )
 
     private companion object {
         /** A fixed non-UTC zone with a non-zero offset all year round. */

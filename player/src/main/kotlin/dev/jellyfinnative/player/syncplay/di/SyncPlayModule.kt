@@ -2,12 +2,18 @@ package dev.jellyfinnative.player.syncplay.di
 
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.player.syncplay.api.SdkSyncPlayApi
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
 import dev.jellyfinnative.player.syncplay.socket.SdkSyncPlaySocket
 import dev.jellyfinnative.player.syncplay.socket.SyncPlaySocket
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import timber.log.Timber
 import javax.inject.Singleton
 
 /**
@@ -17,8 +23,9 @@ import javax.inject.Singleton
  * be shared so the SDK's subscriber reference counting sees one consumer rather than one per
  * injection point.
  *
- * `SyncPlayTimeSync` is constructor-injectable and `@Singleton`-annotated, so it needs no binding
- * here. The controller's supervisor scope arrives with the controller itself (M11 Phase 2).
+ * `SyncPlayTimeSync`, the scheduler, the drift monitor, the pinger, the status holder and the
+ * controller are all constructor-injectable and `@Singleton`-annotated, so they need no binding
+ * here — only the scope they run in does.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -30,4 +37,33 @@ internal interface SyncPlayModule {
     @Binds
     @Singleton
     fun bindSyncPlaySocket(impl: SdkSyncPlaySocket): SyncPlaySocket
+}
+
+/** The scope SyncPlay coordination runs in. */
+@Module
+@InstallIn(SingletonComponent::class)
+internal object SyncPlayScopeModule {
+    /**
+     * The process-lifetime scope the controller, the ping loop and every scheduled command run in.
+     *
+     * Modelled on `PlayerProvidersModule.provideDetachedPlayerScope`, and for the same reason: this
+     * work has to survive the player screen. It is never cancelled — leaving a group cancels the
+     * controller's own per-session child job instead, so the singleton scope stays usable for the
+     * next group.
+     *
+     * `SupervisorJob` so a failed ping cannot take the websocket collection down with it, and a
+     * [CoroutineExceptionHandler] because a supervisor isolates siblings from a failure without
+     * *handling* it — an unhandled throw would still reach the default handler and kill the process.
+     */
+    @Provides
+    @Singleton
+    @SyncPlayScope
+    fun provideSyncPlayScope(): CoroutineScope =
+        CoroutineScope(
+            SupervisorJob() +
+                Dispatchers.Default +
+                CoroutineExceptionHandler { _, error ->
+                    Timber.e(error, "Uncaught exception in a SyncPlay-scope coroutine")
+                },
+        )
 }

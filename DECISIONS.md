@@ -1722,4 +1722,62 @@ Seeded from the approved plan; listed for traceability, no divergence:
   subscriptions exist exactly as the feasibility check claimed; only the field
   and lifecycle details above differ.
 
+## 2026-07-30 — M11 Phase 2: the websocket is collected *before* the join call, and re-negotiations are signalled by the host
+- **Scope:** `player/.../syncplay/SyncPlayController.kt`,
+  `SyncPlayCommandScheduler.kt`, `SyncPlayDriftMonitor.kt`,
+  `SyncPlayStatusHolder.kt`, `SyncPlayPlaybackHost.kt`, `SyncPlayState.kt`,
+  `time/SyncPlayPinger.kt`, `di/SyncPlayScope.kt`, `di/SyncPlayModule.kt`;
+  new `player/di/MainDispatcher.kt` + provider in `PlayerModule.kt`.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, "Join flow": *"joinGroup REST
+  → socket collect → Joined + QueueChanged → …"*, and "Re-negotiations
+  (track/quality change, decoder fallback) re-enter the handshake automatically
+  because the controller watches `PlayerHandle.events`."
+- **Done instead:** four adaptations.
+  1. **Order reversed: collect the socket, then call join.** Collecting is what
+     opens the socket (Phase 1 established the SDK has no `connect()`), so
+     joining first would race the server's own `GroupJoined`/`PlayQueueUpdate`
+     against a socket that is not up yet — and those two updates are the entire
+     input to the join handshake. The controller now opens the collection,
+     waits up to `SOCKET_READY_TIMEOUT_MS` (5 s) for
+     `SyncPlaySocket.connectionState` to report `Connected`, and only then
+     issues join/create; a group update that still arrives before the REST call
+     returns is stashed (`pendingGroup`/`pendingQueue`) and replayed by
+     `enterGroup`. Joining without the socket is still allowed after the
+     timeout — losing the initial queue update is better than not joining.
+  2. **Re-negotiation is signalled, not inferred.** `PlayerEvent` has no
+     "buffering" member (only Ready/Ended/IsPlayingChanged/TracksChanged/
+     VideoSizeChanged/Error), so a re-resolve that rebuilds the player is
+     invisible from the controller and the plan's "automatically" cannot hold as
+     written. The controller exposes `onHostBuffering()` for `PlayerViewModel`
+     to call when it starts a re-negotiation, and reports `ready` on *every*
+     `PlayerEvent.Ready` while in a group rather than only the first — so the
+     back half of the handshake is automatic even if a host forgets the front
+     half.
+  3. **`joinGroup` takes a `SyncPlayGroupSummary`, not a `UUID`.** Every caller
+     (the groups screen, Phase 5) already has the summary, and the server's
+     `GroupJoined` refreshes it moments later; taking an id would mean a
+     `getGroups` round trip purely to fill in a name we already had.
+  4. **A `@MainDispatcher` qualifier was added to `:player`.** Media3 requires
+     transport calls on the thread the player was built on, and the controller
+     drives `PlayerHandle` from its own background `@SyncPlayScope`. It lives in
+     `player/di/` rather than `:core:network` next to `@IoDispatcher` because
+     only the player needs it; injecting it (rather than using
+     `Dispatchers.Main`) is also what makes the scheduler's "apply at exactly
+     this instant" behaviour testable at all.
+- **Also worth recording (not divergences, but decisions Phase 3 inherits):**
+  a `Seek` command repositions without touching play/pause state, per the plan's
+  own "SEEK → seek (stay paused)" — the group's WAITING re-handshake and the
+  unpause that ends it are what restart playback. Teardown pauses the player
+  **only** on a confirmed connection loss (key decision 10 as amended); a user
+  leave, a sign-out, `NotInGroup`, `GroupGone` and `LibraryAccessDenied` all
+  leave playback exactly as it is, now solo. Loss is detected from the socket
+  *collection* ending (normally or with an error) or from
+  `ConnectionStateProvider` going offline — never from `connectionState` flaps,
+  which the SDK reconnects through.
+- **Reason:** the plan's join flow and its re-negotiation claim were written
+  before the SDK's socket lifecycle and `PlayerEvent`'s membership were known;
+  both adaptations preserve the plan's intent (never miss the group's first
+  queue update; always re-enter the handshake) with the API that actually
+  exists.
+
 <!-- END -->

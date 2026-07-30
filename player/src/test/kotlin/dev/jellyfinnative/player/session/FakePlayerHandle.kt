@@ -35,6 +35,35 @@ internal class FakePlayerHandle : PlayerHandle {
 
     var snapshot = PlaybackSnapshot()
 
+    /**
+     * Transport calls, counted.
+     *
+     * SyncPlay's rule is that an in-group intent must produce *no* local playback call at all
+     * (docs/notes/syncplay-m11-plan.md, key decision 11), which is a claim about calls that were
+     * never made — so the flags above are not enough to state it.
+     */
+    var playCount = 0
+        private set
+
+    var pauseCount = 0
+        private set
+
+    /** Every position [seekTo] was asked for, oldest first. */
+    val seekedToMs = mutableListOf<Long>()
+
+    /** `true` when nothing has touched the transport since the handle was created or [resetCalls]. */
+    val hadNoTransportCalls: Boolean
+        get() = playCount == 0 && pauseCount == 0 && seekedToMs.isEmpty() && prepared.isEmpty() && !stopped
+
+    /** Forgets recorded calls, so a test can assert about one phase of a longer scenario. */
+    fun resetCalls() {
+        playCount = 0
+        pauseCount = 0
+        seekedToMs.clear()
+        prepared.clear()
+        stopped = false
+    }
+
     /** What [selectAudioTrack] / [selectSubtitleTrack] should answer — `false` forces a re-resolve. */
     var trackSelectionSucceeds = true
 
@@ -54,14 +83,17 @@ internal class FakePlayerHandle : PlayerHandle {
     }
 
     override fun play() {
+        playCount++
         snapshot = snapshot.copy(isPlaying = true)
     }
 
     override fun pause() {
+        pauseCount++
         snapshot = snapshot.copy(isPlaying = false)
     }
 
     override fun seekTo(positionMs: Long) {
+        seekedToMs += positionMs
         snapshot = snapshot.copy(positionMs = positionMs)
     }
 

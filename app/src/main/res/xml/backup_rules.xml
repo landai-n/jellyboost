@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Pre-Android-12 counterpart to `data_extraction_rules.xml` (audit finding SEC-04).
+
+    On API 26-30 `android:allowBackup="false"` already stops every form of backup, so this file
+    changes nothing today. It exists for two reasons: it states the same intent in the form those
+    API levels understand, so the protection survives anyone ever flipping `allowBackup`; and lint
+    (DataExtractionRules) correctly points out that an app with minSdk below 31 which declares
+    `dataExtractionRules` should declare its older equivalent too, rather than leave the two API
+    ranges configured differently.
+
+    Same rule as the API 31+ file: nothing leaves the device. The app's state is entirely
+    re-derivable by signing in to the server again, and downloaded media is deliberately local.
+-->
+<full-backup-content>
+    <exclude domain="root" />
+    <exclude domain="file" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+    <exclude domain="external" />
+    <exclude domain="device_root" />
+    <exclude domain="device_file" />
+    <exclude domain="device_database" />
+    <exclude domain="device_sharedpref" />
+</full-backup-content>

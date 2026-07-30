@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Audit finding SEC-04 (docs/notes/audit-2026-07.md §3-4).
+
+    `android:allowBackup="false"` is enough on API 30 and below, but from Android 12 (API 31) it no
+    longer covers device-to-device transfer: on a new-phone setup the platform copies the app's data
+    directory across unless these rules say otherwise. That directory holds the unencrypted Room
+    database — viewing history, server addresses and paths, the username — and the DataStore
+    preferences. (The access token itself cannot travel: it lives in EncryptedSharedPreferences
+    under a Keystore-bound key that never leaves the source device, so a transferred copy would be
+    undecryptable — but everything else would arrive in the clear.)
+
+    Nothing in this app is worth restoring onto another device: the whole state is re-derivable by
+    signing in to the server again, and downloaded media is deliberately device-local. So both
+    channels exclude every domain.
+
+    Excluding `root` alone is not sufficient — the platform enumerates `file`, `database`,
+    `sharedpref` and `external` as sibling trees with their own tokens, so each is listed.
+-->
+<data-extraction-rules>
+    <!-- Google-cloud backup. Redundant with allowBackup="false" today, stated so the intent
+         survives anyone ever flipping that flag. -->
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
+    </cloud-backup>
+
+    <!-- Device-to-device transfer. This is the section SEC-04 is actually about. -->
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="device_root" />
+        <exclude domain="device_file" />
+        <exclude domain="device_database" />
+        <exclude domain="device_sharedpref" />
+    </device-transfer>
+</data-extraction-rules>

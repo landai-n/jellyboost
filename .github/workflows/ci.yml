@@ -1,0 +1,108 @@
+# jellyfin-native CI — M10 release hardening (docs/PLAN.md).
+#
+# ---------------------------------------------------------------------------------------------
+# NOT YET EXERCISED. This repository has no GitHub remote, so this workflow has never run and
+# cannot be run: it is authored to spec and reviewed by reading, not by a green check. Treat the
+# first push to a real remote as the actual verification step, and expect to fix small things
+# (action versions, cache keys) at that point.
+# ---------------------------------------------------------------------------------------------
+#
+# The job mirrors the local gate that `/verify` runs (ktlintCheck, detekt, testDebugUnitTest,
+# assembleDebug) and adds `assembleRelease` so R8 and the resource shrinker are exercised on every
+# change — a keep rule that goes missing is a runtime failure with no compile-time signal, so the
+# minified build has to be built somewhere other than a developer's machine.
+#
+# Deliberately absent: instrumented tests and baseline profile generation. Both need a device;
+# `:app:generateBaselineProfile` is run by hand in a device session and its output is checked
+# into `app/src/main/generated/baselineProfiles/`, which is why a device-less CI can still
+# package the profile.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # One run per branch; a new push cancels the in-flight run for the same ref.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Matches the local build (gradle.properties) so CI and developer machines shrink and compile
+  # under the same memory budget.
+  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.daemon=false
+
+jobs:
+  gate:
+    name: Quality gate + release build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # Java toolchain 21 — pinned in gradle/libs.versions.toml (javaToolchain) and set locally by
+      # ../env.sh. Temurin is what the toolchain resolver would download anyway; providing it here
+      # saves the auto-provisioning round trip.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Caches the Gradle distribution and ~/.gradle/caches (dependencies, transforms), keyed on the
+      # wrapper, the version catalog and the build scripts — which covers the included `build-logic`
+      # build too. The cache is written only from the default branch, so PR runs read a warm cache
+      # without poisoning it for everyone else.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          validate-wrappers: true
+
+      # Android SDK components. The runner image ships an SDK, but this project compiles against a
+      # preview-minor SDK (compileSdk 37.1, see libs.versions.toml), so let Gradle's own
+      # auto-download handle it rather than pinning package names here.
+      - name: Accept Android SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      # One invocation so Gradle can schedule the whole graph in parallel and reuse configuration,
+      # and so a failure anywhere fails the job with a single, readable report set.
+      - name: Gate
+        run: >
+          ./gradlew --no-daemon --stacktrace
+          ktlintCheck detekt testDebugUnitTest assembleDebug assembleRelease
+
+      # Release signing. Absent here on purpose: no keystore is committed and none is generated.
+      # app/build.gradle.kts reads RELEASE_STORE_FILE / RELEASE_STORE_PASSWORD / RELEASE_KEY_ALIAS /
+      # RELEASE_KEY_PASSWORD from local.properties or the environment and falls back to the debug
+      # key when they are absent, so `assembleRelease` above produces a `-debugsigned` APK. To
+      # publish a real one, add the four values as repository secrets, decode the keystore into the
+      # workspace in a step before the gate, and export them into `env:` here.
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/reports/detekt/
+            **/build/reports/ktlint/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      # The R8 mapping is the only way to read a release stack trace. Keep it with the build that
+      # produced it.
+      - name: Upload R8 mapping
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8-mapping
+          path: app/build/outputs/mapping/release/
+          if-no-files-found: ignore
+          retention-days: 90

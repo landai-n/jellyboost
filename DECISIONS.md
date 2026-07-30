@@ -1264,3 +1264,47 @@ Seeded from the approved plan; listed for traceability, no divergence:
   copy fix touches one existing assertion and is logged when it lands).
 
 <!-- END -->
+
+## 2026-07-30 — M10 release-build shape: R8 on, new :baselineprofile module, signing fallback, backup rules beyond SEC-04
+
+- **Scope:** `app/build.gradle.kts` (minify + shrinkResources + signing), `app/proguard-rules.pro`
+  (new), root/settings gradle + version catalog, `.github/workflows/ci.yml` (authored, unexercised —
+  no remote), new `:baselineprofile` module, `AndroidManifest` + `data_extraction_rules.xml` +
+  `backup_rules.xml`.
+- **Plan said:** M10 DoD names "R8 rules, baseline profile, CI, signing" without specifying shapes;
+  the audit's SEC-04 names only `dataExtractionRules`.
+- **Done instead / deviations accepted:**
+  1. A 17th Gradle module `:baselineprofile` (`com.android.test`), not in the plan's module table —
+     current AGP requires the separate test module; generation stays a device-only explicit task.
+  2. `androidx.baselineprofile` pinned to **1.5.0-beta01** (pre-release): stable 1.4.1 rejects
+     AGP 9.3.1 ("Module ':app' is not a supported android module"); beta01 is the lowest working.
+  3. `:baselineprofile` uses **JUnit 4** — `benchmark-macro-junit4` has no JUnit 5 equivalent; the
+     module also bypasses the build-logic convention plugins (none fit `com.android.test`).
+  4. `isShrinkResources = true` beyond the plan's "R8 rules" wording — safe (no `getIdentifier()`
+     anywhere); 382 removed resources audited, splash-screen chain verified kept.
+  5. Signing fallback stamps `versionNameSuffix = "-debugsigned"` when no keystore properties are
+     configured, so a debug-signed release artefact is visibly not distributable.
+  6. `android:fullBackupContent` + `backup_rules.xml` added beyond SEC-04's wording — API 26–30
+     symmetry, and it clears lint's DataExtractionRules warning.
+  7. Root build declares `com.android.test`/`androidx.baselineprofile` with `apply false`.
+- **Keep-rule philosophy recorded in `app/proguard-rules.pro`:** only verified gaps are ruled
+  (Coil ServiceLoader fetcher, SLF4J 2.x provider, sdk-model top-level types, crash-trace
+  attributes); everything else relies on shipped consumer rules, each verified by reading the AAR.
+- **Sizes:** debug 35.6 MiB → minified release 10.3 MiB (dex −90%).
+
+<!-- END -->
+
+## 2026-07-30 — bulk queue actions batched in the ViewModel; UNKNOWN download copy stops promising a retry
+
+- **Scope:** `feature/downloads` (`DownloadsViewModel` pauseAll/resumeAll/confirmCancelAll →
+  single batched repository calls), `data/downloads` (`DownloadErrorCopy.UNKNOWN`).
+- **Plan said / was:** per-row repository calls in a loop (STAB-09's user-visible half), and
+  `UNKNOWN = "Something went wrong. The download will retry."` — pinned by one
+  `DownloadErrorCopyTest` assertion.
+- **Done instead:** one `pauseAll`/`resumeAll`/`deleteAll` call per bulk action (one scheduler
+  touch); observable assertions unchanged, only mock targets adapted. UNKNOWN copy now reads
+  "Something went wrong. Try the download again." because unknown failures are classified
+  PERMANENT since STAB-01 — the old string promised a retry the queue never performs. The single
+  pinned assertion was updated to the new string; nothing else weakened.
+
+<!-- END -->

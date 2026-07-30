@@ -13,6 +13,14 @@ kotlin = "2.4.10"
 ksp = "2.3.10"
 detekt = "1.23.8"
 ktlintPlugin = "14.2.0"
+# Baseline profile generation (M10). The plugin, the macrobenchmark runner and the
+# on-device profile installer all ship from androidx.benchmark / androidx.profileinstaller.
+androidxBenchmark = "1.5.0-beta01"
+androidxProfileinstaller = "1.4.1"
+androidxTestUiautomator = "2.4.0"
+androidxTestRunner = "1.7.0"
+androidxTestExtJunit = "1.3.0"
+junit4 = "4.13.2"
 
 # KotlinX
 coroutines = "1.11.0"
@@ -64,6 +72,7 @@ kotest = "6.2.3"
 # Kotlin support and fails the build if that plugin is also applied (see DECISIONS.md).
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+android-test = { id = "com.android.test", version.ref = "androidGradlePlugin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -72,6 +81,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "androidxRoom" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
+baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBenchmark" }
 
 # Convention plugins provided by the `build-logic` included build
 jellyfinnative-android-application = { id = "jellyfinnative.android.application" }
@@ -176,6 +186,14 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 kotest-assertions = { group = "io.kotest", name = "kotest-assertions-core-jvm", version.ref = "kotest" }
+
+# Baseline profile generation (M10) — :baselineprofile module only
+androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "androidxProfileinstaller" }
+androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "androidxBenchmark" }
+androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "androidxTestUiautomator" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
+junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
 
 # Static analysis
 detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }

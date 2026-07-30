@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads.engine
 
+import dev.jellyfinnative.data.downloads.di.DownloadHttpClient
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -96,7 +97,7 @@ fun interface MediaChunkSink {
 class FileDownloader
     @Inject
     constructor(
-        private val callFactory: Call.Factory,
+        @DownloadHttpClient private val callFactory: Call.Factory,
         private val apiClient: ApiClient,
     ) {
         /**

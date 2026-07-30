@@ -59,6 +59,26 @@ class PlaybackService :
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     /**
+     * The system restarting this service after the process was killed (audit STAB-11).
+     *
+     * A `null` intent means exactly that — a `START_STICKY` restart with nothing to resume, not a
+     * real caller — so promoting to the foreground here would build an ExoPlayer and a
+     * `MediaSession` with nothing to play. Stopping immediately and asking not to be restarted
+     * again is cheaper than a notification for a session nobody asked to resume.
+     */
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
+        if (intent == null) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    /**
      * Tapping the media notification comes back to the app.
      *
      * Built from the launcher intent rather than from a direct `MainActivity` reference so that

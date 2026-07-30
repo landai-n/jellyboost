@@ -1445,3 +1445,28 @@ Seeded from the approved plan; listed for traceability, no divergence:
   shipping is affected — revisit if the server's bundled ffmpeg ever changes.
 
 <!-- END -->
+
+## 2026-07-30 — hygiene Lows batch (ARCH-50..56/06/08/12, SEC-05/06/09, STAB-11)
+
+- **Scope:** dead deps/aliases removed (okhttp-logging, lifecycle-process,
+  detekt-formatting), `playbackResolveRequest()` wired to its intended call site
+  instead of deleted (exact behavioral match verified), dead strings deleted,
+  stale `@Suppress` removed (ItemDao 14/20 functions, seedIfUnseeded 5/6 returns),
+  `@DownloadHttpClient` on the `Call.Factory` binding + FileDownloader injection
+  site, 7 pure-Room catches narrowed to `SQLiteException`, `HomeLayoutStore.clear()`
+  on sign-out, username/Quick-Connect-code log hygiene, `LoginUiState.toString()`
+  redacts the password, `PlaybackService` null-intent restart → `stopSelf()` +
+  `START_NOT_STICKY`.
+- **Divergences from the audit text:** (1) ARCH-54 found **8** dead strings, not 7
+  — all individually re-verified dead; neither Retry screen hardcodes the string
+  (both delegate to core:ui `ErrorState`). (2) ARCH-08's claim that
+  `UserDataSyncTrigger.kt:68` lacked the cancellation rethrow was already stale —
+  fixed by the Tier-1 STAB-06 pass; the catch was narrowed anyway. (3) ARCH-06
+  went one qualifier beyond the ask: new `@MediaHttpClient` on the player's media
+  client, so **no** unqualified `OkHttpClient`/`Call.Factory` binding remains.
+- **Recorded for the structural batch:** `DownloadEnqueuer`'s `write()` catch and
+  `UserDataRepositoryImpl.storeLocally`/`clearPendingFlag` are pure-Room catches
+  still missing the `CancellationException` rethrow — same shape as ARCH-08 but
+  outside the audited seven.
+
+<!-- END -->

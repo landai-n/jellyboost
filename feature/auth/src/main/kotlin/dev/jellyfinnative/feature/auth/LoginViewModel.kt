@@ -46,6 +46,18 @@ internal data class LoginUiState(
 ) {
     /** Jellyfin allows blank passwords, so only a username is required. */
     val canSignIn: Boolean get() = username.isNotBlank() && !isSigningIn
+
+    /**
+     * Redacts [password] (audit SEC-09): the generated data-class `toString()` would otherwise
+     * print it in full the moment this state ever reaches a log line — state-restoration crash
+     * reports and `Timber` calls that dump a whole UI state are exactly the paths that do.
+     */
+    override fun toString(): String =
+        "LoginUiState(serverName='$serverName', serverVersion=$serverVersion, " +
+            "isLoadingContext=$isLoadingContext, publicUsers=$publicUsers, " +
+            "loginDisclaimer=$loginDisclaimer, quickConnectEnabled=$quickConnectEnabled, " +
+            "username='$username', password=<redacted>, isSigningIn=$isSigningIn, " +
+            "quickConnect=$quickConnect, error=$error)"
 }
 
 /** One-shot navigation instructions from the login screen. */

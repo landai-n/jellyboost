@@ -92,9 +92,15 @@ internal object DownloadHttpModule {
     /**
      * `FileDownloader` depends on the narrower [Call.Factory] rather than on `OkHttpClient`, which
      * is what lets its unit tests hand it a canned response with no server involved.
+     *
+     * Qualified for the same reason the client it wraps is (audit ARCH-06): an unqualified
+     * `Call.Factory` binding would be the *only* one in the graph, so any future unqualified
+     * `@Inject` would silently receive this no-timeout download client instead of failing to
+     * compile.
      */
     @Provides
     @Singleton
+    @DownloadHttpClient
     fun provideDownloadCallFactory(
         @DownloadHttpClient client: OkHttpClient,
     ): Call.Factory = client

@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
@@ -45,7 +46,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.IOException
 import java.util.UUID
 
 /**
@@ -586,7 +586,7 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `a database failure is reported as a storage error`() =
         runTest {
-            coEvery { libraryViewDao.getAll() } throws IOException("database gone")
+            coEvery { libraryViewDao.getAll() } throws SQLiteException("database gone")
 
             val result = repository.getUserViews()
 

@@ -27,6 +27,7 @@ import dev.jellyfinnative.player.pip.PipController
 import dev.jellyfinnative.player.pip.PipState
 import dev.jellyfinnative.player.report.PlaybackReporter
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
+import dev.jellyfinnative.player.resolve.playbackResolveRequest
 import dev.jellyfinnative.player.segments.MediaSegment
 import dev.jellyfinnative.player.segments.MediaSegmentLoader
 import dev.jellyfinnative.player.segments.SegmentSkipDecision
@@ -44,7 +45,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -192,8 +192,8 @@ class PlayerViewModel
             observeConnectivity()
             loadTitle()
             openSession(
-                PlaybackResolveRequest(
-                    itemId = UUID.fromString(sessionStore.itemId),
+                playbackResolveRequest(
+                    itemId = sessionStore.itemId,
                     mediaSourceId = sessionStore.mediaSourceId,
                     startPositionTicks = sessionStore.startPositionTicks,
                 ),

@@ -5,7 +5,6 @@
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Skip back 10 seconds</string>
     <string name="player_forward">Skip forward 30 seconds</string>
-    <string name="player_retry">Try again</string>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitles</string>

@@ -6,6 +6,7 @@ import dev.jellyfinnative.core.database.dao.UserDao
 import dev.jellyfinnative.core.database.entities.ServerAddressEntity
 import dev.jellyfinnative.core.database.entities.ServerEntity
 import dev.jellyfinnative.core.database.entities.UserEntity
+import dev.jellyfinnative.core.datastore.HomeLayoutStore
 import dev.jellyfinnative.core.datastore.SecureCredentialStore
 import dev.jellyfinnative.core.datastore.StoredSession
 import dev.jellyfinnative.core.network.TestFixtures.ACCESS_TOKEN
@@ -21,6 +22,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -34,6 +36,7 @@ class SessionRepositoryTest {
     private val serverDao = mockk<ServerDao>(relaxed = true)
     private val userDao = mockk<UserDao>(relaxed = true)
     private val secureCredentialStore = mockk<SecureCredentialStore>(relaxed = true)
+    private val homeLayoutStore = mockk<HomeLayoutStore>(relaxed = true)
     private val sessionStateHolder = SessionStateHolder()
 
     private lateinit var repository: SessionRepository
@@ -51,6 +54,7 @@ class SessionRepositoryTest {
                 userDao = userDao,
                 secureCredentialStore = secureCredentialStore,
                 sessionStateHolder = sessionStateHolder,
+                homeLayoutStore = homeLayoutStore,
             )
     }
 
@@ -229,6 +233,15 @@ class SessionRepositoryTest {
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             coVerify(exactly = 1) { apiClientProvider.clearSession() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    @Test
+    @DisplayName("signing out clears the home layout cache, so the next user cannot see the last one's (audit ARCH-12)")
+    fun signOutClearsTheHomeLayoutCache() =
+        runTest {
+            repository.signOut()
+
+            verify(exactly = 1) { homeLayoutStore.clear() }
         }
 
     @Test

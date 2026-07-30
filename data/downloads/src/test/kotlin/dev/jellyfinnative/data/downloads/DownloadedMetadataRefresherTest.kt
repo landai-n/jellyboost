@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.downloads
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.ItemType
@@ -393,7 +394,7 @@ class DownloadedMetadataRefresherTest {
     @Test
     fun `an unreadable downloads table is not allowed to bring the app down at startup`() =
         runTest {
-            coEvery { downloadDao.allItemIds() } throws IOException("disk")
+            coEvery { downloadDao.allItemIds() } throws SQLiteException("disk")
 
             refresher().start()
             runCurrent()
@@ -405,7 +406,7 @@ class DownloadedMetadataRefresherTest {
     fun `a failing write is swallowed`() =
         runTest {
             givenDownloads(uuid(1))
-            coEvery { itemDao.upsert(any()) } throws IOException("disk full")
+            coEvery { itemDao.upsert(any()) } throws SQLiteException("disk full")
 
             refresher().refresh()
 

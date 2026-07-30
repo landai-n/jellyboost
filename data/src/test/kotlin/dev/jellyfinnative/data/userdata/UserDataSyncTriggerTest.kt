@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.userdata
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.database.dao.UserDataDao
 import dev.jellyfinnative.core.network.ConnectionState
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
@@ -17,7 +18,6 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.io.IOException
 
 /**
  * Unit tests for [UserDataSyncTrigger].
@@ -120,7 +120,7 @@ class UserDataSyncTriggerTest {
     @Test
     fun `a failing count is not allowed to bring the app down at startup`() =
         runTest {
-            coEvery { userDataDao.countPendingSync() } throws IOException("disk")
+            coEvery { userDataDao.countPendingSync() } throws SQLiteException("disk")
 
             trigger().start()
             runCurrent()

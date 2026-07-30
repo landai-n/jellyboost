@@ -119,7 +119,6 @@ desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", ver
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
-androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "androidxLifecycle" }
 
 # Navigation / Paging / DataStore
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidxNavigation" }
@@ -165,7 +164,6 @@ jellyfin-media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3
 # Network / images
 jellyfin-sdk = { group = "org.jellyfin.sdk", name = "jellyfin-core", version.ref = "jellyfinSdk" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
@@ -194,9 +192,6 @@ androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiaut
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }
-
-# Static analysis
-detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt" }
 
 [bundles]
 compose = [

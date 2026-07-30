@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import timber.log.Timber
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 /** Wires the `:player` implementations to the interfaces the rest of the module depends on. */
@@ -80,9 +81,15 @@ internal object PlayerProvidersModule {
      *
      * Separate from anything the SDK uses: media transfers are long-lived, so their timeouts and
      * connection pool have nothing in common with a JSON API call's.
+     *
+     * Qualified (audit ARCH-06): `:data:downloads` already qualifies its own no-timeout download
+     * client, and leaving this one the graph's only unqualified `OkHttpClient` would make it the
+     * silent default for any future unqualified `@Inject` — explicit is safer than "whichever
+     * client happened to stay nameless".
      */
     @Provides
     @Singleton
+    @MediaHttpClient
     fun provideMediaOkHttpClient(authInterceptor: JellyfinAuthInterceptor): OkHttpClient =
         OkHttpClient
             .Builder()
@@ -100,6 +107,11 @@ internal object PlayerProvidersModule {
     @UnstableApi
     fun provideDataSourceFactory(
         @ApplicationContext context: Context,
-        okHttpClient: OkHttpClient,
+        @MediaHttpClient okHttpClient: OkHttpClient,
     ): DataSource.Factory = DefaultDataSource.Factory(context, OkHttpDataSource.Factory(okHttpClient))
 }
+
+/** Marks the OkHttp client ExoPlayer transfers media on (audit ARCH-06). */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MediaHttpClient

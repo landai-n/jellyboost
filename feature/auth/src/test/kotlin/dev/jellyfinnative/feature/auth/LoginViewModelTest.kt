@@ -12,6 +12,7 @@ import dev.jellyfinnative.core.network.model.QuickConnectState
 import dev.jellyfinnative.core.network.model.ResolvedServer
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -161,6 +162,19 @@ class LoginViewModelTest {
 
             viewModel.uiState.value.canSignIn shouldBe false
             coVerify(exactly = 0) { authRepository.loginWithPassword(any(), any(), any()) }
+        }
+
+    @Test
+    @DisplayName("LoginUiState.toString() never prints the password (audit SEC-09)")
+    fun toStringRedactsThePassword() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onUsernameChange(USER_NAME)
+            viewModel.onPasswordChange(PASSWORD)
+
+            viewModel.uiState.value.toString() shouldNotContain PASSWORD
         }
 
     @Test

@@ -3,6 +3,7 @@ package dev.jellyfinnative.core.network
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.database.dao.ServerDao
 import dev.jellyfinnative.core.database.dao.UserDao
+import dev.jellyfinnative.core.datastore.HomeLayoutStore
 import dev.jellyfinnative.core.datastore.SecureCredentialStore
 import dev.jellyfinnative.core.network.model.SessionState
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ class SessionRepository
         private val userDao: UserDao,
         private val secureCredentialStore: SecureCredentialStore,
         private val sessionStateHolder: SessionStateHolder,
+        private val homeLayoutStore: HomeLayoutStore,
     ) {
         /**
          * Current session. Starts at [SessionState.Unknown]; hold the splash screen until it
@@ -79,6 +81,11 @@ class SessionRepository
          *
          * Server and user rows stay in Room so the next sign-in on the same server is instant;
          * the plan only requires the credential store to be cleared.
+         *
+         * The home layout cache is cleared too (audit ARCH-12): it is a server-derived value with
+         * no user id of its own, so leaving it behind would let the next user who signs in on this
+         * device see whatever the previous one's server last reported, for as long as their first
+         * fetch keeps failing.
          */
         suspend fun signOut() {
             val reported = apiCall { apiFacade.reportSessionEnded() }
@@ -91,6 +98,7 @@ class SessionRepository
                 Timber.e("Could not clear the stored credentials: %s", cleared.error)
             }
 
+            homeLayoutStore.clear()
             apiClientProvider.clearSession()
             sessionStateHolder.update(SessionState.LoggedOut)
             Timber.i("Signed out")
@@ -122,7 +130,8 @@ class SessionRepository
             }
 
             apiClientProvider.useSession(address, stored.accessToken)
-            Timber.i("Restored session for '%s' on '%s'", user.name, server.name)
+            // The username is deliberately not logged (audit SEC-05).
+            Timber.i("Restored session on '%s'", server.name)
 
             return SessionState.LoggedIn(
                 serverId = server.id,

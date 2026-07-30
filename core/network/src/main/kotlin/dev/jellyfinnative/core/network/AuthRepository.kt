@@ -121,7 +121,9 @@ class AuthRepository
             return when (val result = apiCall { apiFacade.authenticateUserByName(username, password) }) {
                 is AppResult.Success -> completeAuthentication(server, result.value)
                 is AppResult.Failure -> {
-                    Timber.w("Password login for '%s' failed: %s", username, result.error)
+                    // The username value is deliberately not logged (audit SEC-05): what the user
+                    // typed there can be a mistyped password.
+                    Timber.w("Password login failed: %s", result.error)
                     result
                 }
             }
@@ -139,7 +141,9 @@ class AuthRepository
                 is AppResult.Success -> {
                     val secret = result.value.secret
                     val code = result.value.code
-                    Timber.i("Quick Connect initiated, code %s", code)
+                    // The code is not logged (audit SEC-06): it is what authorizes this login, and
+                    // logcat is a wider audience than the screen showing it to the user.
+                    Timber.i("Quick Connect initiated")
                     AppResult.Success(QuickConnectSession(secret = secret, code = code))
                 }
 
@@ -245,9 +249,9 @@ class AuthRepository
 
             // docs/PLAN.md risk #4: a server that forbids content downloading changes the whole
             // offline story, so surface the policy loudly at every sign-in.
+            // The username is deliberately not logged here (audit SEC-05).
             Timber.i(
-                "Signed in as '%s' on '%s' (version %s, device %s); downloads allowed by policy: %b",
-                userName,
+                "Signed in on '%s' (version %s, device %s); downloads allowed by policy: %b",
                 server.name,
                 server.version,
                 apiClientProvider.deviceId,

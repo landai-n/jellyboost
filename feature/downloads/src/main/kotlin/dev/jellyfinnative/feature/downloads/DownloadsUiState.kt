@@ -185,6 +185,18 @@ internal val DownloadItem.isPauseTarget: Boolean
     get() = !isResumeTarget && isPausable
 
 /**
+ * Where a tap on this row should start playback, in Jellyfin ticks.
+ *
+ * Mirrors `:feature:detail`'s `playbackStartTicks(JellyfinItem)` exactly, so a download and the
+ * item's own detail page never disagree about where "Play" resumes: the cached [DownloadItem.item]
+ * carries the same `userData` the detail page reads, kept in step by the same `UserDataEventBus`
+ * both screens collect. `0L` — start from the beginning — whenever there is nothing to resume, or
+ * the cached item itself is missing (a wiped cache still lets the row play from the top).
+ */
+internal val DownloadItem.playbackStartTicks: Long
+    get() = item?.userData?.takeIf { it.isResumable }?.playbackPositionTicks ?: 0L
+
+/**
  * One-shot messages this screen can raise.
  *
  * A type rather than a string so the ViewModel stays free of resources and the copy lives in

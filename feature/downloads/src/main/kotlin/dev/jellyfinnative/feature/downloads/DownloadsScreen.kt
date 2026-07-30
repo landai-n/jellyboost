@@ -76,10 +76,17 @@ import dev.jellyfinnative.data.downloads.model.StorageUsage
  * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
  * WindowInsets(0)`: the frame above already reserved both the app bar and the system navigation
  * bar, and a second helping of the same insets would pad the list twice.
+ *
+ * @param onPlay play was requested for a finished download, at its resume position in Jellyfin
+ *   ticks — the caller pushes `Routes.Player`, the same destination `:feature:detail`'s Play
+ *   button navigates to. Reused rather than invented afresh: a completed download always resolves
+ *   locally (`PlaybackSourceResolver`), so the player needs nothing from this screen but the id and
+ *   the start position.
  */
 @Composable
 fun DownloadsScreen(
     viewModel: DownloadsViewModel,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,6 +116,7 @@ fun DownloadsScreen(
             state = state,
             actions = actions,
             bulk = bulk,
+            onPlay = onPlay,
             onWifiOnlyChange = viewModel::setWifiOnly,
             modifier = Modifier.padding(innerPadding),
         )
@@ -164,6 +172,7 @@ fun DownloadsContent(
     state: DownloadsUiState,
     actions: DownloadsActions,
     bulk: QueueBulkActions,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -193,7 +202,7 @@ fun DownloadsContent(
             state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
 
             state.selectedTab == DownloadsTab.DOWNLOADED ->
-                DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete)
+                DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete, onPlay = onPlay)
 
             else -> QueueTab(state = state, actions = actions, bulk = bulk)
         }
@@ -204,6 +213,7 @@ fun DownloadsContent(
 private fun DownloadedTab(
     groups: List<DownloadGroup>,
     onDelete: (DownloadItem) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
 ) {
     if (groups.isEmpty()) {
         EmptyState(message = stringResource(R.string.downloads_empty_downloaded))
@@ -240,6 +250,7 @@ private fun DownloadedTab(
                 DownloadedRow(
                     item = item,
                     onDelete = { pendingDelete = item },
+                    onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
                     inSeriesGroup = group.isSeries,
                 )
             }
@@ -609,6 +620,7 @@ private fun DownloadsPreview() {
                     onConfirmCancelAll = {},
                     onDismissCancelAll = {},
                 ),
+            onPlay = { _, _ -> },
             onWifiOnlyChange = {},
         )
     }

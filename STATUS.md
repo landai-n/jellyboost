@@ -53,11 +53,11 @@ verification on the minified build.
   Device-owed: blip-mid-queue retry walk, cancel-orphan sweep check, bulk
   actions on a 20+ queue (after wiring), v6→v7 upgrade over a live queue.
 
-### In flight
-- **Connectivity-aware track picker** (user-requested): agent launching now —
-  online, a downloaded item's picker shows the full source track list and a
-  track the file lacks reopens via a force-remote re-resolve; offline, only
-  playable tracks are shown (picker reacts to ConnectionStateProvider).
+- **Connectivity-aware track picker landed** (`feat(player)`, a38413f):
+  online, a downloaded item's pickers show the full source list and a missing
+  track streams via force-remote reopen (sticky across re-negotiations, falls
+  back to the file if the server is gone); offline, only playable tracks are
+  listed, live. Device walk owed (see device session).
 
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in

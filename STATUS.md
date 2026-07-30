@@ -1,18 +1,27 @@
 # STATUS
 
-## Current milestone: M10 — Release hardening (next up)
+## Current milestone: M10 — Release hardening (IN PROGRESS, started 2026-07-30)
 
 **DoD (M10, docs/PLAN.md):** R8 rules (SDK serializers/Room/Hilt/Media3), baseline
 profile, CI (GitHub Actions: assemble+detekt+test), signing; re-run M5/M8
 verification on the minified build.
 
 ### Next
-- Launch the M10 agent. Also on the M10 list from Known issues: the HEVC
-  `VideoProfileNotSupported` investigation (device profile CodecProfile conditions
-  vs `MediaCodecList` on the Helio G100).
-- Note: the repo has no GitHub remote — CI can be authored but not exercised.
-- **Work the audit backlog** (below): Tier 1 fix-now items first, Tier 2 folds into
-  the M10 plan alongside the DoD items.
+1. **Audit backlog Tier 1** (`docs/notes/audit-2026-07.md` §6) — 11 verified S-effort
+   fixes, worked first in parallel subagent groups:
+   player (STAB-02/STAB-03/ARCH-02), downloads-data (PERF-02/STAB-08/MKV-02),
+   stability sweep (STAB-06/STAB-07/STAB-10/PERF-05), build (SEC-01).
+2. **Audit backlog Tier 2** alongside the DoD items — headline: STAB-01 transient
+   retry classification, PERF-01/PERF-03 progress-tick hot path, ARCH-01 offline
+   filters (or honest-empty fallback + /diverge), SEC-03 credential-store catch split.
+3. **DoD items:** R8 rules + minified build, signing config, baseline profile,
+   CI workflow (authored only — repo has no GitHub remote, cannot be exercised),
+   then re-run M5/M8 verification on the minified build on the test tablet.
+4. **HEVC `VideoProfileNotSupported` investigation** (from Known issues): device
+   profile CodecProfile conditions vs `MediaCodecList` on the Helio G100 — note
+   memory: tablet decoder is HEVC Main-only (no Main 10), transcode may be correct.
+5. Outstanding device walk: batch selection (long-press, contextual bar, mixed
+   batch, offline) — fold into an M10 device session.
 
 ## Pre-M10 multi-dimension audit (2026-07-30 — DONE, report committed)
 

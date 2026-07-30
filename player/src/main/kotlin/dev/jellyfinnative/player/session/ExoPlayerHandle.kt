@@ -191,6 +191,31 @@ internal class ExoPlayerHandle
         }
 
         /**
+         * Releases the shared player.
+         *
+         * Idempotent by construction: the field is cleared first, so the second caller — whichever
+         * of `PlayerViewModel.releaseSession` and [PlaybackService.onDestroy] arrives last — finds
+         * nothing to do. [requirePlayer] then builds a fresh instance for the next session, which is
+         * why releasing here costs nothing but the rebuild.
+         *
+         * The listener is removed explicitly rather than left to `release()`: it is a strong
+         * reference from a `@Singleton` to a `MutableSharedFlow` that outlives every session, and
+         * leaving it attached is what turned "one leaked player" into "one leaked player per
+         * process, still emitting".
+         *
+         * Deliberately does *not* stop the playback service. [stop] owns that, and the service's own
+         * teardown is one of the two callers here — asking it to stop itself from inside `onDestroy`
+         * would be a no-op at best.
+         */
+        override fun release() {
+            val player = exoPlayer ?: return
+            exoPlayer = null
+            player.removeListener(listener)
+            player.release()
+            Timber.d("Released the shared ExoPlayer")
+        }
+
+        /**
          * Brings up the media session service so playback survives the screen being left and gets
          * a notification with transport controls.
          *

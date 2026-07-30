@@ -74,6 +74,23 @@ fun PlayerScreen(
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    // Rebuilt per composition, these nine method references are nine new unstable lambdas, and every
+    // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
+    // so one bundle is all that is ever needed.
+    val actions =
+        remember(viewModel, onBack) {
+            PlayerActions(
+                onPlayPause = viewModel::togglePlayPause,
+                onSeekTo = viewModel::seekTo,
+                onSeekBy = viewModel::seekBy,
+                onSelectAudio = viewModel::selectAudioTrack,
+                onSelectSubtitle = viewModel::selectSubtitleTrack,
+                onSelectQuality = viewModel::selectQuality,
+                onSelectSpeed = viewModel::selectSpeed,
+                onSkipSegment = viewModel::skipCurrentSegment,
+                onBack = onBack,
+            )
+        }
     val message = state.userMessage?.let { stringResource(it.textRes()) }
     var controlsVisible by remember { mutableStateOf(true) }
     val inPictureInPicture = pipState.isInPictureInPicture
@@ -116,7 +133,7 @@ fun PlayerScreen(
 
         PlayerGestureLayer(
             onToggleControls = { controlsVisible = !controlsVisible },
-            onSeekBy = viewModel::seekBy,
+            onSeekBy = actions.onSeekBy,
         )
 
         when {
@@ -136,28 +153,14 @@ fun PlayerScreen(
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    PlayerControls(
-                        state = state,
-                        actions =
-                            PlayerActions(
-                                onPlayPause = viewModel::togglePlayPause,
-                                onSeekTo = viewModel::seekTo,
-                                onSeekBy = viewModel::seekBy,
-                                onSelectAudio = viewModel::selectAudioTrack,
-                                onSelectSubtitle = viewModel::selectSubtitleTrack,
-                                onSelectQuality = viewModel::selectQuality,
-                                onSelectSpeed = viewModel::selectSpeed,
-                                onSkipSegment = viewModel::skipCurrentSegment,
-                                onBack = onBack,
-                            ),
-                    )
+                    PlayerControls(state = state, position = viewModel.position, actions = actions)
                 }
         }
 
         state.skippableSegment?.let { segment ->
             SkipSegmentButton(
                 kind = segment.kind,
-                onClick = viewModel::skipCurrentSegment,
+                onClick = actions.onSkipSegment,
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)

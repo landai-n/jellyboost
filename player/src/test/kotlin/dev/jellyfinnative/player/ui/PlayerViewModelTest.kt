@@ -1,34 +1,17 @@
 package dev.jellyfinnative.player.ui
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.media3.common.PlaybackException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
-import dev.jellyfinnative.core.common.model.ItemType
-import dev.jellyfinnative.core.common.model.JellyfinItem
-import dev.jellyfinnative.core.common.model.MediaSegmentKind
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
-import dev.jellyfinnative.core.datastore.AppPreferences
-import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.PlayerFixtures
-import dev.jellyfinnative.player.fallback.DecoderFallbackHandler
-import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 import dev.jellyfinnative.player.model.PlaybackQuality
 import dev.jellyfinnative.player.model.PlaybackSnapshot
 import dev.jellyfinnative.player.model.PlaybackSpeed
 import dev.jellyfinnative.player.model.PlaybackTrack
-import dev.jellyfinnative.player.model.TrickplayTiles
-import dev.jellyfinnative.player.pip.PipController
-import dev.jellyfinnative.player.report.PlaybackReporter
-import dev.jellyfinnative.player.resolve.ExoMediaSourceFactory
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
-import dev.jellyfinnative.player.resolve.PlaybackSourceResolver
-import dev.jellyfinnative.player.segments.MediaSegment
-import dev.jellyfinnative.player.segments.MediaSegmentLoader
-import dev.jellyfinnative.player.session.FakePlayerHandle
 import dev.jellyfinnative.player.session.PlayerEvent
-import dev.jellyfinnative.player.trickplay.TrickplayResolver
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
@@ -36,23 +19,18 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.slot
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
@@ -63,56 +41,7 @@ import org.junit.jupiter.api.Test
  * screen closing. All of that lives here and none of it needs a device.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class PlayerViewModelTest {
-    private val dispatcher = StandardTestDispatcher()
-    private val repository = mockk<JellyfinRepository>()
-    private val resolver = mockk<PlaybackSourceResolver>()
-    private val mediaSourceFactory = mockk<ExoMediaSourceFactory>()
-    private val reporter = mockk<PlaybackReporter>(relaxed = true)
-    private val playerHandle = FakePlayerHandle()
-    private val trickplayResolver = mockk<TrickplayResolver>()
-    private val segmentLoader = mockk<MediaSegmentLoader>()
-    private val pipController = PipController()
-
-    /** The M9 preferences at their defaults; individual tests override what they exercise. */
-    private val preferences =
-        mockk<AppPreferences> {
-            every { introSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
-            every { outroSkipMode } returns flowOf(SegmentSkipMode.SHOW_BUTTON)
-            every { pipOnLeave } returns flowOf(true)
-        }
-
-    private val source =
-        PlayerFixtures.remoteSource(
-            playMethod = PlayMethod.DIRECT_PLAY,
-            startPositionTicks = RESUME_TICKS,
-            audioTracks =
-                listOf(
-                    PlaybackTrack(index = 1, label = "English", language = "eng", codec = "ac3"),
-                    PlaybackTrack(index = 2, label = "French", language = "fra", codec = "aac"),
-                ),
-            selectedAudioIndex = 1,
-        )
-
-    private val spec = PlaybackMediaItemSpec(mediaId = PlayerFixtures.ITEM_ID.toString(), uri = "https://server/x")
-
-    @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-        coEvery { repository.getItem(any()) } returns
-            AppResult.Success(JellyfinItem(id = "x", name = "Arrival", type = ItemType.MOVIE))
-        coEvery { resolver.resolve(any()) } returns AppResult.Success(source)
-        every { mediaSourceFactory.create(any()) } returns spec
-        every { reporter.startReporting(any(), any(), any()) } returns Job()
-        coEvery { trickplayResolver.resolve(any(), any()) } returns null
-        coEvery { segmentLoader.load(any()) } returns emptyList()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
+internal class PlayerViewModelTest : PlayerViewModelFixture() {
     // ---- opening ------------------------------------------------------------------------------
 
     @Test
@@ -261,6 +190,25 @@ class PlayerViewModelTest {
         }
 
     @Test
+    fun `the stop reaches the server before the request for the next stream does`() =
+        runTest(dispatcher) {
+            val transcoding = source.copy(playMethod = PlayMethod.TRANSCODE, maxStreamingBitrate = 20_000_000)
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(transcoding)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectQuality(PlaybackQuality.LOW)
+            advanceUntilIdle()
+
+            // Count is not enough: launched as independent coroutines these two race, and the losing
+            // order leaves the old encoder running against a session nobody will stop.
+            coVerifyOrder {
+                reporter.stopTranscoding(transcoding)
+                resolver.resolve(match { it.maxStreamingBitrate == PlaybackQuality.LOW.maxStreamingBitrate })
+            }
+        }
+
+    @Test
     fun `gives up visibly once the fallback ladder is exhausted`() =
         runTest(dispatcher) {
             val model = viewModel()
@@ -373,6 +321,20 @@ class PlayerViewModelTest {
             // viewModelScope is already cancelled here, so a report launched on it would vanish.
             coVerify(exactly = 1) { reporter.reportStopDetached(source, any()) }
             playerHandle.stopped shouldBe true
+        }
+
+    @Test
+    fun `leaving the screen gives the player back rather than idling it forever`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.releaseSession()
+
+            // `stop()` frees the codecs and the audio focus but keeps the playback thread, the
+            // loaders, the allocator's buffers and the ffmpeg renderer for the life of the process
+            // (audit STAB-05).
+            playerHandle.releaseCount shouldBe 1
         }
 
     @Test
@@ -641,6 +603,46 @@ class PlayerViewModelTest {
                 .shouldBeNull()
         }
 
+    // ---- the ticking half of the state (PERF-04) ------------------------------------------------
+
+    @Test
+    fun `a tick moves the seek bar`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onTick(PlaybackSnapshot(positionMs = 60_000L, bufferedMs = 90_000L, isPlaying = true))
+
+            model.position.value shouldBe PlaybackPosition(positionMs = 60_000L, bufferedMs = 90_000L)
+        }
+
+    @Test
+    fun `a tick that only moves the position leaves the rest of the state alone`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onTick(PlaybackSnapshot(positionMs = 60_000L, isPlaying = true))
+            val before = model.uiState.value
+
+            model.onTick(PlaybackSnapshot(positionMs = 60_500L, isPlaying = true))
+
+            // The whole point of splitting the flow: at 2 Hz, an unchanged `PlayerUiState` is what
+            // lets the top bar, the transport row and the pickers skip recomposition entirely.
+            model.uiState.value shouldBeSameInstanceAs before
+            model.position.value.positionMs shouldBe 60_500L
+        }
+
+    @Test
+    fun `a seek publishes the new position without waiting for the poll`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.seekTo(90_000L)
+
+            model.position.value.positionMs shouldBe 90_000L
+        }
+
     // ---- M9: picture-in-picture ---------------------------------------------------------------
 
     @Test
@@ -772,55 +774,4 @@ class PlayerViewModelTest {
             handle.get<Long>(PlayerViewModel.KEY_LIVE_POSITION_TICKS).shouldBeNull()
             handle.get<Long>(PlayerViewModel.ARG_START_TICKS) shouldBe RESUME_TICKS
         }
-
-    private fun viewModel(savedStateHandle: SavedStateHandle = navArgs()) =
-        PlayerViewModel(
-            repository = repository,
-            resolver = resolver,
-            mediaSourceFactory = mediaSourceFactory,
-            playerHandle = playerHandle,
-            reporter = reporter,
-            fallback = DecoderFallbackHandler(),
-            trickplayResolver = trickplayResolver,
-            segmentLoader = segmentLoader,
-            preferences = preferences,
-            pipController = pipController,
-            savedStateHandle = savedStateHandle,
-        )
-
-    /**
-     * The handle as the navigation library hands it over, plus whatever a restore would carry.
-     *
-     * `extra` empty is the fresh-tap case every other test in this class exercises.
-     */
-    private fun navArgs(vararg extra: Pair<String, Any>) =
-        SavedStateHandle(
-            mapOf(
-                PlayerViewModel.ARG_ITEM_ID to PlayerFixtures.ITEM_ID.toString(),
-                PlayerViewModel.ARG_MEDIA_SOURCE_ID to MEDIA_SOURCE_ID,
-                PlayerViewModel.ARG_START_TICKS to RESUME_TICKS,
-            ) + extra,
-        )
-
-    /** An intro from 30 s to 2 min — long enough to be worth a button. */
-    private val intro = MediaSegment(MediaSegmentKind.INTRO, startMs = 30_000L, endMs = 120_000L)
-
-    private val tiles =
-        TrickplayTiles(
-            thumbnailWidth = 320,
-            thumbnailHeight = 180,
-            columns = 10,
-            rows = 10,
-            thumbnailCount = 250,
-            intervalMs = 10_000,
-            tileUris = listOf("https://server/t.0.jpg"),
-        )
-
-    private companion object {
-        const val MEDIA_SOURCE_ID = "source-1"
-        const val RESUME_TICKS = 12_000_000_000L
-
-        /** 90 minutes in — an hour past [RESUME_TICKS], so a stale replay is unmistakable. */
-        const val LIVE_TICKS = 54_000_000_000L
-    }
 }

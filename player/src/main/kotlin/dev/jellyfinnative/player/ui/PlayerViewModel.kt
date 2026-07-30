@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyfinnative.core.common.AppError
-import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.getOrNull
 import dev.jellyfinnative.core.common.model.MediaSegmentKind
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
@@ -24,15 +23,14 @@ import dev.jellyfinnative.player.model.ticksToMillis
 import dev.jellyfinnative.player.pip.PipController
 import dev.jellyfinnative.player.pip.PipState
 import dev.jellyfinnative.player.report.PlaybackReporter
-import dev.jellyfinnative.player.resolve.ExoMediaSourceFactory
 import dev.jellyfinnative.player.resolve.PlaybackResolveRequest
-import dev.jellyfinnative.player.resolve.PlaybackSourceResolver
 import dev.jellyfinnative.player.segments.MediaSegment
 import dev.jellyfinnative.player.segments.MediaSegmentLoader
-import dev.jellyfinnative.player.segments.SegmentSkipController
 import dev.jellyfinnative.player.segments.SegmentSkipDecision
+import dev.jellyfinnative.player.session.PlaybackSessionController
 import dev.jellyfinnative.player.session.PlayerEvent
 import dev.jellyfinnative.player.session.PlayerHandle
+import dev.jellyfinnative.player.session.SessionOpenResult
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -59,28 +57,35 @@ import kotlin.time.Duration.Companion.milliseconds
  * Ordering rules that are not obvious and are load-bearing:
  *
  * - a re-resolve always stops the *previous* transcode before starting the next one, otherwise
- *   every quality change strands an ffmpeg process on the server;
+ *   every quality change strands an ffmpeg process on the server. That order is now owned by
+ *   [PlaybackSessionController], in one coroutine, because two coroutines could not guarantee it;
  * - the stop report goes out on a detached scope, because `viewModelScope` is already cancelled by
  *   the time [onCleared] runs.
  *
- * Since M8 the source may equally be a local file: [PlaybackSourceResolver] picks between the
+ * Since M8 the source may equally be a local file: `PlaybackSourceResolver` picks between the
  * download on disk and the server, and nothing below this line knows which it got. That is the
  * whole reason `PlaybackMediaSource` is a sealed type.
  *
- * Both suppressed thresholds are exceeded for the same reason, and it is the class's whole purpose:
- * this is the one place a playback session is sequenced, so it has one function per user action, one
- * per player event, and one collaborator per thing a session needs (resolve, report, fall back,
- * trickplay, segments, preferences, picture-in-picture). Splitting it would move the sequencing —
- * the part that is actually hard and actually tested — behind another indirection.
+ * ### What this class is, after the ARCH-10 decomposition
+ * Three things that were sequencing-adjacent rather than sequencing now live next door and are
+ * tested on their own: [PlaybackSessionController] (resolve → prepare → re-negotiate),
+ * [PlayerSessionStore] (the route's arguments, and the live position written back over them), and
+ * [PlaybackPositionTracker] (the 500 ms tick and the segment decision it feeds). What is left is
+ * what was always the hard part — deciding *what to do* with a user action, a player event, or a
+ * failure — plus the one state object the screen draws.
+ *
+ * `TooManyFunctions` still applies and is still suppressed, for a reason the decomposition does not
+ * remove: this is the one place a playback session is sequenced, so it has one function per user
+ * action and one per player event, and there are simply that many of both. Splitting *those* would
+ * move the sequencing, which is the part that is actually hard and actually tested.
  */
 @HiltViewModel
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("TooManyFunctions")
 class PlayerViewModel
     @Inject
     constructor(
         private val repository: JellyfinRepository,
-        private val resolver: PlaybackSourceResolver,
-        private val mediaSourceFactory: ExoMediaSourceFactory,
+        private val sessionController: PlaybackSessionController,
         private val playerHandle: PlayerHandle,
         private val reporter: PlaybackReporter,
         private val fallback: DecoderFallbackHandler,
@@ -88,33 +93,24 @@ class PlayerViewModel
         private val segmentLoader: MediaSegmentLoader,
         private val preferences: AppPreferences,
         private val pipController: PipController,
-        private val savedStateHandle: SavedStateHandle,
+        savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
-        private val itemId: String =
-            requireNotNull(savedStateHandle.get<String>(ARG_ITEM_ID)) {
-                "Player route is missing its '$ARG_ITEM_ID' argument"
-            }
-        private val mediaSourceId: String? = savedStateHandle[ARG_MEDIA_SOURCE_ID]
+        private val sessionStore = PlayerSessionStore(savedStateHandle)
 
-        /**
-         * Where the last session had actually got to, or `null` if this is a fresh navigation.
-         *
-         * Non-null only after a process death: the handle is restored with whatever the last
-         * progress tick wrote into it ([rememberLivePosition]). It is the difference between coming
-         * back to the film where the user left it and coming back to where they *tapped Play* —
-         * and the latter is not merely a cosmetic annoyance, because the progress reporter would
-         * then stamp that stale position with a fresh timestamp and most-recent-wins sync would
-         * push it out to the server and every other device.
-         */
-        private val restoredPositionTicks: Long? = savedStateHandle[KEY_LIVE_POSITION_TICKS]
-
-        private val startPositionTicks: Long =
-            restoredPositionTicks ?: savedStateHandle[ARG_START_TICKS] ?: 0L
+        private val positionTracker = PlaybackPositionTracker()
 
         private val _uiState = MutableStateFlow(PlayerUiState())
 
-        /** The single source of truth for [PlayerScreen]. */
+        /** The slow-changing state [PlayerScreen] draws; the position is deliberately not in it. */
         val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
+
+        /**
+         * The seek bar's position and buffer, ticking twice a second (audit PERF-04).
+         *
+         * Separate from [uiState] so that a number only the scrubber and the clock read cannot
+         * invalidate the top bar, the transport row and the pickers along with them.
+         */
+        val position: StateFlow<PlaybackPosition> = positionTracker.position
 
         private val _videoPlayer = MutableStateFlow<Player?>(null)
 
@@ -147,9 +143,6 @@ class PlayerViewModel
         /** The item's intro/outro ranges; empty offline and on a server without the segments API. */
         private var segments: List<MediaSegment> = emptyList()
 
-        /** Remembers which segments this session already jumped over — one per playback session. */
-        private val segmentSkip = SegmentSkipController()
-
         /** The user's per-type segment preference, kept current for the position ticker to read. */
         private var skipModes: Map<MediaSegmentKind, SegmentSkipMode> = emptyMap()
 
@@ -163,18 +156,13 @@ class PlayerViewModel
             observePlayerEvents()
             observePreferences()
             loadTitle()
-            open(
+            openSession(
                 PlaybackResolveRequest(
-                    itemId = UUID.fromString(itemId),
-                    mediaSourceId = mediaSourceId,
-                    startPositionTicks = startPositionTicks,
+                    itemId = UUID.fromString(sessionStore.itemId),
+                    mediaSourceId = sessionStore.mediaSourceId,
+                    startPositionTicks = sessionStore.startPositionTicks,
                 ),
-                // A fresh tap on Play means play. A restore after process death resumes only what
-                // was actually running: an item the user had paused before leaving the app must not
-                // start talking to an empty room minutes later.
-                playWhenReady =
-                    restoredPositionTicks == null ||
-                        savedStateHandle.get<Boolean>(KEY_WAS_PLAYING) == true,
+                playWhenReady = sessionStore.playWhenReady,
             )
         }
 
@@ -186,7 +174,7 @@ class PlayerViewModel
          */
         private fun loadTitle() {
             viewModelScope.launch {
-                val item = repository.getItem(itemId).getOrNull() ?: return@launch
+                val item = repository.getItem(sessionStore.itemId).getOrNull() ?: return@launch
                 val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
                 _uiState.update { it.copy(title = label) }
             }
@@ -223,7 +211,7 @@ class PlayerViewModel
 
         fun seekTo(positionMs: Long) {
             playerHandle.seekTo(positionMs)
-            _uiState.update { it.copy(positionMs = positionMs) }
+            positionTracker.onSeekTo(positionMs)
         }
 
         /** Jumps by [deltaMs], clamped to the item — backs the skip-back / skip-forward buttons. */
@@ -246,7 +234,7 @@ class PlayerViewModel
                 return
             }
             if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
-            reopen(
+            reopenSession(
                 current.asRequest().copy(audioStreamIndex = jellyfinIndex),
                 PlayerMessage.RestartedForTrackChange,
             )
@@ -262,7 +250,7 @@ class PlayerViewModel
             }
             if (current is LocalPlaybackMediaSource) return refuseLocalTrackChange(current)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
-            reopen(
+            reopenSession(
                 current.asRequest().copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
                 PlayerMessage.RestartedForTrackChange,
             )
@@ -302,14 +290,15 @@ class PlayerViewModel
             val current = source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
             _uiState.update { it.copy(quality = quality) }
-            reopen(current.asRequest().copy(maxStreamingBitrate = quality.maxStreamingBitrate))
+            reopenSession(current.asRequest().copy(maxStreamingBitrate = quality.maxStreamingBitrate))
         }
 
         /**
          * Applies a playback rate.
          *
          * Session-scoped: it is held in [PlayerUiState] and re-applied after every re-resolve
-         * ([open]), and nothing writes it to disk (docs/PLAN.md, "M9 Polish" → speed).
+         * ([PlaybackSessionController.open]), and nothing writes it to disk (docs/PLAN.md,
+         * "M9 Polish" → speed).
          */
         fun selectSpeed(speed: PlaybackSpeed) {
             if (speed == _uiState.value.speed) return
@@ -373,18 +362,28 @@ class PlayerViewModel
         /**
          * One reading of the player: the seek bar, and whatever the segment rules make of it.
          *
-         * The segment check rides the existing poll rather than adding a second one — it needs
-         * exactly the same information, twice a second is far more often than a segment boundary
-         * moves, and a skip button that appears half a second late is a skip button nobody notices
-         * is late.
+         * The position itself goes to [PlaybackPositionTracker] rather than into [uiState]; what
+         * lands here is only what the *slow* state has to learn — that the container disagreed with
+         * the server about the runtime, and whether playback is running.
          *
          * `internal` so a test can hand it a position directly; see [setScreenPresent].
          */
         internal fun onTick(snapshot: PlaybackSnapshot) {
-            _uiState.update { it.withSnapshot(snapshot) }
+            val decision = positionTracker.onTick(snapshot, segments, skipModes)
+            _uiState.update {
+                it.copy(
+                    // The server's runtime and the container's can disagree; once the player knows,
+                    // it wins.
+                    durationMs = snapshot.durationMs.takeIf { ms -> ms > 0L } ?: it.durationMs,
+                    isPlaying = snapshot.isPlaying,
+                )
+            }
             publishPipState()
+            applySegmentDecision(decision)
+        }
 
-            when (val decision = segmentSkip.decide(snapshot.positionMs, segments, skipModes)) {
+        private fun applySegmentDecision(decision: SegmentSkipDecision) {
+            when (decision) {
                 SegmentSkipDecision.None ->
                     _uiState.update { if (it.skippableSegment == null) it else it.copy(skippableSegment = null) }
 
@@ -422,77 +421,84 @@ class PlayerViewModel
 
         // ---- session ------------------------------------------------------------------------------
 
-        /**
-         * Resolves [request] and hands the result to the player.
-         *
-         * @param playWhenReady whether to start playing once buffered — `false` preserves a paused
-         *   state across a re-resolve.
-         */
-        private fun open(
+        /** Opens [request] and publishes whatever [PlaybackSessionController] made of it. */
+        private fun openSession(
             request: PlaybackResolveRequest,
             playWhenReady: Boolean,
             message: PlayerMessage? = null,
         ) {
             viewModelScope.launch {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-                when (val result = resolver.resolve(request)) {
-                    is AppResult.Failure -> fail(result.error.toMessage())
-
-                    is AppResult.Success -> {
-                        val resolved = result.value
-                        val spec = mediaSourceFactory.create(resolved)
-                        if (spec == null) {
-                            fail(UNSUPPORTED_SOURCE)
-                            return@launch
-                        }
-
-                        source = resolved
-                        stopReported = false
-                        playerHandle.prepare(
-                            spec = spec,
-                            startPositionMs = resolved.startPositionTicks.ticksToMillis(),
-                            playWhenReady = playWhenReady,
-                        )
-                        // A re-resolve builds a fresh media item, which starts at 1×; the speed the
-                        // user chose belongs to the session, not to the media item.
-                        _uiState.value.speed
-                            .takeIf { !it.isNormal }
-                            ?.let { playerHandle.setPlaybackSpeed(it.rate) }
-                        _videoPlayer.value = playerHandle.player
-                        _uiState.update { it.withSource(resolved, message) }
-
-                        reporter.reportStart(resolved, playerHandle.snapshot())
-                        setReportingActive(true)
-                        loadPlaybackExtras(resolved)
-                    }
-                }
+                publish(sessionController.open(request, playWhenReady), message)
             }
         }
 
         /**
-         * Reopens the current item under new terms, stopping the outgoing transcode first.
+         * Reopens the current item under new terms.
          *
-         * Every re-negotiation goes through here — quality change, track change the server has to
-         * perform, and both fallback ladders — so the "stop the old encoder, then start the new
-         * stream, then resume where we were" order only exists once.
+         * One coroutine, not two: [PlaybackSessionController.reopen] stops the outgoing transcode
+         * and asks for the next stream in sequence. Launching them independently — which is what
+         * this used to do — let the new `PlaybackInfo` reach the server before the old encoder was
+         * killed, which is the stranded ffmpeg process the ordering exists to prevent.
          */
-        private fun reopen(
+        private fun reopenSession(
             request: PlaybackResolveRequest,
             message: PlayerMessage? = null,
         ) {
             val previous = source ?: return
             val snapshot = playerHandle.snapshot()
             setReportingActive(false)
-            viewModelScope.launch { reporter.stopTranscoding(previous) }
-            open(
+            val resumed =
                 request.copy(
                     startPositionTicks =
                         request.startPositionTicks.takeIf { it > 0L } ?: snapshot.positionTicks,
-                ),
-                playWhenReady = snapshot.isPlaying,
-                message = message,
-            )
+                )
+
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result =
+                    sessionController.reopen(
+                        previous = previous,
+                        request = resumed,
+                        playWhenReady = snapshot.isPlaying,
+                    )
+                publish(result, message)
+            }
+        }
+
+        /**
+         * Adopts the outcome of an open.
+         *
+         * [source] is assigned before anything suspends, so a player event arriving during the first
+         * buffer is attributed to the stream that produced it rather than to the one it replaced.
+         */
+        private suspend fun publish(
+            result: SessionOpenResult,
+            message: PlayerMessage?,
+        ) {
+            when (result) {
+                is SessionOpenResult.ResolveFailed -> fail(result.error.toMessage())
+
+                SessionOpenResult.UnsupportedSource -> fail(UNSUPPORTED_SOURCE)
+
+                is SessionOpenResult.Opened -> {
+                    val resolved = result.source
+                    source = resolved
+                    stopReported = false
+                    // A re-resolve builds a fresh media item, which starts at 1×; the speed the user
+                    // chose belongs to the session, not to the media item.
+                    _uiState.value.speed
+                        .takeIf { !it.isNormal }
+                        ?.let { playerHandle.setPlaybackSpeed(it.rate) }
+                    _videoPlayer.value = playerHandle.player
+                    _uiState.update { it.withSource(resolved, message) }
+                    positionTracker.onSessionOpened(resolved.startPositionTicks.ticksToMillis())
+
+                    reporter.reportStart(resolved, playerHandle.snapshot())
+                    setReportingActive(true)
+                    loadPlaybackExtras(resolved)
+                }
+            }
         }
 
         /**
@@ -506,7 +512,6 @@ class PlayerViewModel
          */
         private fun loadPlaybackExtras(resolved: PlaybackMediaSource) {
             segments = emptyList()
-            segmentSkip.reset()
             _uiState.update { it.copy(trickplay = null, skippableSegment = null) }
 
             viewModelScope.launch {
@@ -563,7 +568,7 @@ class PlayerViewModel
 
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
                 is FallbackDecision.ForceTranscode ->
-                    reopen(
+                    reopenSession(
                         current.asRequest().copy(
                             startPositionTicks = decision.positionTicks,
                             enableDirectPlay = false,
@@ -573,7 +578,7 @@ class PlayerViewModel
                     )
 
                 is FallbackDecision.LowerBitrate ->
-                    reopen(
+                    reopenSession(
                         current.asRequest().copy(
                             startPositionTicks = decision.positionTicks,
                             maxStreamingBitrate = decision.maxStreamingBitrate,
@@ -594,9 +599,10 @@ class PlayerViewModel
          * Independent of the UI position poll: reporting has to keep running while the screen is
          * backgrounded, because that is exactly when a user leaves an episode playing.
          *
-         * The same tick is what keeps [SavedStateHandle] current — see [rememberLivePosition]. It
-         * rides this ticker rather than the UI one for exactly the reason above: the UI poll stops
-         * when the screen goes away, which is precisely the state a process death happens in.
+         * The same tick is what keeps [SavedStateHandle] current — see
+         * [PlayerSessionStore.rememberLivePosition]. It rides this ticker rather than the UI one for
+         * exactly the reason above: the UI poll stops when the screen goes away, which is precisely
+         * the state a process death happens in.
          */
         private fun setReportingActive(active: Boolean) {
             reportingJob?.cancel()
@@ -607,28 +613,9 @@ class PlayerViewModel
                         reporter.startReporting(
                             scope = viewModelScope,
                             currentSource = { source },
-                            snapshot = { playerHandle.snapshot().also(::rememberLivePosition) },
+                            snapshot = { playerHandle.snapshot().also(sessionStore::rememberLivePosition) },
                         )
                 }
-        }
-
-        /**
-         * Writes the live position back into the handle the system restores after a process death.
-         *
-         * Without this the handle only ever holds the navigation arguments, so a restored back
-         * stack re-opens the player at the position the item had when Play was *tapped* — and the
-         * next progress tick then writes that stale position to the local user-data row with a
-         * fresh timestamp, which most-recent-wins sync happily propagates to the server and to
-         * every other device. Losing the resume point of a film someone is halfway through is
-         * silent, permanent and entirely invisible until they come back to it.
-         *
-         * Position 0 is not written: it is indistinguishable from "no session yet", and falling
-         * back to the navigation argument is the better answer for it anyway.
-         */
-        private fun rememberLivePosition(snapshot: PlaybackSnapshot) {
-            if (snapshot.positionTicks <= 0L) return
-            savedStateHandle[KEY_LIVE_POSITION_TICKS] = snapshot.positionTicks
-            savedStateHandle[KEY_WAS_PLAYING] = snapshot.isPlaying
         }
 
         private fun fail(
@@ -663,6 +650,11 @@ class PlayerViewModel
          * `internal` rather than private so the ordering it encodes — which is the entire reason
          * the stop report exists on a detached scope — can be unit tested without reflecting into
          * the lifecycle library's internals.
+         *
+         * [PlayerHandle.release] is the audit's STAB-05 fix: `stop()` alone idles the player but
+         * leaves its playback thread, loaders, allocator buffers and ffmpeg renderer alive for the
+         * rest of the process. It is idempotent, and the media-session service's teardown reaches it
+         * too — this is the path that covers a session whose service never started.
          */
         internal fun releaseSession() {
             setReportingActive(false)
@@ -676,6 +668,7 @@ class PlayerViewModel
             }
             _videoPlayer.value = null
             playerHandle.stop()
+            playerHandle.release()
         }
 
         companion object {
@@ -731,22 +724,12 @@ private fun PlayerUiState.withSource(
         playMethod = source.playMethod,
         isLocalPlayback = source is LocalPlaybackMediaSource,
         durationMs = source.runTimeTicks.ticksToMillis(),
-        positionMs = source.startPositionTicks.ticksToMillis(),
         audioTracks = source.audioTracks,
         subtitleTracks = source.subtitleTracks,
         selectedAudioIndex = source.selectedAudioIndex,
         selectedSubtitleIndex = source.selectedSubtitleIndex,
         quality = PlaybackQuality.forBitrate((source as? RemotePlaybackMediaSource)?.maxStreamingBitrate),
         userMessage = message ?: userMessage,
-    )
-
-private fun PlayerUiState.withSnapshot(snapshot: PlaybackSnapshot): PlayerUiState =
-    copy(
-        positionMs = snapshot.positionMs,
-        bufferedMs = snapshot.bufferedMs,
-        // The server's runtime and the container's can disagree; once the player knows, it wins.
-        durationMs = snapshot.durationMs.takeIf { it > 0L } ?: durationMs,
-        isPlaying = snapshot.isPlaying,
     )
 
 /** Turns the domain failure taxonomy into copy a user can act on. */

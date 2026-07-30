@@ -79,9 +79,11 @@ verification on the minified build.
 2. **DoD items:** R8 rules + minified build, signing config, baseline profile,
    CI workflow (authored only — repo has no GitHub remote, cannot be exercised),
    then re-run M5/M8 verification on the minified build on the test tablet.
-3. **HEVC `VideoProfileNotSupported` investigation** (from Known issues): device
-   profile CodecProfile conditions vs `MediaCodecList` on the Helio G100 — note
-   memory: tablet decoder is HEVC Main-only (no Main 10), transcode may be correct.
+3. ~~**HEVC `VideoProfileNotSupported` investigation**~~ — CLOSED 2026-07-30, not a
+   bug: every HEVC decoder on the device (c2.mtk.hevc.decoder, its .secure variant,
+   c2.android.hevc.decoder) reports Main profile only, no Main 10 (`dumpsys
+   media.player`, direct measurement). The profile is data-driven from those
+   capabilities and advertises Main-only correctly; the transcode is expected.
 4. **M10 device session** (batched): batch-selection walk; Tier 1 checks owed to
    the device — SEC-01 release logcat during a search, STAB-02 Play→Home on a
    slow server, STAB-03 am-kill position restore, STAB-06 Pause not logged at
@@ -590,11 +592,17 @@ which is what Dashboard renders):
   row, 15 s of playback left the server at `Played=False` (previously re-marked within
   5 s), and exit reset position server-side. +11 tests incl. an end-to-end regression
   pair (401 total).
-- HEVC files transcode with `TranscodeReasons=[VideoProfileNotSupported]` even though
-  the Helio G100 decodes HEVC Main/Main 10 — the device profile's HEVC CodecProfile
-  conditions likely don't match what the decoder probe reports on this device.
-  Playback still works (graceful transcode); investigate the built profile vs
-  `MediaCodecList` output before M10.
+- ~~HEVC files transcode with `TranscodeReasons=[VideoProfileNotSupported]`~~ —
+  RESOLVED as correct behavior (2026-07-30 investigation): the premise that the
+  Helio G100 decodes Main 10 was wrong. Direct measurement (`dumpsys media.player`
+  on the test tablet) shows every HEVC decoder path — `c2.mtk.hevc.decoder`,
+  `c2.mtk.hevc.decoder.secure` (both Main/High 5.1), and the software
+  `c2.android.hevc.decoder` (Main + MainStill/High 5.2) — is Main-profile-only.
+  `MediaCodecProbe` → `DeviceProfileBuilder.codecProfile()` correctly advertises
+  `Main` only, so the server transcodes Main 10 content as it should. 8-bit Main
+  HEVC direct-plays on the hardware decoder (confirmed via `media.metrics`: a real
+  1920×960 hardware decode session, no errors). No code change; matches the
+  upstream jellyfin-android approach.
 - Backgrounding the app pauses playback: `POST_NOTIFICATIONS` is declared but never
   requested (M9), so the media notification can't show; background-continue +
   notification permission flow are M9 scope (background playback is not in the M5 DoD).

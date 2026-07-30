@@ -21,7 +21,18 @@ verification on the minified build.
   controller test). DECISIONS.md entry covers the one inverted test. Net +16
   tests. **Device walk still owed** (batched M10 session below).
 
-### Queued (user-requested 2026-07-30, launch after player decomposition + phase 0/1 land)
+- **Tier 2 player batch landed, 2026-07-30** (`refactor(player)`): ARCH-10
+  decomposition (PlaybackSessionController / PlayerSessionStore /
+  PlaybackPositionTracker) with the stop-transcode ordering race fixed
+  structurally; STAB-05/ARCH-03 `PlayerHandle.release()` on both teardown
+  paths; PERF-04 position/buffer moved to a separate fast StateFlow. :player
+  203 → 229 tests, repo 1231. Device-owed: release() thread/loader check +
+  lazy rebuild, PiP survives then releases on dismiss, teardown-order logcat
+  watch, PERF-04 recomposition count.
+- **Debug installs get an orange launcher icon** (`chore(app)`) — adaptive-icon
+  overlay in `app/src/debug/res` only; release resource table untouched.
+
+### Queued (user-requested 2026-07-30, launch after phase 0/1 lands — player half now landed)
 - **Connectivity-aware track picker for downloaded items:** when online, the
   picker for a downloaded item shows the full source track list, and selecting
   a track the local file cannot supply reopens via the *streaming* path with

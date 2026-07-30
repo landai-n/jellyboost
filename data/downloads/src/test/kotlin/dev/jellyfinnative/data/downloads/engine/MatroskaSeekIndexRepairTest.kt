@@ -7,6 +7,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.io.IOException
+import java.io.RandomAccessFile
 
 /**
  * Unit tests for [MatroskaSeekIndexRepair] — what makes a transcoded download seekable.
@@ -188,6 +190,98 @@ class MatroskaSeekIndexRepairTest {
         file.length() shouldBe 0L
     }
 
+    // ---- lengths a file we did not write may declare ------------------------------------------------
+
+    @Test
+    fun `a Void declaring more than two gigabytes is refused rather than overflowed`() {
+        // The adversarial shape MKV-02 names: a Void whose declared length does not fit an `Int`, in
+        // a file long enough for it to parse. Every byte count in the patch is derived from that
+        // length, so `toInt()` on it used to wrap negative and throw a NegativeArraySizeException out
+        // of the coroutine that was opening the file for playback.
+        val prefix = Mkv.headerWithVoidDeclaring(HUGE_VOID_BYTES)
+        val cues = Mkv.cues()
+        val voidEnd = prefix.size + HUGE_VOID_BYTES
+        val file = File(directory, "media.mkv")
+        RandomAccessFile(file, "rw").use { media ->
+            media.write(prefix)
+            // Sparse: the 2.5 GiB in the middle is never written, so this costs a few blocks of disk.
+            media.setLength(voidEnd + cues.size)
+            media.seek(voidEnd)
+            media.write(cues)
+        }
+
+        // A refusal, not a throw — and NO_ROOM rather than FAILED, because the Void is turned down
+        // where it is chosen rather than where it would overflow.
+        repair.ensureSeekable(file, runtimeMillis = RUNTIME_MILLIS) shouldBe Outcome.NO_ROOM
+
+        RandomAccessFile(file, "r").use { media ->
+            val header = ByteArray(prefix.size)
+            media.readFully(header)
+            header.contentEquals(prefix) shouldBe true
+        }
+    }
+
+    // ---- a write that dies part-way -----------------------------------------------------------------
+
+    @Test
+    fun `a write that fails part-way puts every original byte back`() {
+        val fixture = Mkv.transcode()
+        val file = write(fixture)
+        // The second write is the SeekHead: by then the Duration is already on the platter, so this
+        // is the file caught exactly half-patched.
+        val writer = FaultyWriter(failAt = setOf(2)) { IOException("the volume went away") }
+
+        repair.ensureSeekable(file, RUNTIME_MILLIS, writer) shouldBe Outcome.FAILED
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `a failure that is not an IOException is rolled back just the same`() {
+        val fixture = Mkv.transcode()
+        val file = write(fixture)
+        val writer = FaultyWriter(failAt = setOf(2)) { IllegalStateException("the channel was closed") }
+
+        // Rollback keys on the write having failed, not on how — the old code only rolled back a
+        // *verify* failure and let everything else past, taking the half-patched file with it.
+        repair.ensureSeekable(file, RUNTIME_MILLIS, writer) shouldBe Outcome.FAILED
+
+        file.readBytes().contentEquals(fixture.bytes) shouldBe true
+    }
+
+    @Test
+    fun `the Duration is patched before the SeekHead`() {
+        val fixture = Mkv.transcode()
+        val file = write(fixture)
+        val writer = FaultyWriter(failAt = emptySet()) { IOException() }
+
+        repair.ensureSeekable(file, RUNTIME_MILLIS, writer) shouldBe Outcome.INDEXED
+
+        // Each patch alone leaves a file that parses, and the SeekHead is the marker that says
+        // "already repaired" — so it has to be last, or a torn run is never retried.
+        writer.offsets shouldBe listOf(fixture.infoVoid, fixture.segmentContent)
+    }
+
+    @Test
+    fun `a run torn after the Duration leaves a file the next play still repairs`() {
+        val fixture = Mkv.transcode()
+        val file = write(fixture)
+        // The SeekHead write fails and so does the first write of the rollback: the power-loss shape,
+        // where nothing gets to put anything back.
+        val writer = FaultyWriter(failAt = setOf(2, 3)) { IOException("the volume went away") }
+
+        repair.ensureSeekable(file, RUNTIME_MILLIS, writer) shouldBe Outcome.FAILED
+
+        // What is left is the Duration alone: a file that still parses, and still has no SeekHead —
+        // which is what makes the next play repair it instead of short-circuiting on the marker.
+        val torn = Reader(file.readBytes())
+        torn.duration() shouldBe RUNTIME_MILLIS.toDouble()
+        torn.topLevel(Reader.ID_SEEK_HEAD).shouldBeNull()
+
+        repair.ensureSeekable(file, RUNTIME_MILLIS) shouldBe Outcome.INDEXED
+        Reader(file.readBytes()).topLevel(Reader.ID_SEEK_HEAD).shouldNotBeNull()
+    }
+
     // ---- repeating it, which is what running from the playback path means --------------------------
 
     @Test
@@ -265,6 +359,34 @@ class MatroskaSeekIndexRepairTest {
     private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
     private fun write(fixture: Mkv.Fixture): File = File(directory, "media.mkv").apply { writeBytes(fixture.bytes) }
+
+    /**
+     * The production writer with a fault at chosen writes, which is the only way to reach the
+     * rollback: it needs an I/O error between two writes to the one file the repair holds open.
+     *
+     * Writes are counted from one across the whole run, rollback included, so `failAt = {2, 3}` is
+     * "the second patch died, and so did the attempt to undo the first" — the shape a power cut has.
+     */
+    private class FaultyWriter(
+        private val failAt: Set<Int>,
+        private val error: () -> Exception,
+    ) : MatroskaSeekIndexRepair.PatchWriter {
+        /** Every offset written to, in order — which is what pins the patch order. */
+        val offsets = mutableListOf<Long>()
+        private var writes = 0
+
+        override fun write(
+            media: RandomAccessFile,
+            at: Long,
+            bytes: ByteArray,
+        ) {
+            writes++
+            offsets += at
+            if (writes in failAt) throw error()
+            media.seek(at)
+            media.write(bytes)
+        }
+    }
 
     private fun unchanged(
         original: ByteArray,
@@ -349,6 +471,14 @@ class MatroskaSeekIndexRepairTest {
 
         /** One cluster, to hang off a real ffmpeg header. */
         fun cluster(): ByteArray = element(ID_CLUSTER, ByteArray(4_096) { (it % 97).toByte() })
+
+        /**
+         * An EBML header and an unknown-size Segment, then a Void that *declares* [content] bytes of
+         * padding without a byte of it being written — the file is left sparse behind it.
+         */
+        fun headerWithVoidDeclaring(content: Long): ByteArray =
+            element(ID_EBML, ByteArray(35) { 0x22 }) + ID_SEGMENT + UNKNOWN_SIZE +
+                byteArrayOf(ID_VOID) + wideLength(content)
 
         /** The `Cues` ffmpeg appends in its trailer, where nothing points at them. */
         fun cues(): ByteArray = element(ID_CUES, ByteArray(512) { 0x33 })
@@ -543,5 +673,8 @@ class MatroskaSeekIndexRepairTest {
 
         /** 4 id + 1 size + 21 of `Seek`: the whole of the written index. */
         const val SEEK_HEAD_BYTES = 26
+
+        /** 2.5 GiB: past `Int.MAX_VALUE`, which is the whole point of it. */
+        const val HUGE_VOID_BYTES = 2_684_354_560L
     }
 }

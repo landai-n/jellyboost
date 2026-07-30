@@ -52,6 +52,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Clock
 import java.time.ZoneOffset
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Unit tests for [DownloadRepositoryImpl] — the surface every feature module sees.
@@ -589,6 +590,111 @@ class DownloadRepositoryImplTest {
             emissions.await().map { it.usedBytes } shouldBe listOf(10L, 20L)
         }
 
+    // ---- what the storage walk is keyed on ---------------------------------------------------------
+
+    @Test
+    fun `progress writes alone do not re-walk the downloads tree`() =
+        runTest {
+            // `usedBytes()` is a stat() of every file under the root; a transfer writes progress
+            // twice a second for its whole length, and keying the walk on that was PERF-02.
+            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
+            every { downloadDao.observeProgress() } returns rows
+            var walks = 0
+            every { storage.usedBytes() } answers {
+                walks++
+                0L
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
+                awaitItem()
+                walks shouldBe 1
+
+                repeat(PROGRESS_WRITES) { written ->
+                    rows.value =
+                        listOf(
+                            progress(
+                                uuid(1),
+                                DownloadStatus.DOWNLOADING,
+                                downloaded = (written + 1) * 1_000L,
+                                total = 100_000L,
+                            ),
+                        )
+                }
+
+                // Same items, same statuses: nothing that changes which files are on disk.
+                walks shouldBe 1
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a status change re-walks, because that is what adds and removes files`() =
+        runTest {
+            val rows = MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
+            every { downloadDao.observeProgress() } returns rows
+            var walks = 0
+            every { storage.usedBytes() } answers {
+                walks++
+                0L
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
+                awaitItem()
+
+                rows.value = listOf(progress(uuid(1), DownloadStatus.DOWNLOADED))
+                walks shouldBe 2
+
+                rows.value = emptyList()
+                walks shouldBe 3
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `a long transfer still creeps, on a slow tick rather than on every write`() =
+        runTest {
+            // The file grows without any row's *shape* changing, so the header would otherwise sit
+            // still for the length of an episode.
+            every { downloadDao.observeProgress() } returns
+                MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADING)))
+            var walks = 0
+            every { storage.usedBytes() } answers {
+                walks++
+                0L
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
+                awaitItem()
+                walks shouldBe 1
+
+                testScheduler.advanceTimeBy(DownloadRepositoryImpl.STORAGE_WALK_INTERVAL * TICKS + 1.milliseconds)
+
+                walks shouldBe 1 + TICKS
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `nothing downloading means no ticking either`() =
+        runTest {
+            every { downloadDao.observeProgress() } returns
+                MutableStateFlow(listOf(progress(uuid(1), DownloadStatus.DOWNLOADED)))
+            var walks = 0
+            every { storage.usedBytes() } answers {
+                walks++
+                0L
+            }
+
+            repository(UnconfinedTestDispatcher(testScheduler)).observeStorage().test {
+                awaitItem()
+
+                testScheduler.advanceTimeBy(DownloadRepositoryImpl.STORAGE_WALK_INTERVAL * TICKS + 1.milliseconds)
+
+                walks shouldBe 1
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
 
     /** Two mounted volumes; anything else the caller asks for falls back to the primary one. */
@@ -630,6 +736,12 @@ class DownloadRepositoryImplTest {
     private companion object {
         const val PRIMARY_ID = DownloadVolume.PRIMARY_ID
         const val CARD_ID = "1A2B-3C4D"
+
+        /** Ten seconds of a real transfer at the throttle's two writes a second. */
+        const val PROGRESS_WRITES = 20
+
+        /** How many walk intervals the ticking tests step over. */
+        const val TICKS = 3
 
         val PRIMARY_VOLUME =
             DownloadVolume(

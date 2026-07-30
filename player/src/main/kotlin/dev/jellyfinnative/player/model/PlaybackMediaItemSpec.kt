@@ -37,6 +37,32 @@ const val EXTERNAL_SUBTITLE_ID_PREFIX: String = "external:"
 /** The ExoPlayer track id for the Jellyfin subtitle stream at [index]. */
 fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_ID_PREFIX$index"
 
-/** The Jellyfin stream index behind an ExoPlayer track id, or `null` if it is not one of ours. */
-fun jellyfinIndexOfTrackId(trackId: String?): Int? =
-    trackId?.removePrefix(EXTERNAL_SUBTITLE_ID_PREFIX)?.takeIf { it != trackId }?.toIntOrNull()
+/**
+ * The Jellyfin stream index behind an ExoPlayer track id, or `null` if it is not one of ours.
+ *
+ * The id given to a `MediaItem.SubtitleConfiguration` is **not** the id the player reports back.
+ * Side-loading even one subtitle makes the player a `MergingMediaSource`, and
+ * `MergingMediaPeriod.onPrepared` rebuilds every format of every child as
+ * `setId(childIndex + ":" + format.id)` before publishing the merged track groups — so
+ * `external:2` comes back as `1:external:2`. Reading the id without allowing for that prefix
+ * matched nothing, which is how a downloaded sidecar ended up refused as "not in the downloaded
+ * file" (docs/notes/offline-multitrack-design.md, phase 1).
+ */
+fun jellyfinIndexOfTrackId(trackId: String?): Int? {
+    val id = trackId?.withoutMergePrefix() ?: return null
+    if (!id.startsWith(EXTERNAL_SUBTITLE_ID_PREFIX)) return null
+    return id.removePrefix(EXTERNAL_SUBTITLE_ID_PREFIX).toIntOrNull()
+}
+
+/**
+ * The id as its own source published it, with any `MergingMediaPeriod` child prefix removed.
+ *
+ * Only a leading run of digits followed by `:` is stripped, and only once: that is exactly the shape
+ * the merge adds, and it cannot be confused with our own prefix, which is not numeric.
+ */
+private fun String.withoutMergePrefix(): String {
+    val separator = indexOf(':')
+    if (separator <= 0) return this
+    val prefix = substring(0, separator)
+    return if (prefix.all(Char::isDigit)) substring(separator + 1) else this
+}

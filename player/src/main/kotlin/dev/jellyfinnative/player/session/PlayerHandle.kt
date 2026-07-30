@@ -83,6 +83,20 @@ interface PlayerHandle {
 
     /** Stops playback and clears the queued media, leaving the player reusable. */
     fun stop()
+
+    /**
+     * Gives back everything the player is holding.
+     *
+     * [stop] only idles the player: the playback thread, the loaders, the allocator's buffers, the
+     * ffmpeg extension renderer and the event listener all stay alive for the rest of the process,
+     * and every session that follows adds nothing back but keeps them. This is the call that ends
+     * them, and it is the only one that does.
+     *
+     * Must be idempotent — the session teardown and the media-session service's teardown both reach
+     * it, in either order — and must leave the handle usable again, since the next session builds a
+     * fresh player lazily.
+     */
+    fun release()
 }
 
 /** The player callbacks the ViewModel reacts to. */

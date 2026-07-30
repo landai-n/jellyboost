@@ -8,7 +8,8 @@ import dev.jellyfinnative.player.model.TrickplayTiles
 import dev.jellyfinnative.player.segments.MediaSegment
 
 /**
- * Everything the player screen draws.
+ * Everything the player screen draws **except** the position, which ticks twice a second and lives
+ * in [PlaybackPosition] for exactly that reason.
  *
  * [playMethod] is on screen deliberately: "is this direct playing or transcoding" is the single
  * most useful thing to know when playback misbehaves, and the M5 definition of done is checked
@@ -33,9 +34,15 @@ data class PlayerUiState(
     val isLocalPlayback: Boolean = false,
     val isPlaying: Boolean = false,
     val isBuffering: Boolean = false,
-    val positionMs: Long = 0L,
+    /**
+     * The item's length.
+     *
+     * Stays here rather than moving to [PlaybackPosition] with the position: it changes at most
+     * twice per session — once from the server's runtime, once when the container disagrees and the
+     * player wins — so it costs nothing where the slow state is, and it is what the clock and the
+     * scrubber measure the fast state *against*.
+     */
     val durationMs: Long = 0L,
-    val bufferedMs: Long = 0L,
     val audioTracks: List<PlaybackTrack> = emptyList(),
     val subtitleTracks: List<PlaybackTrack> = emptyList(),
     /** Jellyfin stream index of the active audio track. */
@@ -67,16 +74,33 @@ data class PlayerUiState(
     /** One-shot message for the snackbar; cleared through `PlayerViewModel.consumeMessage`. */
     val userMessage: PlayerMessage? = null,
 ) {
-    /** Playback progress in `0f..1f`, or `0f` before the duration is known. */
-    val progress: Float
-        get() = if (durationMs > 0L) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
-
-    /** Buffered fraction, drawn as the dimmer part of the seek bar. */
-    val bufferedProgress: Float
-        get() = if (durationMs > 0L) (bufferedMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
-
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
+}
+
+/**
+ * The half of the player's state that ticks (audit PERF-04).
+ *
+ * Published as its own `StateFlow` and read *inside* the scrubber and the clock rather than at
+ * screen scope. Position changes twice a second while the controls are up; every other field on
+ * [PlayerUiState] changes at most a handful of times a session, and a `StateFlow` conflates values
+ * that compare equal — so keeping the two apart is what stops one moving number from invalidating
+ * the whole control surface.
+ *
+ * The duration lives on [PlayerUiState] and is passed in, because a fraction of an unknown length is
+ * not a number this class can produce.
+ */
+data class PlaybackPosition(
+    val positionMs: Long = 0L,
+    val bufferedMs: Long = 0L,
+) {
+    /** Playback progress in `0f..1f`, or `0f` before the duration is known. */
+    fun progress(durationMs: Long): Float =
+        if (durationMs > 0L) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
+
+    /** Buffered fraction, drawn as the dimmer part of the seek bar. */
+    fun bufferedProgress(durationMs: Long): Float =
+        if (durationMs > 0L) (bufferedMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
 }
 
 /**

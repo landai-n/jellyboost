@@ -39,9 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.R
+import dev.jellyfinnative.player.model.TrickplayTiles
+import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -59,6 +62,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 internal fun PlayerControls(
     state: PlayerUiState,
+    position: StateFlow<PlaybackPosition>,
     actions: PlayerActions,
     modifier: Modifier = Modifier,
 ) {
@@ -76,6 +80,7 @@ internal fun PlayerControls(
 
         BottomBar(
             state = state,
+            position = position,
             onSeekTo = actions.onSeekTo,
             onOpenSheet = { openSheet = it },
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -179,6 +184,7 @@ private fun TransportRow(
 @Composable
 private fun BottomBar(
     state: PlayerUiState,
+    position: StateFlow<PlaybackPosition>,
     onSeekTo: (Long) -> Unit,
     onOpenSheet: (PlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
@@ -192,23 +198,18 @@ private fun BottomBar(
                 .padding(Dimens.SpaceLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        Scrubber(state = state, onSeekTo = onSeekTo)
+        Scrubber(
+            position = position,
+            durationMs = state.durationMs,
+            trickplay = state.trickplay,
+            onSeekTo = onSeekTo,
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = state.positionMs.asClock(),
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White,
-            )
-            Text(
-                text = " / ${state.durationMs.asClock()}",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White.copy(alpha = DIM_ALPHA),
-                modifier = Modifier.weight(1f),
-            )
+            Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
 
             if (state.audioTracks.size > 1) {
                 SheetButton(
@@ -244,6 +245,34 @@ private fun BottomBar(
 }
 
 /**
+ * The elapsed / total readout.
+ *
+ * Its own composable so that collecting the position confines the twice-a-second recomposition to
+ * two `Text`s, instead of dragging the picker row it sits in along with it (audit PERF-04).
+ */
+@Composable
+private fun Clock(
+    position: StateFlow<PlaybackPosition>,
+    durationMs: Long,
+    modifier: Modifier = Modifier,
+) {
+    val current by position.collectAsStateWithLifecycle()
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        Text(
+            text = current.positionMs.asClock(),
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White,
+        )
+        Text(
+            text = " / ${durationMs.asClock()}",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White.copy(alpha = DIM_ALPHA),
+        )
+    }
+}
+
+/**
  * The seek bar, and the trickplay thumbnail that floats above it while a drag is in progress.
  *
  * The preview is positioned with a negative offset so it draws *outside* this composable's bounds:
@@ -251,18 +280,25 @@ private fun BottomBar(
  * soon as a finger touches it is worse than no preview. Its horizontal position follows the drag and
  * is clamped to the bar, so a scrub to either end never leaves the thumbnail hanging off the screen —
  * the case a 2560 px tablet and a 1080 px phone disagree about.
+ *
+ * The position arrives as a flow and is collected here rather than passed down as a value: this is
+ * one of the two places on the screen that wants it twice a second, and reading it any higher up
+ * recomposes everything between (audit PERF-04).
  */
 @Composable
 private fun Scrubber(
-    state: PlayerUiState,
+    position: StateFlow<PlaybackPosition>,
+    durationMs: Long,
+    trickplay: TrickplayTiles?,
     onSeekTo: (Long) -> Unit,
 ) {
+    val current by position.collectAsStateWithLifecycle()
     var scrubFraction by remember { mutableStateOf<Float?>(null) }
-    val fraction = scrubFraction ?: state.progress
+    val fraction = scrubFraction ?: current.progress(durationMs)
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val tiles = state.trickplay
-        val scrubMs = (fraction * state.durationMs).toLong()
+        val tiles = trickplay
+        val scrubMs = (fraction * durationMs).toLong()
         val thumbnail = if (scrubFraction == null) null else tiles?.tileFor(scrubMs)
 
         if (tiles != null && thumbnail != null) {
@@ -291,7 +327,7 @@ private fun Scrubber(
             value = fraction,
             onValueChange = { scrubFraction = it },
             onValueChangeFinished = {
-                scrubFraction?.let { committed -> onSeekTo((committed * state.durationMs).toLong()) }
+                scrubFraction?.let { committed -> onSeekTo((committed * durationMs).toLong()) }
                 scrubFraction = null
             },
         )

@@ -29,6 +29,10 @@ internal class FakePlayerHandle : PlayerHandle {
     var stopped = false
         private set
 
+    /** How many times [release] was called — the count is what pins its idempotent call sites. */
+    var releaseCount = 0
+        private set
+
     var snapshot = PlaybackSnapshot()
 
     /** What [selectAudioTrack] / [selectSubtitleTrack] should answer — `false` forces a re-resolve. */
@@ -88,6 +92,10 @@ internal class FakePlayerHandle : PlayerHandle {
 
     override fun stop() {
         stopped = true
+    }
+
+    override fun release() {
+        releaseCount++
     }
 
     data class PreparedItem(

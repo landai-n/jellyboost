@@ -100,6 +100,14 @@ class PlaybackService :
         }
     }
 
+    /**
+     * Service teardown, and the second of the two paths that release the shared player (STAB-05).
+     *
+     * The session goes first: it was built around the player, and Media3 unwinds its own listeners
+     * through it. Releasing the player is then safe and, unlike the ViewModel's own teardown, always
+     * reached — the service is stopped from `ExoPlayerHandle.stop()` and by a swipe-away, including
+     * the cases where no player screen is left to clear.
+     */
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")
         clearListener()
@@ -108,6 +116,7 @@ class PlaybackService :
             session.release()
         }
         mediaSession = null
+        playerHandle.release()
         super.onDestroy()
     }
 }

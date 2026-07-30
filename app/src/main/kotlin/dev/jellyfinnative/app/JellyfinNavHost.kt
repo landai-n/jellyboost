@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navOptions
 import dev.jellyfinnative.core.common.Routes
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.feature.auth.LoginScreen
@@ -23,7 +24,9 @@ import dev.jellyfinnative.feature.library.LibraryGridScreen
 import dev.jellyfinnative.feature.library.libraries.LibrariesScreen
 import dev.jellyfinnative.feature.search.SearchScreen
 import dev.jellyfinnative.feature.settings.SettingsScreen
+import dev.jellyfinnative.player.syncplay.ui.SyncPlayGroupsScreen
 import dev.jellyfinnative.player.ui.PlayerScreen
+import timber.log.Timber
 
 /**
  * The app's navigation graph.
@@ -47,6 +50,7 @@ internal fun JellyfinNavHost(
     modifier: Modifier = Modifier,
 ) {
     LogoutRedirectEffect(navController = navController, sessionState = sessionState)
+    SyncPlayLaunchEffect(navController = navController)
 
     NavHost(
         navController = navController,
@@ -140,6 +144,19 @@ internal fun JellyfinNavHost(
                 onBack = { navController.popBackStack() },
             )
         }
+
+        composable<Routes.SyncPlay> {
+            SyncPlayGroupsScreen(
+                viewModel = hiltViewModel(),
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+                onOpenPlayer = { itemId, startPositionTicks ->
+                    navController.navigate(
+                        Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
+                    )
+                },
+            )
+        }
     }
 }
 
@@ -164,6 +181,44 @@ private fun LogoutRedirectEffect(
     LaunchedEffect(sessionState, destination) {
         if (sessionState is SessionState.LoggedOut && destination != null && !inAuthFlow) {
             navController.navigateClearingBackStack(Routes.ServerSetup)
+        }
+    }
+}
+
+/**
+ * Collects `SyncPlayController.launchRequests` and opens the player for whatever the group moved
+ * on to — the other half of M11 key decision 5: membership survives leaving the player screen, so
+ * a `PlayQueueUpdate` can arrive while nobody has one open, and this is what catches up.
+ *
+ * A global effect at the NavHost's own level, the same way [LogoutRedirectEffect] is: neither is
+ * owned by any one destination, both react to state a `@Singleton` holds regardless of what is on
+ * screen.
+ *
+ * ### Duplicate-navigation guard
+ * The controller itself never emits a launch request while a player is attached
+ * (`SyncPlayController.reconcile`) — the ordinary case where the group and this device already
+ * agree is a reload in place, not a nav event. This still guards the current destination before
+ * navigating, for the rarer case of a launch request arriving just as the app is already sitting on
+ * the player (a race between the effect resubscribing and the destination changing): a second
+ * `Routes.Player` push for it would stack a duplicate screen rather than the harmless no-op the
+ * controller intended. `launchSingleTop` on the navigation itself is the second layer — even a
+ * request that slips past the check collapses onto the existing entry instead of stacking a new one.
+ */
+@Composable
+private fun SyncPlayLaunchEffect(navController: NavHostController) {
+    val viewModel: SyncPlayLaunchViewModel = hiltViewModel()
+    val currentEntry by navController.currentBackStackEntryAsState()
+
+    LaunchedEffect(viewModel) {
+        viewModel.launchRequests.collect { request ->
+            if (currentEntry?.destination?.hasRoute<Routes.Player>() == true) {
+                Timber.d("Ignoring a SyncPlay launch request while already on the player")
+                return@collect
+            }
+            navController.navigate(
+                Routes.Player(itemId = request.itemId.toString(), startPositionTicks = request.startPositionTicks),
+                navOptions { launchSingleTop = true },
+            )
         }
     }
 }

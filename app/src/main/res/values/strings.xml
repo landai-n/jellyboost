@@ -23,4 +23,8 @@
     <string name="offline_forced">Offline mode is on — showing downloaded media</string>
     <string name="offline_retry">Retry</string>
     <string name="offline_go_online">Go online</string>
+
+    <!-- Home top-bar SyncPlay action (M11 Phase 5) -->
+    <string name="syncplay_groups_action">SyncPlay groups</string>
+    <string name="syncplay_groups_action_active">SyncPlay groups — you\'re in a group</string>
 </resources>

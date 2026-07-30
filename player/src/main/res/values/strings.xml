@@ -71,4 +71,24 @@
     <string name="player_message_syncplay_removed">You\'re no longer in the SyncPlay group.</string>
     <string name="player_message_syncplay_library_denied">The group is watching something you don\'t have access to.</string>
     <string name="player_message_syncplay_item_unavailable">Couldn\'t open what the group is watching.</string>
+
+    <!-- M11 Phase 5: the dedicated SyncPlay section. -->
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Back</string>
+    <string name="player_syncplay_groups_home">Home</string>
+    <string name="player_syncplay_groups_create">Create group</string>
+    <string name="player_syncplay_groups_create_title">Name your group</string>
+    <string name="player_syncplay_groups_create_hint">Group name</string>
+    <string name="player_syncplay_groups_create_confirm">Create</string>
+    <string name="player_syncplay_groups_joining">Joining…</string>
+    <string name="player_syncplay_groups_active_label">You\'re in this group</string>
+    <string name="player_syncplay_groups_open_player">Open player</string>
+    <string name="player_syncplay_groups_empty">No one else is watching together right now.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay is disabled for your account.</string>
+    <string name="player_syncplay_groups_error">Couldn\'t load SyncPlay groups.</string>
+
+    <string name="player_syncplay_state_idle">Idle</string>
+    <string name="player_syncplay_state_waiting">Waiting</string>
+    <string name="player_syncplay_state_paused">Paused</string>
+    <string name="player_syncplay_state_playing">Playing</string>
 </resources>

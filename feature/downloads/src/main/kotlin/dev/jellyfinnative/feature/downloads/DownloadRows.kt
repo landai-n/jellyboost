@@ -1,5 +1,6 @@
 package dev.jellyfinnative.feature.downloads
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,11 +37,23 @@ import dev.jellyfinnative.data.downloads.model.SizeCertainty
 /** Artwork size for a list row — a small poster, not a card. */
 private val THUMB_SIZE = 48.dp
 
-/** One finished download: artwork, title, size on disk, delete. */
+/**
+ * One finished download: artwork, title, size on disk, delete.
+ *
+ * @param onPlay the row itself is the play target — tapping anywhere on it starts playback of
+ *   [item] from its resume position, the same as the detail page's Play button (see
+ *   [DownloadItem.playbackStartTicks]). The *Downloaded* tab has no batch-selection mode to
+ *   conflict with (unlike `:feature:detail`'s episode rows), so the row's own click can mean Play
+ *   unconditionally.
+ * @param onDelete the trailing icon button; nested inside the row's clickable area but its own
+ *   independent target — Compose resolves the tap to whichever target is hit first, so pressing
+ *   the icon never also fires [onPlay].
+ */
 @Composable
 internal fun DownloadedRow(
     item: DownloadItem,
     onDelete: () -> Unit,
+    onPlay: () -> Unit,
     modifier: Modifier = Modifier,
     inSeriesGroup: Boolean = false,
 ) {
@@ -48,6 +61,7 @@ internal fun DownloadedRow(
         modifier =
             modifier
                 .fillMaxWidth()
+                .clickable(onClick = onPlay)
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,

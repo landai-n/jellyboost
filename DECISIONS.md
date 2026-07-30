@@ -1582,3 +1582,31 @@ Seeded from the approved plan; listed for traceability, no divergence:
   agent to change on the user's tablet.
 
 <!-- END -->
+
+## 2026-07-30 — a downloaded row plays when you tap it (user-requested)
+
+- **Scope:** `feature/downloads` (`DownloadedRow` gains `onPlay` + row
+  `clickable`; new `DownloadItem.playbackStartTicks`), `DownloadsScreen`
+  threading, `JellyfinNavHost` wiring to the existing `Routes.Player`.
+- **Plan said:** `docs/PLAN.md:76` enumerates the Downloads screen's
+  *Downloaded* tab as "grouped, sizes, delete" — Play is listed only for
+  ItemDetail.
+- **Done instead:** tapping a completed row starts playback, reusing the detail
+  page's route and resume rule verbatim (no second path into the player; a
+  completed download always resolves locally, so this works offline with no
+  server call).
+- **Reason:** requested by the user after M10 device testing, where two separate
+  agents assumed a download in the Downloads list was tappable and got stuck.
+  It also matches the PLAN's own opening promise that downloaded media is
+  "visible and playable in the same home/library/detail screens".
+- **Constrained deliberately:** only `DownloadedRow` is clickable — `QueueRow`
+  has no `onPlay` parameter at all, so queued/downloading/paused/error rows
+  cannot become play targets by accident. The delete icon stays an independent
+  tap target (same nesting `:feature:detail`'s `EpisodeRow` already relies on).
+  The Downloaded tab has no batch-selection mode to conflict with (verified).
+- **Tests:** 4 resume-semantics cases in the module's established
+  pure-function style (no Compose UI harness exists in this repo; matches how
+  `:feature:detail` tests its own Play button). Mutation-checked: dropping the
+  `!played` half of `isResumable` fails the fully-watched case.
+
+<!-- END -->

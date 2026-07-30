@@ -93,7 +93,14 @@ internal fun JellyfinNavHost(
         }
 
         composable<Routes.Downloads> {
-            DownloadsScreen(viewModel = hiltViewModel())
+            DownloadsScreen(
+                viewModel = hiltViewModel(),
+                onPlay = { itemId, startPositionTicks ->
+                    navController.navigate(
+                        Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
+                    )
+                },
+            )
         }
 
         composable<Routes.Settings> {

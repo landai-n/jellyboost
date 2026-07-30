@@ -2,6 +2,9 @@ package dev.jellyfinnative.feature.downloads
 
 import dev.jellyfinnative.core.common.model.DownloadQuality
 import dev.jellyfinnative.core.common.model.DownloadStatus
+import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.common.model.JellyfinItem
+import dev.jellyfinnative.core.common.model.UserData
 import dev.jellyfinnative.data.downloads.model.DownloadItem
 import dev.jellyfinnative.data.downloads.model.SizeCertainty
 import io.kotest.matchers.shouldBe
@@ -159,6 +162,49 @@ class DownloadRowsTest {
         }
     }
 
+    // ---- where a tap on the row starts playback (M10 device walk) --------------------------------
+    //
+    // A completed row is now clickable to play (see `DownloadedRow`'s `onPlay`), which the screen
+    // wires as `onPlay(item.itemId, item.playbackStartTicks)`. There is no Compose click-simulation
+    // harness in this repo (no Robolectric / androidTest here — every other screen's click wiring is
+    // pinned the same way, at the pure function feeding the callback's arguments; see
+    // `:feature:detail`'s `ItemDetailViewModelTest`'s "what Play actually plays" block for the
+    // precedent this mirrors). What is pinned here is that function, `DownloadItem.playbackStartTicks`,
+    // which is the only thing that decides *where* the play the row triggers actually starts.
+
+    @Test
+    fun `a row partway through resumes exactly where it left off`() {
+        val item = film(playbackPositionTicks = 36_000_000_000L, played = false)
+
+        item.playbackStartTicks shouldBe 36_000_000_000L
+    }
+
+    @Test
+    fun `a fully watched row restarts from the beginning, not its old position`() {
+        // Mutation check: if `playbackStartTicks` used `playbackPositionTicks > 0L` alone (dropping
+        // the `!played` half of `isResumable`), this would wrongly resume a finished film instead of
+        // restarting it.
+        val item = film(playbackPositionTicks = 36_000_000_000L, played = true)
+
+        item.playbackStartTicks shouldBe 0L
+    }
+
+    @Test
+    fun `a never-started row plays from the beginning`() {
+        val item = film(playbackPositionTicks = 0L, played = false)
+
+        item.playbackStartTicks shouldBe 0L
+    }
+
+    @Test
+    fun `a row whose cached item was wiped still plays, from the beginning`() {
+        // The cache row and the item row are written together at enqueue time (DownloadItem's own
+        // class doc), but a wiped cache must degrade to "plays from zero", not to a crash.
+        val item = film(playbackPositionTicks = 36_000_000_000L, played = false).copy(item = null)
+
+        item.playbackStartTicks shouldBe 0L
+    }
+
     // ---- row titles (M9 device walk, docs/POLISH.md) ---------------------------------------------
 
     @Test
@@ -191,6 +237,8 @@ class DownloadRowsTest {
         sizeIsExact: Boolean = false,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
+        playbackPositionTicks: Long = 0L,
+        played: Boolean = false,
     ) = episode(
         series = null,
         title = "Dune",
@@ -200,6 +248,8 @@ class DownloadRowsTest {
         projected = projected,
         sizeIsExact = sizeIsExact,
         status = status,
+        playbackPositionTicks = playbackPositionTicks,
+        played = played,
     )
 
     @Suppress("LongParameterList")
@@ -212,6 +262,8 @@ class DownloadRowsTest {
         projected: Long? = null,
         sizeIsExact: Boolean = false,
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
+        playbackPositionTicks: Long = 0L,
+        played: Boolean = false,
     ) = DownloadItem(
         itemId = "1",
         title = title,
@@ -224,5 +276,12 @@ class DownloadRowsTest {
         quality = quality,
         projectedBytes = projected,
         sizeIsExact = sizeIsExact,
+        item =
+            JellyfinItem(
+                id = "1",
+                name = title,
+                type = ItemType.MOVIE,
+                userData = UserData(playbackPositionTicks = playbackPositionTicks, played = played),
+            ),
     )
 }

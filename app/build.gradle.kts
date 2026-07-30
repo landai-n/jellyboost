@@ -113,6 +113,23 @@ android {
 }
 
 /**
+ * Report-only Compose compiler metrics/reports, off by default (audit PERF-11).
+ *
+ * The same opt-in the Compose convention plugin applies to every other Compose module, repeated
+ * here because `:app` applies the Compose plugin directly rather than through that convention — and
+ * `:app` is where the screens the reports are wanted for actually live, so leaving it out would
+ * have made the flag report on everything except the interesting half. Opt in with
+ * `./gradlew assembleDebug -Pjellyfinnative.composeCompilerMetrics=true`; output lands under
+ * `app/build/compose-metrics` and `app/build/compose-reports`.
+ */
+if (providers.gradleProperty("jellyfinnative.composeCompilerMetrics").getOrElse("false").toBoolean()) {
+    composeCompiler {
+        metricsDestination.set(layout.buildDirectory.dir("compose-metrics"))
+        reportsDestination.set(layout.buildDirectory.dir("compose-reports"))
+    }
+}
+
+/**
  * Consumer side of baseline profile generation (M10). The producer is `:baselineprofile`.
  *
  * Nothing here touches a device: generation is an explicit, device-only task run in a device

@@ -1,5 +1,6 @@
 package dev.jellyfinnative.data.userdata
 
+import android.database.sqlite.SQLiteException
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.UserData
@@ -11,6 +12,7 @@ import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.runCatchingApi
 import dev.jellyfinnative.data.toSdkDateTime
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -171,7 +173,6 @@ class UserDataRepositoryImpl
             edit: (UserDataEntity) -> UserDataEntity,
         ): AppResult<UserDataEntity> =
             withContext(ioDispatcher) {
-                @Suppress("TooGenericExceptionCaught")
                 try {
                     val current =
                         userDataDao.getUserData(id, userId)
@@ -179,7 +180,15 @@ class UserDataRepositoryImpl
                     val next = edit(current).copy(toBeSynced = true, updatedAt = clock.instant())
                     userDataDao.upsert(next)
                     AppResult.Success(next)
-                } catch (error: Exception) {
+                } catch (cancellation: CancellationException) {
+                    // A `withContext` that was cancelled has not written anything; reporting it as
+                    // `AppError.Storage` would tell the caller the disk failed and, worse, swallow
+                    // the cancellation this coroutine owes its parent (the audit's ARCH-08 rule).
+                    throw cancellation
+                } catch (error: SQLiteException) {
+                    // Narrowed to Room's own failure: everything else in the block is a read, a
+                    // `copy` and a lambda the caller supplied, so a different exception is a bug
+                    // rather than a full disk and should not be dressed up as one.
                     Timber.e(error, "Could not write user data for %s", id)
                     AppResult.Failure(AppError.Storage(error))
                 }
@@ -220,12 +229,15 @@ class UserDataRepositoryImpl
 
         private suspend fun clearPendingFlag(row: UserDataEntity) {
             withContext(ioDispatcher) {
-                @Suppress("TooGenericExceptionCaught")
                 try {
                     // Guarded on `updatedAt`: if the user toggled again while the push was in
                     // flight, the newer row keeps its flag instead of being declared synced.
                     userDataDao.clearPendingSync(row.itemId, row.userId, row.updatedAt)
-                } catch (error: Exception) {
+                } catch (cancellation: CancellationException) {
+                    // Best effort, but not at the price of a swallowed cancellation: the row simply
+                    // stays pending and `UserDataSyncTrigger` drains it later (ARCH-08).
+                    throw cancellation
+                } catch (error: SQLiteException) {
                     Timber.w(error, "Could not clear the pending flag for %s", row.itemId)
                 }
             }

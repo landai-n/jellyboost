@@ -55,7 +55,7 @@ import javax.inject.Singleton
  * class still behaves like a pure network reader from the caller's point of view.
  */
 @Singleton
-class OnlineJellyfinRepository
+internal class OnlineJellyfinRepository
     @Inject
     constructor(
         private val apiClient: ApiClient,

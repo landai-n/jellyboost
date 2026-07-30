@@ -184,6 +184,9 @@ junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 kotest-assertions = { group = "io.kotest", name = "kotest-assertions-core-jvm", version.ref = "kotest" }
+# Test-only: the structural "every interface member is delegated" check in :data walks
+# JellyfinRepository's members reflectively (audit ARCH-09). Never a production dependency.
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 
 # Baseline profile generation (M10) — :baselineprofile module only
 androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "androidxProfileinstaller" }

@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.impl
 
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.common.model.ItemType

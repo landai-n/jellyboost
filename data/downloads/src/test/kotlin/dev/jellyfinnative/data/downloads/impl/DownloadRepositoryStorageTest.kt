@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.impl
 
 import app.cash.turbine.test
 import dev.jellyfinnative.core.common.AppError

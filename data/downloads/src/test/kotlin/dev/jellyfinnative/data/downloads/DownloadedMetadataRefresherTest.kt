@@ -19,6 +19,7 @@ import dev.jellyfinnative.data.downloads.DownloadFixtures.movie
 import dev.jellyfinnative.data.downloads.DownloadFixtures.season
 import dev.jellyfinnative.data.downloads.DownloadFixtures.series
 import dev.jellyfinnative.data.downloads.DownloadFixtures.uuid
+import dev.jellyfinnative.data.downloads.engine.SubtitleSidecarTopUp
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe

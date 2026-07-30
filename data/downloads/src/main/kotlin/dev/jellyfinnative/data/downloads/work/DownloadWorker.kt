@@ -36,7 +36,7 @@ import timber.log.Timber
  * throughout.
  */
 @HiltWorker
-class DownloadWorker
+internal class DownloadWorker
     @AssistedInject
     constructor(
         @Assisted appContext: Context,

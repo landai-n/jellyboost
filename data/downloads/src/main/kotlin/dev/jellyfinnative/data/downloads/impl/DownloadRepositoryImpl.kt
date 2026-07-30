@@ -1,4 +1,4 @@
-package dev.jellyfinnative.data.downloads
+package dev.jellyfinnative.data.downloads.impl
 
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
@@ -15,6 +15,7 @@ import dev.jellyfinnative.core.network.di.ApplicationScope
 import dev.jellyfinnative.core.network.di.IoDispatcher
 import dev.jellyfinnative.core.network.model.SessionState
 import dev.jellyfinnative.data.cache.ItemEntityMapper
+import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.downloads.model.DownloadItem
 import dev.jellyfinnative.data.downloads.model.StorageLocations
 import dev.jellyfinnative.data.downloads.model.StorageUsage
@@ -61,7 +62,7 @@ import kotlin.time.Duration.Companion.seconds
  * one place where downloading actually happens.
  */
 @Singleton
-class DownloadRepositoryImpl
+internal class DownloadRepositoryImpl
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

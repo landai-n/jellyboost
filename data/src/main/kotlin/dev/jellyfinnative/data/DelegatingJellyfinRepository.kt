@@ -9,6 +9,7 @@ import dev.jellyfinnative.core.common.model.ItemType
 import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.LibraryView
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
+import dev.jellyfinnative.data.JellyfinRepository.Companion.ONLINE_CALL_TIMEOUT_MS
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,7 +48,7 @@ import javax.inject.Singleton
  * reports the failure so the probe runs.
  */
 @Singleton
-class DelegatingJellyfinRepository
+internal class DelegatingJellyfinRepository
     @Inject
     constructor(
         private val online: OnlineJellyfinRepository,
@@ -145,17 +146,6 @@ class DelegatingJellyfinRepository
         ): AppResult<T> {
             connectionState.reportFailure()
             return offline.offlineCall()
-        }
-
-        companion object {
-            /**
-             * Ceiling on any single server call, in milliseconds.
-             *
-             * Comfortably above a slow library page on a remote server, comfortably below the SDK's
-             * own 30-second socket timeout — which is the number the M6 definition of done rules
-             * out ("server-down (Wi-Fi up) degrades without a 30s hang").
-             */
-            const val ONLINE_CALL_TIMEOUT_MS = 10_000L
         }
     }
 

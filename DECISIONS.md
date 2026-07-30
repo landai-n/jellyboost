@@ -1540,3 +1540,23 @@ Seeded from the approved plan; listed for traceability, no divergence:
   keeps a broad catch (filesystem + Room mixed) with no cancellation rethrow.
 
 <!-- END -->
+
+## 2026-07-30 — go-home ordering fix for forced-remote track picks (device finding B.3)
+
+- **Scope:** `PlayerViewModel` track-change guards + 6 new `PlayerTrackPickerTest`
+  cases. Found by the M10 device session: a forced-remote session that
+  direct-plays the ORIGINAL file carries every track, so the in-stream switch
+  tried first always succeeded and the documented "a track the file does hold
+  goes home" branch was unreachable (transcoded remotes fail the in-stream
+  switch, which is why unit tests and the transcoded walk looked fine).
+- **Fix:** `goesHome` is asked *before* the player is offered the switch;
+  `needsServer` consumes it. Ordering + predicate only, no new plumbing.
+- **Strengthening beyond the brief, accepted on review:** the predicate weighs
+  BOTH current selections, not just the one being changed — turning subtitles
+  off during a session that went remote for a server-only audio track must not
+  drag playback home to a file that cannot produce that audio. Mutation-checked:
+  restoring the old ordering fails 3 tests; collapsing to the one-track
+  predicate fails the subtitles-off test.
+- Unit-proven; device re-walk of B.3 owed next session.
+
+<!-- END -->

@@ -11,6 +11,23 @@ verification on the minified build.
   `VideoProfileNotSupported` investigation (device profile CodecProfile conditions
   vs `MediaCodecList` on the Helio G100).
 - Note: the repo has no GitHub remote — CI can be authored but not exercised.
+- **Work the audit backlog** (below): Tier 1 fix-now items first, Tier 2 folds into
+  the M10 plan alongside the DoD items.
+
+## Pre-M10 multi-dimension audit (2026-07-30 — DONE, report committed)
+
+Six parallel read-only audits (architecture, dead code/tooling, performance, stability,
+security, MKV-parser deep-dive) + a blind red-team verification pass over every High.
+**61 unique findings: 0 Critical, 7 High (all independently verified), 15 Medium, 39 Low**,
+plus a substantial verified-non-problems list (MKV parser core, token handling, Hilt scoping,
+startup, module graph all came back clean). Canonical record with the full three-tier backlog:
+**`docs/notes/audit-2026-07.md`**.
+
+Headline Highs: transient server blip permanently ERRORs the whole download queue (no retry
+path exists); process-death restore overwrites the real resume position on the server; offline
+grid silently ignores active filters; unguarded `startService()` crash after backgrounding
+during a slow Play resolve; no timeout ceiling on the Play path; download-progress ticks
+re-parse every item's JSON blob and stat-walk the whole downloads tree 2–6×/s.
 
 ## Pointless transcodes fall back to the original (post-M9, 2026-07-30 — built, gate green, **device-verified**)
 

@@ -27,6 +27,19 @@ worth making"), `DECISIONS.md` (2026-07-30). Tests: `DownloadEnqueuerSizeTest` 2
   *Pause*, and lands as the source's own file name/container rather than a `(high).mkv`; then a
   25–40 Mbps remux at *Low* to confirm it still transcodes.
 
+## Detail-page media size + downloaded badge icon (post-M9, 2026-07-30 — built, gate green, **not yet device-verified**)
+
+The detail header's metadata line now shows the media file size (`2016 · 116 min · 552.4 MB · …`)
+for items with a media source of their own (movies, episodes; series/seasons omit it), online and
+offline — `JellyfinItem.sizeBytes` mapped from `mediaSources[0].size`, third `internal formatBytes`
+copy in `:feature:detail`. Episode *rows* stay lean (no MediaSources in `EPISODE_FIELDS`). The
+`Downloaded` badge on item cards is now `DownloadForOffline` (circular down-arrow) instead of the
+checkmark. Docs: `docs/features/item-detail.md`. Tests: `ItemMapperTest` +3, `FormatBytesTest` +5.
+
+- **Known issue / next:** device walk on the test tablet — size on a movie and an episode detail
+  page (and its absence on a series/season page), offline size on a downloaded item, and the new
+  badge glyph on the library grid.
+
 ## Batch selection (post-M9 feature, 2026-07-29 — built, gate green, **not yet device-verified**)
 
 Long-press → selection mode on the **library grid** and the **season page's episode list**, with

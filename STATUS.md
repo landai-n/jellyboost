@@ -91,6 +91,27 @@ verification on the minified build.
   rethrows. `assembleRelease` (R8 full) verified green.
 - **HEVC `VideoProfileNotSupported` closed as correct behavior** (e76a94d) —
   see Next §3.
+- **M10 device session executed (agent-driven via adb), 2026-07-30 — 15/16 PASS,
+  1 FAIL found and fixed.** Passes: offline Minions 2 subtitle repro (both subs
+  apply, text renders — the 190dc03 fix confirmed on device); offline picker
+  shrinks (audio control disappears at 1 track); online full-list picker +
+  stream-on-pick (POST /Sessions/Playing, Quality control appears); live shrink
+  on airplane; STAB-01 blip on a real 7.2 GB ORIGINAL download ("failed
+  transiently (attempt 1 of 5); it stays queued", resumed from byte 1.6 G);
+  STAB-02/03/06 clean (kill-restore lands 58:10 vs 57:58 noted); PiP survives
+  then tears down; ORIGINAL Élémentaire offline offers all 3 audio + 6 subtitle
+  entries incl. embedded SRTs; MEDIUM sidecar extraction verified real on
+  Minions 2 (subtitle.1/2.fra.srt on disk); cancel sweeps the directory; bulk
+  pause/resume (bulk bar — there is no long-press multi-select, by design); no
+  Room/migration errors, 0 FATAL in the whole buffer. Evidence:
+  scratchpad device-session2/ screenshots + logcat excerpts.
+  **The FAIL (B.3):** a forced-remote session direct-playing the original never
+  returned to the local file when a file-held track was re-picked (in-stream
+  switch succeeded first). **Fixed** (`fix(player)`, d3f408f): `goesHome` is
+  decided before the player is offered the switch, weighing both selections;
+  6 new tests, mutation-checked. Installed on the tablet; **B.3 device re-walk
+  owed** (30 s: stream a non-downloaded track on Minions 2, re-pick French →
+  Quality control disappears as it returns to Direct play).
 
 ### Awaiting user design decision
 - **Offline multi-track downloads** — full design study in
@@ -120,10 +141,11 @@ verification on the minified build.
    c2.android.hevc.decoder) reports Main profile only, no Main 10 (`dumpsys
    media.player`, direct measurement). The profile is data-driven from those
    capabilities and advertises Main-only correctly; the transcode is expected.
-4. **M10 device session** (batched): batch-selection walk; Tier 1 checks owed to
-   the device — SEC-01 release logcat during a search, STAB-02 Play→Home on a
-   slow server, STAB-03 am-kill position restore, STAB-06 Pause not logged at
-   ERROR; plus the track-selection fix walk once merged.
+4. ~~**M10 device session**~~ — DONE 2026-07-30 (see the Done entry above:
+   15/16 PASS, the one FAIL fixed as d3f408f). Still owed to a device:
+   the 30-second B.3 re-walk on the new build, and SEC-01's release-logcat
+   check, which belongs to the minified-build session (needs a login on the
+   release install — user present).
 
 ## Pre-M10 multi-dimension audit (2026-07-30 — DONE, report committed)
 

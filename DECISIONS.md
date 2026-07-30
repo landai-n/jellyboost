@@ -1781,3 +1781,59 @@ Seeded from the approved plan; listed for traceability, no divergence:
   exists.
 
 <!-- END -->
+
+## 2026-07-30 — M11 Phase 3: how the player bridges to the group, and what an in-group auto-skip does
+- **Scope:** `player/.../ui/PlayerViewModel.kt`, new `player/.../ui/PlayerSyncPlayBridge.kt`,
+  `player/.../ui/PlayerUiState.kt`, `player/.../ui/PlayerControls.kt`,
+  `player/.../ui/PlayerScreen.kt`, new
+  `player/.../syncplay/ui/SyncPlayGroupSheet.kt`, `player/src/main/res/values/strings.xml`.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, "Phase 3 — Player
+  integration": *"Modify `PlayerViewModel.kt` (thin bridge: host attach/detach;
+  transport routes to controller when in-group; disable speed; collect state)"*,
+  and key decision 11: *"Speed picker + segment auto-skip disabled in-group;
+  skip-intro routes through requestSeek."*
+- **Done instead:** four adaptations, none of which changes solo behaviour.
+  1. **An in-group auto-skip becomes the skip *button*, not nothing.** Key
+     decision 11 disables auto-skip because nothing may move this player
+     locally — but "disabled" read literally would mean a user whose preference
+     is AUTO_SKIP silently loses the ability to skip an intro at all, since the
+     button is only offered for the SHOW_BUTTON preference. The decision is
+     downgraded rather than dropped: in a group an `AutoSkip` decision is
+     published as an offer, and the button routes through `requestSeek` like any
+     other in-group skip, so the group moves together and the preference still
+     means something.
+  2. **The host is attached when the *session* opens, not when the group state
+     changes.** The plan's phrasing ("attach while in a group") would need the
+     ViewModel to watch the controller's state for an edge the controller
+     already owns; `SyncPlayController.attachHost` stores the host in any state
+     and only acts on it while `InGroup`, so attaching once — on the first
+     successful `SessionOpenResult.Opened` — is the same thing with one moving
+     part instead of two. It also gets the Phase 5 case right for free: a group
+     joined from the groups screen while a player is open finds a host already
+     there. Detach is on `releaseSession()` (the ViewModel's own teardown),
+     guarded by the controller's identity check.
+  3. **`loadItem` stops the outgoing source before opening the next.** The plan
+     describes `loadItem` as "the normal resolve path, opened paused" only. Left
+     at that, a group moving from item A to item B would strand A's transcode on
+     the server and never report its stop — the exact failure the ViewModel's
+     `reopen` ordering exists to prevent. `loadItem` therefore reports A's stop
+     (which also kills its encoder, `PlaybackReporter.reportStop`) before
+     resolving B.
+  4. **No next/previous transport in Phase 3.** The player has no
+     next/previous controls today (the group queue and its controls are Phase
+     4), so `requestNext`/`requestPrevious` have no call site yet and none was
+     invented; `SyncPlayController.onPlaybackEnded` already asks the group to
+     advance when an item ends.
+- **Also worth recording (not divergences):** the group sheet is an M3
+  `ModalBottomSheet` while the player's own pickers are `AlertDialog`s — the
+  pickers are one-tap radio lists that must not cover the seek bar, the group
+  sheet is a panel (participants, shuffle, repeat, leave) that is dismissed
+  before playback resumes. `PlayerUiState.syncPlay` deliberately carries a UI
+  phase enum rather than `SyncPlayPhase`, so the drift anchor — which changes on
+  every group unpause — cannot invalidate the whole control surface through
+  `PlayerUiState` equality.
+- **Reason:** each adaptation keeps the plan's intent (nothing in a group moves
+  this player locally; the bridge stays thin) while closing a hole the plan's
+  wording leaves open.
+
+<!-- END -->

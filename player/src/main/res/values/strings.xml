@@ -31,4 +31,28 @@
     <string name="player_message_track_streaming">That track isn\'t in the download — streaming it from your server.</string>
     <string name="player_message_track_offline">That track isn\'t in the downloaded file.</string>
     <string name="player_message_failed">Playback failed.</string>
+
+    <!-- M11 SyncPlay: the group as the player screen shows it. -->
+    <string name="player_syncplay_group">Group</string>
+    <string name="player_syncplay_waiting">Waiting for group…</string>
+    <string name="player_syncplay_shuffle">Shuffle queue</string>
+    <string name="player_syncplay_repeat">Repeat</string>
+    <string name="player_syncplay_repeat_none">Off</string>
+    <string name="player_syncplay_repeat_one">This item</string>
+    <string name="player_syncplay_repeat_all">Whole queue</string>
+    <string name="player_syncplay_leave">Leave group</string>
+    <string name="player_syncplay_leave_title">Leave this group?</string>
+    <string name="player_syncplay_leave_body">Playback carries on here, on its own. Rejoining means picking the group again.</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d person watching</item>
+        <item quantity="other">%d people watching</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Left SyncPlay — connection lost</string>
+    <string name="player_message_syncplay_join_failed">Couldn\'t join that SyncPlay group.</string>
+    <string name="player_message_syncplay_group_ended">The SyncPlay group has ended.</string>
+    <string name="player_message_syncplay_removed">You\'re no longer in the SyncPlay group.</string>
+    <string name="player_message_syncplay_library_denied">The group is watching something you don\'t have access to.</string>
+    <string name="player_message_syncplay_item_unavailable">Couldn\'t open what the group is watching.</string>
 </resources>

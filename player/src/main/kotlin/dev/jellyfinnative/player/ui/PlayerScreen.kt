@@ -6,13 +6,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -43,6 +48,7 @@ import dev.jellyfinnative.core.ui.component.ErrorState
 import dev.jellyfinnative.core.ui.component.LoadingState
 import dev.jellyfinnative.core.ui.theme.Dimens
 import dev.jellyfinnative.player.R
+import dev.jellyfinnative.player.syncplay.ui.SyncPlayGroupSheet
 import kotlinx.coroutines.delay
 
 /**
@@ -74,7 +80,10 @@ fun PlayerScreen(
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    // Rebuilt per composition, these nine method references are nine new unstable lambdas, and every
+    // Hoisted above the controls, and above the auto-hide, because the sheet must survive the
+    // controls getting out of the way while the user is reading the participant list (M11).
+    var groupSheetVisible by remember { mutableStateOf(false) }
+    // Rebuilt per composition, these method references are that many new unstable lambdas, and every
     // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
     val actions =
@@ -89,6 +98,10 @@ fun PlayerScreen(
                 onSelectSpeed = viewModel::selectSpeed,
                 onSkipSegment = viewModel::skipCurrentSegment,
                 onBack = onBack,
+                onOpenGroupSheet = { groupSheetVisible = true },
+                onSetGroupShuffle = viewModel::setGroupShuffle,
+                onSetGroupRepeat = viewModel::setGroupRepeat,
+                onLeaveGroup = viewModel::leaveGroup,
             )
         }
     val message = state.userMessage?.let { stringResource(it.textRes()) }
@@ -157,6 +170,15 @@ fun PlayerScreen(
                 }
         }
 
+        // Not while the session is still opening: that already draws a spinner, and two of them
+        // centred on top of each other say less than one.
+        if (state.syncPlay.isWaitingForGroup && state.isReady) {
+            WaitingForGroupOverlay(
+                syncPlay = state.syncPlay,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+
         state.skippableSegment?.let { segment ->
             SkipSegmentButton(
                 kind = segment.kind,
@@ -172,6 +194,79 @@ fun PlayerScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = SNACKBAR_PADDING),
         )
+    }
+
+    // Outside the video `Box`, so it is not covered by the controls and not drawn in the floating
+    // window; never in picture-in-picture, where it would be wider than the window itself.
+    GroupSheetHost(
+        visible = groupSheetVisible && !inPictureInPicture,
+        syncPlay = state.syncPlay,
+        actions = actions,
+        onDismiss = { groupSheetVisible = false },
+    )
+}
+
+/**
+ * Draws the group sheet, or nothing.
+ *
+ * Gated on membership as well as on the tap: a group that ends while the sheet is open takes the
+ * sheet with it, rather than leaving a panel about a group that no longer exists.
+ */
+@Composable
+private fun GroupSheetHost(
+    visible: Boolean,
+    syncPlay: PlayerSyncPlayState,
+    actions: PlayerActions,
+    onDismiss: () -> Unit,
+) {
+    if (!visible || !syncPlay.inGroup) return
+
+    SyncPlayGroupSheet(
+        state = syncPlay,
+        onSetShuffle = actions.onSetGroupShuffle,
+        onSetRepeat = actions.onSetGroupRepeat,
+        onLeave = {
+            actions.onLeaveGroup()
+            onDismiss()
+        },
+        onDismiss = onDismiss,
+    )
+}
+
+/**
+ * "Nothing is happening, and it is not your fault."
+ *
+ * Drawn while the group is gated on someone buffering — this member or another one — which is
+ * otherwise indistinguishable from a stall: the video is frozen, the controls say paused, and the
+ * user's next move would be to tap Play, which in a group only asks the server for something it is
+ * already refusing to do.
+ */
+@Composable
+private fun WaitingForGroupOverlay(
+    syncPlay: PlayerSyncPlayState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.CardCornerRadius))
+                .padding(Dimens.SpaceExtraLarge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        CircularProgressIndicator(color = Color.White)
+        Text(
+            text = stringResource(R.string.player_syncplay_waiting),
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
+        )
+        if (syncPlay.participants.isNotEmpty()) {
+            Text(
+                text = syncPlay.participants.joinToString(", "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = DIM_ALPHA),
+            )
+        }
     }
 }
 
@@ -275,7 +370,18 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.StreamingForTrackChange -> R.string.player_message_track_streaming
         PlayerMessage.TrackUnavailableOffline -> R.string.player_message_track_offline
         PlayerMessage.PlaybackFailed -> R.string.player_message_failed
+        PlayerMessage.SyncPlayConnectionLost -> R.string.player_message_syncplay_connection_lost
+        PlayerMessage.SyncPlayJoinFailed -> R.string.player_message_syncplay_join_failed
+        PlayerMessage.SyncPlayGroupEnded -> R.string.player_message_syncplay_group_ended
+        PlayerMessage.SyncPlayRemoved -> R.string.player_message_syncplay_removed
+        PlayerMessage.SyncPlayLibraryAccessDenied -> R.string.player_message_syncplay_library_denied
+        PlayerMessage.SyncPlayItemUnavailable -> R.string.player_message_syncplay_item_unavailable
     }
+
+/** Enough contrast for white text over a bright frame, without blacking the video out. */
+private val OVERLAY_SCRIM = Color.Black.copy(alpha = 0.6f)
+
+private const val DIM_ALPHA = 0.7f
 
 /** Leaves room for the controls bar so a snackbar never covers the seek bar. */
 private val SNACKBAR_PADDING = 96.dp

@@ -35,6 +35,10 @@ import dev.jellyfinnative.player.session.PlaybackSessionController
 import dev.jellyfinnative.player.session.PlayerEvent
 import dev.jellyfinnative.player.session.PlayerHandle
 import dev.jellyfinnative.player.session.SessionOpenResult
+import dev.jellyfinnative.player.syncplay.SyncPlayController
+import dev.jellyfinnative.player.syncplay.SyncPlayHostSnapshot
+import dev.jellyfinnative.player.syncplay.SyncPlayPlaybackHost
+import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyfinnative.player.trickplay.TrickplayResolver
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -44,7 +48,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -81,6 +87,18 @@ import kotlin.time.Duration.Companion.milliseconds
  * remove: this is the one place a playback session is sequenced, so it has one function per user
  * action and one per player event, and there are simply that many of both. Splitting *those* would
  * move the sequencing, which is the part that is actually hard and actually tested.
+ *
+ * ### What M11 adds
+ * The session can belong to a **group**. When it does, every transport action becomes a request to
+ * the server and nothing here moves the player (docs/notes/syncplay-m11-plan.md, key decision 11);
+ * the group moves it, through `SyncPlayController` and `PlayerHandle`, whether this screen exists or
+ * not. All of that arrives through one collaborator, [PlayerSyncPlayBridge], and the solo path below
+ * is deliberately untouched by it — `syncPlay.isInGroup` is `false` and every branch falls through
+ * to what M5 through M10 built.
+ *
+ * The other half is [SyncPlayPlaybackHost], implemented here because opening an item is this class's
+ * job and nothing else's: device profile, downloaded copy versus stream, track choices, reporting and
+ * decoder fallback all live on this side of the seam.
  */
 @HiltViewModel
 @Suppress("TooManyFunctions")
@@ -97,9 +115,13 @@ class PlayerViewModel
         private val preferences: AppPreferences,
         private val pipController: PipController,
         private val connectionState: ConnectionStateProvider,
+        syncPlayController: SyncPlayController,
         savedStateHandle: SavedStateHandle,
-    ) : ViewModel() {
+    ) : ViewModel(),
+        SyncPlayPlaybackHost {
         private val sessionStore = PlayerSessionStore(savedStateHandle)
+
+        private val syncPlay = PlayerSyncPlayBridge(syncPlayController, host = this)
 
         private val positionTracker = PlaybackPositionTracker()
 
@@ -190,6 +212,7 @@ class PlayerViewModel
             observePlayerEvents()
             observePreferences()
             observeConnectivity()
+            observeSyncPlay()
             loadTitle()
             openSession(
                 playbackResolveRequest(
@@ -257,13 +280,95 @@ class PlayerViewModel
             }
         }
 
+        /**
+         * Keeps the screen in step with the group, and passes on what the group has to say.
+         *
+         * Two collections rather than one because they are two different things: the state is
+         * conflated and drawn continuously, the messages are one-shot and go to the snackbar through
+         * the same field a decoder fallback uses.
+         */
+        private fun observeSyncPlay() {
+            viewModelScope.launch {
+                syncPlay.states.collect { group -> _uiState.update { it.copy(syncPlay = group) } }
+            }
+            viewModelScope.launch {
+                syncPlay.messages.collect { message -> _uiState.update { it.copy(userMessage = message) } }
+            }
+        }
+
+        // ---- SyncPlay host ------------------------------------------------------------------------
+
+        /**
+         * Opens what the group is watching, **paused**.
+         *
+         * The ordinary resolve path, with two differences: `playWhenReady` is `false` because the
+         * group decides when playback starts (a host that started on its own would be out of sync
+         * from the first frame), and whatever was playing is stopped and reported first — a group
+         * moving from one item to the next must not strand the outgoing transcode on the server.
+         *
+         * Runs on `viewModelScope`'s context rather than the caller's: the controller drives this
+         * from its own background scope, and `PlayerHandle` is main-thread-only. That also makes a
+         * teardown mid-load cancel the load rather than prepare a player nobody will see.
+         */
+        override suspend fun loadItem(
+            itemId: UUID,
+            startPositionTicks: Long,
+        ): Boolean =
+            withContext(viewModelScope.coroutineContext) {
+                endCurrentSource()
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result =
+                    sessionController.open(
+                        PlaybackResolveRequest(itemId = itemId, startPositionTicks = startPositionTicks),
+                        playWhenReady = false,
+                    )
+                publish(result, message = null)
+                result is SessionOpenResult.Opened
+            }
+
+        /** Where this player is, for the controller's "do you already have this open?" check. */
+        override fun snapshot(): SyncPlayHostSnapshot {
+            val playback = playerHandle.snapshot()
+            return SyncPlayHostSnapshot(
+                itemId = source?.itemId,
+                positionTicks = playback.positionTicks,
+                isPlaying = playback.isPlaying,
+            )
+        }
+
+        /**
+         * Closes the outgoing session before another item takes its place.
+         *
+         * Only reached from [loadItem]: the group is the one thing that can replace the *item* in a
+         * live session, and the stop report is what kills its encoder and records where it got to.
+         */
+        private suspend fun endCurrentSource() {
+            val current = source ?: return
+            setReportingActive(false)
+            if (stopReported) return
+            stopReported = true
+            reporter.reportStop(current, playerHandle.snapshot())
+        }
+
         // ---- user actions -------------------------------------------------------------------------
 
         fun togglePlayPause() {
-            if (playerHandle.snapshot().isPlaying) playerHandle.pause() else playerHandle.play()
+            val snapshot = playerHandle.snapshot()
+            if (syncPlay.isInGroup) return syncPlay.requestPlayPause(snapshot.isPlaying)
+            if (snapshot.isPlaying) playerHandle.pause() else playerHandle.play()
         }
 
+        /**
+         * Moves playback, or — in a group — asks everyone to move.
+         *
+         * The scrubber, the jump buttons, the double-tap gesture and the skip-segment button all end
+         * up here, which is why this is the only place the in-group rule has to be stated for seeking.
+         * Nothing local happens in a group, including the optimistic position publish: the seek bar
+         * follows the server's command a moment later, and springing it forward first would show a
+         * position this player is not at.
+         */
         fun seekTo(positionMs: Long) {
+            if (syncPlay.isInGroup) return syncPlay.requestSeek(positionMs)
             playerHandle.seekTo(positionMs)
             positionTracker.onSeekTo(positionMs)
         }
@@ -432,16 +537,36 @@ class PlayerViewModel
          * "M9 Polish" → speed).
          */
         fun selectSpeed(speed: PlaybackSpeed) {
+            if (syncPlay.isInGroup) {
+                // SyncPlay has no per-member rate: playing faster than the group is drifting from it.
+                // The control is hidden in a group, so this is only the backstop for a stale tap.
+                Timber.d("Ignoring a playback rate change while in a SyncPlay group")
+                return
+            }
             if (speed == _uiState.value.speed) return
             playerHandle.setPlaybackSpeed(speed.rate)
             _uiState.update { it.copy(speed = speed) }
         }
+
+        // ---- group actions ------------------------------------------------------------------------
+
+        /** Leaves the group; playback carries on exactly as it is, now solo. */
+        fun leaveGroup() = syncPlay.leaveGroup()
+
+        /** Shuffles the group's queue for everyone, or puts it back in order. */
+        fun setGroupShuffle(shuffled: Boolean) = syncPlay.setShuffle(shuffled)
+
+        /** Sets the group's repeat mode for everyone. */
+        fun setGroupRepeat(mode: SyncPlayRepeatMode) = syncPlay.setRepeat(mode)
 
         /**
          * Jumps to the end of the intro or outro currently on screen.
          *
          * Backs the "Skip intro"/"Skip outro" button. A no-op when nothing is offered, so a stale
          * tap that lands just after the segment ended cannot seek somewhere arbitrary.
+         *
+         * In a group the seek goes through [seekTo] like every other one, so the whole group skips
+         * the intro together rather than this member alone.
          */
         fun skipCurrentSegment() {
             val segment = _uiState.value.skippableSegment ?: return
@@ -513,6 +638,16 @@ class PlayerViewModel
             applySegmentDecision(decision)
         }
 
+        /**
+         * Acts on what the segment rules made of the last tick.
+         *
+         * The auto-skip case is the one that changes in a group: nothing may move this player on its
+         * own there, so the skip is *offered* instead (docs/notes/syncplay-m11-plan.md, key decision
+         * 11, and DECISIONS.md 2026-07-30). Suppressing it outright would leave a user whose
+         * preference is auto-skip with no way to skip an intro at all, since the button is normally
+         * only drawn for the other preference; offering it keeps the preference meaningful and lets
+         * the whole group skip together.
+         */
         private fun applySegmentDecision(decision: SegmentSkipDecision) {
             when (decision) {
                 SegmentSkipDecision.None ->
@@ -521,11 +656,14 @@ class PlayerViewModel
                 is SegmentSkipDecision.Offer ->
                     _uiState.update { it.copy(skippableSegment = decision.segment) }
 
-                is SegmentSkipDecision.AutoSkip -> {
-                    Timber.i("Auto-skipping %s to %d ms", decision.segment.kind, decision.segment.endMs)
-                    seekTo(decision.segment.endMs)
-                    _uiState.update { it.copy(skippableSegment = null) }
-                }
+                is SegmentSkipDecision.AutoSkip ->
+                    if (syncPlay.isInGroup) {
+                        _uiState.update { it.copy(skippableSegment = decision.segment) }
+                    } else {
+                        Timber.i("Auto-skipping %s to %d ms", decision.segment.kind, decision.segment.endMs)
+                        seekTo(decision.segment.endMs)
+                        _uiState.update { it.copy(skippableSegment = null) }
+                    }
             }
         }
 
@@ -580,6 +718,9 @@ class PlayerViewModel
             val snapshot = playerHandle.snapshot()
             forcedRemote = request.forceRemote
             setReportingActive(false)
+            // The group has to know this member is rebuilding its player, or it plays on without us.
+            // `PlayerEvent` has no "buffering", so nothing else can tell it (DECISIONS, Phase 2).
+            syncPlay.onBuffering()
             val resumed =
                 request.copy(
                     startPositionTicks =
@@ -630,6 +771,9 @@ class PlayerViewModel
                     reporter.reportStart(resolved, playerHandle.snapshot())
                     setReportingActive(true)
                     loadPlaybackExtras(resolved)
+                    // There is a player worth driving now. Attaching is idempotent, which matters:
+                    // this line is also reached from the group's own `loadItem`.
+                    syncPlay.attach()
                 }
             }
         }
@@ -812,6 +956,9 @@ class PlayerViewModel
         internal fun releaseSession() {
             setReportingActive(false)
             setScreenVisible(false)
+            // The group survives the screen: the controller sends `ignoreWait` from here so nobody
+            // is left waiting on a player that no longer exists (key decision 5).
+            syncPlay.detach()
             // Nothing is playing any more, so nothing should float when the user leaves next.
             pipController.clear()
             val current = source

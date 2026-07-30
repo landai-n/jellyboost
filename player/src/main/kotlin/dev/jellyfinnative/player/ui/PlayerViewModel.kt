@@ -88,14 +88,28 @@ class PlayerViewModel
         private val segmentLoader: MediaSegmentLoader,
         private val preferences: AppPreferences,
         private val pipController: PipController,
-        savedStateHandle: SavedStateHandle,
+        private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val itemId: String =
             requireNotNull(savedStateHandle.get<String>(ARG_ITEM_ID)) {
                 "Player route is missing its '$ARG_ITEM_ID' argument"
             }
         private val mediaSourceId: String? = savedStateHandle[ARG_MEDIA_SOURCE_ID]
-        private val startPositionTicks: Long = savedStateHandle[ARG_START_TICKS] ?: 0L
+
+        /**
+         * Where the last session had actually got to, or `null` if this is a fresh navigation.
+         *
+         * Non-null only after a process death: the handle is restored with whatever the last
+         * progress tick wrote into it ([rememberLivePosition]). It is the difference between coming
+         * back to the film where the user left it and coming back to where they *tapped Play* —
+         * and the latter is not merely a cosmetic annoyance, because the progress reporter would
+         * then stamp that stale position with a fresh timestamp and most-recent-wins sync would
+         * push it out to the server and every other device.
+         */
+        private val restoredPositionTicks: Long? = savedStateHandle[KEY_LIVE_POSITION_TICKS]
+
+        private val startPositionTicks: Long =
+            restoredPositionTicks ?: savedStateHandle[ARG_START_TICKS] ?: 0L
 
         private val _uiState = MutableStateFlow(PlayerUiState())
 
@@ -155,7 +169,12 @@ class PlayerViewModel
                     mediaSourceId = mediaSourceId,
                     startPositionTicks = startPositionTicks,
                 ),
-                playWhenReady = true,
+                // A fresh tap on Play means play. A restore after process death resumes only what
+                // was actually running: an item the user had paused before leaving the app must not
+                // start talking to an empty room minutes later.
+                playWhenReady =
+                    restoredPositionTicks == null ||
+                        savedStateHandle.get<Boolean>(KEY_WAS_PLAYING) == true,
             )
         }
 
@@ -552,6 +571,10 @@ class PlayerViewModel
          *
          * Independent of the UI position poll: reporting has to keep running while the screen is
          * backgrounded, because that is exactly when a user leaves an episode playing.
+         *
+         * The same tick is what keeps [SavedStateHandle] current — see [rememberLivePosition]. It
+         * rides this ticker rather than the UI one for exactly the reason above: the UI poll stops
+         * when the screen goes away, which is precisely the state a process death happens in.
          */
         private fun setReportingActive(active: Boolean) {
             reportingJob?.cancel()
@@ -562,9 +585,28 @@ class PlayerViewModel
                         reporter.startReporting(
                             scope = viewModelScope,
                             currentSource = { source },
-                            snapshot = { playerHandle.snapshot() },
+                            snapshot = { playerHandle.snapshot().also(::rememberLivePosition) },
                         )
                 }
+        }
+
+        /**
+         * Writes the live position back into the handle the system restores after a process death.
+         *
+         * Without this the handle only ever holds the navigation arguments, so a restored back
+         * stack re-opens the player at the position the item had when Play was *tapped* — and the
+         * next progress tick then writes that stale position to the local user-data row with a
+         * fresh timestamp, which most-recent-wins sync happily propagates to the server and to
+         * every other device. Losing the resume point of a film someone is halfway through is
+         * silent, permanent and entirely invisible until they come back to it.
+         *
+         * Position 0 is not written: it is indistinguishable from "no session yet", and falling
+         * back to the navigation argument is the better answer for it anyway.
+         */
+        private fun rememberLivePosition(snapshot: PlaybackSnapshot) {
+            if (snapshot.positionTicks <= 0L) return
+            savedStateHandle[KEY_LIVE_POSITION_TICKS] = snapshot.positionTicks
+            savedStateHandle[KEY_WAS_PLAYING] = snapshot.isPlaying
         }
 
         private fun fail(
@@ -619,6 +661,15 @@ class PlayerViewModel
             const val ARG_ITEM_ID = "itemId"
             const val ARG_MEDIA_SOURCE_ID = "mediaSourceId"
             const val ARG_START_TICKS = "startPositionTicks"
+
+            /**
+             * Keys this ViewModel writes back into the handle, as opposed to the `ARG_` ones it
+             * only reads. Distinct from [ARG_START_TICKS] on purpose: the navigation argument is
+             * what the user tapped and must stay intact, while these two are what the session had
+             * reached the last time anyone looked.
+             */
+            const val KEY_LIVE_POSITION_TICKS = "livePositionTicks"
+            const val KEY_WAS_PLAYING = "wasPlaying"
 
             /** The server's "no subtitles" sentinel; `null` would re-select the item's default. */
             const val SUBTITLES_OFF = -1

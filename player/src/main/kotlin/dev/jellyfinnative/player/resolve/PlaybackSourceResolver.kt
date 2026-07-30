@@ -3,7 +3,9 @@ package dev.jellyfinnative.player.resolve
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
+import dev.jellyfinnative.data.DelegatingJellyfinRepository
 import dev.jellyfinnative.player.model.PlaybackMediaSource
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,9 +24,14 @@ import javax.inject.Singleton
  * be up. It also makes the offline behaviour identical to the online one instead of a special mode,
  * so the path the M8 device walk exercises is the path that runs every day.
  *
- * Rule 3 is what stops the Play button from hanging: `DelegatingJellyfinRepository` already bounds
- * *browse* calls, but a `PlaybackInfo` POST fired into a dead network would sit on the SDK's socket
- * timeout behind a spinner with no cancel.
+ * Rule 3 is what stops the Play button from hanging when the app already knows it is offline: a
+ * `PlaybackInfo` POST fired into a dead network would sit on the SDK's socket timeout behind a
+ * spinner with no cancel.
+ *
+ * Rule 2 carries the other half of that guarantee. A server that died *after* the last browse call
+ * still reads as online — nothing has probed it since — so the resolve gets the same ceiling
+ * [DelegatingJellyfinRepository] puts on every browse call, and a resolve that hits it reports the
+ * failure so the reachability probe demotes the server before the user taps Play again.
  *
  * ### The one exception to rule 1
  * A request that has explicitly forbidden direct play is [DecoderFallbackHandler]'s
@@ -51,6 +58,28 @@ class PlaybackSourceResolver
                 return AppResult.Failure(AppError.Network())
             }
 
-            return remote.resolve(request)
+            return withTimeoutOrNull(RESOLVE_TIMEOUT_MS) { remote.resolve(request) }
+                ?: run {
+                    Timber.w(
+                        "Playback resolve for %s exceeded %d ms; giving up rather than hanging",
+                        request.itemId,
+                        RESOLVE_TIMEOUT_MS,
+                    )
+                    // Demotes the server so the *next* call takes the offline path immediately
+                    // instead of paying the ceiling again.
+                    connectionState.reportFailure()
+                    AppResult.Failure(AppError.Network())
+                }
+        }
+
+        companion object {
+            /**
+             * Ceiling on the playback negotiation, in milliseconds.
+             *
+             * Deliberately the same number as every browse call rather than one of its own: a
+             * `PlaybackInfo` POST is the one server call the user is actively waiting behind, so it
+             * has no business being allowed to run longer than the calls that merely fill a grid.
+             */
+            const val RESOLVE_TIMEOUT_MS = DelegatingJellyfinRepository.ONLINE_CALL_TIMEOUT_MS
         }
     }

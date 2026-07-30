@@ -651,7 +651,91 @@ class PlayerViewModelTest {
             pipController.state.value.canEnter shouldBe false
         }
 
-    private fun viewModel() =
+    // ---- process death ------------------------------------------------------------------------
+
+    @Test
+    fun `a restore comes back where playback got to, not where the user tapped Play`() =
+        runTest(dispatcher) {
+            val request = slot<PlaybackResolveRequest>()
+            // The real resolver echoes the requested position back on the source it returns, and
+            // that is the number the player is prepared at.
+            coEvery { resolver.resolve(capture(request)) } coAnswers {
+                AppResult.Success(source.copy(startPositionTicks = request.captured.startPositionTicks))
+            }
+
+            viewModel(
+                navArgs(
+                    PlayerViewModel.KEY_LIVE_POSITION_TICKS to LIVE_TICKS,
+                    PlayerViewModel.KEY_WAS_PLAYING to true,
+                ),
+            )
+            advanceUntilIdle()
+
+            // The navigation argument is an hour behind: replaying from it would let the next
+            // progress tick stamp a stale position with a fresh timestamp, and most-recent-wins
+            // sync would then push it to the server and every other device.
+            request.captured.startPositionTicks shouldBe LIVE_TICKS
+            playerHandle.prepared.single().startPositionMs shouldBe LIVE_TICKS / 10_000L
+            playerHandle.prepared.single().playWhenReady shouldBe true
+        }
+
+    @Test
+    fun `a session that was paused when the process died comes back paused`() =
+        runTest(dispatcher) {
+            viewModel(
+                navArgs(
+                    PlayerViewModel.KEY_LIVE_POSITION_TICKS to LIVE_TICKS,
+                    PlayerViewModel.KEY_WAS_PLAYING to false,
+                ),
+            )
+            advanceUntilIdle()
+
+            // Coming back to an app abandoned hours ago must not start talking to an empty room.
+            playerHandle.prepared.single().playWhenReady shouldBe false
+        }
+
+    @Test
+    fun `the position a progress tick writes is the position the next process starts from`() =
+        runTest(dispatcher) {
+            val handle = navArgs()
+            val snapshot = slot<() -> PlaybackSnapshot>()
+            every { reporter.startReporting(any(), any(), capture(snapshot)) } returns Job()
+
+            viewModel(handle)
+            advanceUntilIdle()
+            playerHandle.snapshot = PlaybackSnapshot(positionMs = LIVE_TICKS / 10_000L, isPlaying = true)
+            // One 5-second reporter tick — the ticker that keeps running behind a backgrounded
+            // screen, which is exactly the state a process death happens in.
+            snapshot.captured()
+
+            val request = slot<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(request)) } returns AppResult.Success(source)
+            playerHandle.prepared.clear()
+            viewModel(handle)
+            advanceUntilIdle()
+
+            request.captured.startPositionTicks shouldBe LIVE_TICKS
+            playerHandle.prepared.single().playWhenReady shouldBe true
+        }
+
+    @Test
+    fun `a fresh navigation writes nothing to the handle until playback has a position`() =
+        runTest(dispatcher) {
+            val handle = navArgs()
+            val snapshot = slot<() -> PlaybackSnapshot>()
+            every { reporter.startReporting(any(), any(), capture(snapshot)) } returns Job()
+
+            viewModel(handle)
+            advanceUntilIdle()
+            snapshot.captured()
+
+            // Position 0 is indistinguishable from "no session yet"; the route's own resume
+            // argument is the better answer for it, so nothing is recorded over it.
+            handle.get<Long>(PlayerViewModel.KEY_LIVE_POSITION_TICKS).shouldBeNull()
+            handle.get<Long>(PlayerViewModel.ARG_START_TICKS) shouldBe RESUME_TICKS
+        }
+
+    private fun viewModel(savedStateHandle: SavedStateHandle = navArgs()) =
         PlayerViewModel(
             repository = repository,
             resolver = resolver,
@@ -663,14 +747,21 @@ class PlayerViewModelTest {
             segmentLoader = segmentLoader,
             preferences = preferences,
             pipController = pipController,
-            savedStateHandle =
-                SavedStateHandle(
-                    mapOf(
-                        PlayerViewModel.ARG_ITEM_ID to PlayerFixtures.ITEM_ID.toString(),
-                        PlayerViewModel.ARG_MEDIA_SOURCE_ID to MEDIA_SOURCE_ID,
-                        PlayerViewModel.ARG_START_TICKS to RESUME_TICKS,
-                    ),
-                ),
+            savedStateHandle = savedStateHandle,
+        )
+
+    /**
+     * The handle as the navigation library hands it over, plus whatever a restore would carry.
+     *
+     * `extra` empty is the fresh-tap case every other test in this class exercises.
+     */
+    private fun navArgs(vararg extra: Pair<String, Any>) =
+        SavedStateHandle(
+            mapOf(
+                PlayerViewModel.ARG_ITEM_ID to PlayerFixtures.ITEM_ID.toString(),
+                PlayerViewModel.ARG_MEDIA_SOURCE_ID to MEDIA_SOURCE_ID,
+                PlayerViewModel.ARG_START_TICKS to RESUME_TICKS,
+            ) + extra,
         )
 
     /** An intro from 30 s to 2 min — long enough to be worth a button. */
@@ -690,5 +781,8 @@ class PlayerViewModelTest {
     private companion object {
         const val MEDIA_SOURCE_ID = "source-1"
         const val RESUME_TICKS = 12_000_000_000L
+
+        /** 90 minutes in — an hour past [RESUME_TICKS], so a stale replay is unmistakable. */
+        const val LIVE_TICKS = 54_000_000_000L
     }
 }

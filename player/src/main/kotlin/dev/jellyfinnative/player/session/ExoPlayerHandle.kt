@@ -196,11 +196,26 @@ internal class ExoPlayerHandle
          *
          * `startService` rather than a bind: Media3 only promotes a *started* service to the
          * foreground, and that promotion is what keeps playback alive once the app is backgrounded
-         * ([PlaybackService], M9). It is always called from a foreground activity, which is what
-         * makes the background-start restriction irrelevant here.
+         * ([PlaybackService], M9).
+         *
+         * It is **not** guaranteed to be called from a foreground activity. [prepare] runs when the
+         * resolve completes, and a resolve can take seconds on a slow server, so a user who presses
+         * Home while the spinner is up lands here with the app already in the background. Past the
+         * grace window API 26+ answers a background `startService` with an `IllegalStateException`,
+         * and an uncaught throw on `Main.immediate` is process death — a crash traded for a feature
+         * the user is not even using at that moment. `PlaybackService`'s
+         * `onForegroundServiceStartNotAllowedException` does not cover this: that hook is Media3
+         * declining to *promote* an already-started service, which never happens if the service
+         * could not be started at all.
+         *
+         * So the start is best effort. Losing it costs the background-continue bonus and the
+         * notification; playback itself runs off the shared [ExoPlayer] and is unaffected. The next
+         * [prepare] — a quality change, a track switch, a fallback retry, or simply the next item —
+         * tries again from wherever the app is by then.
          */
         private fun startPlaybackService() {
-            context.startService(Intent(context, PlaybackService::class.java))
+            runCatching { context.startService(Intent(context, PlaybackService::class.java)) }
+                .onFailure { Timber.w(it, "Could not start the playback service; continuing without it") }
         }
 
         private fun stopPlaybackService() {

@@ -15,6 +15,12 @@
 >   have handed the controller a track flagged embedded and had it counted among container groups a
 >   transcode does not have. `toTrack` gained a `sideLoaded` parameter and `LocalPlaybackResolver`
 >   passes "has a sidecar". Pinned by two new `TrackSelectionControllerTest` cases.
+>   *Post-landing correction:* the id round-trip this note called "verified and test-pinned" was
+>   pinned against an id the player never reports — side-loading wraps everything in a
+>   `MergingMediaSource`, whose period re-ids every format as `<childIndex>:<originalId>`, so
+>   `external:2` comes back as `1:external:2`. `jellyfinIndexOfTrackId` now strips that one numeric
+>   prefix; until it did, every downloaded sidecar was refused offline as "not in the downloaded
+>   file" (found on the Les Minions 2 walk, 2026-07-30).
 > - **The DECISIONS question is answered: silent top-up.** `SubtitleSidecarTopUp`, driven by
 >   `DownloadedMetadataRefresher`, fetches the missing sidecars of *finished* rows once per stretch of
 >   connectivity. Re-queueing the row — the obvious alternative — would re-download the whole film:

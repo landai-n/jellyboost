@@ -1,6 +1,15 @@
 package dev.jellyfinnative.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -10,10 +19,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,8 +54,22 @@ import kotlinx.coroutines.launch
  * (Settings, LibraryGrid, ItemDetail, the auth flow) each manage their own system-bar insets, and
  * letting this outer `Scaffold` consume them as well would pad those screens twice. What the frame
  * does own on a **top-level** destination is both ends of the window: [AppTopBar] pads itself out
- * of the status bar, and the nav host gets [navigationBarsPadding] — the space the bottom
+ * of the status bar, and the nav host gets the bottom navigation-bar inset — the space the bottom
  * navigation bar used to reserve for it.
+ *
+ * ### Why the chrome is animated rather than switched
+ * `isTopLevel` is read from the back stack, so it flips the instant `navigate()` is called — a good
+ * half-second before the [JellyfinNavHost] cross-fade that follows it has finished. Drawing the bar
+ * with a bare `if` therefore added or removed a ~112dp slot under a screen that was still fading:
+ * `innerPadding` snapped, the outgoing page jumped, and the bar and its page never came or went
+ * together. Both ends of the frame are consequently animated on the same clock the pages use
+ * ([NAV_TRANSITION_MILLIS]) — the bar through `AnimatedVisibility`, which the `Scaffold` re-measures
+ * every frame, and the bottom inset through [animateDpAsState] instead of a toggled modifier. The
+ * inset contract above is unchanged; only the way the top-level padding arrives is.
+ *
+ * The bar is fed the last *top-level* destination rather than the live one, because during the exit
+ * animation the current destination is already the pushed screen and the selected-tab pill would
+ * blink off halfway through the fade.
  */
 @Composable
 internal fun AppScaffold(
@@ -53,6 +79,12 @@ internal fun AppScaffold(
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = currentDestination.isTopLevel()
+
+    // What the bar shows while it animates away: the destination it was last drawn for. Writing it
+    // during composition is idempotent — the same value for the same destination — and it is only
+    // ever read below, after this line has run.
+    var barDestination by remember { mutableStateOf<NavDestination?>(null) }
+    if (isTopLevel) barDestination = currentDestination
 
     val connectionViewModel: ConnectionViewModel = hiltViewModel()
     val connectionState by connectionViewModel.connectionState.collectAsStateWithLifecycle()
@@ -76,12 +108,27 @@ internal fun AppScaffold(
         onPauseOrDispose { }
     }
 
+    // The bottom half of the frame, as a value rather than a modifier, so it can be animated to and
+    // from zero on the same clock as the bar instead of appearing and vanishing in one frame.
+    val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val bottomInset by animateDpAsState(
+        targetValue = if (isTopLevel) navigationBarInset else 0.dp,
+        animationSpec = tween(NAV_TRANSITION_MILLIS),
+        label = "navHostBottomPadding",
+    )
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            if (isTopLevel) {
+            // Expanding/shrinking from the top (the defaults) is what makes the bar slide out from
+            // under the status bar rather than detach from it.
+            AnimatedVisibility(
+                visible = isTopLevel,
+                enter = expandVertically(tween(NAV_TRANSITION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = shrinkVertically(tween(NAV_TRANSITION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+            ) {
                 AppTopBar(
-                    currentDestination = currentDestination,
+                    currentDestination = barDestination,
                     connectionState = connectionState,
                     hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
                     onSelectTab = navController::navigateToTab,
@@ -104,7 +151,7 @@ internal fun AppScaffold(
             modifier =
                 Modifier
                     .padding(innerPadding)
-                    .then(if (isTopLevel) Modifier.navigationBarsPadding() else Modifier),
+                    .padding(bottom = bottomInset),
         )
     }
 }

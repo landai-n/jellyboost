@@ -1,6 +1,7 @@
 package dev.jellyfinnative.player.syncplay.time
 
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
+import dev.jellyfinnative.player.syncplay.model.TimeSyncSample
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
@@ -73,6 +74,30 @@ class SyncPlayPinger
         }
 
         /**
+         * One clock exchange, recorded — and nothing else.
+         *
+         * Split out of [sampleOnce] because it is the half that needs no group: `GET /GetUtcTime` is
+         * a plain system call, where `POST /SyncPlay/Ping` is a group request the server answers with
+         * `NotInGroup` when the session is not in one yet. That is what lets the join flow warm the
+         * clock *before* it joins ([SyncPlayTimeSync.offset] is `ZERO` until something measures it,
+         * and the first command can arrive the moment the join returns).
+         *
+         * @return the sample, or `null` when the exchange failed — a failure costs this sample and
+         *   nothing else, and never blocks the caller.
+         */
+        suspend fun sampleClock(): TimeSyncSample? =
+            try {
+                api.sampleServerTime().also(timeSync::record)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (
+                @Suppress("TooGenericExceptionCaught") error: Throwable,
+            ) {
+                Timber.w(error, "A SyncPlay time sample failed; keeping the current offset")
+                null
+            }
+
+        /**
          * One exchange: measure, feed the estimator, report the latency.
          *
          * A failure costs this sample and nothing else. The loop is the only thing keeping the
@@ -82,10 +107,9 @@ class SyncPlayPinger
          *
          * @return `true` when the exchange completed.
          */
-        private suspend fun sampleOnce(): Boolean =
-            try {
-                val sample = api.sampleServerTime()
-                timeSync.record(sample)
+        private suspend fun sampleOnce(): Boolean {
+            val sample = sampleClock() ?: return false
+            return try {
                 api.reportPing(sample.roundTrip.toMillis() / 2)
                 true
             } catch (cancellation: CancellationException) {
@@ -93,9 +117,10 @@ class SyncPlayPinger
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Throwable,
             ) {
-                Timber.w(error, "A SyncPlay time sample failed; keeping the current offset")
+                Timber.w(error, "A SyncPlay ping report failed; this cycle counts as a failure")
                 false
             }
+        }
 
         companion object {
             /** Samples taken at [FAST_INTERVAL_MS] right after joining, before settling down. */

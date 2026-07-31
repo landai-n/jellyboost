@@ -2390,4 +2390,71 @@ Seeded from the approved plan; listed for traceability, no divergence:
   would be measured against the lie. The group's state is the server's own broadcast, and it is a public
   `val` because a later phase surfaces it through the player UI bridge.
 
+## 2026-07-31 — SyncPlay hygiene: an honest anchor, honest reports, a detach that keeps the group's reach, and a warm clock
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (`inferredGroupAnchor`, `detachHost`,
+  `reportReady`, `reportedIsPlaying`, `warmClock`/`performJoin`, `onHostBuffering`, `reconcile`,
+  `onSameSlotUpdate`, `onPlayerReady`, `oweReady`, `renegotiate`),
+  `player/.../syncplay/time/SyncPlayPinger.kt` (`sampleClock`), `SyncPlayCommandScheduler` KDoc,
+  `SyncPlayControllerTest`, `docs/features/syncplay.md`.
+- **Plan said:** M11 key decision 1 / DECISIONS.md 2026-07-30 — *"on host detach send
+  `syncPlaySetIgnoreWait(true)` so a backgrounded member never gates the group"*, which the
+  implementation had grown into "detach also cancels the command scheduler and forces the member
+  phase to `Paused`". `docs/features/syncplay.md` documented the ignore-wait half of it.
+- **Done instead:** four hygiene fixes, all of them in the direction of telling the truth.
+  1. **The inferred group anchor carries the queue's own instant.** `inferredGroupAnchor()` paired
+     `startPositionTicks` with `timeSync.serverNow()`; it now pairs it with `queue.lastUpdate`, which
+     is when that position was actually true.
+  2. **`buffering`/`ready` reports carry the player's real `isPlaying`.** All four call sites
+     hardcoded `false`; they now read the host's snapshot where one is attached and the shared
+     player otherwise (`reportedIsPlaying`).
+  3. **`detachHost` no longer cancels the scheduler nor forces the phase.** Only `teardown` and
+     `standDown` cancel now. Everything else detach did — clearing `loadedPlaylistItemId` and
+     `skippedSlots`, sending `setIgnoreWait(true)` — is unchanged.
+  4. **The clock is measured before the join call.** `performJoin` takes one `GET /GetUtcTime`
+     sample (`SyncPlayPinger.sampleClock`, split out of `sampleOnce` because it is the half that
+     needs no group — `POST /SyncPlay/Ping` from a session in no group is answered `NotInGroup`).
+     A failure is logged and the join carries on.
+- **Reason:** `syncplay-bugreport.md`, browser-initiated resume: *"app resumes after a few seconds,
+  keeping a desynchronization of a few seconds initially, somehow growing from there"*.
+  - (1) is the "few seconds initially": `startPositionTicks` was true at `lastUpdate`, so pairing it
+    with *now* claims the group has not moved since. `selfSyncToGroup` then seeks short by exactly
+    the age of the queue update, and the drift monitor — handed the same anchor as
+    `SyncPlayPhase.Playing`'s — spends the rest of the session defending that short timeline instead
+    of closing the gap. That is the "growing from there".
+  - (2) is what the *server* schedules from. `WaitingGroupState.HandleRequest(ReadyGroupRequest)`
+    extrapolates the reported position over the round trip only `if (request.IsPlaying)`, and the
+    delay it computes from the result is what the group's next unpause is scheduled with. A member
+    that always says `false` makes the group schedule around a client it believes is parked.
+    jellyfin-web sends `!player.paused()` here.
+  - (3) is the free-running background member. `PlaybackService` keeps the shared ExoPlayer alive
+    across leaving the player screen, so cancelling the scheduler left the group's commands landing
+    nowhere, and forcing the phase to `Paused` took the drift monitor (which runs in `Playing` only)
+    down with it — a detached member played on with nothing measuring anything and nothing able to
+    stop it. The `setIgnoreWait(true)` that key decision 1 is actually about is untouched: the group
+    still stops *waiting* on a member with no screen; it just keeps *reaching* it.
+  - (4) `SyncPlayTimeSync.offset` is `Duration.ZERO` until a sample records one, and the pinger only
+    starts in `enterGroup` — so the first `SendCommand`, which can arrive the instant the join
+    returns, was converted to local time against an assumed offset.
+- **Re-attach after (3):** `attachHost` reconciles from the queue, and since commit 87312aa the
+  scheduler forgets a *never-applied* pending command on `cancel()` while remembering the applied
+  one. With `cancel()` gone from detach, both memories now survive a detach — and neither can replay
+  anything. `lastApplied` is only ever consulted to make a **repeat** of the identical command a
+  no-op, so keeping it can only *suppress* work, never cause it; and suppressing it is right,
+  because the player never left the state that command put it in (it was the same ExoPlayer
+  throughout). The applied-side dedupe is exactly what absorbs the server's "client got lost,
+  sending current state" re-send that our re-attach `ready` earns. A pending command surviving the
+  detach is the fix itself, not a hazard: it belongs to the timeline the player is still on. And a
+  re-attach that has to *reload* (the group moved on while we were detached) gets a fresh
+  `playlistItemId`/`when` from the server's re-handshake, so it is a different identity and applies
+  normally. The staleness guard is unaffected — it only ever drops commands emitted *before* the
+  newest known one, which is the direction the group's timeline never goes.
+- **Known consequence of (2), recorded deliberately:** the 2026-07-31 self-sync entry above ruled
+  out the broadcast filter as a cause of the missing unpause *because* "this client always says
+  `IsPlaying = false`". That is no longer true. In `WaitingGroupState`, a ready-with-`IsPlaying=true`
+  from a member more than `2 × highestPing` behind is answered with
+  `SyncPlayBroadcastType.AllExceptCurrentSession` — the group is told to resume when we catch up,
+  and we are deliberately sent nothing, because a client that is already playing will get there by
+  playing. That is the protocol working as designed for a member that really is running, and the
+  self-sync net (3 s, `SELF_SYNC_TIMEOUT_MS`) is the floor under it if it ever is not.
+
 <!-- END -->

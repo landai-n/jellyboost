@@ -143,11 +143,16 @@ class SyncPlayCommandScheduler
         }
 
         /**
-         * Drops the pending command and forgets what was taken on — on leaving a group, and when the
-         * player screen detaches.
+         * Drops the pending command and forgets what was taken on — when the group session ends, and
+         * only then (`SyncPlayController.teardown` and `standDown`).
          *
-         * The memory goes with it deliberately: a player that re-attaches has to be told the group's
-         * current state again, and that repeat is the only thing that will say it.
+         * The memory goes with it deliberately: the next session is a new timeline, and a command
+         * remembered across it would silence the first thing the group said.
+         *
+         * Deliberately **not** called when the player screen detaches. The screen going away does not
+         * take the player with it — `PlaybackService` keeps the shared ExoPlayer playing — so the
+         * group's commands still have somewhere to land, and forgetting them would only make the
+         * server's "client got lost" re-send re-apply a state the player never left.
          */
         fun cancel() {
             pending?.cancel()

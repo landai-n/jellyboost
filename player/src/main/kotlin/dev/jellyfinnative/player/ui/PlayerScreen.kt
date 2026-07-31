@@ -400,6 +400,7 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.TrackUnavailableOffline -> R.string.player_message_track_offline
         PlayerMessage.PlaybackFailed -> R.string.player_message_failed
         PlayerMessage.SyncPlayConnectionLost -> R.string.player_message_syncplay_connection_lost
+        PlayerMessage.SyncPlayRejoined -> R.string.player_message_syncplay_rejoined
         PlayerMessage.SyncPlayJoinFailed -> R.string.player_message_syncplay_join_failed
         PlayerMessage.SyncPlayGroupEnded -> R.string.player_message_syncplay_group_ended
         PlayerMessage.SyncPlayRemoved -> R.string.player_message_syncplay_removed

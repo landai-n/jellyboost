@@ -191,7 +191,9 @@ private fun SyncPlayGroupsPoll.toUiState(
 private fun SyncPlayState.toMembership(): SyncPlayGroupsMembership =
     when (this) {
         SyncPlayState.Idle -> SyncPlayGroupsMembership.None
-        SyncPlayState.Joining -> SyncPlayGroupsMembership.Joining
+        // Rejoining is a join in progress as far as the screen is concerned: the same spinner, and
+        // the same refusal to offer a second group while one is being negotiated.
+        SyncPlayState.Joining, is SyncPlayState.Rejoining -> SyncPlayGroupsMembership.Joining
         is SyncPlayState.InGroup ->
             SyncPlayGroupsMembership.InGroup(
                 groupId = group.id,

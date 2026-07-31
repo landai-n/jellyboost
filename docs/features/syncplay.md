@@ -113,11 +113,11 @@ player never gates everyone else, and a later `PlayQueueUpdate` re-launches the 
 
 ## Losing the connection
 
-A confirmed loss **pauses the player, leaves the group, and says so** ("Left SyncPlay — connection
-lost"). Nothing resumes automatically: playing on would mean drifting from the group invisibly, so
+A confirmed loss **pauses the player at once**, and — once the automatic rejoin below has failed —
+**leaves the group and says so** ("Left SyncPlay — connection lost"). Nothing resumes automatically: playing on would mean drifting from the group invisibly, so
 the state change is made honest and the user resumes with one tap, solo (from disk if the item is
-downloaded). Rejoining is manual, through the Groups screen. (Key decision 10, as amended on
-2026-07-30 from the original "keep playing solo".)
+downloaded). (Key decision 10, as amended on 2026-07-30 from the original "keep playing solo", and
+again on 2026-07-31 by [taking the group back](#taking-the-group-back) first.)
 
 Three signals confirm one, through a single `confirmLoss()`:
 
@@ -133,6 +133,38 @@ window, and connectivity returning inside it re-enters the buffering/ready hands
 re-syncs this member. Freezing rather than playing on is deliberate — see DECISIONS.md 2026-07-31.
 
 Signing out tears the membership down the same way.
+
+## Taking the group back
+
+Surviving a blip locally is not the same thing as keeping the membership, because the **server** does
+not survive it. A dropped websocket raises `SessionEnded`, `SyncPlayManager.OnSessionEnded` calls
+`LeaveGroup` for this session, and the next request arrives on a brand-new session that belongs to no
+group — answered with a `SyncPlayNotInGroupUpdate` on the socket. (The SyncPlay REST endpoints return
+`204` either way, so the socket update is the answer; the ping loop's five-second cadence finds it
+even when nothing else is happening.) Nobody asked to leave, so the client asks for the group back
+(DECISIONS.md 2026-07-31).
+
+| | |
+|---|---|
+| **remembered** | the group, from the moment it is entered, until a *deliberate* exit forgets it |
+| **deliberate exits** | `leaveGroup()`, sign-out, `LibraryAccessDenied`, `GroupGone`, and a `NotInGroup`/`Left` over a connection that was never in trouble — none of these ever auto-rejoin |
+| **"in trouble"** | connectivity going offline, a failed ping cycle, or the socket leaving `Connected`, within `REJOIN_TROUBLE_WINDOW_MS` (30 s) — the window is there because the removal is found by the *next* request, not at the moment of the trouble |
+| **a confirmed loss** | goes the same way: `confirmLoss()` hands over to the rejoin rather than ending the group. On the device this is the *usual* path — a three-second Wi-Fi drop costs ~5 s of reported-offline once association, DHCP and the reachability probe are counted, so the grace window expires before anything discovers the removal |
+| **the attempt** | list the groups; if ours is still there, run the ordinary join flow — socket re-collected, join REST, handshake with a `ready`, self-sync net behind it |
+| **bounds** | `REJOIN_MAX_ATTEMPTS` (3), `REJOIN_RETRY_DELAY_MS` (2 s) apart, covering a server still reaping the old session; each attempt gated on a bounded `awaitOnline()` so none is spent on a radio that is still down |
+| **group not listed** | it dissolved (we were its last member) → teardown, "The SyncPlay group has ended" |
+| **attempts exhausted** | teardown, "Left SyncPlay — connection lost" — and no background loop afterwards; once out, we stay out until the user acts |
+| **the player** | paused throughout, and never started by the rejoin: the group's answer to this member's `ready` is what puts it back in step |
+| **on success** | "Rejoined SyncPlay group" |
+
+`SyncPlayState.Rejoining` is deliberately **not** a kind of `InGroup` — the server really does not
+have this session in the group while it lasts. Membership therefore falls and rises, which is what
+re-mints the server-visible session of a downloaded file (below), and what the player's control
+surface reads to stop offering transport requests nobody would answer. Two smaller consequences: the
+sign-out watcher lives on the controller's own scope rather than a group session (a rejoin cancels
+the session scope, and a sign-out in the middle of one has to be able to abort it), and a rejoin that
+lands with no player attached re-sends `setIgnoreWait(true)`, because the new server session knows
+nothing of the old one's.
 
 ## Local files in a group, and the reporting exception
 
@@ -216,7 +248,7 @@ offline sessions do.
 
 | File | What it pins |
 |---|---|
-| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net, sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. |
+| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net, sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. Auto-rejoin: a blip-then-`NotInGroup` and a `403` both taken back (join re-run, handshake re-entered, player never started, one "Rejoined" message), membership falling and rising for the local-session re-mint, a dissolved group asked after exactly once, exhaustion at exactly 3 attempts 2 s apart then one message and silence, aborts mid-rejoin from leave and sign-out, the four exits that must never rejoin, and a confirmed loss the connection comes back from (no call spent while offline, rejoined when it returns). |
 | `SyncPlayCommandSchedulerTest` | Future / past-due / replacement commands, seek epsilon, applied-once (identical re-send, repeated past-due, stale `emittedAt`). |
 | `SyncPlayDriftMonitorTest` | Threshold either side of 2 s, no correction while paused. |
 | `time/SyncPlayTimeSyncTest` | Server ahead/behind, asymmetric RTT, outlier rejection, rolling window. |

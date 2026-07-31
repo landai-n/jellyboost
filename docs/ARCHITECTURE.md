@@ -76,12 +76,15 @@ depends on `:player` except `:app`, which owns the `Routes.Player` NavHost entry
 :player
  ├── model/         PlaybackMediaSource (sealed), PlaybackMediaItemSpec, PlaybackSnapshot, PlaybackQuality
  ├── api/           PlayerApi + StreamUrlFactory (interfaces) and their SDK implementations
- ├── deviceprofile/ DeviceProfileBuilder, MediaCodecProbe, CodecHelpers
+ ├── deviceprofile/ DeviceProfileBuilder, MediaCodecProbe, CodecHelpers, CastDeviceProfile
  ├── resolve/       PlaybackInfoResolver, ExoMediaSourceFactory
  ├── report/        PlaybackReporter
  ├── fallback/      DecoderFallbackHandler
- ├── session/       PlayerHandle + ExoPlayerHandle, TrackSelectionController, PlaybackService,
- │                  PlaybackServiceState, JellyfinAuthInterceptor
+ ├── session/       PlayerHandle + ExoPlayerHandle + RoutingPlayerHandle (the binding),
+ │                  TrackSelectionController, PlaybackService, PlaybackServiceState,
+ │                  JellyfinAuthInterceptor
+ ├── cast/          CastAvailability + the Google Cast sender; the app's only GMS types
+ │                  (docs/features/chromecast.md)
  ├── syncplay/      SyncPlayController + the group protocol; presence/ holds the foreground
  │                  service a group without playback runs behind (docs/features/syncplay.md)
  ├── ui/            PlayerViewModel, PlayerScreen, PlayerControls, PlayerSheets
@@ -105,6 +108,14 @@ background playback and the media notification; the UI drives the instance direc
 through a `MediaController` (DECISIONS.md, 2026-07-28). The service is declared in `:player`'s own
 `AndroidManifest.xml`, together with the foreground-service permissions, so `:app`'s manifest stays
 untouched.
+
+**…behind a routing seam, since M12.** The `PlayerHandle` Hilt binding is `RoutingPlayerHandle`, which
+delegates to `ExoPlayerHandle` or to `CastPlayerHandle` depending on whether a television has the
+film; `CastSessionCoordinator` is the only thing allowed to move the pointer. With no cast session
+every method is a single delegation with no branch in it, which is what makes "casting changed nothing
+about playing alone" a property of the code rather than of the tests. `PlaybackService` deliberately
+keeps injecting the concrete `ExoPlayerHandle`: it owns the *local* media session, which is exactly
+what should disappear while the Cast framework publishes its own.
 
 **A second foreground service, for a group with nothing playing.** `SyncPlayPresenceService`
 (`syncplay/presence/`, `specialUse`) exists only to keep a backgrounded process's network alive while
@@ -544,3 +555,53 @@ holds every byte before it starts writes a complete `moov` up front, which is ex
 `docs/features/download-quality.md`, *"Why the container is mkv and not mp4"*) — so the sidecar needs
 no seek-index repair at all, unlike the media file it rides alongside.
 <!-- END: Offline multi-track Phase 2 (post-M10) -->
+
+<!-- BEGIN: Chromecast (M12) -->
+## Chromecast (M12)
+
+Full detail: [`docs/features/chromecast.md`](features/chromecast.md).
+
+**No new module, and one new dependency direction.** Casting is a package inside `:player` for the
+same reason SyncPlay is: it needs the resolvers, the reporter and `PlayerHandle`, all of which live
+there. What is new is that `:player` is the **only** module that may name a
+`com.google.android.gms` type, and inside it only `cast/` may — `:app` calls
+`CastAvailability.initialize(this)` from `MainActivity.onCreate` and knows nothing else about it.
+
+```
+:player/cast
+ ├── JellyboostCastOptionsProvider   framework config; instantiated reflectively from the manifest
+ ├── CastAvailability                the one CastContext, the GoogleApiAvailability guard,
+ │                                   CastDeviceState for the UI
+ ├── CastSessionMonitor + GmsCastSessionMonitor   "a receiver appeared / went away", GMS-free seam
+ ├── CastSessionCoordinator          routing, the detached ticker, the final stop report
+ ├── CastStatusHolder                isCasting + device name, for everyone outside cast/
+ ├── CastMetadataHolder              title / episode line / poster, for the receiver's own screen
+ ├── CastPlaybackHost                the attach/detach + transfer seam a screen implements
+ ├── CastPlayerHandle                PlayerHandle over media3-cast's CastPlayer
+ └── CastSpecMapper → CastMediaSpec → CastMediaItemConverter   decide in pure data, assemble on device
+```
+
+**The seam that made it cheap.** `androidx.media3.cast.CastPlayer` is an
+`androidx.media3.common.Player`, so a receiver fits behind the `PlayerHandle` interface the player was
+already written against — including the contract that a track selection returning `false` sends the
+caller back to the server, which is exactly how an audio switch and a burned-in subtitle have to
+behave while casting. `RoutingPlayerHandle` (in `session/`) becomes the binding and everything above
+it is unchanged.
+
+**Three cross-cutting mechanisms this introduces.**
+
+| mechanism | where | why it is shaped that way |
+|---|---|---|
+| `RoutingPlayerHandle` | `:player/session` | One binding, one seam, a pointer underneath. `PlayerViewModel` never learns which player it is driving; `PlaybackService` keeps the concrete local one so the *local* notification disappears while the framework publishes its own. The cast handle arrives as a `Provider` so a GMS-less device never constructs one. |
+| `CastStatusHolder` / `CastMetadataHolder` | `:player/cast` | The two facts that cross the boundary in each direction — "are we casting" (read by every resolve) and "what should the television say this is" (written by the ViewModel's item fetch). Both are Cast-free by construction, which is what lets a ViewModel test build one on a machine with no Cast stack. Modelled on `SyncPlayStatusHolder`. |
+| `CastSessionCoordinator` on `@DetachedPlayerScope` | `:player/cast` | A cast session outlives every screen, so a `@Singleton` started from `JellyboostApplication` owns it — and reports to the server **only while no screen is attached**, which is what keeps it to exactly one stop report per source. |
+
+**The edges that changed outside `cast/`.** `PlaybackResolveRequest.castTarget` joins `forceRemote` in
+skipping the copy on disk (a `file://` URI is unreachable from a receiver); `PlaybackInfoResolver`
+sends `CastDeviceProfile` instead of the probed one; `StreamUrlFactory.withApiKey` puts the token in
+the URL for a fetcher that is not this app; `PlayerHandle` gained a `prepare` overload carrying the
+resolved source and a `supportsPlaybackSpeed` property, both defaulted so no existing implementation
+or test double changed. `:player` also gained `androidx.appcompat` and `androidx.mediarouter` — the
+cast button is an AppCompat view, which is why `MainActivity` is a `FragmentActivity` and the app
+theme is AppCompat-derived (DECISIONS.md 2026-07-31).
+<!-- END: Chromecast (M12) -->

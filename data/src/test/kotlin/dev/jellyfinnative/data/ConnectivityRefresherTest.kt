@@ -7,6 +7,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -23,11 +25,17 @@ import org.junit.jupiter.api.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConnectivityRefresherTest {
     private val state = MutableStateFlow(ConnectionState.ONLINE)
+
+    /** The provider's "reachable all along, but somebody fell back to Room" tick. */
+    private val reconfirmations =
+        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
     private val provider = mockk<ConnectionStateProvider>()
 
     @BeforeEach
     fun setUp() {
         every { provider.state } returns state
+        every { provider.serverReconfirmed } returns reconfirmations
     }
 
     @Test
@@ -63,6 +71,24 @@ class ConnectivityRefresherTest {
             ConnectivityRefresher(provider).connectivityChanged.test {
                 runCurrent()
                 state.value = ConnectionState.OFFLINE_SERVER_UNREACHABLE
+                runCurrent()
+
+                awaitItem() shouldBe Unit
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    /**
+     * The state never moved here — it read online the whole time — so the edges have nothing to
+     * say, and the screen that fell back to downloads-only data would sit on it forever.
+     */
+    @Test
+    fun `fires when the server is reconfirmed after a request fell back`() =
+        runTest {
+            ConnectivityRefresher(provider).connectivityChanged.test {
+                runCurrent()
+                reconfirmations.tryEmit(Unit)
                 runCurrent()
 
                 awaitItem() shouldBe Unit

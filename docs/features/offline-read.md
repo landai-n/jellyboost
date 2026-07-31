@@ -52,8 +52,19 @@ one probe and then waits `PROBE_DEBOUNCE_MS` (2 s), so a screenful of ViewModels
 same failed request produces one `getPublicSystemInfo`, not twelve. Probes are triggered by:
 
 - a network becoming available (including at app start),
+- the session changing — restore completing, sign-in, sign-out (the addresses the probe tries are
+  derived from the session, so a verdict reached under one says nothing about the next),
 - `refresh()` — app resume (`LifecycleResumeEffect` in `AppScaffold`) and the status icon's *Retry*,
-- `reportFailure()` — the delegating repository, after a transport-level failure.
+- `reportFailure()` — the delegating repository, after a transport-level failure,
+- a 15 s timer, but only while the state is `OFFLINE_SERVER_UNREACHABLE` — an offline verdict
+  routes every call straight to Room, so `reportFailure()` can never fire again and a wrong
+  "unreachable" would otherwise be permanent for the rest of a foreground session. (That state
+  implies the network is up: `OFFLINE_NO_NETWORK` outranks it.)
+
+A probe request that arrives **before session restore has answered** is dropped: there is no server
+to probe yet, and probing anyway used to demote the optimistic launch state to "unreachable" —
+which put every cold start on the offline home until a later probe won a race (DECISIONS.md,
+2026-07-31). The session-change trigger re-asks the moment the restore publishes a session.
 
 ### 2. Choosing a source per call — `:data/DelegatingJellyfinRepository`
 
@@ -178,6 +189,15 @@ point:
 same reload whichever way the edge ran — and its surface is a bare `Flow<Unit>` and nothing else on
 purpose: feature modules depend on `:data`, not on `:core:network`, so no ViewModel needs to see
 `ConnectionState` to know "refresh now". No `build.gradle.kts` changed to wire this up.
+
+Edges are not quite the whole story, though. A call that transport-fails while the state reads
+`ONLINE` falls back to Room (§2) — and if the probe that failure triggers finds the server fine,
+the state never changes, so no edge ever comes and the screen keeps its offline rows indefinitely
+(the launch bug of 2026-07-31: an online home showing downloads-only content, "fixed" by toggling
+offline mode and back). `connectivityChanged` therefore also merges in
+`ConnectionStateProvider.serverReconfirmed`: a tick emitted when a probe answers "reachable"
+*without changing the state* after a transport failure was reported. It fires only when a fallback
+actually happened, and never for the state a screen starts with.
 
 Each ViewModel collects it in `init` and re-runs **the load path it already had** — nothing here is
 a second, connectivity-only code path, and the same call fires whether the edge just went offline or

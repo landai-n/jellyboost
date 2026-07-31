@@ -4,6 +4,7 @@ import dev.jellyfinnative.core.network.connectivity.ConnectionStateProvider
 import dev.jellyfinnative.core.network.connectivity.onlineStateChanges
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,8 +21,12 @@ import javax.inject.Singleton
  * — and the reason taxonomy, which only the offline banner has any use for — into every ViewModel
  * that wants to know "refresh now" or "is there a server to ask".
  *
- * It fires on **both** edges — reachable again, and no longer reachable — but never for the
- * connection state a screen starts with; see [onlineStateChanges].
+ * It fires on **both** edges — reachable again, and no longer reachable — and additionally whenever
+ * a probe reconfirms the server after a request had already fallen back to offline data
+ * ([ConnectionStateProvider.serverReconfirmed]): that fallback leaves a screen showing downloads-only
+ * rows while the state still reads online, so no edge would ever come to correct it (DECISIONS.md,
+ * 2026-07-31). It still says nothing about the connection state a screen starts with; see
+ * [onlineStateChanges].
  */
 @Singleton
 class ConnectivityRefresher
@@ -29,9 +34,15 @@ class ConnectivityRefresher
     constructor(
         private val connectionStateProvider: ConnectionStateProvider,
     ) {
-        /** Fires once per change of online-ness, in either direction. Never completes. */
+        /**
+         * Fires once per change of online-ness, in either direction, and once per reconfirmed
+         * server. Never completes.
+         */
         val connectivityChanged: Flow<Unit> =
-            connectionStateProvider.state.onlineStateChanges().map { }
+            merge(
+                connectionStateProvider.state.onlineStateChanges().map { },
+                connectionStateProvider.serverReconfirmed,
+            )
 
         /**
          * Whether the app is online *right now*.

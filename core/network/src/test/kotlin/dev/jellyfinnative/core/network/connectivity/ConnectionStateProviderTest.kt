@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -103,6 +102,23 @@ class ConnectionStateProviderTest {
     }
 
     /**
+     * `runTest`, with the provider's application scope cancelled before the framework drains the
+     * scheduler on its way out.
+     *
+     * The unreachable re-probe is an endless timer by design, and `runTest` finishes by running the
+     * scheduler until it is idle — which, with that timer armed, is never: the test would spin
+     * through virtual time probing forever instead of passing or failing.
+     */
+    private fun connectivityTest(body: suspend TestScope.() -> Unit) =
+        runTest {
+            try {
+                body()
+            } finally {
+                applicationScope?.cancel()
+            }
+        }
+
+    /**
      * Builds the provider on a scope that shares `runTest`'s scheduler but is *not* a child of the
      * test coroutine — otherwise its endless collectors would keep `runTest` from ever finishing.
      */
@@ -118,6 +134,39 @@ class ConnectionStateProviderTest {
         )
     }
 
+    /**
+     * Builds the provider and takes it through the cold start a signed-in user gets: launch, then
+     * `restoreSession()` publishing a session, which is the first moment a probe may run at all.
+     *
+     * Costs exactly one probe — the one the restored session asks for.
+     */
+    private fun TestScope.newSignedInProvider(): ConnectionStateProvider {
+        val provider = newProvider()
+        settle()
+        sessionStateHolder.update(loggedIn())
+        settle()
+        return provider
+    }
+
+    /**
+     * Runs everything that is due, plus every probe queued behind the debounce, and stops well short
+     * of the first [ConnectionStateProvider.UNREACHABLE_REPROBE_MS] tick.
+     *
+     * `advanceUntilIdle` cannot be used once the state may settle on
+     * [ConnectionState.OFFLINE_SERVER_UNREACHABLE]: the re-probe loop is an endless timer by design,
+     * so "until the scheduler runs dry" never arrives and the test would hang instead of fail.
+     */
+    private fun TestScope.settle() {
+        advanceTimeBy(SETTLE_MS)
+        runCurrent()
+    }
+
+    /** Advances past the next unattended re-probe tick and lets the probe it asks for run. */
+    private fun TestScope.advancePastReprobe() {
+        advanceTimeBy(ConnectionStateProvider.UNREACHABLE_REPROBE_MS)
+        settle()
+    }
+
     private fun loggedIn(serverVersion: String? = SERVER_VERSION) =
         SessionState.LoggedIn(
             serverId = SERVER_ID,
@@ -131,83 +180,78 @@ class ConnectionStateProviderTest {
 
     @Test
     fun `is online when the network is up and the server answers`() =
-        runTest {
-            val provider = newProvider()
-
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
 
             provider.state.value shouldBe ConnectionState.ONLINE
         }
 
     @Test
     fun `reports no network the moment the monitor says so`() =
-        runTest {
-            val provider = newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
 
             hasNetworkFlow.value = false
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_NO_NETWORK
         }
 
     @Test
     fun `reports the server unreachable when the network is up but the probe fails`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } returns false
-            val provider = newProvider()
 
-            advanceUntilIdle()
+            val provider = newSignedInProvider()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
         }
 
     @Test
     fun `forced offline outranks a perfectly good network`() =
-        runTest {
-            val provider = newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
 
             forceOfflineFlow.value = true
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_FORCED
         }
 
     @Test
     fun `forced offline outranks having no network at all`() =
-        runTest {
+        connectivityTest {
             val provider = newProvider()
             hasNetworkFlow.value = false
             forceOfflineFlow.value = true
 
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_FORCED
         }
 
     @Test
     fun `no network outranks an unreachable server`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } returns false
-            val provider = newProvider()
-            advanceUntilIdle()
+            val provider = newSignedInProvider()
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
 
             hasNetworkFlow.value = false
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_NO_NETWORK
         }
 
     @Test
     fun `turning forced offline back off restores the observed state`() =
-        runTest {
-            val provider = newProvider()
+        connectivityTest {
+            val provider = newSignedInProvider()
             forceOfflineFlow.value = true
-            advanceUntilIdle()
+            settle()
 
             forceOfflineFlow.value = false
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.ONLINE
         }
@@ -215,51 +259,46 @@ class ConnectionStateProviderTest {
     // ---- probing ------------------------------------------------------------------------------
 
     @Test
-    fun `probes once as soon as a network is available`() =
-        runTest {
-            newProvider()
-
-            advanceUntilIdle()
+    fun `probes once the restored session gives it a server to probe`() =
+        connectivityTest {
+            newSignedInProvider()
 
             coVerify(exactly = 1) { probe.isServerReachable() }
         }
 
     @Test
     fun `probes again when the network comes back`() =
-        runTest {
-            newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            newSignedInProvider()
 
             hasNetworkFlow.value = false
-            advanceUntilIdle()
+            settle()
             hasNetworkFlow.value = true
-            advanceUntilIdle()
+            settle()
 
             coVerify(exactly = 2) { probe.isServerReachable() }
         }
 
     @Test
     fun `collapses a burst of reported failures into a single probe`() =
-        runTest {
-            val provider = newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
 
             // First failure starts a probe; the rest arrive while that probe's debounce is running,
             // which is exactly what a screenful of parallel requests failing together looks like.
             provider.reportFailure()
             runCurrent()
             repeat(SCREENFUL_OF_REQUESTS) { provider.reportFailure() }
-            advanceUntilIdle()
+            settle()
 
-            // Initial availability probe + the first failure + one for the whole burst — not ten.
+            // Restored-session probe + the first failure + one for the whole burst — not ten.
             coVerify(exactly = 3) { probe.isServerReachable() }
         }
 
     @Test
     fun `holds off a follow-up probe until the debounce window has passed`() =
-        runTest {
-            val provider = newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
 
             provider.reportFailure()
             runCurrent()
@@ -269,22 +308,21 @@ class ConnectionStateProviderTest {
 
             coVerify(exactly = 2) { probe.isServerReachable() }
 
-            advanceUntilIdle()
+            settle()
 
             coVerify(exactly = 3) { probe.isServerReachable() }
         }
 
     @Test
     fun `recovers to online when a refresh finds the server again`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } returns false
-            val provider = newProvider()
-            advanceUntilIdle()
+            val provider = newSignedInProvider()
             provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
 
             coEvery { probe.isServerReachable() } returns true
             provider.refresh()
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.ONLINE
         }
@@ -292,81 +330,101 @@ class ConnectionStateProviderTest {
     // ---- probing on session changes -------------------------------------------------------------
 
     /**
-     * The fresh-install bug, in one test: the launch probe runs before anyone is signed in, so it
-     * answers "no server to probe", and until this wiring existed nothing ever re-asked — the user
-     * signed in successfully and the app still claimed it could not reach the server until restart.
+     * The fresh-install bug, in one test: signed out, the probe has no server to try and correctly
+     * answers "unreachable", and until this wiring existed nothing ever re-asked — the user signed
+     * in successfully and the app still claimed it could not reach the server until restart.
      */
     @Test
     fun `re-probes when a session appears, with no connectivity change at all`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } returns false
             val provider = newProvider()
-            advanceUntilIdle()
+            settle()
+            sessionStateHolder.update(SessionState.LoggedOut)
+            settle()
             provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
 
             // Sign-in: a server to probe now exists, and the network never moved.
             coEvery { probe.isServerReachable() } returns true
             sessionStateHolder.update(loggedIn())
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.ONLINE
             coVerify(exactly = 2) { probe.isServerReachable() }
         }
 
+    /**
+     * The cold-start bug: `restoreSession()` had not published anything yet, so the launch probe
+     * asked about a server nobody was signed in to, got `false` for it, and put the whole first
+     * screen on offline data. Until the session is known there is nothing to learn, so the app keeps
+     * the optimism it launched with.
+     */
     @Test
-    fun `does not probe for the unknown session the app launches with`() =
-        runTest {
-            newProvider()
+    fun `keeps the launch optimism while the session is still unknown`() =
+        connectivityTest {
+            coEvery { probe.isServerReachable() } returns false
 
-            advanceUntilIdle()
+            val provider = newProvider()
+            settle()
 
-            // Only the network-available probe; `Unknown` means "not decided yet", not a change.
+            provider.state.value shouldBe ConnectionState.ONLINE
+            coVerify(exactly = 0) { probe.isServerReachable() }
+        }
+
+    /** …and the moment the restore lands, the probe runs and whatever it finds is the answer. */
+    @Test
+    fun `probes as soon as the restore publishes a session, and applies the verdict`() =
+        connectivityTest {
+            coEvery { probe.isServerReachable() } returns false
+            val provider = newProvider()
+            settle()
+
+            sessionStateHolder.update(loggedIn())
+            settle()
+
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
             coVerify(exactly = 1) { probe.isServerReachable() }
         }
 
     @Test
     fun `re-probes on sign-out so no stale verdict outlives the session`() =
-        runTest {
-            val provider = newProvider()
-            sessionStateHolder.update(loggedIn())
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
             provider.state.value shouldBe ConnectionState.ONLINE
 
             // With nobody signed in the probe has no address to try and says so.
             coEvery { probe.isServerReachable() } returns false
             sessionStateHolder.update(SessionState.LoggedOut)
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
-            coVerify(exactly = 3) { probe.isServerReachable() }
+            coVerify(exactly = 2) { probe.isServerReachable() }
         }
 
     @Test
     fun `does not probe again when the same session is republished`() =
-        runTest {
-            newProvider()
-            sessionStateHolder.update(loggedIn())
-            advanceUntilIdle()
+        connectivityTest {
+            newSignedInProvider()
 
             // Same user on the same server — only the reported server version moved, which changes
             // nothing about what the probe would try.
             sessionStateHolder.update(loggedIn(serverVersion = "10.11.1"))
-            advanceUntilIdle()
+            settle()
 
-            // The launch probe and the sign-in probe, and nothing for the republished session.
-            coVerify(exactly = 2) { probe.isServerReachable() }
+            // The restored-session probe, and nothing for the republished session.
+            coVerify(exactly = 1) { probe.isServerReachable() }
         }
 
     @Test
     fun `probes once per session identity, not once per emission`() =
-        runTest {
+        connectivityTest {
             newProvider()
-            advanceUntilIdle()
+            settle()
 
             repeat(SCREENFUL_OF_REQUESTS) { sessionStateHolder.update(loggedIn(serverVersion = "10.11.$it")) }
-            advanceUntilIdle()
+            settle()
 
-            coVerify(exactly = 2) { probe.isServerReachable() }
+            coVerify(exactly = 1) { probe.isServerReachable() }
         }
 
     // ---- a throwing probe must not take the loop with it (STAB-07) --------------------------------
@@ -378,15 +436,14 @@ class ConnectionStateProviderTest {
      */
     @Test
     fun `survives a probe that throws and keeps answering later ones`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
-            val provider = newProvider()
-            advanceUntilIdle()
+            val provider = newSignedInProvider()
 
             // The loop is still there to serve the next request, and it answers it.
             coEvery { probe.isServerReachable() } returns false
             provider.refresh()
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
             coVerify(exactly = 2) { probe.isServerReachable() }
@@ -398,14 +455,13 @@ class ConnectionStateProviderTest {
      */
     @Test
     fun `keeps the last verdict when a probe throws`() =
-        runTest {
-            val provider = newProvider()
-            advanceUntilIdle()
+        connectivityTest {
+            val provider = newSignedInProvider()
             provider.state.value shouldBe ConnectionState.ONLINE
 
             coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
             provider.refresh()
-            advanceUntilIdle()
+            settle()
 
             provider.state.value shouldBe ConnectionState.ONLINE
         }
@@ -413,16 +469,15 @@ class ConnectionStateProviderTest {
     /** The state flow itself must stay collectable — a dead loop used to strand every collector. */
     @Test
     fun `leaves the state flow alive and collectable after a throwing probe`() =
-        runTest {
+        connectivityTest {
             coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
-            val provider = newProvider()
-            advanceUntilIdle()
+            val provider = newSignedInProvider()
 
             provider.state.test {
                 awaitItem() shouldBe ConnectionState.ONLINE
 
                 hasNetworkFlow.value = false
-                advanceUntilIdle()
+                settle()
 
                 // A live collector still receives the next change, which is the whole claim.
                 awaitItem() shouldBe ConnectionState.OFFLINE_NO_NETWORK
@@ -430,8 +485,140 @@ class ConnectionStateProviderTest {
             }
         }
 
+    // ---- reconfirming a server the state never doubted -----------------------------------------
+
+    /**
+     * `DelegatingJellyfinRepository` can fall back to Room while the state still reads online, and
+     * the probe that follows leaves the verdict exactly where it was — no edge, and a screen left
+     * showing downloads-only data. This tick is the only thing that can tell it to load again.
+     */
+    @Test
+    fun `ticks a reconfirmation when a probe confirms the server after a reported failure`() =
+        connectivityTest {
+            val provider = newSignedInProvider()
+
+            provider.serverReconfirmed.test {
+                runCurrent()
+
+                provider.reportFailure()
+                settle()
+
+                awaitItem() shouldBe Unit
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            provider.state.value shouldBe ConnectionState.ONLINE
+        }
+
+    @Test
+    fun `stays quiet for a probe nobody reported a failure for`() =
+        connectivityTest {
+            val provider = newSignedInProvider()
+
+            provider.serverReconfirmed.test {
+                runCurrent()
+
+                provider.refresh()
+                settle()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    /**
+     * A recovery that *changes* the verdict already produces a state edge, and screens refresh on
+     * those; ticking as well would make every one of them fetch twice.
+     */
+    @Test
+    fun `stays quiet when the probe answering the failure also changes the verdict`() =
+        connectivityTest {
+            coEvery { probe.isServerReachable() } returns false
+            val provider = newSignedInProvider()
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+
+            provider.serverReconfirmed.test {
+                runCurrent()
+
+                coEvery { probe.isServerReachable() } returns true
+                provider.reportFailure()
+                settle()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            provider.state.value shouldBe ConnectionState.ONLINE
+        }
+
+    /** A probe that threw learnt nothing, so the reported failure is still owed an answer. */
+    @Test
+    fun `keeps a reported failure pending when the probe throws`() =
+        connectivityTest {
+            val provider = newSignedInProvider()
+
+            provider.serverReconfirmed.test {
+                runCurrent()
+
+                coEvery { probe.isServerReachable() } throws IllegalStateException("probe blew up")
+                provider.reportFailure()
+                settle()
+                expectNoEvents()
+
+                coEvery { probe.isServerReachable() } returns true
+                provider.refresh()
+                settle()
+
+                awaitItem() shouldBe Unit
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    // ---- digging out of an unreachable verdict on its own ---------------------------------------
+
+    /**
+     * Once offline, every repository call goes straight to Room, so no failure can be reported and
+     * nothing else would ever re-ask. Without this the verdict — right or wrong — lasted until the
+     * user tapped *Retry* or left the app and came back.
+     */
+    @Test
+    fun `comes back online by itself when a later re-probe finds the server`() =
+        connectivityTest {
+            coEvery { probe.isServerReachable() } returns false
+            val provider = newSignedInProvider()
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+
+            // Nothing external moves: no network change, no session change, no refresh, no tap.
+            coEvery { probe.isServerReachable() } returns true
+            advancePastReprobe()
+
+            provider.state.value shouldBe ConnectionState.ONLINE
+        }
+
+    @Test
+    fun `keeps re-probing when the re-probe fails as well`() =
+        connectivityTest {
+            coEvery { probe.isServerReachable() } returns false
+            val provider = newSignedInProvider()
+
+            advancePastReprobe()
+
+            coVerify(exactly = 2) { probe.isServerReachable() }
+
+            // A failed re-probe writes `false` over `false` and moves no state — the ticking has to
+            // survive that, or one failure would end the recovery.
+            advancePastReprobe()
+
+            provider.state.value shouldBe ConnectionState.OFFLINE_SERVER_UNREACHABLE
+            coVerify(exactly = 3) { probe.isServerReachable() }
+        }
+
     private companion object {
         /** Roughly the number of parallel requests a home screen fires. */
         const val SCREENFUL_OF_REQUESTS = 8
+
+        /** Two debounce windows: enough for a couple of chained probes, far short of a re-probe. */
+        const val SETTLE_MS = ConnectionStateProvider.PROBE_DEBOUNCE_MS * 2
     }
 }

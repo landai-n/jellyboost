@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -310,13 +312,14 @@ private fun DetailActions(
                     group = actions.group,
                     onClick = actions.onPlay,
                     modifier = Modifier.weight(1f),
+                    compact = true,
                 )
                 MarkWatchedButton(
                     watched = watched,
                     onClick = actions.onToggleWatched,
                     iconOnly = true,
                 )
-                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
+                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite, compact = true)
                 DownloadButton(
                     state = downloadState,
                     onClick = actions.onDownload,
@@ -393,7 +396,11 @@ private fun MarkWatchedButton(
     iconOnly: Boolean = false,
 ) {
     val label = stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched)
-    OutlinedButton(onClick = onClick, modifier = modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding = if (iconOnly) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
+    ) {
         Icon(
             imageVector = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
             contentDescription = if (iconOnly) label else null,
@@ -414,8 +421,13 @@ private fun FavoriteButton(
     favorite: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
-    OutlinedButton(onClick = onClick, modifier = modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding = if (compact) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
+    ) {
         Icon(
             imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
             contentDescription =
@@ -451,9 +463,21 @@ private fun PlayButton(
     group: DetailGroupActions?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val resume = item.userData.isResumable
-    Button(onClick = onClick, modifier = modifier) {
+    // The three 58dp-minimum circles beside it leave this button ~130dp on a 360dp screen;
+    // Material's 24dp-per-side padding would ellipsize "Resume" inside that, 16dp does not.
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding =
+            if (compact) {
+                PaddingValues(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceSmall)
+            } else {
+                ButtonDefaults.ContentPadding
+            },
+    ) {
         Icon(
             imageVector = if (group == null) Icons.Filled.PlayArrow else Icons.Outlined.Groups,
             contentDescription = null,
@@ -466,6 +490,8 @@ private fun PlayButton(
                     resume -> stringResource(R.string.detail_group_resume, group.groupName)
                     else -> stringResource(R.string.detail_group_play, group.groupName)
                 },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = Dimens.SpaceSmall),
         )
     }
@@ -514,7 +540,11 @@ private fun DownloadButton(
 ) {
     // Icon-only still says what it is: the icon is already state-distinct (download / spinner /
     // done / error), and the label survives as the icon's contentDescription for TalkBack.
-    OutlinedButton(onClick = onClick, modifier = modifier) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        contentPadding = if (iconOnly) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
+    ) {
         when (state) {
             is DownloadState.Downloading ->
                 CircularProgressIndicator(
@@ -544,6 +574,14 @@ private fun DownloadButton(
         }
     }
 }
+
+/**
+ * Content padding for the compact row's icon-only buttons. Material's default pill padding is
+ * 24dp per side, which makes an icon-only `OutlinedButton` ~72dp wide — three of those left the
+ * weighted Play button ~88dp and its label wrapped letter-per-line. 12dp brings each circle to
+ * ~48dp (still the full touch target) and gives Play back ~160dp.
+ */
+private val IconOnlyButtonPadding = PaddingValues(Dimens.SpaceMedium)
 
 private fun DownloadState.icon() =
     when (this) {

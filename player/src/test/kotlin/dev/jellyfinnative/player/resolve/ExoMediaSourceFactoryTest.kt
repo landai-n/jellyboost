@@ -4,6 +4,7 @@ import androidx.media3.common.MimeTypes
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.PlayerFixtures
 import dev.jellyfinnative.player.api.StreamUrlFactory
+import dev.jellyfinnative.player.model.ExternalAudio
 import dev.jellyfinnative.player.model.ExternalSubtitle
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
@@ -249,5 +250,52 @@ class ExoMediaSourceFactoryTest {
         // The same track-id convention as online, so `TrackSelectionController` needs no branch.
         subtitle.id shouldBe "external:3"
         subtitle.mimeType shouldBe MimeTypes.APPLICATION_SUBRIP
+    }
+
+    // ---- audio sidecars (phase 2) ---------------------------------------------------------------
+
+    @Test
+    fun `downloaded audio sidecars reach the spec in the order they will be merged in`() {
+        val spec =
+            factory.create(
+                PlayerFixtures.localSource(
+                    externalAudio =
+                        listOf(
+                            ExternalAudio(index = 4, uri = "file:///downloads/Arrival/audio.4.fra.m4a"),
+                            ExternalAudio(index = 5, uri = "file:///downloads/Arrival/audio.5.eng.m4a"),
+                        ),
+                ),
+            )
+
+        spec.shouldNotBeNull()
+        // Element i becomes merge child i+1; the order is the whole of the mapping back to Jellyfin
+        // stream indices, so nothing between here and `ExoPlayerHandle` may re-sort it.
+        spec.audioSidecars.map { it.streamIndex } shouldBe listOf(4, 5)
+        spec.audioSidecars.map { it.uri } shouldBe
+            listOf("file:///downloads/Arrival/audio.4.fra.m4a", "file:///downloads/Arrival/audio.5.eng.m4a")
+    }
+
+    @Test
+    fun `a streamed source never carries audio sidecars`() {
+        // The server merges what it sends; there is nothing on this side to merge.
+        val spec =
+            factory.create(
+                PlayerFixtures.remoteSource(
+                    playMethod = PlayMethod.TRANSCODE,
+                    transcodingUrl = "/videos/x/master.m3u8",
+                    transcodingSubProtocol = MediaStreamProtocol.HLS,
+                ),
+            )
+
+        spec.shouldNotBeNull()
+        spec.audioSidecars.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a downloaded item with no extra languages gets no audio sidecars`() {
+        val spec = factory.create(PlayerFixtures.localSource())
+
+        spec.shouldNotBeNull()
+        spec.audioSidecars.shouldBeEmpty()
     }
 }

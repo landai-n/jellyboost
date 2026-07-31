@@ -109,6 +109,13 @@ data class RemotePlaybackMediaSource(
  * @property mediaUri `file://` URI of the downloaded video file.
  * @property trickplay downloaded scrubbing thumbnails, when the server generated any. The scrubber
  *   that draws them arrives with M9; M8 only carries the data (DECISIONS.md 2026-07-29).
+ * @property externalAudio audio tracks the download stored as their own files, which ExoPlayer has
+ *   to be handed as extra sources rather than reading them out of the container. **The list order is
+ *   a contract**: it is ascending Jellyfin stream index, and it is the order the merge children are
+ *   built in, which is the only thing that ties an ExoPlayer audio group back to the Jellyfin stream
+ *   behind it (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2"). Empty for everything but a
+ *   transcoded download — an original holds every track in the file, and a streamed source has no
+ *   analogue at all, which is why this lives here rather than on [PlaybackMediaSource].
  * @property allAudioTracks / @property allSubtitleTracks every track of the **source**, as the
  *   cached blob describes it — a superset of [audioTracks] / [subtitleTracks], which are only what
  *   the file and its sidecars can actually play. The two lists are what makes the picker
@@ -127,6 +134,7 @@ data class LocalPlaybackMediaSource(
     override val audioTracks: List<PlaybackTrack> = emptyList(),
     override val subtitleTracks: List<PlaybackTrack> = emptyList(),
     override val externalSubtitles: List<ExternalSubtitle> = emptyList(),
+    val externalAudio: List<ExternalAudio> = emptyList(),
     val allAudioTracks: List<PlaybackTrack> = audioTracks,
     val allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
     override val selectedAudioIndex: Int? = null,
@@ -248,4 +256,21 @@ data class ExternalSubtitle(
     val mimeType: String,
     val label: String,
     val language: String,
+)
+
+/**
+ * One audio track ExoPlayer has to load as its own source, merged alongside the media file.
+ *
+ * Only a downloaded item has any: a transcoded download bakes exactly one audio track into the
+ * video file and stores every other language as its own `.m4a` next to it
+ * (docs/notes/offline-multitrack-design.md, phase 2). There is no `MediaItem` analogue of
+ * `SubtitleConfiguration` for audio, so these are not carried on the spec's subtitle path — they
+ * become merge children in `ExoPlayerHandle.prepare`, **in list order**.
+ *
+ * @property index the absolute Jellyfin `MediaStream.index` the file was fetched for.
+ * @property uri `file://` URI of the audio-only sidecar.
+ */
+data class ExternalAudio(
+    val index: Int,
+    val uri: String,
 )

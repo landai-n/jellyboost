@@ -70,7 +70,7 @@ All implementation phases committed same-day, each `/verify`-green
    verified (50 SyncPlay SDK classes + serializers kept, zero new keep
    rules; REST polling exercised on-device minified, clean logcat).
 
-## Planned milestone: M12 — Chromecast (approved 2026-07-31, gated on M11 closing)
+## Planned milestone: M12 — Chromecast (approved 2026-07-31, implementation started; closes after M11)
 
 User-approved scope extension (DECISIONS 2026-07-31): phone-orchestrated Google
 Cast via media3-cast `CastPlayer` + Google's default receiver (NOT the Jellyfin

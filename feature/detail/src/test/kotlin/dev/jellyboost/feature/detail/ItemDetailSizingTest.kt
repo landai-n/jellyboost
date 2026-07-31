@@ -16,11 +16,22 @@ import org.junit.jupiter.api.Test
  */
 class ItemDetailSizingTest {
     @Test
-    fun `phone portrait gets a proportional banner and the stacked header`() {
-        // 360x800: portrait, width below WIDE_BREAKPOINT so the floor is the narrow fixed value —
-        // 0.40 * 800 = 320dp, which sits inside [220, 560] so the proportional value wins outright.
-        backdropHeight(maxWidth = 360.dp, maxHeight = 800.dp) shouldBe 320.dp
+    fun `phone portrait gets a smaller proportional banner and the stacked header`() {
+        // 360x800: portrait, and narrower than COMPACT_MAX_WIDTH (480dp) so the compact fraction
+        // applies — 0.32 * 800 = 256dp, which sits inside [220, 560] so the proportional value wins
+        // outright.
+        backdropHeight(maxWidth = 360.dp, maxHeight = 800.dp) shouldBe 256.dp
         isWideLayout(maxWidth = 360.dp, maxHeight = 800.dp) shouldBe false
+    }
+
+    @Test
+    fun `portrait banner fraction switches right at the compact width cutoff`() {
+        // 479x900: just below COMPACT_MAX_WIDTH (480dp), so the compact fraction applies —
+        // 0.32 * 900 = 288dp.
+        backdropHeight(maxWidth = 479.dp, maxHeight = 900.dp) shouldBe 288.dp
+        // 480x900: at COMPACT_MAX_WIDTH, so the ordinary (wider) fraction applies —
+        // 0.40 * 900 = 360dp.
+        backdropHeight(maxWidth = 480.dp, maxHeight = 900.dp) shouldBe 360.dp
     }
 
     @Test

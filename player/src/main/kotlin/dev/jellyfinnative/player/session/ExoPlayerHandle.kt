@@ -13,6 +13,7 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MergingMediaSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 import dev.jellyfinnative.player.model.PlaybackMediaSource
@@ -59,6 +60,16 @@ internal class ExoPlayerHandle
         override val events: Flow<PlayerEvent> = _events.asSharedFlow()
 
         private var exoPlayer: ExoPlayer? = null
+
+        /**
+         * The factory the player is built with, kept so [prepare] can build sources by hand.
+         *
+         * Assembling a `MediaSource` outside the player has to go through the *same* factory the
+         * player uses, or the hand-built one would open its URIs through Media3's default data
+         * source instead of the app's — no auth headers, no cache, none of the timeouts
+         * `PlayerModule` configures.
+         */
+        private val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
 
         /** Non-null once playback has been prepared; the video surface binds to it. */
         override val player: Player? get() = exoPlayer
@@ -108,7 +119,7 @@ internal class ExoPlayerHandle
 
             return ExoPlayer
                 .Builder(context, renderersFactory)
-                .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
+                .setMediaSourceFactory(mediaSourceFactory)
                 .setUsePlatformDiagnostics(false)
                 .build()
                 .apply {
@@ -132,6 +143,29 @@ internal class ExoPlayerHandle
                 }
         }
 
+        /**
+         * Opens [spec] and starts buffering it.
+         *
+         * A spec with no audio sidecars — everything streamed, and every original download — is a
+         * plain `setMediaItem`, the item carrying its own side-loaded subtitles as
+         * `SubtitleConfiguration`s. `MediaItem` has no audio analogue of that, which is why a
+         * downloaded item whose extra languages live in their own files can only be assembled where
+         * a `MediaSourceFactory` is in reach: here, rather than in the pure
+         * `ExoMediaSourceFactory` (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2"). Nothing
+         * is *decided* here — the spec already fixes which files and in which order.
+         *
+         * **The child order is a contract.** Child 0 is always the main source, subtitles included;
+         * child `i + 1` is `spec.audioSidecars[i]`. `MergingMediaPeriod` re-ids every child's track
+         * groups as `"<childIndex>:<originalId>"`, and that prefix is the only thing tying an
+         * ExoPlayer audio group back to the Jellyfin stream behind it — see
+         * `TrackSelectionController.selectAudio`, which reads it, and
+         * `LocalPlaybackResolver`, which fixes the order.
+         *
+         * `clipDurations` absorbs the drift between a re-encoded video and its separately
+         * transcoded audio; without it a sidecar a few milliseconds longer than the film is an
+         * `IllegalMergeException` instead of playback. `adjustPeriodTimeOffsets` is off because
+         * every child starts at zero — they are the same title, cut the same way.
+         */
         override fun prepare(
             spec: PlaybackMediaItemSpec,
             startPositionMs: Long,
@@ -142,10 +176,33 @@ internal class ExoPlayerHandle
                 // This player outlives the item: the previous one's overrides — including its
                 // "subtitles off" — would otherwise be this one's starting point.
                 TrackSelectionController(this).reset()
-                setMediaItem(spec.toMediaItem(), startPositionMs.coerceAtLeast(0L))
+                val position = startPositionMs.coerceAtLeast(0L)
+                if (spec.audioSidecars.isEmpty()) {
+                    setMediaItem(spec.toMediaItem(), position)
+                } else {
+                    setMediaSource(spec.toMergedSource(), position)
+                }
                 this.playWhenReady = playWhenReady
                 prepare()
             }
+        }
+
+        /** The main source and its audio sidecars, in the child order [prepare] documents. */
+        @Suppress("SpreadOperator") // MergingMediaSource only takes varargs; the copy is a handful of refs.
+        private fun PlaybackMediaItemSpec.toMergedSource(): MergingMediaSource {
+            val children =
+                buildList {
+                    add(mediaSourceFactory.createMediaSource(toMediaItem()))
+                    audioSidecars.mapTo(this) { mediaSourceFactory.createMediaSource(it.toMediaItem()) }
+                }
+            Timber.d("Merging %d audio sidecars into %s", audioSidecars.size, mediaId)
+            return MergingMediaSource(
+                // adjustPeriodTimeOffsets =
+                false,
+                // clipDurations =
+                true,
+                *children.toTypedArray(),
+            )
         }
 
         override fun play() {

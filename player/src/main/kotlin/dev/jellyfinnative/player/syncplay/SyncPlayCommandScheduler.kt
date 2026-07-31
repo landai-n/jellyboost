@@ -52,8 +52,17 @@ import kotlin.math.abs
  * Those repeats carry the same `when` and the same position as the command already applied, so
  * acting on them again is at best wasted work and at worst a re-seek that re-buffers, emits another
  * readiness, and earns another repeat — the feedback storm found on device (STATUS.md, DoD session
- * #1, B1/B2). So a command identical to the last one scheduled is a no-op, and a command *emitted*
- * before it is stale and dropped: the group's timeline only ever moves forwards.
+ * #1, B1/B2).
+ *
+ * The guard therefore remembers two things, not one: the command *applied* to the player, and the
+ * command currently *pending*. A repeat of either is a no-op — the applied one because acting twice
+ * is the storm, the pending one because it is already going to happen. The distinction matters
+ * because a pending command that never applies — superseded by the next one, or cancelled — is
+ * *forgotten*. Remembering it would turn the server's own recovery re-send into a no-op and leave
+ * this member stuck on a state it never reached, which is the one thing the re-send exists to fix.
+ *
+ * A command emitted before the newer of those two is stale and dropped, so the group's timeline only
+ * ever moves forwards and a straggler cannot displace a newer command still waiting to fire.
  */
 @Singleton
 class SyncPlayCommandScheduler
@@ -82,35 +91,50 @@ class SyncPlayCommandScheduler
 
         private var pending: Job? = null
 
-        /** What was last taken on, so an identical repeat and a stale straggler can be told apart. */
-        private var lastTaken: TakenCommand? = null
+        /**
+         * The command [pending] is waiting to apply.
+         *
+         * Held only while it can still happen: it is dropped the moment the command applies, is
+         * superseded, or is cancelled — a command that never reached the player must not be
+         * mistaken for one that did.
+         */
+        private var pendingScheduled: TakenCommand? = null
+
+        /** The last command actually applied to the player, so its repeats can be told apart. */
+        private var lastApplied: TakenCommand? = null
 
         /**
          * Schedules [command], replacing whatever was pending.
          *
-         * Ignored when it is the same command as the one already taken on (same type, instant,
-         * position and slot), or when it was emitted before it — see the class docs.
+         * Ignored when it is the same command as the one already applied or already pending (same
+         * type, instant, position and slot), or when it was emitted before either — see the class
+         * docs.
          */
         fun schedule(command: SyncPlayCommand) {
             val taken = TakenCommand(command.identity(), command.emittedAt)
-            lastTaken?.let { previous ->
-                if (previous.identity == taken.identity) {
-                    Timber.d("Ignoring a repeated SyncPlay %s for %s", command.type, command.whenInstant)
-                    return
-                }
-                if (command.emittedAt.isBefore(previous.emittedAt)) {
-                    Timber.d("Ignoring a stale SyncPlay %s emitted at %s", command.type, command.emittedAt)
-                    return
-                }
+            if (taken.identity == lastApplied?.identity || taken.identity == pendingScheduled?.identity) {
+                Timber.d("Ignoring a repeated SyncPlay %s for %s", command.type, command.whenInstant)
+                return
             }
-            lastTaken = taken
+            val newestKnown = newestEmittedAt()
+            if (newestKnown != null && command.emittedAt.isBefore(newestKnown)) {
+                Timber.d("Ignoring a stale SyncPlay %s emitted at %s", command.type, command.emittedAt)
+                return
+            }
+            // Order matters: the superseded command stops being pending — job and record together,
+            // before its replacement is written — so nothing it left behind can outlive it.
             pending?.cancel()
+            pending = null
+            pendingScheduled = taken
             pending =
                 scope.launch {
                     val localWhen = timeSync.toLocalTime(command.whenInstant)
                     val waitMillis = Duration.between(clock.instant(), localWhen).toMillis()
                     if (waitMillis > 0L) delay(waitMillis)
                     withContext(mainDispatcher) {
+                        // Only ours to clear: a schedule() that overtook us already wrote its own.
+                        if (pendingScheduled === taken) pendingScheduled = null
+                        lastApplied = taken
                         val result = apply(command, localWhen)
                         _applied.tryEmit(result)
                     }
@@ -128,8 +152,19 @@ class SyncPlayCommandScheduler
         fun cancel() {
             pending?.cancel()
             pending = null
-            lastTaken = null
+            pendingScheduled = null
+            lastApplied = null
         }
+
+        /**
+         * The later of the two remembered emission stamps, or `null` when nothing is remembered.
+         *
+         * Both count: a pending command is the newest thing the server said, and an applied one is
+         * the newest thing that happened. Measuring staleness against only one of them would let a
+         * straggler through.
+         */
+        private fun newestEmittedAt(): Instant? =
+            listOfNotNull(pendingScheduled, lastApplied).maxOfOrNull { it.emittedAt }
 
         private fun apply(
             command: SyncPlayCommand,

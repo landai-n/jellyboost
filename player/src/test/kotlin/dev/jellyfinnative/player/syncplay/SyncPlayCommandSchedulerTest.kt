@@ -269,6 +269,99 @@ class SyncPlayCommandSchedulerTest {
             fixture.player.seekedToMs shouldBe listOf(30_000L)
         }
 
+    // Only what was *applied* is remembered (M11 fix batch, the lost pause/resume echo) -------------
+
+    @Test
+    fun `a command superseded before it applied is not remembered, so it can still arrive`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 5_000, positionMs = 0))
+            // Overtaken while still waiting: neither command has touched the player yet.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 6_000, positionMs = 30_000, emittedAtMillis = 1_000),
+            )
+            runCurrent()
+            fixture.player.hadNoTransportCalls shouldBe true
+
+            // The group's unpause comes round again. Nothing ever applied it, so nothing may drop it.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Unpause, atMillis = 5_000, positionMs = 0, emittedAtMillis = 2_000),
+            )
+            advanceTimeBy(5_000)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+            fixture.player.pauseCount shouldBe 0
+            currentTime shouldBe 5_000
+        }
+
+    @Test
+    fun `the server's re-send of a command that never applied is applied`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Pause, atMillis = 5_000, positionMs = 60_000))
+            // A seek overtakes the pause and is the one that actually reaches the player.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Seek, atMillis = 200, positionMs = 90_000, emittedAtMillis = 100),
+            )
+            advanceTimeBy(200)
+            runCurrent()
+            fixture.player.seekedToMs shouldBe listOf(90_000L)
+
+            // "Client got lost, sending current state" — the pause verbatim, freshly stamped. It is
+            // the recovery path, and dropping it would leave this member playing on alone.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 5_000, positionMs = 60_000, emittedAtMillis = 1_000),
+            )
+            advanceTimeBy(4_800)
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+            fixture.player.seekedToMs shouldBe listOf(90_000L, 60_000L)
+        }
+
+    @Test
+    fun `the re-send of a command that did apply is still ignored`() =
+        runTest {
+            val fixture = fixture()
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000)
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 60_000))
+            advanceTimeBy(500)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+
+            // The storm guard: this one *did* reach the player, so acting again would only re-seek,
+            // re-buffer, report ready, and earn the next repeat.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 60_000, emittedAtMillis = 1_000),
+            )
+            advanceTimeBy(5_000)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+            fixture.player.seekedToMs shouldBe emptyList()
+        }
+
+    @Test
+    fun `a stale straggler cannot displace a command still waiting to fire`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 3_000, positionMs = 60_000, emittedAtMillis = 2_000),
+            )
+
+            // Emitted before the pending pause — cancelling it would lose the group's newest word.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Seek, atMillis = 500, positionMs = 10_000, emittedAtMillis = 1_000),
+            )
+            advanceTimeBy(3_000)
+            runCurrent()
+
+            fixture.player.seekedToMs shouldBe listOf(60_000L)
+            fixture.player.pauseCount shouldBe 1
+        }
+
     @Test
     fun `cancelling forgets what was applied, so a re-attached player can be told again`() =
         runTest {

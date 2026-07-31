@@ -305,6 +305,134 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             requests.last().subtitleStreamIndex shouldBe -1
         }
 
+    // ---- the selection the open itself resolved -------------------------------------------------
+
+    @Test
+    fun `applies the audio and subtitle the open resolved once the player has its tracks`() =
+        runTest(dispatcher) {
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
+
+            viewModel()
+            advanceUntilIdle()
+
+            // Nothing yet: `prepare` has run but `Player.currentTracks` is still empty.
+            playerHandle.selectedSubtitleIndices.shouldBeEmpty()
+
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.selectedAudioIndices shouldContainExactly listOf(1)
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(3)
+        }
+
+    @Test
+    fun `applies the open's selection once, not on every tracks event`() =
+        runTest(dispatcher) {
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
+            viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.selectedAudioIndices shouldContainExactly listOf(1)
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(3)
+        }
+
+    @Test
+    fun `retries the open's selection until the player has the track it names`() =
+        runTest(dispatcher) {
+            // Tracks arrive in stages — a side-loaded subtitle's group lands after the container's —
+            // so the first event need not hold the group the selection needs.
+            playerHandle.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
+            viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.trackSelectionSucceeds = true
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.selectedAudioIndices shouldContainExactly listOf(1, 1)
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(3, 3)
+        }
+
+    @Test
+    fun `an open's selection the player refuses never re-resolves the stream`() =
+        runTest(dispatcher) {
+            // The burned-in case: the server rendered the subtitle into the video, so there is no
+            // text group to select and it is already on screen. Re-requesting it would restart
+            // playback in a loop for something the user can already see.
+            playerHandle.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
+            val model = viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { resolver.resolve(any()) }
+            playerHandle.prepared.size shouldBe 1
+            model.uiState.value.userMessage
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `subtitles off at the start is applied rather than left to the player`() =
+        runTest(dispatcher) {
+            // `prepare` re-enables the text renderer for the new item, and ExoPlayer's selector would
+            // otherwise pick up a default-flagged text track on its own.
+            viewModel()
+            advanceUntilIdle()
+
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(null)
+        }
+
+    @Test
+    fun `a subtitle chosen before the tracks event is not overwritten by the open's own`() =
+        runTest(dispatcher) {
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(selectedSubtitleIndex = 3))
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.selectSubtitleTrack(5)
+            advanceUntilIdle()
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(5)
+            model.uiState.value.selectedSubtitleIndex shouldBe 5
+        }
+
+    @Test
+    fun `a subtitle the server had to re-encode for is applied again on the new stream`() =
+        runTest(dispatcher) {
+            playerHandle.trackSelectionSucceeds = false
+            val model = viewModel()
+            advanceUntilIdle()
+            coEvery { resolver.resolve(any()) } returns
+                AppResult.Success(source.copy(playMethod = PlayMethod.TRANSCODE, selectedSubtitleIndex = 7))
+
+            model.selectSubtitleTrack(7)
+            advanceUntilIdle()
+
+            playerHandle.trackSelectionSucceeds = true
+            playerHandle.emit(PlayerEvent.TracksChanged)
+            advanceUntilIdle()
+
+            // The refused local switch, then the re-resolved stream's own selection reaching the
+            // player — which is the half that used to be missing.
+            playerHandle.selectedSubtitleIndices shouldContainExactly listOf(7, 7)
+        }
+
     // ---- teardown -----------------------------------------------------------------------------
 
     @Test

@@ -6,6 +6,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.TrackGroup
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import dev.jellyfinnative.player.PlayerFixtures
@@ -287,6 +288,32 @@ class TrackSelectionControllerTest {
         controller.selectSubtitle(PlayerFixtures.localSource(), jellyfinIndex = null) shouldBe true
 
         applied.captured.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) shouldBe true
+    }
+
+    // ---- the slate a new media item starts from ------------------------------------------------
+
+    @Test
+    fun `reset clears audio and text overrides and re-enables text`() {
+        // What the previous item left behind: a chosen audio track, a chosen subtitle, and then
+        // subtitles turned off. The player is process-wide, so all three would still be in force
+        // when the next item is prepared.
+        val audio = audioGroup("audio-fra")
+        val text = textGroup(externalSubtitleTrackId(1))
+        every { player.currentTracks } returns Tracks(listOf(audio, text))
+        every { player.trackSelectionParameters } returns
+            TrackSelectionParameters.DEFAULT
+                .buildUpon()
+                .setOverrideForType(TrackSelectionOverride(audio.mediaTrackGroup, 0))
+                .setOverrideForType(TrackSelectionOverride(text.mediaTrackGroup, 0))
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                .build()
+        every { player.trackSelectionParameters = capture(applied) } returns Unit
+
+        TrackSelectionController(player).reset()
+
+        applied.captured.overrides.isEmpty() shouldBe true
+        // Left disabled, a preselected subtitle on the next item would render nothing at all.
+        applied.captured.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) shouldBe false
     }
 
     // ---- audio ----------------------------------------------------------------------------------

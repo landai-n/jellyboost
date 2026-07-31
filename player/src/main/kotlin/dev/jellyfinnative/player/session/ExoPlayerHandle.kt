@@ -139,6 +139,9 @@ internal class ExoPlayerHandle
         ) {
             startPlaybackService()
             with(requirePlayer()) {
+                // This player outlives the item: the previous one's overrides — including its
+                // "subtitles off" — would otherwise be this one's starting point.
+                TrackSelectionController(this).reset()
                 setMediaItem(spec.toMediaItem(), startPositionMs.coerceAtLeast(0L))
                 this.playWhenReady = playWhenReady
                 prepare()

@@ -297,6 +297,11 @@ buttons branch on, so a bulk action can never act on something its own row refus
   the count), unlike a single row's *Cancel*: one tap otherwise discards every partial transfer on
   the device. The dialog copy states that finished downloads are not affected — the same rule as
   cancelling a season (DECISIONS.md, 2026-07-29).
+- Below 480dp of viewport width a queue row stacks in **two tiers** — artwork + title/progress/
+  status take the full row width, and the four action buttons sit end-aligned underneath at full
+  48dp touch-target size. In the single-row layout the actions left a 360dp phone ~64dp of title
+  ("Hous…" — 2026-07-31 phone-size sweep, DECISIONS entry). The flag is measured once at screen
+  level (`queueRowCompact`), not per row; `DownloadedRow` (one delete icon) never needed it.
 
 ---
 

@@ -47,10 +47,17 @@ row draws a synopsis.
   no download row of its own, so its SUM is `null` and the server figure stays.
 - **Rows**: *Next up* → *Seasons* → *Episodes* → *More like this*.
 
-On a viewport wider than 720.dp the poster moves beside the text instead of above it — the same
-rearrangement jellyfin-web makes on a desktop, and the layout the project's tablet test device
-gets in landscape. Long-form text stops growing at 680.dp; a full-width paragraph on a tablet is
-unreadable.
+On a viewport wider than 720.dp **and at least 480.dp tall** the poster moves beside the text
+instead of above it — the same rearrangement jellyfin-web makes on a desktop, and the layout the
+project's tablet test device gets in landscape. The height guard exists because a phone in
+landscape (~800×360dp) clears the width test while being far too short for a side-by-side header:
+it gets the stacked layout, and its banner is drawn at half the viewport height instead of the
+fixed 220/320dp (which filled ~90% of the screen — 2026-07-31 phone-size sweep, DECISIONS entry).
+Long-form text stops growing at 680.dp; a full-width paragraph on a tablet is unreadable.
+
+Below 480.dp of viewport width, episode rows shrink their thumb from 160dp to 128dp so the
+title/overview column keeps enough room to read (`compact` is measured once at the screen level
+and threaded down — no per-row subcomposition).
 
 Episode rows reuse `ThumbCard` for their artwork so the watched tick, resume bar and download
 badge are byte-identical to the ones the home rows show.

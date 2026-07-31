@@ -45,3 +45,36 @@ Device-verification notes (2026-07-29, test tablet, signed in after the device-i
 - Season cancel: "Download cancelled — 2 finished episodes kept." verbatim; finished files intact on disk, queue cleared, button back to *Download*. Confirmed twice.
 - Size estimate: the min(cap, source-bitrate) fix is working as designed, but on sources *above* the cap the figure is a deterministic ceiling and the encoder undershoots on easy content (552 MB estimated vs 229–306 MB landed on 4.3 Mbps animation at the 3.2 Mbps LOW cap; ORIGINAL was exact, 741.0 vs 741.1 MB). Queued/in-progress rows now say **"up to 552,4 MB"** for capped qualities (ee490d0); whether estimation can genuinely beat the ceiling was investigated and answered: mid-flight yes (client-side MKV timestamp projection), pre-flight no — see `docs/notes/download-size-estimation.md`.
 - Storage picker: correctly hidden with a single volume (no SD card in the tablet); storage line shows used/free. SD-card row rendering awaits a card being inserted.
+
+## Phone sizes (2026-07-31 sweep — simulated viewport on the test tablet)
+
+No phone hardware exists in the project, so a phone viewport was simulated on the test tablet:
+`adb shell wm size 1080x2400 && adb shell wm density 480` → **360×800dp portrait**, size swapped to
+`2400x1080` for **800×360dp landscape**; `wm size reset && wm density reset` afterwards
+(auto-rotate pinned off for the session and restored). Every screen was screenshot-audited via
+`adb exec-out screencap` in portrait, plus the orientation-sensitive subset in landscape.
+
+**Fixed (each with a DECISIONS entry, a JVM sizing test, and a phone-width `@Preview`):**
+- Libraries tab: one full-width column at 360dp → 150dp adaptive floor below 600dp (2×~158dp).
+- Item detail, phone landscape: wide/tablet layout + 320dp banner on a ~330dp-tall viewport →
+  wide layout now also requires ≥480dp height; short-landscape banner = 0.5 × height (~165dp).
+- Episode rows: 160dp thumb left ~110dp of text at 360dp → 128dp thumb below 480dp width.
+- Player bottom bar: five labelled sheet buttons fit an 800dp bar with zero slack → icon-only
+  below 840dp of measured row width (tablet portrait intentionally included; tablet landscape
+  keeps labels).
+- SyncPlay queue sheet: fixed 420dp list cap exceeded the phone-landscape sheet → min(420dp,
+  60% of sheet height).
+- Downloads queue rows: four 48dp actions left ~64dp of title ("Hous…") → two-tier layout below
+  480dp (title/progress full-width, actions end-aligned underneath).
+
+**Verified fine as-is (portrait 360×800 unless noted):** server setup, login (keyboard never
+covers the fields), Home rows, library item grid (2 columns; 5 in landscape), search, movie
+detail portrait (banner 40% of height, buttons FlowRow-wrap into two rows), downloads
+header/tabs/bulk bar and Downloaded rows, settings, SyncPlay groups screen + create dialog +
+group/audio sheets, player transport + gesture zones (landscape), overflow menu.
+
+**Re-verified on the fixed build:** all six fixes at phone sizes, then a tablet-native pass
+(Libraries 3 columns portrait, detail wide layout + 40% portrait banner, player landscape bar
+still labelled) — zero tablet regression. Screenshot evidence in the session scratchpad
+(`sweep/*.png`); skip-intro button padding (F5 in the plan) was unverifiable — no media with
+intro segments on the dev server — and was deliberately left unchanged.

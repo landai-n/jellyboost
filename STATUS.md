@@ -39,6 +39,22 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Phone-size polish pass (2026-07-31 — DONE, device-verified both ways)
+
+User-requested, outside M9's tablet-only scope (task-level + per-fix DECISIONS entries).
+A phone viewport was simulated on the test tablet (`wm size 1080x2400` + `density 480` →
+360×800dp; swapped for 800×360dp landscape; reset + auto-rotate restored afterwards) and every
+screen screenshot-audited. Six compact-viewport defects found and fixed — Libraries single
+column, detail wide-layout/banner on short landscape, cramped episode rows, player bar with
+zero slack, over-tall SyncPlay queue sheet, crushed download queue-row titles — as four
+`/verify`-green commits (`08d44d9`, `43e3e07`, `2cef508`, `fcac1c0`), each with JVM sizing
+tests and phone-width previews; re-swept on-device at phone sizes and tablet-native (zero
+tablet regression; tablet-portrait player bar intentionally icon-only). Full record:
+`docs/POLISH.md` "Phone sizes"; feature docs updated (library-grid, item-detail, playback,
+syncplay, downloads). Screenshot-test frameworks evaluated and rejected for now (preview
+compileSdk 37.1 blocks Roborazzi/Paparazzi; no disk for an emulator — see DECISIONS).
+Left on the device: HotD S3:E1 stays downloaded (useful for M11's local-in-group DoD item).
+
 ## Current milestone: M11 — SyncPlay (IN PROGRESS: all 6 phases landed 2026-07-30, device DoD owed)
 
 Full plan: `docs/notes/syncplay-m11-plan.md`; feature doc `docs/features/syncplay.md`.

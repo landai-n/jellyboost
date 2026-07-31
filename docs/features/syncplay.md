@@ -383,6 +383,9 @@ playback starts (DECISIONS.md 2026-07-31).
   the group entering WAITING from playing **pauses** this player — an overlay over playback that
   carries on is a member drifting ahead of a stalled group, which is what it looked like on device.
 - The group icon in the controls opens `SyncPlayGroupSheet`; the queue sheet is reachable from it.
+- The queue sheet caps its list at `min(420dp, 60% of the sheet's height)` — the fixed 420dp cap
+  exceeded a phone-landscape sheet's entire height and pushed the header and transport row out
+  (2026-07-31 phone-size sweep); every tablet height still resolves to the old 420dp.
 - An item ending asks the server for the next entry rather than popping the screen, so the player
   the group is about to fill is not closed a second before it is needed.
 

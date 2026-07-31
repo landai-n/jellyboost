@@ -344,6 +344,33 @@ class SyncPlayCommandSchedulerTest {
         }
 
     @Test
+    fun `forgetting the applied memory lets the server's verbatim re-send land on a rebuilt player`() =
+        runTest {
+            val fixture = fixture()
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 0)
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 0, positionMs = 0))
+            runCurrent()
+            fixture.player.playCount shouldBe 1
+
+            // The player is rebuilt (a track change): what was applied no longer describes it. The
+            // controller forgets on the rebuild, and the server answers the rebuild's `ready` with
+            // the standing command verbatim — same instant, same position, fresh `emittedAt`.
+            // Without the forget this was "Ignoring a repeated SyncPlay Unpause" on device
+            // (2026-07-31), and the member never resumed.
+            fixture.scheduler.forgetApplied()
+            advanceTimeBy(2_000)
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Unpause, atMillis = 0, positionMs = 0, emittedAtMillis = 2_000),
+            )
+            runCurrent()
+
+            fixture.player.playCount shouldBe 2
+            // Past due by the rebuild's two seconds: the ordinary catch-up puts the player at the
+            // group's real position, not the anchor it was parked on.
+            fixture.player.seekedToMs shouldBe listOf(2_000L)
+        }
+
+    @Test
     fun `a stale straggler cannot displace a command still waiting to fire`() =
         runTest {
             val fixture = fixture()

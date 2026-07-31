@@ -162,6 +162,26 @@ class SyncPlayCommandScheduler
         }
 
         /**
+         * Forgets the applied-command memory alone — when the player's continuity breaks.
+         *
+         * "Applied" describes the *player*, not this class: a command applied before the player was
+         * rebuilt (a track change, a quality change, a decoder fallback — anything that re-opens the
+         * session) has not been applied to the player that comes back. The rebuild re-runs the
+         * buffering→ready handshake, and the server answers a ready from a group it considers
+         * settled by re-sending the standing command *verbatim* — same `when`, same position, the
+         * command this member already applied once. Remembering it would drop exactly that answer,
+         * which was measured on device (2026-07-31, run 3 follow-up): a track change at 6:35 left
+         * the resumed Unpause deduplicated as a repeat, and the blind fallback then jumped to 27:27.
+         *
+         * The pending slot survives: a command still waiting for its instant is the group's newest
+         * word either way. Its `emittedAt` also keeps anchoring the staleness check, so this cannot
+         * reopen the door to stragglers older than what is already scheduled.
+         */
+        fun forgetApplied() {
+            lastApplied = null
+        }
+
+        /**
          * The later of the two remembered emission stamps, or `null` when nothing is remembered.
          *
          * Both count: a pending command is the newest thing the server said, and an applied one is

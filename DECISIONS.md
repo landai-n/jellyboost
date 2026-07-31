@@ -2557,3 +2557,162 @@ Seeded from the approved plan; listed for traceability, no divergence:
     `loadItem` branch's choice) precisely because the player is *already* prepared here: it may have
     passed its readiness before the host was attached and would then never announce itself again,
     which would wedge the whole group.
+
+<!-- END -->
+
+## 2026-07-31 — SyncPlay does not use the SDK websocket: `OkHttpSyncPlaySocket` is our own lossless transport
+- **Scope:** new `player/.../syncplay/socket/OkHttpSyncPlaySocket.kt` and its test;
+  `player/.../syncplay/di/SyncPlayModule.kt` (binding + a dedicated `WebSocket.Factory`);
+  `player/.../syncplay/socket/SdkSyncPlaySocket.kt` kept, now documented as the reference
+  implementation of the bug. `SyncPlaySocket` (the seam), `SyncPlayController` and every existing
+  SyncPlay test are unchanged.
+- **Plan said:** `docs/PLAN.md`:110 — *"Full feature via SDK 1.8.12 (`syncPlayApi` + `timeSyncApi` +
+  `SocketApi` websocket, no version bump)"* — and `docs/notes/syncplay-m11-plan.md`:7 —
+  *"`apiClient.webSocket: SocketApi` with `subscribeSyncPlayCommands(...)` /
+  `subscribe<SyncPlayGroupUpdateMessage>()`, **reconnect + keep-alive built in**"*. This extends the
+  M11 Phase 1 record of SDK surface deltas (DECISIONS.md 2026-07-30, item 6), which took the SDK's
+  socket lifecycle as given.
+- **Done instead:** SyncPlay opens its **own** OkHttp websocket to `/socket`, behind the unchanged
+  `SyncPlaySocket` seam. The SDK's `SocketApi` is no longer used for SyncPlay.
+  - **The bug (jellyfin-sdk-kotlin 1.8.12, and master as of 2026-07-31): the SDK's socket drops
+    messages by design.** `SocketConnection.state` is a **`StateFlow`** (`SocketConnection.kt`) whose
+    values include *received messages*: `OkHttpSocketConnection.kt`:39-43 does
+    `onMessage → _state.value = SocketConnectionState.Message(text)`. `DefaultSocketApi.messages`
+    then decodes JSON in a `.map` over that state flow. A `StateFlow` is **conflated**: any two
+    frames that arrive faster than the decode of the first, lose the first — and two *identical*
+    consecutive frames are dropped outright by `StateFlow`'s equality check.
+  - **Why it lands on SyncPlay specifically:** the server sends every transport action as a
+    back-to-back **pair** — `SendCommand` then `GroupStateUpdate`, ~2 ms apart. The pair is exactly
+    the race above, and the frame that loses is the first one: the command. Device evidence
+    (logcat run 3, 2026-07-31): repeated `StateChanged` arrivals with no accompanying command, and
+    **zero** command frames in the last minute of a session in which group updates kept flowing —
+    the member sat still while the rest of the group played.
+  - **The transport.** `OkHttpSyncPlaySocket` builds the URL from the same `ApiClient` the SDK impl
+    used (`api.createUrl("/socket")`) and authenticates with the SDK's own public
+    `AuthorizationHeaderBuilder.buildHeader(clientName, clientVersion, deviceId, deviceName,
+    accessToken)` — same device id and same token, so the server attaches this socket to the *same*
+    session and SyncPlay messages are addressed to us. `onMessage` does one thing: `trySend` the raw
+    text into an **unbounded** `Channel<String>`. No decoding, no conflation, nothing slow on
+    OkHttp's reader thread. A consumer coroutine decodes with the SDK's public
+    `ApiSerializer.decodeSocketMessage` and routes: `SyncPlayCommandMessage` → `commands`,
+    `SyncPlayGroupUpdateMessage` → `groupUpdates`, `ForceKeepAliveMessage` → a keep-alive ticker
+    that replies with `InboundKeepAliveMessage` every *timeout/2* (what `DefaultSocketApi`
+    did for us), everything else ignored. The DTO mapping is the existing
+    `SyncPlayDtoMapping`/`SyncPlayEnumMapping` — unchanged and still the only time boundary.
+  - **Lifecycle is identical to the seam's existing contract** (no `connect()`/`disconnect()`):
+    `groupUpdates`/`commands` are cold, one shared connection opens on the first collector and
+    closes when the last one goes (`shareIn` + `WhileSubscribed`, in place of the SDK's subscriber
+    reference counting), so "connected only while in a group" still holds. `connectionState` is the
+    same hot `Disconnected(error?)`/`Connecting`/`Connected`, now backed by our own connection, so
+    `awaitSocketReady` and `watchSocket` work unchanged. Reconnect is 1 s → 2 s → 4 s → capped 10 s,
+    reset once a connection opens, and — as with the SDK — the *streams never end* while a collector
+    is attached, which is what keeps `collectStream`'s "a finished stream is a confirmed loss" rule
+    meaning what it meant. Nothing is re-sent on reconnect: SyncPlay needs no subscription message,
+    the server pushes to group members unconditionally.
+  - **Diagnostics.** Every SyncPlay frame is logged at `Timber.d` (type, and `when`/`emittedAt` for
+    commands) and every decode failure at `Timber.w` with the frame's raw `MessageType`. The field
+    evidence for this bug was the *absence* of log lines; the replacement says what it received.
+  - **Credentials.** Credentials are read from the `ApiClient` on **every** connection attempt, so a
+    server switch or a re-issued token is picked up by the next reconnect. This matches the SDK,
+    which recomputes its `SocketCredentials` per connect; the SDK's `notifyApiClientUpdate()` —
+    which forces an immediate reconnect on a credentials change — was never called anywhere in this
+    app, so no behaviour is lost. Gap recorded rather than fixed: neither implementation drops a
+    *live* socket when the token changes underneath it; in practice a server switch ends the group.
+  - **`SdkSyncPlaySocket` stays in the tree**, unbound, with its tests, documented as the reference
+    implementation of the defect. It is what a future SDK bump has to be re-verified against.
+- **Reason:** the plan's "reconnect + keep-alive built in" was an argument for using the SDK socket,
+  written before the conflation was known; it is not worth a systematically lost transport command.
+  Keeping the seam means the change is confined to one class plus one Hilt binding — the controller,
+  the mappers and every existing test are untouched — and the alternative (patching the SDK, or
+  pinning a fork) costs more and ships later. The SDK socket remains correct for anything that only
+  cares about the *latest* state; SyncPlay cares about every frame.
+
+## 2026-07-31 — SyncPlay: both safety nets ask the server to repeat itself before guessing
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (`armSelfSync`, `armPauseNet`,
+  `elicitRepeat`, `elicitUnpauseRepeat`, `elicitPauseRepeat`, `NetStage`,
+  `COMMAND_REPEAT_TIMEOUT_MS`), `SyncPlayControllerTest`, `docs/features/syncplay.md`.
+- **Plan said:** the two safety nets logged above — the self-sync net (2026-07-31, "a completed
+  handshake that hears nothing syncs itself") and the pause net (2026-07-31, "a paused group that
+  sends no command pauses this member") — act **locally** when their 3 s window expires: seek to the
+  group's inferred position and play, or pause. Both were logged as bounded exceptions to key
+  decision 11 ("nothing this client does moves this client's player").
+- **Done instead:** each net now has two stages. At the existing 3 s timeout it sends the *matching
+  redundant group request* — `requestUnpause()` for the self-sync net, `requestPause()` for the pause
+  net, through the ordinary `request { }` helper — logs it (`"...asking the server to repeat
+  itself"`) and re-arms itself once for a second window of `COMMAND_REPEAT_TIMEOUT_MS` = 2 s. Only
+  when that window expires with still no command applied does the old local behaviour run, unchanged.
+  Every existing disarm condition covers both stages, because the re-armed net is the same job field
+  (`selfSyncJob` / `pauseNetJob`) that `onCommandApplied`, the opposite `StateChanged`, `teardown`
+  and `standDown` already cancel.
+- **Reason:** the server has a protocol-native recovery for a lost `SendCommand` and we were not
+  using it. A group request that asks for the state the group is *already in* is read as a member
+  that lost the thread and is answered by re-sending the current command **to that session alone**,
+  verbatim: `PausedGroupState.HandleRequest(PauseGroupRequest)` with `prevState == Paused`
+  (`PausedGroupState.cs`:88-93, *"Client got lost, sending current state"*) and
+  `PlayingGroupState.HandleRequest(UnpauseGroupRequest)` with `prevState == Playing`
+  (`PlayingGroupState.cs`:80-86). The scheduler applies a re-sent command that never applied locally
+  (its applied-once guard remembers only what actually reached the player, DECISIONS.md 2026-07-31),
+  so the repeat lands and the ordinary command path — exact `When`, exact `PositionTicks`, anchor,
+  phase, drift monitor — does the rest.
+  The local nets are the weaker recovery and device run 3 (2026-07-31) showed why: their inferred
+  anchor comes from the queue's `startPositionTicks`/`lastUpdate`, which goes stale the moment the
+  group pauses and resumes without publishing a queue, so the self-sync landed seconds off and the
+  desync compounded across cycles. The elicited command carries the group's own timeline instead.
+  (The transport-level cause — the SDK websocket conflating `SendCommand` frames away while
+  `GroupStateUpdate` frames arrive — is being fixed separately; this is the client-side floor under
+  it, and it is worth having whatever the transport does.)
+- **Loop guards, because a request that produces a command that produces a request is a storm:**
+  1. **One elicit per episode.** The stage is carried by the re-arm (`NetStage.Elicit` →
+     `NetStage.Fallback`) rather than remembered in a field, so the second window can only fall
+     through to the local action. A fresh `StateChanged` or `ready` is a new episode and gets its own
+     single ask.
+  2. **Only where the group is still what the net was armed for.** `elicitRepeat` compares
+     `SyncPlayState.InGroup.groupState` against `Playing` / `Paused` at *fire* time. An
+     `UnpauseGroupRequest` sent to a group that has moved to WAITING would not be a repeat — it would
+     be this member starting everyone — so a mismatch falls straight through to the local fallback.
+  3. **Only where the local stage would have acted anyway.** The self-sync net does not ask while
+     this member's phase is already `Playing`, and the pause net does not ask while the player is
+     already stopped. Without these, a `StateChanged` that merely trails its own applied command
+     would cost a request every time the two arrived in that order.
+  4. A failed ask changes nothing: it is fire-and-forget with a logged failure, and stage two fires
+     on schedule.
+- **Cost when the server does not answer:** the local fallback now fires at 5 s rather than 3 s.
+  Accepted deliberately — landing on the group's real position two seconds later is better than
+  landing seconds off the group's real position on time, and the elicit is what makes the difference.
+- **Why this is *less* of an exception to key decision 11, not more:** the first stage is a request
+  to the server like every other intent, and the player still moves only when a command arrives. The
+  local stage that remains is exactly the exception already logged, now reached only after the
+  protocol's own recovery has been tried and has failed.
+
+## 2026-07-31 — SyncPlay: applied-command memory is scoped to the player's continuity
+
+- **Scope:** `SyncPlayCommandScheduler.forgetApplied()`, called from `SyncPlayController` at the
+  three places the player's continuity breaks while the group's timeline does not:
+  `onHostBuffering` (track/quality/decoder rebuild), `reconcile`'s load branch (a new slot), and
+  `renegotiate` (connectivity blip).
+- **Plan said:** the applied-repeat dedupe is permanent for the session (B1/B2 storm guard;
+  re-affirmed in the 87312aa redesign, which scoped forgetting to `cancel()` = teardown only).
+- **Done instead:** the *applied* half of the memory alone is dropped when the player is rebuilt or
+  the timeline's delivery is known to have gapped. The pending slot and the staleness floor survive.
+- **Reason:** "applied" describes the player, not the scheduler. Device evidence (run 3 follow-up,
+  2026-07-31 11:16 logcat): a track change at 6:35 re-ran the buffering→ready handshake; the server
+  answered with the standing Unpause verbatim (same `when`, fresh `emittedAt` — its documented
+  "client got lost" recovery); the dedupe logged "Ignoring a repeated SyncPlay Unpause"; the blind
+  fallback then seeked to a stale-queue guess of 27:27. The storm guard loses nothing: within one
+  continuous playback the repeat is still dropped, and a re-send after a rebuild re-applies a state
+  the player genuinely is not in.
+
+## 2026-07-31 — SyncPlay: a pause-to-playing transition anchors on the parked player first
+
+- **Scope:** `SyncPlayController.onGroupStateChanged` / new `parkedPlayerAnchor()`.
+- **Plan said:** the coarse anchor for the self-sync fallback is inferred from the queue
+  (`startPositionTicks` at `lastUpdate` — itself amended earlier today).
+- **Done instead:** when the group leaves `Paused` for `Playing`, the anchor is read off this
+  member's own parked player (`snapshot.positionMs` at `serverNow()`), falling back to the queue
+  only when nothing is loaded or the player is (wrongly) still running. Any other transition —
+  including a fresh join into a playing group, where the member has no in-step position — keeps the
+  queue inference, which the `a self-sync measures from the instant…` test pins.
+- **Reason:** a group resumes from the position it froze at, and every pause path parks this member
+  exactly there; the queue's reading goes stale the moment a pause/resume happens without a queue
+  update. Device run 3: a seek to 6:03 + a lost resume command turned into a fallback seek to 23:17,
+  computed off a seventeen-minute-old queue.

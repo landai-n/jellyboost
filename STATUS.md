@@ -235,6 +235,29 @@ SendCommand ever arrived ("SyncPlay command …" line) or was dropped at a
 gate ("Ignoring …" lines); "never arrived" would point at socket delivery,
 the one cause static analysis could not settle.
 
+### Wave 3 — the transport was the culprit (2026-07-31, afternoon)
+
+Run-2 walk still failed; the run-3 logcat (offset/lateness diagnostics from `c5ccb68`)
+was decisive: clock sync healthy (~930 ms steady), every arriving command applied
+within ~20 ms — but `SendCommand` frames intermittently never arrive while
+`GroupStateUpdate` frames flow, and they stop entirely late in the session.
+Root cause found in jellyfin-sdk-kotlin 1.8.12 (master unfixed): `SocketConnection.state`
+is a **conflated StateFlow carrying messages** (`OkHttpSocketConnection.kt:39-43`); the
+server sends command+state ~2 ms apart, and the first frame of the pair loses to any
+collector slower than the wire. Follow-up log (11:16) also caught the 27:xx jumps:
+after a track-change rebuild the server's verbatim "client got lost" re-send was eaten
+by our own applied-repeat dedupe, and the blind fallback guessed off a stale queue.
+Fixes (this wave): own lossless OkHttp websocket behind the `SyncPlaySocket` seam
+(SDK impl kept unbound as the defect reference); two-stage nets — ask the server to
+repeat itself (its `CurrentSession` re-send carries the exact position), local guess
+only if unanswered; `scheduler.forgetApplied()` on every player-continuity break;
+pause→playing anchors on the parked player. Earlier same-day wave: park-before-ready
+(`c5ccb68` — a ready with `IsPlaying=true` from a behind member earns an
+`AllExceptCurrentSession` unpause, stranding the reporter; confirmed in server source).
+**Owed: user re-walk** — expect single-press transport both ways, no 23:xx/27:xx jumps,
+no stranding after app-initiated seek; the logcat filter now also has `OkHttpSyncPlaySocket`
+frame logs to prove delivery.
+
 ### Original DoD checklist (reference)
 - **Full DoD walk** (PLAN.md M11): lockstep play/pause/seek <~1 s both
   directions; downloaded item plays from disk in-group — dashboard shows both

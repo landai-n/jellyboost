@@ -467,6 +467,13 @@ class SyncPlayController
         fun onHostBuffering() {
             val entry = currentEntry() ?: return
             setPhase(SyncPlayPhase.Buffering)
+            // The rebuild breaks the player's continuity, so what was applied to the old player has
+            // not been applied to the one that comes back. The server settles this member by
+            // re-sending the standing command verbatim after the ready — same `when`, same position
+            // — and remembering it as applied would dedupe exactly that answer. Measured on device
+            // (2026-07-31): a track change left the resumed Unpause dropped as a repeat, and the
+            // blind fallback then jumped from 6:35 to 27:27.
+            scheduler.forgetApplied()
             // The player really is being rebuilt, so its own readiness is what ends this handshake:
             // no fallback, however long the re-negotiation takes.
             oweReady(entry, fallbackMillis = null)
@@ -1150,9 +1157,11 @@ class SyncPlayController
          * with it. See [armPauseNet]: the mirror image of [armSelfSync].
          */
         private suspend fun onGroupStateChanged(groupState: SyncPlayGroupState) {
+            val resumedFromPause =
+                (_state.value as? SyncPlayState.InGroup)?.groupState == SyncPlayGroupState.Paused
             setGroupState(groupState)
             if (groupState == SyncPlayGroupState.Playing) {
-                groupPlayingAnchor = inferredGroupAnchor()
+                groupPlayingAnchor = (if (resumedFromPause) parkedPlayerAnchor() else null) ?: inferredGroupAnchor()
                 cancelPauseNet()
                 // Either order is possible — the state update can beat this member's own `ready` or
                 // trail it — so the net is armed from both ends. It disarms on the first command.
@@ -1191,6 +1200,26 @@ class SyncPlayController
         private fun inferredGroupAnchor(): SyncPlayAnchor? {
             val queue = (_state.value as? SyncPlayState.InGroup)?.queue ?: return null
             return SyncPlayAnchor(queue.startPositionTicks.ticksToMillis(), queue.lastUpdate)
+        }
+
+        /**
+         * The group's position read off this member's own parked player — the anchor a
+         * pause-to-playing transition trusts before the queue's.
+         *
+         * A group leaving `Paused` resumes from the position it froze at, and every pause path ends
+         * with this member parked exactly there: the pause command seeks before it pauses, the
+         * elicited repeat does the same, and a parked player does not move. The queue's reading
+         * ([inferredGroupAnchor]) dates from its `lastUpdate` and goes stale the moment any
+         * pause/resume happens without a queue update — device run 3 measured the fallback turning a
+         * 6:03 seek into a 23:17 landing off a seventeen-minute-old queue. A player still running is
+         * no anchor (it may be the very member that missed the pause), and neither is one with
+         * nothing loaded: both fall back to the queue.
+         */
+        private suspend fun parkedPlayerAnchor(): SyncPlayAnchor? {
+            if (loadedPlaylistItemId == null) return null
+            val snapshot = withContext(mainDispatcher) { playerHandle.snapshot() }
+            if (snapshot.isPlaying) return null
+            return SyncPlayAnchor(snapshot.positionMs, timeSync.serverNow())
         }
 
         private suspend fun onQueueChanged(queue: SyncPlayGroupQueue) {
@@ -1247,6 +1276,9 @@ class SyncPlayController
 
             loadedPlaylistItemId = entry.playlistItemId
             setPhase(SyncPlayPhase.Buffering)
+            // A new slot is a new player: what the old one applied means nothing here, and the
+            // server's post-ready re-send must not be mistaken for a repeat (see onHostBuffering).
+            scheduler.forgetApplied()
             oweReady(entry, fallbackMillis = null)
             runCatching {
                 api.reportBuffering(
@@ -1409,27 +1441,125 @@ class SyncPlayController
         /**
          * Starts the clock on "the group said go and nothing came".
          *
-         * Armed after every `ready`, disarmed by the first command applied. What it catches is the
-         * queue-advance wedge (B3): the handshake completes, the group's own state update says
-         * `Playing`, and the unpause that should have followed it never arrives — leaving this
-         * member parked at 0:00 under the WAITING overlay while everyone else watches. A group
-         * unpause cannot recover it either, because the group *is* playing and the request no-ops.
+         * Armed after every `ready`, and by a `StateChanged(Playing)`; disarmed by the first command
+         * applied. What it catches is the queue-advance wedge (B3): the handshake completes, the
+         * group's own state update says `Playing`, and the unpause that should have followed it
+         * never arrives — leaving this member parked at 0:00 under the WAITING overlay while
+         * everyone else watches. A group unpause cannot recover it either, because the group *is*
+         * playing and the request no-ops.
          *
-         * Nothing here reports anything: another `ready` would only re-enter the storm B1 is about.
+         * **Two windows, and the first one asks the server rather than guessing.** See [elicitRepeat]:
+         * at [SELF_SYNC_TIMEOUT_MS] this sends a redundant `UnpauseGroupRequest`, which a group that
+         * is already playing answers by re-sending its authoritative unpause to this session alone,
+         * and re-arms itself once for [COMMAND_REPEAT_TIMEOUT_MS] ([NetStage.Fallback]). Only when
+         * that window expires too does [selfSyncToGroup] act locally, off the inferred anchor. The
+         * order matters because the inferred anchor is the weaker reading of the two: it comes from
+         * the queue's `startPositionTicks`/`lastUpdate` and goes stale the moment the group pauses
+         * and resumes without publishing a queue, which on device landed the self-sync seconds off
+         * and compounded across cycles (STATUS.md, logcat run 3).
+         *
+         * Nothing here reports a `ready`: that would re-enter the storm B1 is about. A request is not
+         * a report — the server answers it with a command, not with a wait.
          */
-        private fun armSelfSync() {
+        private fun armSelfSync(stage: NetStage = NetStage.Elicit) {
             selfSyncJob?.cancel()
             selfSyncJob =
                 launchInSession {
-                    delay(SELF_SYNC_TIMEOUT_MS)
+                    delay(if (stage == NetStage.Elicit) SELF_SYNC_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
                     selfSyncJob = null
-                    selfSyncToGroup()
+                    val asked = stage == NetStage.Elicit && elicitUnpauseRepeat()
+                    if (asked) armSelfSync(NetStage.Fallback) else selfSyncToGroup()
                 }
         }
 
         private fun cancelSelfSync() {
             selfSyncJob?.cancel()
             selfSyncJob = null
+        }
+
+        /**
+         * The [armSelfSync] half of [elicitRepeat]: a playing group this member is not keeping up with.
+         *
+         * The phase check is the same one [selfSyncToGroup] opens with, so the ask goes out exactly
+         * where the local fallback would have acted. A member already playing needs nothing repeated
+         * — and a `StateChanged(Playing)` that merely trails its own applied command would otherwise
+         * cost a request every single time the two arrive in that order.
+         */
+        private fun elicitUnpauseRepeat(): Boolean {
+            val current = _state.value as? SyncPlayState.InGroup ?: return false
+            if (current.phase is SyncPlayPhase.Playing) return false
+            return elicitRepeat(current, SyncPlayGroupState.Playing) { requestUnpause() }
+        }
+
+        /**
+         * The [armPauseNet] half of [elicitRepeat]: a paused group this member is still playing past.
+         *
+         * Gated on the player actually running, for the same reason [pauseToGroup] is: a member that
+         * is already stopped is already where the group is, and has nothing to ask for.
+         */
+        private suspend fun elicitPauseRepeat(): Boolean {
+            if (!isPlayerRunning()) return false
+            // Read after the snapshot, not before: that hop to the main thread is long enough for
+            // the group to have moved, and the state check is only worth anything when it is current.
+            val current = _state.value as? SyncPlayState.InGroup ?: return false
+            return elicitRepeat(current, SyncPlayGroupState.Paused) { requestPause() }
+        }
+
+        /**
+         * Asks the server to say again what this member never heard — the first stage of both nets.
+         *
+         * The protocol has a recovery for exactly this and we were not using it. A group request
+         * that asks for the state the group is *already* in is not a state change: the server reads
+         * it as a member that has lost the thread and answers by re-sending the current command to
+         * that one session, with the exact `When` and `PositionTicks` everyone else got —
+         * `PausedGroupState.HandleRequest(PauseGroupRequest)` when `prevState == Paused`
+         * (`PausedGroupState.cs`:88-93, "Client got lost, sending current state") and
+         * `PlayingGroupState.HandleRequest(UnpauseGroupRequest)` when `prevState == Playing`
+         * (`PlayingGroupState.cs`:80-86). The scheduler applies a re-sent command that never applied
+         * locally (its "applied exactly once" guard remembers only what actually reached the player),
+         * so the repeat lands and the ordinary command path — anchor, phase, drift monitor — does the
+         * rest. That is the group's own timeline instead of this client's guess at it.
+         *
+         * **Only when the group is still where the net was armed for.** An `UnpauseGroupRequest`
+         * sent to a group that has moved to WAITING is not a repeat, it is this member starting
+         * everyone — so a group state that no longer matches falls straight through to the local
+         * fallback, which is what the net did all along. The two callers add the other half of the
+         * condition, "and this member really is out of step" ([elicitUnpauseRepeat],
+         * [elicitPauseRepeat]), so the ask goes out exactly where the fallback would have acted.
+         *
+         * The ask itself goes through [request]: fire-and-forget, failure logged, and a failed one
+         * simply leaves [NetStage.Fallback] to fire.
+         *
+         * @return whether the ask went out, which is the caller's cue to re-arm for a second window.
+         */
+        private fun elicitRepeat(
+            current: SyncPlayState.InGroup,
+            expected: SyncPlayGroupState,
+            ask: () -> Unit,
+        ): Boolean {
+            if (current.groupState != expected) return false
+            Timber.w(
+                "SyncPlay group is %s and sent no command; asking the server to repeat itself",
+                expected,
+            )
+            ask()
+            return true
+        }
+
+        /**
+         * Which of the two windows a safety net is in.
+         *
+         * The stage is carried rather than remembered, which is the whole of the loop guard: only an
+         * [Elicit] net asks, and it can only ever re-arm as a [Fallback] one. A fresh episode — a
+         * new `StateChanged`, a new `ready` — arms an [Elicit] net again and so gets one ask of its
+         * own, but nothing inside an episode can produce a second.
+         */
+        private enum class NetStage {
+            /** The group said something and no command came: ask it to say so again. */
+            Elicit,
+
+            /** The repeat did not come either: act locally, off the inferred anchor. */
+            Fallback,
         }
 
         private suspend fun selfSyncToGroup() {
@@ -1465,14 +1595,23 @@ class SyncPlayController
          * be sound from nowhere. And it takes no other action — no seek, no report, no `play` — so
          * firing at a player that is already stopped costs nothing, which is what lets it be armed
          * from the group's state alone rather than from a proof that this member is out of step.
+         * (The elicit stage below does want that proof, because a request is not free — see
+         * [elicitPauseRepeat].)
+         *
+         * It has the same two windows as [armSelfSync]: a redundant `PauseGroupRequest` first, which
+         * a group that is already paused answers with its authoritative pause — exact instant, exact
+         * position — to this session alone, and only then the local pause. The re-sent command is
+         * strictly better than the local one, because it parks this member *where the group is*
+         * rather than merely stopping it where it happens to be.
          */
-        private fun armPauseNet() {
+        private fun armPauseNet(stage: NetStage = NetStage.Elicit) {
             pauseNetJob?.cancel()
             pauseNetJob =
                 launchInSession {
-                    delay(PAUSE_NET_TIMEOUT_MS)
+                    delay(if (stage == NetStage.Elicit) PAUSE_NET_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
                     pauseNetJob = null
-                    pauseToGroup()
+                    val asked = stage == NetStage.Elicit && elicitPauseRepeat()
+                    if (asked) armPauseNet(NetStage.Fallback) else pauseToGroup()
                 }
         }
 
@@ -1508,6 +1647,10 @@ class SyncPlayController
         private suspend fun renegotiate() {
             val entry = currentEntry() ?: return
             setPhase(SyncPlayPhase.Buffering)
+            // The blip may have cost this member commands it will never see; the server's answer to
+            // the coming ready is a verbatim re-send, which the applied-memory would dedupe away
+            // (see onHostBuffering). The player survived, but the timeline's continuity did not.
+            scheduler.forgetApplied()
             val snapshot = hostSnapshot()
             val positionTicks = snapshot?.positionTicks ?: 0L
             val isPlaying = reportedIsPlaying(snapshot)
@@ -1779,6 +1922,21 @@ class SyncPlayController
              * pauses ahead of the instant the group named is out of step just as surely.
              */
             const val PAUSE_NET_TIMEOUT_MS = 3_000L
+
+            /**
+             * The second window of both safety nets: how long the command elicited from the server
+             * has to arrive before this member acts locally, in milliseconds.
+             *
+             * Shorter than the first windows because it measures something narrower. Those have to
+             * outlast the delay the server *builds into* a scheduled command (twice the highest
+             * member ping); this one covers one REST round trip and the application of a command
+             * whose instant has, in the "client got lost" re-send, usually already passed — the
+             * scheduler applies those immediately. Two seconds is generous for that on a tablet with
+             * a busy main thread, and it is the whole of what the two-stage shape costs when the
+             * server does not answer: the local fallback that used to fire at three seconds now
+             * fires at five.
+             */
+            const val COMMAND_REPEAT_TIMEOUT_MS = 2_000L
 
             /**
              * How long an owed `ready` waits for a player that may never re-buffer, in milliseconds.

@@ -23,6 +23,14 @@ data class PlayerUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val title: String = "",
+    /**
+     * The item's artwork, or `null` while it is still being fetched — or when the server has none.
+     *
+     * Drawn in exactly one place: behind the "Casting to …" label, where the video surface would be
+     * (M12 Phase 4). A film playing on this device covers every pixel of it, so it is fetched with
+     * the title, off the same `getItem`, and never on the path to the first frame.
+     */
+    val artworkUrl: String? = null,
     val playMethod: PlayMethod? = null,
     /**
      * `true` while the bytes come off this device rather than off the server (M8).
@@ -64,6 +72,17 @@ data class PlayerUiState(
     val quality: PlaybackQuality = PlaybackQuality.AUTO,
     /** Playback rate; session-scoped and never persisted (M9). */
     val speed: PlaybackSpeed = PlaybackSpeed.NORMAL,
+    /**
+     * Whether the player that is actually decoding this has a playback rate at all.
+     *
+     * Always `true` on this device, and while casting it is whatever the receiver reports through
+     * `PlayerHandle.supportsPlaybackSpeed` — read again at every open, because the answer belongs to
+     * the receiver rather than to the app and is only knowable once one has loaded something. `false`
+     * takes the speed picker off the bar: `CastPlayerHandle.setPlaybackSpeed` refuses to send a rate
+     * a receiver has not published a command for, and a picker whose every row does nothing is worse
+     * than one fewer control (docs/notes/chromecast-m12-plan.md, decision 7).
+     */
+    val canSetSpeed: Boolean = true,
     /**
      * Scrubbing thumbnails, or `null` when this item has none (M9).
      *

@@ -256,6 +256,16 @@ internal class CastPlayerHandle
             player.setPlaybackSpeed(speed)
         }
 
+        /**
+         * The same question [setPlaybackSpeed] asks, asked before the user is offered the control.
+         *
+         * `false` with no player yet, which is the honest answer at that moment: a rate cannot be
+         * applied to a receiver that has not been reached, and the screen re-reads this at every
+         * open — by which time the session exists and the receiver has published its commands.
+         */
+        override val supportsPlaybackSpeed: Boolean
+            get() = castPlayer?.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH) == true
+
         override fun stop() {
             castPlayer?.run {
                 stop()

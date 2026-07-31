@@ -80,6 +80,19 @@ interface JellyfinRepository {
     ): AppResult<List<JellyfinItem>>
 
     /**
+     * Every episode of a series, in server order, spanning seasons — unlike the season-scoped
+     * [getEpisodes].
+     *
+     * It exists for SyncPlay's *Play for group*, which has to send the server the same expanded
+     * queue jellyfin-web would have built for itself. Handed a group queue holding a single episode,
+     * web's `translateItemsForPlayback` silently replaces it with that episode plus every following
+     * one of the series (the `EnableNextEpisodeAutoPlay` default), then indexes the server's
+     * playlist by the *expanded* length — so a one-entry playlist reads past its end and web drops
+     * the whole queue update. Sending the expansion ourselves keeps the two lengths equal.
+     */
+    suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>>
+
+    /**
      * The next unwatched episode of one series, or `null` when the series is fully watched.
      *
      * Distinct from [getNextUp], which spans every series for the home row.

@@ -248,6 +248,28 @@ internal class OnlineJellyfinRepository
                 mapper.toDomain(response.content.items)
             }
 
+        /**
+         * The same endpoint as [getEpisodes] with the season filter left off — `/Shows/{id}/Episodes`
+         * is rooted at the series and returns the whole run, already in broadcast order, when no
+         * season narrows it.
+         */
+        override suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.tvShowsApi.getEpisodes(
+                        GetEpisodesRequest(
+                            seriesId = UUID.fromString(seriesId),
+                            fields = EPISODE_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                            isMissing = false,
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
         override suspend fun getNextUpForSeries(seriesId: String): AppResult<JellyfinItem?> =
             onIo {
                 val response =

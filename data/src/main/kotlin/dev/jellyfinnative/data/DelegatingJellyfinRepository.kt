@@ -81,6 +81,9 @@ internal class DelegatingJellyfinRepository
         ): AppResult<List<JellyfinItem>> =
             delegate({ getEpisodes(seriesId, seasonId) }, { getEpisodes(seriesId, seasonId) })
 
+        override suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>> =
+            delegate({ getSeriesEpisodes(seriesId) }, { getSeriesEpisodes(seriesId) })
+
         override suspend fun getNextUpForSeries(seriesId: String): AppResult<JellyfinItem?> =
             delegate({ getNextUpForSeries(seriesId) }, { getNextUpForSeries(seriesId) })
 

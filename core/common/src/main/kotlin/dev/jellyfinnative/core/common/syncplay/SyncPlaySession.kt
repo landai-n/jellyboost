@@ -32,15 +32,24 @@ interface SyncPlaySession {
     val activeGroup: StateFlow<SyncPlayGroupHandle?>
 
     /**
-     * Replaces the group's queue with [itemId] and starts it there.
+     * Replaces the group's queue with [itemIds] and starts it at the first of them.
      *
      * The group's answer, not this device's: nothing plays here until the server broadcasts the
      * resulting queue and the command that goes with it (key decision 11). A no-op outside a group.
      *
+     * A **list** rather than one id because the group queue has to be the shape jellyfin-web builds
+     * for itself. Web expands a single-episode queue locally into the rest of the series and then
+     * indexes the server's playlist by that expanded length, so a one-entry queue for an episode
+     * makes it read past the end and throw the whole update away. Callers that mean "just this one"
+     * pass a singleton; callers playing an episode pass the run it belongs to.
+     *
+     * There is deliberately no `startIndex`: the list already begins at the item the group should
+     * play, so the playing position is always the first entry.
+     *
      * @param startPositionTicks where the group should start — a resume position, or `0`.
      */
     suspend fun playForGroup(
-        itemId: String,
+        itemIds: List<String>,
         startPositionTicks: Long = 0L,
     )
 

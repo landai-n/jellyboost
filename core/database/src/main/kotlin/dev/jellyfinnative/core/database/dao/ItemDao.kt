@@ -237,6 +237,27 @@ interface ItemDao {
         episodeType: ItemType,
     ): List<ItemEntity>
 
+    /**
+     * A series' downloaded episodes, in broadcast order across seasons.
+     *
+     * The season-spanning sibling of [episodesOfSeason]: ordering by `parentIndexNumber` first puts
+     * season 1 before season 2 before the specials the server numbers 0, which is what "everything
+     * after this episode" means to a viewer — and to jellyfin-web, whose expansion of a one-episode
+     * SyncPlay queue this has to match entry for entry.
+     */
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE source = :source AND type = :episodeType AND seriesId = :seriesId
+        ORDER BY parentIndexNumber ASC, indexNumber ASC, sortName COLLATE NOCASE ASC
+        """,
+    )
+    suspend fun episodesOfSeries(
+        source: ItemSource,
+        seriesId: UUID,
+        episodeType: ItemType,
+    ): List<ItemEntity>
+
     /** Every downloaded row of the given types — the input to the offline filter facets. */
     @Query("SELECT * FROM items WHERE source = :source AND type IN (:types)")
     suspend fun allBySource(

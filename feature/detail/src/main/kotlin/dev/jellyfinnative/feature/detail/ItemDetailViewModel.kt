@@ -350,7 +350,7 @@ class ItemDetailViewModel
             if (syncPlaySession.activeGroup.value == null) return
 
             viewModelScope.launch {
-                sendGroupAction(action, target, syncPlaySession)
+                sendGroupAction(action, target, syncPlaySession, repository)
                 _uiState.update { it.copy(userMessage = UserMessage.GroupActionSent(action)) }
             }
         }
@@ -522,19 +522,50 @@ private suspend fun runSelectionBatch(
  * where the person who chose it had got to — the same rule the ordinary Play button follows. The two
  * queue actions do not: an item added to the back of a queue is not a resume, and the group would
  * be surprised to find it starting in the middle.
+ *
+ * It also expands an episode into the rest of its series before sending, which looks like a UI
+ * decision and is really an interop one. jellyfin-web's `translateItemsForPlayback` intercepts a
+ * group queue holding exactly one episode and — with `EnableNextEpisodeAutoPlay`, the default —
+ * replaces it locally with that episode plus every following one across seasons; `QueueCore` then
+ * walks the server's playlist by the *expanded* length to copy the playlist-item ids over, reads
+ * past the end of our one-entry playlist, throws, and drops the update, so nobody's playback ever
+ * starts. Web never trips this on itself because it expands *before* it calls `SetNewQueue`. Sending
+ * the same expansion makes the two lengths agree. Movies are untouched: web leaves a single one
+ * alone, and a single-item movie queue is verified good.
+ *
+ * A failed lookup, or an episode the series listing does not contain, falls back to the lone id:
+ * a group queue that web may reject beats no request at all, and the caller's snackbar is about the
+ * ask going out either way.
  */
 private suspend fun sendGroupAction(
     action: GroupAction,
     target: JellyfinItem,
     session: SyncPlaySession,
+    repository: JellyfinRepository,
 ) {
     when (action) {
         GroupAction.PLAY_FOR_GROUP ->
-            session.playForGroup(target.id, startPositionTicks = playbackStartTicks(target))
+            session.playForGroup(
+                itemIds = groupPlayQueue(target, repository),
+                startPositionTicks = playbackStartTicks(target),
+            )
 
         GroupAction.PLAY_NEXT -> session.addToGroupQueue(target.id, next = true)
         GroupAction.ADD_TO_QUEUE -> session.addToGroupQueue(target.id, next = false)
     }
+}
+
+/** [target] and, when it is an episode, everything the series runs after it — see [sendGroupAction]. */
+private suspend fun groupPlayQueue(
+    target: JellyfinItem,
+    repository: JellyfinRepository,
+): List<String> {
+    val seriesId = target.seriesId
+    if (target.type != ItemType.EPISODE || seriesId == null) return listOf(target.id)
+
+    val episodes = repository.getSeriesEpisodes(seriesId).getOrNull().orEmpty()
+    val index = episodes.indexOfFirst { it.id == target.id }
+    return if (index >= 0) episodes.drop(index).map { it.id } else listOf(target.id)
 }
 
 /** Turns the domain failure taxonomy into copy a user can act on. */

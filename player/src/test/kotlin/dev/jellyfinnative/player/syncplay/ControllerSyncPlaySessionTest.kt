@@ -26,6 +26,7 @@ import java.util.UUID
 @OptIn(ExperimentalCoroutinesApi::class)
 class ControllerSyncPlaySessionTest {
     private val itemId = UUID.fromString("00000000-0000-0000-0000-0000000000c1")
+    private val nextItemId = UUID.fromString("00000000-0000-0000-0000-0000000000c2")
 
     @Test
     fun `there is no group until the controller is in one`() =
@@ -76,13 +77,29 @@ class ControllerSyncPlaySessionTest {
         runTest {
             val fixture = fixture()
 
-            fixture.session.playForGroup(itemId.toString(), startPositionTicks = 900_000_000L)
+            fixture.session.playForGroup(listOf(itemId.toString()), startPositionTicks = 900_000_000L)
 
             verify {
                 fixture.controller.setNewQueue(
                     itemIds = listOf(itemId),
                     playingItemPosition = 0,
                     startPositionTicks = 900_000_000L,
+                )
+            }
+        }
+
+    @Test
+    fun `a queue of several items keeps its order and starts at the first`() =
+        runTest {
+            val fixture = fixture()
+
+            fixture.session.playForGroup(listOf(itemId.toString(), nextItemId.toString()))
+
+            verify {
+                fixture.controller.setNewQueue(
+                    itemIds = listOf(itemId, nextItemId),
+                    playingItemPosition = 0,
+                    startPositionTicks = 0L,
                 )
             }
         }
@@ -104,11 +121,33 @@ class ControllerSyncPlaySessionTest {
         runTest {
             val fixture = fixture()
 
-            fixture.session.playForGroup("item-1")
+            fixture.session.playForGroup(listOf("item-1"))
             fixture.session.addToGroupQueue("item-1", next = true)
 
             verify(exactly = 0) { fixture.controller.setNewQueue(any(), any(), any()) }
             verify(exactly = 0) { fixture.controller.addToQueue(any(), any()) }
+        }
+
+    @Test
+    fun `one malformed id in a queue sends none of it, rather than a queue off by one`() =
+        runTest {
+            val fixture = fixture()
+
+            fixture.session.playForGroup(listOf(itemId.toString(), "item-2", nextItemId.toString()))
+
+            // Dropping just the bad entry would leave a shorter playlist than the caller counted on,
+            // which is exactly the index mismatch this queue shape exists to avoid.
+            verify(exactly = 0) { fixture.controller.setNewQueue(any(), any(), any()) }
+        }
+
+    @Test
+    fun `an empty queue is nothing to play`() =
+        runTest {
+            val fixture = fixture()
+
+            fixture.session.playForGroup(emptyList())
+
+            verify(exactly = 0) { fixture.controller.setNewQueue(any(), any(), any()) }
         }
 
     private class Fixture(

@@ -1,6 +1,7 @@
 package dev.jellyfinnative.feature.detail
 
 import androidx.lifecycle.SavedStateHandle
+import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
 import dev.jellyfinnative.core.common.model.DownloadState
 import dev.jellyfinnative.core.common.model.ItemType
@@ -78,6 +79,7 @@ class ItemDetailGroupActionsTest {
         coEvery { repository.getEpisodes(any(), any()) } returns AppResult.Success(emptyList())
         coEvery { repository.getNextUpForSeries(any()) } returns AppResult.Success(null)
         coEvery { repository.getSimilarItems(any(), any()) } returns AppResult.Success(emptyList())
+        coEvery { repository.getSeriesEpisodes(any()) } returns AppResult.Success(emptyList())
     }
 
     @AfterEach
@@ -125,7 +127,10 @@ class ItemDetailGroupActionsTest {
             model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { syncPlaySession.playForGroup(ITEM_ID, RESUME_TICKS) }
+            // Exactly one id, and no series lookup: web accepts a one-item movie queue as it is, and
+            // the episode expansion below must not leak into anything that is not an episode.
+            coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(ITEM_ID), RESUME_TICKS) }
+            coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
             model.uiState.value.userMessage shouldBe UserMessage.GroupActionSent(GroupAction.PLAY_FOR_GROUP)
         }
 
@@ -160,7 +165,62 @@ class ItemDetailGroupActionsTest {
             model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { syncPlaySession.playForGroup(EPISODE_2, 0L) }
+            coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
+        }
+
+    @Test
+    fun `an episode is sent with the rest of its series, the way jellyfin-web expands it`() =
+        runTest {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode(EPISODE_2, RESUME_TICKS))
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(
+                    listOf(episode(EPISODE_1), episode(EPISODE_2), episode(EPISODE_3), episode(EPISODE_4)),
+                )
+            inAGroup()
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            advanceUntilIdle()
+
+            // From the chosen episode to the end of the series, in server order, and nothing before
+            // it: that is the list web rebuilds locally and then indexes the server's playlist by.
+            coVerify(exactly = 1) {
+                syncPlaySession.playForGroup(listOf(EPISODE_2, EPISODE_3, EPISODE_4), RESUME_TICKS)
+            }
+        }
+
+    @Test
+    fun `an episode the series listing cannot account for is sent on its own`() =
+        runTest {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode(EPISODE_2))
+            // The failure mode and the absent-from-the-listing mode are the same fallback: whatever
+            // the lookup came back with, the target itself is still worth sending.
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns AppResult.Failure(AppError.Network())
+            inAGroup()
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
+        }
+
+    @Test
+    fun `an episode missing from its own series listing falls back to itself`() =
+        runTest {
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(episode(EPISODE_2))
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(listOf(episode(EPISODE_1), episode(EPISODE_3)))
+            inAGroup()
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
         }
 
     @Test
@@ -181,6 +241,18 @@ class ItemDetailGroupActionsTest {
             coVerify(exactly = 0) { syncPlaySession.addToGroupQueue(any(), any()) }
         }
 
+    /** An episode of [SERIES_ID] — the type and the series link are what drive the expansion. */
+    private fun episode(
+        id: String,
+        positionTicks: Long = 0L,
+    ) = JellyfinItem(
+        id = id,
+        name = "Episode $id",
+        type = ItemType.EPISODE,
+        seriesId = SERIES_ID,
+        userData = UserData(playbackPositionTicks = positionTicks, played = false),
+    )
+
     private fun inAGroup() {
         activeGroup.value = SyncPlayGroupHandle(id = "group-1", name = "Film night", participantCount = 2)
     }
@@ -197,7 +269,11 @@ class ItemDetailGroupActionsTest {
 
     private companion object {
         const val ITEM_ID = "item-1"
+        const val SERIES_ID = "series-1"
+        const val EPISODE_1 = "episode-1"
         const val EPISODE_2 = "episode-2"
+        const val EPISODE_3 = "episode-3"
+        const val EPISODE_4 = "episode-4"
 
         /** A resume position in Jellyfin ticks — 90 seconds in. */
         const val RESUME_TICKS = 900_000_000L

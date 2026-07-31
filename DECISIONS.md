@@ -2226,4 +2226,37 @@ Seeded from the approved plan; listed for traceability, no divergence:
      return 204 whether or not the session is in a group), and the ping loop's five-second cadence
      is what discovers it when nothing else is happening.
 
+## 2026-07-31 — *Play for group* sends an episode with the rest of its series
+- **Scope:** `core/common/.../syncplay/SyncPlaySession.kt`, `player/.../syncplay/ControllerSyncPlaySession.kt`,
+  `feature/detail/.../ItemDetailViewModel.kt`, `data/.../JellyfinRepository.kt` (+ online/offline/delegating
+  implementations), `core/database/.../dao/ItemDao.kt`
+- **Plan said:** `docs/notes/syncplay-m11-plan.md` Phase 4 specifies *Play for group* as "set the group queue to
+  **this item**" — `SetNewQueue` with a one-entry playlist and the item's resume position.
+- **Done instead:** `SyncPlaySession.playForGroup` now takes `itemIds: List<String>`, and the detail screen expands
+  an **episode** into that episode plus every following episode of its series (`getSeriesEpisodes`, a new
+  season-spanning repository read) before sending. Movies, and anything else, still send exactly one id. A failed
+  lookup, or an episode absent from its own series listing, falls back to the lone id.
+- **Reason:** A one-entry queue holding an episode makes the real jellyfin-web client throw the update away, so
+  *Play for group* never started playback for anyone on web — reproduced live today with jellyfin-web 10.11 and
+  captured from its console:
+  `SyncPlay updatePlayQueue: TypeError: Cannot read properties of undefined (reading 'PlaylistItemId')`.
+  The mechanism, read out of `jellyfin-web` `release-10.11.z`: `QueueCore.onPlayQueueUpdate` passes the group's
+  playlist through `Helper.translateItemsForPlayback`, whose
+  `else if (firstItem.Type === 'Episode' && items.length === 1)` branch replaces a single episode with that episode
+  plus every later one of the series whenever `EnableNextEpisodeAutoPlay` is set — the default. It then runs
+  `for (let i = 0; i < items.length; i++) items[i].PlaylistItemId = playQueueUpdate.Playlist[i].PlaylistItemId`,
+  indexing the **server's** playlist by the **expanded** length; with one entry sent, `Playlist[1]` is `undefined`,
+  the promise rejects, `startPlayback()` is never reached, and the user gets *"couldn't play the media"*.
+  jellyfin-web never trips this against itself because it expands *before* it calls `SetNewQueue` — verified in the
+  same session: one episode clicked in web arrived at this app as a ~100-entry playlist. The counter-case was
+  verified too — a single-item queue holding a **movie** completes the handshake on web (`Ready` → `Unpause` →
+  `Playing`), so the defect is specific to a lone episode that has successors, and the fix is scoped to exactly that.
+- **Why match web rather than treat it as their bug:** the failure is in a client we cannot patch and that the user
+  is running today, the shape we now send is the one the reference client itself produces for the same gesture, and
+  the resulting behaviour — a group that rolls on into the next episode — is what SyncPlay viewers expect anyway.
+  A season-scoped expansion was rejected: it would still send a single entry for the last episode of a season, and
+  web expands across seasons, so the mismatch would survive at exactly the boundary.
+- **Note on the seam:** `playForGroup` deliberately has no `startIndex` — callers pass a list that already begins at
+  the item the group should play, so the playing position is always 0.
+
 <!-- END -->

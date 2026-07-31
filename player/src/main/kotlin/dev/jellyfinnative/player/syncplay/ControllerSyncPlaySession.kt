@@ -48,13 +48,19 @@ class ControllerSyncPlaySession
                 .distinctUntilChanged()
                 .stateIn(scope, SharingStarted.Eagerly, initialValue = null)
 
+        /**
+         * All ids or none: a queue is positional, and dropping a malformed entry from the middle
+         * would silently hand the group a playlist whose indices no longer mean what the caller
+         * meant. An empty list is nothing to play, so it too goes nowhere.
+         */
         override suspend fun playForGroup(
-            itemId: String,
+            itemIds: List<String>,
             startPositionTicks: Long,
         ) {
-            val id = itemId.toItemIdOrNull() ?: return
+            if (itemIds.isEmpty()) return
+            val ids = itemIds.map { it.toItemIdOrNull() ?: return }
             controller.setNewQueue(
-                itemIds = listOf(id),
+                itemIds = ids,
                 playingItemPosition = 0,
                 startPositionTicks = startPositionTicks,
             )

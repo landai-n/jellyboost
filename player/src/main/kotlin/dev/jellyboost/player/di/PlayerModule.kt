@@ -15,11 +15,15 @@ import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.api.SdkPlayerApi
 import dev.jellyboost.player.api.SdkStreamUrlFactory
 import dev.jellyboost.player.api.StreamUrlFactory
+import dev.jellyboost.player.cast.CastPlayerHandle
+import dev.jellyboost.player.cast.CastSessionMonitor
+import dev.jellyboost.player.cast.GmsCastSessionMonitor
 import dev.jellyboost.player.deviceprofile.MediaCodecProbe
 import dev.jellyboost.player.deviceprofile.PlatformMediaCodecProbe
 import dev.jellyboost.player.session.ExoPlayerHandle
 import dev.jellyboost.player.session.JellyfinAuthInterceptor
 import dev.jellyboost.player.session.PlayerHandle
+import dev.jellyboost.player.session.RoutingPlayerHandle
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -46,9 +50,32 @@ internal interface PlayerBindingsModule {
     @Singleton
     fun bindStreamUrlFactory(impl: SdkStreamUrlFactory): StreamUrlFactory
 
+    /**
+     * The player everything above the seam holds, and the one place casting is wired in.
+     *
+     * `RoutingPlayerHandle` delegates to whichever player is live and is a pure pass-through with no
+     * cast session, so nothing above it changed. `ExoPlayerHandle` stays a `@Singleton` and stays
+     * injectable concretely: `PlaybackService` takes it directly, because the local media session
+     * and its notification belong to the *local* player and should disappear while a television has
+     * the film (docs/notes/chromecast-m12-plan.md, key decision 1).
+     */
     @Binds
     @Singleton
-    fun bindPlayerHandle(impl: ExoPlayerHandle): PlayerHandle
+    fun bindPlayerHandle(impl: RoutingPlayerHandle): PlayerHandle
+
+    @Binds
+    @Singleton
+    @LocalPlayback
+    fun bindLocalPlayerHandle(impl: ExoPlayerHandle): PlayerHandle
+
+    @Binds
+    @Singleton
+    @CastPlayback
+    fun bindCastPlayerHandle(impl: CastPlayerHandle): PlayerHandle
+
+    @Binds
+    @Singleton
+    fun bindCastSessionMonitor(impl: GmsCastSessionMonitor): CastSessionMonitor
 }
 
 /** Objects the player needs that are not constructor-injectable. */
@@ -126,3 +153,25 @@ internal object PlayerProvidersModule {
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class MediaHttpClient
+
+/**
+ * Marks the `PlayerHandle` that plays on this device.
+ *
+ * Qualified rather than injected as the concrete `ExoPlayerHandle`, so `RoutingPlayerHandle` — which
+ * is nothing but delegation — can be unit tested against two fakes instead of an ExoPlayer that
+ * cannot be built off a device.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class LocalPlayback
+
+/**
+ * Marks the `PlayerHandle` that plays on a Cast receiver.
+ *
+ * Always injected as a `Provider`: constructing it loads the first `com.google.android.gms` class in
+ * the app, and only a started cast session — which cannot exist without Play services — ever asks
+ * for one.
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class CastPlayback

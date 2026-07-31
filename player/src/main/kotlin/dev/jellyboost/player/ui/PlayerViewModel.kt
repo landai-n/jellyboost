@@ -12,6 +12,7 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.fallback.DecoderFallbackHandler
 import dev.jellyboost.player.fallback.FallbackDecision
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
@@ -119,6 +120,16 @@ class PlayerViewModel
         syncPlayController: SyncPlayController,
         syncPlayLocalSession: SyncPlayLocalSession,
         savedStateHandle: SavedStateHandle,
+        /**
+         * Whether the film is going to a television, read on every re-negotiation.
+         *
+         * The holder rather than `CastSessionCoordinator` itself, for the same reason
+         * `PlaybackReporter` takes a `SyncPlayStatusHolder`: this class only needs the one fact, and
+         * taking it this way keeps every `com.google.android.gms` type — and the Cast session
+         * lifecycle behind it — out of a ViewModel that has no business with either. Defaulted so a
+         * test constructs the M5-through-M11 behaviour exactly; Hilt always passes the singleton.
+         */
+        private val castStatus: CastStatusHolder = CastStatusHolder(),
     ) : ViewModel(),
         SyncPlayPlaybackHost {
         private val sessionStore = PlayerSessionStore(savedStateHandle)
@@ -229,6 +240,15 @@ class PlayerViewModel
         /** `true` while the player screen is on top — one of the three conditions PiP needs. */
         private var screenPresent = false
 
+        /**
+         * Whether this session is being negotiated for a Cast receiver.
+         *
+         * Read fresh at every open rather than captured: a session can start or end at any point in
+         * a film, and the next re-negotiation — a quality change, a track switch — has to be for
+         * whichever player will actually decode it.
+         */
+        private val isCasting: Boolean get() = castStatus.isCasting
+
         init {
             observePlayerEvents()
             observePreferences()
@@ -240,7 +260,7 @@ class PlayerViewModel
                     itemId = sessionStore.itemId,
                     mediaSourceId = sessionStore.mediaSourceId,
                     startPositionTicks = sessionStore.startPositionTicks,
-                ),
+                ).copy(castTarget = isCasting),
                 // In a group, **paused** — for the same reason `loadItem` opens paused: the group
                 // decides when playback starts, and a member that started on its own would be out of
                 // sync from the first frame. This is the route a group play actually takes now that
@@ -365,7 +385,11 @@ class PlayerViewModel
                 loadTitle(itemId.toString())
                 val result =
                     sessionController.open(
-                        PlaybackResolveRequest(itemId = itemId, startPositionTicks = startPositionTicks),
+                        PlaybackResolveRequest(
+                            itemId = itemId,
+                            startPositionTicks = startPositionTicks,
+                            castTarget = isCasting,
+                        ),
                         playWhenReady = false,
                     )
                 publish(result, message = null)
@@ -450,7 +474,7 @@ class PlayerViewModel
             if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
             val remote = needsServer(current, home)
             reopenSession(
-                current.asRequest(remote).copy(audioStreamIndex = jellyfinIndex),
+                current.asRequest(remote, isCasting).copy(audioStreamIndex = jellyfinIndex),
                 trackChangeMessage(current, remote),
             )
         }
@@ -471,7 +495,7 @@ class PlayerViewModel
             val remote = needsServer(current, home)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
             reopenSession(
-                current.asRequest(remote).copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
+                current.asRequest(remote, isCasting).copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
                 trackChangeMessage(current, remote),
             )
         }
@@ -578,7 +602,9 @@ class PlayerViewModel
             val current = source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
             _uiState.update { it.copy(quality = quality) }
-            reopenSession(current.asRequest(forcedRemote).copy(maxStreamingBitrate = quality.maxStreamingBitrate))
+            reopenSession(
+                current.asRequest(forcedRemote, isCasting).copy(maxStreamingBitrate = quality.maxStreamingBitrate),
+            )
         }
 
         /**
@@ -854,7 +880,10 @@ class PlayerViewModel
             if (!forcedRemote || downloaded == null) return fail(error.toMessage())
 
             Timber.i("Streaming %s for a track change failed; returning to the file on disk", downloaded.itemId)
-            reopenSession(downloaded.asRequest(forceRemote = false), PlayerMessage.TrackUnavailableOffline)
+            reopenSession(
+                downloaded.asRequest(forceRemote = false, castTarget = isCasting),
+                PlayerMessage.TrackUnavailableOffline,
+            )
         }
 
         /**
@@ -961,14 +990,29 @@ class PlayerViewModel
             viewModelScope.launch { reporter.reportStop(current, playerHandle.snapshot().copy(hasEnded = true)) }
         }
 
+        /**
+         * Playback failed.
+         *
+         * The fallback ladder is skipped entirely while casting. Every rung of it is a diagnosis of
+         * *this device's* decoders — "this renderer could not initialise", "these bytes are too big
+         * for it" — and none of that is true of a failure on the far end of a network: retrying a
+         * receiver error at a lower bitrate would restart the film for a reason that was never the
+         * reason. It surfaces as the same plain failure the ladder itself ends with; a cast-specific
+         * message arrives with the rest of the cast UI (docs/notes/chromecast-m12-plan.md, Phase 3).
+         */
         private fun onError(event: PlayerEvent.Error) {
             val current = source ?: return
             val positionTicks = playerHandle.snapshot().positionTicks
 
+            if (isCasting) {
+                Timber.w("Giving up on %s after a cast error %d", current.itemId, event.errorCode)
+                return fail(event.message ?: PLAYBACK_FAILED, PlayerMessage.PlaybackFailed)
+            }
+
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
                 is FallbackDecision.ForceTranscode ->
                     reopenSession(
-                        current.asRequest(forcedRemote).copy(
+                        current.asRequest(forcedRemote, isCasting).copy(
                             startPositionTicks = decision.positionTicks,
                             enableDirectPlay = false,
                             enableDirectStream = false,
@@ -978,7 +1022,7 @@ class PlayerViewModel
 
                 is FallbackDecision.LowerBitrate ->
                     reopenSession(
-                        current.asRequest(forcedRemote).copy(
+                        current.asRequest(forcedRemote, isCasting).copy(
                             startPositionTicks = decision.positionTicks,
                             maxStreamingBitrate = decision.maxStreamingBitrate,
                         ),
@@ -1112,8 +1156,14 @@ class PlayerViewModel
  *   parameter rather than something read off the source because the source cannot know: a streamed
  *   `RemotePlaybackMediaSource` looks the same whether it is an item nobody downloaded or the
  *   server's copy of one the user is deliberately streaming for a track the file lacks.
+ * @param castTarget whether the stream is for a receiver, likewise unknowable from the source: a
+ *   cast stream and a streamed local one are the same shape, and only the live cast session says
+ *   which profile the next negotiation belongs to (M12 Phase 2).
  */
-private fun PlaybackMediaSource.asRequest(forceRemote: Boolean): PlaybackResolveRequest =
+private fun PlaybackMediaSource.asRequest(
+    forceRemote: Boolean,
+    castTarget: Boolean,
+): PlaybackResolveRequest =
     PlaybackResolveRequest(
         itemId = itemId,
         mediaSourceId = mediaSourceId,
@@ -1121,6 +1171,7 @@ private fun PlaybackMediaSource.asRequest(forceRemote: Boolean): PlaybackResolve
         audioStreamIndex = selectedAudioIndex,
         subtitleStreamIndex = selectedSubtitleIndex,
         forceRemote = forceRemote,
+        castTarget = castTarget,
     )
 
 /**

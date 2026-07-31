@@ -22,6 +22,11 @@ import java.util.UUID
  *   over the same file and hand back the same tracks, so the switch could never be applied — see
  *   `PlayerViewModel.selectAudioTrack`. Distinct from `enableDirectPlay = false`, which says "these
  *   *bytes* cannot be decoded" and therefore also forbids the server's own direct play.
+ * @param castTarget whether the stream is for a **Cast receiver** rather than for this device. It
+ *   changes two things and nothing else: the negotiation is sent with `CastDeviceProfile` instead of
+ *   this device's, because the decoders that matter are the television's; and, like [forceRemote],
+ *   it skips the copy on disk, because a `file://` URI means nothing on the other side of the
+ *   network (docs/notes/chromecast-m12-plan.md, key decision 3).
  */
 data class PlaybackResolveRequest(
     val itemId: UUID,
@@ -33,4 +38,5 @@ data class PlaybackResolveRequest(
     val enableDirectPlay: Boolean? = null,
     val enableDirectStream: Boolean? = null,
     val forceRemote: Boolean = false,
+    val castTarget: Boolean = false,
 )

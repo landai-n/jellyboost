@@ -7,6 +7,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
+import dev.jellyfinnative.player.syncplay.SyncPlayController
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,6 +22,13 @@ import javax.inject.Inject
  * It deliberately does *not* own the player — the same instance is driven directly by
  * `PlayerViewModel` (DECISIONS.md, 2026-07-28). Consequently the session is a thin wrapper and
  * this class has no playback logic of its own.
+ *
+ * ### Why the session does not get the player itself (M11)
+ * The notification, headset buttons and every other media-button surface dispatch through the
+ * session, which is a transport path that never touches `PlayerViewModel` — so in a SyncPlay group
+ * they moved this member's player alone and broke the group. The session is therefore built on
+ * [SyncPlayAwareForwardingPlayer], which turns in-group transport into requests to the server and is
+ * a plain pass-through otherwise.
  *
  * ### Why [addSession] is called explicitly (M9)
  * Media3 only starts managing a session — posting the notification, promoting the service to the
@@ -48,14 +56,24 @@ class PlaybackService :
     @Inject
     internal lateinit var serviceState: PlaybackServiceState
 
+    /**
+     * Only ever consulted through [SyncPlayAwareForwardingPlayer] — the session is the one transport
+     * surface that does not go through `PlayerViewModel`, and a group's transport is requests.
+     */
+    @Inject
+    internal lateinit var syncPlayController: SyncPlayController
+
     private var mediaSession: MediaSession? = null
 
     override fun onCreate() {
         super.onCreate()
         serviceState.setRunning(true)
+        // The session gets the group-aware wrapper; everything else in the app keeps driving the
+        // shared player directly. See [SyncPlayAwareForwardingPlayer].
+        val sessionPlayer = SyncPlayAwareForwardingPlayer(playerHandle.requirePlayer(), syncPlayController)
         val session =
             MediaSession
-                .Builder(this, playerHandle.requirePlayer())
+                .Builder(this, sessionPlayer)
                 .apply { launchIntent()?.let(::setSessionActivity) }
                 .build()
         mediaSession = session

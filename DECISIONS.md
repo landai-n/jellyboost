@@ -2963,3 +2963,18 @@ Seeded from the approved plan; listed for traceability, no divergence:
   weakened assertion).
 - **Reason:** user feedback — the FlowRow wraps into ragged left-aligned rows ("buttons
   feel misaligned") and a 320dp banner is tablet-tuned dead art on a 360dp phone.
+
+## 2026-07-31 — Phone polish round 3: icon-only secondary actions + clamped overview
+- **Scope:** feature/detail/.../ItemDetailHeader.kt (DetailActions compact branch,
+  MarkWatchedButton/DownloadButton `iconOnly`, new ExpandableOverview)
+- **Plan said:** (as round 2 — no layout spec for the detail actions or overview.)
+- **Done instead:** supersedes round 2's two-row compact grid before it ever shipped: on
+  compact widths the actions are ONE edge-to-edge row — Play keeps the only label and
+  stretches; watched/favorite/download are icon-only circles with the label as
+  contentDescription (download keeps its state icons and progress spinner). The overview
+  clamps to 5 lines on compact and expands/collapses on tap (tappable only when it
+  actually overflows; expansion survives rotation via rememberSaveable). Wide layouts
+  unchanged.
+- **Reason:** direct user feedback on the round-2 build: "reduce the text usage? same
+  with the movie description, it's long" — and the two-row grid wrapped "Mark watched"
+  onto two lines at 360dp anyway.

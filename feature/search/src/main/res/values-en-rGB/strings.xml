@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Search movies, shows and episodes</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_section_movies">Movies</string>
+    <string name="search_section_series">Shows</string>
+    <string name="search_section_episodes">Episodes</string>
+    <string name="search_prompt">Type to search your libraries.</string>
+    <string name="search_no_results">Nothing matched “%1$s”.</string>
+    <string name="search_error_network">Can\'t reach your server. Check your connection and try again.</string>
+    <string name="search_error_unauthorized">Your session expired. Sign in again to continue.</string>
+    <string name="search_error_not_found">That item is no longer on the server.</string>
+    <string name="search_error_server">The server returned an error.</string>
+    <string name="search_error_server_with_code">The server returned an error (%1$d).</string>
+    <string name="search_error_storage">Couldn\'t read local data.</string>
+    <string name="search_error_unknown">Something went wrong while searching.</string>
+</resources>

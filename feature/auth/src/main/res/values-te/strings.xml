@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">సర్వర్‌కు కనెక్ట్ అవ్వండి</string>
+    <string name="server_setup_discovered_title">ఈ నెట్‌వర్క్‌లో ఉన్న సర్వర్‌లు</string>
+    <string name="server_setup_discovering">స్థానిక నెట్‌వర్క్‌ను శోధిస్తోంది…</string>
+    <string name="server_setup_no_servers_found">ఏ సర్వర్‌లు కనిపించలేదు. దిగువన చిరునామాను నమోదు చేయండి.</string>
+    <string name="server_setup_manual_title">సర్వర్ చిరునామా</string>
+    <string name="server_setup_address_label">హోస్ట్ లేదా URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org లేదా 192.168.1.10:8096</string>
+    <string name="server_setup_connect">కనెక్ట్ అవ్వండి</string>
+    <string name="server_setup_connecting">సర్వర్‌ను సంప్రదిస్తోంది…</string>
+    <string name="server_setup_session_lost">మీ సేవ్ చేసిన సైన్ ఇన్‌ను పునరుద్ధరించలేకపోయాము, కాబట్టి మిమ్మల్ని సైన్ అవుట్ చేశాము. దయచేసి మళ్లీ సైన్ ఇన్ అవ్వండి.</string>
+
+    <string name="login_title">సైన్ ఇన్</string>
+    <string name="login_server_version">వెర్షన్ %1$s</string>
+    <string name="login_server_version_unknown">వెర్షన్ తెలియదు</string>
+    <string name="login_public_users_title">ఎవరు చూస్తున్నారు?</string>
+    <string name="login_username_label">వినియోగదారు పేరు</string>
+    <string name="login_password_label">పాస్‌వర్డ్</string>
+    <string name="login_show_password">పాస్‌వర్డ్ చూపించు</string>
+    <string name="login_hide_password">పాస్‌వర్డ్ దాచు</string>
+    <string name="login_sign_in">సైన్ ఇన్</string>
+    <string name="login_change_server">వేరే సర్వర్‌ను ఉపయోగించండి</string>
+    <string name="login_loading">సర్వర్ వివరాలను లోడ్ చేస్తోంది…</string>
+    <string name="login_or">లేదా</string>
+
+    <string name="login_quick_connect">క్విక్ కనెక్ట్ ఉపయోగించండి</string>
+    <string name="login_quick_connect_title">క్విక్ కనెక్ట్</string>
+    <string name="login_quick_connect_instructions">మీరు ఇప్పటికే సైన్ ఇన్ అయి ఉన్న పరికరంలో Jellyfin తెరిచి, క్విక్ కనెక్ట్‌కు వెళ్లి ఈ కోడ్‌ను నమోదు చేయండి.</string>
+    <string name="login_quick_connect_waiting">ఆమోదం కోసం వేచి ఉంది…</string>
+    <string name="login_quick_connect_cancel">రద్దు చేయండి</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d చిరునామాను ప్రయత్నించాం, విజయవంతం కాలేదు.</item>
+        <item quantity="other">%d చిరునామాలను ప్రయత్నించాం, విజయవంతం కాలేదు.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">సర్వర్‌ను చేరుకోలేకపోయాం</string>
+    <string name="auth_error_unsupported_version_or_product">మద్దతు లేని వెర్షన్ లేదా ఉత్పత్తి</string>
+    <string name="auth_error_cannot_connect">కనెక్షన్ ఏర్పాటు చేయలేకపోయాం.\nహోస్ట్‌నేమ్ మరియు మీ నెట్‌వర్క్ కనెక్షన్‌ను తనిఖీ చేయండి.</string>
+    <string name="auth_error_invalid_credentials">వినియోగదారు పేరు లేదా పాస్‌వర్డ్ తప్పు.</string>
+    <string name="auth_error_quick_connect_expired">ఆ కోడ్ గడువు ముగిసింది. కొత్తదాన్ని అభ్యర్థించి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="auth_error_server">సర్వర్ దోషంతో స్పందించింది. మళ్లీ ప్రయత్నించండి.</string>
+    <string name="auth_error_server_with_code">సర్వర్ దోషంతో స్పందించింది (%1$d). మళ్లీ ప్రయత్నించండి.</string>
+</resources>

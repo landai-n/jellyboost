@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Lataukset</string>
+    <string name="downloads_channel_description">Laitteelle ladattavan median edistyminen.</string>
+
+    <string name="downloads_notification_preparing">Valmistellaan latauksia…</string>
+    <string name="downloads_notification_downloading">Ladataan…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Ladataan…</string>
+    <string name="downloads_action_pause">Keskeytä</string>
+    <string name="downloads_action_cancel">Peruuta</string>
+</resources>

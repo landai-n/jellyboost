@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Prisijungti prie serverio</string>
+    <string name="server_setup_discovered_title">Serveriai šiame tinkle</string>
+    <string name="server_setup_discovering">Ieškoma vietiniame tinkle…</string>
+    <string name="server_setup_no_servers_found">Nė vienas serveris nepasiskelbė. Įveskite adresą žemiau.</string>
+    <string name="server_setup_manual_title">Serverio adresas</string>
+    <string name="server_setup_address_label">Serveris arba URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org arba 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Prisijungti</string>
+    <string name="server_setup_connecting">Susisiekiama su serveriu…</string>
+    <string name="server_setup_session_lost">Nepavyko atkurti išsaugoto prisijungimo, todėl buvote atjungti. Prisijunkite dar kartą.</string>
+
+    <string name="login_title">Prisijungti</string>
+    <string name="login_server_version">Versija %1$s</string>
+    <string name="login_server_version_unknown">Versija nežinoma</string>
+    <string name="login_public_users_title">Kas žiūri?</string>
+    <string name="login_username_label">Vartotojo vardas</string>
+    <string name="login_password_label">Slaptažodis</string>
+    <string name="login_show_password">Rodyti slaptažodį</string>
+    <string name="login_hide_password">Slėpti slaptažodį</string>
+    <string name="login_sign_in">Prisijungti</string>
+    <string name="login_change_server">Naudoti kitą serverį</string>
+    <string name="login_loading">Įkeliama serverio informacija…</string>
+    <string name="login_or">arba</string>
+
+    <string name="login_quick_connect">Naudoti Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Atidarykite Jellyfin įrenginyje, kuriame jau esate prisijungę, eikite į Quick Connect ir įveskite šį kodą.</string>
+    <string name="login_quick_connect_waiting">Laukiama patvirtinimo…</string>
+    <string name="login_quick_connect_cancel">Atšaukti</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Išbandytas %d kandidatinis adresas, nesėkmingai.</item>
+        <item quantity="few">Išbandyti %d kandidatiniai adresai, nesėkmingai.</item>
+        <item quantity="many">Išbandyta %d kandidatinių adresų, nesėkmingai.</item>
+        <item quantity="other">Išbandyta %d kandidatinių adresų, nesėkmingai.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Nepavyksta pasiekti serverio</string>
+    <string name="auth_error_unsupported_version_or_product">Nepalaikoma versija arba produktas</string>
+    <string name="auth_error_cannot_connect">Nepavyksta prisijungti.\nPatikrinkite serverio pavadinimą ir tinklo ryšį.</string>
+    <string name="auth_error_invalid_credentials">Neteisingas vartotojo vardas arba slaptažodis.</string>
+    <string name="auth_error_quick_connect_expired">Šio kodo galiojimas baigėsi. Paprašykite naujo ir bandykite dar kartą.</string>
+    <string name="auth_error_server">Serveris atsakė su klaida. Bandykite dar kartą.</string>
+    <string name="auth_error_server_with_code">Serveris atsakė su klaida (%1$d). Bandykite dar kartą.</string>
+</resources>

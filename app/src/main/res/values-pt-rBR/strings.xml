@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Mais opções</string>
+    <string name="home_settings">Configurações</string>
+    <string name="settings_offline_mode">Modo offline</string>
+    <string name="state_on">Ativado</string>
+    <string name="state_off">Desativado</string>
+    <string name="nav_home">Início</string>
+    <string name="nav_libraries">Bibliotecas</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_downloads">Downloads</string>
+    <string name="offline_no_network">Sem rede — mostrando mídia baixada</string>
+    <string name="offline_server_unreachable">Não foi possível conectar ao servidor — mostrando mídia baixada</string>
+    <string name="offline_forced">O modo offline está ativado — mostrando mídia baixada</string>
+    <string name="offline_retry">Tentar novamente</string>
+    <string name="offline_go_online">Ficar online</string>
+    <string name="syncplay_groups_action">Grupos SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grupos SyncPlay — você está em um grupo</string>
+</resources>

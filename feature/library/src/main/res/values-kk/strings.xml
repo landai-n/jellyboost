@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Әзірге кітапханалар жоқ. Серверде біреуін қосыңыз.</string>
+
+    <string name="library_back">Артқа</string>
+    <string name="library_home">Басты бет</string>
+    <string name="library_sort">Сұрыптау</string>
+    <string name="library_filter">Сүзгі</string>
+
+    <string name="library_sort_title">Сұрыптау тәртібі</string>
+    <string name="library_sort_name">Атауы</string>
+    <string name="library_sort_date_added">Қосылған күні</string>
+    <string name="library_sort_premiere_date">Шыққан күні</string>
+    <string name="library_sort_community_rating">Қауымдастық рейтингі</string>
+    <string name="library_sort_runtime">Ұзақтығы</string>
+    <string name="library_sort_random">Кездейсоқ</string>
+    <string name="library_sort_direction">Бағыт</string>
+    <string name="library_sort_ascending">Өсу ретімен</string>
+    <string name="library_sort_descending">Кему ретімен</string>
+
+    <string name="library_filters_title">Сүзгілер</string>
+    <string name="library_filters_genres">Жанрлар</string>
+    <string name="library_filters_years">Жылдар</string>
+    <string name="library_filters_played">Қаралған</string>
+    <string name="library_filters_played_any">Кез келген</string>
+    <string name="library_filters_played_yes">Қаралған</string>
+    <string name="library_filters_played_no">Қаралмаған</string>
+    <string name="library_filters_clear">Барлығын тазалау</string>
+    <string name="library_filters_apply">Нәтижелерді көрсету</string>
+    <string name="library_filters_none">Бұл кітапханада сүзгілеуге болатын ештеңе жоқ.</string>
+    <string name="library_filters_loading">Сүзгілер жүктелуде…</string>
+
+    <string name="library_empty">Мұнда көрсетуге ештеңе жоқ.</string>
+    <string name="library_empty_filtered">Осы сүзгілерге сәйкес келетін элемент жоқ.</string>
+    <string name="library_empty_clear_filters">Сүзгілерді тазалау</string>
+    <string name="library_retry">Қайталау</string>
+
+    <string name="library_error_network">Серверіңізге қосыла алмады. Қосылымыңызды тексеріп, қайта көріңіз.</string>
+    <string name="library_error_unauthorized">Сеансыңыздың мерзімі өтті. Жалғастыру үшін қайта кіріңіз.</string>
+    <string name="library_error_not_found">Бұл кітапхана серверде енді жоқ.</string>
+    <string name="library_error_server">Сервер қате қайтарды.</string>
+    <string name="library_error_server_with_code">Сервер қате қайтарды (%1$d).</string>
+    <string name="library_error_storage">Жергілікті деректерді оқу мүмкін болмады.</string>
+    <string name="library_error_unknown">Бұл кітапхананы жүктеу кезінде бірдеңе дұрыс болмады.</string>
+</resources>

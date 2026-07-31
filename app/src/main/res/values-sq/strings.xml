@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Më shumë opsione</string>
+    <string name="home_settings">Cilësimet</string>
+    <string name="settings_offline_mode">Mënyra jashtë linje</string>
+
+    <string name="state_on">Aktiv</string>
+    <string name="state_off">Joaktiv</string>
+
+    <string name="nav_home">Kryefaqja</string>
+    <string name="nav_libraries">Bibliotekat</string>
+    <string name="nav_search">Kërko</string>
+    <string name="nav_downloads">Shkarkimet</string>
+
+    <string name="offline_no_network">Nuk ka rrjet — po shfaqet media e shkarkuar</string>
+    <string name="offline_server_unreachable">Serveri nuk mund të arrihet — po shfaqet media e shkarkuar</string>
+    <string name="offline_forced">Mënyra jashtë linje është aktive — po shfaqet media e shkarkuar</string>
+    <string name="offline_retry">Provo përsëri</string>
+    <string name="offline_go_online">Kalo në linjë</string>
+
+    <string name="syncplay_groups_action">Grupet SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grupet SyncPlay — je në një grup</string>
+</resources>

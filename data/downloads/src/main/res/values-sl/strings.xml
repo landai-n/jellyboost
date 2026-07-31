@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Prenosi</string>
+    <string name="downloads_channel_description">Napredek prenosa vsebine na to napravo.</string>
+
+    <string name="downloads_notification_preparing">Priprava prenosov…</string>
+    <string name="downloads_notification_downloading">Prenašanje…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Prenašanje…</string>
+    <string name="downloads_action_pause">Premor</string>
+    <string name="downloads_action_cancel">Prekliči</string>
+</resources>

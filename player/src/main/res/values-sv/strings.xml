@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Stäng spelaren</string>
+    <string name="player_play">Spela upp</string>
+    <string name="player_pause">Pausa</string>
+    <string name="player_rewind">Hoppa bakåt 10 sekunder</string>
+    <string name="player_forward">Hoppa framåt 30 sekunder</string>
+
+    <string name="player_audio">Ljud</string>
+    <string name="player_subtitles">Undertexter</string>
+    <string name="player_subtitles_off">Av</string>
+    <string name="player_quality">Kvalitet</string>
+    <string name="player_speed">Hastighet</string>
+
+    <string name="player_skip_intro">Hoppa över intro</string>
+    <string name="player_skip_outro">Hoppa över outro</string>
+
+    <string name="player_quality_auto">Automatisk</string>
+    <string name="player_quality_high">Hög – 20 Mbps</string>
+    <string name="player_quality_medium">Medel – 8 Mbps</string>
+    <string name="player_quality_low">Låg – 3 Mbps</string>
+    <string name="player_quality_lowest">Lägst – 720 kbps</string>
+
+    <string name="player_method_direct_play">Direktuppspelning</string>
+    <string name="player_method_direct_stream">Direktströmning</string>
+    <string name="player_method_transcode">Omkodning</string>
+
+    <string name="player_message_transcode">Din enhet kunde inte avkoda den här filen, så servern omkodar den.</string>
+    <string name="player_message_lower_quality">Strömmen fastnade – försöker igen med lägre kvalitet.</string>
+    <string name="player_message_track_restart">Servern var tvungen att omkoda strömmen för det spåret.</string>
+    <string name="player_message_track_streaming">Det spåret finns inte i nedladdningen – strömmar det från din server.</string>
+    <string name="player_message_track_offline">Det spåret finns inte i den nedladdade filen.</string>
+    <string name="player_message_failed">Uppspelningen misslyckades.</string>
+
+    <string name="player_syncplay_group">Grupp</string>
+    <string name="player_syncplay_waiting">Väntar på grupp…</string>
+    <string name="player_syncplay_shuffle">Blanda kö</string>
+    <string name="player_syncplay_repeat">Upprepa</string>
+    <string name="player_syncplay_repeat_none">Av</string>
+    <string name="player_syncplay_repeat_one">Det här objektet</string>
+    <string name="player_syncplay_repeat_all">Hela kön</string>
+    <string name="player_syncplay_leave">Lämna gruppen</string>
+    <string name="player_syncplay_leave_title">Lämna den här gruppen?</string>
+    <string name="player_syncplay_leave_body">Uppspelningen fortsätter här på egen hand. Att gå med igen innebär att välja gruppen på nytt.</string>
+
+    <string name="player_syncplay_cancel">Avbryt</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d person tittar</item>
+        <item quantity="other">%d personer tittar</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d till</string>
+
+    <string name="player_syncplay_queue">Kö</string>
+    <string name="player_syncplay_queue_empty">Gruppen har inte köat något än.</string>
+    <string name="player_syncplay_queue_item_loading">Läser in…</string>
+    <string name="player_syncplay_queue_playing">Spelas nu</string>
+    <string name="player_syncplay_queue_next">Nästa objekt</string>
+    <string name="player_syncplay_queue_previous">Föregående objekt</string>
+    <string name="player_syncplay_queue_move_up">Flytta upp</string>
+    <string name="player_syncplay_queue_move_down">Flytta ner</string>
+    <string name="player_syncplay_queue_remove">Ta bort från kön</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d objekt i kö</item>
+        <item quantity="other">%d objekt i kö</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Lämnade SyncPlay – anslutningen förlorades</string>
+    <string name="player_message_syncplay_rejoined">Gick med i SyncPlay-gruppen igen</string>
+    <string name="player_message_syncplay_join_failed">Kunde inte gå med i den SyncPlay-gruppen.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay-gruppen har avslutats.</string>
+    <string name="player_message_syncplay_removed">Du är inte längre med i SyncPlay-gruppen.</string>
+    <string name="player_message_syncplay_library_denied">Gruppen tittar på något du inte har åtkomst till.</string>
+    <string name="player_message_syncplay_item_unavailable">Kunde inte öppna det gruppen tittar på.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Tillbaka</string>
+    <string name="player_syncplay_groups_home">Hem</string>
+    <string name="player_syncplay_groups_create">Skapa grupp</string>
+    <string name="player_syncplay_groups_create_title">Namnge din grupp</string>
+    <string name="player_syncplay_groups_create_hint">Gruppnamn</string>
+    <string name="player_syncplay_groups_create_confirm">Skapa</string>
+    <string name="player_syncplay_groups_joining">Går med…</string>
+    <string name="player_syncplay_groups_active_label">Du är med i den här gruppen</string>
+    <string name="player_syncplay_groups_open_player">Öppna spelaren</string>
+    <string name="player_syncplay_groups_empty">Ingen annan tittar tillsammans just nu.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay är inaktiverat för ditt konto.</string>
+    <string name="player_syncplay_groups_error">Kunde inte läsa in SyncPlay-grupper.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-grupp</string>
+    <string name="player_syncplay_presence_channel_description">Behåller din plats i en gemensam tittargrupp medan appen körs i bakgrunden.</string>
+    <string name="player_syncplay_presence_title">I en SyncPlay-grupp</string>
+    <string name="player_syncplay_presence_text">Väntar på gruppen</string>
+    <string name="player_syncplay_presence_leave">Lämna</string>
+
+    <string name="player_syncplay_state_idle">Inaktiv</string>
+    <string name="player_syncplay_state_waiting">Väntar</string>
+    <string name="player_syncplay_state_paused">Pausad</string>
+    <string name="player_syncplay_state_playing">Spelar upp</string>
+
+    <string name="player_cast">Casta till en enhet</string>
+
+    <string name="player_cast_device_unnamed">din tv</string>
+    <string name="player_message_cast_transferred">Spelas nu upp på %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Lämnade SyncPlay-gruppen för att casta till %1$s.</string>
+    <string name="player_message_cast_failed">Kunde inte spela upp det på %1$s.</string>
+
+    <string name="player_casting_to">Castar till %1$s</string>
+</resources>

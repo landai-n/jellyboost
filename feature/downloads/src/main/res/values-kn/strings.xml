@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ಡೌನ್‌ಲೋಡ್ ಆಗಿದೆ</string>
+    <string name="downloads_tab_queue">ಸರತಿ</string>
+    <string name="downloads_wifi_only">ಕೇವಲ Wi‑Fi</string>
+
+    <string name="downloads_group_movies">ಚಲನಚಿತ್ರಗಳು</string>
+
+    <string name="downloads_storage_summary">%1$s ಬಳಕೆಯಾಗಿದೆ · %2$s ಖಾಲಿ ಇದೆ</string>
+
+    <string name="downloads_action_delete">ಡೌನ್‌ಲೋಡ್ ಅಳಿಸಿ</string>
+    <string name="downloads_action_cancel">ಡೌನ್‌ಲೋಡ್ ರದ್ದುಮಾಡಿ</string>
+    <string name="downloads_action_pause">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಳಿಸಿ</string>
+    <string name="downloads_action_resume">ಡೌನ್‌ಲೋಡ್ ಮುಂದುವರಿಸಿ</string>
+    <string name="downloads_action_move_up">ಸರತಿಯಲ್ಲಿ ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
+    <string name="downloads_action_move_down">ಸರತಿಯಲ್ಲಿ ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>
+
+    <string name="downloads_action_pause_all">ಎಲ್ಲವನ್ನೂ ವಿರಾಮಗೊಳಿಸಿ</string>
+    <string name="downloads_action_resume_all">ಎಲ್ಲವನ್ನೂ ಮುಂದುವರಿಸಿ</string>
+    <string name="downloads_action_cancel_all">ಎಲ್ಲವನ್ನೂ ರದ್ದುಮಾಡಿ</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">ಈ ಡೌನ್‌ಲೋಡ್ ಅನ್ನು ರದ್ದುಮಾಡುವುದೇ?</item>
+        <item quantity="other">ಎಲ್ಲಾ %1$d ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ರದ್ದುಮಾಡುವುದೇ?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">ಸರತಿಯನ್ನು ಖಾಲಿ ಮಾಡಲಾಗುತ್ತದೆ ಮತ್ತು ಭಾಗಶಃ ಡೌನ್‌ಲೋಡ್ ಆದ ಫೈಲ್‌ಗಳನ್ನು ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ. ಮುಗಿದ ಡೌನ್‌ಲೋಡ್‌ಗಳ ಮೇಲೆ ಪರಿಣಾಮ ಬೀರುವುದಿಲ್ಲ.</string>
+    <string name="downloads_cancel_all_dialog_confirm">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ರದ್ದುಮಾಡಿ</string>
+    <string name="downloads_cancel_all_dialog_dismiss">ಇರಿಸಿ</string>
+
+    <string name="downloads_delete_dialog_title">%1$s ಅಳಿಸುವುದೇ?</string>
+    <string name="downloads_delete_dialog_message">ಡೌನ್‌ಲೋಡ್ ಆದ ಫೈಲ್‌ಗಳನ್ನು ಈ ಸಾಧನದಿಂದ ತೆಗೆದುಹಾಕಲಾಗುತ್ತದೆ. ನೀವು ನಂತರ ಅದನ್ನು ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</string>
+    <string name="downloads_delete_dialog_confirm">ಅಳಿಸಿ</string>
+    <string name="downloads_delete_dialog_cancel">ರದ್ದುಮಾಡಿ</string>
+
+    <string name="downloads_progress_of">%2$s ರಲ್ಲಿ %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s ರಲ್ಲಿ %1$s</string>
+    <string name="downloads_progress_of_capped">%1$s (%2$s ವರೆಗೆ)</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s ವರೆಗೆ</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s ಬಾಕಿ</string>
+    <string name="downloads_eta_approx">~%1$s ಬಾಕಿ</string>
+    <string name="downloads_transcoded_marker">ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಆಗಿದೆ</string>
+    <string name="downloads_status_queued">ಕಾಯುತ್ತಿದೆ</string>
+    <string name="downloads_status_paused">ವಿರಾಮಗೊಂಡಿದೆ</string>
+    <string name="downloads_status_failed">ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ</string>
+    <string name="downloads_status_failed_reason">ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ: %1$s</string>
+
+    <string name="downloads_empty_downloaded">ಇನ್ನೂ ಏನನ್ನೂ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿಲ್ಲ. ಚಲನಚಿತ್ರ ಅಥವಾ ಸಂಚಿಕೆಯನ್ನು ಈ ಸಾಧನದಲ್ಲಿ ಇರಿಸಲು ಡೌನ್‌ಲೋಡ್ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+    <string name="downloads_empty_queue">ಡೌನ್‌ಲೋಡ್ ಸರತಿ ಖಾಲಿ ಇದೆ.</string>
+    <string name="downloads_load_failed">ನಿಮ್ಮ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲು ಈ ಪರದೆಯನ್ನು ಮತ್ತೆ ತೆರೆಯಿರಿ.</string>
+    <string name="downloads_message_delete_failed">ಆ ಡೌನ್‌ಲೋಡ್ ಅಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="downloads_message_action_failed">ಸರತಿಯನ್ನು ನವೀಕರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ — %2$d ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಲೇ ಇದೆ (ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಅನ್ನು ವಿರಾಮಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ).</item>
+        <item quantity="other">%1$d ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ — %2$d ಟ್ರಾನ್ಸ್‌ಕೋಡ್‌ಗಳು ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಲೇ ಇವೆ (ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಅನ್ನು ವಿರಾಮಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ).</item>
+    </plurals>
+</resources>

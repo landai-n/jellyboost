@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Још опција</string>
+    <string name="home_settings">Подешавања</string>
+    <string name="settings_offline_mode">Режим рада ван мреже</string>
+
+    <string name="state_on">Укључено</string>
+    <string name="state_off">Искључено</string>
+
+    <string name="nav_home">Почетна</string>
+    <string name="nav_libraries">Библиотеке</string>
+    <string name="nav_search">Претрага</string>
+    <string name="nav_downloads">Преузимања</string>
+
+    <string name="offline_no_network">Нема мреже — приказује се преузети садржај</string>
+    <string name="offline_server_unreachable">Сервер није доступан — приказује се преузети садржај</string>
+    <string name="offline_forced">Режим рада ван мреже је укључен — приказује се преузети садржај</string>
+    <string name="offline_retry">Покушај поново</string>
+    <string name="offline_go_online">Пређи на мрежу</string>
+
+    <string name="syncplay_groups_action">SyncPlay групе</string>
+    <string name="syncplay_groups_action_active">SyncPlay групе — у групи сте</string>
+</resources>

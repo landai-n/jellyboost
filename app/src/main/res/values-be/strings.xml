@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Дадатковыя параметры</string>
+    <string name="home_settings">Налады</string>
+    <string name="settings_offline_mode">Аўтаномны рэжым</string>
+
+    <string name="state_on">Уключана</string>
+    <string name="state_off">Выключана</string>
+
+    <string name="nav_home">Галоўная</string>
+    <string name="nav_libraries">Бібліятэкі</string>
+    <string name="nav_search">Пошук</string>
+    <string name="nav_downloads">Спампоўкі</string>
+
+    <string name="offline_no_network">Няма сеткі — паказваюцца спампаваныя медыя</string>
+    <string name="offline_server_unreachable">Немагчыма звязацца з серверам — паказваюцца спампаваныя медыя</string>
+    <string name="offline_forced">Уключаны аўтаномны рэжым — паказваюцца спампаваныя медыя</string>
+    <string name="offline_retry">Паўтарыць</string>
+    <string name="offline_go_online">Перайсці ў сетку</string>
+
+    <string name="syncplay_groups_action">Групы SyncPlay</string>
+    <string name="syncplay_groups_action_active">Групы SyncPlay — вы ў групе</string>
+</resources>

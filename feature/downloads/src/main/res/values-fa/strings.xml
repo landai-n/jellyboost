@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">دانلود شده</string>
+    <string name="downloads_tab_queue">صف</string>
+    <string name="downloads_wifi_only">فقط Wi‑Fi</string>
+
+    <string name="downloads_group_movies">فیلم‌ها</string>
+
+    <string name="downloads_storage_summary">%1$s استفاده شده · %2$s آزاد</string>
+
+    <string name="downloads_action_delete">حذف دانلود</string>
+    <string name="downloads_action_cancel">لغو دانلود</string>
+    <string name="downloads_action_pause">توقف موقت دانلود</string>
+    <string name="downloads_action_resume">ازسرگیری دانلود</string>
+    <string name="downloads_action_move_up">انتقال به بالای صف</string>
+    <string name="downloads_action_move_down">انتقال به پایین صف</string>
+
+    <string name="downloads_action_pause_all">توقف موقت همه</string>
+    <string name="downloads_action_resume_all">ازسرگیری همه</string>
+    <string name="downloads_action_cancel_all">لغو همه</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">این دانلود لغو شود؟</item>
+        <item quantity="other">همه %1$d دانلود لغو شود؟</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">صف خالی می‌شود و فایل‌های نیمه‌دانلودشده حذف می‌شوند. دانلودهای تمام‌شده تحت تأثیر قرار نمی‌گیرند.</string>
+    <string name="downloads_cancel_all_dialog_confirm">لغو دانلودها</string>
+    <string name="downloads_cancel_all_dialog_dismiss">نگه‌داشتن</string>
+
+    <string name="downloads_delete_dialog_title">%1$s حذف شود؟</string>
+    <string name="downloads_delete_dialog_message">فایل‌های دانلودشده از این دستگاه حذف می‌شوند. می‌توانید بعداً دوباره آن را دانلود کنید.</string>
+    <string name="downloads_delete_dialog_confirm">حذف</string>
+    <string name="downloads_delete_dialog_cancel">لغو</string>
+
+    <string name="downloads_progress_of">%1$s از %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s از ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s از حداکثر %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">حداکثر %1$s</string>
+    <string name="downloads_speed">%1$s/ثانیه</string>
+    <string name="downloads_eta">%1$s مانده</string>
+    <string name="downloads_eta_approx">~%1$s مانده</string>
+    <string name="downloads_transcoded_marker">ترنسکد شده</string>
+    <string name="downloads_status_queued">در انتظار</string>
+    <string name="downloads_status_paused">متوقف شده</string>
+    <string name="downloads_status_failed">دانلود ناموفق بود</string>
+    <string name="downloads_status_failed_reason">دانلود ناموفق بود: %1$s</string>
+
+    <string name="downloads_empty_downloaded">هنوز چیزی دانلود نشده است. برای نگه‌داشتن یک فیلم یا قسمت روی این دستگاه، روی دانلود ضربه بزنید.</string>
+    <string name="downloads_empty_queue">صف دانلود خالی است.</string>
+    <string name="downloads_load_failed">خواندن دانلودهای شما ممکن نبود. این صفحه را دوباره باز کنید تا دوباره امتحان شود.</string>
+    <string name="downloads_message_delete_failed">حذف این دانلود ممکن نبود.</string>
+    <string name="downloads_message_action_failed">به‌روزرسانی صف ممکن نبود.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d مورد متوقف شد — %2$d ترنسکد همچنان در حال دانلود است (ترنسکد را نمی‌توان متوقف کرد).</item>
+        <item quantity="other">%1$d مورد متوقف شد — %2$d ترنسکد همچنان در حال دانلود هستند (ترنسکد را نمی‌توان متوقف کرد).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">మరిన్ని ఎంపికలు</string>
+    <string name="home_settings">సెట్టింగ్‌లు</string>
+    <string name="settings_offline_mode">ఆఫ్‌లైన్ మోడ్</string>
+
+    <string name="state_on">ఆన్</string>
+    <string name="state_off">ఆఫ్</string>
+
+    <string name="nav_home">హోమ్</string>
+    <string name="nav_libraries">లైబ్రరీలు</string>
+    <string name="nav_search">శోధన</string>
+    <string name="nav_downloads">డౌన్‌లోడ్‌లు</string>
+
+    <string name="offline_no_network">నెట్‌వర్క్ లేదు — డౌన్‌లోడ్ చేసిన మీడియా చూపిస్తోంది</string>
+    <string name="offline_server_unreachable">సర్వర్‌ను చేరుకోలేకపోయాం — డౌన్‌లోడ్ చేసిన మీడియా చూపిస్తోంది</string>
+    <string name="offline_forced">ఆఫ్‌లైన్ మోడ్ ఆన్‌లో ఉంది — డౌన్‌లోడ్ చేసిన మీడియా చూపిస్తోంది</string>
+    <string name="offline_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="offline_go_online">ఆన్‌లైన్‌కు వెళ్లండి</string>
+
+    <string name="syncplay_groups_action">SyncPlay గ్రూపులు</string>
+    <string name="syncplay_groups_action_active">SyncPlay గ్రూపులు — మీరు ఒక గ్రూప్‌లో ఉన్నారు</string>
+</resources>

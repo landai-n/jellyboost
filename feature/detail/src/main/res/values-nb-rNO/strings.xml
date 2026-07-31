@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Tilbake</string>
+    <string name="detail_home">Hjem</string>
+    <string name="detail_play">Spill av</string>
+    <string name="detail_resume">Fortsett</string>
+    <string name="detail_download">Last ned</string>
+    <string name="detail_download_cancel">Avbryt</string>
+    <string name="detail_download_remove">Fjern</string>
+    <string name="detail_download_retry">Prøv igjen</string>
+    <string name="detail_play_episode">Spill av denne episoden</string>
+    <string name="detail_mark_watched">Merk som sett</string>
+    <string name="detail_mark_unwatched">Merk som usett</string>
+    <string name="detail_add_favorite">Legg til i favoritter</string>
+    <string name="detail_remove_favorite">Fjern fra favoritter</string>
+
+    <string name="detail_section_seasons">Sesonger</string>
+    <string name="detail_section_next_up">Neste</string>
+    <string name="detail_section_episodes">Episoder</string>
+    <string name="detail_section_similar">Mer som dette</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min igjen</string>
+    <string name="detail_size_on_device">%1$s på enheten</string>
+    <string name="detail_directed_by">Regissert av %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sesong</item>
+        <item quantity="other">%1$d sesonger</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episoder</item>
+    </plurals>
+
+    <string name="detail_empty">Dette elementet er ikke lenger tilgjengelig.</string>
+    <string name="detail_message_download_queued">Lagt til i nedlastinger.</string>
+    <string name="detail_message_download_failed">Kunne ikke starte den nedlastingen.</string>
+    <string name="detail_message_download_deleted">Fjernet fra denne enheten.</string>
+    <string name="detail_message_download_delete_failed">Kunne ikke fjerne den nedlastingen.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Nedlasting avbrutt – %1$d fullført episode beholdt.</item>
+        <item quantity="other">Nedlasting avbrutt – %1$d fullførte episoder beholdt.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Kunne ikke lagre det. Prøv igjen.</string>
+
+    <string name="detail_group_play">Spill av for %1$s</string>
+    <string name="detail_group_resume">Fortsett for %1$s</string>
+    <string name="detail_group_play_next">Spill av neste</string>
+    <string name="detail_group_add_to_queue">Legg til i køen</string>
+    <string name="detail_message_group_play">Ba gruppen spille av dette.</string>
+    <string name="detail_message_group_play_next">Lagt i kø som neste for gruppen.</string>
+    <string name="detail_message_group_queued">Lagt til i gruppens kø.</string>
+
+    <string name="detail_delete_download_dialog_title">Slette nedlasting?</string>
+    <string name="detail_delete_download_dialog_message">Dette fjerner den fra denne enheten. Du kan laste den ned igjen når som helst.</string>
+    <string name="detail_delete_download_dialog_confirm">Slett</string>
+    <string name="detail_delete_download_dialog_cancel">Avbryt</string>
+</resources>

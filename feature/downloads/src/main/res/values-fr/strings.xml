@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Téléchargés</string>
+    <string name="downloads_tab_queue">File d\'attente</string>
+    <string name="downloads_wifi_only">Wi‑Fi uniquement</string>
+    <string name="downloads_group_movies">Films</string>
+    <string name="downloads_storage_summary">%1$s utilisés · %2$s libres</string>
+    <string name="downloads_action_delete">Supprimer le téléchargement</string>
+    <string name="downloads_action_cancel">Annuler le téléchargement</string>
+    <string name="downloads_action_pause">Suspendre le téléchargement</string>
+    <string name="downloads_action_resume">Reprendre le téléchargement</string>
+    <string name="downloads_action_move_up">Monter dans la file d\'attente</string>
+    <string name="downloads_action_move_down">Descendre dans la file d\'attente</string>
+    <string name="downloads_action_pause_all">Tout suspendre</string>
+    <string name="downloads_action_resume_all">Tout reprendre</string>
+    <string name="downloads_action_cancel_all">Tout annuler</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Annuler ce téléchargement ?</item>
+        <item quantity="other">Annuler les %1$d téléchargements ?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">La file d\'attente est vidée et les fichiers partiellement téléchargés sont supprimés. Les téléchargements terminés ne sont pas concernés.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Annuler les téléchargements</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Conserver</string>
+    <string name="downloads_delete_dialog_title">Supprimer %1$s ?</string>
+    <string name="downloads_delete_dialog_message">Les fichiers téléchargés sont supprimés de cet appareil. Vous pouvez le retélécharger plus tard.</string>
+    <string name="downloads_delete_dialog_confirm">Supprimer</string>
+    <string name="downloads_delete_dialog_cancel">Annuler</string>
+    <string name="downloads_progress_of">%1$s sur %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s sur ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s sur %2$s max.</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">jusqu\'à %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s restantes</string>
+    <string name="downloads_eta_approx">~%1$s restantes</string>
+    <string name="downloads_transcoded_marker">Transcodé</string>
+    <string name="downloads_status_queued">En attente</string>
+    <string name="downloads_status_paused">En pause</string>
+    <string name="downloads_status_failed">Échec du téléchargement</string>
+    <string name="downloads_status_failed_reason">Échec du téléchargement : %1$s</string>
+    <string name="downloads_empty_downloaded">Rien n\'a encore été téléchargé. Appuyez sur Télécharger sur un film ou un épisode pour le conserver sur cet appareil.</string>
+    <string name="downloads_empty_queue">La file d\'attente des téléchargements est vide.</string>
+    <string name="downloads_load_failed">Impossible de lire vos téléchargements. Rouvrez cet écran pour réessayer.</string>
+    <string name="downloads_message_delete_failed">Impossible de supprimer ce téléchargement.</string>
+    <string name="downloads_message_action_failed">Impossible de mettre à jour la file d\'attente.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d suspendu — %2$d transcodage continue (un transcodage ne peut pas être suspendu).</item>
+        <item quantity="other">%1$d suspendus — %2$d transcodages continuent (un transcodage ne peut pas être suspendu).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Головна</string>
+
+    <string name="settings_section_playback">Відтворення</string>
+    <string name="settings_skip_intro">Пропускати заставку</string>
+    <string name="settings_skip_outro">Пропускати завершення</string>
+    <string name="settings_skip_mode_off">Нічого не робити</string>
+    <string name="settings_skip_mode_show_button">Показувати кнопку пропуску</string>
+    <string name="settings_skip_mode_auto">Пропускати автоматично</string>
+    <string name="settings_pip">Картинка в картинці</string>
+    <string name="settings_pip_supporting">Продовжувати відтворення в плаваючому вікні, коли ви виходите з застосунку.</string>
+
+    <string name="settings_section_downloads">Завантаження</string>
+    <string name="settings_wifi_only">Лише Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Призупиняти завантаження в мобільній мережі.</string>
+    <string name="settings_quality">Якість завантаження</string>
+    <string name="settings_quality_original">Оригінальний файл — точна копія, можна відновити</string>
+    <string name="settings_quality_high">Висока — приблизно 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Середня — приблизно 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Низька — приблизно 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Усе, крім оригінального файлу, конвертується сервером під час передавання, тому розмір під час завантаження є приблизним, а перервана передача починається спочатку.</string>
+    <string name="settings_storage_label">Сховище</string>
+    <string name="settings_storage_summary">%1$s використано · %2$s вільно на цьому пристрої</string>
+    <string name="settings_storage_location">Завантаження зберігаються в %1$s</string>
+    <string name="settings_storage_picker">Місце зберігання</string>
+    <string name="settings_storage_internal">Внутрішня пам’ять</string>
+    <string name="settings_storage_sd_card">SD-карта</string>
+    <string name="settings_storage_volume_free">%1$s вільно</string>
+    <string name="settings_storage_missing">Обране вами сховище зараз недоступне, тому завантаження виконуються в місце, вибране нижче.</string>
+    <string name="settings_storage_switch_title">Перемістити завантаження?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Завантаження поки не можна переміщати між сховищами, тому те, що вже є на цьому пристрої, буде видалено. Ви зможете завантажити його знову в нове місце.</item>
+        <item quantity="few">Завантаження поки не можна переміщати між сховищами, тому %1$d, які вже є на цьому пристрої, будуть видалені. Ви зможете завантажити їх знову в нове місце.</item>
+        <item quantity="many">Завантаження поки не можна переміщати між сховищами, тому %1$d, які вже є на цьому пристрої, будуть видалені. Ви зможете завантажити їх знову в нове місце.</item>
+        <item quantity="other">Завантаження поки не можна переміщати між сховищами, тому %1$d, які вже є на цьому пристрої, будуть видалені. Ви зможете завантажити їх знову в нове місце.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Видалити і перемкнути</string>
+
+    <string name="settings_section_connectivity">З’єднання</string>
+    <string name="settings_offline_mode">Автономний режим</string>
+    <string name="settings_offline_mode_supporting">Показувати лише медіа, які вже є на цьому пристрої.</string>
+
+    <string name="settings_section_account">Обліковий запис</string>
+    <string name="settings_account_user">Виконано вхід як</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Не ввійшли</string>
+    <string name="settings_sign_out">Вийти</string>
+    <string name="settings_sign_out_dialog_title">Вийти?</string>
+    <string name="settings_sign_out_dialog_message">Вам знадобляться адреса сервера та пароль, щоб увійти знову.</string>
+    <string name="settings_sign_out_delete_downloads">Також видалити завантаження з цього пристрою</string>
+    <string name="settings_cancel">Скасувати</string>
+</resources>

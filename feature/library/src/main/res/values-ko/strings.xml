@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">아직 라이브러리가 없습니다. 서버에서 하나를 추가하세요.</string>
+
+    <string name="library_back">뒤로</string>
+    <string name="library_home">홈</string>
+    <string name="library_sort">정렬</string>
+    <string name="library_filter">필터</string>
+
+    <string name="library_sort_title">정렬 기준</string>
+    <string name="library_sort_name">이름</string>
+    <string name="library_sort_date_added">추가된 날짜</string>
+    <string name="library_sort_premiere_date">발매일</string>
+    <string name="library_sort_community_rating">커뮤니티 평점</string>
+    <string name="library_sort_runtime">재생 시간</string>
+    <string name="library_sort_random">무작위</string>
+    <string name="library_sort_direction">정렬 방향</string>
+    <string name="library_sort_ascending">오름차순</string>
+    <string name="library_sort_descending">내림차순</string>
+
+    <string name="library_filters_title">필터</string>
+    <string name="library_filters_genres">장르</string>
+    <string name="library_filters_years">연도</string>
+    <string name="library_filters_played">시청 여부</string>
+    <string name="library_filters_played_any">전체</string>
+    <string name="library_filters_played_yes">시청함</string>
+    <string name="library_filters_played_no">시청 안 함</string>
+    <string name="library_filters_clear">전체 지우기</string>
+    <string name="library_filters_apply">결과 보기</string>
+    <string name="library_filters_none">이 라이브러리에는 필터링할 항목이 없습니다.</string>
+    <string name="library_filters_loading">필터를 불러오는 중…</string>
+
+    <string name="library_empty">표시할 내용이 없습니다.</string>
+    <string name="library_empty_filtered">이 필터와 일치하는 항목이 없습니다.</string>
+    <string name="library_empty_clear_filters">필터 지우기</string>
+    <string name="library_retry">다시 시도</string>
+
+    <string name="library_error_network">서버에 연결할 수 없습니다. 연결을 확인한 후 다시 시도하세요.</string>
+    <string name="library_error_unauthorized">세션이 만료되었습니다. 계속하려면 다시 로그인하세요.</string>
+    <string name="library_error_not_found">해당 라이브러리는 더 이상 서버에 없습니다.</string>
+    <string name="library_error_server">서버에서 오류를 반환했습니다.</string>
+    <string name="library_error_server_with_code">서버에서 오류를 반환했습니다 (%1$d).</string>
+    <string name="library_error_storage">로컬 데이터를 읽을 수 없습니다.</string>
+    <string name="library_error_unknown">이 라이브러리를 불러오는 중 문제가 발생했습니다.</string>
+</resources>

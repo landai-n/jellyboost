@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Back</string>
+    <string name="detail_home">Home</string>
+    <string name="detail_play">Play</string>
+    <string name="detail_resume">Resume</string>
+    <string name="detail_download">Download</string>
+    <string name="detail_download_cancel">Cancel</string>
+    <string name="detail_download_remove">Remove</string>
+    <string name="detail_download_retry">Retry</string>
+    <string name="detail_play_episode">Play this episode</string>
+    <string name="detail_mark_watched">Mark watched</string>
+    <string name="detail_mark_unwatched">Mark unwatched</string>
+    <string name="detail_add_favorite">Add to favourites</string>
+    <string name="detail_remove_favorite">Remove from favourites</string>
+    <string name="detail_section_seasons">Seasons</string>
+    <string name="detail_section_next_up">Next up</string>
+    <string name="detail_section_episodes">Episodes</string>
+    <string name="detail_section_similar">More like this</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min left</string>
+    <string name="detail_size_on_device">%1$s on device</string>
+    <string name="detail_directed_by">Directed by %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d season</item>
+        <item quantity="other">%1$d seasons</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <string name="detail_empty">This item is no longer available.</string>
+    <string name="detail_message_download_queued">Added to downloads.</string>
+    <string name="detail_message_download_failed">Couldn\'t start that download.</string>
+    <string name="detail_message_download_deleted">Removed from this device.</string>
+    <string name="detail_message_download_delete_failed">Couldn\'t remove that download.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Download cancelled — %1$d finished episode kept.</item>
+        <item quantity="other">Download cancelled — %1$d finished episodes kept.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
+    <string name="detail_group_play">Play for %1$s</string>
+    <string name="detail_group_resume">Resume for %1$s</string>
+    <string name="detail_group_play_next">Play next</string>
+    <string name="detail_group_add_to_queue">Add to queue</string>
+    <string name="detail_message_group_play">Asked the group to play this.</string>
+    <string name="detail_message_group_play_next">Queued next for the group.</string>
+    <string name="detail_message_group_queued">Added to the group\'s queue.</string>
+    <string name="detail_delete_download_dialog_title">Delete download?</string>
+    <string name="detail_delete_download_dialog_message">This removes it from this device. You can download it again anytime.</string>
+    <string name="detail_delete_download_dialog_confirm">Delete</string>
+    <string name="detail_delete_download_dialog_cancel">Cancel</string>
+</resources>

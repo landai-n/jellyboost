@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Изтеглено</string>
+    <string name="downloads_tab_queue">Опашка</string>
+    <string name="downloads_wifi_only">Само Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Филми</string>
+
+    <string name="downloads_storage_summary">%1$s използвани · %2$s свободни</string>
+
+    <string name="downloads_action_delete">Изтрий изтеглянето</string>
+    <string name="downloads_action_cancel">Отказ на изтеглянето</string>
+    <string name="downloads_action_pause">Пауза на изтеглянето</string>
+    <string name="downloads_action_resume">Продължи изтеглянето</string>
+    <string name="downloads_action_move_up">Премести нагоре в опашката</string>
+    <string name="downloads_action_move_down">Премести надолу в опашката</string>
+
+    <string name="downloads_action_pause_all">Пауза на всички</string>
+    <string name="downloads_action_resume_all">Продължи всички</string>
+    <string name="downloads_action_cancel_all">Отказ на всички</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Да се отмени ли това изтегляне?</item>
+        <item quantity="other">Да се отменят ли всички %1$d изтегляния?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Опашката се изпразва и всички частично изтеглени файлове се премахват. Завършените изтегляния не се засягат.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Отмени изтеглянията</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Запази</string>
+
+    <string name="downloads_delete_dialog_title">Да се изтрие ли %1$s?</string>
+    <string name="downloads_delete_dialog_message">Изтеглените файлове се премахват от това устройство. Можете да го изтеглите отново по-късно.</string>
+    <string name="downloads_delete_dialog_confirm">Изтрий</string>
+    <string name="downloads_delete_dialog_cancel">Отказ</string>
+
+    <string name="downloads_progress_of">%1$s от %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s от ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s от максимум %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">до %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Остават %1$s</string>
+    <string name="downloads_eta_approx">Остават ~%1$s</string>
+    <string name="downloads_transcoded_marker">Транскодирано</string>
+    <string name="downloads_status_queued">Чака</string>
+    <string name="downloads_status_paused">Паузирано</string>
+    <string name="downloads_status_failed">Изтеглянето е неуспешно</string>
+    <string name="downloads_status_failed_reason">Изтеглянето е неуспешно: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Все още нищо не е изтеглено. Докоснете Изтегли на филм или епизод, за да го запазите на устройството.</string>
+    <string name="downloads_empty_queue">Опашката за изтегляне е празна.</string>
+    <string name="downloads_load_failed">Изтеглянията не можаха да се заредят. Отворете отново този екран, за да опитате пак.</string>
+    <string name="downloads_message_delete_failed">Не можа да се изтрие това изтегляне.</string>
+    <string name="downloads_message_action_failed">Опашката не можа да се обнови.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Паузирани %1$d — %2$d транскодиране продължава да се изтегля (транскодиране не може да се паузира).</item>
+        <item quantity="other">Паузирани %1$d — %2$d транскодирания продължават да се изтеглят (транскодиране не може да се паузира).</item>
+    </plurals>
+</resources>

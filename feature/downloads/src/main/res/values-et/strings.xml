@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Alla laaditud</string>
+    <string name="downloads_tab_queue">Järjekord</string>
+    <string name="downloads_wifi_only">Ainult Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmid</string>
+
+    <string name="downloads_storage_summary">%1$s kasutatud · %2$s vaba</string>
+
+    <string name="downloads_action_delete">Kustuta allalaadimine</string>
+    <string name="downloads_action_cancel">Tühista allalaadimine</string>
+    <string name="downloads_action_pause">Peata allalaadimine</string>
+    <string name="downloads_action_resume">Jätka allalaadimist</string>
+    <string name="downloads_action_move_up">Liiguta järjekorras üles</string>
+    <string name="downloads_action_move_down">Liiguta järjekorras alla</string>
+
+    <string name="downloads_action_pause_all">Peata kõik</string>
+    <string name="downloads_action_resume_all">Jätka kõiki</string>
+    <string name="downloads_action_cancel_all">Tühista kõik</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Tühistada see allalaadimine?</item>
+        <item quantity="other">Tühistada kõik %1$d allalaadimist?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Järjekord tühjendatakse ja kõik osaliselt allalaaditud failid eemaldatakse. Valminud allalaadimisi see ei mõjuta.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Tühista allalaadimised</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Säilita</string>
+
+    <string name="downloads_delete_dialog_title">Kustutada %1$s?</string>
+    <string name="downloads_delete_dialog_message">Allalaaditud failid eemaldatakse sellest seadmest. Saad selle hiljem uuesti alla laadida.</string>
+    <string name="downloads_delete_dialog_confirm">Kustuta</string>
+    <string name="downloads_delete_dialog_cancel">Tühista</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / kuni %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">kuni %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s jäänud</string>
+    <string name="downloads_eta_approx">~%1$s jäänud</string>
+    <string name="downloads_transcoded_marker">Ümber kodeeritud</string>
+    <string name="downloads_status_queued">Ootel</string>
+    <string name="downloads_status_paused">Peatatud</string>
+    <string name="downloads_status_failed">Allalaadimine ebaõnnestus</string>
+    <string name="downloads_status_failed_reason">Allalaadimine ebaõnnestus: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Veel pole midagi alla laaditud. Puuduta filmi või osa juures nuppu Laadi alla, et hoida seda sellel seadmel.</string>
+    <string name="downloads_empty_queue">Allalaadimiste järjekord on tühi.</string>
+    <string name="downloads_load_failed">Sinu allalaadimisi ei õnnestunud lugeda. Ava see ekraan uuesti, et proovida uuesti.</string>
+    <string name="downloads_message_delete_failed">Selle allalaadimise kustutamine ebaõnnestus.</string>
+    <string name="downloads_message_action_failed">Järjekorra uuendamine ebaõnnestus.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d peatatud – %2$d ümberkodeering jätkab allalaadimist (ümberkodeeringut ei saa peatada).</item>
+        <item quantity="other">%1$d peatatud – %2$d ümberkodeeringut jätkavad allalaadimist (ümberkodeeringuid ei saa peatada).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">სერვერთან დაკავშირება</string>
+    <string name="server_setup_discovered_title">სერვერები ამ ქსელში</string>
+    <string name="server_setup_discovering">მიმდინარეობს ლოკალური ქსელის ძიება…</string>
+    <string name="server_setup_no_servers_found">არცერთმა სერვერმა არ განაცხადა თავი. შეიყვანეთ მისამართი ქვემოთ.</string>
+    <string name="server_setup_manual_title">სერვერის მისამართი</string>
+    <string name="server_setup_address_label">ჰოსტი ან URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ან 192.168.1.10:8096</string>
+    <string name="server_setup_connect">დაკავშირება</string>
+    <string name="server_setup_connecting">სერვერთან დაკავშირება მიმდინარეობს…</string>
+    <string name="server_setup_session_lost">თქვენი შენახული ავტორიზაცია ვერ აღდგა, ამიტომ სისტემიდან გამოხვედით. გთხოვთ, ხელახლა შეხვიდეთ.</string>
+    <string name="login_title">შესვლა</string>
+    <string name="login_server_version">ვერსია %1$s</string>
+    <string name="login_server_version_unknown">ვერსია უცნობია</string>
+    <string name="login_public_users_title">ვინ უყურებს?</string>
+    <string name="login_username_label">მომხმარებლის სახელი</string>
+    <string name="login_password_label">პაროლი</string>
+    <string name="login_show_password">პაროლის ჩვენება</string>
+    <string name="login_hide_password">პაროლის დამალვა</string>
+    <string name="login_sign_in">შესვლა</string>
+    <string name="login_change_server">სხვა სერვერის გამოყენება</string>
+    <string name="login_loading">სერვერის დეტალები იტვირთება…</string>
+    <string name="login_or">ან</string>
+    <string name="login_quick_connect">Quick Connect გამოყენება</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">გახსენით Jellyfin მოწყობილობაზე, სადაც უკვე ავტორიზებული ხართ, გადადით Quick Connect-ზე და შეიყვანეთ ეს კოდი.</string>
+    <string name="login_quick_connect_waiting">მოწონების მოლოდინში…</string>
+    <string name="login_quick_connect_cancel">გაუქმება</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">გამოცდილია %d კანდიდატი მისამართი, უშედეგოდ.</item>
+        <item quantity="other">გამოცდილია %d კანდიდატი მისამართი, უშედეგოდ.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">სერვერთან დაკავშირება ვერ ხერხდება</string>
+    <string name="auth_error_unsupported_version_or_product">მხარდაუჭერელი ვერსია ან პროდუქტი</string>
+    <string name="auth_error_cannot_connect">კავშირის დამყარება ვერ ხერხდება.\nშეამოწმეთ ჰოსტის სახელი და თქვენი ქსელის კავშირი.</string>
+    <string name="auth_error_invalid_credentials">მომხმარებლის სახელი ან პაროლი არასწორია.</string>
+    <string name="auth_error_quick_connect_expired">ეს კოდი ვადაგასულია. მოითხოვეთ ახალი და სცადეთ ხელახლა.</string>
+    <string name="auth_error_server">სერვერმა შეცდომით უპასუხა. სცადეთ ხელახლა.</string>
+    <string name="auth_error_server_with_code">სერვერმა შეცდომით უპასუხა (%1$d). სცადეთ ხელახლა.</string>
+</resources>

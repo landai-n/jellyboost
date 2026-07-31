@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Κλείσιμο αναπαραγωγού</string>
+    <string name="player_play">Αναπαραγωγή</string>
+    <string name="player_pause">Παύση</string>
+    <string name="player_rewind">Πίσω 10 δευτερόλεπτα</string>
+    <string name="player_forward">Μπροστά 30 δευτερόλεπτα</string>
+
+    <string name="player_audio">Ήχος</string>
+    <string name="player_subtitles">Υπότιτλοι</string>
+    <string name="player_subtitles_off">Ανενεργοί</string>
+    <string name="player_quality">Ποιότητα</string>
+    <string name="player_speed">Ταχύτητα</string>
+
+    <string name="player_skip_intro">Παράλειψη εισαγωγής</string>
+    <string name="player_skip_outro">Παράλειψη τίτλων τέλους</string>
+
+    <string name="player_quality_auto">Αυτόματη</string>
+    <string name="player_quality_high">Υψηλή — 20 Mbps</string>
+    <string name="player_quality_medium">Μεσαία — 8 Mbps</string>
+    <string name="player_quality_low">Χαμηλή — 3 Mbps</string>
+    <string name="player_quality_lowest">Χαμηλότερη — 720 kbps</string>
+
+    <string name="player_method_direct_play">Άμεση αναπαραγωγή</string>
+    <string name="player_method_direct_stream">Άμεση ροή</string>
+    <string name="player_method_transcode">Μετακωδικοποίηση</string>
+
+    <string name="player_message_transcode">Η συσκευή σας δεν μπόρεσε να αποκωδικοποιήσει αυτό το αρχείο, οπότε ο διακομιστής το μετακωδικοποιεί.</string>
+    <string name="player_message_lower_quality">Η ροή κόλλησε — νέα προσπάθεια με χαμηλότερη ποιότητα.</string>
+    <string name="player_message_track_restart">Ο διακομιστής χρειάστηκε να επανακωδικοποιήσει τη ροή για αυτό το κομμάτι.</string>
+    <string name="player_message_track_streaming">Αυτό το κομμάτι δεν βρίσκεται στη λήψη — μεταδίδεται από τον διακομιστή σας.</string>
+    <string name="player_message_track_offline">Αυτό το κομμάτι δεν βρίσκεται στο ληφθέν αρχείο.</string>
+    <string name="player_message_failed">Η αναπαραγωγή απέτυχε.</string>
+
+    <string name="player_syncplay_group">Ομάδα</string>
+    <string name="player_syncplay_waiting">Αναμονή ομάδας…</string>
+    <string name="player_syncplay_shuffle">Ανακάτεμα ουράς</string>
+    <string name="player_syncplay_repeat">Επανάληψη</string>
+    <string name="player_syncplay_repeat_none">Ανενεργή</string>
+    <string name="player_syncplay_repeat_one">Αυτό το στοιχείο</string>
+    <string name="player_syncplay_repeat_all">Όλη η ουρά</string>
+    <string name="player_syncplay_leave">Αποχώρηση από ομάδα</string>
+    <string name="player_syncplay_leave_title">Αποχώρηση από αυτή την ομάδα;</string>
+    <string name="player_syncplay_leave_body">Η αναπαραγωγή συνεχίζεται εδώ, μόνη της. Η επανένταξη σημαίνει να επιλέξετε ξανά την ομάδα.</string>
+
+    <string name="player_syncplay_cancel">Άκυρο</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d άτομο παρακολουθεί</item>
+        <item quantity="other">%d άτομα παρακολουθούν</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d ακόμη</string>
+
+    <string name="player_syncplay_queue">Ουρά</string>
+    <string name="player_syncplay_queue_empty">Η ομάδα δεν έχει προσθέσει τίποτα στην ουρά ακόμη.</string>
+    <string name="player_syncplay_queue_item_loading">Φόρτωση…</string>
+    <string name="player_syncplay_queue_playing">Αναπαράγεται τώρα</string>
+    <string name="player_syncplay_queue_next">Επόμενο στοιχείο</string>
+    <string name="player_syncplay_queue_previous">Προηγούμενο στοιχείο</string>
+    <string name="player_syncplay_queue_move_up">Μετακίνηση επάνω</string>
+    <string name="player_syncplay_queue_move_down">Μετακίνηση κάτω</string>
+    <string name="player_syncplay_queue_remove">Αφαίρεση από την ουρά</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d στοιχείο στην ουρά</item>
+        <item quantity="other">%d στοιχεία στην ουρά</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Αποχωρήσατε από το SyncPlay — η σύνδεση χάθηκε</string>
+    <string name="player_message_syncplay_rejoined">Επανεντάχθηκε στην ομάδα SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">Δεν ήταν δυνατή η ένταξη σε αυτή την ομάδα SyncPlay.</string>
+    <string name="player_message_syncplay_group_ended">Η ομάδα SyncPlay έχει τερματιστεί.</string>
+    <string name="player_message_syncplay_removed">Δεν είστε πλέον στην ομάδα SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">Η ομάδα παρακολουθεί κάτι στο οποίο δεν έχετε πρόσβαση.</string>
+    <string name="player_message_syncplay_item_unavailable">Δεν ήταν δυνατό το άνοιγμα αυτού που παρακολουθεί η ομάδα.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Πίσω</string>
+    <string name="player_syncplay_groups_home">Αρχική</string>
+    <string name="player_syncplay_groups_create">Δημιουργία ομάδας</string>
+    <string name="player_syncplay_groups_create_title">Ονομάστε την ομάδα σας</string>
+    <string name="player_syncplay_groups_create_hint">Όνομα ομάδας</string>
+    <string name="player_syncplay_groups_create_confirm">Δημιουργία</string>
+    <string name="player_syncplay_groups_joining">Ένταξη…</string>
+    <string name="player_syncplay_groups_active_label">Είστε σε αυτή την ομάδα</string>
+    <string name="player_syncplay_groups_open_player">Άνοιγμα αναπαραγωγού</string>
+    <string name="player_syncplay_groups_empty">Κανείς άλλος δεν παρακολουθεί μαζί αυτή τη στιγμή.</string>
+    <string name="player_syncplay_groups_disabled">Το SyncPlay είναι απενεργοποιημένο για τον λογαριασμό σας.</string>
+    <string name="player_syncplay_groups_error">Δεν ήταν δυνατή η φόρτωση των ομάδων SyncPlay.</string>
+
+    <string name="player_syncplay_presence_channel_name">Ομάδα SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">Διατηρεί τη θέση σας σε μια ομάδα κοινής παρακολούθησης ενώ η εφαρμογή είναι στο παρασκήνιο.</string>
+    <string name="player_syncplay_presence_title">Σε ομάδα SyncPlay</string>
+    <string name="player_syncplay_presence_text">Αναμονή ομάδας</string>
+    <string name="player_syncplay_presence_leave">Αποχώρηση</string>
+
+    <string name="player_syncplay_state_idle">Αδρανές</string>
+    <string name="player_syncplay_state_waiting">Αναμονή</string>
+    <string name="player_syncplay_state_paused">Σε παύση</string>
+    <string name="player_syncplay_state_playing">Αναπαράγεται</string>
+
+    <string name="player_cast">Μετάδοση σε συσκευή</string>
+
+    <string name="player_cast_device_unnamed">την τηλεόρασή σας</string>
+    <string name="player_message_cast_transferred">Αναπαράγεται τώρα στο %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Αποχωρήσατε από την ομάδα SyncPlay για μετάδοση στο %1$s.</string>
+    <string name="player_message_cast_failed">Δεν ήταν δυνατή η αναπαραγωγή στο %1$s.</string>
+
+    <string name="player_casting_to">Μετάδοση στο %1$s</string>
+</resources>

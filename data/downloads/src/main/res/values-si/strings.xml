@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">බාගත කිරීම්</string>
+    <string name="downloads_channel_description">මෙම උපාංගයට මාධ්‍ය බාගත වීමේ ප්‍රගතිය.</string>
+    <string name="downloads_notification_preparing">බාගත කිරීම් සූදානම් කරමින්…</string>
+    <string name="downloads_notification_downloading">බාගත කරමින්…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">බාගත කරමින්…</string>
+    <string name="downloads_action_pause">විරාම කරන්න</string>
+    <string name="downloads_action_cancel">අවලංගු කරන්න</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Фильмдерді, көрсетілімдерді және бөлімдерді іздеу</string>
+    <string name="search_clear">Тазалау</string>
+
+    <string name="search_section_movies">Фильмдер</string>
+    <string name="search_section_series">Көрсетілімдер</string>
+    <string name="search_section_episodes">Бөлімдер</string>
+
+    <string name="search_prompt">Кітапханаларыңыздан іздеу үшін теріңіз.</string>
+    <string name="search_no_results">«%1$s» бойынша ешнәрсе табылмады.</string>
+
+    <string name="search_error_network">Серверіңізге қосыла алмады. Қосылымыңызды тексеріп, қайта көріңіз.</string>
+    <string name="search_error_unauthorized">Сеансыңыздың мерзімі өтті. Жалғастыру үшін қайта кіріңіз.</string>
+    <string name="search_error_not_found">Бұл элемент серверде енді жоқ.</string>
+    <string name="search_error_server">Сервер қате қайтарды.</string>
+    <string name="search_error_server_with_code">Сервер қате қайтарды (%1$d).</string>
+    <string name="search_error_storage">Жергілікті деректерді оқу мүмкін болмады.</string>
+    <string name="search_error_unknown">Іздеу кезінде бірдеңе дұрыс болмады.</string>
+</resources>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">设置</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_home">主页</string>
+
+    <string name="settings_section_playback">播放</string>
+    <string name="settings_skip_intro">跳过片头</string>
+    <string name="settings_skip_outro">跳过片尾</string>
+    <string name="settings_skip_mode_off">不执行任何操作</string>
+    <string name="settings_skip_mode_show_button">显示跳过按钮</string>
+    <string name="settings_skip_mode_auto">自动跳过</string>
+    <string name="settings_pip">画中画</string>
+    <string name="settings_pip_supporting">离开应用后在悬浮窗口中继续播放。</string>
+
+    <string name="settings_section_downloads">下载</string>
+    <string name="settings_wifi_only">仅限 Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">使用移动数据时暂停下载。</string>
+    <string name="settings_quality">下载画质</string>
+    <string name="settings_quality_original">原始文件——完全复制，可续传</string>
+    <string name="settings_quality_high">高——约 20 Mbps，1080p</string>
+    <string name="settings_quality_medium">中——约 8 Mbps，1080p</string>
+    <string name="settings_quality_low">低——约 3 Mbps，720p</string>
+    <string name="settings_quality_supporting">除原始文件外，其他画质都会由你的服务器在发送时进行转换，因此下载过程中显示的大小只是估算值，中断的传输会重新开始。</string>
+    <string name="settings_storage_label">存储空间</string>
+    <string name="settings_storage_summary">此设备已用 %1$s · 剩余 %2$s</string>
+    <string name="settings_storage_location">下载内容保存在 %1$s</string>
+    <string name="settings_storage_picker">存储位置</string>
+    <string name="settings_storage_internal">内部存储</string>
+    <string name="settings_storage_sd_card">SD 卡</string>
+    <string name="settings_storage_volume_free">剩余 %1$s</string>
+    <string name="settings_storage_missing">你选择的存储位置目前不可用，下载内容将改为保存到下方选择的位置。</string>
+    <string name="settings_storage_switch_title">是否移动下载内容？</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">下载内容暂时无法在不同位置之间移动，因此此设备上已有的 %1$d 项将被删除。你可以重新下载到新位置。</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">删除并切换</string>
+
+    <string name="settings_section_connectivity">连接</string>
+    <string name="settings_offline_mode">离线模式</string>
+    <string name="settings_offline_mode_supporting">仅显示此设备上已有的媒体。</string>
+
+    <string name="settings_section_account">账户</string>
+    <string name="settings_account_user">已登录为</string>
+    <string name="settings_account_server">服务器</string>
+    <string name="settings_account_unknown">未登录</string>
+    <string name="settings_sign_out">退出登录</string>
+    <string name="settings_sign_out_dialog_title">退出登录？</string>
+    <string name="settings_sign_out_dialog_message">你需要服务器地址和密码才能重新登录。</string>
+    <string name="settings_sign_out_delete_downloads">同时删除此设备上的下载内容</string>
+    <string name="settings_cancel">取消</string>
+</resources>

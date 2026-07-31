@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">ਸੈਟਿੰਗਾਂ</string>
+    <string name="settings_back">ਪਿੱਛੇ</string>
+    <string name="settings_home">ਹੋਮ</string>
+
+    <string name="settings_section_playback">ਪਲੇਬੈਕ</string>
+    <string name="settings_skip_intro">ਇੰਟਰੋ ਛੱਡੋ</string>
+    <string name="settings_skip_outro">ਆਉਟਰੋ ਛੱਡੋ</string>
+    <string name="settings_skip_mode_off">ਕੁਝ ਨਾ ਕਰੋ</string>
+    <string name="settings_skip_mode_show_button">ਸਕਿੱਪ ਬਟਨ ਦਿਖਾਓ</string>
+    <string name="settings_skip_mode_auto">ਆਪਣੇ ਆਪ ਛੱਡੋ</string>
+    <string name="settings_pip">ਪਿਕਚਰ-ਇਨ-ਪਿਕਚਰ</string>
+    <string name="settings_pip_supporting">ਐਪ ਛੱਡਣ ਸਮੇਂ ਇੱਕ ਫਲੋਟਿੰਗ ਵਿੰਡੋ ਵਿੱਚ ਚਲਾਉਣਾ ਜਾਰੀ ਰੱਖੋ।</string>
+
+    <string name="settings_section_downloads">ਡਾਊਨਲੋਡ</string>
+    <string name="settings_wifi_only">ਸਿਰਫ਼ Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">ਮੋਬਾਈਲ ਡਾਟਾ ਉੱਤੇ ਡਾਊਨਲੋਡ ਰੋਕੋ।</string>
+    <string name="settings_quality">ਡਾਊਨਲੋਡ ਕੁਆਲਿਟੀ</string>
+    <string name="settings_quality_original">ਮੂਲ ਫਾਈਲ — ਸਟੀਕ ਕਾਪੀ, ਦੁਬਾਰਾ ਸ਼ੁਰੂ ਕਰਨ ਯੋਗ</string>
+    <string name="settings_quality_high">ਉੱਚ — ਲਗਭਗ 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">ਦਰਮਿਆਨੀ — ਲਗਭਗ 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">ਘੱਟ — ਲਗਭਗ 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">ਮੂਲ ਫਾਈਲ ਤੋਂ ਇਲਾਵਾ ਹੋਰ ਸਭ ਕੁਝ ਭੇਜਦੇ ਸਮੇਂ ਤੁਹਾਡੇ ਸਰਵਰ ਵੱਲੋਂ ਬਦਲਿਆ ਜਾਂਦਾ ਹੈ, ਇਸ ਲਈ ਡਾਊਨਲੋਡ ਦੌਰਾਨ ਦਿਖਾਇਆ ਗਿਆ ਆਕਾਰ ਇੱਕ ਅੰਦਾਜ਼ਾ ਹੈ ਅਤੇ ਵਿਚਕਾਰ ਰੁਕਿਆ ਟ੍ਰਾਂਸਫਰ ਦੁਬਾਰਾ ਸ਼ੁਰੂ ਹੁੰਦਾ ਹੈ।</string>
+    <string name="settings_storage_label">ਸਟੋਰੇਜ</string>
+    <string name="settings_storage_summary">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ %1$s ਵਰਤਿਆ · %2$s ਖਾਲੀ</string>
+    <string name="settings_storage_location">ਡਾਊਨਲੋਡ %1$s ਵਿੱਚ ਰੱਖੇ ਜਾਂਦੇ ਹਨ</string>
+    <string name="settings_storage_picker">ਸਟੋਰੇਜ ਟਿਕਾਣਾ</string>
+    <string name="settings_storage_internal">ਅੰਦਰੂਨੀ ਸਟੋਰੇਜ</string>
+    <string name="settings_storage_sd_card">SD ਕਾਰਡ</string>
+    <string name="settings_storage_volume_free">%1$s ਖਾਲੀ</string>
+    <string name="settings_storage_missing">ਤੁਹਾਡੇ ਵੱਲੋਂ ਚੁਣੀ ਗਈ ਸਟੋਰੇਜ ਇਸ ਵੇਲੇ ਉਪਲਬਧ ਨਹੀਂ ਹੈ, ਇਸ ਲਈ ਡਾਊਨਲੋਡ ਹੇਠਾਂ ਚੁਣੇ ਗਏ ਟਿਕਾਣੇ ਉੱਤੇ ਜਾ ਰਹੇ ਹਨ।</string>
+    <string name="settings_storage_switch_title">ਡਾਊਨਲੋਡ ਭੇਜੀਏ?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">ਡਾਊਨਲੋਡ ਹਾਲੇ ਟਿਕਾਣਿਆਂ ਵਿਚਕਾਰ ਭੇਜੇ ਨਹੀਂ ਜਾ ਸਕਦੇ, ਇਸ ਲਈ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਇੱਕ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ। ਤੁਸੀਂ ਇਸਨੂੰ ਨਵੇਂ ਟਿਕਾਣੇ ਉੱਤੇ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</item>
+        <item quantity="other">ਡਾਊਨਲੋਡ ਹਾਲੇ ਟਿਕਾਣਿਆਂ ਵਿਚਕਾਰ ਭੇਜੇ ਨਹੀਂ ਜਾ ਸਕਦੇ, ਇਸ ਲਈ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ %1$d ਮਿਟਾ ਦਿੱਤੇ ਜਾਣਗੇ। ਤੁਸੀਂ ਉਹਨਾਂ ਨੂੰ ਨਵੇਂ ਟਿਕਾਣੇ ਉੱਤੇ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">ਮਿਟਾਓ ਅਤੇ ਬਦਲੋ</string>
+
+    <string name="settings_section_connectivity">ਕਨੈਕਟੀਵਿਟੀ</string>
+    <string name="settings_offline_mode">ਆਫਲਾਈਨ ਮੋਡ</string>
+    <string name="settings_offline_mode_supporting">ਸਿਰਫ਼ ਉਹ ਮੀਡੀਆ ਦਿਖਾਓ ਜੋ ਪਹਿਲਾਂ ਤੋਂ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹੈ।</string>
+
+    <string name="settings_section_account">ਖਾਤਾ</string>
+    <string name="settings_account_user">ਇਸ ਵਜੋਂ ਸਾਈਨ ਇਨ</string>
+    <string name="settings_account_server">ਸਰਵਰ</string>
+    <string name="settings_account_unknown">ਸਾਈਨ ਇਨ ਨਹੀਂ ਹੈ</string>
+    <string name="settings_sign_out">ਸਾਈਨ ਆਉਟ ਕਰੋ</string>
+    <string name="settings_sign_out_dialog_title">ਸਾਈਨ ਆਉਟ ਕਰੀਏ?</string>
+    <string name="settings_sign_out_dialog_message">ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਤੁਹਾਨੂੰ ਆਪਣੇ ਸਰਵਰ ਪਤੇ ਅਤੇ ਪਾਸਵਰਡ ਦੀ ਲੋੜ ਪਵੇਗੀ।</string>
+    <string name="settings_sign_out_delete_downloads">ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਡਾਊਨਲੋਡ ਵੀ ਮਿਟਾਓ</string>
+    <string name="settings_cancel">ਰੱਦ ਕਰੋ</string>
+</resources>

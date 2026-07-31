@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Bumalik</string>
+    <string name="detail_home">Home</string>
+    <string name="detail_play">I-play</string>
+    <string name="detail_resume">Ipagpatuloy</string>
+    <string name="detail_download">I-download</string>
+    <string name="detail_download_cancel">Kanselahin</string>
+    <string name="detail_download_remove">Alisin</string>
+    <string name="detail_download_retry">Subukan muli</string>
+    <string name="detail_play_episode">I-play ang episode na ito</string>
+    <string name="detail_mark_watched">Markahang napanood na</string>
+    <string name="detail_mark_unwatched">Markahang hindi pa napapanood</string>
+    <string name="detail_add_favorite">Idagdag sa mga paborito</string>
+    <string name="detail_remove_favorite">Alisin sa mga paborito</string>
+    <string name="detail_section_seasons">Mga Season</string>
+    <string name="detail_section_next_up">Susunod</string>
+    <string name="detail_section_episodes">Mga Episode</string>
+    <string name="detail_section_similar">Higit pa tulad nito</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min na lang</string>
+    <string name="detail_size_on_device">%1$s sa device</string>
+    <string name="detail_directed_by">Direktor: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d season</item>
+        <item quantity="other">%1$d season</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episode</item>
+    </plurals>
+    <string name="detail_empty">Hindi na available ang item na ito.</string>
+    <string name="detail_message_download_queued">Idinagdag sa mga download.</string>
+    <string name="detail_message_download_failed">Hindi masimulan ang download na iyon.</string>
+    <string name="detail_message_download_deleted">Inalis sa device na ito.</string>
+    <string name="detail_message_download_delete_failed">Hindi maalis ang download na iyon.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Nakansela ang download — %1$d natapos na episode ang naiwan.</item>
+        <item quantity="other">Nakansela ang download — %1$d natapos na episode ang naiwan.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Hindi ma-save iyon. Subukan ulit.</string>
+    <string name="detail_group_play">I-play para kay %1$s</string>
+    <string name="detail_group_resume">Ipagpatuloy para kay %1$s</string>
+    <string name="detail_group_play_next">I-play sunod</string>
+    <string name="detail_group_add_to_queue">Idagdag sa pila</string>
+    <string name="detail_message_group_play">Hiniling sa grupo na i-play ito.</string>
+    <string name="detail_message_group_play_next">Nakapila na susunod para sa grupo.</string>
+    <string name="detail_message_group_queued">Idinagdag sa pila ng grupo.</string>
+    <string name="detail_delete_download_dialog_title">Tanggalin ang download?</string>
+    <string name="detail_delete_download_dialog_message">Aalisin nito ito sa device na ito. Puwede mo itong i-download ulit anumang oras.</string>
+    <string name="detail_delete_download_dialog_confirm">Tanggalin</string>
+    <string name="detail_delete_download_dialog_cancel">Kanselahin</string>
+</resources>

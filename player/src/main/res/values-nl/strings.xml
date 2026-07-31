@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Speler sluiten</string>
+    <string name="player_play">Afspelen</string>
+    <string name="player_pause">Pauzeren</string>
+    <string name="player_rewind">10 seconden terugspoelen</string>
+    <string name="player_forward">30 seconden vooruitspoelen</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Ondertitels</string>
+    <string name="player_subtitles_off">Uit</string>
+    <string name="player_quality">Kwaliteit</string>
+    <string name="player_speed">Snelheid</string>
+
+    <string name="player_skip_intro">Intro overslaan</string>
+    <string name="player_skip_outro">Outro overslaan</string>
+
+    <string name="player_quality_auto">Automatisch</string>
+    <string name="player_quality_high">Hoog – 20 Mbps</string>
+    <string name="player_quality_medium">Gemiddeld – 8 Mbps</string>
+    <string name="player_quality_low">Laag – 3 Mbps</string>
+    <string name="player_quality_lowest">Laagst – 720 kbps</string>
+
+    <string name="player_method_direct_play">Direct afspelen</string>
+    <string name="player_method_direct_stream">Directe stream</string>
+    <string name="player_method_transcode">Transcoderen</string>
+
+    <string name="player_message_transcode">Je apparaat kon dit bestand niet decoderen, dus de server transcodeert het.</string>
+    <string name="player_message_lower_quality">De stream haperde – opnieuw proberen met lagere kwaliteit.</string>
+    <string name="player_message_track_restart">De server moest de stream voor dat spoor opnieuw coderen.</string>
+    <string name="player_message_track_streaming">Dat spoor zit niet in de download – het wordt gestreamd vanaf je server.</string>
+    <string name="player_message_track_offline">Dat spoor zit niet in het gedownloade bestand.</string>
+    <string name="player_message_failed">Afspelen mislukt.</string>
+
+    <string name="player_syncplay_group">Groep</string>
+    <string name="player_syncplay_waiting">Wachten op groep…</string>
+    <string name="player_syncplay_shuffle">Wachtrij shuffelen</string>
+    <string name="player_syncplay_repeat">Herhalen</string>
+    <string name="player_syncplay_repeat_none">Uit</string>
+    <string name="player_syncplay_repeat_one">Dit item</string>
+    <string name="player_syncplay_repeat_all">Hele wachtrij</string>
+    <string name="player_syncplay_leave">Groep verlaten</string>
+    <string name="player_syncplay_leave_title">Deze groep verlaten?</string>
+    <string name="player_syncplay_leave_body">Afspelen gaat hier zelfstandig verder. Opnieuw meedoen betekent de groep opnieuw kiezen.</string>
+
+    <string name="player_syncplay_cancel">Annuleren</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d persoon kijkt mee</item>
+        <item quantity="other">%d personen kijken mee</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s en %2$d meer</string>
+
+    <string name="player_syncplay_queue">Wachtrij</string>
+    <string name="player_syncplay_queue_empty">De groep heeft nog niets in de wachtrij gezet.</string>
+    <string name="player_syncplay_queue_item_loading">Laden…</string>
+    <string name="player_syncplay_queue_playing">Speelt nu</string>
+    <string name="player_syncplay_queue_next">Volgend item</string>
+    <string name="player_syncplay_queue_previous">Vorig item</string>
+    <string name="player_syncplay_queue_move_up">Omhoog</string>
+    <string name="player_syncplay_queue_move_down">Omlaag</string>
+    <string name="player_syncplay_queue_remove">Verwijderen uit wachtrij</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d item in de wachtrij</item>
+        <item quantity="other">%d items in de wachtrij</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay verlaten – verbinding verbroken</string>
+    <string name="player_message_syncplay_rejoined">Opnieuw toegetreden tot SyncPlay-groep</string>
+    <string name="player_message_syncplay_join_failed">Kon niet deelnemen aan die SyncPlay-groep.</string>
+    <string name="player_message_syncplay_group_ended">De SyncPlay-groep is beëindigd.</string>
+    <string name="player_message_syncplay_removed">Je zit niet meer in de SyncPlay-groep.</string>
+    <string name="player_message_syncplay_library_denied">De groep kijkt naar iets waartoe je geen toegang hebt.</string>
+    <string name="player_message_syncplay_item_unavailable">Kon niet openen wat de groep aan het kijken is.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Terug</string>
+    <string name="player_syncplay_groups_home">Start</string>
+    <string name="player_syncplay_groups_create">Groep aanmaken</string>
+    <string name="player_syncplay_groups_create_title">Geef je groep een naam</string>
+    <string name="player_syncplay_groups_create_hint">Groepsnaam</string>
+    <string name="player_syncplay_groups_create_confirm">Aanmaken</string>
+    <string name="player_syncplay_groups_joining">Toetreden…</string>
+    <string name="player_syncplay_groups_active_label">Je zit in deze groep</string>
+    <string name="player_syncplay_groups_open_player">Speler openen</string>
+    <string name="player_syncplay_groups_empty">Er kijkt nu niemand anders samen.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay is uitgeschakeld voor je account.</string>
+    <string name="player_syncplay_groups_error">Kon SyncPlay-groepen niet laden.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-groep</string>
+    <string name="player_syncplay_presence_channel_description">Houdt je plek vast in een samen-kijken-groep terwijl de app op de achtergrond draait.</string>
+    <string name="player_syncplay_presence_title">In een SyncPlay-groep</string>
+    <string name="player_syncplay_presence_text">Wachten op de groep</string>
+    <string name="player_syncplay_presence_leave">Verlaten</string>
+
+    <string name="player_syncplay_state_idle">Inactief</string>
+    <string name="player_syncplay_state_waiting">Wachten</string>
+    <string name="player_syncplay_state_paused">Gepauzeerd</string>
+    <string name="player_syncplay_state_playing">Speelt af</string>
+
+    <string name="player_cast">Casten naar een apparaat</string>
+
+    <string name="player_cast_device_unnamed">je tv</string>
+    <string name="player_message_cast_transferred">Speelt nu af op %1$s.</string>
+    <string name="player_message_cast_left_syncplay">De SyncPlay-groep verlaten om te casten naar %1$s.</string>
+    <string name="player_message_cast_failed">Kon dat niet afspelen op %1$s.</string>
+
+    <string name="player_casting_to">Aan het casten naar %1$s</string>
+</resources>

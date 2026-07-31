@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Configuració</string>
+    <string name="settings_back">Enrere</string>
+    <string name="settings_home">Inici</string>
+    <string name="settings_section_playback">Reproducció</string>
+    <string name="settings_skip_intro">Omet la introducció</string>
+    <string name="settings_skip_outro">Omet els crèdits finals</string>
+    <string name="settings_skip_mode_off">No facis res</string>
+    <string name="settings_skip_mode_show_button">Mostra un botó per ometre</string>
+    <string name="settings_skip_mode_auto">Omet automàticament</string>
+    <string name="settings_pip">Imatge dins d\'imatge</string>
+    <string name="settings_pip_supporting">Continua reproduint en una finestra flotant en sortir de l\'aplicació.</string>
+    <string name="settings_section_downloads">Baixades</string>
+    <string name="settings_wifi_only">Només Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Posa en pausa les baixades amb dades mòbils.</string>
+    <string name="settings_quality">Qualitat de la baixada</string>
+    <string name="settings_quality_original">Fitxer original — còpia exacta, es pot reprendre</string>
+    <string name="settings_quality_high">Alta — uns 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Mitjana — uns 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Baixa — uns 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Qualsevol opció que no sigui el fitxer original la converteix el teu servidor en enviar-la, així que la mida mostrada durant la baixada és una estimació i una transferència interrompuda torna a començar.</string>
+    <string name="settings_storage_label">Emmagatzematge</string>
+    <string name="settings_storage_summary">%1$s utilitzats · %2$s lliures en aquest dispositiu</string>
+    <string name="settings_storage_location">Les baixades es guarden a %1$s</string>
+    <string name="settings_storage_picker">Ubicació d\'emmagatzematge</string>
+    <string name="settings_storage_internal">Emmagatzematge intern</string>
+    <string name="settings_storage_sd_card">Targeta SD</string>
+    <string name="settings_storage_volume_free">%1$s lliures</string>
+    <string name="settings_storage_missing">L\'emmagatzematge que has triat no està disponible ara mateix, així que les baixades aniran a la ubicació seleccionada a sota.</string>
+    <string name="settings_storage_switch_title">Vols moure les baixades?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Les baixades encara no es poden moure entre ubicacions, així que s\'eliminarà la que ja és en aquest dispositiu. La pots tornar a baixar a la nova ubicació.</item>
+        <item quantity="other">Les baixades encara no es poden moure entre ubicacions, així que s\'eliminaran les %1$d que ja són en aquest dispositiu. Les pots tornar a baixar a la nova ubicació.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Elimina i canvia</string>
+    <string name="settings_section_connectivity">Connectivitat</string>
+    <string name="settings_offline_mode">Mode sense connexió</string>
+    <string name="settings_offline_mode_supporting">Mostra només el contingut que ja és en aquest dispositiu.</string>
+    <string name="settings_section_account">Compte</string>
+    <string name="settings_account_user">Sessió iniciada com a</string>
+    <string name="settings_account_server">Servidor</string>
+    <string name="settings_account_unknown">Sessió no iniciada</string>
+    <string name="settings_sign_out">Tanca la sessió</string>
+    <string name="settings_sign_out_dialog_title">Vols tancar la sessió?</string>
+    <string name="settings_sign_out_dialog_message">Necessitaràs l\'adreça del teu servidor i la contrasenya per tornar a iniciar sessió.</string>
+    <string name="settings_sign_out_delete_downloads">Elimina també les baixades d\'aquest dispositiu</string>
+    <string name="settings_cancel">Cancel·la</string>
+</resources>

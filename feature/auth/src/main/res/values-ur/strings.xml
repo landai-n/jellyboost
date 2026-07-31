@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">سرور سے منسلک ہوں</string>
+    <string name="server_setup_discovered_title">اس نیٹ ورک پر سرورز</string>
+    <string name="server_setup_discovering">مقامی نیٹ ورک تلاش کیا جا رہا ہے…</string>
+    <string name="server_setup_no_servers_found">کسی سرور نے خود کو ظاہر نہیں کیا۔ نیچے ایک پتہ درج کریں۔</string>
+    <string name="server_setup_manual_title">سرور کا پتہ</string>
+    <string name="server_setup_address_label">ہوسٹ یا URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org یا 192.168.1.10:8096</string>
+    <string name="server_setup_connect">منسلک ہوں</string>
+    <string name="server_setup_connecting">سرور سے رابطہ کیا جا رہا ہے…</string>
+    <string name="server_setup_session_lost">آپ کا محفوظ شدہ سائن ان بحال نہیں ہو سکا، اس لیے آپ کو سائن آؤٹ کر دیا گیا ہے۔ براہ کرم دوبارہ سائن ان کریں۔</string>
+
+    <string name="login_title">سائن ان</string>
+    <string name="login_server_version">ورژن %1$s</string>
+    <string name="login_server_version_unknown">ورژن نامعلوم</string>
+    <string name="login_public_users_title">کون دیکھ رہا ہے؟</string>
+    <string name="login_username_label">صارف نام</string>
+    <string name="login_password_label">پاس ورڈ</string>
+    <string name="login_show_password">پاس ورڈ دکھائیں</string>
+    <string name="login_hide_password">پاس ورڈ چھپائیں</string>
+    <string name="login_sign_in">سائن ان</string>
+    <string name="login_change_server">ایک مختلف سرور استعمال کریں</string>
+    <string name="login_loading">سرور کی تفصیلات لوڈ ہو رہی ہیں…</string>
+    <string name="login_or">یا</string>
+
+    <string name="login_quick_connect">Quick Connect استعمال کریں</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">اس ڈیوائس پر Jellyfin کھولیں جہاں آپ پہلے سے سائن ان ہیں، Quick Connect پر جائیں اور یہ کوڈ درج کریں۔</string>
+    <string name="login_quick_connect_waiting">منظوری کا انتظار ہے…</string>
+    <string name="login_quick_connect_cancel">منسوخ کریں</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d امیدوار پتے کی کوشش کی گئی، بغیر کامیابی کے۔</item>
+        <item quantity="other">%d امیدوار پتوں کی کوشش کی گئی، بغیر کامیابی کے۔</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">سرور تک رسائی ممکن نہیں</string>
+    <string name="auth_error_unsupported_version_or_product">غیر معاون ورژن یا پروڈکٹ</string>
+    <string name="auth_error_cannot_connect">رابطہ قائم نہیں ہو سکا۔\nہوسٹ نیم اور اپنے نیٹ ورک کنکشن کی جانچ کریں۔</string>
+    <string name="auth_error_invalid_credentials">صارف نام یا پاس ورڈ غلط ہے۔</string>
+    <string name="auth_error_quick_connect_expired">اس کوڈ کی میعاد ختم ہو گئی۔ نیا کوڈ حاصل کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="auth_error_server">سرور نے ایک خرابی کے ساتھ جواب دیا۔ دوبارہ کوشش کریں۔</string>
+    <string name="auth_error_server_with_code">سرور نے ایک خرابی (%1$d) کے ساتھ جواب دیا۔ دوبارہ کوشش کریں۔</string>
+</resources>

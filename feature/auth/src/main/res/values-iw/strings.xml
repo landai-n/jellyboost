@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">התחברות לשרת</string>
+    <string name="server_setup_discovered_title">שרתים ברשת הזאת</string>
+    <string name="server_setup_discovering">מחפש ברשת המקומית…</string>
+    <string name="server_setup_no_servers_found">אף שרת לא הכריז על עצמו. הזן כתובת למטה.</string>
+    <string name="server_setup_manual_title">כתובת השרת</string>
+    <string name="server_setup_address_label">מארח או כתובת URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org או 192.168.1.10:8096</string>
+    <string name="server_setup_connect">התחברות</string>
+    <string name="server_setup_connecting">יוצר קשר עם השרת…</string>
+    <string name="server_setup_session_lost">לא ניתן היה לשחזר את ההתחברות השמורה שלך, ולכן נותקת. אנא התחבר מחדש.</string>
+
+    <string name="login_title">התחברות</string>
+    <string name="login_server_version">גרסה %1$s</string>
+    <string name="login_server_version_unknown">גרסה לא ידועה</string>
+    <string name="login_public_users_title">מי צופה?</string>
+    <string name="login_username_label">שם משתמש</string>
+    <string name="login_password_label">סיסמה</string>
+    <string name="login_show_password">הצג סיסמה</string>
+    <string name="login_hide_password">הסתר סיסמה</string>
+    <string name="login_sign_in">התחברות</string>
+    <string name="login_change_server">שימוש בשרת אחר</string>
+    <string name="login_loading">טוען פרטי שרת…</string>
+    <string name="login_or">או</string>
+
+    <string name="login_quick_connect">שימוש ב-Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">פתח את Jellyfin במכשיר שבו אתה כבר מחובר, עבור אל Quick Connect והזן קוד זה.</string>
+    <string name="login_quick_connect_waiting">ממתין לאישור…</string>
+    <string name="login_quick_connect_cancel">ביטול</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">נוסתה כתובת מועמדת אחת, ללא הצלחה.</item>
+        <item quantity="two">נוסו שתי כתובות מועמדות, ללא הצלחה.</item>
+        <item quantity="many">נוסו %d כתובות מועמדות, ללא הצלחה.</item>
+        <item quantity="other">נוסו %d כתובות מועמדות, ללא הצלחה.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">לא ניתן להתחבר לשרת</string>
+    <string name="auth_error_unsupported_version_or_product">גרסה או מוצר לא נתמכים</string>
+    <string name="auth_error_cannot_connect">לא ניתן ליצור חיבור.\nבדוק את שם המארח ואת חיבור הרשת שלך.</string>
+    <string name="auth_error_invalid_credentials">שם המשתמש או הסיסמה שגויים.</string>
+    <string name="auth_error_quick_connect_expired">פג תוקף הקוד. בקש קוד חדש ונסה שוב.</string>
+    <string name="auth_error_server">השרת השיב בשגיאה. נסה שוב.</string>
+    <string name="auth_error_server_with_code">השרת השיב בשגיאה (%1$d). נסה שוב.</string>
+</resources>

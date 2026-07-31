@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Zavrieť prehrávač</string>
+    <string name="player_play">Prehrať</string>
+    <string name="player_pause">Pozastaviť</string>
+    <string name="player_rewind">Posunúť späť o 10 sekúnd</string>
+    <string name="player_forward">Posunúť dopredu o 30 sekúnd</string>
+
+    <string name="player_audio">Zvuk</string>
+    <string name="player_subtitles">Titulky</string>
+    <string name="player_subtitles_off">Vypnuté</string>
+    <string name="player_quality">Kvalita</string>
+    <string name="player_speed">Rýchlosť</string>
+
+    <string name="player_skip_intro">Preskočiť úvod</string>
+    <string name="player_skip_outro">Preskočiť záver</string>
+
+    <string name="player_quality_auto">Automaticky</string>
+    <string name="player_quality_high">Vysoká — 20 Mbps</string>
+    <string name="player_quality_medium">Stredná — 8 Mbps</string>
+    <string name="player_quality_low">Nízka — 3 Mbps</string>
+    <string name="player_quality_lowest">Najnižšia — 720 kbps</string>
+
+    <string name="player_method_direct_play">Direct play</string>
+    <string name="player_method_direct_stream">Direct stream</string>
+    <string name="player_method_transcode">Prekódovanie</string>
+
+    <string name="player_message_transcode">Vaše zariadenie nedokázalo dekódovať tento súbor, preto ho server prekódováva.</string>
+    <string name="player_message_lower_quality">Prenos sa zasekol — skúša sa nižšia kvalita.</string>
+    <string name="player_message_track_restart">Server musel pre túto stopu prenos prekódovať.</string>
+    <string name="player_message_track_streaming">Táto stopa nie je súčasťou stiahnutia — streamuje sa zo servera.</string>
+    <string name="player_message_track_offline">Táto stopa nie je súčasťou stiahnutého súboru.</string>
+    <string name="player_message_failed">Prehrávanie zlyhalo.</string>
+
+    <string name="player_syncplay_group">Skupina</string>
+    <string name="player_syncplay_waiting">Čaká sa na skupinu…</string>
+    <string name="player_syncplay_shuffle">Premiešať front</string>
+    <string name="player_syncplay_repeat">Opakovať</string>
+    <string name="player_syncplay_repeat_none">Vypnuté</string>
+    <string name="player_syncplay_repeat_one">Túto položku</string>
+    <string name="player_syncplay_repeat_all">Celý front</string>
+    <string name="player_syncplay_leave">Opustiť skupinu</string>
+    <string name="player_syncplay_leave_title">Opustiť túto skupinu?</string>
+    <string name="player_syncplay_leave_body">Prehrávanie tu pokračuje samostatne. Opätovné pripojenie znamená znova vybrať skupinu.</string>
+
+    <string name="player_syncplay_cancel">Zrušiť</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d osoba sleduje</item>
+        <item quantity="few">%d osoby sledujú</item>
+        <item quantity="many">%d osôb sleduje</item>
+        <item quantity="other">%d osôb sleduje</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s a %2$d ďalších</string>
+
+    <string name="player_syncplay_queue">Front</string>
+    <string name="player_syncplay_queue_empty">Skupina zatiaľ nič nezaradila do frontu.</string>
+    <string name="player_syncplay_queue_item_loading">Načítava sa…</string>
+    <string name="player_syncplay_queue_playing">Práve sa prehráva</string>
+    <string name="player_syncplay_queue_next">Ďalšia položka</string>
+    <string name="player_syncplay_queue_previous">Predchádzajúca položka</string>
+    <string name="player_syncplay_queue_move_up">Posunúť vyššie</string>
+    <string name="player_syncplay_queue_move_down">Posunúť nižšie</string>
+    <string name="player_syncplay_queue_remove">Odstrániť z frontu</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d položka vo fronte</item>
+        <item quantity="few">%d položky vo fronte</item>
+        <item quantity="many">%d položiek vo fronte</item>
+        <item quantity="other">%d položiek vo fronte</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Opustené SyncPlay — spojenie stratené</string>
+    <string name="player_message_syncplay_rejoined">Opätovne pripojený k skupine SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">Nepodarilo sa pripojiť k tejto skupine SyncPlay.</string>
+    <string name="player_message_syncplay_group_ended">Skupina SyncPlay bola ukončená.</string>
+    <string name="player_message_syncplay_removed">Už nie ste v skupine SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">Skupina sleduje niečo, k čomu nemáte prístup.</string>
+    <string name="player_message_syncplay_item_unavailable">Nepodarilo sa otvoriť to, čo skupina sleduje.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Späť</string>
+    <string name="player_syncplay_groups_home">Domov</string>
+    <string name="player_syncplay_groups_create">Vytvoriť skupinu</string>
+    <string name="player_syncplay_groups_create_title">Pomenujte svoju skupinu</string>
+    <string name="player_syncplay_groups_create_hint">Názov skupiny</string>
+    <string name="player_syncplay_groups_create_confirm">Vytvoriť</string>
+    <string name="player_syncplay_groups_joining">Pripája sa…</string>
+    <string name="player_syncplay_groups_active_label">Ste v tejto skupine</string>
+    <string name="player_syncplay_groups_open_player">Otvoriť prehrávač</string>
+    <string name="player_syncplay_groups_empty">Momentálne nikto iný nesleduje spoločne.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay je pre váš účet vypnuté.</string>
+    <string name="player_syncplay_groups_error">Nepodarilo sa načítať skupiny SyncPlay.</string>
+
+    <string name="player_syncplay_presence_channel_name">Skupina SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">Udržiava vaše miesto v spoločnej skupine, kým je aplikácia na pozadí.</string>
+    <string name="player_syncplay_presence_title">V skupine SyncPlay</string>
+    <string name="player_syncplay_presence_text">Čaká sa na skupinu</string>
+    <string name="player_syncplay_presence_leave">Opustiť</string>
+
+    <string name="player_syncplay_state_idle">Nečinné</string>
+    <string name="player_syncplay_state_waiting">Čaká sa</string>
+    <string name="player_syncplay_state_paused">Pozastavené</string>
+    <string name="player_syncplay_state_playing">Prehráva sa</string>
+
+    <string name="player_cast">Odosielať na zariadenie</string>
+
+    <string name="player_cast_device_unnamed">vašu TV</string>
+    <string name="player_message_cast_transferred">Teraz sa prehráva na %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Opustili ste skupinu SyncPlay a odosielate na %1$s.</string>
+    <string name="player_message_cast_failed">Nepodarilo sa to prehrať na %1$s.</string>
+
+    <string name="player_casting_to">Odosielanie na %1$s</string>
+</resources>

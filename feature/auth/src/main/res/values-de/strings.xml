@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Mit Server verbinden</string>
+    <string name="server_setup_discovered_title">Server in diesem Netzwerk</string>
+    <string name="server_setup_discovering">Lokales Netzwerk wird durchsucht …</string>
+    <string name="server_setup_no_servers_found">Es haben sich keine Server gemeldet. Gib unten eine Adresse ein.</string>
+    <string name="server_setup_manual_title">Serveradresse</string>
+    <string name="server_setup_address_label">Host oder URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org oder 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Verbinden</string>
+    <string name="server_setup_connecting">Server wird kontaktiert …</string>
+    <string name="server_setup_session_lost">Deine gespeicherte Anmeldung konnte nicht wiederhergestellt werden, daher wurdest du abgemeldet. Bitte melde dich erneut an.</string>
+
+    <string name="login_title">Anmelden</string>
+    <string name="login_server_version">Version %1$s</string>
+    <string name="login_server_version_unknown">Version unbekannt</string>
+    <string name="login_public_users_title">Wer schaut gerade?</string>
+    <string name="login_username_label">Benutzername</string>
+    <string name="login_password_label">Passwort</string>
+    <string name="login_show_password">Passwort anzeigen</string>
+    <string name="login_hide_password">Passwort verbergen</string>
+    <string name="login_sign_in">Anmelden</string>
+    <string name="login_change_server">Anderen Server verwenden</string>
+    <string name="login_loading">Serverdetails werden geladen …</string>
+    <string name="login_or">oder</string>
+
+    <string name="login_quick_connect">Quick Connect verwenden</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Öffne Jellyfin auf einem Gerät, auf dem du bereits angemeldet bist, gehe zu Quick Connect und gib diesen Code ein.</string>
+    <string name="login_quick_connect_waiting">Warten auf Bestätigung …</string>
+    <string name="login_quick_connect_cancel">Abbrechen</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Es wurde %d Adresse ohne Erfolg versucht.</item>
+        <item quantity="other">Es wurden %d Adressen ohne Erfolg versucht.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Server nicht erreichbar</string>
+    <string name="auth_error_unsupported_version_or_product">Nicht unterstützte Version oder nicht unterstütztes Produkt</string>
+    <string name="auth_error_cannot_connect">Es kann keine Verbindung hergestellt werden.\nÜberprüfe den Hostnamen und deine Netzwerkverbindung.</string>
+    <string name="auth_error_invalid_credentials">Falscher Benutzername oder falsches Passwort.</string>
+    <string name="auth_error_quick_connect_expired">Der Code ist abgelaufen. Fordere einen neuen an und versuche es erneut.</string>
+    <string name="auth_error_server">Der Server hat mit einem Fehler geantwortet. Versuche es erneut.</string>
+    <string name="auth_error_server_with_code">Der Server hat mit einem Fehler geantwortet (%1$d). Versuche es erneut.</string>
+</resources>

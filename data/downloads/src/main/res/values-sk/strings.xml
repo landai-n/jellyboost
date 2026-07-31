@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Stiahnutia</string>
+    <string name="downloads_channel_description">Priebeh sťahovania médií do tohto zariadenia.</string>
+
+    <string name="downloads_notification_preparing">Pripravujú sa stiahnutia…</string>
+    <string name="downloads_notification_downloading">Sťahovanie…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Sťahovanie…</string>
+    <string name="downloads_action_pause">Pozastaviť</string>
+    <string name="downloads_action_cancel">Zrušiť</string>
+</resources>

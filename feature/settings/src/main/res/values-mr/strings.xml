@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">सेटिंग्ज</string>
+    <string name="settings_back">मागे</string>
+    <string name="settings_home">मुख्यपृष्ठ</string>
+
+    <string name="settings_section_playback">प्लेबॅक</string>
+    <string name="settings_skip_intro">इंट्रो वगळा</string>
+    <string name="settings_skip_outro">आउट्रो वगळा</string>
+    <string name="settings_skip_mode_off">काहीही करू नका</string>
+    <string name="settings_skip_mode_show_button">वगळण्याचे बटण दाखवा</string>
+    <string name="settings_skip_mode_auto">आपोआप वगळा</string>
+    <string name="settings_pip">पिक्चर-इन-पिक्चर</string>
+    <string name="settings_pip_supporting">अ‍ॅप सोडल्यावर तरंगत्या विंडोमध्ये प्ले करणे सुरू ठेवा.</string>
+
+    <string name="settings_section_downloads">डाउनलोड्स</string>
+    <string name="settings_wifi_only">फक्त Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">मोबाइल डेटावर डाउनलोड्स थांबवा.</string>
+    <string name="settings_quality">डाउनलोड गुणवत्ता</string>
+    <string name="settings_quality_original">मूळ फाइल — तंतोतंत प्रत, पुन्हा सुरू करता येणारी</string>
+    <string name="settings_quality_high">उच्च — सुमारे 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">मध्यम — सुमारे 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">कमी — सुमारे 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">मूळ फाइल वगळता इतर सर्व काही पाठवताना आपला सर्व्हर रूपांतरित करतो, त्यामुळे डाउनलोड होताना दाखवलेला आकार हा अंदाज असतो आणि व्यत्यय आलेले हस्तांतरण पुन्हा सुरुवातीपासून सुरू होते.</string>
+    <string name="settings_storage_label">स्टोरेज</string>
+    <string name="settings_storage_summary">%1$s वापरले · %2$s मोकळे या डिव्हाइसवर</string>
+    <string name="settings_storage_location">डाउनलोड्स %1$s मध्ये ठेवले जातात</string>
+    <string name="settings_storage_picker">स्टोरेज स्थान</string>
+    <string name="settings_storage_internal">अंतर्गत स्टोरेज</string>
+    <string name="settings_storage_sd_card">SD कार्ड</string>
+    <string name="settings_storage_volume_free">%1$s मोकळे</string>
+    <string name="settings_storage_missing">आपण निवडलेले स्टोरेज सध्या उपलब्ध नाही, त्यामुळे डाउनलोड्स खाली निवडलेल्या स्थानावर जात आहेत.</string>
+    <string name="settings_storage_switch_title">डाउनलोड्स हलवायचे का?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">डाउनलोड्स अद्याप स्थानांदरम्यान हलवता येत नाहीत, त्यामुळे या डिव्हाइसवर आधीच असलेला डाउनलोड हटवला जाईल. आपण तो नवीन स्थानावर पुन्हा डाउनलोड करू शकता.</item>
+        <item quantity="other">डाउनलोड्स अद्याप स्थानांदरम्यान हलवता येत नाहीत, त्यामुळे या डिव्हाइसवर आधीच असलेले %1$d हटवले जातील. आपण ते नवीन स्थानावर पुन्हा डाउनलोड करू शकता.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">हटवा आणि स्विच करा</string>
+
+    <string name="settings_section_connectivity">कनेक्टिव्हिटी</string>
+    <string name="settings_offline_mode">ऑफलाइन मोड</string>
+    <string name="settings_offline_mode_supporting">फक्त या डिव्हाइसवर आधीच असलेले मीडिया दाखवा.</string>
+
+    <string name="settings_section_account">खाते</string>
+    <string name="settings_account_user">यांच्या रूपात साइन इन केले</string>
+    <string name="settings_account_server">सर्व्हर</string>
+    <string name="settings_account_unknown">साइन इन केलेले नाही</string>
+    <string name="settings_sign_out">साइन आउट करा</string>
+    <string name="settings_sign_out_dialog_title">साइन आउट करायचे का?</string>
+    <string name="settings_sign_out_dialog_message">पुन्हा साइन इन करण्यासाठी आपल्याला आपला सर्व्हर पत्ता आणि पासवर्ड लागेल.</string>
+    <string name="settings_sign_out_delete_downloads">या डिव्हाइसवरील डाउनलोड्स देखील हटवा</string>
+    <string name="settings_cancel">रद्द करा</string>
+</resources>

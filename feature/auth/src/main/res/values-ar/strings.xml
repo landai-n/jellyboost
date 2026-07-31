@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">الاتصال بالخادم</string>
+    <string name="server_setup_discovered_title">الخوادم على هذه الشبكة</string>
+    <string name="server_setup_discovering">جارٍ البحث في الشبكة المحلية…</string>
+    <string name="server_setup_no_servers_found">لم يُعلن أي خادم عن نفسه. أدخل عنوانًا أدناه.</string>
+    <string name="server_setup_manual_title">عنوان الخادم</string>
+    <string name="server_setup_address_label">المضيف أو الرابط</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org أو 192.168.1.10:8096</string>
+    <string name="server_setup_connect">اتصال</string>
+    <string name="server_setup_connecting">جارٍ الاتصال بالخادم…</string>
+    <string name="server_setup_session_lost">تعذّرت استعادة تسجيل دخولك المحفوظ، لذا تم تسجيل خروجك. يُرجى تسجيل الدخول مرة أخرى.</string>
+
+    <string name="login_title">تسجيل الدخول</string>
+    <string name="login_server_version">الإصدار %1$s</string>
+    <string name="login_server_version_unknown">الإصدار غير معروف</string>
+    <string name="login_public_users_title">من يشاهد؟</string>
+    <string name="login_username_label">اسم المستخدم</string>
+    <string name="login_password_label">كلمة المرور</string>
+    <string name="login_show_password">إظهار كلمة المرور</string>
+    <string name="login_hide_password">إخفاء كلمة المرور</string>
+    <string name="login_sign_in">تسجيل الدخول</string>
+    <string name="login_change_server">استخدام خادم آخر</string>
+    <string name="login_loading">جارٍ تحميل بيانات الخادم…</string>
+    <string name="login_or">أو</string>
+
+    <string name="login_quick_connect">استخدام الاتصال السريع</string>
+    <string name="login_quick_connect_title">الاتصال السريع</string>
+    <string name="login_quick_connect_instructions">افتح Jellyfin على جهاز مسجّل الدخول عليه بالفعل، وانتقل إلى الاتصال السريع، ثم أدخل هذا الرمز.</string>
+    <string name="login_quick_connect_waiting">بانتظار الموافقة…</string>
+    <string name="login_quick_connect_cancel">إلغاء</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="zero">لم يتم تجربة أي عنوان مرشّح.</item>
+        <item quantity="one">تمت تجربة عنوان مرشّح واحد، دون نجاح.</item>
+        <item quantity="two">تمت تجربة عنوانين مرشّحين، دون نجاح.</item>
+        <item quantity="few">تمت تجربة %d عناوين مرشّحة، دون نجاح.</item>
+        <item quantity="many">تمت تجربة %d عنوانًا مرشّحًا، دون نجاح.</item>
+        <item quantity="other">تمت تجربة %d عنوان مرشّح، دون نجاح.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">تعذّر الوصول إلى الخادم</string>
+    <string name="auth_error_unsupported_version_or_product">إصدار أو منتج غير مدعوم</string>
+    <string name="auth_error_cannot_connect">يتعذّر إنشاء الاتصال.\nتحقّق من اسم المضيف واتصالك بالشبكة.</string>
+    <string name="auth_error_invalid_credentials">اسم المستخدم أو كلمة المرور غير صحيحة.</string>
+    <string name="auth_error_quick_connect_expired">انتهت صلاحية هذا الرمز. اطلب رمزًا جديدًا وحاول مرة أخرى.</string>
+    <string name="auth_error_server">أجاب الخادم بخطأ. حاول مرة أخرى.</string>
+    <string name="auth_error_server_with_code">أجاب الخادم بخطأ (%1$d). حاول مرة أخرى.</string>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Henüz kitaplık yok. Sunucuda bir tane ekleyin.</string>
+    <string name="library_back">Geri</string>
+    <string name="library_home">Ana Sayfa</string>
+    <string name="library_sort">Sırala</string>
+    <string name="library_filter">Filtrele</string>
+    <string name="library_sort_title">Sıralama ölçütü</string>
+    <string name="library_sort_name">Ad</string>
+    <string name="library_sort_date_added">Eklenme tarihi</string>
+    <string name="library_sort_premiere_date">Yayın tarihi</string>
+    <string name="library_sort_community_rating">Topluluk puanı</string>
+    <string name="library_sort_runtime">Süre</string>
+    <string name="library_sort_random">Rastgele</string>
+    <string name="library_sort_direction">Yön</string>
+    <string name="library_sort_ascending">Artan</string>
+    <string name="library_sort_descending">Azalan</string>
+    <string name="library_filters_title">Filtreler</string>
+    <string name="library_filters_genres">Türler</string>
+    <string name="library_filters_years">Yıllar</string>
+    <string name="library_filters_played">İzlendi</string>
+    <string name="library_filters_played_any">Herhangi biri</string>
+    <string name="library_filters_played_yes">İzlendi</string>
+    <string name="library_filters_played_no">İzlenmedi</string>
+    <string name="library_filters_clear">Tümünü temizle</string>
+    <string name="library_filters_apply">Sonuçları göster</string>
+    <string name="library_filters_none">Bu kitaplık filtrelenebilecek hiçbir şey sunmuyor.</string>
+    <string name="library_filters_loading">Filtreler yükleniyor…</string>
+    <string name="library_empty">Burada gösterilecek bir şey yok.</string>
+    <string name="library_empty_filtered">Bu filtrelere uyan öğe yok.</string>
+    <string name="library_empty_clear_filters">Filtreleri temizle</string>
+    <string name="library_retry">Tekrar dene</string>
+    <string name="library_error_network">Sunucunuza ulaşılamıyor. Bağlantınızı kontrol edin ve tekrar deneyin.</string>
+    <string name="library_error_unauthorized">Oturumunuzun süresi doldu. Devam etmek için tekrar giriş yapın.</string>
+    <string name="library_error_not_found">O kitaplık artık sunucuda değil.</string>
+    <string name="library_error_server">Sunucu bir hata döndürdü.</string>
+    <string name="library_error_server_with_code">Sunucu bir hata döndürdü (%1$d).</string>
+    <string name="library_error_storage">Yerel veriler okunamadı.</string>
+    <string name="library_error_unknown">Bu kitaplık yüklenirken bir şeyler ters gitti.</string>
+</resources>

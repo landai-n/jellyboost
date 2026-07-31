@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Назад</string>
+    <string name="detail_home">Головна</string>
+    <string name="detail_play">Відтворити</string>
+    <string name="detail_resume">Продовжити</string>
+    <string name="detail_download">Завантажити</string>
+    <string name="detail_download_cancel">Скасувати</string>
+    <string name="detail_download_remove">Видалити</string>
+    <string name="detail_download_retry">Повторити</string>
+    <string name="detail_play_episode">Відтворити цей епізод</string>
+    <string name="detail_mark_watched">Позначити переглянутим</string>
+    <string name="detail_mark_unwatched">Позначити непереглянутим</string>
+    <string name="detail_add_favorite">Додати в обране</string>
+    <string name="detail_remove_favorite">Видалити з обраного</string>
+
+    <string name="detail_section_seasons">Сезони</string>
+    <string name="detail_section_next_up">Далі</string>
+    <string name="detail_section_episodes">Епізоди</string>
+    <string name="detail_section_similar">Схоже</string>
+
+    <string name="detail_runtime_minutes">%1$d хв</string>
+    <string name="detail_remaining_minutes">Залишилось %1$d хв</string>
+    <string name="detail_size_on_device">%1$s на пристрої</string>
+    <string name="detail_directed_by">Режисер: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d сезон</item>
+        <item quantity="few">%1$d сезони</item>
+        <item quantity="many">%1$d сезонів</item>
+        <item quantity="other">%1$d сезонів</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d епізод</item>
+        <item quantity="few">%1$d епізоди</item>
+        <item quantity="many">%1$d епізодів</item>
+        <item quantity="other">%1$d епізодів</item>
+    </plurals>
+
+    <string name="detail_empty">Цей елемент більше недоступний.</string>
+    <string name="detail_message_download_queued">Додано до завантажень.</string>
+    <string name="detail_message_download_failed">Не вдалося почати це завантаження.</string>
+    <string name="detail_message_download_deleted">Видалено з цього пристрою.</string>
+    <string name="detail_message_download_delete_failed">Не вдалося видалити це завантаження.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Завантаження скасовано — %1$d завершений епізод збережено.</item>
+        <item quantity="few">Завантаження скасовано — %1$d завершені епізоди збережено.</item>
+        <item quantity="many">Завантаження скасовано — %1$d завершених епізодів збережено.</item>
+        <item quantity="other">Завантаження скасовано — %1$d завершених епізодів збережено.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Не вдалося зберегти. Спробуйте ще раз.</string>
+
+    <string name="detail_group_play">Відтворити для %1$s</string>
+    <string name="detail_group_resume">Продовжити для %1$s</string>
+    <string name="detail_group_play_next">Відтворити далі</string>
+    <string name="detail_group_add_to_queue">Додати до черги</string>
+    <string name="detail_message_group_play">Запропоновано групі відтворити це.</string>
+    <string name="detail_message_group_play_next">Додано до черги групи — наступним.</string>
+    <string name="detail_message_group_queued">Додано до черги групи.</string>
+
+    <string name="detail_delete_download_dialog_title">Видалити завантаження?</string>
+    <string name="detail_delete_download_dialog_message">Це видалить його з цього пристрою. Ви можете завантажити знову будь-коли.</string>
+    <string name="detail_delete_download_dialog_confirm">Видалити</string>
+    <string name="detail_delete_download_dialog_cancel">Скасувати</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Indstillinger</string>
+    <string name="settings_back">Tilbage</string>
+    <string name="settings_home">Hjem</string>
+
+    <string name="settings_section_playback">Afspilning</string>
+    <string name="settings_skip_intro">Spring intro over</string>
+    <string name="settings_skip_outro">Spring outro over</string>
+    <string name="settings_skip_mode_off">Gør ingenting</string>
+    <string name="settings_skip_mode_show_button">Vis en spring over-knap</string>
+    <string name="settings_skip_mode_auto">Spring automatisk over</string>
+    <string name="settings_pip">Billede‑i‑billede</string>
+    <string name="settings_pip_supporting">Fortsæt afspilning i et svævende vindue, når du forlader appen.</string>
+
+    <string name="settings_section_downloads">Downloads</string>
+    <string name="settings_wifi_only">Kun Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Sæt downloads på pause ved mobildata.</string>
+    <string name="settings_quality">Downloadkvalitet</string>
+    <string name="settings_quality_original">Original fil – nøjagtig kopi, kan genoptages</string>
+    <string name="settings_quality_high">Høj – cirka 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Mellem – cirka 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Lav – cirka 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alt andet end den originale fil konverteres af din server, mens den sendes, så den viste størrelse under download er et skøn, og en afbrudt overførsel starter forfra.</string>
+    <string name="settings_storage_label">Lagerplads</string>
+    <string name="settings_storage_summary">%1$s brugt · %2$s ledig på denne enhed</string>
+    <string name="settings_storage_location">Downloads gemmes i %1$s</string>
+    <string name="settings_storage_picker">Lagerplacering</string>
+    <string name="settings_storage_internal">Internt lager</string>
+    <string name="settings_storage_sd_card">SD-kort</string>
+    <string name="settings_storage_volume_free">%1$s ledig</string>
+    <string name="settings_storage_missing">Det lager, du valgte, er ikke tilgængeligt lige nu, så downloads går til placeringen valgt nedenfor.</string>
+    <string name="settings_storage_switch_title">Flyt downloads?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Downloads kan endnu ikke flyttes mellem placeringer, så den download, der allerede er på denne enhed, bliver slettet. Du kan downloade den igen til den nye placering.</item>
+        <item quantity="other">Downloads kan endnu ikke flyttes mellem placeringer, så de %1$d, der allerede er på denne enhed, bliver slettet. Du kan downloade dem igen til den nye placering.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Slet og skift</string>
+
+    <string name="settings_section_connectivity">Forbindelse</string>
+    <string name="settings_offline_mode">Offlinetilstand</string>
+    <string name="settings_offline_mode_supporting">Vis kun indhold, der allerede er på denne enhed.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Logget ind som</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Ikke logget ind</string>
+    <string name="settings_sign_out">Log ud</string>
+    <string name="settings_sign_out_dialog_title">Log ud?</string>
+    <string name="settings_sign_out_dialog_message">Du skal bruge din serveradresse og adgangskode for at logge ind igen.</string>
+    <string name="settings_sign_out_delete_downloads">Slet også downloads fra denne enhed</string>
+    <string name="settings_cancel">Annuller</string>
+</resources>

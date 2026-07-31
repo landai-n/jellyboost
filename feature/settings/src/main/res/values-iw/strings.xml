@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">הגדרות</string>
+    <string name="settings_back">חזרה</string>
+    <string name="settings_home">בית</string>
+
+    <string name="settings_section_playback">הפעלה</string>
+    <string name="settings_skip_intro">דילוג על הפתיח</string>
+    <string name="settings_skip_outro">דילוג על הסיום</string>
+    <string name="settings_skip_mode_off">לא לעשות כלום</string>
+    <string name="settings_skip_mode_show_button">הצגת כפתור דילוג</string>
+    <string name="settings_skip_mode_auto">דילוג אוטומטי</string>
+    <string name="settings_pip">תמונה בתוך תמונה</string>
+    <string name="settings_pip_supporting">המשך הפעלה בחלון צף כשיוצאים מהאפליקציה.</string>
+
+    <string name="settings_section_downloads">הורדות</string>
+    <string name="settings_wifi_only">Wi‑Fi בלבד</string>
+    <string name="settings_wifi_only_supporting">השהיית הורדות כשמשתמשים בנתונים סלולריים.</string>
+    <string name="settings_quality">איכות הורדה</string>
+    <string name="settings_quality_original">קובץ מקורי — עותק מדויק, ניתן להמשך</string>
+    <string name="settings_quality_high">גבוהה — כ-20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">בינונית — כ-8 Mbps, 1080p</string>
+    <string name="settings_quality_low">נמוכה — כ-3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">כל דבר מלבד הקובץ המקורי מומר על ידי השרת שלך בזמן השליחה, ולכן הגודל המוצג במהלך ההורדה הוא הערכה, והעברה שנקטעה מתחילה מחדש.</string>
+    <string name="settings_storage_label">אחסון</string>
+    <string name="settings_storage_summary">%1$s בשימוש · %2$s פנויים במכשיר זה</string>
+    <string name="settings_storage_location">ההורדות נשמרות ב-%1$s</string>
+    <string name="settings_storage_picker">מיקום אחסון</string>
+    <string name="settings_storage_internal">אחסון פנימי</string>
+    <string name="settings_storage_sd_card">כרטיס SD</string>
+    <string name="settings_storage_volume_free">%1$s פנויים</string>
+    <string name="settings_storage_missing">האחסון שבחרת אינו זמין כרגע, ולכן ההורדות עוברות למיקום הנבחר למטה.</string>
+    <string name="settings_storage_switch_title">להעביר הורדות?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">עדיין אי אפשר להעביר הורדות בין מיקומים, ולכן ההורדה הקיימת במכשיר זה תימחק. תוכל להוריד אותה שוב למיקום החדש.</item>
+        <item quantity="two">עדיין אי אפשר להעביר הורדות בין מיקומים, ולכן שתי ההורדות הקיימות במכשיר זה יימחקו. תוכל להוריד אותן שוב למיקום החדש.</item>
+        <item quantity="many">עדיין אי אפשר להעביר הורדות בין מיקומים, ולכן %1$d ההורדות הקיימות במכשיר זה יימחקו. תוכל להוריד אותן שוב למיקום החדש.</item>
+        <item quantity="other">עדיין אי אפשר להעביר הורדות בין מיקומים, ולכן %1$d ההורדות הקיימות במכשיר זה יימחקו. תוכל להוריד אותן שוב למיקום החדש.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">מחיקה והחלפה</string>
+
+    <string name="settings_section_connectivity">קישוריות</string>
+    <string name="settings_offline_mode">מצב לא מקוון</string>
+    <string name="settings_offline_mode_supporting">הצגת מדיה שכבר נמצאת במכשיר זה בלבד.</string>
+
+    <string name="settings_section_account">חשבון</string>
+    <string name="settings_account_user">מחובר בתור</string>
+    <string name="settings_account_server">שרת</string>
+    <string name="settings_account_unknown">לא מחובר</string>
+    <string name="settings_sign_out">התנתקות</string>
+    <string name="settings_sign_out_dialog_title">להתנתק?</string>
+    <string name="settings_sign_out_dialog_message">תזדקק לכתובת השרת ולסיסמה שלך כדי להתחבר שוב.</string>
+    <string name="settings_sign_out_delete_downloads">מחיקת ההורדות מהמכשיר הזה גם כן</string>
+    <string name="settings_cancel">ביטול</string>
+</resources>

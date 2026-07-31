@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Ingen biblioteker ennå. Legg til ett på serveren.</string>
+
+    <string name="library_back">Tilbake</string>
+    <string name="library_home">Hjem</string>
+    <string name="library_sort">Sorter</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sorter etter</string>
+    <string name="library_sort_name">Navn</string>
+    <string name="library_sort_date_added">Dato lagt til</string>
+    <string name="library_sort_premiere_date">Utgivelsesdato</string>
+    <string name="library_sort_community_rating">Fellesskapsvurdering</string>
+    <string name="library_sort_runtime">Spilletid</string>
+    <string name="library_sort_random">Tilfeldig</string>
+    <string name="library_sort_direction">Retning</string>
+    <string name="library_sort_ascending">Stigende</string>
+    <string name="library_sort_descending">Synkende</string>
+
+    <string name="library_filters_title">Filtre</string>
+    <string name="library_filters_genres">Sjangre</string>
+    <string name="library_filters_years">År</string>
+    <string name="library_filters_played">Sett</string>
+    <string name="library_filters_played_any">Alle</string>
+    <string name="library_filters_played_yes">Sett</string>
+    <string name="library_filters_played_no">Usett</string>
+    <string name="library_filters_clear">Fjern alle</string>
+    <string name="library_filters_apply">Vis resultater</string>
+    <string name="library_filters_none">Dette biblioteket hadde ingenting å filtrere etter.</string>
+    <string name="library_filters_loading">Laster filtre…</string>
+
+    <string name="library_empty">Ingenting å vise her.</string>
+    <string name="library_empty_filtered">Ingen elementer samsvarer med disse filtrene.</string>
+    <string name="library_empty_clear_filters">Fjern filtre</string>
+    <string name="library_retry">Prøv igjen</string>
+
+    <string name="library_error_network">Får ikke kontakt med serveren din. Sjekk tilkoblingen og prøv igjen.</string>
+    <string name="library_error_unauthorized">Økten din er utløpt. Logg inn på nytt for å fortsette.</string>
+    <string name="library_error_not_found">Det biblioteket er ikke lenger på serveren.</string>
+    <string name="library_error_server">Serveren returnerte en feil.</string>
+    <string name="library_error_server_with_code">Serveren returnerte en feil (%1$d).</string>
+    <string name="library_error_storage">Kunne ikke lese lokale data.</string>
+    <string name="library_error_unknown">Noe gikk galt under lasting av dette biblioteket.</string>
+</resources>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_back">Retour</string>
+    <string name="settings_home">Accueil</string>
+    <string name="settings_section_playback">Lecture</string>
+    <string name="settings_skip_intro">Ignorer le générique</string>
+    <string name="settings_skip_outro">Ignorer la fin</string>
+    <string name="settings_skip_mode_off">Ne rien faire</string>
+    <string name="settings_skip_mode_show_button">Afficher un bouton pour ignorer</string>
+    <string name="settings_skip_mode_auto">Ignorer automatiquement</string>
+    <string name="settings_pip">Incrustation d\'image</string>
+    <string name="settings_pip_supporting">Continuer la lecture dans une fenêtre flottante en quittant l\'application.</string>
+    <string name="settings_section_downloads">Téléchargements</string>
+    <string name="settings_wifi_only">Wi‑Fi uniquement</string>
+    <string name="settings_wifi_only_supporting">Suspendre les téléchargements en connexion mobile.</string>
+    <string name="settings_quality">Qualité de téléchargement</string>
+    <string name="settings_quality_original">Fichier original — copie exacte, reprise possible</string>
+    <string name="settings_quality_high">Haute — environ 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Moyenne — environ 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Basse — environ 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Tout sauf le fichier original est converti par votre serveur au moment de l\'envoi, donc la taille affichée pendant le téléchargement est une estimation, et un transfert interrompu recommence depuis le début.</string>
+    <string name="settings_storage_label">Stockage</string>
+    <string name="settings_storage_summary">%1$s utilisés · %2$s libres sur cet appareil</string>
+    <string name="settings_storage_location">Les téléchargements sont conservés dans %1$s</string>
+    <string name="settings_storage_picker">Emplacement de stockage</string>
+    <string name="settings_storage_internal">Stockage interne</string>
+    <string name="settings_storage_sd_card">Carte SD</string>
+    <string name="settings_storage_volume_free">%1$s libres</string>
+    <string name="settings_storage_missing">Le stockage choisi n\'est pas disponible pour le moment, donc les téléchargements iront vers l\'emplacement sélectionné ci-dessous.</string>
+    <string name="settings_storage_switch_title">Déplacer les téléchargements ?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Les téléchargements ne peuvent pas encore être déplacés entre emplacements, donc celui déjà présent sur cet appareil sera supprimé. Vous pourrez le retélécharger vers le nouvel emplacement.</item>
+        <item quantity="other">Les téléchargements ne peuvent pas encore être déplacés entre emplacements, donc les %1$d déjà présents sur cet appareil seront supprimés. Vous pourrez les retélécharger vers le nouvel emplacement.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Supprimer et changer</string>
+    <string name="settings_section_connectivity">Connectivité</string>
+    <string name="settings_offline_mode">Mode hors ligne</string>
+    <string name="settings_offline_mode_supporting">N\'afficher que les contenus déjà présents sur cet appareil.</string>
+    <string name="settings_section_account">Compte</string>
+    <string name="settings_account_user">Connecté en tant que</string>
+    <string name="settings_account_server">Serveur</string>
+    <string name="settings_account_unknown">Non connecté</string>
+    <string name="settings_sign_out">Se déconnecter</string>
+    <string name="settings_sign_out_dialog_title">Se déconnecter ?</string>
+    <string name="settings_sign_out_dialog_message">Vous aurez besoin de l\'adresse de votre serveur et de votre mot de passe pour vous reconnecter.</string>
+    <string name="settings_sign_out_delete_downloads">Supprimer aussi les téléchargements de cet appareil</string>
+    <string name="settings_cancel">Annuler</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Все още няма библиотеки. Добавете такава на сървъра.</string>
+
+    <string name="library_back">Назад</string>
+    <string name="library_home">Начало</string>
+    <string name="library_sort">Сортиране</string>
+    <string name="library_filter">Филтър</string>
+
+    <string name="library_sort_title">Сортирай по</string>
+    <string name="library_sort_name">Име</string>
+    <string name="library_sort_date_added">Дата на добавяне</string>
+    <string name="library_sort_premiere_date">Дата на издаване</string>
+    <string name="library_sort_community_rating">Рейтинг на общността</string>
+    <string name="library_sort_runtime">Времетраене</string>
+    <string name="library_sort_random">Случайно</string>
+    <string name="library_sort_direction">Посока</string>
+    <string name="library_sort_ascending">Възходящо</string>
+    <string name="library_sort_descending">Низходящо</string>
+
+    <string name="library_filters_title">Филтри</string>
+    <string name="library_filters_genres">Жанрове</string>
+    <string name="library_filters_years">Години</string>
+    <string name="library_filters_played">Гледано</string>
+    <string name="library_filters_played_any">Всички</string>
+    <string name="library_filters_played_yes">Гледано</string>
+    <string name="library_filters_played_no">Негледано</string>
+    <string name="library_filters_clear">Изчисти всички</string>
+    <string name="library_filters_apply">Покажи резултатите</string>
+    <string name="library_filters_none">Тази библиотека не предложи нищо за филтриране.</string>
+    <string name="library_filters_loading">Зареждане на филтрите…</string>
+
+    <string name="library_empty">Тук няма нищо за показване.</string>
+    <string name="library_empty_filtered">Няма елемент, отговарящ на тези филтри.</string>
+    <string name="library_empty_clear_filters">Изчисти филтрите</string>
+    <string name="library_retry">Опитай пак</string>
+
+    <string name="library_error_network">Сървърът е недостъпен. Проверете връзката и опитайте пак.</string>
+    <string name="library_error_unauthorized">Сесията ви е изтекла. Влезте отново, за да продължите.</string>
+    <string name="library_error_not_found">Тази библиотека вече не е на сървъра.</string>
+    <string name="library_error_server">Сървърът върна грешка.</string>
+    <string name="library_error_server_with_code">Сървърът върна грешка (%1$d).</string>
+    <string name="library_error_storage">Не можаха да се прочетат локалните данни.</string>
+    <string name="library_error_unknown">Нещо се обърка при зареждането на тази библиотека.</string>
+</resources>

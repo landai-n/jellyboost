@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">ආපසු</string>
+    <string name="detail_home">මුල් පිටුව</string>
+    <string name="detail_play">වාදනය කරන්න</string>
+    <string name="detail_resume">නැවත ආරම්භ කරන්න</string>
+    <string name="detail_download">බාගත කරන්න</string>
+    <string name="detail_download_cancel">අවලංගු කරන්න</string>
+    <string name="detail_download_remove">ඉවත් කරන්න</string>
+    <string name="detail_download_retry">යළි උත්සාහ කරන්න</string>
+    <string name="detail_play_episode">මෙම කථාංගය වාදනය කරන්න</string>
+    <string name="detail_mark_watched">නරඹන ලද ලෙස සලකුණු කරන්න</string>
+    <string name="detail_mark_unwatched">නොනරඹන ලද ලෙස සලකුණු කරන්න</string>
+    <string name="detail_add_favorite">ප්‍රියතමයන්ට එක් කරන්න</string>
+    <string name="detail_remove_favorite">ප්‍රියතමයන්ගෙන් ඉවත් කරන්න</string>
+    <string name="detail_section_seasons">වාර</string>
+    <string name="detail_section_next_up">ඊළඟට</string>
+    <string name="detail_section_episodes">කථාංග</string>
+    <string name="detail_section_similar">මීට සමාන තවත්</string>
+    <string name="detail_runtime_minutes">මිනිත්තු %1$d</string>
+    <string name="detail_remaining_minutes">මිනිත්තු %1$d ඉතිරිය</string>
+    <string name="detail_size_on_device">උපාංගයේ %1$s</string>
+    <string name="detail_directed_by">අධ්‍යක්ෂණය %1$s විසිනි</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d වාරය</item>
+        <item quantity="other">%1$d වාර</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d කථාංගය</item>
+        <item quantity="other">%1$d කථාංග</item>
+    </plurals>
+    <string name="detail_empty">මෙම අයිතමය තවදුරටත් ලබා ගත නොහැක.</string>
+    <string name="detail_message_download_queued">බාගත කිරීම් වෙත එක් කරන ලදී.</string>
+    <string name="detail_message_download_failed">එම බාගත කිරීම ආරම්භ කළ නොහැකි විය.</string>
+    <string name="detail_message_download_deleted">මෙම උපාංගයෙන් ඉවත් කරන ලදී.</string>
+    <string name="detail_message_download_delete_failed">එම බාගත කිරීම ඉවත් කළ නොහැකි විය.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">බාගත කිරීම අවලංගු කරන ලදී — නිමකළ කථාංගය %1$d ක් තබා ගන්නා ලදී.</item>
+        <item quantity="other">බාගත කිරීම අවලංගු කරන ලදී — නිමකළ කථාංග %1$d ක් තබා ගන්නා ලදී.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">එය සුරැකිය නොහැකි විය. නැවත උත්සාහ කරන්න.</string>
+    <string name="detail_group_play">%1$s සඳහා වාදනය කරන්න</string>
+    <string name="detail_group_resume">%1$s සඳහා නැවත ආරම්භ කරන්න</string>
+    <string name="detail_group_play_next">ඊළඟට වාදනය කරන්න</string>
+    <string name="detail_group_add_to_queue">පෝලිමට එක් කරන්න</string>
+    <string name="detail_message_group_play">මෙය වාදනය කරන ලෙස කණ්ඩායමෙන් ඉල්ලා සිටියි.</string>
+    <string name="detail_message_group_play_next">කණ්ඩායම සඳහා ඊළඟට පෝලිමට දමන ලදී.</string>
+    <string name="detail_message_group_queued">කණ්ඩායමේ පෝලිමට එක් කරන ලදී.</string>
+    <string name="detail_delete_download_dialog_title">බාගත කිරීම මකන්නද?</string>
+    <string name="detail_delete_download_dialog_message">මෙය එය මෙම උපාංගයෙන් ඉවත් කරයි. ඔබට ඕනෑම වේලාවක එය නැවත බාගත කළ හැක.</string>
+    <string name="detail_delete_download_dialog_confirm">මකන්න</string>
+    <string name="detail_delete_download_dialog_cancel">අවලංගු කරන්න</string>
+</resources>

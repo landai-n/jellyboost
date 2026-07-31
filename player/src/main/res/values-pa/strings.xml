@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">ਪਲੇਅਰ ਬੰਦ ਕਰੋ</string>
+    <string name="player_play">ਚਲਾਓ</string>
+    <string name="player_pause">ਰੋਕੋ</string>
+    <string name="player_rewind">10 ਸਕਿੰਟ ਪਿੱਛੇ ਜਾਓ</string>
+    <string name="player_forward">30 ਸਕਿੰਟ ਅੱਗੇ ਜਾਓ</string>
+
+    <string name="player_audio">ਆਡੀਓ</string>
+    <string name="player_subtitles">ਸਬਟਾਈਟਲ</string>
+    <string name="player_subtitles_off">ਬੰਦ</string>
+    <string name="player_quality">ਕੁਆਲਿਟੀ</string>
+    <string name="player_speed">ਸਪੀਡ</string>
+
+    <string name="player_skip_intro">ਇੰਟਰੋ ਛੱਡੋ</string>
+    <string name="player_skip_outro">ਆਉਟਰੋ ਛੱਡੋ</string>
+
+    <string name="player_quality_auto">ਆਟੋ</string>
+    <string name="player_quality_high">ਉੱਚ — 20 Mbps</string>
+    <string name="player_quality_medium">ਦਰਮਿਆਨੀ — 8 Mbps</string>
+    <string name="player_quality_low">ਘੱਟ — 3 Mbps</string>
+    <string name="player_quality_lowest">ਸਭ ਤੋਂ ਘੱਟ — 720 kbps</string>
+
+    <string name="player_method_direct_play">ਡਾਇਰੈਕਟ ਪਲੇ</string>
+    <string name="player_method_direct_stream">ਡਾਇਰੈਕਟ ਸਟ੍ਰੀਮ</string>
+    <string name="player_method_transcode">ਟ੍ਰਾਂਸਕੋਡਿੰਗ</string>
+
+    <string name="player_message_transcode">ਤੁਹਾਡੀ ਡਿਵਾਈਸ ਇਸ ਫਾਈਲ ਨੂੰ ਡੀਕੋਡ ਨਹੀਂ ਕਰ ਸਕੀ, ਇਸ ਲਈ ਸਰਵਰ ਇਸਨੂੰ ਟ੍ਰਾਂਸਕੋਡ ਕਰ ਰਿਹਾ ਹੈ।</string>
+    <string name="player_message_lower_quality">ਸਟ੍ਰੀਮ ਰੁਕ ਗਈ — ਘੱਟ ਕੁਆਲਿਟੀ ਉੱਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ।</string>
+    <string name="player_message_track_restart">ਸਰਵਰ ਨੂੰ ਉਸ ਟਰੈਕ ਲਈ ਸਟ੍ਰੀਮ ਦੁਬਾਰਾ ਏਨਕੋਡ ਕਰਨੀ ਪਈ।</string>
+    <string name="player_message_track_streaming">ਉਹ ਟਰੈਕ ਡਾਊਨਲੋਡ ਵਿੱਚ ਨਹੀਂ ਹੈ — ਇਸਨੂੰ ਤੁਹਾਡੇ ਸਰਵਰ ਤੋਂ ਸਟ੍ਰੀਮ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ।</string>
+    <string name="player_message_track_offline">ਉਹ ਟਰੈਕ ਡਾਊਨਲੋਡ ਕੀਤੀ ਫਾਈਲ ਵਿੱਚ ਨਹੀਂ ਹੈ।</string>
+    <string name="player_message_failed">ਪਲੇਬੈਕ ਅਸਫਲ ਰਿਹਾ।</string>
+
+    <string name="player_syncplay_group">ਗਰੁੱਪ</string>
+    <string name="player_syncplay_waiting">ਗਰੁੱਪ ਦੀ ਉਡੀਕ ਹੋ ਰਹੀ ਹੈ…</string>
+    <string name="player_syncplay_shuffle">ਕਤਾਰ ਬੇਤਰਤੀਬ ਕਰੋ</string>
+    <string name="player_syncplay_repeat">ਦੁਹਰਾਓ</string>
+    <string name="player_syncplay_repeat_none">ਬੰਦ</string>
+    <string name="player_syncplay_repeat_one">ਇਹ ਆਈਟਮ</string>
+    <string name="player_syncplay_repeat_all">ਪੂਰੀ ਕਤਾਰ</string>
+    <string name="player_syncplay_leave">ਗਰੁੱਪ ਛੱਡੋ</string>
+    <string name="player_syncplay_leave_title">ਇਹ ਗਰੁੱਪ ਛੱਡੀਏ?</string>
+    <string name="player_syncplay_leave_body">ਪਲੇਬੈਕ ਇੱਥੇ, ਆਪਣੇ ਆਪ ਜਾਰੀ ਰਹਿੰਦੀ ਹੈ। ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਹੋਣ ਲਈ ਗਰੁੱਪ ਦੁਬਾਰਾ ਚੁਣਨਾ ਪਵੇਗਾ।</string>
+
+    <string name="player_syncplay_cancel">ਰੱਦ ਕਰੋ</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d ਵਿਅਕਤੀ ਦੇਖ ਰਿਹਾ ਹੈ</item>
+        <item quantity="other">%d ਲੋਕ ਦੇਖ ਰਹੇ ਹਨ</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d ਹੋਰ</string>
+
+    <string name="player_syncplay_queue">ਕਤਾਰ</string>
+    <string name="player_syncplay_queue_empty">ਗਰੁੱਪ ਨੇ ਹਾਲੇ ਤੱਕ ਕੁਝ ਵੀ ਕਤਾਰਬੱਧ ਨਹੀਂ ਕੀਤਾ।</string>
+    <string name="player_syncplay_queue_item_loading">ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…</string>
+    <string name="player_syncplay_queue_playing">ਹੁਣ ਚੱਲ ਰਿਹਾ ਹੈ</string>
+    <string name="player_syncplay_queue_next">ਅਗਲੀ ਆਈਟਮ</string>
+    <string name="player_syncplay_queue_previous">ਪਿਛਲੀ ਆਈਟਮ</string>
+    <string name="player_syncplay_queue_move_up">ਉੱਪਰ ਲਿਜਾਓ</string>
+    <string name="player_syncplay_queue_move_down">ਹੇਠਾਂ ਲਿਜਾਓ</string>
+    <string name="player_syncplay_queue_remove">ਕਤਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d ਆਈਟਮ ਕਤਾਰਬੱਧ</item>
+        <item quantity="other">%d ਆਈਟਮਾਂ ਕਤਾਰਬੱਧ</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay ਛੱਡ ਦਿੱਤਾ — ਕਨੈਕਸ਼ਨ ਟੁੱਟ ਗਿਆ</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay ਗਰੁੱਪ ਵਿੱਚ ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਹੋਏ</string>
+    <string name="player_message_syncplay_join_failed">ਉਸ SyncPlay ਗਰੁੱਪ ਵਿੱਚ ਸ਼ਾਮਲ ਨਹੀਂ ਹੋ ਸਕੇ।</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay ਗਰੁੱਪ ਖਤਮ ਹੋ ਗਿਆ ਹੈ।</string>
+    <string name="player_message_syncplay_removed">ਤੁਸੀਂ ਹੁਣ SyncPlay ਗਰੁੱਪ ਵਿੱਚ ਨਹੀਂ ਹੋ।</string>
+    <string name="player_message_syncplay_library_denied">ਗਰੁੱਪ ਕੁਝ ਅਜਿਹਾ ਦੇਖ ਰਿਹਾ ਹੈ ਜਿਸ ਤੱਕ ਤੁਹਾਡੀ ਪਹੁੰਚ ਨਹੀਂ ਹੈ।</string>
+    <string name="player_message_syncplay_item_unavailable">ਗਰੁੱਪ ਜੋ ਦੇਖ ਰਿਹਾ ਹੈ ਉਹ ਖੋਲ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">ਪਿੱਛੇ</string>
+    <string name="player_syncplay_groups_home">ਹੋਮ</string>
+    <string name="player_syncplay_groups_create">ਗਰੁੱਪ ਬਣਾਓ</string>
+    <string name="player_syncplay_groups_create_title">ਆਪਣੇ ਗਰੁੱਪ ਦਾ ਨਾਮ ਦਿਓ</string>
+    <string name="player_syncplay_groups_create_hint">ਗਰੁੱਪ ਦਾ ਨਾਮ</string>
+    <string name="player_syncplay_groups_create_confirm">ਬਣਾਓ</string>
+    <string name="player_syncplay_groups_joining">ਸ਼ਾਮਲ ਹੋ ਰਹੇ ਹਾਂ…</string>
+    <string name="player_syncplay_groups_active_label">ਤੁਸੀਂ ਇਸ ਗਰੁੱਪ ਵਿੱਚ ਹੋ</string>
+    <string name="player_syncplay_groups_open_player">ਪਲੇਅਰ ਖੋਲ੍ਹੋ</string>
+    <string name="player_syncplay_groups_empty">ਇਸ ਵੇਲੇ ਹੋਰ ਕੋਈ ਵੀ ਇਕੱਠੇ ਨਹੀਂ ਦੇਖ ਰਿਹਾ।</string>
+    <string name="player_syncplay_groups_disabled">ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ SyncPlay ਬੰਦ ਹੈ।</string>
+    <string name="player_syncplay_groups_error">SyncPlay ਗਰੁੱਪ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay ਗਰੁੱਪ</string>
+    <string name="player_syncplay_presence_channel_description">ਐਪ ਬੈਕਗ੍ਰਾਊਂਡ ਵਿੱਚ ਹੋਣ ਦੌਰਾਨ ਇਕੱਠੇ ਦੇਖਣ ਵਾਲੇ ਗਰੁੱਪ ਵਿੱਚ ਤੁਹਾਡੀ ਥਾਂ ਬਣਾਈ ਰੱਖਦਾ ਹੈ।</string>
+    <string name="player_syncplay_presence_title">SyncPlay ਗਰੁੱਪ ਵਿੱਚ</string>
+    <string name="player_syncplay_presence_text">ਗਰੁੱਪ ਦੀ ਉਡੀਕ ਹੋ ਰਹੀ ਹੈ</string>
+    <string name="player_syncplay_presence_leave">ਛੱਡੋ</string>
+
+    <string name="player_syncplay_state_idle">ਵਿਹਲਾ</string>
+    <string name="player_syncplay_state_waiting">ਉਡੀਕ ਵਿੱਚ</string>
+    <string name="player_syncplay_state_paused">ਰੋਕਿਆ ਗਿਆ</string>
+    <string name="player_syncplay_state_playing">ਚੱਲ ਰਿਹਾ ਹੈ</string>
+
+    <string name="player_cast">ਕਿਸੇ ਡਿਵਾਈਸ ਉੱਤੇ ਕਾਸਟ ਕਰੋ</string>
+
+    <string name="player_cast_device_unnamed">ਤੁਹਾਡੀ TV</string>
+    <string name="player_message_cast_transferred">ਹੁਣ %1$s ਉੱਤੇ ਚੱਲ ਰਿਹਾ ਹੈ।</string>
+    <string name="player_message_cast_left_syncplay">%1$s ਉੱਤੇ ਕਾਸਟ ਕਰਨ ਲਈ SyncPlay ਗਰੁੱਪ ਛੱਡ ਦਿੱਤਾ।</string>
+    <string name="player_message_cast_failed">ਉਹ %1$s ਉੱਤੇ ਨਹੀਂ ਚਲਾਇਆ ਜਾ ਸਕਿਆ।</string>
+
+    <string name="player_casting_to">%1$s ਉੱਤੇ ਕਾਸਟ ਹੋ ਰਿਹਾ ਹੈ</string>
+</resources>

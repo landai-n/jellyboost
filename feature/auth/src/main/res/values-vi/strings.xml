@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Kết nối với máy chủ</string>
+    <string name="server_setup_discovered_title">Máy chủ trên mạng này</string>
+    <string name="server_setup_discovering">Đang tìm kiếm trên mạng cục bộ…</string>
+    <string name="server_setup_no_servers_found">Không có máy chủ nào tự thông báo. Nhập địa chỉ bên dưới.</string>
+    <string name="server_setup_manual_title">Địa chỉ máy chủ</string>
+    <string name="server_setup_address_label">Máy chủ hoặc URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org hoặc 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Kết nối</string>
+    <string name="server_setup_connecting">Đang liên hệ với máy chủ…</string>
+    <string name="server_setup_session_lost">Không thể khôi phục thông tin đăng nhập đã lưu của bạn, vì vậy bạn đã bị đăng xuất. Vui lòng đăng nhập lại.</string>
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_server_version">Phiên bản %1$s</string>
+    <string name="login_server_version_unknown">Không rõ phiên bản</string>
+    <string name="login_public_users_title">Ai đang xem?</string>
+    <string name="login_username_label">Tên đăng nhập</string>
+    <string name="login_password_label">Mật khẩu</string>
+    <string name="login_show_password">Hiện mật khẩu</string>
+    <string name="login_hide_password">Ẩn mật khẩu</string>
+    <string name="login_sign_in">Đăng nhập</string>
+    <string name="login_change_server">Dùng máy chủ khác</string>
+    <string name="login_loading">Đang tải thông tin máy chủ…</string>
+    <string name="login_or">hoặc</string>
+    <string name="login_quick_connect">Dùng Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Mở Jellyfin trên một thiết bị bạn đã đăng nhập sẵn, vào Quick Connect và nhập mã này.</string>
+    <string name="login_quick_connect_waiting">Đang chờ phê duyệt…</string>
+    <string name="login_quick_connect_cancel">Hủy</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">Đã thử %d địa chỉ, nhưng không thành công.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Không thể kết nối với máy chủ</string>
+    <string name="auth_error_unsupported_version_or_product">Phiên bản hoặc sản phẩm không được hỗ trợ</string>
+    <string name="auth_error_cannot_connect">Không thể thiết lập kết nối.\nKiểm tra tên máy chủ và kết nối mạng của bạn.</string>
+    <string name="auth_error_invalid_credentials">Sai tên đăng nhập hoặc mật khẩu.</string>
+    <string name="auth_error_quick_connect_expired">Mã đó đã hết hạn. Yêu cầu mã mới và thử lại.</string>
+    <string name="auth_error_server">Máy chủ đã trả về lỗi. Thử lại.</string>
+    <string name="auth_error_server_with_code">Máy chủ đã trả về lỗi (%1$d). Thử lại.</string>
+</resources>

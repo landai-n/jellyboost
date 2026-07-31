@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">ސެޓިންގްސް</string>
+    <string name="settings_back">ފަހަތަށް</string>
+    <string name="settings_home">ހޯމް</string>
+
+    <string name="settings_section_playback">ޕްލޭބެކް</string>
+    <string name="settings_skip_intro">އިންޓްރޯ ސްކިޕްކުރޭ</string>
+    <string name="settings_skip_outro">އައުޓްރޯ ސްކިޕްކުރޭ</string>
+    <string name="settings_skip_mode_off">އެއްވެސް ކަމެއް ނުކުރޭ</string>
+    <string name="settings_skip_mode_show_button">ސްކިޕް ބަޓަނެއް ދައްކާ</string>
+    <string name="settings_skip_mode_auto">އޮޓޮމެޓިކުން ސްކިޕްކުރޭ</string>
+    <string name="settings_pip">ޕިކްޗަރ-އިން-ޕިކްޗަރ</string>
+    <string name="settings_pip_supporting">އެޕުން ނިކުމެލިޔަސް ފްލޯޓިންގް ވިންޑޯއެއްގައި ޕްލޭކުރަމުން ގެންދޭ.</string>
+
+    <string name="settings_section_downloads">ޑައުންލޯޑްތައް</string>
+    <string name="settings_wifi_only">Wi‑Fi އެކަނި</string>
+    <string name="settings_wifi_only_supporting">މޮބައިލް ޑޭޓާ ބޭނުންކުރާއިރު ޑައުންލޯޑްތައް މެދުކަނޑާލާ.</string>
+    <string name="settings_quality">ޑައުންލޯޑް ކޮލިޓީ</string>
+    <string name="settings_quality_original">އަސްލު ފައިލް — ސީދާ ކޮޕީއެއް، ކުރިއަށް ގެންދެވޭނެ</string>
+    <string name="settings_quality_high">މަތި — ގާތްގަނޑަކަށް 20 Mbps، 1080p</string>
+    <string name="settings_quality_medium">މެދު — ގާތްގަނޑަކަށް 8 Mbps، 1080p</string>
+    <string name="settings_quality_low">ދަށް — ގާތްގަނޑަކަށް 3 Mbps، 720p</string>
+    <string name="settings_quality_supporting">އަސްލު ފައިލް ފިޔަވައި އެހެން ހުރިހާ އެއްޗެއް ފޮނުވަމުން ތިޔަ ސަރވަރއިން ބަދަލުކުރެއެވެ، ވީމާ ޑައުންލޯޑްވަމުންދާއިރު ދައްކާ ސައިޒަކީ ލަފައެކެވެ، އަދި މެދުކެނޑޭ ޓްރާންސްފަރއެއް އަލުން ފަށާނެއެވެ.</string>
+    <string name="settings_storage_label">ސްޓޯރޭޖް</string>
+    <string name="settings_storage_summary">%1$s ބޭނުންކޮށްފި · %2$s މި ޑިވައިސްގައި ހުސް</string>
+    <string name="settings_storage_location">ޑައުންލޯޑްތައް ބަހައްޓަނީ %1$s ގައި</string>
+    <string name="settings_storage_picker">ސްޓޯރޭޖް ތަން</string>
+    <string name="settings_storage_internal">އިންޓަރނަލް ސްޓޯރޭޖް</string>
+    <string name="settings_storage_sd_card">SD ކާޑް</string>
+    <string name="settings_storage_volume_free">%1$s ހުސް</string>
+    <string name="settings_storage_missing">ތިޔަ ހޮވި ސްޓޯރޭޖް މިހާރު ނުލިބޭ، ވީމާ ޑައުންލޯޑްތައް ތިރީގައި ހޮވާފައިވާ ތަނަށް ދާނެއެވެ.</string>
+    <string name="settings_storage_switch_title">ޑައުންލޯޑްތައް ބަދަލުކުރަންހޭ؟</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">ޑައުންލޯޑްތައް ތަންތަނުގެ މެދުގައި އަދި ބަދަލެއް ނުކުރެވޭނެ، ވީމާ މި ޑިވައިސްގައި މިހާރު ހުރި ޑައުންލޯޑް ފޮހެލެވޭނެއެވެ. އާ ތަނަށް އަލުން ޑައުންލޯޑްކުރެވިދާނެއެވެ.</item>
+        <item quantity="other">ޑައުންލޯޑްތައް ތަންތަނުގެ މެދުގައި އަދި ބަދަލެއް ނުކުރެވޭނެ، ވީމާ މި ޑިވައިސްގައި މިހާރު ހުރި %1$d ޑައުންލޯޑް ފޮހެލެވޭނެއެވެ. އާ ތަނަށް އަލުން ޑައުންލޯޑްކުރެވިދާނެއެވެ.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">ފޮހެލާފައި ބަދަލުކުރޭ</string>
+
+    <string name="settings_section_connectivity">ކަނެކްޓިވިޓީ</string>
+    <string name="settings_offline_mode">އޮފްލައިން މޯޑް</string>
+    <string name="settings_offline_mode_supporting">މިހާރު މި ޑިވައިސްގައި ހުރި މީޑިއާ އެކަނި ދައްކާ.</string>
+
+    <string name="settings_section_account">އެކައުންޓް</string>
+    <string name="settings_account_user">ސައިން އިންވެފައި</string>
+    <string name="settings_account_server">ސަރވަރ</string>
+    <string name="settings_account_unknown">ސައިން އިންވެފައެއް ނެތް</string>
+    <string name="settings_sign_out">ސައިން އައުޓް</string>
+    <string name="settings_sign_out_dialog_title">ސައިން އައުޓް ވާންހޭ؟</string>
+    <string name="settings_sign_out_dialog_message">އަލުން ސައިން އިންވުމަށް ތިޔަ ސަރވަރ އެޑްރެހާއި ޕާސްވޯޑް ބޭނުންވާނެއެވެ.</string>
+    <string name="settings_sign_out_delete_downloads">މި ޑިވައިސްއިން ޑައުންލޯޑްތައްވެސް ފޮހެލާ</string>
+    <string name="settings_cancel">ކެންސަލްކުރޭ</string>
+</resources>

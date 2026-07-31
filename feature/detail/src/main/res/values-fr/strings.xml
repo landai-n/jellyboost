@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Retour</string>
+    <string name="detail_home">Accueil</string>
+    <string name="detail_play">Lecture</string>
+    <string name="detail_resume">Reprendre</string>
+    <string name="detail_download">Télécharger</string>
+    <string name="detail_download_cancel">Annuler</string>
+    <string name="detail_download_remove">Supprimer</string>
+    <string name="detail_download_retry">Réessayer</string>
+    <string name="detail_play_episode">Lire cet épisode</string>
+    <string name="detail_mark_watched">Marquer comme vu</string>
+    <string name="detail_mark_unwatched">Marquer comme non vu</string>
+    <string name="detail_add_favorite">Ajouter aux favoris</string>
+    <string name="detail_remove_favorite">Retirer des favoris</string>
+    <string name="detail_section_seasons">Saisons</string>
+    <string name="detail_section_next_up">À suivre</string>
+    <string name="detail_section_episodes">Épisodes</string>
+    <string name="detail_section_similar">Suggestions similaires</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min restantes</string>
+    <string name="detail_size_on_device">%1$s sur l\'appareil</string>
+    <string name="detail_directed_by">Réalisé par %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d saison</item>
+        <item quantity="other">%1$d saisons</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d épisode</item>
+        <item quantity="other">%1$d épisodes</item>
+    </plurals>
+    <string name="detail_empty">Cet élément n\'est plus disponible.</string>
+    <string name="detail_message_download_queued">Ajouté aux téléchargements.</string>
+    <string name="detail_message_download_failed">Impossible de démarrer ce téléchargement.</string>
+    <string name="detail_message_download_deleted">Supprimé de cet appareil.</string>
+    <string name="detail_message_download_delete_failed">Impossible de supprimer ce téléchargement.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Téléchargement annulé — %1$d épisode terminé conservé.</item>
+        <item quantity="other">Téléchargement annulé — %1$d épisodes terminés conservés.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Impossible d\'enregistrer cela. Réessayez.</string>
+    <string name="detail_group_play">Lire pour %1$s</string>
+    <string name="detail_group_resume">Reprendre pour %1$s</string>
+    <string name="detail_group_play_next">Lire ensuite</string>
+    <string name="detail_group_add_to_queue">Ajouter à la file d\'attente</string>
+    <string name="detail_message_group_play">Le groupe a été invité à lire ce contenu.</string>
+    <string name="detail_message_group_play_next">Ajouté à la suite pour le groupe.</string>
+    <string name="detail_message_group_queued">Ajouté à la file d\'attente du groupe.</string>
+    <string name="detail_delete_download_dialog_title">Supprimer le téléchargement ?</string>
+    <string name="detail_delete_download_dialog_message">Ceci le supprime de cet appareil. Vous pouvez le retélécharger à tout moment.</string>
+    <string name="detail_delete_download_dialog_confirm">Supprimer</string>
+    <string name="detail_delete_download_dialog_cancel">Annuler</string>
+</resources>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Закрыть плеер</string>
+    <string name="player_play">Воспроизвести</string>
+    <string name="player_pause">Пауза</string>
+    <string name="player_rewind">Назад на 10 секунд</string>
+    <string name="player_forward">Вперёд на 30 секунд</string>
+
+    <string name="player_audio">Аудио</string>
+    <string name="player_subtitles">Субтитры</string>
+    <string name="player_subtitles_off">Выкл.</string>
+    <string name="player_quality">Качество</string>
+    <string name="player_speed">Скорость</string>
+
+    <string name="player_skip_intro">Пропустить заставку</string>
+    <string name="player_skip_outro">Пропустить титры</string>
+
+    <string name="player_quality_auto">Авто</string>
+    <string name="player_quality_high">Высокое — 20 Мбит/с</string>
+    <string name="player_quality_medium">Среднее — 8 Мбит/с</string>
+    <string name="player_quality_low">Низкое — 3 Мбит/с</string>
+    <string name="player_quality_lowest">Минимальное — 720 кбит/с</string>
+
+    <string name="player_method_direct_play">Прямое воспроизведение</string>
+    <string name="player_method_direct_stream">Прямая трансляция</string>
+    <string name="player_method_transcode">Перекодирование</string>
+
+    <string name="player_message_transcode">Ваше устройство не может декодировать этот файл, поэтому сервер выполняет перекодирование.</string>
+    <string name="player_message_lower_quality">Поток прервался — повтор попытки с более низким качеством.</string>
+    <string name="player_message_track_restart">Серверу пришлось перекодировать поток для этой дорожки.</string>
+    <string name="player_message_track_streaming">Этой дорожки нет в загрузке — трансляция с вашего сервера.</string>
+    <string name="player_message_track_offline">Этой дорожки нет в загруженном файле.</string>
+    <string name="player_message_failed">Не удалось воспроизвести.</string>
+
+    <string name="player_syncplay_group">Группа</string>
+    <string name="player_syncplay_waiting">Ожидание группы…</string>
+    <string name="player_syncplay_shuffle">Перемешать очередь</string>
+    <string name="player_syncplay_repeat">Повтор</string>
+    <string name="player_syncplay_repeat_none">Выкл.</string>
+    <string name="player_syncplay_repeat_one">Этот элемент</string>
+    <string name="player_syncplay_repeat_all">Всю очередь</string>
+    <string name="player_syncplay_leave">Покинуть группу</string>
+    <string name="player_syncplay_leave_title">Покинуть эту группу?</string>
+    <string name="player_syncplay_leave_body">Воспроизведение продолжится здесь, отдельно. Чтобы присоединиться снова, нужно будет выбрать группу заново.</string>
+
+    <string name="player_syncplay_cancel">Отмена</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d человек смотрит</item>
+        <item quantity="few">%d человека смотрят</item>
+        <item quantity="many">%d человек смотрят</item>
+        <item quantity="other">%d человека смотрят</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d ещё</string>
+
+    <string name="player_syncplay_queue">Очередь</string>
+    <string name="player_syncplay_queue_empty">Группа пока ничего не добавила в очередь.</string>
+    <string name="player_syncplay_queue_item_loading">Загрузка…</string>
+    <string name="player_syncplay_queue_playing">Сейчас играет</string>
+    <string name="player_syncplay_queue_next">Следующий элемент</string>
+    <string name="player_syncplay_queue_previous">Предыдущий элемент</string>
+    <string name="player_syncplay_queue_move_up">Сдвинуть вверх</string>
+    <string name="player_syncplay_queue_move_down">Сдвинуть вниз</string>
+    <string name="player_syncplay_queue_remove">Удалить из очереди</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d элемент в очереди</item>
+        <item quantity="few">%d элемента в очереди</item>
+        <item quantity="many">%d элементов в очереди</item>
+        <item quantity="other">%d элемента в очереди</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Вышли из SyncPlay — соединение потеряно</string>
+    <string name="player_message_syncplay_rejoined">Вы снова в группе SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">Не удалось присоединиться к этой группе SyncPlay.</string>
+    <string name="player_message_syncplay_group_ended">Группа SyncPlay завершила работу.</string>
+    <string name="player_message_syncplay_removed">Вы больше не в группе SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">Группа смотрит то, к чему у вас нет доступа.</string>
+    <string name="player_message_syncplay_item_unavailable">Не удалось открыть то, что смотрит группа.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Назад</string>
+    <string name="player_syncplay_groups_home">Главная</string>
+    <string name="player_syncplay_groups_create">Создать группу</string>
+    <string name="player_syncplay_groups_create_title">Название группы</string>
+    <string name="player_syncplay_groups_create_hint">Название группы</string>
+    <string name="player_syncplay_groups_create_confirm">Создать</string>
+    <string name="player_syncplay_groups_joining">Подключение…</string>
+    <string name="player_syncplay_groups_active_label">Вы в этой группе</string>
+    <string name="player_syncplay_groups_open_player">Открыть плеер</string>
+    <string name="player_syncplay_groups_empty">Сейчас никто не смотрит вместе.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay отключён для вашего аккаунта.</string>
+    <string name="player_syncplay_groups_error">Не удалось загрузить группы SyncPlay.</string>
+
+    <string name="player_syncplay_presence_channel_name">Группа SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">Сохраняет ваше место в группе совместного просмотра, пока приложение находится в фоновом режиме.</string>
+    <string name="player_syncplay_presence_title">В группе SyncPlay</string>
+    <string name="player_syncplay_presence_text">Ожидание группы</string>
+    <string name="player_syncplay_presence_leave">Покинуть</string>
+
+    <string name="player_syncplay_state_idle">Ожидание</string>
+    <string name="player_syncplay_state_waiting">Ожидание</string>
+    <string name="player_syncplay_state_paused">Пауза</string>
+    <string name="player_syncplay_state_playing">Воспроизведение</string>
+
+    <string name="player_cast">Трансляция на устройство</string>
+
+    <string name="player_cast_device_unnamed">ваш телевизор</string>
+    <string name="player_message_cast_transferred">Теперь воспроизводится на %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Покинули группу SyncPlay для трансляции на %1$s.</string>
+    <string name="player_message_cast_failed">Не удалось воспроизвести это на %1$s.</string>
+
+    <string name="player_casting_to">Трансляция на %1$s</string>
+</resources>

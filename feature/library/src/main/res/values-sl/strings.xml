@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Še ni knjižnic. Dodajte jo na strežniku.</string>
+
+    <string name="library_back">Nazaj</string>
+    <string name="library_home">Domov</string>
+    <string name="library_sort">Razvrsti</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Razvrsti po</string>
+    <string name="library_sort_name">Ime</string>
+    <string name="library_sort_date_added">Datum dodajanja</string>
+    <string name="library_sort_premiere_date">Datum izida</string>
+    <string name="library_sort_community_rating">Ocena skupnosti</string>
+    <string name="library_sort_runtime">Trajanje</string>
+    <string name="library_sort_random">Naključno</string>
+    <string name="library_sort_direction">Smer</string>
+    <string name="library_sort_ascending">Naraščajoče</string>
+    <string name="library_sort_descending">Padajoče</string>
+
+    <string name="library_filters_title">Filtri</string>
+    <string name="library_filters_genres">Žanri</string>
+    <string name="library_filters_years">Leta</string>
+    <string name="library_filters_played">Ogledano</string>
+    <string name="library_filters_played_any">Vse</string>
+    <string name="library_filters_played_yes">Ogledano</string>
+    <string name="library_filters_played_no">Neogledano</string>
+    <string name="library_filters_clear">Počisti vse</string>
+    <string name="library_filters_apply">Prikaži rezultate</string>
+    <string name="library_filters_none">Ta knjižnica ne ponuja ničesar za filtriranje.</string>
+    <string name="library_filters_loading">Nalaganje filtrov…</string>
+
+    <string name="library_empty">Tukaj ni ničesar za prikaz.</string>
+    <string name="library_empty_filtered">Noben predmet ne ustreza tem filtrom.</string>
+    <string name="library_empty_clear_filters">Počisti filtre</string>
+    <string name="library_retry">Poskusi znova</string>
+
+    <string name="library_error_network">Strežnika ni mogoče doseči. Preverite povezavo in poskusite znova.</string>
+    <string name="library_error_unauthorized">Vaša seja je potekla. Za nadaljevanje se znova prijavite.</string>
+    <string name="library_error_not_found">Te knjižnice ni več na strežniku.</string>
+    <string name="library_error_server">Strežnik je vrnil napako.</string>
+    <string name="library_error_server_with_code">Strežnik je vrnil napako (%1$d).</string>
+    <string name="library_error_storage">Lokalnih podatkov ni bilo mogoče prebrati.</string>
+    <string name="library_error_unknown">Pri nalaganju te knjižnice je prišlo do napake.</string>
+</resources>

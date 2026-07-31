@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">चित्रपट, शो आणि भाग शोधा</string>
+    <string name="search_clear">साफ करा</string>
+
+    <string name="search_section_movies">चित्रपट</string>
+    <string name="search_section_series">शो</string>
+    <string name="search_section_episodes">भाग</string>
+
+    <string name="search_prompt">आपल्या लायब्ररी शोधण्यासाठी टाइप करा.</string>
+    <string name="search_no_results">“%1$s” शी जुळणारे काही आढळले नाही.</string>
+
+    <string name="search_error_network">आपल्या सर्व्हरशी संपर्क होऊ शकत नाही. आपले कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.</string>
+    <string name="search_error_unauthorized">आपले सत्र कालबाह्य झाले. सुरू ठेवण्यासाठी पुन्हा साइन इन करा.</string>
+    <string name="search_error_not_found">तो आयटम आता सर्व्हरवर नाही.</string>
+    <string name="search_error_server">सर्व्हरने त्रुटी दिली.</string>
+    <string name="search_error_server_with_code">सर्व्हरने त्रुटी दिली (%1$d).</string>
+    <string name="search_error_storage">स्थानिक डेटा वाचता आला नाही.</string>
+    <string name="search_error_unknown">शोधताना काहीतरी चुकले.</string>
+</resources>

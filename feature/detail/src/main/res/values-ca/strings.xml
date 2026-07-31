@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Enrere</string>
+    <string name="detail_home">Inici</string>
+    <string name="detail_play">Reprodueix</string>
+    <string name="detail_resume">Reprèn</string>
+    <string name="detail_download">Baixa</string>
+    <string name="detail_download_cancel">Cancel·la</string>
+    <string name="detail_download_remove">Elimina</string>
+    <string name="detail_download_retry">Torna-ho a provar</string>
+    <string name="detail_play_episode">Reprodueix aquest episodi</string>
+    <string name="detail_mark_watched">Marca com a vist</string>
+    <string name="detail_mark_unwatched">Marca com a no vist</string>
+    <string name="detail_add_favorite">Afegeix als preferits</string>
+    <string name="detail_remove_favorite">Elimina dels preferits</string>
+    <string name="detail_section_seasons">Temporades</string>
+    <string name="detail_section_next_up">A continuació</string>
+    <string name="detail_section_episodes">Episodis</string>
+    <string name="detail_section_similar">Més com això</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min restants</string>
+    <string name="detail_size_on_device">%1$s al dispositiu</string>
+    <string name="detail_directed_by">Dirigida per %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d temporada</item>
+        <item quantity="other">%1$d temporades</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episodi</item>
+        <item quantity="other">%1$d episodis</item>
+    </plurals>
+    <string name="detail_empty">Aquest element ja no està disponible.</string>
+    <string name="detail_message_download_queued">Afegit a les baixades.</string>
+    <string name="detail_message_download_failed">No s\'ha pogut iniciar aquesta baixada.</string>
+    <string name="detail_message_download_deleted">Eliminat d\'aquest dispositiu.</string>
+    <string name="detail_message_download_delete_failed">No s\'ha pogut eliminar aquesta baixada.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Baixada cancel·lada — s\'ha conservat %1$d episodi acabat.</item>
+        <item quantity="other">Baixada cancel·lada — s\'han conservat %1$d episodis acabats.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">No s\'ha pogut desar. Torna-ho a provar.</string>
+    <string name="detail_group_play">Reprodueix per a %1$s</string>
+    <string name="detail_group_resume">Reprèn per a %1$s</string>
+    <string name="detail_group_play_next">Reprodueix a continuació</string>
+    <string name="detail_group_add_to_queue">Afegeix a la cua</string>
+    <string name="detail_message_group_play">S\'ha enviat la sol·licitud al grup per reproduir això.</string>
+    <string name="detail_message_group_play_next">Posat en cua per al grup.</string>
+    <string name="detail_message_group_queued">Afegit a la cua del grup.</string>
+    <string name="detail_delete_download_dialog_title">Vols eliminar la baixada?</string>
+    <string name="detail_delete_download_dialog_message">Això l\'elimina d\'aquest dispositiu. La pots tornar a baixar quan vulguis.</string>
+    <string name="detail_delete_download_dialog_confirm">Elimina</string>
+    <string name="detail_delete_download_dialog_cancel">Cancel·la</string>
+</resources>

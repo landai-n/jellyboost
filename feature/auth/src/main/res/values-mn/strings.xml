@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Серверт холбогдох</string>
+    <string name="server_setup_discovered_title">Энэ сүлжээн дэх серверүүд</string>
+    <string name="server_setup_discovering">Дотоод сүлжээнээс хайж байна…</string>
+    <string name="server_setup_no_servers_found">Ямар ч сервер олдсонгүй. Доор хаяг оруулна уу.</string>
+    <string name="server_setup_manual_title">Серверийн хаяг</string>
+    <string name="server_setup_address_label">Хост эсвэл URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org эсвэл 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Холбогдох</string>
+    <string name="server_setup_connecting">Серверт хандаж байна…</string>
+    <string name="server_setup_session_lost">Таны хадгалсан нэвтрэлтийг сэргээж чадаагүй тул системээс гарлаа. Дахин нэвтэрнэ үү.</string>
+
+    <string name="login_title">Нэвтрэх</string>
+    <string name="login_server_version">Хувилбар %1$s</string>
+    <string name="login_server_version_unknown">Хувилбар тодорхойгүй</string>
+    <string name="login_public_users_title">Хэн үзэж байна вэ?</string>
+    <string name="login_username_label">Хэрэглэгчийн нэр</string>
+    <string name="login_password_label">Нууц үг</string>
+    <string name="login_show_password">Нууц үг харуулах</string>
+    <string name="login_hide_password">Нууц үг нуух</string>
+    <string name="login_sign_in">Нэвтрэх</string>
+    <string name="login_change_server">Өөр сервер ашиглах</string>
+    <string name="login_loading">Серверийн мэдээллийг ачаалж байна…</string>
+    <string name="login_or">эсвэл</string>
+
+    <string name="login_quick_connect">Түргэн холболт ашиглах</string>
+    <string name="login_quick_connect_title">Түргэн холболт</string>
+    <string name="login_quick_connect_instructions">Аль хэдийн нэвтэрсэн төхөөрөмж дээрээ Jellyfin-г нээж, Түргэн холболт руу орж энэ кодыг оруулна уу.</string>
+    <string name="login_quick_connect_waiting">Зөвшөөрлийг хүлээж байна…</string>
+    <string name="login_quick_connect_cancel">Цуцлах</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d боломжит хаягийг оролдсон боловч амжилтгүй боллоо.</item>
+        <item quantity="other">%d боломжит хаягийг оролдсон боловч амжилтгүй боллоо.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Серверт холбогдож чадсангүй</string>
+    <string name="auth_error_unsupported_version_or_product">Дэмжигдээгүй хувилбар эсвэл бүтээгдэхүүн</string>
+    <string name="auth_error_cannot_connect">Холболт үүсгэж чадсангүй.\nХостын нэр болон сүлжээний холболтоо шалгана уу.</string>
+    <string name="auth_error_invalid_credentials">Хэрэглэгчийн нэр эсвэл нууц үг буруу байна.</string>
+    <string name="auth_error_quick_connect_expired">Тухайн код хугацаа дууссан байна. Шинэ код авч дахин оролдоно уу.</string>
+    <string name="auth_error_server">Сервер алдаа буцаалаа. Дахин оролдоно уу.</string>
+    <string name="auth_error_server_with_code">Сервер алдаа буцаалаа (%1$d). Дахин оролдоно уу.</string>
+</resources>

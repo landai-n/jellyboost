@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Спампавана</string>
+    <string name="downloads_tab_queue">Чарга</string>
+    <string name="downloads_wifi_only">Толькі Wi-Fi</string>
+
+    <string name="downloads_group_movies">Фільмы</string>
+
+    <string name="downloads_storage_summary">%1$s выкарыстана · %2$s вольна</string>
+
+    <string name="downloads_action_delete">Выдаліць спампоўку</string>
+    <string name="downloads_action_cancel">Скасаваць спампоўку</string>
+    <string name="downloads_action_pause">Прыпыніць спампоўку</string>
+    <string name="downloads_action_resume">Аднавіць спампоўку</string>
+    <string name="downloads_action_move_up">Перамясціць вышэй у чарзе</string>
+    <string name="downloads_action_move_down">Перамясціць ніжэй у чарзе</string>
+
+    <string name="downloads_action_pause_all">Прыпыніць усе</string>
+    <string name="downloads_action_resume_all">Аднавіць усе</string>
+    <string name="downloads_action_cancel_all">Скасаваць усе</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Скасаваць %1$d спампоўку?</item>
+        <item quantity="few">Скасаваць усе %1$d спампоўкі?</item>
+        <item quantity="many">Скасаваць усе %1$d спамповак?</item>
+        <item quantity="other">Скасаваць усе %1$d спамповак?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Чарга ачышчаецца, і любыя часткова спампаваныя файлы выдаляюцца. Завершаныя спампоўкі не закранаюцца.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Скасаваць спампоўкі</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Пакінуць</string>
+
+    <string name="downloads_delete_dialog_title">Выдаліць %1$s?</string>
+    <string name="downloads_delete_dialog_message">Спампаваныя файлы будуць выдалены з гэтай прылады. Вы можаце спампаваць іх зноў пазней.</string>
+    <string name="downloads_delete_dialog_confirm">Выдаліць</string>
+    <string name="downloads_delete_dialog_cancel">Скасаваць</string>
+
+    <string name="downloads_progress_of">%1$s з %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s з ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s з не больш за %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">да %1$s</string>
+    <string name="downloads_speed">%1$s/с</string>
+    <string name="downloads_eta">засталося %1$s</string>
+    <string name="downloads_eta_approx">засталося ~%1$s</string>
+    <string name="downloads_transcoded_marker">Перакадавана</string>
+    <string name="downloads_status_queued">Чаканне</string>
+    <string name="downloads_status_paused">Прыпынена</string>
+    <string name="downloads_status_failed">Спампоўка не ўдалася</string>
+    <string name="downloads_status_failed_reason">Спампоўка не ўдалася: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Пакуль нічога не спампавана. Націсніце «Спампаваць» на фільме або эпізодзе, каб захаваць яго на гэтай прыладзе.</string>
+    <string name="downloads_empty_queue">Чарга спампоўкі пустая.</string>
+    <string name="downloads_load_failed">Не ўдалося прачытаць вашы спампоўкі. Адкрыйце гэты экран зноў, каб паспрабаваць яшчэ раз.</string>
+    <string name="downloads_message_delete_failed">Не ўдалося выдаліць гэтую спампоўку.</string>
+    <string name="downloads_message_action_failed">Не ўдалося абнавіць чаргу.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Прыпынена %1$d — %2$d перакадаванне працягвае спампоўвацца (перакадаванне нельга прыпыніць).</item>
+        <item quantity="few">Прыпынена %1$d — %2$d перакадаванні працягваюць спампоўвацца (перакадаванне нельга прыпыніць).</item>
+        <item quantity="many">Прыпынена %1$d — %2$d перакадаванняў працягваюць спампоўвацца (перакадаванне нельга прыпыніць).</item>
+        <item quantity="other">Прыпынена %1$d — %2$d перакадаванняў працягваюць спампоўвацца (перакадаванне нельга прыпыніць).</item>
+    </plurals>
+</resources>

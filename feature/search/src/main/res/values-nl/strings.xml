@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Zoek films, series en afleveringen</string>
+    <string name="search_clear">Wissen</string>
+
+    <string name="search_section_movies">Films</string>
+    <string name="search_section_series">Series</string>
+    <string name="search_section_episodes">Afleveringen</string>
+
+    <string name="search_prompt">Typ om je bibliotheken te doorzoeken.</string>
+    <string name="search_no_results">Niets gevonden voor “%1$s”.</string>
+
+    <string name="search_error_network">Kan je server niet bereiken. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="search_error_unauthorized">Je sessie is verlopen. Meld je opnieuw aan om door te gaan.</string>
+    <string name="search_error_not_found">Dat item staat niet meer op de server.</string>
+    <string name="search_error_server">De server gaf een fout terug.</string>
+    <string name="search_error_server_with_code">De server gaf een fout terug (%1$d).</string>
+    <string name="search_error_storage">Kon lokale gegevens niet lezen.</string>
+    <string name="search_error_unknown">Er ging iets mis tijdens het zoeken.</string>
+</resources>

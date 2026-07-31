@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">اتصال به سرور</string>
+    <string name="server_setup_discovered_title">سرورهای این شبکه</string>
+    <string name="server_setup_discovering">در حال جستجوی شبکه محلی…</string>
+    <string name="server_setup_no_servers_found">هیچ سروری خود را اعلام نکرد. آدرسی را در زیر وارد کنید.</string>
+    <string name="server_setup_manual_title">آدرس سرور</string>
+    <string name="server_setup_address_label">میزبان یا URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org یا 192.168.1.10:8096</string>
+    <string name="server_setup_connect">اتصال</string>
+    <string name="server_setup_connecting">در حال تماس با سرور…</string>
+    <string name="server_setup_session_lost">ورود ذخیره‌شده شما بازیابی نشد، بنابراین از حساب شما خارج شدید. لطفاً دوباره وارد شوید.</string>
+
+    <string name="login_title">ورود</string>
+    <string name="login_server_version">نسخه %1$s</string>
+    <string name="login_server_version_unknown">نسخه نامشخص</string>
+    <string name="login_public_users_title">چه کسی تماشا می‌کند؟</string>
+    <string name="login_username_label">نام کاربری</string>
+    <string name="login_password_label">گذرواژه</string>
+    <string name="login_show_password">نمایش گذرواژه</string>
+    <string name="login_hide_password">پنهان کردن گذرواژه</string>
+    <string name="login_sign_in">ورود</string>
+    <string name="login_change_server">استفاده از سرور دیگر</string>
+    <string name="login_loading">در حال بارگذاری اطلاعات سرور…</string>
+    <string name="login_or">یا</string>
+
+    <string name="login_quick_connect">استفاده از Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Jellyfin را روی دستگاهی که قبلاً در آن وارد شده‌اید باز کنید، به Quick Connect بروید و این کد را وارد کنید.</string>
+    <string name="login_quick_connect_waiting">در انتظار تأیید…</string>
+    <string name="login_quick_connect_cancel">لغو</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d آدرس نامزد بدون موفقیت امتحان شد.</item>
+        <item quantity="other">%d آدرس نامزد بدون موفقیت امتحان شد.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">دسترسی به سرور ممکن نیست</string>
+    <string name="auth_error_unsupported_version_or_product">نسخه یا محصول پشتیبانی نمی‌شود</string>
+    <string name="auth_error_cannot_connect">برقراری اتصال ممکن نیست.\nنام میزبان و اتصال شبکه خود را بررسی کنید.</string>
+    <string name="auth_error_invalid_credentials">نام کاربری یا گذرواژه اشتباه است.</string>
+    <string name="auth_error_quick_connect_expired">این کد منقضی شده است. کد جدیدی درخواست کنید و دوباره تلاش کنید.</string>
+    <string name="auth_error_server">سرور با خطا پاسخ داد. دوباره تلاش کنید.</string>
+    <string name="auth_error_server_with_code">سرور با خطا پاسخ داد (%1$d). دوباره تلاش کنید.</string>
+</resources>

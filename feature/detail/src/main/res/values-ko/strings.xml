@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">뒤로</string>
+    <string name="detail_home">홈</string>
+    <string name="detail_play">재생</string>
+    <string name="detail_resume">이어서 재생</string>
+    <string name="detail_download">다운로드</string>
+    <string name="detail_download_cancel">취소</string>
+    <string name="detail_download_remove">제거</string>
+    <string name="detail_download_retry">다시 시도</string>
+    <string name="detail_play_episode">이 에피소드 재생</string>
+    <string name="detail_mark_watched">시청함으로 표시</string>
+    <string name="detail_mark_unwatched">시청 안 함으로 표시</string>
+    <string name="detail_add_favorite">즐겨찾기에 추가</string>
+    <string name="detail_remove_favorite">즐겨찾기에서 제거</string>
+
+    <string name="detail_section_seasons">시즌</string>
+    <string name="detail_section_next_up">다음 시청</string>
+    <string name="detail_section_episodes">에피소드</string>
+    <string name="detail_section_similar">비슷한 콘텐츠</string>
+
+    <string name="detail_runtime_minutes">%1$d분</string>
+    <string name="detail_remaining_minutes">%1$d분 남음</string>
+    <string name="detail_size_on_device">기기 저장 용량 %1$s</string>
+    <string name="detail_directed_by">감독: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="other">시즌 %1$d개</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="other">에피소드 %1$d개</item>
+    </plurals>
+
+    <string name="detail_empty">이 항목은 더 이상 사용할 수 없습니다.</string>
+    <string name="detail_message_download_queued">다운로드에 추가했습니다.</string>
+    <string name="detail_message_download_failed">다운로드를 시작할 수 없습니다.</string>
+    <string name="detail_message_download_deleted">이 기기에서 제거했습니다.</string>
+    <string name="detail_message_download_delete_failed">다운로드를 제거할 수 없습니다.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="other">다운로드를 취소했습니다 — 완료된 에피소드 %1$d개는 유지됩니다.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">저장할 수 없습니다. 다시 시도하세요.</string>
+
+    <string name="detail_group_play">%1$s에서 재생</string>
+    <string name="detail_group_resume">%1$s에서 이어서 재생</string>
+    <string name="detail_group_play_next">다음에 재생</string>
+    <string name="detail_group_add_to_queue">대기열에 추가</string>
+    <string name="detail_message_group_play">그룹에 재생을 요청했습니다.</string>
+    <string name="detail_message_group_play_next">그룹의 다음 재생 항목으로 추가했습니다.</string>
+    <string name="detail_message_group_queued">그룹의 대기열에 추가했습니다.</string>
+
+    <string name="detail_delete_download_dialog_title">다운로드를 삭제할까요?</string>
+    <string name="detail_delete_download_dialog_message">이 기기에서 제거됩니다. 언제든지 다시 다운로드할 수 있습니다.</string>
+    <string name="detail_delete_download_dialog_confirm">삭제</string>
+    <string name="detail_delete_download_dialog_cancel">취소</string>
+</resources>

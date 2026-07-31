@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ezarpenak</string>
+    <string name="settings_back">Atzera</string>
+    <string name="settings_home">Hasiera</string>
+    <string name="settings_section_playback">Erreprodukzioa</string>
+    <string name="settings_skip_intro">Saltatu sarrera</string>
+    <string name="settings_skip_outro">Saltatu amaiera</string>
+    <string name="settings_skip_mode_off">Ez egin ezer</string>
+    <string name="settings_skip_mode_show_button">Erakutsi saltatzeko botoia</string>
+    <string name="settings_skip_mode_auto">Saltatu automatikoki</string>
+    <string name="settings_pip">Pantaila pantailan</string>
+    <string name="settings_pip_supporting">Jarraitu erreproduzitzen leiho mugikor batean aplikaziotik irtetean.</string>
+    <string name="settings_section_downloads">Deskargak</string>
+    <string name="settings_wifi_only">Wi‑Fi bidez soilik</string>
+    <string name="settings_wifi_only_supporting">Pausatu deskargak datu mugikorrekin.</string>
+    <string name="settings_quality">Deskargaren kalitatea</string>
+    <string name="settings_quality_original">Jatorrizko fitxategia — kopia zehatza, berrekin daiteke</string>
+    <string name="settings_quality_high">Altua — ~20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Ertaina — ~8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Baxua — ~3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Jatorrizko fitxategia ez den beste edozer zerbitzariak bihurtzen du bidaltzean, beraz deskargatzean erakusten den tamaina zenbatespen bat da eta eten den transferentzia berriz hasten da.</string>
+    <string name="settings_storage_label">Biltegiratzea</string>
+    <string name="settings_storage_summary">%1$s erabilita · %2$s libre gailu honetan</string>
+    <string name="settings_storage_location">Deskargak %1$s kokapenean gordetzen dira</string>
+    <string name="settings_storage_picker">Biltegiratze-kokapena</string>
+    <string name="settings_storage_internal">Barneko biltegia</string>
+    <string name="settings_storage_sd_card">SD txartela</string>
+    <string name="settings_storage_volume_free">%1$s libre</string>
+    <string name="settings_storage_missing">Aukeratu duzun biltegiratzea ez dago erabilgarri une honetan, beraz deskargak beheko kokapenera joango dira.</string>
+    <string name="settings_storage_switch_title">Deskargak lekuz aldatu?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Deskargak oraindik ezin dira kokapenez aldatu, beraz gailu honetan dagoena ezabatu egingo da. Berriz deskarga dezakezu kokapen berrian.</item>
+        <item quantity="other">Deskargak oraindik ezin dira kokapenez aldatu, beraz gailu honetan dauden %1$d ezabatu egingo dira. Berriz deskarga ditzakezu kokapen berrian.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Ezabatu eta aldatu</string>
+    <string name="settings_section_connectivity">Konektagarritasuna</string>
+    <string name="settings_offline_mode">Lineaz kanpoko modua</string>
+    <string name="settings_offline_mode_supporting">Erakutsi soilik gailu honetan dagoeneko dagoen multimedia.</string>
+    <string name="settings_section_account">Kontua</string>
+    <string name="settings_account_user">Honela hasi da saioa:</string>
+    <string name="settings_account_server">Zerbitzaria</string>
+    <string name="settings_account_unknown">Saiorik hasi gabe</string>
+    <string name="settings_sign_out">Amaitu saioa</string>
+    <string name="settings_sign_out_dialog_title">Amaitu saioa?</string>
+    <string name="settings_sign_out_dialog_message">Zerbitzariaren helbidea eta pasahitza beharko dituzu berriro saioa hasteko.</string>
+    <string name="settings_sign_out_delete_downloads">Ezabatu gailu honetako deskargak ere</string>
+    <string name="settings_cancel">Utzi</string>
+</resources>

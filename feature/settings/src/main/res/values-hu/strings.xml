@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Beállítások</string>
+    <string name="settings_back">Vissza</string>
+    <string name="settings_home">Kezdőlap</string>
+
+    <string name="settings_section_playback">Lejátszás</string>
+    <string name="settings_skip_intro">Bevezető kihagyása</string>
+    <string name="settings_skip_outro">Végjelenet kihagyása</string>
+    <string name="settings_skip_mode_off">Ne csináljon semmit</string>
+    <string name="settings_skip_mode_show_button">Kihagyás gomb megjelenítése</string>
+    <string name="settings_skip_mode_auto">Automatikus kihagyás</string>
+    <string name="settings_pip">Kép a képben</string>
+    <string name="settings_pip_supporting">Lejátszás folytatása lebegő ablakban, ha kilépsz az appból.</string>
+
+    <string name="settings_section_downloads">Letöltések</string>
+    <string name="settings_wifi_only">Csak Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Letöltések szüneteltetése mobiladat használatakor.</string>
+    <string name="settings_quality">Letöltési minőség</string>
+    <string name="settings_quality_original">Eredeti fájl – pontos másolat, folytatható</string>
+    <string name="settings_quality_high">Magas – kb. 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Közepes – kb. 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Alacsony – kb. 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Az eredeti fájlt kivéve mindent a szervered alakít át küldés közben, ezért a letöltés alatt megjelenő méret csak becslés, és egy megszakadt átvitel elölről kezdődik.</string>
+    <string name="settings_storage_label">Tárhely</string>
+    <string name="settings_storage_summary">%1$s felhasználva · %2$s szabad ezen az eszközön</string>
+    <string name="settings_storage_location">A letöltések itt tárolódnak: %1$s</string>
+    <string name="settings_storage_picker">Tárhely helye</string>
+    <string name="settings_storage_internal">Belső tárhely</string>
+    <string name="settings_storage_sd_card">SD-kártya</string>
+    <string name="settings_storage_volume_free">%1$s szabad</string>
+    <string name="settings_storage_missing">A kiválasztott tárhely jelenleg nem elérhető, ezért a letöltések az alább megadott helyre kerülnek.</string>
+    <string name="settings_storage_switch_title">Áthelyezed a letöltéseket?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">A letöltések egyelőre nem helyezhetők át helyek között, ezért az eszközön lévő törlődik. Az új helyre újra letöltheted.</item>
+        <item quantity="other">A letöltések egyelőre nem helyezhetők át helyek között, ezért a(z) %1$d, amely már ezen az eszközön van, törlődik. Az új helyre újra letöltheted őket.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Törlés és váltás</string>
+
+    <string name="settings_section_connectivity">Kapcsolat</string>
+    <string name="settings_offline_mode">Offline mód</string>
+    <string name="settings_offline_mode_supporting">Csak az eszközön már meglévő tartalom megjelenítése.</string>
+
+    <string name="settings_section_account">Fiók</string>
+    <string name="settings_account_user">Bejelentkezve mint</string>
+    <string name="settings_account_server">Szerver</string>
+    <string name="settings_account_unknown">Nincs bejelentkezve</string>
+    <string name="settings_sign_out">Kijelentkezés</string>
+    <string name="settings_sign_out_dialog_title">Kijelentkezel?</string>
+    <string name="settings_sign_out_dialog_message">A visszalépéshez szükséged lesz a szerver címére és a jelszavadra.</string>
+    <string name="settings_sign_out_delete_downloads">A letöltések törlése erről az eszközről is</string>
+    <string name="settings_cancel">Mégse</string>
+</resources>

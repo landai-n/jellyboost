@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">مزید اختیارات</string>
+    <string name="home_settings">ترتیبات</string>
+    <string name="settings_offline_mode">آف لائن موڈ</string>
+
+    <string name="state_on">آن</string>
+    <string name="state_off">آف</string>
+
+    <string name="nav_home">ہوم</string>
+    <string name="nav_libraries">لائبریریاں</string>
+    <string name="nav_search">تلاش</string>
+    <string name="nav_downloads">ڈاؤن لوڈز</string>
+
+    <string name="offline_no_network">نیٹ ورک نہیں ہے — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
+    <string name="offline_server_unreachable">سرور تک رسائی ممکن نہیں — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
+    <string name="offline_forced">آف لائن موڈ آن ہے — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
+    <string name="offline_retry">دوبارہ کوشش کریں</string>
+    <string name="offline_go_online">آن لائن ہوں</string>
+
+    <string name="syncplay_groups_action">SyncPlay گروپس</string>
+    <string name="syncplay_groups_action_active">SyncPlay گروپس — آپ ایک گروپ میں ہیں</string>
+</resources>

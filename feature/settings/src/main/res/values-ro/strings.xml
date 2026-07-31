@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Setări</string>
+    <string name="settings_back">Înapoi</string>
+    <string name="settings_home">Acasă</string>
+    <string name="settings_section_playback">Redare</string>
+    <string name="settings_skip_intro">Sari peste genericul de început</string>
+    <string name="settings_skip_outro">Sari peste genericul de final</string>
+    <string name="settings_skip_mode_off">Nu face nimic</string>
+    <string name="settings_skip_mode_show_button">Afișează un buton de omitere</string>
+    <string name="settings_skip_mode_auto">Sari automat</string>
+    <string name="settings_pip">Picture-in-picture</string>
+    <string name="settings_pip_supporting">Continuă redarea într-o fereastră plutitoare când părăsiți aplicația.</string>
+    <string name="settings_section_downloads">Descărcări</string>
+    <string name="settings_wifi_only">Doar Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pune descărcările pe pauză pe date mobile.</string>
+    <string name="settings_quality">Calitatea descărcării</string>
+    <string name="settings_quality_original">Fișier original — copie exactă, se poate relua</string>
+    <string name="settings_quality_high">Înaltă — aproximativ 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Medie — aproximativ 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Scăzută — aproximativ 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Orice altceva decât fișierul original este convertit de server pe măsură ce îl trimite, așa că dimensiunea afișată în timpul descărcării este o estimare, iar un transfer întrerupt reia de la început.</string>
+    <string name="settings_storage_label">Stocare</string>
+    <string name="settings_storage_summary">%1$s utilizați · %2$s liberi pe acest dispozitiv</string>
+    <string name="settings_storage_location">Descărcările sunt păstrate în %1$s</string>
+    <string name="settings_storage_picker">Locație de stocare</string>
+    <string name="settings_storage_internal">Stocare internă</string>
+    <string name="settings_storage_sd_card">Card SD</string>
+    <string name="settings_storage_volume_free">%1$s liberi</string>
+    <string name="settings_storage_missing">Stocarea aleasă nu este disponibilă acum, așa că descărcările vor merge la locația selectată mai jos.</string>
+    <string name="settings_storage_switch_title">Mutați descărcările?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Descărcările nu pot fi mutate încă între locații, așa că cea deja existentă pe acest dispozitiv va fi ștearsă. O puteți descărca din nou la noua locație.</item>
+        <item quantity="few">Descărcările nu pot fi mutate încă între locații, așa că cele %1$d deja existente pe acest dispozitiv vor fi șterse. Le puteți descărca din nou la noua locație.</item>
+        <item quantity="other">Descărcările nu pot fi mutate încă între locații, așa că cele %1$d de descărcări deja existente pe acest dispozitiv vor fi șterse. Le puteți descărca din nou la noua locație.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Șterge și schimbă</string>
+    <string name="settings_section_connectivity">Conectivitate</string>
+    <string name="settings_offline_mode">Mod offline</string>
+    <string name="settings_offline_mode_supporting">Afișează doar conținutul media deja existent pe acest dispozitiv.</string>
+    <string name="settings_section_account">Cont</string>
+    <string name="settings_account_user">Autentificat ca</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Neautentificat</string>
+    <string name="settings_sign_out">Deconectare</string>
+    <string name="settings_sign_out_dialog_title">Deconectare?</string>
+    <string name="settings_sign_out_dialog_message">Veți avea nevoie de adresa serverului și de parolă pentru a vă autentifica din nou.</string>
+    <string name="settings_sign_out_delete_downloads">Șterge și descărcările de pe acest dispozitiv</string>
+    <string name="settings_cancel">Anulează</string>
+</resources>

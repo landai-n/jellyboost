@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">ޕްލޭޔަރ ބަންދުކުރޭ</string>
+    <string name="player_play">ޕްލޭ</string>
+    <string name="player_pause">މެދުކަނޑާލާ</string>
+    <string name="player_rewind">10 ސިކުންތު ފަހަތަށް</string>
+    <string name="player_forward">30 ސިކުންތު ކުރިއަށް</string>
+
+    <string name="player_audio">އޯޑިއޯ</string>
+    <string name="player_subtitles">ސަބްޓައިޓަލް</string>
+    <string name="player_subtitles_off">އޮފް</string>
+    <string name="player_quality">ކޮލިޓީ</string>
+    <string name="player_speed">ސްޕީޑް</string>
+
+    <string name="player_skip_intro">އިންޓްރޯ ސްކިޕްކުރޭ</string>
+    <string name="player_skip_outro">އައުޓްރޯ ސްކިޕްކުރޭ</string>
+
+    <string name="player_quality_auto">އޮޓޯ</string>
+    <string name="player_quality_high">މަތި — 20 Mbps</string>
+    <string name="player_quality_medium">މެދު — 8 Mbps</string>
+    <string name="player_quality_low">ދަށް — 3 Mbps</string>
+    <string name="player_quality_lowest">އެންމެ ދަށް — 720 kbps</string>
+
+    <string name="player_method_direct_play">ޑައިރެކްޓް ޕްލޭ</string>
+    <string name="player_method_direct_stream">ޑައިރެކްޓް ސްޓްރީމް</string>
+    <string name="player_method_transcode">ޓްރާންސްކޯޑިންގް</string>
+
+    <string name="player_message_transcode">ތިޔަ ޑިވައިސްއަށް މި ފައިލް ޑީކޯޑްކުރެވޭގޮތެއް ނުވި، ވީމާ ސަރވަރއިން ދަނީ ޓްރާންސްކޯޑްކުރަމުންނެވެ.</string>
+    <string name="player_message_lower_quality">ސްޓްރީމް ހުއްޓިއްޖެ — ދަށް ކޮލިޓީއެއްގައި އަލުން މަސައްކަތްކުރަނީ.</string>
+    <string name="player_message_track_restart">މި ޓްރެކްއަށްޓަކައި ސަރވަރއިން ސްޓްރީމް އަލުން އެންކޯޑްކުރަން ޖެހުނެވެ.</string>
+    <string name="player_message_track_streaming">މި ޓްރެކް ޑައުންލޯޑްގައި ނެތް — ތިޔަ ސަރވަރއިން ސްޓްރީމްކުރަނީ.</string>
+    <string name="player_message_track_offline">މި ޓްރެކް ޑައުންލޯޑްކޮށްފައިވާ ފައިލްގައި ނެތް.</string>
+    <string name="player_message_failed">ޕްލޭބެކް ފެއިލްވެއްޖެ.</string>
+
+    <string name="player_syncplay_group">ގްރޫޕް</string>
+    <string name="player_syncplay_waiting">ގްރޫޕަށް އިންތިޒާރުކުރަނީ…</string>
+    <string name="player_syncplay_shuffle">ކިއޫ ޝަފްލްކުރޭ</string>
+    <string name="player_syncplay_repeat">ރިޕީޓް</string>
+    <string name="player_syncplay_repeat_none">އޮފް</string>
+    <string name="player_syncplay_repeat_one">މި އައިޓަމް</string>
+    <string name="player_syncplay_repeat_all">ހުރިހާ ކިއޫއެއް</string>
+    <string name="player_syncplay_leave">ގްރޫޕުން ނިކުމޭ</string>
+    <string name="player_syncplay_leave_title">މި ގްރޫޕުން ނިކުންނަންހޭ؟</string>
+    <string name="player_syncplay_leave_body">ޕްލޭބެކް މިތާ، އަމިއްލައަށް ކުރިއަށްދާނެއެވެ. އަލުން ގުޅުމަކީ ގްރޫޕް އަލުން ހޮވުމެވެ.</string>
+
+    <string name="player_syncplay_cancel">ކެންސަލްކުރޭ</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d މީހަކު ބަލަނީ</item>
+        <item quantity="other">%d މީހުން ބަލަނީ</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s ‎+%2$d އިތުރު</string>
+
+    <string name="player_syncplay_queue">ކިއޫ</string>
+    <string name="player_syncplay_queue_empty">ގްރޫޕުން އަދި ކިއޫއަށް އެއްޗެއް އިތުރެއް ނުކުރެއެވެ.</string>
+    <string name="player_syncplay_queue_item_loading">ލޯޑްކުރަނީ…</string>
+    <string name="player_syncplay_queue_playing">މިހާރު ޕްލޭވަނީ</string>
+    <string name="player_syncplay_queue_next">ދެން އޮތް އައިޓަމް</string>
+    <string name="player_syncplay_queue_previous">ކުރީ އައިޓަމް</string>
+    <string name="player_syncplay_queue_move_up">މައްޗަށް ޖައްސާ</string>
+    <string name="player_syncplay_queue_move_down">ދަށަށް ޖައްސާ</string>
+    <string name="player_syncplay_queue_remove">ކިއޫއިން ނަގާ</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d އައިޓަމް ކިއޫގައި</item>
+        <item quantity="other">%d އައިޓަމް ކިއޫގައި</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay ދޫކޮށްލައިފި — ގުޅުން ކެނޑިއްޖެ</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay ގްރޫޕަށް އަލުން ގުޅިއްޖެ</string>
+    <string name="player_message_syncplay_join_failed">އެ SyncPlay ގްރޫޕަށް ގުޅޭގޮތެއް ނުވި.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay ގްރޫޕް ނިމިއްޖެ.</string>
+    <string name="player_message_syncplay_removed">ތިޔަ ދެން SyncPlay ގްރޫޕުގައި ނެތް.</string>
+    <string name="player_message_syncplay_library_denied">ގްރޫޕުން ބަލަނީ ތިޔައަށް އެކްސެސްނެތް އެއްޗެއް.</string>
+    <string name="player_message_syncplay_item_unavailable">ގްރޫޕުން ބަލާ އެއްޗެއް ހުޅުވޭގޮތެއް ނުވި.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">ފަހަތަށް</string>
+    <string name="player_syncplay_groups_home">ހޯމް</string>
+    <string name="player_syncplay_groups_create">ގްރޫޕެއް އުފައްދާ</string>
+    <string name="player_syncplay_groups_create_title">ތިޔަ ގްރޫޕަށް ނަމެއް ދޭ</string>
+    <string name="player_syncplay_groups_create_hint">ގްރޫޕުގެ ނަން</string>
+    <string name="player_syncplay_groups_create_confirm">އުފައްދާ</string>
+    <string name="player_syncplay_groups_joining">ގުޅެނީ…</string>
+    <string name="player_syncplay_groups_active_label">ތިޔަ ހުރީ މި ގްރޫޕުގައި</string>
+    <string name="player_syncplay_groups_open_player">ޕްލޭޔަރ ހުޅުވާ</string>
+    <string name="player_syncplay_groups_empty">މިހާރު އެކުގައި ބަލާ އިތުރު މީހަކު ނެތް.</string>
+    <string name="player_syncplay_groups_disabled">ތިޔަ އެކައުންޓަށް SyncPlay ޑިސޭބަލްކޮށްފައި.</string>
+    <string name="player_syncplay_groups_error">SyncPlay ގްރޫޕްތައް ލޯޑްކުރެވޭގޮތެއް ނުވި.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay ގްރޫޕް</string>
+    <string name="player_syncplay_presence_channel_description">އެޕް ބެކްގްރައުންޑްގައި ހުއްޓާ، އެކުގައި ބަލާ ގްރޫޕެއްގައި ތިޔަގެ މަގާމު ބަހައްޓައިދޭ.</string>
+    <string name="player_syncplay_presence_title">SyncPlay ގްރޫޕެއްގައި</string>
+    <string name="player_syncplay_presence_text">ގްރޫޕަށް އިންތިޒާރުކުރަނީ</string>
+    <string name="player_syncplay_presence_leave">ނިކުމޭ</string>
+
+    <string name="player_syncplay_state_idle">ހުއްޓިފައި</string>
+    <string name="player_syncplay_state_waiting">އިންތިޒާރުގައި</string>
+    <string name="player_syncplay_state_paused">މެދުކަނޑާލައިފި</string>
+    <string name="player_syncplay_state_playing">ޕްލޭވަނީ</string>
+
+    <string name="player_cast">ޑިވައިސްއަކަށް ކާސްޓްކުރޭ</string>
+
+    <string name="player_cast_device_unnamed">ތިޔަގެ ޓީވީ</string>
+    <string name="player_message_cast_transferred">މިހާރު %1$s ގައި ޕްލޭވަނީ.</string>
+    <string name="player_message_cast_left_syncplay">%1$s އަށް ކާސްޓްކުރުމަށް SyncPlay ގްރޫޕް ދޫކޮށްލައިފި.</string>
+    <string name="player_message_cast_failed">އެ %1$s ގައި ޕްލޭކުރެވޭގޮތެއް ނުވި.</string>
+
+    <string name="player_casting_to">%1$s އަށް ކާސްޓްކުރަނީ</string>
+</resources>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Завантажено</string>
+    <string name="downloads_tab_queue">Черга</string>
+    <string name="downloads_wifi_only">Лише Wi-Fi</string>
+
+    <string name="downloads_group_movies">Фільми</string>
+
+    <string name="downloads_storage_summary">%1$s використано · %2$s вільно</string>
+
+    <string name="downloads_action_delete">Видалити завантаження</string>
+    <string name="downloads_action_cancel">Скасувати завантаження</string>
+    <string name="downloads_action_pause">Призупинити завантаження</string>
+    <string name="downloads_action_resume">Відновити завантаження</string>
+    <string name="downloads_action_move_up">Перемістити вище в черзі</string>
+    <string name="downloads_action_move_down">Перемістити нижче в черзі</string>
+
+    <string name="downloads_action_pause_all">Призупинити всі</string>
+    <string name="downloads_action_resume_all">Відновити всі</string>
+    <string name="downloads_action_cancel_all">Скасувати всі</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Скасувати це завантаження?</item>
+        <item quantity="few">Скасувати всі %1$d завантаження?</item>
+        <item quantity="many">Скасувати всі %1$d завантажень?</item>
+        <item quantity="other">Скасувати всі %1$d завантажень?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Чергу буде очищено, а частково завантажені файли видалено. Завершені завантаження не постраждають.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Скасувати завантаження</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Залишити</string>
+
+    <string name="downloads_delete_dialog_title">Видалити %1$s?</string>
+    <string name="downloads_delete_dialog_message">Завантажені файли буде видалено з цього пристрою. Ви можете завантажити знову пізніше.</string>
+    <string name="downloads_delete_dialog_confirm">Видалити</string>
+    <string name="downloads_delete_dialog_cancel">Скасувати</string>
+
+    <string name="downloads_progress_of">%1$s із %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s із ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s із максимум %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">до %1$s</string>
+    <string name="downloads_speed">%1$s/с</string>
+    <string name="downloads_eta">Залишилось %1$s</string>
+    <string name="downloads_eta_approx">Залишилось ~%1$s</string>
+    <string name="downloads_transcoded_marker">Перекодовано</string>
+    <string name="downloads_status_queued">Очікування</string>
+    <string name="downloads_status_paused">Призупинено</string>
+    <string name="downloads_status_failed">Помилка завантаження</string>
+    <string name="downloads_status_failed_reason">Помилка завантаження: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Ще нічого не завантажено. Торкніться «Завантажити» на фільмі чи епізоді, щоб зберегти його на цьому пристрої.</string>
+    <string name="downloads_empty_queue">Черга завантажень порожня.</string>
+    <string name="downloads_load_failed">Не вдалося прочитати ваші завантаження. Відкрийте цей екран знову, щоб спробувати ще раз.</string>
+    <string name="downloads_message_delete_failed">Не вдалося видалити це завантаження.</string>
+    <string name="downloads_message_action_failed">Не вдалося оновити чергу.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Призупинено %1$d — %2$d перекодування продовжує завантажуватися (перекодування не можна призупинити).</item>
+        <item quantity="few">Призупинено %1$d — %2$d перекодування продовжують завантажуватися (перекодування не можна призупинити).</item>
+        <item quantity="many">Призупинено %1$d — %2$d перекодувань продовжують завантажуватися (перекодування не можна призупинити).</item>
+        <item quantity="other">Призупинено %1$d — %2$d перекодувань продовжують завантажуватися (перекодування не можна призупинити).</item>
+    </plurals>
+</resources>

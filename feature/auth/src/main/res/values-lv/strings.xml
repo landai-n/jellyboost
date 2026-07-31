@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Izveidot savienojumu ar serveri</string>
+    <string name="server_setup_discovered_title">Serveri šajā tīklā</string>
+    <string name="server_setup_discovering">Meklē vietējā tīklā…</string>
+    <string name="server_setup_no_servers_found">Neviens serveris nepieteicās. Ievadiet adresi zemāk.</string>
+    <string name="server_setup_manual_title">Servera adrese</string>
+    <string name="server_setup_address_label">Resursdators vai URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org vai 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Savienot</string>
+    <string name="server_setup_connecting">Sazinās ar serveri…</string>
+    <string name="server_setup_session_lost">Saglabāto pieteikšanos neizdevās atjaunot, tāpēc jūs tikāt atslēgts. Lūdzu, piesakieties vēlreiz.</string>
+
+    <string name="login_title">Pieteikties</string>
+    <string name="login_server_version">Versija %1$s</string>
+    <string name="login_server_version_unknown">Versija nav zināma</string>
+    <string name="login_public_users_title">Kurš skatās?</string>
+    <string name="login_username_label">Lietotājvārds</string>
+    <string name="login_password_label">Parole</string>
+    <string name="login_show_password">Rādīt paroli</string>
+    <string name="login_hide_password">Slēpt paroli</string>
+    <string name="login_sign_in">Pieteikties</string>
+    <string name="login_change_server">Izmantot citu serveri</string>
+    <string name="login_loading">Ielādē servera informāciju…</string>
+    <string name="login_or">vai</string>
+
+    <string name="login_quick_connect">Izmantot Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Atveriet Jellyfin ierīcē, kurā jau esat pieteicies, dodieties uz Quick Connect un ievadiet šo kodu.</string>
+    <string name="login_quick_connect_waiting">Gaida apstiprinājumu…</string>
+    <string name="login_quick_connect_cancel">Atcelt</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="zero">Izmēģinātas %d kandidātadreses, bez rezultāta.</item>
+        <item quantity="one">Izmēģināta %d kandidātadrese, bez rezultāta.</item>
+        <item quantity="other">Izmēģinātas %d kandidātadreses, bez rezultāta.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Nevar sasniegt serveri</string>
+    <string name="auth_error_unsupported_version_or_product">Neatbalstīta versija vai produkts</string>
+    <string name="auth_error_cannot_connect">Neizdodas izveidot savienojumu.\nPārbaudiet resursdatora nosaukumu un tīkla savienojumu.</string>
+    <string name="auth_error_invalid_credentials">Nepareizs lietotājvārds vai parole.</string>
+    <string name="auth_error_quick_connect_expired">Šī koda derīgums beidzās. Pieprasiet jaunu un mēģiniet vēlreiz.</string>
+    <string name="auth_error_server">Serveris atbildēja ar kļūdu. Mēģiniet vēlreiz.</string>
+    <string name="auth_error_server_with_code">Serveris atbildēja ar kļūdu (%1$d). Mēģiniet vēlreiz.</string>
+</resources>

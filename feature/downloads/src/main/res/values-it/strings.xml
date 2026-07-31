@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Scaricati</string>
+    <string name="downloads_tab_queue">Coda</string>
+    <string name="downloads_wifi_only">Solo Wi‑Fi</string>
+    <string name="downloads_group_movies">Film</string>
+    <string name="downloads_storage_summary">%1$s usati · %2$s liberi</string>
+    <string name="downloads_action_delete">Elimina download</string>
+    <string name="downloads_action_cancel">Annulla download</string>
+    <string name="downloads_action_pause">Metti in pausa il download</string>
+    <string name="downloads_action_resume">Riprendi il download</string>
+    <string name="downloads_action_move_up">Sposta su nella coda</string>
+    <string name="downloads_action_move_down">Sposta giù nella coda</string>
+    <string name="downloads_action_pause_all">Metti tutti in pausa</string>
+    <string name="downloads_action_resume_all">Riprendi tutti</string>
+    <string name="downloads_action_cancel_all">Annulla tutti</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Annullare questo download?</item>
+        <item quantity="other">Annullare tutti i %1$d download?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">La coda viene svuotata e i file scaricati parzialmente vengono rimossi. I download completati non sono interessati.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Annulla download</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Mantieni</string>
+    <string name="downloads_delete_dialog_title">Eliminare %1$s?</string>
+    <string name="downloads_delete_dialog_message">I file scaricati vengono rimossi da questo dispositivo. Puoi scaricarlo di nuovo in seguito.</string>
+    <string name="downloads_delete_dialog_confirm">Elimina</string>
+    <string name="downloads_delete_dialog_cancel">Annulla</string>
+    <string name="downloads_progress_of">%1$s di %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s di ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s di massimo %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">fino a %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s rimanenti</string>
+    <string name="downloads_eta_approx">~%1$s rimanenti</string>
+    <string name="downloads_transcoded_marker">Transcodificato</string>
+    <string name="downloads_status_queued">In attesa</string>
+    <string name="downloads_status_paused">In pausa</string>
+    <string name="downloads_status_failed">Download non riuscito</string>
+    <string name="downloads_status_failed_reason">Download non riuscito: %1$s</string>
+    <string name="downloads_empty_downloaded">Ancora niente scaricato. Tocca Scarica su un film o un episodio per conservarlo su questo dispositivo.</string>
+    <string name="downloads_empty_queue">La coda dei download è vuota.</string>
+    <string name="downloads_load_failed">Impossibile leggere i tuoi download. Riapri questa schermata per riprovare.</string>
+    <string name="downloads_message_delete_failed">Impossibile eliminare quel download.</string>
+    <string name="downloads_message_action_failed">Impossibile aggiornare la coda.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d messo in pausa — %2$d transcodifica continua a scaricare (una transcodifica non può essere messa in pausa).</item>
+        <item quantity="other">%1$d messi in pausa — %2$d transcodifiche continuano a scaricare (una transcodifica non può essere messa in pausa).</item>
+    </plurals>
+</resources>

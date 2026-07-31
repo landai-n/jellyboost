@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">ಪ್ಲೇಯರ್ ಮುಚ್ಚಿ</string>
+    <string name="player_play">ಪ್ಲೇ</string>
+    <string name="player_pause">ವಿರಾಮ</string>
+    <string name="player_rewind">10 ಸೆಕೆಂಡ್ ಹಿಂದೆ ಸರಿಸಿ</string>
+    <string name="player_forward">30 ಸೆಕೆಂಡ್ ಮುಂದೆ ಸರಿಸಿ</string>
+
+    <string name="player_audio">ಆಡಿಯೋ</string>
+    <string name="player_subtitles">ಉಪಶೀರ್ಷಿಕೆಗಳು</string>
+    <string name="player_subtitles_off">ಆಫ್</string>
+    <string name="player_quality">ಗುಣಮಟ್ಟ</string>
+    <string name="player_speed">ವೇಗ</string>
+
+    <string name="player_skip_intro">ಇಂಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
+    <string name="player_skip_outro">ಔಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
+
+    <string name="player_quality_auto">ಸ್ವಯಂಚಾಲಿತ</string>
+    <string name="player_quality_high">ಹೆಚ್ಚು — 20 Mbps</string>
+    <string name="player_quality_medium">ಮಧ್ಯಮ — 8 Mbps</string>
+    <string name="player_quality_low">ಕಡಿಮೆ — 3 Mbps</string>
+    <string name="player_quality_lowest">ಅತಿ ಕಡಿಮೆ — 720 kbps</string>
+
+    <string name="player_method_direct_play">ನೇರ ಪ್ಲೇ</string>
+    <string name="player_method_direct_stream">ನೇರ ಸ್ಟ್ರೀಮ್</string>
+    <string name="player_method_transcode">ಟ್ರಾನ್ಸ್‌ಕೋಡಿಂಗ್</string>
+
+    <string name="player_message_transcode">ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಈ ಫೈಲ್ ಅನ್ನು ಡಿಕೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ, ಆದ್ದರಿಂದ ಸರ್ವರ್ ಅದನ್ನು ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಮಾಡುತ್ತಿದೆ.</string>
+    <string name="player_message_lower_quality">ಸ್ಟ್ರೀಮ್ ನಿಂತುಹೋಯಿತು — ಕಡಿಮೆ ಗುಣಮಟ್ಟದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತಿದೆ.</string>
+    <string name="player_message_track_restart">ಆ ಟ್ರ್ಯಾಕ್‌ಗಾಗಿ ಸರ್ವರ್ ಸ್ಟ್ರೀಮ್ ಅನ್ನು ಮರುಎನ್‌ಕೋಡ್ ಮಾಡಬೇಕಾಯಿತು.</string>
+    <string name="player_message_track_streaming">ಆ ಟ್ರ್ಯಾಕ್ ಡೌನ್‌ಲೋಡ್‌ನಲ್ಲಿ ಇಲ್ಲ — ನಿಮ್ಮ ಸರ್ವರ್‌ನಿಂದ ಅದನ್ನು ಸ್ಟ್ರೀಮ್ ಮಾಡಲಾಗುತ್ತಿದೆ.</string>
+    <string name="player_message_track_offline">ಆ ಟ್ರ್ಯಾಕ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಫೈಲ್‌ನಲ್ಲಿ ಇಲ್ಲ.</string>
+    <string name="player_message_failed">ಪ್ಲೇಬ್ಯಾಕ್ ವಿಫಲವಾಗಿದೆ.</string>
+
+    <string name="player_syncplay_group">ಗುಂಪು</string>
+    <string name="player_syncplay_waiting">ಗುಂಪಿಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ…</string>
+    <string name="player_syncplay_shuffle">ಸರತಿಯನ್ನು ಶಫಲ್ ಮಾಡಿ</string>
+    <string name="player_syncplay_repeat">ಪುನರಾವರ್ತಿಸಿ</string>
+    <string name="player_syncplay_repeat_none">ಆಫ್</string>
+    <string name="player_syncplay_repeat_one">ಈ ಐಟಂ</string>
+    <string name="player_syncplay_repeat_all">ಸಂಪೂರ್ಣ ಸರತಿ</string>
+    <string name="player_syncplay_leave">ಗುಂಪು ಬಿಡಿ</string>
+    <string name="player_syncplay_leave_title">ಈ ಗುಂಪನ್ನು ಬಿಡುವುದೇ?</string>
+    <string name="player_syncplay_leave_body">ಇಲ್ಲಿ ಪ್ಲೇಬ್ಯಾಕ್ ತನ್ನಷ್ಟಕ್ಕೆ ತಾನೇ ಮುಂದುವರಿಯುತ್ತದೆ. ಮತ್ತೆ ಸೇರಲು ಗುಂಪನ್ನು ಮತ್ತೆ ಆಯ್ಕೆಮಾಡಬೇಕಾಗುತ್ತದೆ.</string>
+
+    <string name="player_syncplay_cancel">ರದ್ದುಮಾಡಿ</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d ವ್ಯಕ್ತಿ ವೀಕ್ಷಿಸುತ್ತಿದ್ದಾರೆ</item>
+        <item quantity="other">%d ಜನ ವೀಕ್ಷಿಸುತ್ತಿದ್ದಾರೆ</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d ಹೆಚ್ಚು</string>
+
+    <string name="player_syncplay_queue">ಸರತಿ</string>
+    <string name="player_syncplay_queue_empty">ಗುಂಪು ಇನ್ನೂ ಏನನ್ನೂ ಸರತಿಗೆ ಸೇರಿಸಿಲ್ಲ.</string>
+    <string name="player_syncplay_queue_item_loading">ಲೋಡ್ ಆಗುತ್ತಿದೆ…</string>
+    <string name="player_syncplay_queue_playing">ಈಗ ಪ್ಲೇ ಆಗುತ್ತಿದೆ</string>
+    <string name="player_syncplay_queue_next">ಮುಂದಿನ ಐಟಂ</string>
+    <string name="player_syncplay_queue_previous">ಹಿಂದಿನ ಐಟಂ</string>
+    <string name="player_syncplay_queue_move_up">ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
+    <string name="player_syncplay_queue_move_down">ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>
+    <string name="player_syncplay_queue_remove">ಸರತಿಯಿಂದ ತೆಗೆದುಹಾಕಿ</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d ಐಟಂ ಸರತಿಯಲ್ಲಿದೆ</item>
+        <item quantity="other">%d ಐಟಂಗಳು ಸರತಿಯಲ್ಲಿವೆ</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay ಬಿಟ್ಟಿದೆ — ಸಂಪರ್ಕ ಕಡಿತಗೊಂಡಿದೆ</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay ಗುಂಪಿಗೆ ಮತ್ತೆ ಸೇರಲಾಗಿದೆ</string>
+    <string name="player_message_syncplay_join_failed">ಆ SyncPlay ಗುಂಪಿಗೆ ಸೇರಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay ಗುಂಪು ಕೊನೆಗೊಂಡಿದೆ.</string>
+    <string name="player_message_syncplay_removed">ನೀವು ಇನ್ನು SyncPlay ಗುಂಪಿನಲ್ಲಿ ಇಲ್ಲ.</string>
+    <string name="player_message_syncplay_library_denied">ನಿಮಗೆ ಪ್ರವೇಶವಿಲ್ಲದ ಯಾವುದನ್ನೋ ಗುಂಪು ವೀಕ್ಷಿಸುತ್ತಿದೆ.</string>
+    <string name="player_message_syncplay_item_unavailable">ಗುಂಪು ವೀಕ್ಷಿಸುತ್ತಿರುವುದನ್ನು ತೆರೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">ಹಿಂದೆ</string>
+    <string name="player_syncplay_groups_home">ಮುಖಪುಟ</string>
+    <string name="player_syncplay_groups_create">ಗುಂಪು ರಚಿಸಿ</string>
+    <string name="player_syncplay_groups_create_title">ನಿಮ್ಮ ಗುಂಪಿಗೆ ಹೆಸರಿಡಿ</string>
+    <string name="player_syncplay_groups_create_hint">ಗುಂಪಿನ ಹೆಸರು</string>
+    <string name="player_syncplay_groups_create_confirm">ರಚಿಸಿ</string>
+    <string name="player_syncplay_groups_joining">ಸೇರುತ್ತಿದೆ…</string>
+    <string name="player_syncplay_groups_active_label">ನೀವು ಈ ಗುಂಪಿನಲ್ಲಿದ್ದೀರಿ</string>
+    <string name="player_syncplay_groups_open_player">ಪ್ಲೇಯರ್ ತೆರೆಯಿರಿ</string>
+    <string name="player_syncplay_groups_empty">ಈಗ ಬೇರೆ ಯಾರೂ ಒಟ್ಟಿಗೆ ವೀಕ್ಷಿಸುತ್ತಿಲ್ಲ.</string>
+    <string name="player_syncplay_groups_disabled">ನಿಮ್ಮ ಖಾತೆಗೆ SyncPlay ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ.</string>
+    <string name="player_syncplay_groups_error">SyncPlay ಗುಂಪುಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay ಗುಂಪು</string>
+    <string name="player_syncplay_presence_channel_description">ಆ್ಯಪ್ ಹಿನ್ನೆಲೆಯಲ್ಲಿರುವಾಗ ಒಟ್ಟಿಗೆ ವೀಕ್ಷಿಸುವ ಗುಂಪಿನಲ್ಲಿ ನಿಮ್ಮ ಸ್ಥಾನವನ್ನು ಉಳಿಸಿಕೊಳ್ಳುತ್ತದೆ.</string>
+    <string name="player_syncplay_presence_title">SyncPlay ಗುಂಪಿನಲ್ಲಿ</string>
+    <string name="player_syncplay_presence_text">ಗುಂಪಿಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ</string>
+    <string name="player_syncplay_presence_leave">ಬಿಡಿ</string>
+
+    <string name="player_syncplay_state_idle">ನಿಷ್ಕ್ರಿಯ</string>
+    <string name="player_syncplay_state_waiting">ಕಾಯುತ್ತಿದೆ</string>
+    <string name="player_syncplay_state_paused">ವಿರಾಮಗೊಂಡಿದೆ</string>
+    <string name="player_syncplay_state_playing">ಪ್ಲೇ ಆಗುತ್ತಿದೆ</string>
+
+    <string name="player_cast">ಸಾಧನಕ್ಕೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಿ</string>
+
+    <string name="player_cast_device_unnamed">ನಿಮ್ಮ TV</string>
+    <string name="player_message_cast_transferred">ಈಗ %1$s ನಲ್ಲಿ ಪ್ಲೇ ಆಗುತ್ತಿದೆ.</string>
+    <string name="player_message_cast_left_syncplay">%1$s ಗೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಲು SyncPlay ಗುಂಪನ್ನು ಬಿಡಲಾಗಿದೆ.</string>
+    <string name="player_message_cast_failed">ಅದನ್ನು %1$s ನಲ್ಲಿ ಪ್ಲೇ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+
+    <string name="player_casting_to">%1$s ಗೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಲಾಗುತ್ತಿದೆ</string>
+</resources>

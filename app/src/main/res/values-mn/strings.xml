@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Бусад сонголтууд</string>
+    <string name="home_settings">Тохиргоо</string>
+    <string name="settings_offline_mode">Оффлайн горим</string>
+
+    <string name="state_on">Идэвхтэй</string>
+    <string name="state_off">Идэвхгүй</string>
+
+    <string name="nav_home">Нүүр</string>
+    <string name="nav_libraries">Сангууд</string>
+    <string name="nav_search">Хайх</string>
+    <string name="nav_downloads">Татсан</string>
+
+    <string name="offline_no_network">Сүлжээ алга — татсан медиаг харуулж байна</string>
+    <string name="offline_server_unreachable">Серверт холбогдож чадсангүй — татсан медиаг харуулж байна</string>
+    <string name="offline_forced">Оффлайн горим асаалттай байна — татсан медиаг харуулж байна</string>
+    <string name="offline_retry">Дахин оролдох</string>
+    <string name="offline_go_online">Онлайн болох</string>
+
+    <string name="syncplay_groups_action">SyncPlay бүлгүүд</string>
+    <string name="syncplay_groups_action_active">SyncPlay бүлгүүд — та бүлэгт байна</string>
+</resources>

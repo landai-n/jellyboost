@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Ei vielä kirjastoja. Lisää yksi palvelimelle.</string>
+
+    <string name="library_back">Takaisin</string>
+    <string name="library_home">Koti</string>
+    <string name="library_sort">Lajittele</string>
+    <string name="library_filter">Suodatin</string>
+
+    <string name="library_sort_title">Lajitteluperuste</string>
+    <string name="library_sort_name">Nimi</string>
+    <string name="library_sort_date_added">Lisäyspäivä</string>
+    <string name="library_sort_premiere_date">Julkaisupäivä</string>
+    <string name="library_sort_community_rating">Yhteisöarvio</string>
+    <string name="library_sort_runtime">Kesto</string>
+    <string name="library_sort_random">Satunnainen</string>
+    <string name="library_sort_direction">Suunta</string>
+    <string name="library_sort_ascending">Nouseva</string>
+    <string name="library_sort_descending">Laskeva</string>
+
+    <string name="library_filters_title">Suodattimet</string>
+    <string name="library_filters_genres">Genret</string>
+    <string name="library_filters_years">Vuodet</string>
+    <string name="library_filters_played">Katsottu</string>
+    <string name="library_filters_played_any">Kaikki</string>
+    <string name="library_filters_played_yes">Katsottu</string>
+    <string name="library_filters_played_no">Katsomaton</string>
+    <string name="library_filters_clear">Tyhjennä kaikki</string>
+    <string name="library_filters_apply">Näytä tulokset</string>
+    <string name="library_filters_none">Tässä kirjastossa ei ollut mitään suodatettavaa.</string>
+    <string name="library_filters_loading">Ladataan suodattimia…</string>
+
+    <string name="library_empty">Ei mitään näytettävää täällä.</string>
+    <string name="library_empty_filtered">Mikään kohde ei vastaa näitä suodattimia.</string>
+    <string name="library_empty_clear_filters">Tyhjennä suodattimet</string>
+    <string name="library_retry">Yritä uudelleen</string>
+
+    <string name="library_error_network">Palvelimeen ei saada yhteyttä. Tarkista yhteytesi ja yritä uudelleen.</string>
+    <string name="library_error_unauthorized">Istuntosi vanheni. Kirjaudu sisään uudelleen jatkaaksesi.</string>
+    <string name="library_error_not_found">Kyseinen kirjasto ei ole enää palvelimella.</string>
+    <string name="library_error_server">Palvelin palautti virheen.</string>
+    <string name="library_error_server_with_code">Palvelin palautti virheen (%1$d).</string>
+    <string name="library_error_storage">Paikallisia tietoja ei voitu lukea.</string>
+    <string name="library_error_unknown">Jokin meni pieleen tätä kirjastoa ladattaessa.</string>
+</resources>

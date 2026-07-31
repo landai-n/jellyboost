@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">ダウンロード</string>
+    <string name="downloads_channel_description">この端末へのメディアのダウンロードの進行状況。</string>
+
+    <string name="downloads_notification_preparing">ダウンロードを準備しています…</string>
+    <string name="downloads_notification_downloading">ダウンロード中…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">ダウンロード中…</string>
+    <string name="downloads_action_pause">一時停止</string>
+    <string name="downloads_action_cancel">キャンセル</string>
+</resources>

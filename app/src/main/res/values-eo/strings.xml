@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Pli da opcioj</string>
+    <string name="home_settings">Agordoj</string>
+    <string name="settings_offline_mode">Malreta reĝimo</string>
+    <string name="state_on">Ŝaltita</string>
+    <string name="state_off">Malŝaltita</string>
+    <string name="nav_home">Hejmo</string>
+    <string name="nav_libraries">Bibliotekoj</string>
+    <string name="nav_search">Serĉo</string>
+    <string name="nav_downloads">Elŝutoj</string>
+    <string name="offline_no_network">Neniu reto — montrante elŝutitajn enhavojn</string>
+    <string name="offline_server_unreachable">Ne eblas atingi la servilon — montrante elŝutitajn enhavojn</string>
+    <string name="offline_forced">Malreta reĝimo estas ŝaltita — montrante elŝutitajn enhavojn</string>
+    <string name="offline_retry">Reprovi</string>
+    <string name="offline_go_online">Konektiĝi rete</string>
+    <string name="syncplay_groups_action">SyncPlay-grupoj</string>
+    <string name="syncplay_groups_action_active">SyncPlay-grupoj — vi estas en grupo</string>
+</resources>

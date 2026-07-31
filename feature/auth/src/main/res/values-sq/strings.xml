@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Lidhu me serverin</string>
+    <string name="server_setup_discovered_title">Serverët në këtë rrjet</string>
+    <string name="server_setup_discovering">Duke kërkuar në rrjetin lokal…</string>
+    <string name="server_setup_no_servers_found">Asnjë server nuk u shfaq. Shkruaj një adresë më poshtë.</string>
+    <string name="server_setup_manual_title">Adresa e serverit</string>
+    <string name="server_setup_address_label">Host ose URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ose 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Lidhu</string>
+    <string name="server_setup_connecting">Duke kontaktuar serverin…</string>
+    <string name="server_setup_session_lost">Identifikimi i ruajtur nuk u rikthye dot, prandaj u çkyçe. Identifikohu përsëri.</string>
+
+    <string name="login_title">Identifikohu</string>
+    <string name="login_server_version">Versioni %1$s</string>
+    <string name="login_server_version_unknown">Version i panjohur</string>
+    <string name="login_public_users_title">Kush po shikon?</string>
+    <string name="login_username_label">Emri i përdoruesit</string>
+    <string name="login_password_label">Fjalëkalimi</string>
+    <string name="login_show_password">Shfaq fjalëkalimin</string>
+    <string name="login_hide_password">Fshih fjalëkalimin</string>
+    <string name="login_sign_in">Identifikohu</string>
+    <string name="login_change_server">Përdor një server tjetër</string>
+    <string name="login_loading">Duke ngarkuar detajet e serverit…</string>
+    <string name="login_or">ose</string>
+
+    <string name="login_quick_connect">Përdor Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Hap Jellyfin në një pajisje ku je i identifikuar tashmë, shko te Quick Connect dhe shkruaj këtë kod.</string>
+    <string name="login_quick_connect_waiting">Duke pritur miratimin…</string>
+    <string name="login_quick_connect_cancel">Anulo</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">U provua %d adresë kandidate, pa sukses.</item>
+        <item quantity="other">U provuan %d adresa kandidate, pa sukses.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Serveri nuk mund të arrihet</string>
+    <string name="auth_error_unsupported_version_or_product">Version ose produkt i pambështetur</string>
+    <string name="auth_error_cannot_connect">Lidhja nuk mund të vendoset.\nKontrollo emrin e hostit dhe lidhjen tënde në rrjet.</string>
+    <string name="auth_error_invalid_credentials">Emër përdoruesi ose fjalëkalim i gabuar.</string>
+    <string name="auth_error_quick_connect_expired">Ai kod skadoi. Kërko një të ri dhe provo përsëri.</string>
+    <string name="auth_error_server">Serveri u përgjigj me një gabim. Provo përsëri.</string>
+    <string name="auth_error_server_with_code">Serveri u përgjigj me një gabim (%1$d). Provo përsëri.</string>
+</resources>

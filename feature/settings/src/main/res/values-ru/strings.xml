@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Главная</string>
+
+    <string name="settings_section_playback">Воспроизведение</string>
+    <string name="settings_skip_intro">Пропуск заставки</string>
+    <string name="settings_skip_outro">Пропуск титров</string>
+    <string name="settings_skip_mode_off">Ничего не делать</string>
+    <string name="settings_skip_mode_show_button">Показывать кнопку пропуска</string>
+    <string name="settings_skip_mode_auto">Пропускать автоматически</string>
+    <string name="settings_pip">Картинка в картинке</string>
+    <string name="settings_pip_supporting">Продолжать воспроизведение в плавающем окне при выходе из приложения.</string>
+
+    <string name="settings_section_downloads">Загрузки</string>
+    <string name="settings_wifi_only">Только Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Приостанавливать загрузки при использовании мобильного интернета.</string>
+    <string name="settings_quality">Качество загрузки</string>
+    <string name="settings_quality_original">Исходный файл — точная копия, докачка возможна</string>
+    <string name="settings_quality_high">Высокое — около 20 Мбит/с, 1080p</string>
+    <string name="settings_quality_medium">Среднее — около 8 Мбит/с, 1080p</string>
+    <string name="settings_quality_low">Низкое — около 3 Мбит/с, 720p</string>
+    <string name="settings_quality_supporting">Любой вариант, кроме исходного файла, преобразуется вашим сервером при отправке, поэтому размер, показанный во время загрузки, приблизительный, а прерванная передача начинается заново.</string>
+    <string name="settings_storage_label">Хранилище</string>
+    <string name="settings_storage_summary">Занято: %1$s · свободно: %2$s на этом устройстве</string>
+    <string name="settings_storage_location">Загрузки хранятся в: %1$s</string>
+    <string name="settings_storage_picker">Место хранения</string>
+    <string name="settings_storage_internal">Внутренняя память</string>
+    <string name="settings_storage_sd_card">SD-карта</string>
+    <string name="settings_storage_volume_free">Свободно: %1$s</string>
+    <string name="settings_storage_missing">Выбранное хранилище сейчас недоступно, поэтому загрузки идут в место, выбранное ниже.</string>
+    <string name="settings_storage_switch_title">Переместить загрузки?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Загрузки пока нельзя перемещать между местами хранения, поэтому уже имеющаяся на этом устройстве будет удалена. Вы можете загрузить её снова в новое место.</item>
+        <item quantity="few">Загрузки пока нельзя перемещать между местами хранения, поэтому уже имеющиеся на этом устройстве (%1$d) будут удалены. Вы можете загрузить их снова в новое место.</item>
+        <item quantity="many">Загрузки пока нельзя перемещать между местами хранения, поэтому уже имеющиеся на этом устройстве (%1$d) будут удалены. Вы можете загрузить их снова в новое место.</item>
+        <item quantity="other">Загрузки пока нельзя перемещать между местами хранения, поэтому уже имеющиеся на этом устройстве (%1$d) будут удалены. Вы можете загрузить их снова в новое место.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Удалить и переместить</string>
+
+    <string name="settings_section_connectivity">Подключение</string>
+    <string name="settings_offline_mode">Автономный режим</string>
+    <string name="settings_offline_mode_supporting">Показывать только медиа, уже имеющиеся на этом устройстве.</string>
+
+    <string name="settings_section_account">Аккаунт</string>
+    <string name="settings_account_user">Вход выполнен как</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Вход не выполнен</string>
+    <string name="settings_sign_out">Выйти</string>
+    <string name="settings_sign_out_dialog_title">Выйти из аккаунта?</string>
+    <string name="settings_sign_out_dialog_message">Для повторного входа вам понадобятся адрес сервера и пароль.</string>
+    <string name="settings_sign_out_delete_downloads">Также удалить загрузки с этого устройства</string>
+    <string name="settings_cancel">Отмена</string>
+</resources>

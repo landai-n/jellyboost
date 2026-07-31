@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Hae elokuvia, sarjoja ja jaksoja</string>
+    <string name="search_clear">Tyhjennä</string>
+
+    <string name="search_section_movies">Elokuvat</string>
+    <string name="search_section_series">Sarjat</string>
+    <string name="search_section_episodes">Jaksot</string>
+
+    <string name="search_prompt">Kirjoita hakeaksesi kirjastoistasi.</string>
+    <string name="search_no_results">Ei osumia haulle ”%1$s”.</string>
+
+    <string name="search_error_network">Palvelimeen ei saada yhteyttä. Tarkista yhteytesi ja yritä uudelleen.</string>
+    <string name="search_error_unauthorized">Istuntosi vanheni. Kirjaudu sisään uudelleen jatkaaksesi.</string>
+    <string name="search_error_not_found">Kyseinen kohde ei ole enää palvelimella.</string>
+    <string name="search_error_server">Palvelin palautti virheen.</string>
+    <string name="search_error_server_with_code">Palvelin palautti virheen (%1$d).</string>
+    <string name="search_error_storage">Paikallisia tietoja ei voitu lukea.</string>
+    <string name="search_error_unknown">Jokin meni pieleen haun aikana.</string>
+</resources>

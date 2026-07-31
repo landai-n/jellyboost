@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Pretraži filmove, serije i epizode</string>
+    <string name="search_clear">Očisti</string>
+
+    <string name="search_section_movies">Filmovi</string>
+    <string name="search_section_series">Serije</string>
+    <string name="search_section_episodes">Epizode</string>
+
+    <string name="search_prompt">Upišite tekst za pretraživanje svojih biblioteka.</string>
+    <string name="search_no_results">Ništa nije pronađeno za “%1$s”.</string>
+
+    <string name="search_error_network">Poslužitelj nedostupan. Provjerite vezu i pokušajte ponovno.</string>
+    <string name="search_error_unauthorized">Sesija je istekla. Prijavite se ponovno za nastavak.</string>
+    <string name="search_error_not_found">Ta stavka više nije na poslužitelju.</string>
+    <string name="search_error_server">Poslužitelj je vratio pogrešku.</string>
+    <string name="search_error_server_with_code">Poslužitelj je vratio pogrešku (%1$d).</string>
+    <string name="search_error_storage">Nije moguće pročitati lokalne podatke.</string>
+    <string name="search_error_unknown">Došlo je do pogreške prilikom pretraživanja.</string>
+</resources>

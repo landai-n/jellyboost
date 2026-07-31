@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Пошук фільмаў, серыялаў і эпізодаў</string>
+    <string name="search_clear">Ачысціць</string>
+
+    <string name="search_section_movies">Фільмы</string>
+    <string name="search_section_series">Серыялы</string>
+    <string name="search_section_episodes">Эпізоды</string>
+
+    <string name="search_prompt">Пачніце ўводзіць, каб шукаць у бібліятэках.</string>
+    <string name="search_no_results">Няма супадзенняў для «%1$s».</string>
+
+    <string name="search_error_network">Не ўдаецца звязацца з вашым серверам. Праверце злучэнне і паспрабуйце зноў.</string>
+    <string name="search_error_unauthorized">Тэрмін дзеяння сесіі скончыўся. Увайдзіце зноў, каб працягнуць.</string>
+    <string name="search_error_not_found">Гэтага элемента больш няма на серверы.</string>
+    <string name="search_error_server">Сервер вярнуў памылку.</string>
+    <string name="search_error_server_with_code">Сервер вярнуў памылку (%1$d).</string>
+    <string name="search_error_storage">Не ўдалося прачытаць лакальныя дадзеныя.</string>
+    <string name="search_error_unknown">Падчас пошуку нешта пайшло не так.</string>
+</resources>

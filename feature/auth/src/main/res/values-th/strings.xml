@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">เชื่อมต่อกับเซิร์ฟเวอร์</string>
+    <string name="server_setup_discovered_title">เซิร์ฟเวอร์ในเครือข่ายนี้</string>
+    <string name="server_setup_discovering">กำลังค้นหาในเครือข่ายท้องถิ่น…</string>
+    <string name="server_setup_no_servers_found">ไม่พบเซิร์ฟเวอร์ที่ประกาศตัว กรอกที่อยู่ด้านล่าง</string>
+    <string name="server_setup_manual_title">ที่อยู่เซิร์ฟเวอร์</string>
+    <string name="server_setup_address_label">โฮสต์หรือ URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org or 192.168.1.10:8096</string>
+    <string name="server_setup_connect">เชื่อมต่อ</string>
+    <string name="server_setup_connecting">กำลังติดต่อเซิร์ฟเวอร์…</string>
+    <string name="server_setup_session_lost">ไม่สามารถกู้คืนการเข้าสู่ระบบที่บันทึกไว้ได้ คุณจึงถูกออกจากระบบ กรุณาเข้าสู่ระบบอีกครั้ง</string>
+    <string name="login_title">เข้าสู่ระบบ</string>
+    <string name="login_server_version">เวอร์ชัน %1$s</string>
+    <string name="login_server_version_unknown">ไม่ทราบเวอร์ชัน</string>
+    <string name="login_public_users_title">ใครกำลังดูอยู่?</string>
+    <string name="login_username_label">ชื่อผู้ใช้</string>
+    <string name="login_password_label">รหัสผ่าน</string>
+    <string name="login_show_password">แสดงรหัสผ่าน</string>
+    <string name="login_hide_password">ซ่อนรหัสผ่าน</string>
+    <string name="login_sign_in">เข้าสู่ระบบ</string>
+    <string name="login_change_server">ใช้เซิร์ฟเวอร์อื่น</string>
+    <string name="login_loading">กำลังโหลดรายละเอียดเซิร์ฟเวอร์…</string>
+    <string name="login_or">หรือ</string>
+    <string name="login_quick_connect">ใช้ Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">เปิด Jellyfin บนอุปกรณ์ที่คุณเข้าสู่ระบบอยู่แล้ว ไปที่ Quick Connect แล้วป้อนรหัสนี้</string>
+    <string name="login_quick_connect_waiting">กำลังรอการอนุมัติ…</string>
+    <string name="login_quick_connect_cancel">ยกเลิก</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">ลองที่อยู่ที่เป็นไปได้ %d รายการแล้ว แต่ไม่สำเร็จ</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้</string>
+    <string name="auth_error_unsupported_version_or_product">เวอร์ชันหรือผลิตภัณฑ์ไม่รองรับ</string>
+    <string name="auth_error_cannot_connect">ไม่สามารถเชื่อมต่อได้\nตรวจสอบชื่อโฮสต์และการเชื่อมต่อเครือข่ายของคุณ</string>
+    <string name="auth_error_invalid_credentials">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</string>
+    <string name="auth_error_quick_connect_expired">รหัสนี้หมดอายุแล้ว ขอรหัสใหม่แล้วลองอีกครั้ง</string>
+    <string name="auth_error_server">เซิร์ฟเวอร์ตอบกลับด้วยข้อผิดพลาด ลองอีกครั้ง</string>
+    <string name="auth_error_server_with_code">เซิร์ฟเวอร์ตอบกลับด้วยข้อผิดพลาด (%1$d) ลองอีกครั้ง</string>
+</resources>

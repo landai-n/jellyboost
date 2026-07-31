@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Več možnosti</string>
+    <string name="home_settings">Nastavitve</string>
+    <string name="settings_offline_mode">Način brez povezave</string>
+
+    <string name="state_on">Vklopljeno</string>
+    <string name="state_off">Izklopljeno</string>
+
+    <string name="nav_home">Domov</string>
+    <string name="nav_libraries">Knjižnice</string>
+    <string name="nav_search">Iskanje</string>
+    <string name="nav_downloads">Prenosi</string>
+
+    <string name="offline_no_network">Brez omrežja — prikazana je prenesena vsebina</string>
+    <string name="offline_server_unreachable">Strežnika ni mogoče doseči — prikazana je prenesena vsebina</string>
+    <string name="offline_forced">Način brez povezave je vklopljen — prikazana je prenesena vsebina</string>
+    <string name="offline_retry">Poskusi znova</string>
+    <string name="offline_go_online">Poveži se</string>
+
+    <string name="syncplay_groups_action">Skupine SyncPlay</string>
+    <string name="syncplay_groups_action_active">Skupine SyncPlay — v skupini ste</string>
+</resources>

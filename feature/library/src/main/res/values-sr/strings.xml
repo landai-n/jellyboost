@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Још нема библиотека. Додајте једну на серверу.</string>
+
+    <string name="library_back">Назад</string>
+    <string name="library_home">Почетна</string>
+    <string name="library_sort">Сортирај</string>
+    <string name="library_filter">Филтер</string>
+
+    <string name="library_sort_title">Сортирај по</string>
+    <string name="library_sort_name">Назив</string>
+    <string name="library_sort_date_added">Датум додавања</string>
+    <string name="library_sort_premiere_date">Датум издавања</string>
+    <string name="library_sort_community_rating">Оцена заједнице</string>
+    <string name="library_sort_runtime">Трајање</string>
+    <string name="library_sort_random">Насумично</string>
+    <string name="library_sort_direction">Смер</string>
+    <string name="library_sort_ascending">Растуће</string>
+    <string name="library_sort_descending">Опадајуће</string>
+
+    <string name="library_filters_title">Филтери</string>
+    <string name="library_filters_genres">Жанрови</string>
+    <string name="library_filters_years">Године</string>
+    <string name="library_filters_played">Погледано</string>
+    <string name="library_filters_played_any">Било које</string>
+    <string name="library_filters_played_yes">Погледано</string>
+    <string name="library_filters_played_no">Непогледано</string>
+    <string name="library_filters_clear">Обриши све</string>
+    <string name="library_filters_apply">Прикажи резултате</string>
+    <string name="library_filters_none">Ова библиотека није понудила ништа за филтрирање.</string>
+    <string name="library_filters_loading">Учитавање филтера…</string>
+
+    <string name="library_empty">Овде нема ништа за приказ.</string>
+    <string name="library_empty_filtered">Ниједна ставка не одговара овим филтерима.</string>
+    <string name="library_empty_clear_filters">Обриши филтере</string>
+    <string name="library_retry">Покушај поново</string>
+
+    <string name="library_error_network">Сервер није доступан. Проверите везу и покушајте поново.</string>
+    <string name="library_error_unauthorized">Ваша сесија је истекла. Пријавите се поново да наставите.</string>
+    <string name="library_error_not_found">Та библиотека више није на серверу.</string>
+    <string name="library_error_server">Сервер је вратио грешку.</string>
+    <string name="library_error_server_with_code">Сервер је вратио грешку (%1$d).</string>
+    <string name="library_error_storage">Није могуће прочитати локалне податке.</string>
+    <string name="library_error_unknown">Нешто није у реду приликом учитавања ове библиотеке.</string>
+</resources>

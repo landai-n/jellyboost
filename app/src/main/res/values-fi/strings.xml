@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Lisää vaihtoehtoja</string>
+    <string name="home_settings">Asetukset</string>
+    <string name="settings_offline_mode">Offline-tila</string>
+
+    <string name="state_on">Päällä</string>
+    <string name="state_off">Pois</string>
+
+    <string name="nav_home">Koti</string>
+    <string name="nav_libraries">Kirjastot</string>
+    <string name="nav_search">Haku</string>
+    <string name="nav_downloads">Lataukset</string>
+
+    <string name="offline_no_network">Ei verkkoyhteyttä – näytetään ladattua sisältöä</string>
+    <string name="offline_server_unreachable">Palvelinta ei tavoiteta – näytetään ladattua sisältöä</string>
+    <string name="offline_forced">Offline-tila on käytössä – näytetään ladattua sisältöä</string>
+    <string name="offline_retry">Yritä uudelleen</string>
+    <string name="offline_go_online">Siirry verkkoon</string>
+
+    <string name="syncplay_groups_action">SyncPlay-ryhmät</string>
+    <string name="syncplay_groups_action_active">SyncPlay-ryhmät – olet ryhmässä</string>
+</resources>

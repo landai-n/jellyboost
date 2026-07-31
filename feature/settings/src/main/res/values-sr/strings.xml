@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Подешавања</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Почетна</string>
+
+    <string name="settings_section_playback">Репродукција</string>
+    <string name="settings_skip_intro">Прескочи уводну шпицу</string>
+    <string name="settings_skip_outro">Прескочи одјавну шпицу</string>
+    <string name="settings_skip_mode_off">Не ради ништа</string>
+    <string name="settings_skip_mode_show_button">Прикажи дугме за прескакање</string>
+    <string name="settings_skip_mode_auto">Прескочи аутоматски</string>
+    <string name="settings_pip">Слика у слици</string>
+    <string name="settings_pip_supporting">Настави репродукцију у плутајућем прозору када напустите апликацију.</string>
+
+    <string name="settings_section_downloads">Преузимања</string>
+    <string name="settings_wifi_only">Само Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Паузирај преузимања на мобилним подацима.</string>
+    <string name="settings_quality">Квалитет преузимања</string>
+    <string name="settings_quality_original">Оригинални фајл — тачна копија, наставља се</string>
+    <string name="settings_quality_high">Високи — око 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Средњи — око 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Низак — око 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Све осим оригиналног фајла сервер конвертује док га шаље, па је приказана величина током преузимања процена, а прекинути пренос почиње изнова.</string>
+    <string name="settings_storage_label">Складиште</string>
+    <string name="settings_storage_summary">%1$s искоришћено · %2$s слободно на овом уређају</string>
+    <string name="settings_storage_location">Преузимања се чувају у %1$s</string>
+    <string name="settings_storage_picker">Локација складишта</string>
+    <string name="settings_storage_internal">Интерно складиште</string>
+    <string name="settings_storage_sd_card">SD картица</string>
+    <string name="settings_storage_volume_free">%1$s слободно</string>
+    <string name="settings_storage_missing">Складиште које сте изабрали тренутно није доступно, па преузимања иду на локацију изабрану испод.</string>
+    <string name="settings_storage_switch_title">Преместити преузимања?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Преузимања још не могу да се премештају између локација, па ће преузимање које је већ на овом уређају бити обрисано. Можете га поново преузети на нову локацију.</item>
+        <item quantity="few">Преузимања још не могу да се премештају између локација, па ће %1$d преузимања која су већ на овом уређају бити обрисана. Можете их поново преузети на нову локацију.</item>
+        <item quantity="other">Преузимања још не могу да се премештају између локација, па ће %1$d преузимања с овог уређаја бити обрисано. Можете их поново преузети на нову локацију.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Обриши и промени</string>
+
+    <string name="settings_section_connectivity">Повезивање</string>
+    <string name="settings_offline_mode">Режим рада ван мреже</string>
+    <string name="settings_offline_mode_supporting">Прикажи само медије који су већ на овом уређају.</string>
+
+    <string name="settings_section_account">Налог</string>
+    <string name="settings_account_user">Пријављени као</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Нисте пријављени</string>
+    <string name="settings_sign_out">Одјави се</string>
+    <string name="settings_sign_out_dialog_title">Одјавити се?</string>
+    <string name="settings_sign_out_dialog_message">Биће вам потребна адреса сервера и лозинка да се поново пријавите.</string>
+    <string name="settings_sign_out_delete_downloads">Такође обриши преузимања са овог уређаја</string>
+    <string name="settings_cancel">Откажи</string>
+</resources>

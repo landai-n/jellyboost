@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">ਹਾਲੇ ਕੋਈ ਲਾਇਬ੍ਰੇਰੀ ਨਹੀਂ ਹੈ। ਸਰਵਰ ਉੱਤੇ ਇੱਕ ਸ਼ਾਮਲ ਕਰੋ।</string>
+
+    <string name="library_back">ਪਿੱਛੇ</string>
+    <string name="library_home">ਹੋਮ</string>
+    <string name="library_sort">ਕ੍ਰਮਬੱਧ ਕਰੋ</string>
+    <string name="library_filter">ਫਿਲਟਰ</string>
+
+    <string name="library_sort_title">ਇਸ ਅਨੁਸਾਰ ਕ੍ਰਮਬੱਧ ਕਰੋ</string>
+    <string name="library_sort_name">ਨਾਮ</string>
+    <string name="library_sort_date_added">ਸ਼ਾਮਲ ਕਰਨ ਦੀ ਮਿਤੀ</string>
+    <string name="library_sort_premiere_date">ਰਿਲੀਜ਼ ਮਿਤੀ</string>
+    <string name="library_sort_community_rating">ਕਮਿਊਨਿਟੀ ਰੇਟਿੰਗ</string>
+    <string name="library_sort_runtime">ਸਮਾਂ-ਅੰਤਰਾਲ</string>
+    <string name="library_sort_random">ਬੇਤਰਤੀਬ</string>
+    <string name="library_sort_direction">ਦਿਸ਼ਾ</string>
+    <string name="library_sort_ascending">ਵਧਦੇ ਕ੍ਰਮ ਵਿੱਚ</string>
+    <string name="library_sort_descending">ਘਟਦੇ ਕ੍ਰਮ ਵਿੱਚ</string>
+
+    <string name="library_filters_title">ਫਿਲਟਰ</string>
+    <string name="library_filters_genres">ਸ਼ੈਲੀਆਂ</string>
+    <string name="library_filters_years">ਸਾਲ</string>
+    <string name="library_filters_played">ਦੇਖਿਆ</string>
+    <string name="library_filters_played_any">ਕੋਈ ਵੀ</string>
+    <string name="library_filters_played_yes">ਦੇਖਿਆ</string>
+    <string name="library_filters_played_no">ਨਾ-ਦੇਖਿਆ</string>
+    <string name="library_filters_clear">ਸਾਰੇ ਸਾਫ਼ ਕਰੋ</string>
+    <string name="library_filters_apply">ਨਤੀਜੇ ਦਿਖਾਓ</string>
+    <string name="library_filters_none">ਇਸ ਲਾਇਬ੍ਰੇਰੀ ਵਿੱਚ ਫਿਲਟਰ ਕਰਨ ਲਈ ਕੁਝ ਨਹੀਂ ਹੈ।</string>
+    <string name="library_filters_loading">ਫਿਲਟਰ ਲੋਡ ਹੋ ਰਹੇ ਹਨ…</string>
+
+    <string name="library_empty">ਇੱਥੇ ਦਿਖਾਉਣ ਲਈ ਕੁਝ ਨਹੀਂ ਹੈ।</string>
+    <string name="library_empty_filtered">ਇਹਨਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਕੋਈ ਆਈਟਮ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।</string>
+    <string name="library_empty_clear_filters">ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ</string>
+    <string name="library_retry">ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+
+    <string name="library_error_network">ਤੁਹਾਡੇ ਸਰਵਰ ਤੱਕ ਪਹੁੰਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+    <string name="library_error_unauthorized">ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਮਿਆਦ ਪੁੱਗ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+    <string name="library_error_not_found">ਉਹ ਲਾਇਬ੍ਰੇਰੀ ਹੁਣ ਸਰਵਰ ਉੱਤੇ ਨਹੀਂ ਹੈ।</string>
+    <string name="library_error_server">ਸਰਵਰ ਨੇ ਗਲਤੀ ਦਿੱਤੀ।</string>
+    <string name="library_error_server_with_code">ਸਰਵਰ ਨੇ ਗਲਤੀ (%1$d) ਦਿੱਤੀ।</string>
+    <string name="library_error_storage">ਲੋਕਲ ਡਾਟਾ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
+    <string name="library_error_unknown">ਇਹ ਲਾਇਬ੍ਰੇਰੀ ਲੋਡ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
+</resources>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Lejupielādēts</string>
+    <string name="downloads_tab_queue">Rinda</string>
+    <string name="downloads_wifi_only">Tikai Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmas</string>
+
+    <string name="downloads_storage_summary">Izmantots %1$s · brīvs %2$s</string>
+
+    <string name="downloads_action_delete">Dzēst lejupielādi</string>
+    <string name="downloads_action_cancel">Atcelt lejupielādi</string>
+    <string name="downloads_action_pause">Pauzēt lejupielādi</string>
+    <string name="downloads_action_resume">Atsākt lejupielādi</string>
+    <string name="downloads_action_move_up">Pārvietot augšup rindā</string>
+    <string name="downloads_action_move_down">Pārvietot lejup rindā</string>
+
+    <string name="downloads_action_pause_all">Pauzēt visu</string>
+    <string name="downloads_action_resume_all">Atsākt visu</string>
+    <string name="downloads_action_cancel_all">Atcelt visu</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="zero">Atcelt visas %1$d lejupielādes?</item>
+        <item quantity="one">Atcelt šo lejupielādi?</item>
+        <item quantity="other">Atcelt visas %1$d lejupielādes?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Rinda tiek iztukšota, un visi daļēji lejupielādētie faili tiek noņemti. Pabeigtās lejupielādes netiek ietekmētas.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Atcelt lejupielādes</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Paturēt</string>
+
+    <string name="downloads_delete_dialog_title">Dzēst %1$s?</string>
+    <string name="downloads_delete_dialog_message">Lejupielādētie faili tiek noņemti no šīs ierīces. Varat to lejupielādēt vēlreiz vēlāk.</string>
+    <string name="downloads_delete_dialog_confirm">Dzēst</string>
+    <string name="downloads_delete_dialog_cancel">Atcelt</string>
+
+    <string name="downloads_progress_of">%1$s no %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s no ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s no ne vairāk kā %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">ne vairāk kā %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Atlicis %1$s</string>
+    <string name="downloads_eta_approx">Atlicis ~%1$s</string>
+    <string name="downloads_transcoded_marker">Pārkodēts</string>
+    <string name="downloads_status_queued">Gaida</string>
+    <string name="downloads_status_paused">Pauzēts</string>
+    <string name="downloads_status_failed">Lejupielāde neizdevās</string>
+    <string name="downloads_status_failed_reason">Lejupielāde neizdevās: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Vēl nekas nav lejupielādēts. Pieskarieties Lejupielādēt pie filmas vai sērijas, lai saglabātu to šajā ierīcē.</string>
+    <string name="downloads_empty_queue">Lejupielāžu rinda ir tukša.</string>
+    <string name="downloads_load_failed">Neizdevās nolasīt jūsu lejupielādes. Atveriet šo ekrānu vēlreiz, lai mēģinātu vēlreiz.</string>
+    <string name="downloads_message_delete_failed">Neizdevās dzēst šo lejupielādi.</string>
+    <string name="downloads_message_action_failed">Neizdevās atjaunināt rindu.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="zero">Pauzēti %1$d — %2$d pārkodēšanas turpina lejupielādi (pārkodēšanu nevar pauzēt).</item>
+        <item quantity="one">Pauzēts %1$d — %2$d pārkodēšana turpina lejupielādi (pārkodēšanu nevar pauzēt).</item>
+        <item quantity="other">Pauzēti %1$d — %2$d pārkodēšanas turpina lejupielādi (pārkodēšanu nevar pauzēt).</item>
+    </plurals>
+</resources>

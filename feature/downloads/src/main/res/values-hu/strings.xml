@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Letöltve</string>
+    <string name="downloads_tab_queue">Sor</string>
+    <string name="downloads_wifi_only">Csak Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmek</string>
+
+    <string name="downloads_storage_summary">%1$s felhasználva · %2$s szabad</string>
+
+    <string name="downloads_action_delete">Letöltés törlése</string>
+    <string name="downloads_action_cancel">Letöltés megszakítása</string>
+    <string name="downloads_action_pause">Letöltés szüneteltetése</string>
+    <string name="downloads_action_resume">Letöltés folytatása</string>
+    <string name="downloads_action_move_up">Feljebb a sorban</string>
+    <string name="downloads_action_move_down">Lejjebb a sorban</string>
+
+    <string name="downloads_action_pause_all">Összes szüneteltetése</string>
+    <string name="downloads_action_resume_all">Összes folytatása</string>
+    <string name="downloads_action_cancel_all">Összes megszakítása</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Megszakítod ezt a letöltést?</item>
+        <item quantity="other">Megszakítod mind a(z) %1$d letöltést?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">A sor kiürül, és a részben letöltött fájlok törlődnek. A befejezett letöltéseket ez nem érinti.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Letöltések megszakítása</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Megtartás</string>
+
+    <string name="downloads_delete_dialog_title">Törlöd ezt: %1$s?</string>
+    <string name="downloads_delete_dialog_message">A letöltött fájlok törlődnek erről az eszközről. Később újra letöltheted.</string>
+    <string name="downloads_delete_dialog_confirm">Törlés</string>
+    <string name="downloads_delete_dialog_cancel">Mégse</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / legfeljebb %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">legfeljebb %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s van hátra</string>
+    <string name="downloads_eta_approx">~%1$s van hátra</string>
+    <string name="downloads_transcoded_marker">Átkódolva</string>
+    <string name="downloads_status_queued">Várakozik</string>
+    <string name="downloads_status_paused">Szüneteltetve</string>
+    <string name="downloads_status_failed">A letöltés sikertelen</string>
+    <string name="downloads_status_failed_reason">A letöltés sikertelen: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Még nincs letöltött tartalom. Koppints a Letöltés gombra egy filmnél vagy epizódnál, hogy megőrizd az eszközön.</string>
+    <string name="downloads_empty_queue">A letöltési sor üres.</string>
+    <string name="downloads_load_failed">Nem sikerült beolvasni a letöltéseket. Nyisd meg újra ezt a képernyőt a próbálkozáshoz.</string>
+    <string name="downloads_message_delete_failed">Nem sikerült törölni a letöltést.</string>
+    <string name="downloads_message_action_failed">Nem sikerült frissíteni a sort.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d szüneteltetve – %2$d átkódolás továbbra is töltődik (egy átkódolás nem szüneteltethető).</item>
+        <item quantity="other">%1$d szüneteltetve – %2$d átkódolás továbbra is töltődik (egy átkódolás nem szüneteltethető).</item>
+    </plurals>
+</resources>

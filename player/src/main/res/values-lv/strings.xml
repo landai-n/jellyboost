@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Aizvērt atskaņotāju</string>
+    <string name="player_play">Atskaņot</string>
+    <string name="player_pause">Pauzēt</string>
+    <string name="player_rewind">Pārtīt 10 sekundes atpakaļ</string>
+    <string name="player_forward">Pārtīt 30 sekundes uz priekšu</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Subtitri</string>
+    <string name="player_subtitles_off">Izslēgts</string>
+    <string name="player_quality">Kvalitāte</string>
+    <string name="player_speed">Ātrums</string>
+
+    <string name="player_skip_intro">Izlaist ievadu</string>
+    <string name="player_skip_outro">Izlaist nobeigumu</string>
+
+    <string name="player_quality_auto">Automātiski</string>
+    <string name="player_quality_high">Augsta — 20 Mbps</string>
+    <string name="player_quality_medium">Vidēja — 8 Mbps</string>
+    <string name="player_quality_low">Zema — 3 Mbps</string>
+    <string name="player_quality_lowest">Zemākā — 720 kbps</string>
+
+    <string name="player_method_direct_play">Tiešā atskaņošana</string>
+    <string name="player_method_direct_stream">Tiešā straumēšana</string>
+    <string name="player_method_transcode">Pārkodēšana</string>
+
+    <string name="player_message_transcode">Jūsu ierīce nevarēja atkodēt šo failu, tāpēc serveris to pārkodē.</string>
+    <string name="player_message_lower_quality">Straumēšana apstājās — mēģina vēlreiz zemākā kvalitātē.</string>
+    <string name="player_message_track_restart">Serverim bija jāpārkodē straume šim celiņam.</string>
+    <string name="player_message_track_streaming">Šis celiņš nav lejupielādē — tas tiek straumēts no jūsu servera.</string>
+    <string name="player_message_track_offline">Šis celiņš nav lejupielādētajā failā.</string>
+    <string name="player_message_failed">Atskaņošana neizdevās.</string>
+
+    <string name="player_syncplay_group">Grupa</string>
+    <string name="player_syncplay_waiting">Gaida grupu…</string>
+    <string name="player_syncplay_shuffle">Sajaukt rindu</string>
+    <string name="player_syncplay_repeat">Atkārtot</string>
+    <string name="player_syncplay_repeat_none">Izslēgts</string>
+    <string name="player_syncplay_repeat_one">Šis vienums</string>
+    <string name="player_syncplay_repeat_all">Visa rinda</string>
+    <string name="player_syncplay_leave">Pamest grupu</string>
+    <string name="player_syncplay_leave_title">Pamest šo grupu?</string>
+    <string name="player_syncplay_leave_body">Atskaņošana turpinās šeit, atsevišķi. Atkārtota pievienošanās nozīmē grupas izvēli no jauna.</string>
+
+    <string name="player_syncplay_cancel">Atcelt</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="zero">%d cilvēku skatās</item>
+        <item quantity="one">%d cilvēks skatās</item>
+        <item quantity="other">%d cilvēki skatās</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d vairāk</string>
+
+    <string name="player_syncplay_queue">Rinda</string>
+    <string name="player_syncplay_queue_empty">Grupa vēl nav pievienojusi neko rindai.</string>
+    <string name="player_syncplay_queue_item_loading">Ielādē…</string>
+    <string name="player_syncplay_queue_playing">Atskaņo tagad</string>
+    <string name="player_syncplay_queue_next">Nākamais vienums</string>
+    <string name="player_syncplay_queue_previous">Iepriekšējais vienums</string>
+    <string name="player_syncplay_queue_move_up">Pārvietot augšup</string>
+    <string name="player_syncplay_queue_move_down">Pārvietot lejup</string>
+    <string name="player_syncplay_queue_remove">Noņemt no rindas</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="zero">%d vienumu rindā</item>
+        <item quantity="one">%d vienums rindā</item>
+        <item quantity="other">%d vienumi rindā</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Pametāt SyncPlay — savienojums pazuda</string>
+    <string name="player_message_syncplay_rejoined">Atkārtoti pievienojāties SyncPlay grupai</string>
+    <string name="player_message_syncplay_join_failed">Neizdevās pievienoties tai SyncPlay grupai.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay grupa ir beigusi darbību.</string>
+    <string name="player_message_syncplay_removed">Jūs vairs neesat SyncPlay grupā.</string>
+    <string name="player_message_syncplay_library_denied">Grupa skatās kaut ko, kam jums nav piekļuves.</string>
+    <string name="player_message_syncplay_item_unavailable">Neizdevās atvērt to, ko grupa skatās.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Atpakaļ</string>
+    <string name="player_syncplay_groups_home">Sākums</string>
+    <string name="player_syncplay_groups_create">Izveidot grupu</string>
+    <string name="player_syncplay_groups_create_title">Nosauciet savu grupu</string>
+    <string name="player_syncplay_groups_create_hint">Grupas nosaukums</string>
+    <string name="player_syncplay_groups_create_confirm">Izveidot</string>
+    <string name="player_syncplay_groups_joining">Pievienojas…</string>
+    <string name="player_syncplay_groups_active_label">Jūs esat šajā grupā</string>
+    <string name="player_syncplay_groups_open_player">Atvērt atskaņotāju</string>
+    <string name="player_syncplay_groups_empty">Šobrīd neviens cits neskatās kopā.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay ir atspējots jūsu kontam.</string>
+    <string name="player_syncplay_groups_error">Neizdevās ielādēt SyncPlay grupas.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay grupa</string>
+    <string name="player_syncplay_presence_channel_description">Saglabā jūsu vietu kopīgas skatīšanās grupā, kamēr lietotne darbojas fonā.</string>
+    <string name="player_syncplay_presence_title">SyncPlay grupā</string>
+    <string name="player_syncplay_presence_text">Gaida grupu</string>
+    <string name="player_syncplay_presence_leave">Pamest</string>
+
+    <string name="player_syncplay_state_idle">Dīkstāvē</string>
+    <string name="player_syncplay_state_waiting">Gaida</string>
+    <string name="player_syncplay_state_paused">Pauzēts</string>
+    <string name="player_syncplay_state_playing">Atskaņo</string>
+
+    <string name="player_cast">Apraidīt uz ierīci</string>
+
+    <string name="player_cast_device_unnamed">jūsu TV</string>
+    <string name="player_message_cast_transferred">Tagad tiek atskaņots ierīcē %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Pameta SyncPlay grupu, lai apraidītu uz %1$s.</string>
+    <string name="player_message_cast_failed">Neizdevās to atskaņot ierīcē %1$s.</string>
+
+    <string name="player_casting_to">Notiek apraide uz %1$s</string>
+</resources>

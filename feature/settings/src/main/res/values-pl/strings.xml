@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_back">Wstecz</string>
+    <string name="settings_home">Strona główna</string>
+
+    <string name="settings_section_playback">Odtwarzanie</string>
+    <string name="settings_skip_intro">Pomiń intro</string>
+    <string name="settings_skip_outro">Pomiń napisy końcowe</string>
+    <string name="settings_skip_mode_off">Nic nie rób</string>
+    <string name="settings_skip_mode_show_button">Pokaż przycisk pomijania</string>
+    <string name="settings_skip_mode_auto">Pomijaj automatycznie</string>
+    <string name="settings_pip">Obraz w obrazie</string>
+    <string name="settings_pip_supporting">Kontynuuj odtwarzanie w pływającym oknie po opuszczeniu aplikacji.</string>
+
+    <string name="settings_section_downloads">Pobrania</string>
+    <string name="settings_wifi_only">Tylko Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Wstrzymuj pobieranie w sieci komórkowej.</string>
+    <string name="settings_quality">Jakość pobierania</string>
+    <string name="settings_quality_original">Oryginalny plik — dokładna kopia, można wznowić</string>
+    <string name="settings_quality_high">Wysoka — ok. 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Średnia — ok. 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Niska — ok. 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Wszystko poza oryginalnym plikiem jest konwertowane przez serwer podczas wysyłania, więc rozmiar widoczny w trakcie pobierania jest szacunkowy, a przerwany transfer zaczyna się od nowa.</string>
+    <string name="settings_storage_label">Pamięć</string>
+    <string name="settings_storage_summary">%1$s użyte · %2$s wolne na tym urządzeniu</string>
+    <string name="settings_storage_location">Pobrania są przechowywane w %1$s</string>
+    <string name="settings_storage_picker">Lokalizacja pamięci</string>
+    <string name="settings_storage_internal">Pamięć wewnętrzna</string>
+    <string name="settings_storage_sd_card">Karta SD</string>
+    <string name="settings_storage_volume_free">%1$s wolnego miejsca</string>
+    <string name="settings_storage_missing">Wybrana pamięć jest teraz niedostępna, więc pobrania trafiają do lokalizacji wybranej poniżej.</string>
+    <string name="settings_storage_switch_title">Przenieść pobrania?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Pobrań nie można jeszcze przenosić między lokalizacjami, dlatego pobranie już zapisane na tym urządzeniu zostanie usunięte. Możesz pobrać je ponownie do nowej lokalizacji.</item>
+        <item quantity="few">Pobrań nie można jeszcze przenosić między lokalizacjami, dlatego %1$d pobrania już zapisane na tym urządzeniu zostaną usunięte. Możesz pobrać je ponownie do nowej lokalizacji.</item>
+        <item quantity="many">Pobrań nie można jeszcze przenosić między lokalizacjami, dlatego %1$d pobrań już zapisanych na tym urządzeniu zostanie usuniętych. Możesz pobrać je ponownie do nowej lokalizacji.</item>
+        <item quantity="other">Pobrań nie można jeszcze przenosić między lokalizacjami, dlatego %1$d pobrań już zapisanych na tym urządzeniu zostanie usuniętych. Możesz pobrać je ponownie do nowej lokalizacji.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Usuń i przenieś</string>
+
+    <string name="settings_section_connectivity">Łączność</string>
+    <string name="settings_offline_mode">Tryb offline</string>
+    <string name="settings_offline_mode_supporting">Pokazuj tylko multimedia, które są już na tym urządzeniu.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Zalogowano jako</string>
+    <string name="settings_account_server">Serwer</string>
+    <string name="settings_account_unknown">Nie zalogowano</string>
+    <string name="settings_sign_out">Wyloguj się</string>
+    <string name="settings_sign_out_dialog_title">Wylogować się?</string>
+    <string name="settings_sign_out_dialog_message">Aby zalogować się ponownie, będziesz potrzebować adresu serwera i hasła.</string>
+    <string name="settings_sign_out_delete_downloads">Usuń też pobrania z tego urządzenia</string>
+    <string name="settings_cancel">Anuluj</string>
+</resources>

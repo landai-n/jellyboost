@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ダウンロード済み</string>
+    <string name="downloads_tab_queue">キュー</string>
+    <string name="downloads_wifi_only">Wi‑Fi接続時のみ</string>
+
+    <string name="downloads_group_movies">映画</string>
+
+    <string name="downloads_storage_summary">使用中 %1$s · 空き %2$s</string>
+
+    <string name="downloads_action_delete">ダウンロードを削除</string>
+    <string name="downloads_action_cancel">ダウンロードをキャンセル</string>
+    <string name="downloads_action_pause">ダウンロードを一時停止</string>
+    <string name="downloads_action_resume">ダウンロードを再開</string>
+    <string name="downloads_action_move_up">キューで上へ移動</string>
+    <string name="downloads_action_move_down">キューで下へ移動</string>
+
+    <string name="downloads_action_pause_all">すべて一時停止</string>
+    <string name="downloads_action_resume_all">すべて再開</string>
+    <string name="downloads_action_cancel_all">すべてキャンセル</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">%1$d 件のダウンロードをすべてキャンセルしますか？</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">キューは空になり、途中までダウンロードされたファイルも削除されます。完了済みのダウンロードには影響しません。</string>
+    <string name="downloads_cancel_all_dialog_confirm">ダウンロードをキャンセル</string>
+    <string name="downloads_cancel_all_dialog_dismiss">保持</string>
+
+    <string name="downloads_delete_dialog_title">%1$s を削除しますか？</string>
+    <string name="downloads_delete_dialog_message">ダウンロード済みのファイルはこの端末から削除されます。後でもう一度ダウンロードできます。</string>
+    <string name="downloads_delete_dialog_confirm">削除</string>
+    <string name="downloads_delete_dialog_cancel">キャンセル</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / 約%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / 最大%2$s</string>
+    <string name="downloads_size_approx">約%1$s</string>
+    <string name="downloads_size_capped">最大%1$s</string>
+    <string name="downloads_speed">%1$s/秒</string>
+    <string name="downloads_eta">残り %1$s</string>
+    <string name="downloads_eta_approx">残り約 %1$s</string>
+    <string name="downloads_transcoded_marker">トランスコード済み</string>
+    <string name="downloads_status_queued">待機中</string>
+    <string name="downloads_status_paused">一時停止中</string>
+    <string name="downloads_status_failed">ダウンロード失敗</string>
+    <string name="downloads_status_failed_reason">ダウンロード失敗: %1$s</string>
+
+    <string name="downloads_empty_downloaded">まだ何もダウンロードされていません。映画やエピソードの「ダウンロード」をタップすると、この端末に保存されます。</string>
+    <string name="downloads_empty_queue">ダウンロードキューは空です。</string>
+    <string name="downloads_load_failed">ダウンロードを読み込めませんでした。この画面を開き直してもう一度お試しください。</string>
+    <string name="downloads_message_delete_failed">そのダウンロードを削除できませんでした。</string>
+    <string name="downloads_message_action_failed">キューを更新できませんでした。</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">%1$d 件を一時停止しました — %2$d 件のトランスコードはダウンロードを継続します（トランスコードは一時停止できません）。</item>
+    </plurals>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">ยังไม่มีคลังสื่อ เพิ่มคลังบนเซิร์ฟเวอร์</string>
+    <string name="library_back">ย้อนกลับ</string>
+    <string name="library_home">หน้าแรก</string>
+    <string name="library_sort">จัดเรียง</string>
+    <string name="library_filter">กรอง</string>
+    <string name="library_sort_title">จัดเรียงตาม</string>
+    <string name="library_sort_name">ชื่อ</string>
+    <string name="library_sort_date_added">วันที่เพิ่ม</string>
+    <string name="library_sort_premiere_date">วันที่วางจำหน่าย</string>
+    <string name="library_sort_community_rating">คะแนนจากชุมชน</string>
+    <string name="library_sort_runtime">ความยาว</string>
+    <string name="library_sort_random">สุ่ม</string>
+    <string name="library_sort_direction">ทิศทาง</string>
+    <string name="library_sort_ascending">จากน้อยไปมาก</string>
+    <string name="library_sort_descending">จากมากไปน้อย</string>
+    <string name="library_filters_title">ตัวกรอง</string>
+    <string name="library_filters_genres">แนว</string>
+    <string name="library_filters_years">ปี</string>
+    <string name="library_filters_played">ดูแล้ว</string>
+    <string name="library_filters_played_any">ทั้งหมด</string>
+    <string name="library_filters_played_yes">ดูแล้ว</string>
+    <string name="library_filters_played_no">ยังไม่ได้ดู</string>
+    <string name="library_filters_clear">ล้างทั้งหมด</string>
+    <string name="library_filters_apply">แสดงผลลัพธ์</string>
+    <string name="library_filters_none">คลังนี้ไม่มีตัวเลือกให้กรอง</string>
+    <string name="library_filters_loading">กำลังโหลดตัวกรอง…</string>
+    <string name="library_empty">ไม่มีอะไรให้แสดงที่นี่</string>
+    <string name="library_empty_filtered">ไม่มีรายการที่ตรงกับตัวกรองเหล่านี้</string>
+    <string name="library_empty_clear_filters">ล้างตัวกรอง</string>
+    <string name="library_retry">ลองอีกครั้ง</string>
+    <string name="library_error_network">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของคุณได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
+    <string name="library_error_unauthorized">เซสชันของคุณหมดอายุแล้ว เข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ</string>
+    <string name="library_error_not_found">คลังนั้นไม่มีอยู่บนเซิร์ฟเวอร์แล้ว</string>
+    <string name="library_error_server">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา</string>
+    <string name="library_error_server_with_code">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา (%1$d)</string>
+    <string name="library_error_storage">ไม่สามารถอ่านข้อมูลในเครื่องได้</string>
+    <string name="library_error_unknown">เกิดข้อผิดพลาดขณะโหลดคลังนี้</string>
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Afgelaai</string>
+    <string name="downloads_tab_queue">Wagtou</string>
+    <string name="downloads_wifi_only">Slegs Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Flieks</string>
+
+    <string name="downloads_storage_summary">%1$s gebruik · %2$s beskikbaar</string>
+
+    <string name="downloads_action_delete">Skrap aflaai</string>
+    <string name="downloads_action_cancel">Kanselleer aflaai</string>
+    <string name="downloads_action_pause">Pouseer aflaai</string>
+    <string name="downloads_action_resume">Hervat aflaai</string>
+    <string name="downloads_action_move_up">Skuif op in wagtou</string>
+    <string name="downloads_action_move_down">Skuif af in wagtou</string>
+
+    <string name="downloads_action_pause_all">Pouseer almal</string>
+    <string name="downloads_action_resume_all">Hervat almal</string>
+    <string name="downloads_action_cancel_all">Kanselleer almal</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Kanselleer hierdie aflaai?</item>
+        <item quantity="other">Kanselleer al %1$d aflaaie?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Die wagtou word geleegmaak en enige gedeeltelik afgelaaide lêers word verwyder. Voltooide aflaaie word nie geraak nie.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Kanselleer aflaaie</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behou</string>
+
+    <string name="downloads_delete_dialog_title">Skrap %1$s?</string>
+    <string name="downloads_delete_dialog_message">Die afgelaaide lêers word van hierdie toestel verwyder. Jy kan dit later weer aflaai.</string>
+    <string name="downloads_delete_dialog_confirm">Skrap</string>
+    <string name="downloads_delete_dialog_cancel">Kanselleer</string>
+
+    <string name="downloads_progress_of">%1$s van %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s van ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s van tot %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">tot %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s oor</string>
+    <string name="downloads_eta_approx">~%1$s oor</string>
+    <string name="downloads_transcoded_marker">Getranskodeer</string>
+    <string name="downloads_status_queued">Wag</string>
+    <string name="downloads_status_paused">Gepouseer</string>
+    <string name="downloads_status_failed">Aflaai het misluk</string>
+    <string name="downloads_status_failed_reason">Aflaai het misluk: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Nog niks afgelaai nie. Tik Laai af op \'n fliek of episode om dit op hierdie toestel te hou.</string>
+    <string name="downloads_empty_queue">Die aflaaiwagtou is leeg.</string>
+    <string name="downloads_load_failed">Kon nie jou aflaaie lees nie. Maak hierdie skerm weer oop om weer te probeer.</string>
+    <string name="downloads_message_delete_failed">Kon nie daardie aflaai skrap nie.</string>
+    <string name="downloads_message_action_failed">Kon nie die wagtou bywerk nie.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d gepouseer — %2$d transkodering laai steeds af (\'n transkodering kan nie gepouseer word nie).</item>
+        <item quantity="other">%1$d gepouseer — %2$d transkoderings laai steeds af (\'n transkodering kan nie gepouseer word nie).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">ย้อนกลับ</string>
+    <string name="detail_home">หน้าแรก</string>
+    <string name="detail_play">เล่น</string>
+    <string name="detail_resume">เล่นต่อ</string>
+    <string name="detail_download">ดาวน์โหลด</string>
+    <string name="detail_download_cancel">ยกเลิก</string>
+    <string name="detail_download_remove">ลบ</string>
+    <string name="detail_download_retry">ลองอีกครั้ง</string>
+    <string name="detail_play_episode">เล่นตอนนี้</string>
+    <string name="detail_mark_watched">ทำเครื่องหมายว่าดูแล้ว</string>
+    <string name="detail_mark_unwatched">ทำเครื่องหมายว่ายังไม่ได้ดู</string>
+    <string name="detail_add_favorite">เพิ่มในรายการโปรด</string>
+    <string name="detail_remove_favorite">นำออกจากรายการโปรด</string>
+    <string name="detail_section_seasons">ซีซัน</string>
+    <string name="detail_section_next_up">ตอนถัดไป</string>
+    <string name="detail_section_episodes">ตอนทั้งหมด</string>
+    <string name="detail_section_similar">รายการที่คล้ายกัน</string>
+    <string name="detail_runtime_minutes">%1$d นาที</string>
+    <string name="detail_remaining_minutes">เหลืออีก %1$d นาที</string>
+    <string name="detail_size_on_device">%1$s บนอุปกรณ์</string>
+    <string name="detail_directed_by">กำกับโดย %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="other">%1$d ซีซัน</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="other">%1$d ตอน</item>
+    </plurals>
+    <string name="detail_empty">รายการนี้ไม่พร้อมใช้งานแล้ว</string>
+    <string name="detail_message_download_queued">เพิ่มลงในดาวน์โหลดแล้ว</string>
+    <string name="detail_message_download_failed">ไม่สามารถเริ่มดาวน์โหลดนั้นได้</string>
+    <string name="detail_message_download_deleted">ลบออกจากอุปกรณ์นี้แล้ว</string>
+    <string name="detail_message_download_delete_failed">ไม่สามารถลบดาวน์โหลดนั้นได้</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="other">ยกเลิกดาวน์โหลดแล้ว — เก็บตอนที่ดาวน์โหลดเสร็จแล้ว %1$d ตอนไว้</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">ไม่สามารถบันทึกได้ ลองอีกครั้ง</string>
+    <string name="detail_group_play">เล่นให้ %1$s</string>
+    <string name="detail_group_resume">เล่นต่อให้ %1$s</string>
+    <string name="detail_group_play_next">เล่นต่อไป</string>
+    <string name="detail_group_add_to_queue">เพิ่มในคิว</string>
+    <string name="detail_message_group_play">ขอให้กลุ่มเล่นรายการนี้แล้ว</string>
+    <string name="detail_message_group_play_next">จัดคิวให้กลุ่มเล่นต่อไปแล้ว</string>
+    <string name="detail_message_group_queued">เพิ่มลงในคิวของกลุ่มแล้ว</string>
+    <string name="detail_delete_download_dialog_title">ลบดาวน์โหลดนี้หรือไม่?</string>
+    <string name="detail_delete_download_dialog_message">การดำเนินการนี้จะลบออกจากอุปกรณ์นี้ คุณสามารถดาวน์โหลดใหม่ได้ทุกเมื่อ</string>
+    <string name="detail_delete_download_dialog_confirm">ลบ</string>
+    <string name="detail_delete_download_dialog_cancel">ยกเลิก</string>
+</resources>

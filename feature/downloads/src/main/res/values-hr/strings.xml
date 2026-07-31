@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Preuzeto</string>
+    <string name="downloads_tab_queue">Red čekanja</string>
+    <string name="downloads_wifi_only">Samo Wi-Fi</string>
+
+    <string name="downloads_group_movies">Filmovi</string>
+
+    <string name="downloads_storage_summary">%1$s iskorišteno · %2$s slobodno</string>
+
+    <string name="downloads_action_delete">Izbriši preuzimanje</string>
+    <string name="downloads_action_cancel">Otkaži preuzimanje</string>
+    <string name="downloads_action_pause">Pauziraj preuzimanje</string>
+    <string name="downloads_action_resume">Nastavi preuzimanje</string>
+    <string name="downloads_action_move_up">Pomakni gore u redu čekanja</string>
+    <string name="downloads_action_move_down">Pomakni dolje u redu čekanja</string>
+
+    <string name="downloads_action_pause_all">Pauziraj sve</string>
+    <string name="downloads_action_resume_all">Nastavi sve</string>
+    <string name="downloads_action_cancel_all">Otkaži sve</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Otkazati ovo preuzimanje?</item>
+        <item quantity="few">Otkazati ova %1$d preuzimanja?</item>
+        <item quantity="other">Otkazati svih %1$d preuzimanja?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Red čekanja se prazni i djelomično preuzete datoteke se uklanjaju. Završena preuzimanja nisu pogođena.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Otkaži preuzimanja</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Zadrži</string>
+
+    <string name="downloads_delete_dialog_title">Izbrisati %1$s?</string>
+    <string name="downloads_delete_dialog_message">Preuzete datoteke uklanjaju se s ovog uređaja. Možete ga ponovno preuzeti kasnije.</string>
+    <string name="downloads_delete_dialog_confirm">Izbriši</string>
+    <string name="downloads_delete_dialog_cancel">Otkaži</string>
+
+    <string name="downloads_progress_of">%1$s od %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s od ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s od najviše %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">do %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Preostalo %1$s</string>
+    <string name="downloads_eta_approx">Preostalo ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transkodirano</string>
+    <string name="downloads_status_queued">Čeka</string>
+    <string name="downloads_status_paused">Pauzirano</string>
+    <string name="downloads_status_failed">Preuzimanje neuspješno</string>
+    <string name="downloads_status_failed_reason">Preuzimanje neuspješno: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Još ništa nije preuzeto. Dodirnite Preuzmi na filmu ili epizodi da ga zadržite na ovom uređaju.</string>
+    <string name="downloads_empty_queue">Red čekanja za preuzimanje je prazan.</string>
+    <string name="downloads_load_failed">Nije moguće učitati vaša preuzimanja. Ponovno otvorite ovaj zaslon za novi pokušaj.</string>
+    <string name="downloads_message_delete_failed">Preuzimanje se nije moglo izbrisati.</string>
+    <string name="downloads_message_action_failed">Red čekanja se nije mogao ažurirati.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Pauzirano %1$d — %2$d transkodiranje se nastavlja preuzimati (transkodiranje se ne može pauzirati).</item>
+        <item quantity="few">Pauzirano %1$d — %2$d transkodiranja se nastavljaju preuzimati (transkodiranje se ne može pauzirati).</item>
+        <item quantity="other">Pauzirano %1$d — %2$d transkodiranja se nastavlja preuzimati (transkodiranje se ne može pauzirati).</item>
+    </plurals>
+</resources>

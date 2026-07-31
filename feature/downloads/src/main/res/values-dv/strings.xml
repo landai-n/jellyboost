@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ޑައުންލޯޑްކޮށްފި</string>
+    <string name="downloads_tab_queue">ކިއޫ</string>
+    <string name="downloads_wifi_only">Wi‑Fi އެކަނި</string>
+
+    <string name="downloads_group_movies">ފިލްމުތައް</string>
+
+    <string name="downloads_storage_summary">%1$s ބޭނުންކޮށްފި · %2$s ހުސް</string>
+
+    <string name="downloads_action_delete">ޑައުންލޯޑް ފޮހެލާ</string>
+    <string name="downloads_action_cancel">ޑައުންލޯޑް ކެންސަލްކުރޭ</string>
+    <string name="downloads_action_pause">ޑައުންލޯޑް މެދުކަނޑާލާ</string>
+    <string name="downloads_action_resume">ޑައުންލޯޑް ކުރިއަށް ގެންދޭ</string>
+    <string name="downloads_action_move_up">ކިއޫގައި މައްޗަށް ޖައްސާ</string>
+    <string name="downloads_action_move_down">ކިއޫގައި ދަށަށް ޖައްސާ</string>
+
+    <string name="downloads_action_pause_all">ހުރިހާ ޑައުންލޯޑެއް މެދުކަނޑާލާ</string>
+    <string name="downloads_action_resume_all">ހުރިހާ ޑައުންލޯޑެއް ކުރިއަށް ގެންދޭ</string>
+    <string name="downloads_action_cancel_all">ހުރިހާ ޑައުންލޯޑެއް ކެންސަލްކުރޭ</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">މި ޑައުންލޯޑް ކެންސަލްކުރަންހޭ؟</item>
+        <item quantity="other">ހުރިހާ %1$d ޑައުންލޯޑް ކެންސަލްކުރަންހޭ؟</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">ކިއޫ ހުސްކުރެވި، ބައި ޑައުންލޯޑްވެފައިވާ ފައިލްތައް ނަގާނެ. ނިމިފައިވާ ޑައުންލޯޑްތަކަށް އަސަރެއް ނުކުރާނެ.</string>
+    <string name="downloads_cancel_all_dialog_confirm">ޑައުންލޯޑްތައް ކެންސަލްކުރޭ</string>
+    <string name="downloads_cancel_all_dialog_dismiss">ބަހައްޓާ</string>
+
+    <string name="downloads_delete_dialog_title">%1$s ފޮހެލަންހޭ؟</string>
+    <string name="downloads_delete_dialog_message">ޑައުންލޯޑްކޮށްފައިވާ ފައިލްތައް މި ޑިވައިސްއިން ނަގާނެ. ފަހުން އަލުން ޑައުންލޯޑްކުރެވިދާނެ.</string>
+    <string name="downloads_delete_dialog_confirm">ފޮހެލާ</string>
+    <string name="downloads_delete_dialog_cancel">ކެންސަލްކުރޭ</string>
+
+    <string name="downloads_progress_of">%2$s ގެ %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s ގެ %1$s</string>
+    <string name="downloads_progress_of_capped">%2$s އަށްވުރެ ބޮޑުނުވާ ގޮތަށް %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s އަށްވުރެ ބޮޑެއް ނުވާނެ</string>
+    <string name="downloads_speed">%1$s/ސިކުންތު</string>
+    <string name="downloads_eta">%1$s ބާކީ</string>
+    <string name="downloads_eta_approx">~%1$s ބާކީ</string>
+    <string name="downloads_transcoded_marker">ޓްރާންސްކޯޑްކޮށްފި</string>
+    <string name="downloads_status_queued">އިންތިޒާރުގައި</string>
+    <string name="downloads_status_paused">މެދުކަނޑާލައިފި</string>
+    <string name="downloads_status_failed">ޑައުންލޯޑް ފެއިލްވެއްޖެ</string>
+    <string name="downloads_status_failed_reason">ޑައުންލޯޑް ފެއިލްވެއްޖެ: %1$s</string>
+
+    <string name="downloads_empty_downloaded">އަދި އެއްވެސް އެއްޗެއް ޑައުންލޯޑްކޮށްފައެއް ނެތް. ފިލްމެއް ނުވަތަ އެޕިސޯޑެއް މި ޑިވައިސްގައި ބެހެއްޓުމަށް ޑައުންލޯޑަށް ފިތާ.</string>
+    <string name="downloads_empty_queue">ޑައުންލޯޑް ކިއޫ ހުސް.</string>
+    <string name="downloads_load_failed">ތިޔަ ޑައުންލޯޑްތައް ކިޔޭގޮތެއް ނުވި. އަލުން މަސައްކަތްކުރުމަށް މި ސްކްރީން އަލުން ހުޅުވާ.</string>
+    <string name="downloads_message_delete_failed">އެ ޑައުންލޯޑް ފޮހެލޭގޮތެއް ނުވި.</string>
+    <string name="downloads_message_action_failed">ކިއޫ އަޕްޑޭޓްކުރެވޭގޮތެއް ނުވި.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d މެދުކަނޑާލައިފި — %2$d ޓްރާންސްކޯޑް ޑައުންލޯޑްވަމުން ދަނީ (ޓްރާންސްކޯޑެއް މެދުކަނޑައެއް ނުލެވޭނެ).</item>
+        <item quantity="other">%1$d މެދުކަނޑާލައިފި — %2$d ޓްރާންސްކޯޑް ޑައުންލޯޑްވަމުން ދަނީ (ޓްރާންސްކޯޑެއް މެދުކަނޑައެއް ނުލެވޭނެ).</item>
+    </plurals>
+</resources>

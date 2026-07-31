@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Unduhan</string>
+    <string name="downloads_channel_description">Progres media yang sedang diunduh ke perangkat ini.</string>
+    <string name="downloads_notification_preparing">Menyiapkan unduhan…</string>
+    <string name="downloads_notification_downloading">Mengunduh…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Mengunduh…</string>
+    <string name="downloads_action_pause">Jeda</string>
+    <string name="downloads_action_cancel">Batal</string>
+</resources>

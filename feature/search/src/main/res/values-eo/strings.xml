@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Serĉi filmojn, seriojn kaj epizodojn</string>
+    <string name="search_clear">Forigi</string>
+    <string name="search_section_movies">Filmoj</string>
+    <string name="search_section_series">Serioj</string>
+    <string name="search_section_episodes">Epizodoj</string>
+    <string name="search_prompt">Tajpu por serĉi en viaj bibliotekoj.</string>
+    <string name="search_no_results">Nenio kongruis kun “%1$s”.</string>
+    <string name="search_error_network">Ne eblas atingi vian servilon. Kontrolu vian konekton kaj reprovu.</string>
+    <string name="search_error_unauthorized">Via seanco eksvalidiĝis. Ensalutu denove por daŭrigi.</string>
+    <string name="search_error_not_found">Tiu ero ne plu estas sur la servilo.</string>
+    <string name="search_error_server">La servilo redonis eraron.</string>
+    <string name="search_error_server_with_code">La servilo redonis eraron (%1$d).</string>
+    <string name="search_error_storage">Ne eblis legi lokajn datumojn.</string>
+    <string name="search_error_unknown">Io misfunkciis dum serĉado.</string>
+</resources>

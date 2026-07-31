@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">已下载</string>
+    <string name="downloads_tab_queue">队列</string>
+    <string name="downloads_wifi_only">仅限 Wi‑Fi</string>
+
+    <string name="downloads_group_movies">电影</string>
+
+    <string name="downloads_storage_summary">已用 %1$s · 剩余 %2$s</string>
+
+    <string name="downloads_action_delete">删除下载</string>
+    <string name="downloads_action_cancel">取消下载</string>
+    <string name="downloads_action_pause">暂停下载</string>
+    <string name="downloads_action_resume">继续下载</string>
+    <string name="downloads_action_move_up">在队列中上移</string>
+    <string name="downloads_action_move_down">在队列中下移</string>
+
+    <string name="downloads_action_pause_all">全部暂停</string>
+    <string name="downloads_action_resume_all">全部继续</string>
+    <string name="downloads_action_cancel_all">全部取消</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">取消全部 %1$d 个下载？</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">队列将被清空，任何未下载完成的文件都会被移除。已完成的下载不受影响。</string>
+    <string name="downloads_cancel_all_dialog_confirm">取消下载</string>
+    <string name="downloads_cancel_all_dialog_dismiss">保留</string>
+
+    <string name="downloads_delete_dialog_title">删除 %1$s？</string>
+    <string name="downloads_delete_dialog_message">已下载的文件将从此设备移除。你可以稍后重新下载。</string>
+    <string name="downloads_delete_dialog_confirm">删除</string>
+    <string name="downloads_delete_dialog_cancel">取消</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / 约 %2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / 最多 %2$s</string>
+    <string name="downloads_size_approx">约 %1$s</string>
+    <string name="downloads_size_capped">最多 %1$s</string>
+    <string name="downloads_speed">%1$s/秒</string>
+    <string name="downloads_eta">剩余 %1$s</string>
+    <string name="downloads_eta_approx">剩余约 %1$s</string>
+    <string name="downloads_transcoded_marker">已转码</string>
+    <string name="downloads_status_queued">等待中</string>
+    <string name="downloads_status_paused">已暂停</string>
+    <string name="downloads_status_failed">下载失败</string>
+    <string name="downloads_status_failed_reason">下载失败：%1$s</string>
+
+    <string name="downloads_empty_downloaded">尚未下载任何内容。点击电影或剧集上的下载即可保存到此设备。</string>
+    <string name="downloads_empty_queue">下载队列为空。</string>
+    <string name="downloads_load_failed">无法读取你的下载内容。请重新打开此页面再试一次。</string>
+    <string name="downloads_message_delete_failed">无法删除该下载。</string>
+    <string name="downloads_message_action_failed">无法更新队列。</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">已暂停 %1$d 个——%2$d 个转码任务仍在继续下载（转码任务无法暂停）。</item>
+    </plurals>
+</resources>

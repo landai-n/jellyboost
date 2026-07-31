@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">다운로드됨</string>
+    <string name="downloads_tab_queue">대기열</string>
+    <string name="downloads_wifi_only">Wi‑Fi에서만</string>
+
+    <string name="downloads_group_movies">영화</string>
+
+    <string name="downloads_storage_summary">사용 %1$s · 여유 공간 %2$s</string>
+
+    <string name="downloads_action_delete">다운로드 삭제</string>
+    <string name="downloads_action_cancel">다운로드 취소</string>
+    <string name="downloads_action_pause">다운로드 일시정지</string>
+    <string name="downloads_action_resume">다운로드 재개</string>
+    <string name="downloads_action_move_up">대기열에서 위로 이동</string>
+    <string name="downloads_action_move_down">대기열에서 아래로 이동</string>
+
+    <string name="downloads_action_pause_all">모두 일시정지</string>
+    <string name="downloads_action_resume_all">모두 재개</string>
+    <string name="downloads_action_cancel_all">모두 취소</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">다운로드 %1$d개를 모두 취소할까요?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">대기열이 비워지고 일부 다운로드된 파일도 제거됩니다. 완료된 다운로드에는 영향이 없습니다.</string>
+    <string name="downloads_cancel_all_dialog_confirm">다운로드 취소</string>
+    <string name="downloads_cancel_all_dialog_dismiss">유지</string>
+
+    <string name="downloads_delete_dialog_title">%1$s을(를) 삭제할까요?</string>
+    <string name="downloads_delete_dialog_message">다운로드된 파일이 이 기기에서 제거됩니다. 나중에 다시 다운로드할 수 있습니다.</string>
+    <string name="downloads_delete_dialog_confirm">삭제</string>
+    <string name="downloads_delete_dialog_cancel">취소</string>
+
+    <string name="downloads_progress_of">%2$s 중 %1$s</string>
+    <string name="downloads_progress_of_approx">약 %2$s 중 %1$s</string>
+    <string name="downloads_progress_of_capped">최대 %2$s 중 %1$s</string>
+    <string name="downloads_size_approx">약 %1$s</string>
+    <string name="downloads_size_capped">최대 %1$s</string>
+    <string name="downloads_speed">%1$s/초</string>
+    <string name="downloads_eta">%1$s 남음</string>
+    <string name="downloads_eta_approx">약 %1$s 남음</string>
+    <string name="downloads_transcoded_marker">트랜스코딩됨</string>
+    <string name="downloads_status_queued">대기 중</string>
+    <string name="downloads_status_paused">일시정지됨</string>
+    <string name="downloads_status_failed">다운로드 실패</string>
+    <string name="downloads_status_failed_reason">다운로드 실패: %1$s</string>
+
+    <string name="downloads_empty_downloaded">아직 다운로드한 항목이 없습니다. 영화나 에피소드에서 다운로드를 눌러 이 기기에 저장하세요.</string>
+    <string name="downloads_empty_queue">다운로드 대기열이 비어 있습니다.</string>
+    <string name="downloads_load_failed">다운로드 목록을 읽을 수 없습니다. 이 화면을 다시 열어 시도해 주세요.</string>
+    <string name="downloads_message_delete_failed">다운로드를 삭제할 수 없습니다.</string>
+    <string name="downloads_message_action_failed">대기열을 업데이트할 수 없습니다.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">%1$d개를 일시정지했습니다 — 트랜스코딩 %2$d개는 계속 다운로드됩니다(트랜스코딩은 일시정지할 수 없습니다).</item>
+    </plurals>
+</resources>

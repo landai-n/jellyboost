@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">その他のオプション</string>
+    <string name="home_settings">設定</string>
+    <string name="settings_offline_mode">オフラインモード</string>
+
+    <string name="state_on">オン</string>
+    <string name="state_off">オフ</string>
+
+    <string name="nav_home">ホーム</string>
+    <string name="nav_libraries">ライブラリ</string>
+    <string name="nav_search">検索</string>
+    <string name="nav_downloads">ダウンロード</string>
+
+    <string name="offline_no_network">ネットワークがありません — ダウンロード済みのメディアを表示しています</string>
+    <string name="offline_server_unreachable">サーバーに接続できません — ダウンロード済みのメディアを表示しています</string>
+    <string name="offline_forced">オフラインモードがオンです — ダウンロード済みのメディアを表示しています</string>
+    <string name="offline_retry">再試行</string>
+    <string name="offline_go_online">オンラインに戻る</string>
+
+    <string name="syncplay_groups_action">SyncPlay グループ</string>
+    <string name="syncplay_groups_action_active">SyncPlay グループ — グループに参加中です</string>
+</resources>

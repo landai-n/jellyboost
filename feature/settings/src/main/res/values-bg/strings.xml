@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Начало</string>
+
+    <string name="settings_section_playback">Възпроизвеждане</string>
+    <string name="settings_skip_intro">Пропускане на въведението</string>
+    <string name="settings_skip_outro">Пропускане на финалните надписи</string>
+    <string name="settings_skip_mode_off">Не прави нищо</string>
+    <string name="settings_skip_mode_show_button">Покажи бутон за пропускане</string>
+    <string name="settings_skip_mode_auto">Пропускай автоматично</string>
+    <string name="settings_pip">Картина в картината</string>
+    <string name="settings_pip_supporting">Продължи възпроизвеждането в плаващ прозорец, когато напуснете приложението.</string>
+
+    <string name="settings_section_downloads">Изтегляния</string>
+    <string name="settings_wifi_only">Само Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Пауза на изтеглянията при мобилни данни.</string>
+    <string name="settings_quality">Качество на изтегляне</string>
+    <string name="settings_quality_original">Оригинален файл — точно копие, възобновимо</string>
+    <string name="settings_quality_high">Високо — около 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Средно — около 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Ниско — около 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Всичко освен оригиналния файл се преобразува от сървъра ви, докато го изпраща, затова показаният размер по време на изтеглянето е приблизителен, а прекъснатото прехвърляне започва отначало.</string>
+    <string name="settings_storage_label">Хранилище</string>
+    <string name="settings_storage_summary">%1$s използвани · %2$s свободни на това устройство</string>
+    <string name="settings_storage_location">Изтеглянията се съхраняват в %1$s</string>
+    <string name="settings_storage_picker">Място за съхранение</string>
+    <string name="settings_storage_internal">Вътрешна памет</string>
+    <string name="settings_storage_sd_card">SD карта</string>
+    <string name="settings_storage_volume_free">%1$s свободни</string>
+    <string name="settings_storage_missing">Избраното от вас хранилище в момента не е налично, затова изтеглянията отиват в мястото, избрано по-долу.</string>
+    <string name="settings_storage_switch_title">Да се преместят ли изтеглянията?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Изтеглянията все още не могат да се местят между места, затова наличното на това устройство ще бъде изтрито. Можете да го изтеглите отново на новото място.</item>
+        <item quantity="other">Изтеглянията все още не могат да се местят между места, затова %1$d вече на това устройство ще бъдат изтрити. Можете да ги изтеглите отново на новото място.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Изтрий и премести</string>
+
+    <string name="settings_section_connectivity">Свързаност</string>
+    <string name="settings_offline_mode">Офлайн режим</string>
+    <string name="settings_offline_mode_supporting">Показвай само медия, която вече е на това устройство.</string>
+
+    <string name="settings_section_account">Профил</string>
+    <string name="settings_account_user">Влезли сте като</string>
+    <string name="settings_account_server">Сървър</string>
+    <string name="settings_account_unknown">Не сте влезли</string>
+    <string name="settings_sign_out">Изход</string>
+    <string name="settings_sign_out_dialog_title">Да излезете ли от профила?</string>
+    <string name="settings_sign_out_dialog_message">Ще ви трябват адресът на сървъра и паролата, за да влезете отново.</string>
+    <string name="settings_sign_out_delete_downloads">Изтрий също изтеглянията от това устройство</string>
+    <string name="settings_cancel">Отказ</string>
+</resources>

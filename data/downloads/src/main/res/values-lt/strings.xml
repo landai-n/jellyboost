@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Atsisiuntimai</string>
+    <string name="downloads_channel_description">Į šį įrenginį atsisiunčiamos medijos eiga.</string>
+
+    <string name="downloads_notification_preparing">Ruošiamasi atsisiųsti…</string>
+    <string name="downloads_notification_downloading">Atsisiunčiama…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Atsisiunčiama…</string>
+    <string name="downloads_action_pause">Pristabdyti</string>
+    <string name="downloads_action_cancel">Atšaukti</string>
+</resources>

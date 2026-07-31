@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">返回</string>
+    <string name="detail_home">首頁</string>
+    <string name="detail_play">播放</string>
+    <string name="detail_resume">繼續播放</string>
+    <string name="detail_download">下載</string>
+    <string name="detail_download_cancel">取消</string>
+    <string name="detail_download_remove">移除</string>
+    <string name="detail_download_retry">重試</string>
+    <string name="detail_play_episode">播放這一集</string>
+    <string name="detail_mark_watched">標記為已觀看</string>
+    <string name="detail_mark_unwatched">標記為未觀看</string>
+    <string name="detail_add_favorite">加入我的最愛</string>
+    <string name="detail_remove_favorite">從我的最愛移除</string>
+
+    <string name="detail_section_seasons">季</string>
+    <string name="detail_section_next_up">接下來</string>
+    <string name="detail_section_episodes">集數</string>
+    <string name="detail_section_similar">更多類似內容</string>
+
+    <string name="detail_runtime_minutes">%1$d 分鐘</string>
+    <string name="detail_remaining_minutes">剩餘 %1$d 分鐘</string>
+    <string name="detail_size_on_device">裝置上佔用 %1$s</string>
+    <string name="detail_directed_by">導演：%1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="other">%1$d 季</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="other">%1$d 集</item>
+    </plurals>
+
+    <string name="detail_empty">此項目已不再可用。</string>
+    <string name="detail_message_download_queued">已加入下載。</string>
+    <string name="detail_message_download_failed">無法開始這個下載。</string>
+    <string name="detail_message_download_deleted">已從此裝置移除。</string>
+    <string name="detail_message_download_delete_failed">無法移除這個下載。</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="other">下載已取消——已保留 %1$d 集已完成的集數。</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">無法儲存。請再試一次。</string>
+
+    <string name="detail_group_play">為 %1$s 播放</string>
+    <string name="detail_group_resume">為 %1$s 繼續播放</string>
+    <string name="detail_group_play_next">接下來播放</string>
+    <string name="detail_group_add_to_queue">加入佇列</string>
+    <string name="detail_message_group_play">已要求群組播放此項目。</string>
+    <string name="detail_message_group_play_next">已排入群組的下一項播放。</string>
+    <string name="detail_message_group_queued">已加入群組的佇列。</string>
+
+    <string name="detail_delete_download_dialog_title">刪除下載？</string>
+    <string name="detail_delete_download_dialog_message">這會從此裝置移除該項目。你可以隨時重新下載。</string>
+    <string name="detail_delete_download_dialog_confirm">刪除</string>
+    <string name="detail_delete_download_dialog_cancel">取消</string>
+</resources>

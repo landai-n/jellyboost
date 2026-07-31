@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">डाउनलोड किया गया</string>
+    <string name="downloads_tab_queue">कतार</string>
+    <string name="downloads_wifi_only">केवल Wi-Fi</string>
+
+    <!-- Downloaded tab grouping -->
+    <string name="downloads_group_movies">फ़िल्में</string>
+
+    <!-- Storage header -->
+    <string name="downloads_storage_summary">%1$s उपयोग में · %2$s खाली</string>
+
+    <!-- Row actions -->
+    <string name="downloads_action_delete">डाउनलोड हटाएँ</string>
+    <string name="downloads_action_cancel">डाउनलोड रद्द करें</string>
+    <string name="downloads_action_pause">डाउनलोड रोकें</string>
+    <string name="downloads_action_resume">डाउनलोड फिर से शुरू करें</string>
+    <string name="downloads_action_move_up">कतार में ऊपर ले जाएँ</string>
+    <string name="downloads_action_move_down">कतार में नीचे ले जाएँ</string>
+
+    <!-- Queue tab bulk actions -->
+    <string name="downloads_action_pause_all">सभी रोकें</string>
+    <string name="downloads_action_resume_all">सभी फिर से शुरू करें</string>
+    <string name="downloads_action_cancel_all">सभी रद्द करें</string>
+
+    <!-- Cancel-all confirmation -->
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">यह डाउनलोड रद्द करें?</item>
+        <item quantity="other">सभी %1$d डाउनलोड रद्द करें?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">कतार खाली कर दी जाएगी और आंशिक रूप से डाउनलोड की गई फ़ाइलें हटा दी जाएँगी। पूरे हो चुके डाउनलोड प्रभावित नहीं होंगे।</string>
+    <string name="downloads_cancel_all_dialog_confirm">डाउनलोड रद्द करें</string>
+    <string name="downloads_cancel_all_dialog_dismiss">रखें</string>
+
+    <!-- Delete confirmation (Downloaded tab) -->
+    <string name="downloads_delete_dialog_title">%1$s हटाएँ?</string>
+    <string name="downloads_delete_dialog_message">डाउनलोड की गई फ़ाइलें इस डिवाइस से हटा दी जाएँगी। आप इसे बाद में फिर से डाउनलोड कर सकते हैं।</string>
+    <string name="downloads_delete_dialog_confirm">हटाएँ</string>
+    <string name="downloads_delete_dialog_cancel">रद्द करें</string>
+
+    <!-- Queue row status line -->
+    <string name="downloads_progress_of">%2$s में से %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s में से %1$s</string>
+    <string name="downloads_progress_of_capped">%2$s तक में से %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s तक</string>
+    <string name="downloads_speed">%1$s/सेकंड</string>
+    <string name="downloads_eta">%1$s शेष</string>
+    <string name="downloads_eta_approx">~%1$s शेष</string>
+    <string name="downloads_transcoded_marker">ट्रांसकोड किया गया</string>
+    <string name="downloads_status_queued">प्रतीक्षा में</string>
+    <string name="downloads_status_paused">रुका हुआ</string>
+    <string name="downloads_status_failed">डाउनलोड विफल</string>
+    <string name="downloads_status_failed_reason">डाउनलोड विफल: %1$s</string>
+
+    <!-- Empty states and messages -->
+    <string name="downloads_empty_downloaded">अभी तक कुछ भी डाउनलोड नहीं किया गया है। किसी फ़िल्म या एपिसोड को इस डिवाइस पर रखने के लिए डाउनलोड पर टैप करें।</string>
+    <string name="downloads_empty_queue">डाउनलोड कतार खाली है।</string>
+    <string name="downloads_load_failed">आपके डाउनलोड नहीं पढ़े जा सके। फिर से कोशिश करने के लिए यह स्क्रीन दोबारा खोलें।</string>
+    <string name="downloads_message_delete_failed">वह डाउनलोड हटाया नहीं जा सका।</string>
+    <string name="downloads_message_action_failed">कतार अपडेट नहीं की जा सकी।</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d रोके गए — %2$d ट्रांसकोड डाउनलोड होता रहेगा (ट्रांसकोड को रोका नहीं जा सकता)।</item>
+        <item quantity="other">%1$d रोके गए — %2$d ट्रांसकोड डाउनलोड होते रहेंगे (ट्रांसकोड को रोका नहीं जा सकता)।</item>
+    </plurals>
+</resources>

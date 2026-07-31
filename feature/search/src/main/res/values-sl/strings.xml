@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Iskanje filmov, serij in epizod</string>
+    <string name="search_clear">Počisti</string>
+
+    <string name="search_section_movies">Filmi</string>
+    <string name="search_section_series">Serije</string>
+    <string name="search_section_episodes">Epizode</string>
+
+    <string name="search_prompt">Za iskanje po knjižnicah začnite tipkati.</string>
+    <string name="search_no_results">Ni zadetkov za „%1$s“.</string>
+
+    <string name="search_error_network">Strežnika ni mogoče doseči. Preverite povezavo in poskusite znova.</string>
+    <string name="search_error_unauthorized">Vaša seja je potekla. Za nadaljevanje se znova prijavite.</string>
+    <string name="search_error_not_found">Tega predmeta ni več na strežniku.</string>
+    <string name="search_error_server">Strežnik je vrnil napako.</string>
+    <string name="search_error_server_with_code">Strežnik je vrnil napako (%1$d).</string>
+    <string name="search_error_storage">Lokalnih podatkov ni bilo mogoče prebrati.</string>
+    <string name="search_error_unknown">Med iskanjem je prišlo do napake.</string>
+</resources>

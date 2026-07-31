@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_back">بازگشت</string>
+    <string name="settings_home">خانه</string>
+
+    <string name="settings_section_playback">پخش</string>
+    <string name="settings_skip_intro">رد کردن مقدمه</string>
+    <string name="settings_skip_outro">رد کردن پایان‌بندی</string>
+    <string name="settings_skip_mode_off">کاری انجام نشود</string>
+    <string name="settings_skip_mode_show_button">نمایش دکمه رد کردن</string>
+    <string name="settings_skip_mode_auto">رد کردن خودکار</string>
+    <string name="settings_pip">تصویر در تصویر</string>
+    <string name="settings_pip_supporting">هنگام خروج از برنامه، پخش در یک پنجره شناور ادامه یابد.</string>
+
+    <string name="settings_section_downloads">دانلودها</string>
+    <string name="settings_wifi_only">فقط Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">توقف موقت دانلودها هنگام استفاده از داده تلفن همراه.</string>
+    <string name="settings_quality">کیفیت دانلود</string>
+    <string name="settings_quality_original">فایل اصلی — کپی دقیق، قابل ازسرگیری</string>
+    <string name="settings_quality_high">بالا — حدود 20 مگابیت بر ثانیه، 1080p</string>
+    <string name="settings_quality_medium">متوسط — حدود 8 مگابیت بر ثانیه، 1080p</string>
+    <string name="settings_quality_low">پایین — حدود 3 مگابیت بر ثانیه، 720p</string>
+    <string name="settings_quality_supporting">هر چیزی به‌جز فایل اصلی توسط سرور شما هنگام ارسال تبدیل می‌شود، بنابراین حجم نمایش داده‌شده حین دانلود یک تخمین است و انتقال قطع‌شده از نو شروع می‌شود.</string>
+    <string name="settings_storage_label">حافظه</string>
+    <string name="settings_storage_summary">%1$s استفاده شده · %2$s آزاد روی این دستگاه</string>
+    <string name="settings_storage_location">دانلودها در %1$s نگه‌داری می‌شوند</string>
+    <string name="settings_storage_picker">محل ذخیره‌سازی</string>
+    <string name="settings_storage_internal">حافظه داخلی</string>
+    <string name="settings_storage_sd_card">کارت SD</string>
+    <string name="settings_storage_volume_free">%1$s آزاد</string>
+    <string name="settings_storage_missing">حافظه‌ای که انتخاب کردید اکنون در دسترس نیست، بنابراین دانلودها به محل انتخاب‌شده زیر می‌روند.</string>
+    <string name="settings_storage_switch_title">دانلودها منتقل شوند؟</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">دانلودها هنوز نمی‌توانند بین مکان‌ها منتقل شوند، بنابراین موردی که از قبل روی این دستگاه است حذف خواهد شد. می‌توانید دوباره آن را در مکان جدید دانلود کنید.</item>
+        <item quantity="other">دانلودها هنوز نمی‌توانند بین مکان‌ها منتقل شوند، بنابراین %1$d موردی که از قبل روی این دستگاه است حذف خواهند شد. می‌توانید دوباره آن‌ها را در مکان جدید دانلود کنید.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">حذف و تغییر</string>
+
+    <string name="settings_section_connectivity">اتصال</string>
+    <string name="settings_offline_mode">حالت آفلاین</string>
+    <string name="settings_offline_mode_supporting">فقط رسانه‌ای که از قبل روی این دستگاه است نمایش داده شود.</string>
+
+    <string name="settings_section_account">حساب کاربری</string>
+    <string name="settings_account_user">وارد شده به‌عنوان</string>
+    <string name="settings_account_server">سرور</string>
+    <string name="settings_account_unknown">وارد نشده‌اید</string>
+    <string name="settings_sign_out">خروج</string>
+    <string name="settings_sign_out_dialog_title">خارج شوید؟</string>
+    <string name="settings_sign_out_dialog_message">برای ورود دوباره به آدرس سرور و گذرواژه خود نیاز خواهید داشت.</string>
+    <string name="settings_sign_out_delete_downloads">دانلودها از این دستگاه هم حذف شوند</string>
+    <string name="settings_cancel">لغو</string>
+</resources>

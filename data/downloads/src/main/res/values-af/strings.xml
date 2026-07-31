@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Aflaaie</string>
+    <string name="downloads_channel_description">Vordering van media wat na hierdie toestel afgelaai word.</string>
+
+    <string name="downloads_notification_preparing">Berei aflaaie voor…</string>
+    <string name="downloads_notification_downloading">Laai af…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Laai af…</string>
+    <string name="downloads_action_pause">Pouseer</string>
+    <string name="downloads_action_cancel">Kanselleer</string>
+</resources>

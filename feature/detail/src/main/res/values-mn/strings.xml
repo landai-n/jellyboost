@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Буцах</string>
+    <string name="detail_home">Нүүр</string>
+    <string name="detail_play">Тоглуулах</string>
+    <string name="detail_resume">Үргэлжлүүлэх</string>
+    <string name="detail_download">Татах</string>
+    <string name="detail_download_cancel">Цуцлах</string>
+    <string name="detail_download_remove">Устгах</string>
+    <string name="detail_download_retry">Дахин оролдох</string>
+    <string name="detail_play_episode">Энэ ангийг тоглуулах</string>
+    <string name="detail_mark_watched">Үзсэн гэж тэмдэглэх</string>
+    <string name="detail_mark_unwatched">Үзээгүй гэж тэмдэглэх</string>
+    <string name="detail_add_favorite">Дуртай зүйлд нэмэх</string>
+    <string name="detail_remove_favorite">Дуртай зүйлээс хасах</string>
+
+    <string name="detail_section_seasons">Улирлууд</string>
+    <string name="detail_section_next_up">Дараагийн</string>
+    <string name="detail_section_episodes">Ангиуд</string>
+    <string name="detail_section_similar">Үүнтэй төстэй</string>
+
+    <string name="detail_runtime_minutes">%1$d мин</string>
+    <string name="detail_remaining_minutes">%1$d мин үлдсэн</string>
+    <string name="detail_size_on_device">Төхөөрөмж дээр %1$s</string>
+    <string name="detail_directed_by">Найруулагч: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d улирал</item>
+        <item quantity="other">%1$d улирал</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d анги</item>
+        <item quantity="other">%1$d анги</item>
+    </plurals>
+
+    <string name="detail_empty">Энэ зүйл цаашид байхгүй боллоо.</string>
+    <string name="detail_message_download_queued">Татах жагсаалтад нэмэгдлээ.</string>
+    <string name="detail_message_download_failed">Тухайн татаж авалтыг эхлүүлж чадсангүй.</string>
+    <string name="detail_message_download_deleted">Энэ төхөөрөмжөөс устгалаа.</string>
+    <string name="detail_message_download_delete_failed">Тухайн татаж авалтыг устгаж чадсангүй.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Татаж авалтыг цуцаллаа — дууссан %1$d ангийг хадгаллаа.</item>
+        <item quantity="other">Татаж авалтыг цуцаллаа — дууссан %1$d ангийг хадгаллаа.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Үүнийг хадгалж чадсангүй. Дахин оролдоно уу.</string>
+
+    <string name="detail_group_play">%1$s-д зориулж тоглуулах</string>
+    <string name="detail_group_resume">%1$s-д зориулж үргэлжлүүлэх</string>
+    <string name="detail_group_play_next">Дараа нь тоглуулах</string>
+    <string name="detail_group_add_to_queue">Дараалалд нэмэх</string>
+    <string name="detail_message_group_play">Бүлгээс үүнийг тоглуулахыг хүслээ.</string>
+    <string name="detail_message_group_play_next">Бүлгийн дараалалд дараагийнх болгож нэмлээ.</string>
+    <string name="detail_message_group_queued">Бүлгийн дараалалд нэмэгдлээ.</string>
+
+    <string name="detail_delete_download_dialog_title">Татсан файлыг устгах уу?</string>
+    <string name="detail_delete_download_dialog_message">Энэ нь тухайн зүйлийг төхөөрөмжөөс устгана. Та хүссэн үедээ дахин татаж болно.</string>
+    <string name="detail_delete_download_dialog_confirm">Устгах</string>
+    <string name="detail_delete_download_dialog_cancel">Цуцлах</string>
+</resources>

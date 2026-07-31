@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Downloads</string>
+    <string name="downloads_channel_description">Fremskridt for indhold, der downloades til denne enhed.</string>
+
+    <string name="downloads_notification_preparing">Forbereder downloads…</string>
+    <string name="downloads_notification_downloading">Downloader…</string>
+    <string name="downloads_notification_percent">%1$d %%</string>
+    <string name="downloads_notification_generic_title">Downloader…</string>
+    <string name="downloads_action_pause">Pause</string>
+    <string name="downloads_action_cancel">Annuller</string>
+</resources>

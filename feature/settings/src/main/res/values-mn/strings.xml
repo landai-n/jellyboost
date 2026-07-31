@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Тохиргоо</string>
+    <string name="settings_back">Буцах</string>
+    <string name="settings_home">Нүүр</string>
+
+    <string name="settings_section_playback">Тоглуулалт</string>
+    <string name="settings_skip_intro">Эхлэлийг алгасах</string>
+    <string name="settings_skip_outro">Төгсгөлийг алгасах</string>
+    <string name="settings_skip_mode_off">Юу ч хийхгүй</string>
+    <string name="settings_skip_mode_show_button">Алгасах товч харуулах</string>
+    <string name="settings_skip_mode_auto">Автоматаар алгасах</string>
+    <string name="settings_pip">Зураг доторх зураг</string>
+    <string name="settings_pip_supporting">Аппаас гарахад хөвөгч цонхонд тоглуулалтыг үргэлжлүүлнэ.</string>
+
+    <string name="settings_section_downloads">Татсан файлууд</string>
+    <string name="settings_wifi_only">Зөвхөн Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Мобайл дата дээр татаж авалтыг түр зогсооно.</string>
+    <string name="settings_quality">Татах чанар</string>
+    <string name="settings_quality_original">Эх файл — яг хуулбар, үргэлжлүүлэх боломжтой</string>
+    <string name="settings_quality_high">Өндөр — ойролцоогоор 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Дунд — ойролцоогоор 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Бага — ойролцоогоор 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Эх файлаас бусад бүх зүйлийг сервер илгээх явцад хөрвүүлдэг тул татаж авах үеийн харагдах хэмжээ нь ойролцоо тооцоо бөгөөд тасалдсан дамжуулалт дахин эхэлнэ.</string>
+    <string name="settings_storage_label">Хадгалах сан</string>
+    <string name="settings_storage_summary">%1$s ашигласан · %2$s чөлөөтэй энэ төхөөрөмж дээр</string>
+    <string name="settings_storage_location">Татсан файлууд %1$s-д хадгалагдана</string>
+    <string name="settings_storage_picker">Хадгалах байршил</string>
+    <string name="settings_storage_internal">Дотоод сан</string>
+    <string name="settings_storage_sd_card">SD карт</string>
+    <string name="settings_storage_volume_free">%1$s чөлөөтэй</string>
+    <string name="settings_storage_missing">Таны сонгосон хадгалах сан одоогоор боломжгүй байгаа тул татаж авалт доор сонгосон байршилд очих болно.</string>
+    <string name="settings_storage_switch_title">Татсан файлуудыг зөөх үү?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Татсан файлуудыг байршил хооронд зөөх боломж одоохондоо алга тул энэ төхөөрөмж дээр байгаа файлыг устгана. Та шинэ байршилд дахин татаж болно.</item>
+        <item quantity="other">Татсан файлуудыг байршил хооронд зөөх боломж одоохондоо алга тул энэ төхөөрөмж дээр байгаа %1$d файлыг устгана. Та шинэ байршилд дахин татаж болно.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Устгаад сэлгэх</string>
+
+    <string name="settings_section_connectivity">Холболт</string>
+    <string name="settings_offline_mode">Оффлайн горим</string>
+    <string name="settings_offline_mode_supporting">Зөвхөн энэ төхөөрөмж дээр байгаа медиаг харуулна.</string>
+
+    <string name="settings_section_account">Бүртгэл</string>
+    <string name="settings_account_user">Нэвтэрсэн хэрэглэгч</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Нэвтрээгүй байна</string>
+    <string name="settings_sign_out">Гарах</string>
+    <string name="settings_sign_out_dialog_title">Гарах уу?</string>
+    <string name="settings_sign_out_dialog_message">Дахин нэвтрэхийн тулд танд серверийн хаяг болон нууц үг хэрэгтэй болно.</string>
+    <string name="settings_sign_out_delete_downloads">Энэ төхөөрөмж дэх татсан файлуудыг мөн устгах</string>
+    <string name="settings_cancel">Цуцлах</string>
+</resources>

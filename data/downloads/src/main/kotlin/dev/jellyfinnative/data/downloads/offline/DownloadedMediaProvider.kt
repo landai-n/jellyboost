@@ -93,6 +93,10 @@ class DownloadedMediaProvider
                     // than dead defensiveness.
                     bakedAudioStreamIndex = stored.download.bakedAudioStreamIndex,
                     subtitles = stored.files.toSubtitles(),
+                    // No seek-repair call here (unlike [mediaFile] above): these are locally muxed
+                    // by the post-fetch strip and land with a complete `moov`, not a server-fetched
+                    // transcode that arrives without one.
+                    audio = stored.files.toAudio(),
                     trickplay = stored.files.toTrickplay(dto),
                 )
             }
@@ -117,6 +121,18 @@ class DownloadedMediaProvider
                     val onDisk = file.takeIfOnDisk() ?: return@mapNotNull null
                     DownloadedSubtitle(streamIndex = index, uri = localFileUri(onDisk.path))
                 }
+
+        /**
+         * The downloaded extra audio tracks of a transcoded download, sorted ascending by stream
+         * index — the order [DownloadedMedia.audio] promises the player.
+         */
+        private fun List<DownloadFileEntity>.toAudio(): List<DownloadedAudio> =
+            filter { it.type == DownloadFileType.AUDIO }
+                .mapNotNull { file ->
+                    val index = file.streamIndex ?: return@mapNotNull null
+                    val onDisk = file.takeIfOnDisk() ?: return@mapNotNull null
+                    DownloadedAudio(streamIndex = index, uri = localFileUri(onDisk.path))
+                }.sortedBy { it.streamIndex }
 
         /**
          * The downloaded tile sheets, paired with the geometry that makes them addressable.

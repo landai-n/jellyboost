@@ -34,6 +34,11 @@ import java.util.UUID
  *   transcode encoded (schema v8). `null` for an `ORIGINAL` download, which holds them all, and for
  *   a transcoded row written before v8 — those fall back to assuming the source's
  *   `defaultAudioStreamIndex`, which is what the server would have picked with no index named.
+ * @property audio the extra audio tracks of a transcoded download, sorted ascending by
+ *   [DownloadedAudio.streamIndex] — **this order is the contract**: the player builds its
+ *   `MergingMediaSource` children in exactly this order and maps ExoPlayer track groups back to
+ *   Jellyfin stream indices by position (docs/notes/offline-multitrack-design.md, phase 2). Empty
+ *   for an `ORIGINAL` download, where every track is already in the file.
  */
 data class DownloadedMedia(
     val itemId: UUID,
@@ -44,6 +49,7 @@ data class DownloadedMedia(
     val quality: DownloadQuality = DownloadQuality.ORIGINAL,
     val bakedAudioStreamIndex: Int? = null,
     val subtitles: List<DownloadedSubtitle> = emptyList(),
+    val audio: List<DownloadedAudio> = emptyList(),
     val trickplay: DownloadedTrickplay? = null,
 ) {
     /** `true` when the bytes on disk are a server re-encode rather than the source file. */
@@ -57,6 +63,21 @@ data class DownloadedMedia(
  *   the only thing that ties the sidecar back to the track the picker offers.
  */
 data class DownloadedSubtitle(
+    val streamIndex: Int,
+    val uri: String,
+)
+
+/**
+ * One extra audio language of a transcoded download.
+ *
+ * A local `.m4a` produced by the post-fetch strip, not the server's own file — and unlike the media
+ * mkv, it needs no seek-index repair: the transmux that made it wrote a complete `moov`, so it is
+ * natively seekable from the moment it lands on disk.
+ *
+ * @property streamIndex the **absolute** Jellyfin `MediaStream.index` the track was fetched for —
+ *   the only thing that ties the sidecar back to the track the picker offers.
+ */
+data class DownloadedAudio(
     val streamIndex: Int,
     val uri: String,
 )

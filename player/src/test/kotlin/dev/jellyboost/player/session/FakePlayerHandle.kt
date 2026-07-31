@@ -122,6 +122,15 @@ internal class FakePlayerHandle : PlayerHandle {
         playbackSpeeds += speed
     }
 
+    /**
+     * Whether this player admits to having a playback rate, writable so a test can be a receiver
+     * that has none (M12 Phase 4).
+     *
+     * `true` by default, which is every local player's answer and therefore leaves every test that
+     * predates casting saying exactly what it said before.
+     */
+    override var supportsPlaybackSpeed: Boolean = true
+
     override fun stop() {
         stopped = true
     }

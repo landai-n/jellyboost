@@ -139,6 +139,8 @@ internal class RoutingPlayerHandle
 
         override fun setPlaybackSpeed(speed: Float) = active.setPlaybackSpeed(speed)
 
+        override val supportsPlaybackSpeed: Boolean get() = active.supportsPlaybackSpeed
+
         override fun stop() = active.stop()
 
         override fun release() = active.release()

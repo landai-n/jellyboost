@@ -3,6 +3,8 @@ package dev.jellyboost.player.ui
 import androidx.media3.common.PlaybackException
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.player.cast.CastSessionCoordinator
 import dev.jellyboost.player.cast.CastSessionListener
 import dev.jellyboost.player.cast.CastSessionMonitor
@@ -421,7 +423,118 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             verify(exactly = 0) { syncPlayController.leaveGroup() }
         }
 
+    // ---- what the screen draws (Phase 4) -----------------------------------------------------------
+
+    @Test
+    fun `picture-in-picture is disarmed while a television has the film`() =
+        runTest(dispatcher) {
+            val model = castViewModel()
+            advanceUntilIdle()
+            local.emit(PlayerEvent.IsPlayingChanged(true))
+            advanceUntilIdle()
+            model.setScreenPresent(true)
+            pipController.state.value.canEnter shouldBe true
+
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+
+            // Nothing to float: the cast handle has no surface, so leaving the app would ask the
+            // system for a floating window over a black rectangle while the television plays on.
+            pipController.state.value.canEnter shouldBe false
+        }
+
+    @Test
+    fun `a receiver with no playback rate takes the speed picker with it`() =
+        runTest(dispatcher) {
+            castHandle.supportsPlaybackSpeed = false
+            val model = castViewModel()
+            advanceUntilIdle()
+            // Local playback always has a rate, so the control is there until the receiver is.
+            model.uiState.value.canSetSpeed shouldBe true
+
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+
+            model.uiState.value.canSetSpeed shouldBe false
+
+            framework.onSessionEnded()
+            advanceUntilIdle()
+
+            // And comes back with the film.
+            model.uiState.value.canSetSpeed shouldBe true
+        }
+
+    @Test
+    fun `a receiver that does have a rate keeps the picker`() =
+        runTest(dispatcher) {
+            castHandle.supportsPlaybackSpeed = true
+            val model = castViewModel()
+            advanceUntilIdle()
+
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+
+            model.uiState.value.canSetSpeed shouldBe true
+        }
+
+    @Test
+    fun `a rate the receiver only admits to once it has loaded something is picked up at ready`() =
+        runTest(dispatcher) {
+            // The pessimistic reading first — a `CastPlayer` publishes its receiver's commands only
+            // after a load — and the true one when the receiver says it is ready.
+            castHandle.supportsPlaybackSpeed = false
+            val model = castViewModel()
+            advanceUntilIdle()
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+            model.uiState.value.canSetSpeed shouldBe false
+
+            castHandle.supportsPlaybackSpeed = true
+            castHandle.emit(PlayerEvent.Ready)
+            advanceUntilIdle()
+
+            model.uiState.value.canSetSpeed shouldBe true
+        }
+
+    @Test
+    fun `the artwork behind the casting label is the item's backdrop`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(any()) } returns AppResult.Success(item(backdrop = BACKDROP, primary = POSTER))
+
+            val model = castViewModel()
+            advanceUntilIdle()
+
+            // Fetched with the title rather than when a receiver connects: it is needed the instant
+            // the surface goes, and a round trip later would leave the screen black.
+            model.uiState.value.artworkUrl shouldBe BACKDROP
+        }
+
+    @Test
+    fun `an item with no backdrop falls back to its poster`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(any()) } returns AppResult.Success(item(backdrop = null, primary = POSTER))
+
+            val model = castViewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.artworkUrl shouldBe POSTER
+        }
+
+    private fun item(
+        backdrop: String?,
+        primary: String?,
+    ) = JellyfinItem(
+        id = "x",
+        name = "Arrival",
+        type = ItemType.MOVIE,
+        backdropImageUrl = backdrop,
+        primaryImageUrl = primary,
+    )
+
     private companion object {
+        const val BACKDROP = "https://server/Items/x/Images/Backdrop"
+        const val POSTER = "https://server/Items/x/Images/Primary"
+
         /** Ten minutes in, and playing — an unmistakable position for the handover to resume at. */
         val ON_THE_PHONE = PlaybackSnapshot(positionMs = 600_000L, isPlaying = true)
 

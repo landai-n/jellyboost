@@ -126,4 +126,10 @@
     <string name="player_message_cast_transferred">Now playing on %1$s.</string>
     <string name="player_message_cast_left_syncplay">Left the SyncPlay group to cast to %1$s.</string>
     <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
+
+    <!--
+      M12 Phase 4. Drawn over the item's artwork, where the video would be, for as long as a
+      receiver has the film. Takes the same unnamed-device fallback as the messages above.
+    -->
+    <string name="player_casting_to">Casting to %1$s</string>
 </resources>

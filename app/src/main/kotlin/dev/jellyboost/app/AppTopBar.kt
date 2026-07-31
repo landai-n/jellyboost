@@ -61,6 +61,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.player.ui.CastRouteButton
 
 /**
  * The app's one piece of chrome for the four top-level destinations: navigation, app actions and
@@ -119,6 +120,9 @@ internal fun AppTopBar(
                     status = connectionState.toStatus(),
                     onClick = onConnectionStatusClick,
                 )
+                // Draws nothing at all unless the device has a Cast stack and something to cast to
+                // (M12); it needs no state from here, and takes none.
+                CastRouteButton()
                 SyncPlayGroupsAction(
                     hasActiveGroup = hasActiveSyncPlayGroup,
                     onClick = onOpenSyncPlayGroups,

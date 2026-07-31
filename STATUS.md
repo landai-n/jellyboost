@@ -80,8 +80,28 @@ behind the existing `PlayerHandle` binding, static conservative `CastDeviceProfi
 (1080p H.264/AAC, HLS-ts), `castTarget` joins `forceRemote`, `api_key` on every
 receiver-fetched URL, `CastSessionCoordinator` keeps reporting alive off-screen.
 First GMS dependency, taken directly (no flavors), confined to `cast/`.
-Phase 0 (governance docs) landed; Phases 1–5 (button → playback → parity →
-remote-control UI → hardening) awaiting implementation.
+Phase 0 (governance docs) landed.
+
+**Phase 1 landed (Cast plumbing + route button, no playback yet).** `media3-cast`
+1.9.0 with `play-services-cast-framework` **22.1.0** (the version media3-cast's own
+POM declares), `mediarouter` 1.8.1, `appcompat` 1.7.1 — all `:player`-only.
+`JellyboostCastOptionsProvider` (default receiver, notification targeting the launch
+activity, expanded controller off) is wired through the manifest meta-data the merger
+carries to `:app`; `CastAvailability` owns the `CastContext` behind a
+`GoogleApiAvailability` guard and publishes the GMS-free `CastDeviceState`;
+`CastRouteButton` renders a themed `MediaRouteButton` in the app top bar and nothing
+at all when the state is `Unavailable`. Two `:app` changes were forced by MediaRouter
+and are logged in DECISIONS.md 2026-07-31: `MainActivity` is now a `FragmentActivity`
+(the chooser is a `DialogFragment`; `MediaRouteButton` *throws* without one) and
+`Theme.Jellyboost` derives from `Theme.AppCompat.NoActionBar` (the dialogs are themed
+from the activity's theme). Merged manifest gains only Cast's own components
+(`MediaIntentReceiver`, `ReconnectionService`, `GoogleApiActivity`, the
+`policy_cast_dynamite` `<queries>` entry) — **no new permissions**.
+**Owed:** DoD walk 1 on a real Chromecast (icon appears, chooser opens,
+connect/disconnect; GMS-less device shows no icon and does not crash).
+
+Phases 2–5 (playback → parity → remote-control UI → hardening) awaiting
+implementation.
 
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)
 

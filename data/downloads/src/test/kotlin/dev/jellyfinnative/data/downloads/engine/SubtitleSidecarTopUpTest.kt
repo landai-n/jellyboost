@@ -192,6 +192,33 @@ class SubtitleSidecarTopUpTest {
         }
 
     @Test
+    fun `a finished download is never given the audio sidecars today's plan would add`() =
+        runTest {
+            // Phase 2 is new downloads only (DECISIONS.md, 2026-07-31, "Offline multi-track
+            // Phase 2", point 5): an extra language is ~165 MB fetched through a junk-video
+            // transcode, which is not a repair to perform silently behind a user who already has
+            // the film. The `type == SUBTITLE` filter is the whole guard, and this is what holds it
+            // there — widening it later has to be a decision, not a diff nobody noticed.
+            given(files = listOf(mediaFile()))
+            val dubbed =
+                movie(
+                    streams =
+                        listOf(
+                            DownloadFixtures.audioStream(index = 1, language = "eng"),
+                            DownloadFixtures.audioStream(index = 2, language = "fra"),
+                            subtitleStream(index = 6, language = "fra", external = false),
+                        ),
+                    defaultAudioStreamIndex = 1,
+                )
+
+            // The one missing subtitle is still fetched: this pins the audio, not the top-up.
+            topUp().topUp(listOf(dubbed)) shouldBe 1
+
+            inserted.map { it.type }.distinct() shouldContainExactly listOf(DownloadFileType.SUBTITLE)
+            requested.none { it.startsWith("audio://") } shouldBe true
+        }
+
+    @Test
     fun `a download still in the queue is left entirely to the queue`() =
         runTest {
             given(files = listOf(mediaFile()), status = DownloadStatus.QUEUED)

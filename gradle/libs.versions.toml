@@ -162,6 +162,9 @@ androidx-media3-datasource-okhttp = { group = "androidx.media3", name = "media3-
 androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
 androidx-media3-ui-compose = { group = "androidx.media3", name = "media3-ui-compose", version.ref = "media3" }
+# Used by `:data:downloads`, not by the player: an audio sidecar is fetched as video+audio (the only
+# shape the server hands a named `audioStreamIndex` over in) and transmuxed to audio-only on device.
+androidx-media3-transformer = { group = "androidx.media3", name = "media3-transformer", version.ref = "media3" }
 jellyfin-media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "jellyfinMedia3Ffmpeg" }
 
 # Network / images

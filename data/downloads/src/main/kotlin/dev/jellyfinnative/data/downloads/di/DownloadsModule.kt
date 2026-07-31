@@ -8,7 +8,9 @@ import dagger.hilt.components.SingletonComponent
 import dev.jellyfinnative.data.downloads.DownloadApi
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.downloads.SdkDownloadApi
+import dev.jellyfinnative.data.downloads.engine.AudioSidecarExtractor
 import dev.jellyfinnative.data.downloads.engine.DownloadHttpClient
+import dev.jellyfinnative.data.downloads.engine.TransformerAudioSidecarExtractor
 import dev.jellyfinnative.data.downloads.impl.DownloadRepositoryImpl
 import dev.jellyfinnative.data.downloads.plan.DownloadUrlFactory
 import dev.jellyfinnative.data.downloads.plan.SdkDownloadUrlFactory
@@ -51,6 +53,16 @@ internal interface DownloadsModule {
     @Binds
     @Singleton
     fun bindStorageVolumeProvider(impl: AndroidStorageVolumeProvider): StorageVolumeProvider
+
+    /**
+     * Binds the audio-sidecar strip stage to Media3's `Transformer`.
+     *
+     * An interface for the queue's sake: its unit tests must be able to run the whole AUDIO path —
+     * fetch, strip, delete the fetch file — without a `Looper`, a muxer or a device.
+     */
+    @Binds
+    @Singleton
+    fun bindAudioSidecarExtractor(impl: TransformerAudioSidecarExtractor): AudioSidecarExtractor
 
     /** Binds the queue's scheduling to WorkManager. */
     @Binds

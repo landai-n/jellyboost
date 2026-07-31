@@ -44,6 +44,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.io.IOException
 import java.time.Clock
@@ -70,6 +71,11 @@ class DownloadQueueTest {
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
+    private val extractor = FakeExtractor()
+
+    /** Real files for the one path that has any: the audio sidecar's fetch, strip and clean-up. */
+    @TempDir
+    lateinit var directory: File
 
     private var nextFileId = 1L
 
@@ -570,6 +576,91 @@ class DownloadQueueTest {
             coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
         }
 
+    // ---- audio sidecars (offline multi-track, phase 2) -------------------------------------------
+
+    @Test
+    fun `an audio sidecar is fetched as the live transcode it is, never resumed`() =
+        runTest {
+            givenTwoLanguageTranscode()
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            // The fifth argument is `transcoded`. A sidecar is a `/Videos` encode of its own, so the
+            // server ignores `Range` on it exactly as it does on the media file's, and a resumed
+            // fetch would splice two encodes into one file (docs/notes/audit-2026-07.md, MKV-10).
+            coVerify { downloader.download(AUDIO_URL, partFile(), any(), any(), true, any()) }
+        }
+
+    @Test
+    fun `the fetched mkv is stripped into the sidecar, and does not outlive it`() =
+        runTest {
+            givenTwoLanguageTranscode()
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            extractor.calls shouldContainExactly listOf(partFile() to sidecarFile())
+            // The junk video was 165 MB of the reason this fetch exists at all; keeping it on disk
+            // afterwards would cost more than the track it was carrying.
+            partFile().exists() shouldBe false
+            sidecarFile().length() shouldBe SIDECAR_BYTES
+        }
+
+    @Test
+    fun `the row's bytes are the sidecar's, not the mkv the fetch wrote`() =
+        runTest {
+            givenTwoLanguageTranscode()
+
+            queue().drain(listener)
+
+            // The Downloaded tab sums file rows, so a row still claiming the fetch's size would
+            // overstate the item by more than the sidecar itself weighs.
+            coVerify { downloadDao.updateFileProgress(AUDIO_FILE_ID, SIDECAR_BYTES, SIDECAR_BYTES) }
+            coVerify { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.DOWNLOADED) }
+        }
+
+    @Test
+    fun `a strip that fails costs its own row and nothing else`() =
+        runTest {
+            givenTwoLanguageTranscode()
+            extractor.failure = IllegalStateException("no muxer for this device")
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            // The optional-file rule, unchanged: a film without one dub is still a film.
+            coVerify { downloadDao.setFileStatus(AUDIO_FILE_ID, DownloadStatus.ERROR) }
+            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
+            // Neither half survives: a part-written m4a would read as a finished sidecar to the
+            // next drain and to `DownloadedMediaProvider` alike.
+            partFile().exists() shouldBe false
+            sidecarFile().exists() shouldBe false
+        }
+
+    @Test
+    fun `a sidecar already stripped is not fetched all over again`() =
+        runTest {
+            sidecarFile().writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
+            givenTwoLanguageTranscode(
+                files =
+                    listOf(
+                        file(
+                            id = AUDIO_FILE_ID,
+                            type = DownloadFileType.AUDIO,
+                            fileName = "audio.2.eng.m4a",
+                            streamIndex = 2,
+                            status = DownloadStatus.DOWNLOADED,
+                            path = sidecarFile().absolutePath,
+                        ),
+                    ),
+            )
+
+            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
+
+            // Its fetch cannot be resumed, so re-running it would spend the whole track again —
+            // the row and the file together are what say it is finished.
+            coVerify(exactly = 0) { downloader.download(AUDIO_URL, any(), any(), any(), any(), any()) }
+            extractor.calls.shouldBeEmpty()
+        }
+
     // ---- cancellation ---------------------------------------------------------------------------
 
     @Test
@@ -789,6 +880,36 @@ class DownloadQueueTest {
         }
     }
 
+    /**
+     * A transcoded film with two audio languages, one of them baked in — so the plan carries
+     * exactly one `AUDIO` row, for stream 2.
+     *
+     * Storage is redirected into the temp directory for these tests, because the sidecar path is
+     * the one place the queue touches real files: it writes a fetch beside the sidecar, hands both
+     * paths to the extractor, and deletes one of them.
+     */
+    private fun givenTwoLanguageTranscode(files: List<DownloadFileEntity> = emptyList()) {
+        every { storage.resolve(any(), any()) } answers { File(directory, secondArg<String>()) }
+        every { itemMapper.toDtoOrNull(any()) } returns
+            movie(
+                streams = listOf(audioStream(index = 1), audioStream(index = 2)),
+                defaultAudioStreamIndex = 1,
+            )
+        every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
+        every { urls.audioStreamUrl(uuid(1), "source-1", 2) } returns AUDIO_URL
+        coEvery { downloader.download(AUDIO_URL, any(), any(), any(), any(), any()) } coAnswers {
+            // What the server actually sends: the wanted audio track wrapped in junk video.
+            secondArg<File>().writeBytes(ByteArray(FETCH_BYTES.toInt()))
+            FETCH_BYTES
+        }
+        queueWith(download(quality = DownloadQuality.MEDIUM, bakedAudioStreamIndex = 1), files = files)
+    }
+
+    /** The sidecar the row names, and the mkv its fetch is written to. */
+    private fun sidecarFile() = File(directory, "audio.2.eng.m4a")
+
+    private fun partFile() = File(directory, "audio.2.eng.m4a${DownloadQueue.PART_SUFFIX}")
+
     /** One Matroska cluster whose `Timestamp` is [millis], at the default 1 ms scale. */
     private fun clusterBytes(millis: Long): ByteArray {
         val value =
@@ -810,6 +931,7 @@ class DownloadQueueTest {
             planner = DownloadFilePlanner(urls),
             storage = storage,
             downloader = downloader,
+            extractor = extractor,
             seeder = seeder,
             sweeper = sweeper,
             sessionGate = sessionGate,
@@ -829,6 +951,30 @@ class DownloadQueueTest {
         download: DownloadEntity,
         files: List<DownloadFileEntity> = emptyList(),
     ) = DownloadWithFiles(download = download, files = files)
+
+    /**
+     * The strip stage, without a `Looper`, a muxer or a device.
+     *
+     * A failing extractor still writes something first, because that is what a real one does: the
+     * `Transformer` opens its output before it discovers it cannot finish, and the half-file it
+     * leaves is precisely what the queue has to clean up.
+     */
+    private class FakeExtractor : AudioSidecarExtractor {
+        val calls = mutableListOf<Pair<File, File>>()
+        var failure: Exception? = null
+
+        override suspend fun extract(
+            source: File,
+            target: File,
+        ) {
+            calls += source to target
+            failure?.let { error ->
+                target.writeBytes(ByteArray(1))
+                throw error
+            }
+            target.writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
+        }
+    }
 
     /** Records what the worker would have shown in its notification. */
     private class RecordingListener : DownloadQueueListener {
@@ -851,6 +997,16 @@ class DownloadQueueTest {
     private companion object {
         const val IMAGE_URL = "https://server/image"
         const val TRANSCODE_URL = "https://server/videos/stream.mkv"
+
+        /** The extra audio language's fetch — `/Videos` with a junk video track. */
+        const val AUDIO_URL = "https://server/videos/stream.mkv?audioStreamIndex=2"
+
+        /** The `AUDIO` row is third in plan order (poster, media, sidecar). */
+        const val AUDIO_FILE_ID = 3L
+
+        /** What the fetch weighs (audio *and* junk video) against what the sidecar keeps. */
+        const val FETCH_BYTES = 900L
+        const val SIDECAR_BYTES = 400L
 
         /** One hour in `runTimeTicks` (100 ns each). */
         const val HOUR_TICKS = 36_000_000_000L

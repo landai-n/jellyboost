@@ -9,21 +9,24 @@ import dev.jellyfinnative.core.common.syncplay.SyncPlaySession
 import dev.jellyfinnative.player.syncplay.ControllerSyncPlaySession
 import dev.jellyfinnative.player.syncplay.api.SdkSyncPlayApi
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
-import dev.jellyfinnative.player.syncplay.socket.SdkSyncPlaySocket
+import dev.jellyfinnative.player.syncplay.socket.OkHttpSyncPlaySocket
 import dev.jellyfinnative.player.syncplay.socket.SyncPlaySocket
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import okhttp3.OkHttpClient
+import okhttp3.WebSocket
 import timber.log.Timber
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 /**
  * Wires the SyncPlay SDK facades to their interfaces, modelled on `PlayerBindingsModule`.
  *
  * Both are `@Singleton`: the REST facade holds nothing but the client, and the socket facade must
- * be shared so the SDK's subscriber reference counting sees one consumer rather than one per
- * injection point.
+ * be shared so its connection reference counting sees one consumer rather than one per injection
+ * point.
  *
  * `SyncPlayTimeSync`, the scheduler, the drift monitor, the pinger, the status holder and the
  * controller are all constructor-injectable and `@Singleton`-annotated, so they need no binding
@@ -36,9 +39,15 @@ internal interface SyncPlayModule {
     @Singleton
     fun bindSyncPlayApi(impl: SdkSyncPlayApi): SyncPlayApi
 
+    /**
+     * **Not** `SdkSyncPlaySocket` (DECISIONS.md 2026-07-31): the SDK's socket routes received
+     * messages through a conflated `StateFlow` and loses the first of any back-to-back pair —
+     * which is precisely how the server sends every SyncPlay transport action. The SDK-backed
+     * implementation is kept in the tree as the reference for that defect.
+     */
     @Binds
     @Singleton
-    fun bindSyncPlaySocket(impl: SdkSyncPlaySocket): SyncPlaySocket
+    fun bindSyncPlaySocket(impl: OkHttpSyncPlaySocket): SyncPlaySocket
 
     /**
      * The cross-feature contract (M11 Phase 4, key decision 2).
@@ -79,4 +88,26 @@ internal object SyncPlayScopeModule {
                     Timber.e(error, "Uncaught exception in a SyncPlay-scope coroutine")
                 },
         )
+
+    /**
+     * The OkHttp client `OkHttpSyncPlaySocket` opens its websocket with.
+     *
+     * Its own rather than `@MediaHttpClient`'s: that one exists for long-lived media transfers and
+     * carries `JellyfinAuthInterceptor`, which would rewrite the `Authorization` header the socket
+     * builds for itself. Defaults are left alone deliberately — OkHttp does not apply a read
+     * timeout to a websocket's reader, so an idle group is not a dropped connection, and the
+     * server-driven `ForceKeepAlive` cadence is what keeps the session alive.
+     *
+     * Exposed as [WebSocket.Factory] rather than as the client, so the socket can be tested
+     * against a fake without an HTTP stack.
+     */
+    @Provides
+    @Singleton
+    @SyncPlaySocketClient
+    fun provideSyncPlaySocketFactory(): WebSocket.Factory = OkHttpClient.Builder().build()
 }
+
+/** Marks the OkHttp websocket factory SyncPlay's own socket connects with. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+internal annotation class SyncPlaySocketClient

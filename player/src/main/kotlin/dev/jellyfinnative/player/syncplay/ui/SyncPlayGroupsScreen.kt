@@ -217,7 +217,7 @@ fun SyncPlayGroupsContent(
             },
             dismissButton = {
                 TextButton(onClick = { confirmingLeave = false }) {
-                    Text(text = stringResource(android.R.string.cancel))
+                    Text(text = stringResource(R.string.player_syncplay_cancel))
                 }
             },
         )
@@ -338,12 +338,7 @@ private fun GroupRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = group.name, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text =
-                        pluralStringResource(
-                            R.plurals.player_syncplay_participants,
-                            group.participants.size,
-                            group.participants.size,
-                        ),
+                    text = participantsSummary(group.participants),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -358,6 +353,31 @@ private fun GroupRow(
         }
     }
 }
+
+/**
+ * Turns [participants] into the row's secondary text (B6).
+ *
+ * Follows `SyncPlayGroupSheet`, which already lists everyone in the group this device is in — the
+ * browsable list has no room for one row per name, so it joins them instead and falls back to
+ * "+N more" past [MAX_PARTICIPANT_NAMES], the same shape jellyfin-web's group picker uses. An empty
+ * list falls back to the plural count rather than an empty line — the server has never actually sent
+ * one, but a blank row would look broken if it ever did.
+ */
+@Composable
+private fun participantsSummary(participants: List<String>): String {
+    if (participants.isEmpty()) return pluralStringResource(R.plurals.player_syncplay_participants, 0, 0)
+    val shown = participants.take(MAX_PARTICIPANT_NAMES)
+    val hiddenCount = participants.size - shown.size
+    val names = shown.joinToString(", ")
+    return if (hiddenCount > 0) {
+        stringResource(R.string.player_syncplay_groups_participants_more, names, hiddenCount)
+    } else {
+        names
+    }
+}
+
+/** Names shown before the row switches to "+N more" — fits [GroupRow]'s width on the test tablet. */
+private const val MAX_PARTICIPANT_NAMES = 3
 
 @Composable
 private fun CreateGroupDialog(
@@ -384,7 +404,7 @@ private fun CreateGroupDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.cancel)) }
+            TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.player_syncplay_cancel)) }
         },
     )
 }

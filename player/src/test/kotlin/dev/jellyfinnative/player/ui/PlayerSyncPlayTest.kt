@@ -2,6 +2,8 @@ package dev.jellyfinnative.player.ui
 
 import dev.jellyfinnative.core.common.AppError
 import dev.jellyfinnative.core.common.AppResult
+import dev.jellyfinnative.core.common.model.ItemType
+import dev.jellyfinnative.core.common.model.JellyfinItem
 import dev.jellyfinnative.core.common.model.SegmentSkipMode
 import dev.jellyfinnative.player.PlayerFixtures
 import dev.jellyfinnative.player.model.PlaybackQuality
@@ -208,6 +210,39 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             // of sync from the first frame.
             playerHandle.prepared.single().playWhenReady shouldBe false
             playerHandle.playCount shouldBe 0
+        }
+
+    @Test
+    fun `loading the group's item in the same session refreshes title, subtitle and duration (B4)`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            advanceUntilIdle()
+            model.uiState.value.title shouldBe "Arrival"
+            model.uiState.value.durationMs shouldBe PlayerFixtures.RUN_TIME_TICKS.ticksToMillis()
+
+            val nextEpisode =
+                JellyfinItem(
+                    id = otherItemId.toString(),
+                    name = "Episode 8",
+                    type = ItemType.EPISODE,
+                    seriesName = "Pyjamasques",
+                    parentIndexNumber = 1,
+                    indexNumber = 8,
+                )
+            coEvery { repository.getItem(otherItemId.toString()) } returns AppResult.Success(nextEpisode)
+            val nextRunTimeTicks = 60_000L.millisToTicks()
+            coEvery { resolver.resolve(any()) } returns
+                AppResult.Success(source.copy(itemId = otherItemId, runTimeTicks = nextRunTimeTicks))
+
+            val opened = model.loadItem(otherItemId, 0L)
+            advanceUntilIdle()
+
+            opened shouldBe true
+            // Both halves of the device finding (check B4): the old item's title survived the
+            // reload, and so did its duration — the queue sheet's now-playing marker was the only
+            // thing that had actually moved on.
+            model.uiState.value.title shouldBe "Pyjamasques · S1:E8 · Episode 8"
+            model.uiState.value.durationMs shouldBe nextRunTimeTicks.ticksToMillis()
         }
 
     @Test

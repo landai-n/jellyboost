@@ -180,7 +180,7 @@ private fun GroupSheetContent(
             },
             dismissButton = {
                 TextButton(onClick = { confirmingLeave = false }) {
-                    Text(text = stringResource(android.R.string.cancel))
+                    Text(text = stringResource(R.string.player_syncplay_cancel))
                 }
             },
         )

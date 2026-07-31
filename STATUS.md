@@ -102,7 +102,34 @@ join works; seek does not pause; ping accepted; rejoin re-syncs to anchor).
   per-progress-tick `POST /UserItems/{id}/UserData` chattiness (assess —
   may predate M11).
 
-**Still owed / blocked:** sign-out-leaves-group (needs a safe re-login path —
+**Fix batches landed 2026-07-31** (`fix(player)` f4af878 coordinator,
+c4a2400 UI; all device-re-verified except B6-names which needs a second
+client to display):
+- B1 pause storm KILLED (root cause confirmed in server source: ready-report
+  now sent only when the server has reset us to buffering; device: 0 Ready
+  POSTs in 38 s paused, was 306/24 s) + B2 scheduler idempotency (identity =
+  type+when+position+slot, `emittedAt` excluded — server re-stamps it).
+- B3 wedge: root cause narrowed to a lost/undelivered SendCommand frame
+  (server had broadcast it); `armSelfSync()` safety net (3 s after
+  ready/Playing-state with no command → seek to inferred position + play) —
+  reproduced live on device and recovered automatically.
+- B5 Waiting-from-Playing now pauses this member (silently).
+- B8+B9 unified `confirmLoss()`: connectivity edge starts a 5 s grace
+  (player frozen, re-negotiates if it returns), 3 failed ping cycles ≈15 s
+  or terminal socket failure → loss. Full Wi-Fi kill still pauses (+grace)
+  with manual solo resume. **Server-side limit discovered:** jellyfin
+  10.11 ends membership when the websocket drops (SessionEnded →
+  LeaveGroup) — a >2 s real drop cannot be survived client-side by design;
+  the client now degrades accurately instead of self-ejecting.
+- B4 header refresh on in-place item change; B6 participant names on group
+  rows; B10 dialog strings consistent (screenshot-verified).
+- B10-chattiness assessed: per-tick `POST /UserItems/{id}/UserData` is the
+  pre-M11 M5/M8 local-first user-data push (continues after group ends,
+  independent of SyncPlay) — follow-up ticket material, out of M11 scope.
+
+**Still owed / blocked:** B7 two-real-client Waiting deadlock retest (the
+observed instance was polluted by a never-ready REST member);
+sign-out-leaves-group (needs a safe re-login path —
 skipped to avoid stranding the device); 403 disabled-account copy (needs
 admin to toggle `SyncPlayAccess` on a spare account); queue remove /
 previous / shuffle / repeat buttons; "Left SyncPlay" snackbar text on

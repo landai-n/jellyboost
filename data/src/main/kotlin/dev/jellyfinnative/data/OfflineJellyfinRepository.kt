@@ -301,6 +301,19 @@ internal class OfflineJellyfinRepository
                     .withLocalUserData(currentUserId())
             }
 
+        /**
+         * Only the *downloaded* episodes, which is the honest offline answer: a group queue built
+         * from here skips what this device never fetched. The caller's fallback covers the case
+         * where that leaves nothing usable.
+         */
+        override suspend fun getSeriesEpisodes(seriesId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val series = seriesId.toUuidOrNull() ?: return@onIo emptyList()
+                itemDao
+                    .episodesOfSeries(ItemSource.DOWNLOAD, series, ItemType.EPISODE)
+                    .withLocalUserData(currentUserId())
+            }
+
         override suspend fun getNextUpForSeries(seriesId: String): AppResult<JellyfinItem?> =
             onIo {
                 val userId = currentUserId() ?: return@onIo null

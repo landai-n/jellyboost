@@ -12,7 +12,9 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.player.cast.CastPlaybackCoordinator
 import dev.jellyboost.player.cast.CastStatusHolder
+import dev.jellyboost.player.cast.NoCastPlaybackCoordinator
 import dev.jellyboost.player.fallback.DecoderFallbackHandler
 import dev.jellyboost.player.fallback.FallbackDecision
 import dev.jellyboost.player.model.LocalPlaybackMediaSource
@@ -129,12 +131,31 @@ class PlayerViewModel
          * lifecycle behind it — out of a ViewModel that has no business with either. Defaulted so a
          * test constructs the M5-through-M11 behaviour exactly; Hilt always passes the singleton.
          */
-        private val castStatus: CastStatusHolder = CastStatusHolder(),
+        castStatus: CastStatusHolder = CastStatusHolder(),
+        /**
+         * Where this screen hands the cast session over when it goes away, and takes it back.
+         *
+         * The interface rather than `CastSessionCoordinator` so that it can be defaulted: a
+         * coordinator cannot be constructed without the Cast framework's session manager behind it,
+         * and every pre-M12 test fixture builds this class with neither. [NoCastPlaybackCoordinator]
+         * is the honest answer for a player with no Cast stack — there is nowhere to hand a session
+         * to — and Hilt always passes the singleton.
+         */
+        castCoordinator: CastPlaybackCoordinator = NoCastPlaybackCoordinator,
     ) : ViewModel(),
         SyncPlayPlaybackHost {
         private val sessionStore = PlayerSessionStore(savedStateHandle)
 
         private val syncPlay = PlayerSyncPlayBridge(syncPlayController, syncPlayLocalSession, host = this)
+
+        private val cast =
+            PlayerCastBridge(
+                status = castStatus,
+                coordinator = castCoordinator,
+                currentSource = { source },
+                onStarted = ::onCastStarted,
+                onEnded = ::onCastEnded,
+            )
 
         private val positionTracker = PlaybackPositionTracker()
 
@@ -247,13 +268,14 @@ class PlayerViewModel
          * a film, and the next re-negotiation — a quality change, a track switch — has to be for
          * whichever player will actually decode it.
          */
-        private val isCasting: Boolean get() = castStatus.isCasting
+        private val isCasting: Boolean get() = cast.isCasting
 
         init {
             observePlayerEvents()
             observePreferences()
             observeConnectivity()
             observeSyncPlay()
+            observeCast()
             loadTitle()
             openSession(
                 playbackResolveRequest(
@@ -357,6 +379,79 @@ class PlayerViewModel
             }
         }
 
+        /**
+         * Keeps the screen in step with the receiver.
+         *
+         * One collection, not two, and deliberately unlike [observeSyncPlay]: the *edges* — a
+         * session starting, a session ending — do not arrive here. They are pushed in through
+         * [PlayerCastBridge]'s host callbacks, because each carries a position that can only be read
+         * at the instant playback is routed, and a collector by definition runs after it.
+         */
+        private fun observeCast() {
+            viewModelScope.launch {
+                cast.states.collect { receiver -> _uiState.update { it.copy(cast = receiver) } }
+            }
+        }
+
+        // ---- cast transfers -----------------------------------------------------------------------
+
+        /**
+         * The film moves to a receiver, from wherever it had got to here.
+         *
+         * Three things happen in one sequence, and the order is the plan's (decision 11): the
+         * outgoing session is **stopped and reported** at [from] — which kills its transcode on the
+         * way past — and only then is the item negotiated again, this time against the cast profile,
+         * resuming at that same position and playing if the phone was playing. Sequencing them in
+         * one coroutine is what stops the new `PlaybackInfo` reaching the server before the old
+         * encoder is killed, exactly as [reopenSession] does for a re-negotiation.
+         *
+         * The snapshot is the coordinator's rather than this class's, because by now
+         * [playerHandle] is the receiver's and it has never played anything.
+         *
+         * A group is left first (decision 6). Its message wins the snackbar over the transfer's:
+         * moving to a television is visible on screen a second later, while leaving a group is a
+         * thing the user did not ask for and would otherwise discover by finding the group sheet
+         * gone.
+         */
+        private fun onCastStarted(
+            deviceName: String?,
+            from: PlaybackSnapshot,
+        ) {
+            val current = source ?: return
+            val leftGroup = syncPlay.isInGroup
+            if (leftGroup) {
+                Timber.i("A receiver connected while in a SyncPlay group; leaving the group")
+                syncPlay.leaveGroup()
+            }
+            Timber.i("Moving %s to %s at %d ms", current.itemId, deviceName ?: "a receiver", from.positionMs)
+            openSession(
+                current.asRequest(forcedRemote, castTarget = true).copy(startPositionTicks = from.positionTicks),
+                playWhenReady = from.isPlaying,
+                message = if (leftGroup) PlayerMessage.CastLeftSyncPlayGroup else PlayerMessage.CastTransferred,
+                endingAt = from,
+            )
+        }
+
+        /**
+         * The receiver went away, so the film comes home — **paused**.
+         *
+         * Paused because a disconnect is not a request to watch: the user pulled the plug, walked
+         * out of the room, or the television was switched off, and a film that started playing out
+         * loud on the phone in any of those cases is a worse answer than one waiting to be resumed.
+         *
+         * Only ever reached with this screen attached; a session that ends after it has gone is the
+         * coordinator's to close, which is the other half of the one-stop-report-per-source rule.
+         */
+        private fun onCastEnded(at: PlaybackSnapshot) {
+            val current = source ?: return
+            Timber.i("Bringing %s back to this device at %d ms", current.itemId, at.positionMs)
+            openSession(
+                current.asRequest(forcedRemote, castTarget = false).copy(startPositionTicks = at.positionTicks),
+                playWhenReady = false,
+                endingAt = at,
+            )
+        }
+
         // ---- SyncPlay host ------------------------------------------------------------------------
 
         /**
@@ -407,17 +502,23 @@ class PlayerViewModel
         }
 
         /**
-         * Closes the outgoing session before another item takes its place.
+         * Closes the outgoing session before something else takes its place.
          *
-         * Only reached from [loadItem]: the group is the one thing that can replace the *item* in a
-         * live session, and the stop report is what kills its encoder and records where it got to.
+         * Two callers, and they are the two ways a live session can be replaced rather than
+         * re-negotiated: the group moving to another item ([loadItem]), and the film moving to or
+         * from a receiver ([onCastStarted], [onCastEnded]). Either way the stop report is what kills
+         * the encoder and records where the user got to.
+         *
+         * @param at where to report the stop from. Defaulted to asking the player, which is right
+         *   for the group's case and wrong for a transfer: by then [playerHandle] is the *other*
+         *   player, which has not started yet or has already gone.
          */
-        private suspend fun endCurrentSource() {
+        private suspend fun endCurrentSource(at: PlaybackSnapshot = playerHandle.snapshot()) {
             val current = source ?: return
             setReportingActive(false)
             if (stopReported) return
             stopReported = true
-            reporter.reportStop(current, playerHandle.snapshot())
+            reporter.reportStop(current, at)
         }
 
         // ---- user actions -------------------------------------------------------------------------
@@ -768,13 +869,24 @@ class PlayerViewModel
 
         // ---- session ------------------------------------------------------------------------------
 
-        /** Opens [request] and publishes whatever [PlaybackSessionController] made of it. */
+        /**
+         * Opens [request] and publishes whatever [PlaybackSessionController] made of it.
+         *
+         * @param endingAt closes the session that is playing now, at that position, **before** the
+         *   next one is negotiated — the transfer case (`null` everywhere else, where there is
+         *   either nothing playing or a re-negotiation of the same session, which is
+         *   [reopenSession]'s job). One coroutine for both halves for the reason that method
+         *   documents: two would let the new `PlaybackInfo` overtake the stop that kills the
+         *   outgoing encoder.
+         */
         private fun openSession(
             request: PlaybackResolveRequest,
             playWhenReady: Boolean,
             message: PlayerMessage? = null,
+            endingAt: PlaybackSnapshot? = null,
         ) {
             viewModelScope.launch {
+                endingAt?.let { endCurrentSource(it) }
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 publish(sessionController.open(request, playWhenReady), message)
             }
@@ -859,6 +971,10 @@ class PlayerViewModel
                     // There is a player worth driving now. Attaching is idempotent, which matters:
                     // this line is also reached from the group's own `loadItem`.
                     syncPlay.attach()
+                    // And a session worth reporting: from here the cast coordinator stays quiet,
+                    // because this screen's own ticker above is the one telling the server where the
+                    // film is — whether the bytes are being decoded here or in a television.
+                    cast.attach()
                 }
             }
         }
@@ -997,8 +1113,8 @@ class PlayerViewModel
          * *this device's* decoders — "this renderer could not initialise", "these bytes are too big
          * for it" — and none of that is true of a failure on the far end of a network: retrying a
          * receiver error at a lower bitrate would restart the film for a reason that was never the
-         * reason. It surfaces as the same plain failure the ladder itself ends with; a cast-specific
-         * message arrives with the rest of the cast UI (docs/notes/chromecast-m12-plan.md, Phase 3).
+         * reason. One message — [PlayerMessage.CastPlaybackFailed], which says where the failure
+         * actually was — and it stops (docs/notes/chromecast-m12-plan.md, decision 8).
          */
         private fun onError(event: PlayerEvent.Error) {
             val current = source ?: return
@@ -1006,7 +1122,7 @@ class PlayerViewModel
 
             if (isCasting) {
                 Timber.w("Giving up on %s after a cast error %d", current.itemId, event.errorCode)
-                return fail(event.message ?: PLAYBACK_FAILED, PlayerMessage.PlaybackFailed)
+                return fail(event.message ?: PLAYBACK_FAILED, PlayerMessage.CastPlaybackFailed)
             }
 
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
@@ -1098,6 +1214,14 @@ class PlayerViewModel
          * leaves its playback thread, loaders, allocator buffers and ffmpeg renderer alive for the
          * rest of the process. It is idempotent, and the media-session service's teardown reaches it
          * too — this is the path that covers a session whose service never started.
+         *
+         * ### While casting, almost none of that applies
+         * A television is not this screen's to end. The film plays on after the user backs out of
+         * the player, so the last three steps are exactly wrong there: the stop report is the
+         * coordinator's to send when the *session* ends (which is the whole
+         * one-stop-report-per-source invariant), and stopping or releasing the handle would stop the
+         * receiver — [playerHandle] is the routing one, and while casting it is pointing at the
+         * television. The local ExoPlayer needs neither: it was stopped when the transfer happened.
          */
         internal fun releaseSession() {
             setReportingActive(false)
@@ -1105,10 +1229,13 @@ class PlayerViewModel
             // The group survives the screen: the controller sends `ignoreWait` from here so nobody
             // is left waiting on a player that no longer exists (key decision 5).
             syncPlay.detach()
+            // And so does the receiver. After the ticker above is stopped, never before: the
+            // coordinator starts its own from here, and two would double every reported position.
+            cast.detach()
             // Nothing is playing any more, so nothing should float when the user leaves next.
             pipController.clear()
             val current = source
-            if (current != null && !stopReported) {
+            if (current != null && !stopReported && !isCasting) {
                 stopReported = true
                 reporter.reportStopDetached(current, playerHandle.snapshot())
             }
@@ -1116,6 +1243,7 @@ class PlayerViewModel
             // group's view of a downloaded item, and it reads the minted id on its way out.
             syncPlay.onSessionClosed()
             _videoPlayer.value = null
+            if (isCasting) return
             playerHandle.stop()
             playerHandle.release()
         }

@@ -144,13 +144,36 @@ the reused `PlaybackFailed` message, the defaulted `withApiKey`, and the media-s
 coexistence.
 **Owed:** DoD walk 2 on a real Chromecast — direct-play mp4 and forced-transcode mkv
 both play on the TV, dashboard shows the session, quality change kills the old ffmpeg,
-disconnect leaves no stray encoder, resume position correct in jellyfin-web. Until
-Phase 3 the ViewModel does not attach to the coordinator, so a cast session started
-mid-playback flips the routing handle but does **not** transfer what is playing, and
-nothing yet reports from the detached scope (no host ever detaches).
+disconnect leaves no stray encoder, resume position correct in jellyfin-web.
 
-Phases 3–5 (control parity + transfers → remote-control UI → hardening) awaiting
-implementation.
+**Phase 3 landed (transfers + control parity).** New in `:player`: `CastPlaybackHost`
+(now public, with `onCastStarted`/`onCastEnded` carrying the outgoing player's snapshot),
+`CastPlaybackCoordinator`/`NoCastPlaybackCoordinator` (the defaultable attach/detach seam
+`CastSessionCoordinator` implements) and `PlayerCastBridge` — `PlayerSyncPlayBridge`-shaped,
+and the host itself, since a public ViewModel cannot implement a module type it must also
+be constructible without. Behaviour: connecting mid-playback **transfers** the film (one
+snapshot → one stop report at that position → one negotiation against the cast profile,
+resuming and playing on), disconnecting brings it back **paused** at the receiver's last
+position, a cast session that connects in a SyncPlay group leaves the group with a message
+(decision 6), and the screen's teardown while casting neither reports nor stops anything —
+the coordinator owns both from the moment the host detaches. `RoutingPlayerHandle.stopInactive`
+now stops the local player when a receiver takes over (decision 1 had nobody performing it).
+`PlayerUiState.cast: PlayerCastState(isCasting, deviceName)` plus `CastTransferred`,
+`CastLeftSyncPlayGroup` and `CastPlaybackFailed` (which replaces Phase 2's reused
+`PlaybackFailed`) and their strings; every snackbar message is now formatted with the
+receiver's name, falling back to "your TV". **Regression gate held: no existing test was
+modified** (two files gained new cases), `:player` 621 → 644 unit tests, 0 failures; full
+gate green in one run. Five DECISIONS entries (2026-07-31) cover the pushed transfer edges,
+the public host, the stop-then-open transfer and the casting teardown, `stopInactive`, and
+the plain-enum `CastTransferred`.
+**Owed:** DoD walk 3 — connect mid-local-playback (TV continues near the phone position),
+disconnect (phone paused at the TV position, resumes locally), audio/subtitle/quality
+changes on the receiver, in-group connect leaves the group, back out of the player while
+casting (TV plays on, dashboard advances, one stop report when the session ends).
+
+Phases 4–5 (remote-control UI → hardening) awaiting implementation. Phase 4 has what it
+needs on `PlayerUiState.cast`: `isCasting` for the poster/gesture/PiP branches and
+`deviceName` for "Casting to <device>".
 
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)
 

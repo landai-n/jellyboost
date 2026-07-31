@@ -4,9 +4,11 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.annotation.RequiresApi
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
+import dev.jellyfinnative.player.R
 import dev.jellyfinnative.player.syncplay.SyncPlayController
 import timber.log.Timber
 import javax.inject.Inject
@@ -77,6 +79,15 @@ class PlaybackService :
                 .apply { launchIntent()?.let(::setSessionActivity) }
                 .build()
         mediaSession = session
+        // Media3's default provider ships its own generic small icon; the status bar shows only that
+        // icon, so without this the media notification is the one surface that does not identify the
+        // app. Everything else about the default notification is what this service wants.
+        setMediaNotificationProvider(
+            DefaultMediaNotificationProvider
+                .Builder(this)
+                .build()
+                .apply { setSmallIcon(R.drawable.ic_stat_fin) },
+        )
         // The line that keeps playback alive in the background — see the class documentation.
         addSession(session)
         setListener(this)

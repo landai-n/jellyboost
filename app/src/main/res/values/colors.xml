@@ -3,4 +3,11 @@
     <color name="background">#FF101010</color>
     <color name="surface">#FF202020</color>
     <color name="primary">#FF00A4DC</color>
+    <!--
+        Adaptive-icon background (logo/ic_launcher_background.svg). Deliberately NOT
+        "background" — that resource also drives the app window background and the splash
+        screen (themes.xml); this is the brand navy the mark was drawn against, and it
+        applies to the launcher tile only. The debug variant overrides it (app/src/debug).
+    -->
+    <color name="launcher_background">#FF000B25</color>
 </resources>

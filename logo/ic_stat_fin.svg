@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <!-- NOTIFICATION icon (res/drawable/ic_stat_fin). 24x24dp, flat white on
+       transparent - the status bar tints it and discards colour entirely, so
+       the gradient and the navy tile must not appear here.
+
+       Simplified for legibility at 24dp:
+         - third (shortest) trail removed; it collapsed to under 1dp
+         - remaining two trails respaced from y=116/150 to y=110/158 so they
+           don't visually merge
+         - trail stroke thickened from 12 to 24 source units, giving 2.4dp
+       Mark scaled 0.1, centred on (12,12); farthest point sits at radius
+       10.8dp inside the 12dp canvas. -->
+  <g transform="translate(-13.1 -2.9) scale(0.1)">
+    <path fill="#FFFFFF"
+          d="M336 82 C290 96, 250 130, 232 176 C226 190, 224 204, 226 216 C262 214, 296 190, 316 156 C330 132, 336 106, 336 82 Z"/>
+    <g stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" fill="none">
+      <path d="M190 110 L250 110"/>
+      <path d="M178 158 L222 158"/>
+    </g>
+  </g>
+</svg>

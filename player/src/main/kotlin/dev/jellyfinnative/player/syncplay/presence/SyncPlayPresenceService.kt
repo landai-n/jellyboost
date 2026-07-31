@@ -112,7 +112,7 @@ class SyncPlayPresenceService : Service() {
     private fun buildNotification(): Notification =
         NotificationCompat
             .Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_share)
+            .setSmallIcon(R.drawable.ic_stat_fin)
             .setContentTitle(getString(R.string.player_syncplay_presence_title))
             .setContentText(getString(R.string.player_syncplay_presence_text))
             .setOngoing(true)

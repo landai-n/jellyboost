@@ -202,13 +202,46 @@ class CastSpecMapperTest {
     }
 
     @Test
-    fun `passes the screen's metadata through untouched`() {
-        val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
+    fun `the screen's words reach the receiver as they are`() {
+        val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = null)
 
         val spec = mapper.map(itemSpec(), directPlay(), metadata)
 
         spec.metadata shouldBe metadata
         spec.mediaId shouldContain PlayerFixtures.ITEM_ID.toString()
+    }
+
+    @Test
+    fun `the poster is signed like every other URL the receiver fetches`() {
+        // A third URL the television opens itself, so it lives under the same rule as the media and
+        // the subtitles rather than under an exception. The words beside it are strings and are not
+        // touched.
+        val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
+
+        val spec = mapper.map(itemSpec(), directPlay(), metadata)
+
+        spec.metadata shouldBe metadata.copy(posterUrl = "https://server/p.jpg?ApiKey=$TOKEN")
+    }
+
+    @Test
+    fun `a poster that is already signed is left alone, and an item without one stays without`() {
+        val poster = "https://server/p.jpg?ApiKey=$TOKEN"
+        val signed = mapper.map(itemSpec(), directPlay(), CastMetadata(posterUrl = poster))
+        val none = mapper.map(itemSpec(), directPlay(), CastMetadata(title = "Arrival"))
+
+        signed.metadata.posterUrl shouldBe poster
+        // Not the empty string, and not a URL with a token and no path: an item with no artwork
+        // leaves the receiver on its own idle backdrop, which is what it is for.
+        none.metadata.posterUrl shouldBe null
+    }
+
+    @Test
+    fun `nothing is announced when the screen never got round to naming the film`() {
+        // The default: a cast open waits for the item fetch, but a receiver reached any other way
+        // must still play rather than fail over a caption.
+        val spec = mapper.map(itemSpec(), directPlay())
+
+        spec.metadata shouldBe CastMetadata()
     }
 
     private fun itemSpec(

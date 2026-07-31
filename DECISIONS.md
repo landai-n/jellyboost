@@ -3236,3 +3236,69 @@ Seeded from the approved plan; listed for traceability, no divergence:
   moment its controls timed out. It is left out of the modifier chain rather than branched inside the
   drag handler so that an unoffered swipe is never *detected*, leaving those touches to the system.
 
+## 2026-07-31 — M12 Phase 5: the receiver's title and poster travel in a holder, and a cast open waits for them
+- **Scope:** `player/.../cast/CastMetadataHolder.kt` (new), `player/.../cast/CastPlayerHandle.kt`,
+  `player/.../cast/CastSpecMapper.kt`, `player/.../ui/PlayerViewModel.kt`
+- **Plan said:** `docs/notes/chromecast-m12-plan.md` gives `CastSpecMapper` the signature
+  `PlaybackMediaItemSpec + RemotePlaybackMediaSource → CastMediaSpec` and lists "metadata (title,
+  poster URL)" among `CastMediaSpec`'s fields, without saying where either comes from. Phase 2 landed
+  the `metadata` parameter with a default of `CastMetadata()`, and Phase 4 flagged the consequence:
+  every load reached the receiver anonymous, so the television and the Cast notification showed an
+  unlabelled stream.
+- **Done instead:** a fourth `cast/` holder, `CastMetadataHolder` — `@Singleton`, no Cast type, keyed
+  by media id — written by `PlayerViewModel.loadTitleAndArtwork` (the fetch that already exists for
+  the top bar and the casting backdrop) and read by `CastPlayerHandle.prepare` under `spec.mediaId`.
+  Two supporting changes: `openSession` **joins** that fetch when `request.castTarget` is set, and
+  `CastSpecMapper` runs `metadata.posterUrl` through `StreamUrlFactory.withApiKey` alongside the media
+  and subtitle URLs.
+- **Reason:** four separate judgements, each with a cheaper-looking alternative that is wrong.
+  1. *A holder, not a wider spec.* The two objects that already travel to `prepare` are the resolved
+     `PlaybackMediaSource` and the `PlaybackMediaItemSpec`, and neither can carry this honestly: a
+     `PlaybackInfo` response has no item name and no image, and `ExoMediaSourceFactory` — the pure URL
+     table that builds the spec — holds a `StreamUrlFactory` and nothing else. Putting the item's
+     display fields on either would have meant an item fetch inside the *resolve* path, a second round
+     trip on every local open, for a caption only a television ever reads. The holder is the shape
+     `CastStatusHolder` already established for exactly this direction of dependency, and it leaves
+     the mapper pure with its metadata still an argument — so the decisions stay where
+     `CastSpecMapperTest` can read them.
+  2. *Keyed by media id.* A `@Singleton` outlives every session, and a group advancing to the next
+     episode publishes a second item over the first. The mismatch case answers `CastMetadata()`: an
+     unlabelled receiver is a cosmetic loss, while the wrong title on the television is a lie nobody
+     can correct from the phone.
+  3. *A cast open waits, a local open does not.* A receiver is loaded exactly once, so metadata that
+     arrived after the load could only be applied by loading the film a second time; a title that
+     arrives after the first frame on this device is invisible. The wait is bounded by the
+     repository's own `ONLINE_CALL_TIMEOUT_MS` ceiling and its offline fallback, and it is the only
+     ordering in `PlayerViewModel` that a deliberately cosmetic fetch is allowed to impose.
+  4. *The poster is signed in the mapper.* It is a third URL the receiver fetches itself, and the
+     class whose first paragraph is "the token has to travel in the URL" is where that belongs — an
+     exception for one of the three is the one nobody remembers. Probed against the dev server
+     (2026-07-31): `GET /Items/{id}/Images/Primary` answers `200` with **no** credentials and `200`
+     with `ApiKey` appended, so today the token changes nothing. That is the server's current policy
+     rather than a property of the URL, and the cost of being wrong about it is a blank card on the
+     television.
+- **Test change, stated because it is a change to an existing test:** `CastSpecMapperTest`'s
+  "passes the screen's metadata through untouched" pinned pass-through of a *poster* that is now
+  signed. It is replaced by four tests that pin more than it did — the words passing through
+  untouched, the poster signed, an already-signed poster and an absent one both left alone, and the
+  no-metadata default — alongside a new `CastMetadataHolderTest` and three `PlayerViewModelCastTest`
+  cases. Nothing was weakened, and no pre-M12 test was touched.
+
+## 2026-07-31 — M12 Phase 5: the minified build needs no cast keep rule (verified, not assumed)
+- **Scope:** `app/proguard-rules.pro` (deliberately unchanged), `docs/features/chromecast.md`
+- **Plan said:** Phase 1 — "No speculative proguard rules"; Phase 5 — "Minified-build cast smoke
+  (targeted R8 keeps only if broken, with DECISIONS entry)".
+- **Done instead:** nothing was added, and this entry records the verification rather than a change.
+  `assembleRelease` (R8 in full mode, `isMinifyEnabled` + `isShrinkResources`) was inspected:
+  `dev.jellyboost.player.cast.JellyboostCastOptionsProvider` is present in the release dex under
+  exactly the name the merged manifest's
+  `com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME` meta-data gives, the meta-data
+  and the framework's own Cast components survive the merge, and R8 reported no missing-class
+  warnings for `com.google.android.gms.cast.*` or `androidx.media3.cast.*`. The APK was installed on
+  the test tablet and cold-started with no crash in its process.
+- **Reason:** the framework instantiates the provider reflectively off a manifest *string*, which is
+  precisely the shape R8 cannot see — but `play-services-cast-framework` ships consumer rules that
+  keep it, and this file's own stated rule is that a keep belongs there only when it was shown to be
+  missing. A rule added "to be safe" would be indistinguishable, six months from now, from one that
+  is load-bearing.
+

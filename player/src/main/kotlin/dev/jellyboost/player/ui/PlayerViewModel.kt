@@ -12,6 +12,8 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.player.cast.CastMetadata
+import dev.jellyboost.player.cast.CastMetadataHolder
 import dev.jellyboost.player.cast.CastPlaybackCoordinator
 import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.cast.NoCastPlaybackCoordinator
@@ -133,6 +135,16 @@ class PlayerViewModel
          */
         castStatus: CastStatusHolder = CastStatusHolder(),
         /**
+         * Where the receiver's title, episode line and poster are left for the load to pick up.
+         *
+         * This class is the only one that fetches the item — for the top bar and the casting
+         * backdrop — and a `PlaybackInfo` response names nothing, so without this a cast session
+         * puts an unlabelled stream on the television and in the Cast notification. Written in
+         * [loadTitleAndArtwork], read by `CastPlayerHandle.prepare`, and defaulted for the same
+         * reason [castStatus] is: it holds no Cast type, so a test can construct one.
+         */
+        private val castMetadata: CastMetadataHolder = CastMetadataHolder(),
+        /**
          * Where this screen hands the cast session over when it goes away, and takes it back.
          *
          * The interface rather than `CastSessionCoordinator` so that it can be defaulted: a
@@ -193,6 +205,16 @@ class PlayerViewModel
 
         /** The currently playing source; `null` until the first resolve succeeds. */
         private var source: PlaybackMediaSource? = null
+
+        /**
+         * The item fetch behind the title, the backdrop and the receiver's metadata.
+         *
+         * Kept only so that a *cast* open can wait for it ([openSession]). Local playback never
+         * looks at it: the title arriving a moment after the first frame is invisible, while a
+         * receiver that was loaded before the label existed shows an unnamed stream until the film
+         * is opened again.
+         */
+        private var metadataLoad: Job? = null
 
         /**
          * The audio stream this open resolved, until the player has been told about it.
@@ -295,13 +317,20 @@ class PlayerViewModel
         }
 
         /**
-         * Fetches the item's name for the top bar, and the artwork behind the casting label.
+         * Fetches the item's name for the top bar, the artwork behind the casting label, and the
+         * metadata a receiver is loaded with.
          *
-         * Fire and forget, and deliberately not on the path to playback: both are cosmetic and must
-         * never delay the first frame. The artwork rides along with the title rather than being
-         * fetched when a receiver connects, because that is the moment it is *needed* — a poster
-         * that arrives a network round trip after the video surface has gone leaves the screen
+         * Fire and forget, and deliberately not on the path to playback: all three are cosmetic and
+         * must never delay the first frame **here**. The artwork rides along with the title rather
+         * than being fetched when a receiver connects, because that is the moment it is *needed* — a
+         * poster that arrives a network round trip after the video surface has gone leaves the screen
          * black exactly when the user is looking for reassurance that anything happened.
+         *
+         * The third consumer is the television, and it is the one this fetch is *awaited* for
+         * ([openSession]): a Cast receiver is loaded once, so metadata that arrived after the load
+         * could only be applied by loading the film a second time. The title and the episode line
+         * are published separately rather than as the joined label the top bar draws, because the
+         * Cast metadata has its own two fields and the default receiver lays them out itself.
          *
          * The backdrop first: the player is a landscape screen and the label sits over a wide image.
          * Episodes usually have neither a backdrop nor a thumb of their own, and their primary image
@@ -315,12 +344,25 @@ class PlayerViewModel
          *   than assuming the session's original one.
          */
         private fun loadTitleAndArtwork(itemId: String = sessionStore.itemId) {
-            viewModelScope.launch {
-                val item = repository.getItem(itemId).getOrNull() ?: return@launch
-                val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
-                val artwork = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl
-                _uiState.update { it.copy(title = label, artworkUrl = artwork) }
-            }
+            metadataLoad =
+                viewModelScope.launch {
+                    val item = repository.getItem(itemId).getOrNull() ?: return@launch
+                    val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
+                    val artwork = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl
+                    castMetadata.publish(
+                        mediaId = itemId,
+                        metadata =
+                            CastMetadata(
+                                title = item.displayTitle,
+                                subtitle = item.displaySubtitle,
+                                // The same image the phone falls back to, and for the same reason:
+                                // both surfaces are landscape, and the chain ends somewhere sensible
+                                // for an episode, which usually has only a still of its own.
+                                posterUrl = artwork,
+                            ),
+                    )
+                    _uiState.update { it.copy(title = label, artworkUrl = artwork) }
+                }
         }
 
         /**
@@ -924,6 +966,13 @@ class PlayerViewModel
             viewModelScope.launch {
                 endingAt?.let { endCurrentSource(it) }
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                // A receiver is loaded exactly once, with whatever it is told at that instant, so a
+                // cast open waits for the item fetch that names the film — the only ordering in this
+                // class that a *cosmetic* fetch is allowed to impose, and one local playback never
+                // pays. The wait is bounded by the repository's own ceiling
+                // (`JellyfinRepository.ONLINE_CALL_TIMEOUT_MS`), after which it falls back to the
+                // cache and completes anyway.
+                if (request.castTarget) metadataLoad?.join()
                 publish(sessionController.open(request, playWhenReady), message)
             }
         }

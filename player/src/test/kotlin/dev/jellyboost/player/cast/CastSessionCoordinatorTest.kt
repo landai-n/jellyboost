@@ -201,4 +201,77 @@ class CastSessionCoordinatorTest {
         coordinator.connection.value shouldBe CastConnection.Connected(null)
         routing.activeHandle.value shouldBe cast
     }
+
+    // ---- what the attached screen is told, and when (M12 Phase 3) --------------------------------
+
+    /** A host that records the two transfer edges, which the Phase 2 one had no use for. */
+    private class RecordingHost(
+        override var castSource: PlaybackMediaSource?,
+    ) : CastPlaybackHost {
+        val started = mutableListOf<Pair<String?, PlaybackSnapshot>>()
+        val ended = mutableListOf<PlaybackSnapshot>()
+
+        override fun onCastStarted(
+            deviceName: String?,
+            from: PlaybackSnapshot,
+        ) {
+            started += deviceName to from
+        }
+
+        override fun onCastEnded(at: PlaybackSnapshot) {
+            ended += at
+        }
+    }
+
+    @Test
+    fun `the screen is told where the outgoing player was, read before routing moved`() {
+        val recording = RecordingHost(source)
+        val onThePhone = PlaybackSnapshot(positionMs = 600_000L, isPlaying = true)
+        local.snapshot = onThePhone
+        coordinator.attachHost(recording)
+
+        framework.onSessionStarted("Living Room TV")
+
+        // A screen that took its own snapshot would be asking a cast player that has not started.
+        recording.started shouldBe listOf("Living Room TV" to onThePhone)
+    }
+
+    @Test
+    fun `this device is stopped when a receiver takes the film`() {
+        coordinator.attachHost(RecordingHost(source))
+
+        framework.onSessionStarted("Living Room TV")
+
+        local.stopped shouldBe true
+    }
+
+    @Test
+    fun `the screen is told where the television got to`() {
+        val recording = RecordingHost(source)
+        val onTheTelevision = PlaybackSnapshot(positionMs = 900_000L, isPlaying = true)
+        cast.snapshot = onTheTelevision
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Living Room TV")
+
+        framework.onSessionEnded()
+
+        recording.ended shouldBe listOf(onTheTelevision)
+        // The screen owes the stop report for it, so this one must not send a second.
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
+    fun `a screen that has gone is told nothing, and reported for instead`() {
+        every { reporter.startReporting(any(), any(), any()) } returns Job()
+        val recording = RecordingHost(source)
+        cast.snapshot = PlaybackSnapshot(positionMs = 900_000L)
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Living Room TV")
+        coordinator.detachHost(recording)
+
+        framework.onSessionEnded()
+
+        recording.ended shouldBe emptyList()
+        verify(exactly = 1) { reporter.reportStopDetached(any(), any()) }
+    }
 }

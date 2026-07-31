@@ -117,4 +117,13 @@
 
     <!-- The cast button. The view has no label of its own, so this is all TalkBack has to go on. -->
     <string name="player_cast">Cast to a device</string>
+
+    <!--
+      M12 Phase 3. What a receiver is called when the Cast framework has not published a name:
+      every message and label that names the device falls back to this rather than to a gap.
+    -->
+    <string name="player_cast_device_unnamed">your TV</string>
+    <string name="player_message_cast_transferred">Now playing on %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Left the SyncPlay group to cast to %1$s.</string>
+    <string name="player_message_cast_failed">Couldn\'t play that on %1$s.</string>
 </resources>

@@ -4,6 +4,7 @@ import dev.jellyfinnative.player.syncplay.model.TimeSyncSample
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import timber.log.Timber
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -61,7 +62,18 @@ class SyncPlayTimeSync
         fun record(sample: TimeSyncSample): Duration {
             samples.addLast(sample)
             while (samples.size > WINDOW_SIZE) samples.removeFirst()
-            return estimate().also { _offset.value = it }
+            return estimate().also { estimate ->
+                _offset.value = estimate
+                // Every desync argument starts with "whose clock was wrong": one line per sample is
+                // what makes the estimate, its inputs, and an outlier being rejected all readable
+                // from a device log alone.
+                Timber.d(
+                    "SyncPlay clock sample: offset %d ms rtt %d ms → estimate %d ms",
+                    sample.offset.toMillis(),
+                    sample.roundTrip.toMillis(),
+                    estimate.toMillis(),
+                )
+            }
         }
 
         /** Forgets every sample — on sign-out, or when the group (and so the server) changes. */

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">لا توجد مكتبات بعد. أضف واحدة على الخادم.</string>
+
+    <string name="library_back">رجوع</string>
+    <string name="library_home">الرئيسية</string>
+    <string name="library_sort">فرز</string>
+    <string name="library_filter">تصفية</string>
+
+    <string name="library_sort_title">الفرز حسب</string>
+    <string name="library_sort_name">الاسم</string>
+    <string name="library_sort_date_added">تاريخ الإضافة</string>
+    <string name="library_sort_premiere_date">تاريخ الإصدار</string>
+    <string name="library_sort_community_rating">تقييم المجتمع</string>
+    <string name="library_sort_runtime">المدة</string>
+    <string name="library_sort_random">عشوائي</string>
+    <string name="library_sort_direction">الاتجاه</string>
+    <string name="library_sort_ascending">تصاعدي</string>
+    <string name="library_sort_descending">تنازلي</string>
+
+    <string name="library_filters_title">عوامل التصفية</string>
+    <string name="library_filters_genres">الأنواع</string>
+    <string name="library_filters_years">السنوات</string>
+    <string name="library_filters_played">المشاهدة</string>
+    <string name="library_filters_played_any">الكل</string>
+    <string name="library_filters_played_yes">تمت مشاهدته</string>
+    <string name="library_filters_played_no">لم تتم مشاهدته</string>
+    <string name="library_filters_clear">مسح الكل</string>
+    <string name="library_filters_apply">عرض النتائج</string>
+    <string name="library_filters_none">لا تتوفر في هذه المكتبة عناصر للتصفية بحسبها.</string>
+    <string name="library_filters_loading">جارٍ تحميل عوامل التصفية…</string>
+
+    <string name="library_empty">لا يوجد شيء لعرضه هنا.</string>
+    <string name="library_empty_filtered">لا يوجد عنصر يطابق عوامل التصفية هذه.</string>
+    <string name="library_empty_clear_filters">مسح عوامل التصفية</string>
+    <string name="library_retry">إعادة المحاولة</string>
+
+    <string name="library_error_network">تعذّر الوصول إلى خادمك. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="library_error_unauthorized">انتهت صلاحية جلستك. سجّل الدخول مرة أخرى للمتابعة.</string>
+    <string name="library_error_not_found">هذه المكتبة لم تعد على الخادم.</string>
+    <string name="library_error_server">أعاد الخادم خطأ.</string>
+    <string name="library_error_server_with_code">أعاد الخادم خطأ (%1$d).</string>
+    <string name="library_error_storage">تعذّرت قراءة البيانات المحلية.</string>
+    <string name="library_error_unknown">حدث خطأ ما أثناء تحميل هذه المكتبة.</string>
+</resources>

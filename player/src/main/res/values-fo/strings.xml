@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Lat spælara aftur</string>
+    <string name="player_play">Spæl</string>
+    <string name="player_pause">Steðga</string>
+    <string name="player_rewind">Flyt 10 sekund aftur</string>
+    <string name="player_forward">Flyt 30 sekund fram</string>
+
+    <string name="player_audio">Ljóð</string>
+    <string name="player_subtitles">Undirtekstir</string>
+    <string name="player_subtitles_off">Sløkt</string>
+    <string name="player_quality">Gæði</string>
+    <string name="player_speed">Ferð</string>
+
+    <string name="player_skip_intro">Sleppa intro</string>
+    <string name="player_skip_outro">Sleppa outro</string>
+
+    <string name="player_quality_auto">Sjálvvirkandi</string>
+    <string name="player_quality_high">Høgt — 20 Mbps</string>
+    <string name="player_quality_medium">Meðal — 8 Mbps</string>
+    <string name="player_quality_low">Lágt — 3 Mbps</string>
+    <string name="player_quality_lowest">Lægst — 720 kbps</string>
+
+    <string name="player_method_direct_play">Beinleiðis avspæling</string>
+    <string name="player_method_direct_stream">Beinleiðis streymur</string>
+    <string name="player_method_transcode">Transkoding</string>
+
+    <string name="player_message_transcode">Títt tól kundi ikki decoda hesa fíluna, so ambætarin transkoderar hana.</string>
+    <string name="player_message_lower_quality">Streymurin steðgaði — roynir aftur við lægri gæði.</string>
+    <string name="player_message_track_restart">Ambætarin mátti umkoda streymin fyri hetta lagið.</string>
+    <string name="player_message_track_streaming">Hetta lagið er ikki í niðurhalinum — streymar tað frá ambætaranum.</string>
+    <string name="player_message_track_offline">Hetta lagið er ikki í niðurhalaðu fíluni.</string>
+    <string name="player_message_failed">Avspæling miseydnaðist.</string>
+
+    <string name="player_syncplay_group">Bólkur</string>
+    <string name="player_syncplay_waiting">Bíðar eftir bólki…</string>
+    <string name="player_syncplay_shuffle">Rugga bíðirøð</string>
+    <string name="player_syncplay_repeat">Endurtak</string>
+    <string name="player_syncplay_repeat_none">Sløkt</string>
+    <string name="player_syncplay_repeat_one">Henda luturin</string>
+    <string name="player_syncplay_repeat_all">Øll bíðirøðin</string>
+    <string name="player_syncplay_leave">Far úr bólki</string>
+    <string name="player_syncplay_leave_title">Fara úr hesum bólki?</string>
+    <string name="player_syncplay_leave_body">Avspæling heldur áfram her, sjálvstøðugt. Fyri at koma aftur mást tú velja bólkin uppaftur.</string>
+
+    <string name="player_syncplay_cancel">Avlýs</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d persónur hyggur at</item>
+        <item quantity="other">%d fólk hyggja at</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d fleiri</string>
+
+    <string name="player_syncplay_queue">Bíðirøð</string>
+    <string name="player_syncplay_queue_empty">Bólkurin hevur ikki sett onki í bíðirøð enn.</string>
+    <string name="player_syncplay_queue_item_loading">Heintar…</string>
+    <string name="player_syncplay_queue_playing">Spælir nú</string>
+    <string name="player_syncplay_queue_next">Næsti lutur</string>
+    <string name="player_syncplay_queue_previous">Fyrri lutur</string>
+    <string name="player_syncplay_queue_move_up">Flyt upp</string>
+    <string name="player_syncplay_queue_move_down">Flyt niður</string>
+    <string name="player_syncplay_queue_remove">Tak úr bíðirøð</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d lutur í bíðirøð</item>
+        <item quantity="other">%d lutir í bíðirøð</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Fór úr SyncPlay — samband miss</string>
+    <string name="player_message_syncplay_rejoined">Komin aftur í SyncPlay bólk</string>
+    <string name="player_message_syncplay_join_failed">Kundi ikki koma í henda SyncPlay bólkin.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay bólkurin er endaður.</string>
+    <string name="player_message_syncplay_removed">Tú ert ikki longur í SyncPlay bólkinum.</string>
+    <string name="player_message_syncplay_library_denied">Bólkurin hyggur at einumhvørjum, sum tú ikki hevur atgongd til.</string>
+    <string name="player_message_syncplay_item_unavailable">Kundi ikki opna tað, sum bólkurin hyggur at.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Aftur</string>
+    <string name="player_syncplay_groups_home">Heim</string>
+    <string name="player_syncplay_groups_create">Stovna bólk</string>
+    <string name="player_syncplay_groups_create_title">Gev bólkinum navn</string>
+    <string name="player_syncplay_groups_create_hint">Bólksnavn</string>
+    <string name="player_syncplay_groups_create_confirm">Stovna</string>
+    <string name="player_syncplay_groups_joining">Kemur inn…</string>
+    <string name="player_syncplay_groups_active_label">Tú ert í hesum bólki</string>
+    <string name="player_syncplay_groups_open_player">Opna spælara</string>
+    <string name="player_syncplay_groups_empty">Eingin annar hyggur saman beint nú.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay er sløktur fyri tína kontu.</string>
+    <string name="player_syncplay_groups_error">Kundi ikki heinta SyncPlay bólkar.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay bólkur</string>
+    <string name="player_syncplay_presence_channel_description">Goymir stað tín í einum saman-hyggja bólki, meðan appin er í baksýn.</string>
+    <string name="player_syncplay_presence_title">Í einum SyncPlay bólki</string>
+    <string name="player_syncplay_presence_text">Bíðar eftir bólkinum</string>
+    <string name="player_syncplay_presence_leave">Far úr</string>
+
+    <string name="player_syncplay_state_idle">Í kvild</string>
+    <string name="player_syncplay_state_waiting">Bíðar</string>
+    <string name="player_syncplay_state_paused">Steðgað</string>
+    <string name="player_syncplay_state_playing">Spælir</string>
+
+    <string name="player_cast">Send til eitt tól</string>
+
+    <string name="player_cast_device_unnamed">tín sjónvarpari</string>
+    <string name="player_message_cast_transferred">Spælir nú á %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Fór úr SyncPlay bólkinum fyri at senda til %1$s.</string>
+    <string name="player_message_cast_failed">Kundi ikki spæla hetta á %1$s.</string>
+
+    <string name="player_casting_to">Sendir til %1$s</string>
+</resources>

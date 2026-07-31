@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Назад</string>
+    <string name="detail_home">Главная</string>
+    <string name="detail_play">Воспроизвести</string>
+    <string name="detail_resume">Продолжить</string>
+    <string name="detail_download">Скачать</string>
+    <string name="detail_download_cancel">Отмена</string>
+    <string name="detail_download_remove">Удалить</string>
+    <string name="detail_download_retry">Повторить</string>
+    <string name="detail_play_episode">Воспроизвести этот эпизод</string>
+    <string name="detail_mark_watched">Отметить просмотренным</string>
+    <string name="detail_mark_unwatched">Отметить непросмотренным</string>
+    <string name="detail_add_favorite">Добавить в избранное</string>
+    <string name="detail_remove_favorite">Удалить из избранного</string>
+
+    <string name="detail_section_seasons">Сезоны</string>
+    <string name="detail_section_next_up">Далее</string>
+    <string name="detail_section_episodes">Эпизоды</string>
+    <string name="detail_section_similar">Похожее</string>
+
+    <string name="detail_runtime_minutes">%1$d мин</string>
+    <string name="detail_remaining_minutes">Осталось %1$d мин</string>
+    <string name="detail_size_on_device">%1$s на устройстве</string>
+    <string name="detail_directed_by">Режиссёр: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d сезон</item>
+        <item quantity="few">%1$d сезона</item>
+        <item quantity="many">%1$d сезонов</item>
+        <item quantity="other">%1$d сезона</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d эпизод</item>
+        <item quantity="few">%1$d эпизода</item>
+        <item quantity="many">%1$d эпизодов</item>
+        <item quantity="other">%1$d эпизода</item>
+    </plurals>
+
+    <string name="detail_empty">Этот элемент больше недоступен.</string>
+    <string name="detail_message_download_queued">Добавлено в загрузки.</string>
+    <string name="detail_message_download_failed">Не удалось начать эту загрузку.</string>
+    <string name="detail_message_download_deleted">Удалено с этого устройства.</string>
+    <string name="detail_message_download_delete_failed">Не удалось удалить эту загрузку.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Загрузка отменена — %1$d завершённый эпизод сохранён.</item>
+        <item quantity="few">Загрузка отменена — %1$d завершённых эпизода сохранены.</item>
+        <item quantity="many">Загрузка отменена — %1$d завершённых эпизодов сохранены.</item>
+        <item quantity="other">Загрузка отменена — %1$d завершённых эпизода сохранены.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Не удалось сохранить. Попробуйте ещё раз.</string>
+
+    <string name="detail_group_play">Воспроизвести для %1$s</string>
+    <string name="detail_group_resume">Продолжить для %1$s</string>
+    <string name="detail_group_play_next">Воспроизвести следующим</string>
+    <string name="detail_group_add_to_queue">Добавить в очередь</string>
+    <string name="detail_message_group_play">Группе предложено воспроизвести это.</string>
+    <string name="detail_message_group_play_next">Добавлено следующим в очередь группы.</string>
+    <string name="detail_message_group_queued">Добавлено в очередь группы.</string>
+
+    <string name="detail_delete_download_dialog_title">Удалить загрузку?</string>
+    <string name="detail_delete_download_dialog_message">Она будет удалена с этого устройства. Вы можете загрузить её снова в любой момент.</string>
+    <string name="detail_delete_download_dialog_confirm">Удалить</string>
+    <string name="detail_delete_download_dialog_cancel">Отмена</string>
+</resources>

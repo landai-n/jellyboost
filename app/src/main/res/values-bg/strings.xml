@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Още опции</string>
+    <string name="home_settings">Настройки</string>
+    <string name="settings_offline_mode">Офлайн режим</string>
+
+    <string name="state_on">Включено</string>
+    <string name="state_off">Изключено</string>
+
+    <string name="nav_home">Начало</string>
+    <string name="nav_libraries">Библиотеки</string>
+    <string name="nav_search">Търсене</string>
+    <string name="nav_downloads">Изтегляния</string>
+
+    <string name="offline_no_network">Няма връзка — показва се изтеглено съдържание</string>
+    <string name="offline_server_unreachable">Сървърът е недостъпен — показва се изтеглено съдържание</string>
+    <string name="offline_forced">Офлайн режимът е включен — показва се изтеглено съдържание</string>
+    <string name="offline_retry">Опитай пак</string>
+    <string name="offline_go_online">Свързване с мрежата</string>
+
+    <string name="syncplay_groups_action">SyncPlay групи</string>
+    <string name="syncplay_groups_action_active">SyncPlay групи — в група сте</string>
+</resources>

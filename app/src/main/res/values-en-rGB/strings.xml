@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">More options</string>
+    <string name="home_settings">Settings</string>
+    <string name="settings_offline_mode">Offline mode</string>
+    <string name="state_on">On</string>
+    <string name="state_off">Off</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_libraries">Libraries</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_downloads">Downloads</string>
+    <string name="offline_no_network">No network — showing downloaded media</string>
+    <string name="offline_server_unreachable">Can\'t reach the server — showing downloaded media</string>
+    <string name="offline_forced">Offline mode is on — showing downloaded media</string>
+    <string name="offline_retry">Retry</string>
+    <string name="offline_go_online">Go online</string>
+    <string name="syncplay_groups_action">SyncPlay groups</string>
+    <string name="syncplay_groups_action_active">SyncPlay groups — you\'re in a group</string>
+</resources>

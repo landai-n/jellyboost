@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">ตัวเลือกเพิ่มเติม</string>
+    <string name="home_settings">การตั้งค่า</string>
+    <string name="settings_offline_mode">โหมดออฟไลน์</string>
+    <string name="state_on">เปิด</string>
+    <string name="state_off">ปิด</string>
+    <string name="nav_home">หน้าแรก</string>
+    <string name="nav_libraries">คลังสื่อ</string>
+    <string name="nav_search">ค้นหา</string>
+    <string name="nav_downloads">ดาวน์โหลด</string>
+    <string name="offline_no_network">ไม่มีเครือข่าย — แสดงสื่อที่ดาวน์โหลดไว้</string>
+    <string name="offline_server_unreachable">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ — แสดงสื่อที่ดาวน์โหลดไว้</string>
+    <string name="offline_forced">โหมดออฟไลน์เปิดอยู่ — แสดงสื่อที่ดาวน์โหลดไว้</string>
+    <string name="offline_retry">ลองอีกครั้ง</string>
+    <string name="offline_go_online">กลับสู่ออนไลน์</string>
+    <string name="syncplay_groups_action">กลุ่ม SyncPlay</string>
+    <string name="syncplay_groups_action_active">กลุ่ม SyncPlay — คุณอยู่ในกลุ่มแล้ว</string>
+</resources>

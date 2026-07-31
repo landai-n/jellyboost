@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">फ़िल्में, शो और एपिसोड खोजें</string>
+    <string name="search_clear">साफ़ करें</string>
+
+    <!-- Result sections -->
+    <string name="search_section_movies">फ़िल्में</string>
+    <string name="search_section_series">शो</string>
+    <string name="search_section_episodes">एपिसोड</string>
+
+    <!-- States -->
+    <string name="search_prompt">अपनी लाइब्रेरी खोजने के लिए टाइप करें।</string>
+    <string name="search_no_results">“%1$s” से कुछ भी मेल नहीं खाया।</string>
+
+    <!-- Errors -->
+    <string name="search_error_network">आपके सर्वर तक नहीं पहुँचा जा सका। अपना कनेक्शन जांचें और फिर से कोशिश करें।</string>
+    <string name="search_error_unauthorized">आपका सत्र समाप्त हो गया। जारी रखने के लिए फिर से साइन इन करें।</string>
+    <string name="search_error_not_found">वह आइटम अब सर्वर पर नहीं है।</string>
+    <string name="search_error_server">सर्वर ने त्रुटि लौटाई।</string>
+    <string name="search_error_server_with_code">सर्वर ने त्रुटि (%1$d) लौटाई।</string>
+    <string name="search_error_storage">स्थानीय डेटा नहीं पढ़ा जा सका।</string>
+    <string name="search_error_unknown">खोजते समय कुछ गड़बड़ हुई।</string>
+</resources>

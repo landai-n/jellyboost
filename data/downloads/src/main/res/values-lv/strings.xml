@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Lejupielādes</string>
+    <string name="downloads_channel_description">Šajā ierīcē lejupielādējamo mediju progress.</string>
+
+    <string name="downloads_notification_preparing">Lejupielāžu sagatavošana…</string>
+    <string name="downloads_notification_downloading">Notiek lejupielāde…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Notiek lejupielāde…</string>
+    <string name="downloads_action_pause">Pauzēt</string>
+    <string name="downloads_action_cancel">Atcelt</string>
+</resources>

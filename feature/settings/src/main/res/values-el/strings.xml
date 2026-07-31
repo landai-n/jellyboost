@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ρυθμίσεις</string>
+    <string name="settings_back">Πίσω</string>
+    <string name="settings_home">Αρχική</string>
+
+    <string name="settings_section_playback">Αναπαραγωγή</string>
+    <string name="settings_skip_intro">Παράλειψη εισαγωγής</string>
+    <string name="settings_skip_outro">Παράλειψη τίτλων τέλους</string>
+    <string name="settings_skip_mode_off">Καμία ενέργεια</string>
+    <string name="settings_skip_mode_show_button">Εμφάνιση κουμπιού παράλειψης</string>
+    <string name="settings_skip_mode_auto">Αυτόματη παράλειψη</string>
+    <string name="settings_pip">Εικόνα εντός εικόνας</string>
+    <string name="settings_pip_supporting">Συνέχιση αναπαραγωγής σε αιωρούμενο παράθυρο όταν βγαίνετε από την εφαρμογή.</string>
+
+    <string name="settings_section_downloads">Λήψεις</string>
+    <string name="settings_wifi_only">Μόνο Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Παύση λήψεων με δεδομένα κινητής τηλεφωνίας.</string>
+    <string name="settings_quality">Ποιότητα λήψης</string>
+    <string name="settings_quality_original">Αρχικό αρχείο — ακριβές αντίγραφο, με δυνατότητα συνέχισης</string>
+    <string name="settings_quality_high">Υψηλή — περίπου 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Μεσαία — περίπου 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Χαμηλή — περίπου 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Οτιδήποτε εκτός από το αρχικό αρχείο μετατρέπεται από τον διακομιστή σας καθώς το στέλνει, οπότε το μέγεθος που εμφανίζεται κατά τη λήψη είναι εκτίμηση και μια διακοπείσα μεταφορά ξεκινά ξανά από την αρχή.</string>
+    <string name="settings_storage_label">Αποθηκευτικός χώρος</string>
+    <string name="settings_storage_summary">%1$s σε χρήση · %2$s ελεύθερα σε αυτή τη συσκευή</string>
+    <string name="settings_storage_location">Οι λήψεις διατηρούνται στο %1$s</string>
+    <string name="settings_storage_picker">Τοποθεσία αποθήκευσης</string>
+    <string name="settings_storage_internal">Εσωτερική μνήμη</string>
+    <string name="settings_storage_sd_card">Κάρτα SD</string>
+    <string name="settings_storage_volume_free">%1$s ελεύθερα</string>
+    <string name="settings_storage_missing">Ο αποθηκευτικός χώρος που επιλέξατε δεν είναι διαθέσιμος αυτή τη στιγμή, οπότε οι λήψεις πηγαίνουν στην τοποθεσία που επιλέχθηκε παρακάτω.</string>
+    <string name="settings_storage_switch_title">Μετακίνηση λήψεων;</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Οι λήψεις δεν μπορούν ακόμη να μετακινηθούν μεταξύ τοποθεσιών, οπότε αυτή που υπάρχει ήδη σε αυτή τη συσκευή θα διαγραφεί. Μπορείτε να την κατεβάσετε ξανά στη νέα τοποθεσία.</item>
+        <item quantity="other">Οι λήψεις δεν μπορούν ακόμη να μετακινηθούν μεταξύ τοποθεσιών, οπότε οι %1$d που υπάρχουν ήδη σε αυτή τη συσκευή θα διαγραφούν. Μπορείτε να τις κατεβάσετε ξανά στη νέα τοποθεσία.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Διαγραφή και αλλαγή</string>
+
+    <string name="settings_section_connectivity">Συνδεσιμότητα</string>
+    <string name="settings_offline_mode">Λειτουργία εκτός σύνδεσης</string>
+    <string name="settings_offline_mode_supporting">Εμφάνιση μόνο μέσων που υπάρχουν ήδη σε αυτή τη συσκευή.</string>
+
+    <string name="settings_section_account">Λογαριασμός</string>
+    <string name="settings_account_user">Συνδεδεμένος ως</string>
+    <string name="settings_account_server">Διακομιστής</string>
+    <string name="settings_account_unknown">Δεν είστε συνδεδεμένοι</string>
+    <string name="settings_sign_out">Αποσύνδεση</string>
+    <string name="settings_sign_out_dialog_title">Αποσύνδεση;</string>
+    <string name="settings_sign_out_dialog_message">Θα χρειαστείτε τη διεύθυνση του διακομιστή σας και τον κωδικό πρόσβασης για να συνδεθείτε ξανά.</string>
+    <string name="settings_sign_out_delete_downloads">Διαγραφή επίσης των λήψεων από αυτή τη συσκευή</string>
+    <string name="settings_cancel">Άκυρο</string>
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">వెనుకకు</string>
+    <string name="detail_home">హోమ్</string>
+    <string name="detail_play">ప్లే చేయండి</string>
+    <string name="detail_resume">కొనసాగించండి</string>
+    <string name="detail_download">డౌన్‌లోడ్ చేయండి</string>
+    <string name="detail_download_cancel">రద్దు చేయండి</string>
+    <string name="detail_download_remove">తీసివేయండి</string>
+    <string name="detail_download_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="detail_play_episode">ఈ ఎపిసోడ్‌ను ప్లే చేయండి</string>
+    <string name="detail_mark_watched">చూసినట్లు గుర్తించండి</string>
+    <string name="detail_mark_unwatched">చూడనట్లు గుర్తించండి</string>
+    <string name="detail_add_favorite">ఇష్టమైనవిగా జోడించండి</string>
+    <string name="detail_remove_favorite">ఇష్టమైనవి నుండి తీసివేయండి</string>
+
+    <string name="detail_section_seasons">సీజన్‌లు</string>
+    <string name="detail_section_next_up">తర్వాత రానున్నవి</string>
+    <string name="detail_section_episodes">ఎపిసోడ్‌లు</string>
+    <string name="detail_section_similar">దీనిలాంటివి మరిన్ని</string>
+
+    <string name="detail_runtime_minutes">%1$d నిమి</string>
+    <string name="detail_remaining_minutes">%1$d నిమి మిగిలి ఉంది</string>
+    <string name="detail_size_on_device">పరికరంలో %1$s</string>
+    <string name="detail_directed_by">దర్శకత్వం: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d సీజన్</item>
+        <item quantity="other">%1$d సీజన్‌లు</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d ఎపిసోడ్</item>
+        <item quantity="other">%1$d ఎపిసోడ్‌లు</item>
+    </plurals>
+
+    <string name="detail_empty">ఈ అంశం ఇకపై అందుబాటులో లేదు.</string>
+    <string name="detail_message_download_queued">డౌన్‌లోడ్‌లకు జోడించారు.</string>
+    <string name="detail_message_download_failed">ఆ డౌన్‌లోడ్‌ను ప్రారంభించలేకపోయాం.</string>
+    <string name="detail_message_download_deleted">ఈ పరికరం నుండి తీసివేయబడింది.</string>
+    <string name="detail_message_download_delete_failed">ఆ డౌన్‌లోడ్‌ను తీసివేయలేకపోయాం.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">డౌన్‌లోడ్ రద్దయింది — పూర్తయిన %1$d ఎపిసోడ్ ఉంచబడింది.</item>
+        <item quantity="other">డౌన్‌లోడ్ రద్దయింది — పూర్తయిన %1$d ఎపిసోడ్‌లు ఉంచబడ్డాయి.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">దాన్ని సేవ్ చేయలేకపోయాం. మళ్లీ ప్రయత్నించండి.</string>
+
+    <string name="detail_group_play">%1$s కోసం ప్లే చేయండి</string>
+    <string name="detail_group_resume">%1$s కోసం కొనసాగించండి</string>
+    <string name="detail_group_play_next">తర్వాత ప్లే చేయండి</string>
+    <string name="detail_group_add_to_queue">క్యూకు జోడించండి</string>
+    <string name="detail_message_group_play">దీన్ని ప్లే చేయమని గ్రూప్‌ను అడిగాం.</string>
+    <string name="detail_message_group_play_next">గ్రూప్ కోసం తర్వాతిదిగా క్యూలో పెట్టాం.</string>
+    <string name="detail_message_group_queued">గ్రూప్ క్యూకు జోడించారు.</string>
+
+    <string name="detail_delete_download_dialog_title">డౌన్‌లోడ్‌ను తొలగించాలా?</string>
+    <string name="detail_delete_download_dialog_message">ఇది దీన్ని ఈ పరికరం నుండి తీసివేస్తుంది. మీరు దీన్ని ఎప్పుడైనా మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</string>
+    <string name="detail_delete_download_dialog_confirm">తొలగించండి</string>
+    <string name="detail_delete_download_dialog_cancel">రద్దు చేయండి</string>
+</resources>

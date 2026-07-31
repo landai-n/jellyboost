@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Downloadet</string>
+    <string name="downloads_tab_queue">Kø</string>
+    <string name="downloads_wifi_only">Kun Wi-Fi</string>
+
+    <string name="downloads_group_movies">Film</string>
+
+    <string name="downloads_storage_summary">%1$s brugt · %2$s ledig</string>
+
+    <string name="downloads_action_delete">Slet download</string>
+    <string name="downloads_action_cancel">Annuller download</string>
+    <string name="downloads_action_pause">Sæt download på pause</string>
+    <string name="downloads_action_resume">Genoptag download</string>
+    <string name="downloads_action_move_up">Flyt op i køen</string>
+    <string name="downloads_action_move_down">Flyt ned i køen</string>
+
+    <string name="downloads_action_pause_all">Sæt alle på pause</string>
+    <string name="downloads_action_resume_all">Genoptag alle</string>
+    <string name="downloads_action_cancel_all">Annuller alle</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Annuller denne download?</item>
+        <item quantity="other">Annuller alle %1$d downloads?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Køen tømmes, og delvist downloadede filer fjernes. Færdige downloads påvirkes ikke.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Annuller downloads</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behold</string>
+
+    <string name="downloads_delete_dialog_title">Slet %1$s?</string>
+    <string name="downloads_delete_dialog_message">De downloadede filer fjernes fra denne enhed. Du kan downloade den igen senere.</string>
+    <string name="downloads_delete_dialog_confirm">Slet</string>
+    <string name="downloads_delete_dialog_cancel">Annuller</string>
+
+    <string name="downloads_progress_of">%1$s af %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s af ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s af op til %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">op til %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s tilbage</string>
+    <string name="downloads_eta_approx">~%1$s tilbage</string>
+    <string name="downloads_transcoded_marker">Transkodet</string>
+    <string name="downloads_status_queued">Venter</string>
+    <string name="downloads_status_paused">Sat på pause</string>
+    <string name="downloads_status_failed">Download mislykkedes</string>
+    <string name="downloads_status_failed_reason">Download mislykkedes: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Intet downloadet endnu. Tryk på Download på en film eller episode for at beholde den på denne enhed.</string>
+    <string name="downloads_empty_queue">Download-køen er tom.</string>
+    <string name="downloads_load_failed">Kunne ikke læse dine downloads. Åbn denne skærm igen for at prøve igen.</string>
+    <string name="downloads_message_delete_failed">Kunne ikke slette den download.</string>
+    <string name="downloads_message_action_failed">Kunne ikke opdatere køen.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Satte %1$d på pause – %2$d transkodning fortsætter med at downloade (en transkodning kan ikke sættes på pause).</item>
+        <item quantity="other">Satte %1$d på pause – %2$d transkodninger fortsætter med at downloade (en transkodning kan ikke sættes på pause).</item>
+    </plurals>
+</resources>

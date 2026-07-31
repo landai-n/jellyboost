@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Atsisiųsta</string>
+    <string name="downloads_tab_queue">Eilė</string>
+    <string name="downloads_wifi_only">Tik Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmai</string>
+
+    <string name="downloads_storage_summary">Naudota %1$s · laisva %2$s</string>
+
+    <string name="downloads_action_delete">Ištrinti atsisiuntimą</string>
+    <string name="downloads_action_cancel">Atšaukti atsisiuntimą</string>
+    <string name="downloads_action_pause">Pristabdyti atsisiuntimą</string>
+    <string name="downloads_action_resume">Tęsti atsisiuntimą</string>
+    <string name="downloads_action_move_up">Perkelti aukštyn eilėje</string>
+    <string name="downloads_action_move_down">Perkelti žemyn eilėje</string>
+
+    <string name="downloads_action_pause_all">Pristabdyti viską</string>
+    <string name="downloads_action_resume_all">Tęsti viską</string>
+    <string name="downloads_action_cancel_all">Atšaukti viską</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Atšaukti šį atsisiuntimą?</item>
+        <item quantity="few">Atšaukti visus %1$d atsisiuntimus?</item>
+        <item quantity="many">Atšaukti visus %1$d atsisiuntimų?</item>
+        <item quantity="other">Atšaukti visus %1$d atsisiuntimų?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Eilė bus ištuštinta, o iš dalies atsisiųsti failai pašalinti. Baigti atsisiuntimai nebus paveikti.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Atšaukti atsisiuntimus</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Palikti</string>
+
+    <string name="downloads_delete_dialog_title">Ištrinti %1$s?</string>
+    <string name="downloads_delete_dialog_message">Atsisiųsti failai bus pašalinti iš šio įrenginio. Galėsite atsisiųsti jį iš naujo vėliau.</string>
+    <string name="downloads_delete_dialog_confirm">Ištrinti</string>
+    <string name="downloads_delete_dialog_cancel">Atšaukti</string>
+
+    <string name="downloads_progress_of">%1$s iš %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s iš ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s iš ne daugiau kaip %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">ne daugiau kaip %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Liko %1$s</string>
+    <string name="downloads_eta_approx">Liko ~%1$s</string>
+    <string name="downloads_transcoded_marker">Perkoduota</string>
+    <string name="downloads_status_queued">Laukiama</string>
+    <string name="downloads_status_paused">Pristabdyta</string>
+    <string name="downloads_status_failed">Atsisiuntimas nepavyko</string>
+    <string name="downloads_status_failed_reason">Atsisiuntimas nepavyko: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Kol kas nieko neatsisiųsta. Palieskite „Atsisiųsti“ ties filmu ar epizodu, kad išsaugotumėte jį šiame įrenginyje.</string>
+    <string name="downloads_empty_queue">Atsisiuntimų eilė tuščia.</string>
+    <string name="downloads_load_failed">Nepavyko nuskaityti jūsų atsisiuntimų. Atidarykite šį ekraną iš naujo ir bandykite dar kartą.</string>
+    <string name="downloads_message_delete_failed">Nepavyko ištrinti šio atsisiuntimo.</string>
+    <string name="downloads_message_action_failed">Nepavyko atnaujinti eilės.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Pristabdytas %1$d – %2$d perkodavimas tęsia atsisiuntimą (perkodavimo negalima pristabdyti).</item>
+        <item quantity="few">Pristabdyti %1$d – %2$d perkodavimai tęsia atsisiuntimą (perkodavimų negalima pristabdyti).</item>
+        <item quantity="many">Pristabdyta %1$d – %2$d perkodavimų tęsia atsisiuntimą (perkodavimų negalima pristabdyti).</item>
+        <item quantity="other">Pristabdyta %1$d – %2$d perkodavimų tęsia atsisiuntimą (perkodavimų negalima pristabdyti).</item>
+    </plurals>
+</resources>

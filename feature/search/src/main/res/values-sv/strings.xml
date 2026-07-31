@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Sök filmer, serier och avsnitt</string>
+    <string name="search_clear">Rensa</string>
+
+    <string name="search_section_movies">Filmer</string>
+    <string name="search_section_series">Serier</string>
+    <string name="search_section_episodes">Avsnitt</string>
+
+    <string name="search_prompt">Skriv för att söka i dina bibliotek.</string>
+    <string name="search_no_results">Inget matchade ”%1$s”.</string>
+
+    <string name="search_error_network">Kan inte nå din server. Kontrollera din anslutning och försök igen.</string>
+    <string name="search_error_unauthorized">Din session har gått ut. Logga in igen för att fortsätta.</string>
+    <string name="search_error_not_found">Det objektet finns inte längre på servern.</string>
+    <string name="search_error_server">Servern returnerade ett fel.</string>
+    <string name="search_error_server_with_code">Servern returnerade ett fel (%1$d).</string>
+    <string name="search_error_storage">Kunde inte läsa lokal data.</string>
+    <string name="search_error_unknown">Något gick fel under sökningen.</string>
+</resources>

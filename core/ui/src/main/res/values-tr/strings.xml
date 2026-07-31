@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">İndirildi</string>
+    <string name="badge_download_queued">İndirme kuyruğunda</string>
+    <string name="badge_download_paused">İndirme duraklatıldı</string>
+    <string name="badge_download_failed">İndirme başarısız oldu</string>
+    <string name="media_row_see_all">Tümünü gör</string>
+    <string name="media_card_watched">İzlendi</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d öğe seçildi</item>
+        <item quantity="other">%1$d öğe seçildi</item>
+    </plurals>
+    <string name="selection_close">Seçimi temizle</string>
+    <string name="selection_select_all">Tümünü seç</string>
+    <string name="selection_mark_watched">İzlendi olarak işaretle</string>
+    <string name="selection_mark_unwatched">İzlenmedi olarak işaretle</string>
+    <string name="selection_download">İndir</string>
+    <string name="selection_item_selected">Seçildi</string>
+    <string name="selection_item_not_selected">Seçilmedi</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d öğe izlendi olarak işaretlendi</item>
+        <item quantity="other">%1$d öğe izlendi olarak işaretlendi</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d öğe izlendi olarak işaretlendi, %2$d başarısız oldu</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d öğe izlendi olarak işaretlenemedi</item>
+        <item quantity="other">%1$d öğe izlendi olarak işaretlenemedi</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d öğe izlenmedi olarak işaretlendi</item>
+        <item quantity="other">%1$d öğe izlenmedi olarak işaretlendi</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d öğe izlenmedi olarak işaretlendi, %2$d başarısız oldu</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d öğe izlenmedi olarak işaretlenemedi</item>
+        <item quantity="other">%1$d öğe izlenmedi olarak işaretlenemedi</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d öğe indirilenlere eklendi</item>
+        <item quantity="other">%1$d öğe indirilenlere eklendi</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d öğe indirilenlere eklendi, %2$d başarısız oldu</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d öğe indirilenlere eklenemedi</item>
+        <item quantity="other">%1$d öğe indirilenlere eklenemedi</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d öğe indirilenlere eklendi — %2$d zaten bu cihazda</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d öğe zaten bu cihazda</item>
+        <item quantity="other">%1$d öğe zaten bu cihazda</item>
+    </plurals>
+</resources>

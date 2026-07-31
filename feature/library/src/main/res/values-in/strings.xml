@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Belum ada perpustakaan. Tambahkan satu di server.</string>
+    <string name="library_back">Kembali</string>
+    <string name="library_home">Beranda</string>
+    <string name="library_sort">Urutkan</string>
+    <string name="library_filter">Filter</string>
+    <string name="library_sort_title">Urutkan berdasarkan</string>
+    <string name="library_sort_name">Nama</string>
+    <string name="library_sort_date_added">Tanggal ditambahkan</string>
+    <string name="library_sort_premiere_date">Tanggal rilis</string>
+    <string name="library_sort_community_rating">Peringkat komunitas</string>
+    <string name="library_sort_runtime">Durasi</string>
+    <string name="library_sort_random">Acak</string>
+    <string name="library_sort_direction">Arah</string>
+    <string name="library_sort_ascending">Naik</string>
+    <string name="library_sort_descending">Turun</string>
+    <string name="library_filters_title">Filter</string>
+    <string name="library_filters_genres">Genre</string>
+    <string name="library_filters_years">Tahun</string>
+    <string name="library_filters_played">Sudah ditonton</string>
+    <string name="library_filters_played_any">Semua</string>
+    <string name="library_filters_played_yes">Sudah ditonton</string>
+    <string name="library_filters_played_no">Belum ditonton</string>
+    <string name="library_filters_clear">Hapus semua</string>
+    <string name="library_filters_apply">Tampilkan hasil</string>
+    <string name="library_filters_none">Perpustakaan ini tidak menawarkan apa pun untuk difilter.</string>
+    <string name="library_filters_loading">Memuat filter…</string>
+    <string name="library_empty">Tidak ada yang bisa ditampilkan di sini.</string>
+    <string name="library_empty_filtered">Tidak ada item yang cocok dengan filter ini.</string>
+    <string name="library_empty_clear_filters">Hapus filter</string>
+    <string name="library_retry">Coba lagi</string>
+    <string name="library_error_network">Tidak dapat menjangkau server Anda. Periksa koneksi Anda dan coba lagi.</string>
+    <string name="library_error_unauthorized">Sesi Anda telah berakhir. Masuk lagi untuk melanjutkan.</string>
+    <string name="library_error_not_found">Perpustakaan itu sudah tidak ada di server.</string>
+    <string name="library_error_server">Server mengembalikan kesalahan.</string>
+    <string name="library_error_server_with_code">Server mengembalikan kesalahan (%1$d).</string>
+    <string name="library_error_storage">Tidak dapat membaca data lokal.</string>
+    <string name="library_error_unknown">Terjadi kesalahan saat memuat perpustakaan ini.</string>
+</resources>

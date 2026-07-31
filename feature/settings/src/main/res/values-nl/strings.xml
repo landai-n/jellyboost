@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_back">Terug</string>
+    <string name="settings_home">Start</string>
+
+    <string name="settings_section_playback">Afspelen</string>
+    <string name="settings_skip_intro">Intro overslaan</string>
+    <string name="settings_skip_outro">Outro overslaan</string>
+    <string name="settings_skip_mode_off">Niets doen</string>
+    <string name="settings_skip_mode_show_button">Een overslaan-knop tonen</string>
+    <string name="settings_skip_mode_auto">Automatisch overslaan</string>
+    <string name="settings_pip">Beeld‑in‑beeld</string>
+    <string name="settings_pip_supporting">Blijf afspelen in een zwevend venster wanneer je de app verlaat.</string>
+
+    <string name="settings_section_downloads">Downloads</string>
+    <string name="settings_wifi_only">Alleen wifi</string>
+    <string name="settings_wifi_only_supporting">Pauzeer downloads op mobiele data.</string>
+    <string name="settings_quality">Downloadkwaliteit</string>
+    <string name="settings_quality_original">Origineel bestand – exacte kopie, hervatbaar</string>
+    <string name="settings_quality_high">Hoog – ongeveer 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Gemiddeld – ongeveer 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Laag – ongeveer 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alles behalve het originele bestand wordt door je server omgezet tijdens het verzenden, dus de weergegeven grootte tijdens het downloaden is een schatting en een onderbroken overdracht begint opnieuw.</string>
+    <string name="settings_storage_label">Opslag</string>
+    <string name="settings_storage_summary">%1$s gebruikt · %2$s vrij op dit apparaat</string>
+    <string name="settings_storage_location">Downloads worden bewaard in %1$s</string>
+    <string name="settings_storage_picker">Opslaglocatie</string>
+    <string name="settings_storage_internal">Interne opslag</string>
+    <string name="settings_storage_sd_card">SD-kaart</string>
+    <string name="settings_storage_volume_free">%1$s vrij</string>
+    <string name="settings_storage_missing">De opslag die je koos is momenteel niet beschikbaar, dus downloads gaan naar de hieronder geselecteerde locatie.</string>
+    <string name="settings_storage_switch_title">Downloads verplaatsen?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Downloads kunnen nog niet tussen locaties worden verplaatst, dus de download die al op dit apparaat staat wordt verwijderd. Je kunt hem opnieuw downloaden naar de nieuwe locatie.</item>
+        <item quantity="other">Downloads kunnen nog niet tussen locaties worden verplaatst, dus de %1$d die al op dit apparaat staan worden verwijderd. Je kunt ze opnieuw downloaden naar de nieuwe locatie.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Verwijderen en wisselen</string>
+
+    <string name="settings_section_connectivity">Connectiviteit</string>
+    <string name="settings_offline_mode">Offlinemodus</string>
+    <string name="settings_offline_mode_supporting">Toon alleen media die al op dit apparaat staat.</string>
+
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_user">Aangemeld als</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Niet aangemeld</string>
+    <string name="settings_sign_out">Afmelden</string>
+    <string name="settings_sign_out_dialog_title">Afmelden?</string>
+    <string name="settings_sign_out_dialog_message">Je hebt je serveradres en wachtwoord nodig om je weer aan te melden.</string>
+    <string name="settings_sign_out_delete_downloads">Ook downloads van dit apparaat verwijderen</string>
+    <string name="settings_cancel">Annuleren</string>
+</resources>

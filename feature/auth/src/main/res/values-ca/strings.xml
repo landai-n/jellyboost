@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Connecta amb el servidor</string>
+    <string name="server_setup_discovered_title">Servidors en aquesta xarxa</string>
+    <string name="server_setup_discovering">Cercant a la xarxa local…</string>
+    <string name="server_setup_no_servers_found">Cap servidor no s\'ha anunciat. Introdueix una adreça a sota.</string>
+    <string name="server_setup_manual_title">Adreça del servidor</string>
+    <string name="server_setup_address_label">Amfitrió o URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org o 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Connecta</string>
+    <string name="server_setup_connecting">Contactant amb el servidor…</string>
+    <string name="server_setup_session_lost">La teva sessió desada no s\'ha pogut restaurar, per la qual cosa s\'ha tancat la sessió. Torna a iniciar sessió.</string>
+    <string name="login_title">Inicia la sessió</string>
+    <string name="login_server_version">Versió %1$s</string>
+    <string name="login_server_version_unknown">Versió desconeguda</string>
+    <string name="login_public_users_title">Qui està mirant?</string>
+    <string name="login_username_label">Nom d\'usuari</string>
+    <string name="login_password_label">Contrasenya</string>
+    <string name="login_show_password">Mostra la contrasenya</string>
+    <string name="login_hide_password">Amaga la contrasenya</string>
+    <string name="login_sign_in">Inicia la sessió</string>
+    <string name="login_change_server">Utilitza un altre servidor</string>
+    <string name="login_loading">Carregant les dades del servidor…</string>
+    <string name="login_or">o</string>
+    <string name="login_quick_connect">Utilitza la connexió ràpida</string>
+    <string name="login_quick_connect_title">Connexió ràpida</string>
+    <string name="login_quick_connect_instructions">Obre Jellyfin en un dispositiu on ja tinguis la sessió iniciada, ves a Connexió ràpida i introdueix aquest codi.</string>
+    <string name="login_quick_connect_waiting">Esperant aprovació…</string>
+    <string name="login_quick_connect_cancel">Cancel·la</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">S\'ha provat %d adreça candidata, sense èxit.</item>
+        <item quantity="other">S\'han provat %d adreces candidates, sense èxit.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">No es pot contactar amb el servidor</string>
+    <string name="auth_error_unsupported_version_or_product">Versió o producte no compatible</string>
+    <string name="auth_error_cannot_connect">No es pot establir la connexió.
+Comprova el nom de l\'amfitrió i la teva connexió de xarxa.</string>
+    <string name="auth_error_invalid_credentials">Nom d\'usuari o contrasenya incorrectes.</string>
+    <string name="auth_error_quick_connect_expired">Aquest codi ha caducat. Sol·licita\'n un de nou i torna-ho a provar.</string>
+    <string name="auth_error_server">El servidor ha respost amb un error. Torna-ho a provar.</string>
+    <string name="auth_error_server_with_code">El servidor ha respost amb un error (%1$d). Torna-ho a provar.</string>
+</resources>

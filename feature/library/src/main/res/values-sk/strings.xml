@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Zatiaľ žiadne knižnice. Pridajte nejakú na serveri.</string>
+
+    <string name="library_back">Späť</string>
+    <string name="library_home">Domov</string>
+    <string name="library_sort">Zoradiť</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Zoradiť podľa</string>
+    <string name="library_sort_name">Názov</string>
+    <string name="library_sort_date_added">Dátum pridania</string>
+    <string name="library_sort_premiere_date">Dátum vydania</string>
+    <string name="library_sort_community_rating">Hodnotenie komunity</string>
+    <string name="library_sort_runtime">Dĺžka</string>
+    <string name="library_sort_random">Náhodne</string>
+    <string name="library_sort_direction">Smer</string>
+    <string name="library_sort_ascending">Vzostupne</string>
+    <string name="library_sort_descending">Zostupne</string>
+
+    <string name="library_filters_title">Filtre</string>
+    <string name="library_filters_genres">Žánre</string>
+    <string name="library_filters_years">Roky</string>
+    <string name="library_filters_played">Videné</string>
+    <string name="library_filters_played_any">Akékoľvek</string>
+    <string name="library_filters_played_yes">Videné</string>
+    <string name="library_filters_played_no">Nevidené</string>
+    <string name="library_filters_clear">Vymazať všetko</string>
+    <string name="library_filters_apply">Zobraziť výsledky</string>
+    <string name="library_filters_none">Táto knižnica neponúka žiadne kritériá na filtrovanie.</string>
+    <string name="library_filters_loading">Načítavajú sa filtre…</string>
+
+    <string name="library_empty">Tu nie je nič na zobrazenie.</string>
+    <string name="library_empty_filtered">Žiadna položka nezodpovedá týmto filtrom.</string>
+    <string name="library_empty_clear_filters">Vymazať filtre</string>
+    <string name="library_retry">Skúsiť znova</string>
+
+    <string name="library_error_network">Server nie je dostupný. Skontrolujte pripojenie a skúste to znova.</string>
+    <string name="library_error_unauthorized">Vaša relácia vypršala. Prihláste sa znova, aby ste mohli pokračovať.</string>
+    <string name="library_error_not_found">Táto knižnica sa už na serveri nenachádza.</string>
+    <string name="library_error_server">Server vrátil chybu.</string>
+    <string name="library_error_server_with_code">Server vrátil chybu (%1$d).</string>
+    <string name="library_error_storage">Nepodarilo sa načítať lokálne dáta.</string>
+    <string name="library_error_unknown">Pri načítavaní tejto knižnice sa niečo pokazilo.</string>
+</resources>

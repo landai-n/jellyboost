@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Πίσω</string>
+    <string name="detail_home">Αρχική</string>
+    <string name="detail_play">Αναπαραγωγή</string>
+    <string name="detail_resume">Συνέχεια</string>
+    <string name="detail_download">Λήψη</string>
+    <string name="detail_download_cancel">Άκυρο</string>
+    <string name="detail_download_remove">Αφαίρεση</string>
+    <string name="detail_download_retry">Επανάληψη</string>
+    <string name="detail_play_episode">Αναπαραγωγή αυτού του επεισοδίου</string>
+    <string name="detail_mark_watched">Σήμανση ως παρακολουθημένο</string>
+    <string name="detail_mark_unwatched">Σήμανση ως μη παρακολουθημένο</string>
+    <string name="detail_add_favorite">Προσθήκη στα αγαπημένα</string>
+    <string name="detail_remove_favorite">Αφαίρεση από τα αγαπημένα</string>
+
+    <string name="detail_section_seasons">Σεζόν</string>
+    <string name="detail_section_next_up">Επόμενο</string>
+    <string name="detail_section_episodes">Επεισόδια</string>
+    <string name="detail_section_similar">Παρόμοια με αυτό</string>
+
+    <string name="detail_runtime_minutes">%1$d λεπτά</string>
+    <string name="detail_remaining_minutes">Απομένουν %1$d λεπτά</string>
+    <string name="detail_size_on_device">%1$s στη συσκευή</string>
+    <string name="detail_directed_by">Σκηνοθεσία: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d σεζόν</item>
+        <item quantity="other">%1$d σεζόν</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d επεισόδιο</item>
+        <item quantity="other">%1$d επεισόδια</item>
+    </plurals>
+
+    <string name="detail_empty">Αυτό το στοιχείο δεν είναι πλέον διαθέσιμο.</string>
+    <string name="detail_message_download_queued">Προστέθηκε στις λήψεις.</string>
+    <string name="detail_message_download_failed">Δεν ήταν δυνατή η έναρξη αυτής της λήψης.</string>
+    <string name="detail_message_download_deleted">Αφαιρέθηκε από αυτή τη συσκευή.</string>
+    <string name="detail_message_download_delete_failed">Δεν ήταν δυνατή η αφαίρεση αυτής της λήψης.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Η λήψη ακυρώθηκε — %1$d ολοκληρωμένο επεισόδιο διατηρήθηκε.</item>
+        <item quantity="other">Η λήψη ακυρώθηκε — %1$d ολοκληρωμένα επεισόδια διατηρήθηκαν.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Δεν ήταν δυνατή η αποθήκευση. Δοκιμάστε ξανά.</string>
+
+    <string name="detail_group_play">Αναπαραγωγή για %1$s</string>
+    <string name="detail_group_resume">Συνέχεια για %1$s</string>
+    <string name="detail_group_play_next">Αναπαραγωγή επόμενου</string>
+    <string name="detail_group_add_to_queue">Προσθήκη στην ουρά</string>
+    <string name="detail_message_group_play">Ζητήθηκε από την ομάδα να το αναπαράγει.</string>
+    <string name="detail_message_group_play_next">Μπήκε ως επόμενο για την ομάδα.</string>
+    <string name="detail_message_group_queued">Προστέθηκε στην ουρά της ομάδας.</string>
+
+    <string name="detail_delete_download_dialog_title">Διαγραφή λήψης;</string>
+    <string name="detail_delete_download_dialog_message">Αυτό το αφαιρεί από αυτή τη συσκευή. Μπορείτε να το κατεβάσετε ξανά όποτε θέλετε.</string>
+    <string name="detail_delete_download_dialog_confirm">Διαγραφή</string>
+    <string name="detail_delete_download_dialog_cancel">Άκυρο</string>
+</resources>

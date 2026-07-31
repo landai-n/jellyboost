@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">رجوع</string>
+    <string name="detail_home">الرئيسية</string>
+    <string name="detail_play">تشغيل</string>
+    <string name="detail_resume">استئناف</string>
+    <string name="detail_download">تنزيل</string>
+    <string name="detail_download_cancel">إلغاء</string>
+    <string name="detail_download_remove">إزالة</string>
+    <string name="detail_download_retry">إعادة المحاولة</string>
+    <string name="detail_play_episode">تشغيل هذه الحلقة</string>
+    <string name="detail_mark_watched">تعليم كمشاهَد</string>
+    <string name="detail_mark_unwatched">تعليم كغير مشاهَد</string>
+    <string name="detail_add_favorite">إضافة إلى المفضلة</string>
+    <string name="detail_remove_favorite">إزالة من المفضلة</string>
+
+    <string name="detail_section_seasons">المواسم</string>
+    <string name="detail_section_next_up">التالي</string>
+    <string name="detail_section_episodes">الحلقات</string>
+    <string name="detail_section_similar">أعمال مشابهة</string>
+
+    <string name="detail_runtime_minutes">%1$d د</string>
+    <string name="detail_remaining_minutes">%1$d د متبقية</string>
+    <string name="detail_size_on_device">%1$s على الجهاز</string>
+    <string name="detail_directed_by">إخراج %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="zero">لا مواسم</item>
+        <item quantity="one">موسم واحد</item>
+        <item quantity="two">موسمان</item>
+        <item quantity="few">%1$d مواسم</item>
+        <item quantity="many">%1$d موسمًا</item>
+        <item quantity="other">%1$d موسم</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="zero">لا حلقات</item>
+        <item quantity="one">حلقة واحدة</item>
+        <item quantity="two">حلقتان</item>
+        <item quantity="few">%1$d حلقات</item>
+        <item quantity="many">%1$d حلقة</item>
+        <item quantity="other">%1$d حلقة</item>
+    </plurals>
+
+    <string name="detail_empty">هذا العنصر لم يعد متوفرًا.</string>
+    <string name="detail_message_download_queued">تمت الإضافة إلى التنزيلات.</string>
+    <string name="detail_message_download_failed">تعذّر بدء هذا التنزيل.</string>
+    <string name="detail_message_download_deleted">تمت الإزالة من هذا الجهاز.</string>
+    <string name="detail_message_download_delete_failed">تعذّرت إزالة هذا التنزيل.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="zero">تم إلغاء التنزيل — لم يتم الاحتفاظ بأي حلقة منتهية.</item>
+        <item quantity="one">تم إلغاء التنزيل — تم الاحتفاظ بحلقة واحدة منتهية.</item>
+        <item quantity="two">تم إلغاء التنزيل — تم الاحتفاظ بحلقتين منتهيتين.</item>
+        <item quantity="few">تم إلغاء التنزيل — تم الاحتفاظ بـ%1$d حلقات منتهية.</item>
+        <item quantity="many">تم إلغاء التنزيل — تم الاحتفاظ بـ%1$d حلقة منتهية.</item>
+        <item quantity="other">تم إلغاء التنزيل — تم الاحتفاظ بـ%1$d حلقة منتهية.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">تعذّر حفظ ذلك. حاول مرة أخرى.</string>
+
+    <string name="detail_group_play">تشغيل لـ%1$s</string>
+    <string name="detail_group_resume">استئناف لـ%1$s</string>
+    <string name="detail_group_play_next">تشغيل بعد ذلك</string>
+    <string name="detail_group_add_to_queue">إضافة إلى قائمة الانتظار</string>
+    <string name="detail_message_group_play">تم إرسال طلب إلى المجموعة لتشغيل هذا.</string>
+    <string name="detail_message_group_play_next">تمت الإضافة إلى قائمة انتظار المجموعة، لتشغيله بعد ذلك.</string>
+    <string name="detail_message_group_queued">تمت الإضافة إلى قائمة انتظار المجموعة.</string>
+
+    <string name="detail_delete_download_dialog_title">حذف التنزيل؟</string>
+    <string name="detail_delete_download_dialog_message">ستتم إزالته من هذا الجهاز. يمكنك تنزيله مرة أخرى في أي وقت.</string>
+    <string name="detail_delete_download_dialog_confirm">حذف</string>
+    <string name="detail_delete_download_dialog_cancel">إلغاء</string>
+</resources>

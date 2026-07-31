@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Téléchargements</string>
+    <string name="downloads_channel_description">Progression du téléchargement des contenus multimédias sur cet appareil.</string>
+    <string name="downloads_notification_preparing">Préparation des téléchargements…</string>
+    <string name="downloads_notification_downloading">Téléchargement en cours…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Téléchargement en cours…</string>
+    <string name="downloads_action_pause">Suspendre</string>
+    <string name="downloads_action_cancel">Annuler</string>
+</resources>

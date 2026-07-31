@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Hələ izləməli heç nə yoxdur. Serverdəki kitabxanalarınıza media əlavə edin.</string>
+    <string name="home_empty_refresh">Yenilə</string>
+    <string name="home_section_my_media">Mənim Medialarım</string>
+    <string name="home_section_continue_watching">İzləməyə Davam Et</string>
+    <string name="home_section_next_up">Növbəti</string>
+    <string name="home_section_latest">Ən Son %1$s</string>
+</resources>

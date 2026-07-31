@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Onki savn enn. Legg eitt afturat á ambætaranum.</string>
+
+    <string name="library_back">Aftur</string>
+    <string name="library_home">Heim</string>
+    <string name="library_sort">Raða</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Raða eftir</string>
+    <string name="library_sort_name">Navn</string>
+    <string name="library_sort_date_added">Dagfesting tilsett</string>
+    <string name="library_sort_premiere_date">Útgávudagur</string>
+    <string name="library_sort_community_rating">Fellagsmeting</string>
+    <string name="library_sort_runtime">Longd</string>
+    <string name="library_sort_random">Tilvildarligt</string>
+    <string name="library_sort_direction">Retning</string>
+    <string name="library_sort_ascending">Vaksandi</string>
+    <string name="library_sort_descending">Minkandi</string>
+
+    <string name="library_filters_title">Filtir</string>
+    <string name="library_filters_genres">Slag</string>
+    <string name="library_filters_years">Ár</string>
+    <string name="library_filters_played">Sæð</string>
+    <string name="library_filters_played_any">Øll</string>
+    <string name="library_filters_played_yes">Sæð</string>
+    <string name="library_filters_played_no">Ósæð</string>
+    <string name="library_filters_clear">Strika alt</string>
+    <string name="library_filters_apply">Sýn úrslit</string>
+    <string name="library_filters_none">Hetta savnið hevði einki at filtrera eftir.</string>
+    <string name="library_filters_loading">Heintar filtir…</string>
+
+    <string name="library_empty">Einki at sýna her.</string>
+    <string name="library_empty_filtered">Eingin lutur passar við hesi filtrini.</string>
+    <string name="library_empty_clear_filters">Strika filtir</string>
+    <string name="library_retry">Royn aftur</string>
+
+    <string name="library_error_network">Fær ikki samband við ambætaran. Kanna sambandið og royn aftur.</string>
+    <string name="library_error_unauthorized">Tín seta er útrunnin. Innrita teg aftur fyri at halda áfram.</string>
+    <string name="library_error_not_found">Hetta savnið er ikki longur á ambætaranum.</string>
+    <string name="library_error_server">Ambætarin gav eina villu aftur.</string>
+    <string name="library_error_server_with_code">Ambætarin gav eina villu aftur (%1$d).</string>
+    <string name="library_error_storage">Kundi ikki lesa staðbundnu dátuna.</string>
+    <string name="library_error_unknown">Naka fór skeivt, tá hetta savnið varð heint.</string>
+</resources>

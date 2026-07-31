@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Nastavenia</string>
+    <string name="settings_back">Späť</string>
+    <string name="settings_home">Domov</string>
+
+    <string name="settings_section_playback">Prehrávanie</string>
+    <string name="settings_skip_intro">Preskočiť úvod</string>
+    <string name="settings_skip_outro">Preskočiť záver</string>
+    <string name="settings_skip_mode_off">Nerobiť nič</string>
+    <string name="settings_skip_mode_show_button">Zobraziť tlačidlo na preskočenie</string>
+    <string name="settings_skip_mode_auto">Preskočiť automaticky</string>
+    <string name="settings_pip">Obraz v obraze</string>
+    <string name="settings_pip_supporting">Pri opustení aplikácie pokračuje prehrávanie v plávajúcom okne.</string>
+
+    <string name="settings_section_downloads">Stiahnutia</string>
+    <string name="settings_wifi_only">Len Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pozastaviť sťahovanie pri mobilných dátach.</string>
+    <string name="settings_quality">Kvalita stiahnutia</string>
+    <string name="settings_quality_original">Pôvodný súbor — presná kópia, možnosť pokračovania</string>
+    <string name="settings_quality_high">Vysoká — približne 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Stredná — približne 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Nízka — približne 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Okrem pôvodného súboru všetko konvertuje váš server priamo pri odosielaní, takže veľkosť zobrazená počas sťahovania je len odhad a prerušený prenos začína odznova.</string>
+    <string name="settings_storage_label">Úložisko</string>
+    <string name="settings_storage_summary">%1$s využité · %2$s voľné na tomto zariadení</string>
+    <string name="settings_storage_location">Stiahnutia sa ukladajú do %1$s</string>
+    <string name="settings_storage_picker">Umiestnenie úložiska</string>
+    <string name="settings_storage_internal">Interné úložisko</string>
+    <string name="settings_storage_sd_card">SD karta</string>
+    <string name="settings_storage_volume_free">%1$s voľné</string>
+    <string name="settings_storage_missing">Zvolené úložisko momentálne nie je dostupné, preto stiahnutia smerujú na miesto vybrané nižšie.</string>
+    <string name="settings_storage_switch_title">Presunúť stiahnutia?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Stiahnutia zatiaľ nie je možné presúvať medzi umiestneniami, preto bude to, čo je už v tomto zariadení, odstránené. Môžete si to znova stiahnuť na nové miesto.</item>
+        <item quantity="few">Stiahnutia zatiaľ nie je možné presúvať medzi umiestneniami, preto budú odstránené %1$d, ktoré sú už v tomto zariadení. Môžete si ich znova stiahnuť na nové miesto.</item>
+        <item quantity="many">Stiahnutia zatiaľ nie je možné presúvať medzi umiestneniami, preto bude odstránených %1$d, ktoré sú už v tomto zariadení. Môžete si ich znova stiahnuť na nové miesto.</item>
+        <item quantity="other">Stiahnutia zatiaľ nie je možné presúvať medzi umiestneniami, preto bude odstránených %1$d, ktoré sú už v tomto zariadení. Môžete si ich znova stiahnuť na nové miesto.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Odstrániť a prepnúť</string>
+
+    <string name="settings_section_connectivity">Pripojenie</string>
+    <string name="settings_offline_mode">Režim offline</string>
+    <string name="settings_offline_mode_supporting">Zobrazovať iba médiá, ktoré sú už v tomto zariadení.</string>
+
+    <string name="settings_section_account">Účet</string>
+    <string name="settings_account_user">Prihlásený ako</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Neprihlásený</string>
+    <string name="settings_sign_out">Odhlásiť sa</string>
+    <string name="settings_sign_out_dialog_title">Odhlásiť sa?</string>
+    <string name="settings_sign_out_dialog_message">Na opätovné prihlásenie budete potrebovať adresu servera a heslo.</string>
+    <string name="settings_sign_out_delete_downloads">Odstrániť aj stiahnutia z tohto zariadenia</string>
+    <string name="settings_cancel">Zrušiť</string>
+</resources>

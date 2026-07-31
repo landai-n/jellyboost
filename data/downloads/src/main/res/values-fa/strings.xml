@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">دانلودها</string>
+    <string name="downloads_channel_description">پیشرفت دانلود رسانه به این دستگاه.</string>
+
+    <string name="downloads_notification_preparing">در حال آماده‌سازی دانلودها…</string>
+    <string name="downloads_notification_downloading">در حال دانلود…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">در حال دانلود…</string>
+    <string name="downloads_action_pause">توقف موقت</string>
+    <string name="downloads_action_cancel">لغو</string>
+</resources>

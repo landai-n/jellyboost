@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">已下载</string>
+    <string name="badge_download_queued">已加入下载队列</string>
+    <string name="badge_download_paused">下载已暂停</string>
+    <string name="badge_download_failed">下载失败</string>
+
+    <string name="media_row_see_all">查看全部</string>
+    <string name="media_card_watched">已观看</string>
+
+    <plurals name="selection_count">
+        <item quantity="other">已选择 %1$d 项</item>
+    </plurals>
+    <string name="selection_close">清除选择</string>
+    <string name="selection_select_all">全选</string>
+    <string name="selection_mark_watched">标记为已观看</string>
+    <string name="selection_mark_unwatched">标记为未观看</string>
+    <string name="selection_download">下载</string>
+
+    <string name="selection_item_selected">已选择</string>
+    <string name="selection_item_not_selected">未选择</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="other">已将 %1$d 项标记为已观看</item>
+    </plurals>
+    <string name="selection_result_watched_partial">已将 %1$d 项标记为已观看，%2$d 项失败</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="other">无法将 %1$d 项标记为已观看</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="other">已将 %1$d 项标记为未观看</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">已将 %1$d 项标记为未观看，%2$d 项失败</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="other">无法将 %1$d 项标记为未观看</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="other">已将 %1$d 项添加到下载</item>
+    </plurals>
+    <string name="selection_result_download_partial">已将 %1$d 项添加到下载，%2$d 项失败</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="other">无法将 %1$d 项添加到下载</item>
+    </plurals>
+    <string name="selection_result_download_skipped">已将 %1$d 项添加到下载——%2$d 项已在此设备上</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="other">%1$d 项已在此设备上</item>
+    </plurals>
+</resources>

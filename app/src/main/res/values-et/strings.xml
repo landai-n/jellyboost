@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Rohkem valikuid</string>
+    <string name="home_settings">Sätted</string>
+    <string name="settings_offline_mode">Võrguühenduseta režiim</string>
+
+    <string name="state_on">Sees</string>
+    <string name="state_off">Väljas</string>
+
+    <string name="nav_home">Avaleht</string>
+    <string name="nav_libraries">Teegid</string>
+    <string name="nav_search">Otsi</string>
+    <string name="nav_downloads">Allalaadimised</string>
+
+    <string name="offline_no_network">Võrku pole – kuvatakse allalaaditud sisu</string>
+    <string name="offline_server_unreachable">Serveriga ei saa ühendust – kuvatakse allalaaditud sisu</string>
+    <string name="offline_forced">Võrguühenduseta režiim on sees – kuvatakse allalaaditud sisu</string>
+    <string name="offline_retry">Proovi uuesti</string>
+    <string name="offline_go_online">Mine võrku</string>
+
+    <string name="syncplay_groups_action">SyncPlay rühmad</string>
+    <string name="syncplay_groups_action_active">SyncPlay rühmad – oled rühmas</string>
+</resources>

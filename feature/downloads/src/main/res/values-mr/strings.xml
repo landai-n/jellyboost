@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">डाउनलोड केलेले</string>
+    <string name="downloads_tab_queue">रांग</string>
+    <string name="downloads_wifi_only">फक्त Wi‑Fi</string>
+
+    <string name="downloads_group_movies">चित्रपट</string>
+
+    <string name="downloads_storage_summary">%1$s वापरले · %2$s मोकळे</string>
+
+    <string name="downloads_action_delete">डाउनलोड हटवा</string>
+    <string name="downloads_action_cancel">डाउनलोड रद्द करा</string>
+    <string name="downloads_action_pause">डाउनलोड थांबवा</string>
+    <string name="downloads_action_resume">डाउनलोड पुन्हा सुरू करा</string>
+    <string name="downloads_action_move_up">रांगेत वर हलवा</string>
+    <string name="downloads_action_move_down">रांगेत खाली हलवा</string>
+
+    <string name="downloads_action_pause_all">सर्व थांबवा</string>
+    <string name="downloads_action_resume_all">सर्व पुन्हा सुरू करा</string>
+    <string name="downloads_action_cancel_all">सर्व रद्द करा</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">हा डाउनलोड रद्द करायचा का?</item>
+        <item quantity="other">सर्व %1$d डाउनलोड्स रद्द करायचे का?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">रांग रिकामी केली जाईल आणि अंशतः डाउनलोड केलेल्या फायली काढून टाकल्या जातील. पूर्ण झालेल्या डाउनलोड्सवर याचा परिणाम होणार नाही.</string>
+    <string name="downloads_cancel_all_dialog_confirm">डाउनलोड्स रद्द करा</string>
+    <string name="downloads_cancel_all_dialog_dismiss">ठेवा</string>
+
+    <string name="downloads_delete_dialog_title">%1$s हटवायचे का?</string>
+    <string name="downloads_delete_dialog_message">डाउनलोड केलेल्या फायली या डिव्हाइसवरून काढून टाकल्या जातील. आपण नंतर ते पुन्हा डाउनलोड करू शकता.</string>
+    <string name="downloads_delete_dialog_confirm">हटवा</string>
+    <string name="downloads_delete_dialog_cancel">रद्द करा</string>
+
+    <string name="downloads_progress_of">%2$s पैकी %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s पैकी %1$s</string>
+    <string name="downloads_progress_of_capped">जास्तीत जास्त %2$s पैकी %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s पर्यंत</string>
+    <string name="downloads_speed">%1$s/से</string>
+    <string name="downloads_eta">%1$s शिल्लक</string>
+    <string name="downloads_eta_approx">~%1$s शिल्लक</string>
+    <string name="downloads_transcoded_marker">ट्रान्सकोड केले</string>
+    <string name="downloads_status_queued">प्रतीक्षेत</string>
+    <string name="downloads_status_paused">थांबवले</string>
+    <string name="downloads_status_failed">डाउनलोड अयशस्वी</string>
+    <string name="downloads_status_failed_reason">डाउनलोड अयशस्वी: %1$s</string>
+
+    <string name="downloads_empty_downloaded">अद्याप काहीही डाउनलोड केलेले नाही. एखादा चित्रपट किंवा भाग या डिव्हाइसवर ठेवण्यासाठी डाउनलोड वर टॅप करा.</string>
+    <string name="downloads_empty_queue">डाउनलोड रांग रिकामी आहे.</string>
+    <string name="downloads_load_failed">आपले डाउनलोड्स वाचता आले नाहीत. पुन्हा प्रयत्न करण्यासाठी ही स्क्रीन पुन्हा उघडा.</string>
+    <string name="downloads_message_delete_failed">तो डाउनलोड हटवता आला नाही.</string>
+    <string name="downloads_message_action_failed">रांग अद्ययावत करता आली नाही.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d थांबवले — %2$d ट्रान्सकोड डाउनलोड होतच राहील (ट्रान्सकोड थांबवता येत नाही).</item>
+        <item quantity="other">%1$d थांबवले — %2$d ट्रान्सकोड डाउनलोड होतच राहतील (ट्रान्सकोड थांबवता येत नाहीत).</item>
+    </plurals>
+</resources>

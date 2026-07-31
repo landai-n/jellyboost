@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">გადმოწერილია</string>
+    <string name="downloads_tab_queue">რიგი</string>
+    <string name="downloads_wifi_only">მხოლოდ Wi‑Fi</string>
+    <string name="downloads_group_movies">ფილმები</string>
+    <string name="downloads_storage_summary">%1$s გამოყენებულია · %2$s თავისუფალია</string>
+    <string name="downloads_action_delete">გადმოწერის წაშლა</string>
+    <string name="downloads_action_cancel">გადმოწერის გაუქმება</string>
+    <string name="downloads_action_pause">გადმოწერის შეჩერება</string>
+    <string name="downloads_action_resume">გადმოწერის გაგრძელება</string>
+    <string name="downloads_action_move_up">რიგში აწევა</string>
+    <string name="downloads_action_move_down">რიგში ჩამოწევა</string>
+    <string name="downloads_action_pause_all">ყველას შეჩერება</string>
+    <string name="downloads_action_resume_all">ყველას გაგრძელება</string>
+    <string name="downloads_action_cancel_all">ყველას გაუქმება</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">გავაუქმოთ ეს გადმოწერა?</item>
+        <item quantity="other">გავაუქმოთ ყველა %1$d გადმოწერა?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">რიგი დაცარიელდება და ნაწილობრივ გადმოწერილი ფაილები წაიშლება. დასრულებულ გადმოწერებზე გავლენას არ მოახდენს.</string>
+    <string name="downloads_cancel_all_dialog_confirm">გადმოწერების გაუქმება</string>
+    <string name="downloads_cancel_all_dialog_dismiss">შენარჩუნება</string>
+    <string name="downloads_delete_dialog_title">წავშალოთ %1$s?</string>
+    <string name="downloads_delete_dialog_message">გადმოწერილი ფაილები წაიშლება ამ მოწყობილობიდან. მოგვიანებით ისევ შეგიძლიათ გადმოწერა.</string>
+    <string name="downloads_delete_dialog_confirm">წაშლა</string>
+    <string name="downloads_delete_dialog_cancel">გაუქმება</string>
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / მაქსიმუმ %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">მაქსიმუმ %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">დარჩენილია %1$s</string>
+    <string name="downloads_eta_approx">დარჩენილია ~%1$s</string>
+    <string name="downloads_transcoded_marker">გადაკოდილი</string>
+    <string name="downloads_status_queued">მოლოდინში</string>
+    <string name="downloads_status_paused">შეჩერებული</string>
+    <string name="downloads_status_failed">გადმოწერა ვერ მოხერხდა</string>
+    <string name="downloads_status_failed_reason">გადმოწერა ვერ მოხერხდა: %1$s</string>
+    <string name="downloads_empty_downloaded">ჯერ არაფერია გადმოწერილი. შეეხეთ გადმოწერას ფილმზე ან ეპიზოდზე, რომ ის ამ მოწყობილობაზე შეინახოთ.</string>
+    <string name="downloads_empty_queue">გადმოწერის რიგი ცარიელია.</string>
+    <string name="downloads_load_failed">თქვენი გადმოწერების წაკითხვა ვერ მოხერხდა. ხელახლა ცდისთვის ხელახლა გახსენით ეს ეკრანი.</string>
+    <string name="downloads_message_delete_failed">ამ გადმოწერის წაშლა ვერ მოხერხდა.</string>
+    <string name="downloads_message_action_failed">რიგის განახლება ვერ მოხერხდა.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">შეჩერდა %1$d — %2$d ტრანსკოდი აგრძელებს გადმოწერას (ტრანსკოდის შეჩერება შეუძლებელია).</item>
+        <item quantity="other">შეჩერდა %1$d — %2$d ტრანსკოდი აგრძელებს გადმოწერას (ტრანსკოდის შეჩერება შეუძლებელია).</item>
+    </plurals>
+</resources>

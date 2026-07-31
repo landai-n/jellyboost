@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Jellyboost</string>
+    <string name="app_name" translatable="false">Jellyboost</string>
 
     <!-- Home top-bar overflow menu -->
     <string name="home_more_options">More options</string>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Aínda non hai nada para ver. Engade contido ás túas bibliotecas no servidor.</string>
+    <string name="home_empty_refresh">Actualizar</string>
+    <string name="home_section_my_media">O Meu Contido</string>
+    <string name="home_section_continue_watching">Continuar Vendo</string>
+    <string name="home_section_next_up">A Seguir</string>
+    <string name="home_section_latest">Últimos en %1$s</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Še ni vsebine za ogled. Dodajte vsebino v svoje knjižnice na strežniku.</string>
+    <string name="home_empty_refresh">Osveži</string>
+
+    <string name="home_section_my_media">Moja vsebina</string>
+    <string name="home_section_continue_watching">Nadaljuj z ogledom</string>
+    <string name="home_section_next_up">Naslednje</string>
+    <string name="home_section_latest">Najnovejše: %1$s</string>
+</resources>

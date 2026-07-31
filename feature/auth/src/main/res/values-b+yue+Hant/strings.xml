@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">連接伺服器</string>
+    <string name="server_setup_discovered_title">呢個網絡上嘅伺服器</string>
+    <string name="server_setup_discovering">搵緊本機網絡…</string>
+    <string name="server_setup_no_servers_found">冇伺服器出現。請喺下面輸入地址。</string>
+    <string name="server_setup_manual_title">伺服器地址</string>
+    <string name="server_setup_address_label">主機或網址</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org 或 192.168.1.10:8096</string>
+    <string name="server_setup_connect">連接</string>
+    <string name="server_setup_connecting">連緊伺服器…</string>
+    <string name="server_setup_session_lost">冇辦法還原已儲存嘅登入資料，你已經被登出咗。請重新登入。</string>
+
+    <string name="login_title">登入</string>
+    <string name="login_server_version">版本 %1$s</string>
+    <string name="login_server_version_unknown">版本不明</string>
+    <string name="login_public_users_title">邊個喺度睇緊？</string>
+    <string name="login_username_label">使用者名稱</string>
+    <string name="login_password_label">密碼</string>
+    <string name="login_show_password">顯示密碼</string>
+    <string name="login_hide_password">隱藏密碼</string>
+    <string name="login_sign_in">登入</string>
+    <string name="login_change_server">使用其他伺服器</string>
+    <string name="login_loading">載入緊伺服器資料…</string>
+    <string name="login_or">或者</string>
+
+    <string name="login_quick_connect">使用快速連接</string>
+    <string name="login_quick_connect_title">快速連接</string>
+    <string name="login_quick_connect_instructions">喺你已經登入嘅裝置度打開 Jellyfin，去快速連接嗰度輸入呢個代碼。</string>
+    <string name="login_quick_connect_waiting">等緊批准…</string>
+    <string name="login_quick_connect_cancel">取消</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">試咗 %d 個候選地址，都唔成功。</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">連唔到伺服器</string>
+    <string name="auth_error_unsupported_version_or_product">唔支援嘅版本或產品</string>
+    <string name="auth_error_cannot_connect">冇辦法建立連線。\n請檢查主機名同你嘅網絡連線。</string>
+    <string name="auth_error_invalid_credentials">使用者名稱或密碼錯誤。</string>
+    <string name="auth_error_quick_connect_expired">個代碼已經過期。請攞個新嘅再試多次。</string>
+    <string name="auth_error_server">伺服器回覆咗一個錯誤。請再試一次。</string>
+    <string name="auth_error_server_with_code">伺服器回覆咗一個錯誤 (%1$d)。請再試一次。</string>
+</resources>

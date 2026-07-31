@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">אפשרויות נוספות</string>
+    <string name="home_settings">הגדרות</string>
+    <string name="settings_offline_mode">מצב לא מקוון</string>
+
+    <string name="state_on">פועל</string>
+    <string name="state_off">כבוי</string>
+
+    <string name="nav_home">בית</string>
+    <string name="nav_libraries">ספריות</string>
+    <string name="nav_search">חיפוש</string>
+    <string name="nav_downloads">הורדות</string>
+
+    <string name="offline_no_network">אין רשת — מוצג תוכן שהורד</string>
+    <string name="offline_server_unreachable">לא ניתן להתחבר לשרת — מוצג תוכן שהורד</string>
+    <string name="offline_forced">מצב לא מקוון פעיל — מוצג תוכן שהורד</string>
+    <string name="offline_retry">ניסיון חוזר</string>
+    <string name="offline_go_online">התחברות לאינטרנט</string>
+
+    <string name="syncplay_groups_action">קבוצות SyncPlay</string>
+    <string name="syncplay_groups_action_active">קבוצות SyncPlay — אתה נמצא בקבוצה</string>
+</resources>

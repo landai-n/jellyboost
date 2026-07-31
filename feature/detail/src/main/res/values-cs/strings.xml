@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Zpět</string>
+    <string name="detail_home">Domů</string>
+    <string name="detail_play">Přehrát</string>
+    <string name="detail_resume">Pokračovat</string>
+    <string name="detail_download">Stáhnout</string>
+    <string name="detail_download_cancel">Zrušit</string>
+    <string name="detail_download_remove">Odebrat</string>
+    <string name="detail_download_retry">Zkusit znovu</string>
+    <string name="detail_play_episode">Přehrát tuto epizodu</string>
+    <string name="detail_mark_watched">Označit jako zhlédnuté</string>
+    <string name="detail_mark_unwatched">Označit jako nezhlédnuté</string>
+    <string name="detail_add_favorite">Přidat do oblíbených</string>
+    <string name="detail_remove_favorite">Odebrat z oblíbených</string>
+
+    <string name="detail_section_seasons">Řady</string>
+    <string name="detail_section_next_up">Další v pořadí</string>
+    <string name="detail_section_episodes">Epizody</string>
+    <string name="detail_section_similar">Další podobné</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Zbývá %1$d min</string>
+    <string name="detail_size_on_device">%1$s v zařízení</string>
+    <string name="detail_directed_by">Režie: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d řada</item>
+        <item quantity="few">%1$d řady</item>
+        <item quantity="many">%1$d řad</item>
+        <item quantity="other">%1$d řad</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d epizoda</item>
+        <item quantity="few">%1$d epizody</item>
+        <item quantity="many">%1$d epizod</item>
+        <item quantity="other">%1$d epizod</item>
+    </plurals>
+
+    <string name="detail_empty">Tato položka již není k dispozici.</string>
+    <string name="detail_message_download_queued">Přidáno ke stažení.</string>
+    <string name="detail_message_download_failed">Toto stažení se nepodařilo spustit.</string>
+    <string name="detail_message_download_deleted">Odebráno z tohoto zařízení.</string>
+    <string name="detail_message_download_delete_failed">Toto stažení se nepodařilo odebrat.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Stahování zrušeno — %1$d dokončená epizoda zůstává zachována.</item>
+        <item quantity="few">Stahování zrušeno — %1$d dokončené epizody zůstávají zachovány.</item>
+        <item quantity="many">Stahování zrušeno — %1$d dokončených epizod zůstává zachováno.</item>
+        <item quantity="other">Stahování zrušeno — %1$d dokončených epizod zůstává zachováno.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nepodařilo se to uložit. Zkuste to znovu.</string>
+
+    <string name="detail_group_play">Přehrát pro %1$s</string>
+    <string name="detail_group_resume">Pokračovat pro %1$s</string>
+    <string name="detail_group_play_next">Přehrát další</string>
+    <string name="detail_group_add_to_queue">Přidat do fronty</string>
+    <string name="detail_message_group_play">Skupina byla požádána, aby to přehrála.</string>
+    <string name="detail_message_group_play_next">Zařazeno jako další pro skupinu.</string>
+    <string name="detail_message_group_queued">Přidáno do fronty skupiny.</string>
+
+    <string name="detail_delete_download_dialog_title">Smazat stažení?</string>
+    <string name="detail_delete_download_dialog_message">Odstraní se to z tohoto zařízení. Kdykoli si to můžete stáhnout znovu.</string>
+    <string name="detail_delete_download_dialog_confirm">Smazat</string>
+    <string name="detail_delete_download_dialog_cancel">Zrušit</string>
+</resources>

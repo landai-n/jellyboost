@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Wala pang aklatan. Magdagdag ng isa sa server.</string>
+    <string name="library_back">Bumalik</string>
+    <string name="library_home">Home</string>
+    <string name="library_sort">Ayusin</string>
+    <string name="library_filter">I-filter</string>
+    <string name="library_sort_title">Ayusin ayon sa</string>
+    <string name="library_sort_name">Pangalan</string>
+    <string name="library_sort_date_added">Petsa idinagdag</string>
+    <string name="library_sort_premiere_date">Petsa ng paglabas</string>
+    <string name="library_sort_community_rating">Rating ng komunidad</string>
+    <string name="library_sort_runtime">Tagal</string>
+    <string name="library_sort_random">Random</string>
+    <string name="library_sort_direction">Direksyon</string>
+    <string name="library_sort_ascending">Ascending</string>
+    <string name="library_sort_descending">Descending</string>
+    <string name="library_filters_title">Mga Filter</string>
+    <string name="library_filters_genres">Mga Genre</string>
+    <string name="library_filters_years">Mga Taon</string>
+    <string name="library_filters_played">Napanood na</string>
+    <string name="library_filters_played_any">Kahit ano</string>
+    <string name="library_filters_played_yes">Napanood na</string>
+    <string name="library_filters_played_no">Hindi pa napapanood</string>
+    <string name="library_filters_clear">I-clear lahat</string>
+    <string name="library_filters_apply">Ipakita ang mga resulta</string>
+    <string name="library_filters_none">Walang inaalok ang aklatan na ito na maaaring i-filter.</string>
+    <string name="library_filters_loading">Nilo-load ang mga filter…</string>
+    <string name="library_empty">Walang maipapakita dito.</string>
+    <string name="library_empty_filtered">Walang item na tumutugma sa mga filter na ito.</string>
+    <string name="library_empty_clear_filters">I-clear ang mga filter</string>
+    <string name="library_retry">Subukan muli</string>
+    <string name="library_error_network">Hindi ma-reach ang server mo. Suriin ang koneksyon mo at subukan ulit.</string>
+    <string name="library_error_unauthorized">Nag-expire na ang session mo. Mag-sign in ulit para magpatuloy.</string>
+    <string name="library_error_not_found">Wala na sa server ang aklatan na iyon.</string>
+    <string name="library_error_server">Nagbalik ang server ng error.</string>
+    <string name="library_error_server_with_code">Nagbalik ang server ng error (%1$d).</string>
+    <string name="library_error_storage">Hindi mabasa ang lokal na data.</string>
+    <string name="library_error_unknown">May nangyaring mali sa pag-load ng aklatan na ito.</string>
+</resources>

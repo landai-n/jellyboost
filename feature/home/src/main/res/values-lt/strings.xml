@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Kol kas nėra ką žiūrėti. Pridėkite medijos į savo bibliotekas serveryje.</string>
+    <string name="home_empty_refresh">Atnaujinti</string>
+
+    <string name="home_section_my_media">Mano medija</string>
+    <string name="home_section_continue_watching">Tęsti žiūrėjimą</string>
+    <string name="home_section_next_up">Kas toliau</string>
+    <string name="home_section_latest">Naujausi %1$s</string>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Baixados</string>
+    <string name="downloads_tab_queue">Fila</string>
+    <string name="downloads_wifi_only">Somente Wi‑Fi</string>
+    <string name="downloads_group_movies">Filmes</string>
+    <string name="downloads_storage_summary">%1$s usados · %2$s livres</string>
+    <string name="downloads_action_delete">Excluir download</string>
+    <string name="downloads_action_cancel">Cancelar download</string>
+    <string name="downloads_action_pause">Pausar download</string>
+    <string name="downloads_action_resume">Retomar download</string>
+    <string name="downloads_action_move_up">Subir na fila</string>
+    <string name="downloads_action_move_down">Descer na fila</string>
+    <string name="downloads_action_pause_all">Pausar tudo</string>
+    <string name="downloads_action_resume_all">Retomar tudo</string>
+    <string name="downloads_action_cancel_all">Cancelar tudo</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Cancelar este download?</item>
+        <item quantity="other">Cancelar todos os %1$d downloads?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">A fila é esvaziada e os arquivos parcialmente baixados são removidos. Downloads concluídos não são afetados.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Cancelar downloads</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Manter</string>
+    <string name="downloads_delete_dialog_title">Excluir %1$s?</string>
+    <string name="downloads_delete_dialog_message">Os arquivos baixados são removidos deste dispositivo. Você pode baixá-lo novamente depois.</string>
+    <string name="downloads_delete_dialog_confirm">Excluir</string>
+    <string name="downloads_delete_dialog_cancel">Cancelar</string>
+    <string name="downloads_progress_of">%1$s de %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s de até %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">até %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Faltam %1$s</string>
+    <string name="downloads_eta_approx">Faltam ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transcodificado</string>
+    <string name="downloads_status_queued">Aguardando</string>
+    <string name="downloads_status_paused">Pausado</string>
+    <string name="downloads_status_failed">Falha no download</string>
+    <string name="downloads_status_failed_reason">Falha no download: %1$s</string>
+    <string name="downloads_empty_downloaded">Nada baixado ainda. Toque em Baixar em um filme ou episódio para mantê-lo neste dispositivo.</string>
+    <string name="downloads_empty_queue">A fila de downloads está vazia.</string>
+    <string name="downloads_load_failed">Não foi possível ler seus downloads. Reabra esta tela para tentar novamente.</string>
+    <string name="downloads_message_delete_failed">Não foi possível excluir esse download.</string>
+    <string name="downloads_message_action_failed">Não foi possível atualizar a fila.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d pausado — %2$d transcodificação continua baixando (uma transcodificação não pode ser pausada).</item>
+        <item quantity="other">%1$d pausados — %2$d transcodificações continuam baixando (uma transcodificação não pode ser pausada).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Nicio bibliotecă încă. Adăugați una pe server.</string>
+    <string name="library_back">Înapoi</string>
+    <string name="library_home">Acasă</string>
+    <string name="library_sort">Sortează</string>
+    <string name="library_filter">Filtrează</string>
+    <string name="library_sort_title">Sortează după</string>
+    <string name="library_sort_name">Nume</string>
+    <string name="library_sort_date_added">Data adăugării</string>
+    <string name="library_sort_premiere_date">Data lansării</string>
+    <string name="library_sort_community_rating">Evaluarea comunității</string>
+    <string name="library_sort_runtime">Durată</string>
+    <string name="library_sort_random">Aleatoriu</string>
+    <string name="library_sort_direction">Direcție</string>
+    <string name="library_sort_ascending">Crescător</string>
+    <string name="library_sort_descending">Descrescător</string>
+    <string name="library_filters_title">Filtre</string>
+    <string name="library_filters_genres">Genuri</string>
+    <string name="library_filters_years">Ani</string>
+    <string name="library_filters_played">Vizionat</string>
+    <string name="library_filters_played_any">Toate</string>
+    <string name="library_filters_played_yes">Vizionat</string>
+    <string name="library_filters_played_no">Nevizionat</string>
+    <string name="library_filters_clear">Șterge tot</string>
+    <string name="library_filters_apply">Afișează rezultatele</string>
+    <string name="library_filters_none">Această bibliotecă nu a oferit niciun criteriu de filtrare.</string>
+    <string name="library_filters_loading">Se încarcă filtrele…</string>
+    <string name="library_empty">Nimic de afișat aici.</string>
+    <string name="library_empty_filtered">Niciun element nu corespunde acestor filtre.</string>
+    <string name="library_empty_clear_filters">Șterge filtrele</string>
+    <string name="library_retry">Reîncearcă</string>
+    <string name="library_error_network">Serverul nu poate fi contactat. Verificați conexiunea și încercați din nou.</string>
+    <string name="library_error_unauthorized">Sesiunea a expirat. Autentificați-vă din nou pentru a continua.</string>
+    <string name="library_error_not_found">Această bibliotecă nu mai este pe server.</string>
+    <string name="library_error_server">Serverul a returnat o eroare.</string>
+    <string name="library_error_server_with_code">Serverul a returnat o eroare (%1$d).</string>
+    <string name="library_error_storage">Datele locale nu au putut fi citite.</string>
+    <string name="library_error_unknown">Ceva nu a mers bine la încărcarea acestei biblioteci.</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Higit pang opsyon</string>
+    <string name="home_settings">Mga Setting</string>
+    <string name="settings_offline_mode">Offline mode</string>
+    <string name="state_on">Naka-on</string>
+    <string name="state_off">Naka-off</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_libraries">Mga Aklatan</string>
+    <string name="nav_search">Maghanap</string>
+    <string name="nav_downloads">Mga Download</string>
+    <string name="offline_no_network">Walang network — ipinapakita ang na-download na media</string>
+    <string name="offline_server_unreachable">Hindi ma-reach ang server — ipinapakita ang na-download na media</string>
+    <string name="offline_forced">Naka-on ang offline mode — ipinapakita ang na-download na media</string>
+    <string name="offline_retry">Subukan Muli</string>
+    <string name="offline_go_online">Mag-online</string>
+    <string name="syncplay_groups_action">Mga grupo ng SyncPlay</string>
+    <string name="syncplay_groups_action_active">Mga grupo ng SyncPlay — nasa isang grupo ka</string>
+</resources>

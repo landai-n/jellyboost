@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Encara no hi ha biblioteques. Afegeix-ne una al servidor.</string>
+    <string name="library_back">Enrere</string>
+    <string name="library_home">Inici</string>
+    <string name="library_sort">Ordena</string>
+    <string name="library_filter">Filtra</string>
+    <string name="library_sort_title">Ordena per</string>
+    <string name="library_sort_name">Nom</string>
+    <string name="library_sort_date_added">Data d\'addició</string>
+    <string name="library_sort_premiere_date">Data d\'estrena</string>
+    <string name="library_sort_community_rating">Valoració de la comunitat</string>
+    <string name="library_sort_runtime">Durada</string>
+    <string name="library_sort_random">Aleatori</string>
+    <string name="library_sort_direction">Direcció</string>
+    <string name="library_sort_ascending">Ascendent</string>
+    <string name="library_sort_descending">Descendent</string>
+    <string name="library_filters_title">Filtres</string>
+    <string name="library_filters_genres">Gèneres</string>
+    <string name="library_filters_years">Anys</string>
+    <string name="library_filters_played">Vist</string>
+    <string name="library_filters_played_any">Qualsevol</string>
+    <string name="library_filters_played_yes">Vist</string>
+    <string name="library_filters_played_no">No vist</string>
+    <string name="library_filters_clear">Esborra-ho tot</string>
+    <string name="library_filters_apply">Mostra els resultats</string>
+    <string name="library_filters_none">Aquesta biblioteca no ofereix res per filtrar.</string>
+    <string name="library_filters_loading">Carregant filtres…</string>
+    <string name="library_empty">No hi ha res per mostrar aquí.</string>
+    <string name="library_empty_filtered">Cap element coincideix amb aquests filtres.</string>
+    <string name="library_empty_clear_filters">Esborra els filtres</string>
+    <string name="library_retry">Torna-ho a provar</string>
+    <string name="library_error_network">No es pot contactar amb el teu servidor. Comprova la connexió i torna-ho a provar.</string>
+    <string name="library_error_unauthorized">La teva sessió ha caducat. Inicia la sessió de nou per continuar.</string>
+    <string name="library_error_not_found">Aquesta biblioteca ja no és al servidor.</string>
+    <string name="library_error_server">El servidor ha retornat un error.</string>
+    <string name="library_error_server_with_code">El servidor ha retornat un error (%1$d).</string>
+    <string name="library_error_storage">No s\'han pogut llegir les dades locals.</string>
+    <string name="library_error_unknown">Alguna cosa ha fallat en carregar aquesta biblioteca.</string>
+</resources>

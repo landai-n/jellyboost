@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">دانلود شد</string>
+    <string name="badge_download_queued">در صف دانلود</string>
+    <string name="badge_download_paused">دانلود متوقف شد</string>
+    <string name="badge_download_failed">دانلود ناموفق بود</string>
+
+    <string name="media_row_see_all">مشاهده همه</string>
+    <string name="media_card_watched">تماشا شده</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d مورد انتخاب شد</item>
+        <item quantity="other">%1$d مورد انتخاب شد</item>
+    </plurals>
+    <string name="selection_close">پاک کردن انتخاب</string>
+    <string name="selection_select_all">انتخاب همه</string>
+    <string name="selection_mark_watched">علامت‌گذاری به‌عنوان تماشا شده</string>
+    <string name="selection_mark_unwatched">علامت‌گذاری به‌عنوان تماشا نشده</string>
+    <string name="selection_download">دانلود</string>
+
+    <string name="selection_item_selected">انتخاب شده</string>
+    <string name="selection_item_not_selected">انتخاب نشده</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d مورد به‌عنوان تماشا شده علامت‌گذاری شد</item>
+        <item quantity="other">%1$d مورد به‌عنوان تماشا شده علامت‌گذاری شد</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d مورد به‌عنوان تماشا شده علامت‌گذاری شد، %2$d مورد ناموفق بود</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">علامت‌گذاری %1$d مورد به‌عنوان تماشا شده ممکن نبود</item>
+        <item quantity="other">علامت‌گذاری %1$d مورد به‌عنوان تماشا شده ممکن نبود</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d مورد به‌عنوان تماشا نشده علامت‌گذاری شد</item>
+        <item quantity="other">%1$d مورد به‌عنوان تماشا نشده علامت‌گذاری شد</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d مورد به‌عنوان تماشا نشده علامت‌گذاری شد، %2$d مورد ناموفق بود</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">علامت‌گذاری %1$d مورد به‌عنوان تماشا نشده ممکن نبود</item>
+        <item quantity="other">علامت‌گذاری %1$d مورد به‌عنوان تماشا نشده ممکن نبود</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d مورد به دانلودها اضافه شد</item>
+        <item quantity="other">%1$d مورد به دانلودها اضافه شد</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d مورد به دانلودها اضافه شد، %2$d مورد ناموفق بود</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">افزودن %1$d مورد به دانلودها ممکن نبود</item>
+        <item quantity="other">افزودن %1$d مورد به دانلودها ممکن نبود</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d مورد به دانلودها اضافه شد — %2$d مورد از قبل روی این دستگاه موجود است</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d مورد از قبل روی این دستگاه موجود است</item>
+        <item quantity="other">%1$d مورد از قبل روی این دستگاه موجود است</item>
+    </plurals>
+</resources>

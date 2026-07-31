@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Teeke pole veel. Lisa üks serveris.</string>
+
+    <string name="library_back">Tagasi</string>
+    <string name="library_home">Avaleht</string>
+    <string name="library_sort">Sordi</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sordi</string>
+    <string name="library_sort_name">Nimi</string>
+    <string name="library_sort_date_added">Lisamise kuupäev</string>
+    <string name="library_sort_premiere_date">Ilmumiskuupäev</string>
+    <string name="library_sort_community_rating">Kogukonna hinnang</string>
+    <string name="library_sort_runtime">Kestus</string>
+    <string name="library_sort_random">Juhuslik</string>
+    <string name="library_sort_direction">Suund</string>
+    <string name="library_sort_ascending">Kasvav</string>
+    <string name="library_sort_descending">Kahanev</string>
+
+    <string name="library_filters_title">Filtrid</string>
+    <string name="library_filters_genres">Žanrid</string>
+    <string name="library_filters_years">Aastad</string>
+    <string name="library_filters_played">Vaadatud</string>
+    <string name="library_filters_played_any">Kõik</string>
+    <string name="library_filters_played_yes">Vaadatud</string>
+    <string name="library_filters_played_no">Vaatamata</string>
+    <string name="library_filters_clear">Tühjenda kõik</string>
+    <string name="library_filters_apply">Näita tulemusi</string>
+    <string name="library_filters_none">Selles teegis polnud midagi, mille järgi filtreerida.</string>
+    <string name="library_filters_loading">Filtrite laadimine…</string>
+
+    <string name="library_empty">Siin pole midagi näidata.</string>
+    <string name="library_empty_filtered">Ükski üksus ei vasta neile filtritele.</string>
+    <string name="library_empty_clear_filters">Tühjenda filtrid</string>
+    <string name="library_retry">Proovi uuesti</string>
+
+    <string name="library_error_network">Serveriga ei saa ühendust. Kontrolli oma ühendust ja proovi uuesti.</string>
+    <string name="library_error_unauthorized">Sinu seanss aegus. Jätkamiseks logi uuesti sisse.</string>
+    <string name="library_error_not_found">Seda teeki pole enam serveris.</string>
+    <string name="library_error_server">Server tagastas vea.</string>
+    <string name="library_error_server_with_code">Server tagastas vea (%1$d).</string>
+    <string name="library_error_storage">Kohalikke andmeid ei õnnestunud lugeda.</string>
+    <string name="library_error_unknown">Selle teegi laadimisel läks midagi valesti.</string>
+</resources>

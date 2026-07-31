@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Tillbaka</string>
+    <string name="detail_home">Hem</string>
+    <string name="detail_play">Spela upp</string>
+    <string name="detail_resume">Återuppta</string>
+    <string name="detail_download">Ladda ner</string>
+    <string name="detail_download_cancel">Avbryt</string>
+    <string name="detail_download_remove">Ta bort</string>
+    <string name="detail_download_retry">Försök igen</string>
+    <string name="detail_play_episode">Spela upp det här avsnittet</string>
+    <string name="detail_mark_watched">Markera som sedd</string>
+    <string name="detail_mark_unwatched">Markera som osedd</string>
+    <string name="detail_add_favorite">Lägg till som favorit</string>
+    <string name="detail_remove_favorite">Ta bort som favorit</string>
+
+    <string name="detail_section_seasons">Säsonger</string>
+    <string name="detail_section_next_up">Näst på tur</string>
+    <string name="detail_section_episodes">Avsnitt</string>
+    <string name="detail_section_similar">Mer i samma stil</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min kvar</string>
+    <string name="detail_size_on_device">%1$s på enheten</string>
+    <string name="detail_directed_by">Regi: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d säsong</item>
+        <item quantity="other">%1$d säsonger</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d avsnitt</item>
+        <item quantity="other">%1$d avsnitt</item>
+    </plurals>
+
+    <string name="detail_empty">Det här objektet är inte längre tillgängligt.</string>
+    <string name="detail_message_download_queued">Tillagt i nedladdningar.</string>
+    <string name="detail_message_download_failed">Kunde inte starta den nedladdningen.</string>
+    <string name="detail_message_download_deleted">Borttagen från den här enheten.</string>
+    <string name="detail_message_download_delete_failed">Kunde inte ta bort den nedladdningen.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Nedladdning avbruten – %1$d färdigt avsnitt behölls.</item>
+        <item quantity="other">Nedladdning avbruten – %1$d färdiga avsnitt behölls.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Kunde inte spara det. Försök igen.</string>
+
+    <string name="detail_group_play">Spela upp för %1$s</string>
+    <string name="detail_group_resume">Återuppta för %1$s</string>
+    <string name="detail_group_play_next">Spela upp härnäst</string>
+    <string name="detail_group_add_to_queue">Lägg till i kö</string>
+    <string name="detail_message_group_play">Bad gruppen spela upp det här.</string>
+    <string name="detail_message_group_play_next">Köade som nästa för gruppen.</string>
+    <string name="detail_message_group_queued">Tillagt i gruppens kö.</string>
+
+    <string name="detail_delete_download_dialog_title">Ta bort nedladdning?</string>
+    <string name="detail_delete_download_dialog_message">Det här tar bort den från den här enheten. Du kan ladda ner den igen när som helst.</string>
+    <string name="detail_delete_download_dialog_confirm">Ta bort</string>
+    <string name="detail_delete_download_dialog_cancel">Avbryt</string>
+</resources>

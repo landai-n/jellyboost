@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Lastet ned</string>
+    <string name="downloads_tab_queue">Kø</string>
+    <string name="downloads_wifi_only">Bare Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmer</string>
+
+    <string name="downloads_storage_summary">%1$s brukt · %2$s ledig</string>
+
+    <string name="downloads_action_delete">Slett nedlasting</string>
+    <string name="downloads_action_cancel">Avbryt nedlasting</string>
+    <string name="downloads_action_pause">Sett nedlasting på pause</string>
+    <string name="downloads_action_resume">Gjenoppta nedlasting</string>
+    <string name="downloads_action_move_up">Flytt opp i køen</string>
+    <string name="downloads_action_move_down">Flytt ned i køen</string>
+
+    <string name="downloads_action_pause_all">Sett alle på pause</string>
+    <string name="downloads_action_resume_all">Gjenoppta alle</string>
+    <string name="downloads_action_cancel_all">Avbryt alle</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Avbryte denne nedlastingen?</item>
+        <item quantity="other">Avbryte alle %1$d nedlastingene?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Køen tømmes, og eventuelle delvis nedlastede filer fjernes. Fullførte nedlastinger påvirkes ikke.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Avbryt nedlastinger</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behold</string>
+
+    <string name="downloads_delete_dialog_title">Slette %1$s?</string>
+    <string name="downloads_delete_dialog_message">De nedlastede filene fjernes fra denne enheten. Du kan laste det ned igjen senere.</string>
+    <string name="downloads_delete_dialog_confirm">Slett</string>
+    <string name="downloads_delete_dialog_cancel">Avbryt</string>
+
+    <string name="downloads_progress_of">%1$s av %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s av ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s av opptil %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">opptil %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s igjen</string>
+    <string name="downloads_eta_approx">~%1$s igjen</string>
+    <string name="downloads_transcoded_marker">Omkodet</string>
+    <string name="downloads_status_queued">Venter</string>
+    <string name="downloads_status_paused">Pauset</string>
+    <string name="downloads_status_failed">Nedlasting mislyktes</string>
+    <string name="downloads_status_failed_reason">Nedlasting mislyktes: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Ingenting lastet ned ennå. Trykk på Last ned på en film eller episode for å beholde den på denne enheten.</string>
+    <string name="downloads_empty_queue">Nedlastingskøen er tom.</string>
+    <string name="downloads_load_failed">Kunne ikke lese nedlastingene dine. Åpne denne skjermen på nytt for å prøve igjen.</string>
+    <string name="downloads_message_delete_failed">Kunne ikke slette den nedlastingen.</string>
+    <string name="downloads_message_action_failed">Kunne ikke oppdatere køen.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Satt %1$d på pause – %2$d omkoding fortsetter å laste ned (en omkoding kan ikke settes på pause).</item>
+        <item quantity="other">Satt %1$d på pause – %2$d omkodinger fortsetter å laste ned (en omkoding kan ikke settes på pause).</item>
+    </plurals>
+</resources>

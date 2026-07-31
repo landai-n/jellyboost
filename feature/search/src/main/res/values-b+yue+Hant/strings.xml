@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">搜尋電影、劇集同埋集數</string>
+    <string name="search_clear">清除</string>
+
+    <string name="search_section_movies">電影</string>
+    <string name="search_section_series">劇集</string>
+    <string name="search_section_episodes">集數</string>
+
+    <string name="search_prompt">打字嚟搜尋你嘅媒體庫。</string>
+    <string name="search_no_results">搵唔到同「%1$s」相符嘅嘢。</string>
+
+    <string name="search_error_network">連唔到你嘅伺服器。請檢查網絡連線再試一次。</string>
+    <string name="search_error_unauthorized">你嘅登入時效已過期。請重新登入先可以繼續。</string>
+    <string name="search_error_not_found">呢個項目已經唔喺伺服器度。</string>
+    <string name="search_error_server">伺服器回覆咗一個錯誤。</string>
+    <string name="search_error_server_with_code">伺服器回覆咗一個錯誤 (%1$d)。</string>
+    <string name="search_error_storage">冇辦法讀取本機資料。</string>
+    <string name="search_error_unknown">搜尋嗰陣出咗問題。</string>
+</resources>

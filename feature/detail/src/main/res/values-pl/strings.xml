@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Wstecz</string>
+    <string name="detail_home">Strona główna</string>
+    <string name="detail_play">Odtwórz</string>
+    <string name="detail_resume">Wznów</string>
+    <string name="detail_download">Pobierz</string>
+    <string name="detail_download_cancel">Anuluj</string>
+    <string name="detail_download_remove">Usuń</string>
+    <string name="detail_download_retry">Spróbuj ponownie</string>
+    <string name="detail_play_episode">Odtwórz ten odcinek</string>
+    <string name="detail_mark_watched">Oznacz jako obejrzane</string>
+    <string name="detail_mark_unwatched">Oznacz jako nieobejrzane</string>
+    <string name="detail_add_favorite">Dodaj do ulubionych</string>
+    <string name="detail_remove_favorite">Usuń z ulubionych</string>
+
+    <string name="detail_section_seasons">Sezony</string>
+    <string name="detail_section_next_up">Następne</string>
+    <string name="detail_section_episodes">Odcinki</string>
+    <string name="detail_section_similar">Podobne tytuły</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Pozostało %1$d min</string>
+    <string name="detail_size_on_device">%1$s na urządzeniu</string>
+    <string name="detail_directed_by">Reżyseria: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezon</item>
+        <item quantity="few">%1$d sezony</item>
+        <item quantity="many">%1$d sezonów</item>
+        <item quantity="other">%1$d sezonów</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d odcinek</item>
+        <item quantity="few">%1$d odcinki</item>
+        <item quantity="many">%1$d odcinków</item>
+        <item quantity="other">%1$d odcinków</item>
+    </plurals>
+
+    <string name="detail_empty">Ten element nie jest już dostępny.</string>
+    <string name="detail_message_download_queued">Dodano do pobrań.</string>
+    <string name="detail_message_download_failed">Nie udało się rozpocząć tego pobierania.</string>
+    <string name="detail_message_download_deleted">Usunięto z tego urządzenia.</string>
+    <string name="detail_message_download_delete_failed">Nie udało się usunąć tego pobierania.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Pobieranie anulowane — zachowano %1$d ukończony odcinek.</item>
+        <item quantity="few">Pobieranie anulowane — zachowano %1$d ukończone odcinki.</item>
+        <item quantity="many">Pobieranie anulowane — zachowano %1$d ukończonych odcinków.</item>
+        <item quantity="other">Pobieranie anulowane — zachowano %1$d ukończonych odcinków.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nie udało się tego zapisać. Spróbuj ponownie.</string>
+
+    <string name="detail_group_play">Odtwórz dla %1$s</string>
+    <string name="detail_group_resume">Wznów dla %1$s</string>
+    <string name="detail_group_play_next">Odtwórz jako następne</string>
+    <string name="detail_group_add_to_queue">Dodaj do kolejki</string>
+    <string name="detail_message_group_play">Poproszono grupę o odtworzenie tego.</string>
+    <string name="detail_message_group_play_next">Dodano jako następne w kolejce grupy.</string>
+    <string name="detail_message_group_queued">Dodano do kolejki grupy.</string>
+
+    <string name="detail_delete_download_dialog_title">Usunąć pobieranie?</string>
+    <string name="detail_delete_download_dialog_message">To usunie je z tego urządzenia. Możesz pobrać je ponownie w dowolnym momencie.</string>
+    <string name="detail_delete_download_dialog_confirm">Usuń</string>
+    <string name="detail_delete_download_dialog_cancel">Anuluj</string>
+</resources>

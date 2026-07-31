@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Δεν υπάρχουν ακόμη βιβλιοθήκες. Προσθέστε μία στον διακομιστή.</string>
+
+    <string name="library_back">Πίσω</string>
+    <string name="library_home">Αρχική</string>
+    <string name="library_sort">Ταξινόμηση</string>
+    <string name="library_filter">Φίλτρο</string>
+
+    <string name="library_sort_title">Ταξινόμηση κατά</string>
+    <string name="library_sort_name">Όνομα</string>
+    <string name="library_sort_date_added">Ημερομηνία προσθήκης</string>
+    <string name="library_sort_premiere_date">Ημερομηνία κυκλοφορίας</string>
+    <string name="library_sort_community_rating">Βαθμολογία κοινότητας</string>
+    <string name="library_sort_runtime">Διάρκεια</string>
+    <string name="library_sort_random">Τυχαία</string>
+    <string name="library_sort_direction">Κατεύθυνση</string>
+    <string name="library_sort_ascending">Αύξουσα</string>
+    <string name="library_sort_descending">Φθίνουσα</string>
+
+    <string name="library_filters_title">Φίλτρα</string>
+    <string name="library_filters_genres">Είδη</string>
+    <string name="library_filters_years">Έτη</string>
+    <string name="library_filters_played">Παρακολουθημένο</string>
+    <string name="library_filters_played_any">Οποιοδήποτε</string>
+    <string name="library_filters_played_yes">Παρακολουθημένο</string>
+    <string name="library_filters_played_no">Μη παρακολουθημένο</string>
+    <string name="library_filters_clear">Απαλοιφή όλων</string>
+    <string name="library_filters_apply">Εμφάνιση αποτελεσμάτων</string>
+    <string name="library_filters_none">Αυτή η βιβλιοθήκη δεν προσέφερε τίποτα για φιλτράρισμα.</string>
+    <string name="library_filters_loading">Φόρτωση φίλτρων…</string>
+
+    <string name="library_empty">Δεν υπάρχει τίποτα να εμφανιστεί εδώ.</string>
+    <string name="library_empty_filtered">Κανένα στοιχείο δεν ταιριάζει με αυτά τα φίλτρα.</string>
+    <string name="library_empty_clear_filters">Απαλοιφή φίλτρων</string>
+    <string name="library_retry">Επανάληψη</string>
+
+    <string name="library_error_network">Δεν είναι δυνατή η πρόσβαση στον διακομιστή σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
+    <string name="library_error_unauthorized">Η περίοδος σύνδεσής σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε.</string>
+    <string name="library_error_not_found">Αυτή η βιβλιοθήκη δεν είναι πλέον στον διακομιστή.</string>
+    <string name="library_error_server">Ο διακομιστής επέστρεψε σφάλμα.</string>
+    <string name="library_error_server_with_code">Ο διακομιστής επέστρεψε σφάλμα (%1$d).</string>
+    <string name="library_error_storage">Δεν ήταν δυνατή η ανάγνωση των τοπικών δεδομένων.</string>
+    <string name="library_error_unknown">Κάτι πήγε στραβά κατά τη φόρτωση αυτής της βιβλιοθήκης.</string>
+</resources>

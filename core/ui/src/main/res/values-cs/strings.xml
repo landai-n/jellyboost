@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Staženo</string>
+    <string name="badge_download_queued">Ve frontě ke stažení</string>
+    <string name="badge_download_paused">Stahování pozastaveno</string>
+    <string name="badge_download_failed">Stahování se nezdařilo</string>
+
+    <string name="media_row_see_all">Zobrazit vše</string>
+    <string name="media_card_watched">Zhlédnuto</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Vybrána %1$d položka</item>
+        <item quantity="few">Vybrány %1$d položky</item>
+        <item quantity="many">Vybráno %1$d položek</item>
+        <item quantity="other">Vybráno %1$d položek</item>
+    </plurals>
+    <string name="selection_close">Zrušit výběr</string>
+    <string name="selection_select_all">Vybrat vše</string>
+    <string name="selection_mark_watched">Označit jako zhlédnuté</string>
+    <string name="selection_mark_unwatched">Označit jako nezhlédnuté</string>
+    <string name="selection_download">Stáhnout</string>
+
+    <string name="selection_item_selected">Vybráno</string>
+    <string name="selection_item_not_selected">Nevybráno</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Označena %1$d položka jako zhlédnutá</item>
+        <item quantity="few">Označeny %1$d položky jako zhlédnuté</item>
+        <item quantity="many">Označeno %1$d položek jako zhlédnutých</item>
+        <item quantity="other">Označeno %1$d položek jako zhlédnutých</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Označeno %1$d jako zhlédnuté, %2$d se nezdařilo</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nepodařilo se označit %1$d položku jako zhlédnutou</item>
+        <item quantity="few">Nepodařilo se označit %1$d položky jako zhlédnuté</item>
+        <item quantity="many">Nepodařilo se označit %1$d položek jako zhlédnuté</item>
+        <item quantity="other">Nepodařilo se označit %1$d položek jako zhlédnuté</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Označena %1$d položka jako nezhlédnutá</item>
+        <item quantity="few">Označeny %1$d položky jako nezhlédnuté</item>
+        <item quantity="many">Označeno %1$d položek jako nezhlédnutých</item>
+        <item quantity="other">Označeno %1$d položek jako nezhlédnutých</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Označeno %1$d jako nezhlédnuté, %2$d se nezdařilo</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nepodařilo se označit %1$d položku jako nezhlédnutou</item>
+        <item quantity="few">Nepodařilo se označit %1$d položky jako nezhlédnuté</item>
+        <item quantity="many">Nepodařilo se označit %1$d položek jako nezhlédnuté</item>
+        <item quantity="other">Nepodařilo se označit %1$d položek jako nezhlédnuté</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Přidána %1$d položka ke stažení</item>
+        <item quantity="few">Přidány %1$d položky ke stažení</item>
+        <item quantity="many">Přidáno %1$d položek ke stažení</item>
+        <item quantity="other">Přidáno %1$d položek ke stažení</item>
+    </plurals>
+    <string name="selection_result_download_partial">Přidáno %1$d ke stažení, %2$d se nezdařilo</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nepodařilo se přidat %1$d položku ke stažení</item>
+        <item quantity="few">Nepodařilo se přidat %1$d položky ke stažení</item>
+        <item quantity="many">Nepodařilo se přidat %1$d položek ke stažení</item>
+        <item quantity="other">Nepodařilo se přidat %1$d položek ke stažení</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Přidáno %1$d ke stažení — %2$d už je v tomto zařízení</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d položka už je v tomto zařízení</item>
+        <item quantity="few">%1$d položky už jsou v tomto zařízení</item>
+        <item quantity="many">%1$d položek už je v tomto zařízení</item>
+        <item quantity="other">%1$d položek už je v tomto zařízení</item>
+    </plurals>
+</resources>

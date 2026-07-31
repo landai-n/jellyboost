@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Nenio por spekti ankoraŭ. Aldonu aŭdvidaĵojn al viaj bibliotekoj sur la servilo.</string>
+    <string name="home_empty_refresh">Refreŝigi</string>
+    <string name="home_section_my_media">Mia enhavo</string>
+    <string name="home_section_continue_watching">Daŭrigi Spektadon</string>
+    <string name="home_section_next_up">Sekve</string>
+    <string name="home_section_latest">Plej novaj: %1$s</string>
+</resources>

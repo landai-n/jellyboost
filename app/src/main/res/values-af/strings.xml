@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Meer opsies</string>
+    <string name="home_settings">Instellings</string>
+    <string name="settings_offline_mode">Vanlynmodus</string>
+
+    <string name="state_on">Aan</string>
+    <string name="state_off">Af</string>
+
+    <string name="nav_home">Tuis</string>
+    <string name="nav_libraries">Biblioteke</string>
+    <string name="nav_search">Soek</string>
+    <string name="nav_downloads">Aflaaie</string>
+
+    <string name="offline_no_network">Geen netwerk nie — wys afgelaaide media</string>
+    <string name="offline_server_unreachable">Kan nie die bediener bereik nie — wys afgelaaide media</string>
+    <string name="offline_forced">Vanlynmodus is aan — wys afgelaaide media</string>
+    <string name="offline_retry">Probeer weer</string>
+    <string name="offline_go_online">Gaan aanlyn</string>
+
+    <string name="syncplay_groups_action">SyncPlay-groepe</string>
+    <string name="syncplay_groups_action_active">SyncPlay-groepe — jy is in \'n groep</string>
+</resources>

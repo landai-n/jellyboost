@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Zréck</string>
+    <string name="detail_home">Start</string>
+    <string name="detail_play">Ofspillen</string>
+    <string name="detail_resume">Weiderfueren</string>
+    <string name="detail_download">Eroflueden</string>
+    <string name="detail_download_cancel">Ofbriechen</string>
+    <string name="detail_download_remove">Ewechhuelen</string>
+    <string name="detail_download_retry">Nach eng Kéier probéieren</string>
+    <string name="detail_play_episode">Dës Episod ofspillen</string>
+    <string name="detail_mark_watched">Als gekuckt markéieren</string>
+    <string name="detail_mark_unwatched">Als net gekuckt markéieren</string>
+    <string name="detail_add_favorite">Zu de Favoriten dobäisetzen</string>
+    <string name="detail_remove_favorite">Aus de Favoriten ewechhuelen</string>
+
+    <string name="detail_section_seasons">Staffelen</string>
+    <string name="detail_section_next_up">Als Nächst</string>
+    <string name="detail_section_episodes">Episoden</string>
+    <string name="detail_section_similar">Méi wéi dëst</string>
+
+    <string name="detail_runtime_minutes">%1$d Min.</string>
+    <string name="detail_remaining_minutes">Nach %1$d Min.</string>
+    <string name="detail_size_on_device">%1$s op dësem Apparat</string>
+    <string name="detail_directed_by">Regie: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d Staffel</item>
+        <item quantity="other">%1$d Staffelen</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d Episod</item>
+        <item quantity="other">%1$d Episoden</item>
+    </plurals>
+
+    <string name="detail_empty">Dëst Element ass net méi disponibel.</string>
+    <string name="detail_message_download_queued">Zu den Downloads bäigefüügt.</string>
+    <string name="detail_message_download_failed">Den Download konnt net gestart ginn.</string>
+    <string name="detail_message_download_deleted">Vun dësem Apparat ewechgeholl.</string>
+    <string name="detail_message_download_delete_failed">Den Download konnt net ewechgeholl ginn.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Download ofgebrach – %1$d fäerdeg Episod behalen.</item>
+        <item quantity="other">Download ofgebrach – %1$d fäerdeg Episoden behalen.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Dat konnt net gespäichert ginn. Probéier nach eng Kéier.</string>
+
+    <string name="detail_group_play">Fir %1$s ofspillen</string>
+    <string name="detail_group_resume">Fir %1$s weiderfueren</string>
+    <string name="detail_group_play_next">Als Nächst ofspillen</string>
+    <string name="detail_group_add_to_queue">Zur Warteschlaang dobäisetzen</string>
+    <string name="detail_message_group_play">D\'Grupp gefrot, dëst ofzespillen.</string>
+    <string name="detail_message_group_play_next">Fir d\'Grupp als Nächst an d\'Warteschlaang gesat.</string>
+    <string name="detail_message_group_queued">Zur Warteschlaang vun der Grupp dobäigesat.</string>
+
+    <string name="detail_delete_download_dialog_title">Download läschen?</string>
+    <string name="detail_delete_download_dialog_message">Dëst hëlt en vun dësem Apparat ewech. Du kanns en zu all Moment nach eng Kéier eroflueden.</string>
+    <string name="detail_delete_download_dialog_confirm">Läschen</string>
+    <string name="detail_delete_download_dialog_cancel">Ofbriechen</string>
+</resources>

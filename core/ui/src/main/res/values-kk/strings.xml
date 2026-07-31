@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Жүктеп алынды</string>
+    <string name="badge_download_queued">Жүктеу кезегінде</string>
+    <string name="badge_download_paused">Жүктеу кідіртілді</string>
+    <string name="badge_download_failed">Жүктеу сәтсіз аяқталды</string>
+
+    <string name="media_row_see_all">Барлығын көру</string>
+    <string name="media_card_watched">Қаралды</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d таңдалды</item>
+        <item quantity="other">%1$d таңдалды</item>
+    </plurals>
+    <string name="selection_close">Таңдауды тазалау</string>
+    <string name="selection_select_all">Барлығын таңдау</string>
+    <string name="selection_mark_watched">Қаралды деп белгілеу</string>
+    <string name="selection_mark_unwatched">Қаралмады деп белгілеу</string>
+    <string name="selection_download">Жүктеп алу</string>
+
+    <string name="selection_item_selected">Таңдалды</string>
+    <string name="selection_item_not_selected">Таңдалмады</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d элемент қаралды деп белгіленді</item>
+        <item quantity="other">%1$d элемент қаралды деп белгіленді</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d элемент қаралды деп белгіленді, %2$d сәтсіз аяқталды</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d элементті қаралды деп белгілеу мүмкін болмады</item>
+        <item quantity="other">%1$d элементті қаралды деп белгілеу мүмкін болмады</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d элемент қаралмады деп белгіленді</item>
+        <item quantity="other">%1$d элемент қаралмады деп белгіленді</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d элемент қаралмады деп белгіленді, %2$d сәтсіз аяқталды</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d элементті қаралмады деп белгілеу мүмкін болмады</item>
+        <item quantity="other">%1$d элементті қаралмады деп белгілеу мүмкін болмады</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d жүктеулерге қосылды</item>
+        <item quantity="other">%1$d жүктеулерге қосылды</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d жүктеулерге қосылды, %2$d сәтсіз аяқталды</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d элементті жүктеулерге қосу мүмкін болмады</item>
+        <item quantity="other">%1$d элементті жүктеулерге қосу мүмкін болмады</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d жүктеулерге қосылды — %2$d бұл құрылғыда бұрыннан бар</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d элемент бұл құрылғыда бұрыннан бар</item>
+        <item quantity="other">%1$d элемент бұл құрылғыда бұрыннан бар</item>
+    </plurals>
+</resources>

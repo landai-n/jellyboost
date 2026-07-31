@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Digər seçimlər</string>
+    <string name="home_settings">Tənzimləmələr</string>
+    <string name="settings_offline_mode">Oflayn rejim</string>
+    <string name="state_on">Aktiv</string>
+    <string name="state_off">Deaktiv</string>
+    <string name="nav_home">Əsas səhifə</string>
+    <string name="nav_libraries">Kitabxanalar</string>
+    <string name="nav_search">Axtar</string>
+    <string name="nav_downloads">Yükləmələr</string>
+    <string name="offline_no_network">Şəbəkə yoxdur — yüklənmiş media göstərilir</string>
+    <string name="offline_server_unreachable">Serverə çatmaq mümkün deyil — yüklənmiş media göstərilir</string>
+    <string name="offline_forced">Oflayn rejim aktivdir — yüklənmiş media göstərilir</string>
+    <string name="offline_retry">Yenidən cəhd et</string>
+    <string name="offline_go_online">Onlayn ol</string>
+    <string name="syncplay_groups_action">SyncPlay qrupları</string>
+    <string name="syncplay_groups_action_active">SyncPlay qrupları — siz bir qrupdasınız</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Anslut till server</string>
+    <string name="server_setup_discovered_title">Servrar på det här nätverket</string>
+    <string name="server_setup_discovering">Söker på det lokala nätverket…</string>
+    <string name="server_setup_no_servers_found">Inga servrar hittades. Ange en adress nedan.</string>
+    <string name="server_setup_manual_title">Serveradress</string>
+    <string name="server_setup_address_label">Värd eller URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org eller 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Anslut</string>
+    <string name="server_setup_connecting">Kontaktar servern…</string>
+    <string name="server_setup_session_lost">Din sparade inloggning kunde inte återställas, så du har loggats ut. Logga in igen.</string>
+
+    <string name="login_title">Logga in</string>
+    <string name="login_server_version">Version %1$s</string>
+    <string name="login_server_version_unknown">Version okänd</string>
+    <string name="login_public_users_title">Vem tittar?</string>
+    <string name="login_username_label">Användarnamn</string>
+    <string name="login_password_label">Lösenord</string>
+    <string name="login_show_password">Visa lösenord</string>
+    <string name="login_hide_password">Dölj lösenord</string>
+    <string name="login_sign_in">Logga in</string>
+    <string name="login_change_server">Använd en annan server</string>
+    <string name="login_loading">Läser in serverinformation…</string>
+    <string name="login_or">eller</string>
+
+    <string name="login_quick_connect">Använd Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Öppna Jellyfin på en enhet där du redan är inloggad, gå till Quick Connect och ange den här koden.</string>
+    <string name="login_quick_connect_waiting">Väntar på godkännande…</string>
+    <string name="login_quick_connect_cancel">Avbryt</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Provade %d möjlig adress utan att lyckas.</item>
+        <item quantity="other">Provade %d möjliga adresser utan att lyckas.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Kan inte nå servern</string>
+    <string name="auth_error_unsupported_version_or_product">Version eller produkt stöds inte</string>
+    <string name="auth_error_cannot_connect">Anslutningen kan inte upprättas.\nKontrollera värdnamnet och din nätverksanslutning.</string>
+    <string name="auth_error_invalid_credentials">Fel användarnamn eller lösenord.</string>
+    <string name="auth_error_quick_connect_expired">Koden har gått ut. Begär en ny och försök igen.</string>
+    <string name="auth_error_server">Servern svarade med ett fel. Försök igen.</string>
+    <string name="auth_error_server_with_code">Servern svarade med ett fel (%1$d). Försök igen.</string>
+</resources>

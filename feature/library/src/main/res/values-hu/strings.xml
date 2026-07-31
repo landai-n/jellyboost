@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Még nincs könyvtár. Adj hozzá egyet a szerveren.</string>
+
+    <string name="library_back">Vissza</string>
+    <string name="library_home">Kezdőlap</string>
+    <string name="library_sort">Rendezés</string>
+    <string name="library_filter">Szűrő</string>
+
+    <string name="library_sort_title">Rendezés</string>
+    <string name="library_sort_name">Név</string>
+    <string name="library_sort_date_added">Hozzáadás dátuma</string>
+    <string name="library_sort_premiere_date">Megjelenés dátuma</string>
+    <string name="library_sort_community_rating">Közösségi értékelés</string>
+    <string name="library_sort_runtime">Időtartam</string>
+    <string name="library_sort_random">Véletlenszerű</string>
+    <string name="library_sort_direction">Irány</string>
+    <string name="library_sort_ascending">Növekvő</string>
+    <string name="library_sort_descending">Csökkenő</string>
+
+    <string name="library_filters_title">Szűrők</string>
+    <string name="library_filters_genres">Műfajok</string>
+    <string name="library_filters_years">Évek</string>
+    <string name="library_filters_played">Megnézve</string>
+    <string name="library_filters_played_any">Bármelyik</string>
+    <string name="library_filters_played_yes">Megnézve</string>
+    <string name="library_filters_played_no">Nem nézett</string>
+    <string name="library_filters_clear">Összes törlése</string>
+    <string name="library_filters_apply">Eredmények megjelenítése</string>
+    <string name="library_filters_none">Ebben a könyvtárban nincs mi alapján szűrni.</string>
+    <string name="library_filters_loading">Szűrők betöltése…</string>
+
+    <string name="library_empty">Itt nincs mit megjeleníteni.</string>
+    <string name="library_empty_filtered">Egyik elem sem felel meg a szűrőknek.</string>
+    <string name="library_empty_clear_filters">Szűrők törlése</string>
+    <string name="library_retry">Újra</string>
+
+    <string name="library_error_network">A szerver nem érhető el. Ellenőrizd a kapcsolatot, és próbáld újra.</string>
+    <string name="library_error_unauthorized">A munkameneted lejárt. Jelentkezz be újra a folytatáshoz.</string>
+    <string name="library_error_not_found">Ez a könyvtár már nincs a szerveren.</string>
+    <string name="library_error_server">A szerver hibát adott vissza.</string>
+    <string name="library_error_server_with_code">A szerver hibát adott vissza (%1$d).</string>
+    <string name="library_error_storage">Nem sikerült beolvasni a helyi adatokat.</string>
+    <string name="library_error_unknown">Hiba történt a könyvtár betöltése közben.</string>
+</resources>

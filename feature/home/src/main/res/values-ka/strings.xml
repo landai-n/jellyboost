@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ჯერ საყურებელი არაფერია. დაამატეთ მედია თქვენს ბიბლიოთეკებში სერვერზე.</string>
+    <string name="home_empty_refresh">განახლება</string>
+    <string name="home_section_my_media">ჩემი მედია</string>
+    <string name="home_section_continue_watching">ყურების გაგრძელება</string>
+    <string name="home_section_next_up">შემდეგი</string>
+    <string name="home_section_latest">უახლესი %1$s</string>
+</resources>

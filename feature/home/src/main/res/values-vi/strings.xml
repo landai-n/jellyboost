@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Chưa có gì để xem. Thêm media vào thư viện của bạn trên máy chủ.</string>
+    <string name="home_empty_refresh">Làm mới</string>
+    <string name="home_section_my_media">Media của tôi</string>
+    <string name="home_section_continue_watching">Tiếp tục xem</string>
+    <string name="home_section_next_up">Tiếp theo</string>
+    <string name="home_section_latest">%1$s mới nhất</string>
+</resources>

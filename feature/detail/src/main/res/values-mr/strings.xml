@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">मागे</string>
+    <string name="detail_home">मुख्यपृष्ठ</string>
+    <string name="detail_play">प्ले करा</string>
+    <string name="detail_resume">पुन्हा सुरू करा</string>
+    <string name="detail_download">डाउनलोड करा</string>
+    <string name="detail_download_cancel">रद्द करा</string>
+    <string name="detail_download_remove">काढून टाका</string>
+    <string name="detail_download_retry">पुन्हा प्रयत्न करा</string>
+    <string name="detail_play_episode">हा भाग प्ले करा</string>
+    <string name="detail_mark_watched">पाहिले म्हणून चिन्हांकित करा</string>
+    <string name="detail_mark_unwatched">न पाहिलेले म्हणून चिन्हांकित करा</string>
+    <string name="detail_add_favorite">आवडींमध्ये जोडा</string>
+    <string name="detail_remove_favorite">आवडींमधून काढून टाका</string>
+
+    <string name="detail_section_seasons">सीझन</string>
+    <string name="detail_section_next_up">पुढे</string>
+    <string name="detail_section_episodes">भाग</string>
+    <string name="detail_section_similar">यासारखे आणखी</string>
+
+    <string name="detail_runtime_minutes">%1$d मिनिटे</string>
+    <string name="detail_remaining_minutes">%1$d मिनिटे शिल्लक</string>
+    <string name="detail_size_on_device">%1$s डिव्हाइसवर</string>
+    <string name="detail_directed_by">दिग्दर्शक: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d सीझन</item>
+        <item quantity="other">%1$d सीझन</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d भाग</item>
+        <item quantity="other">%1$d भाग</item>
+    </plurals>
+
+    <string name="detail_empty">हा आयटम आता उपलब्ध नाही.</string>
+    <string name="detail_message_download_queued">डाउनलोडमध्ये जोडले.</string>
+    <string name="detail_message_download_failed">तो डाउनलोड सुरू करता आला नाही.</string>
+    <string name="detail_message_download_deleted">या डिव्हाइसवरून काढून टाकले.</string>
+    <string name="detail_message_download_delete_failed">तो डाउनलोड काढून टाकता आला नाही.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">डाउनलोड रद्द केला — %1$d पूर्ण झालेला भाग ठेवला.</item>
+        <item quantity="other">डाउनलोड रद्द केला — %1$d पूर्ण झालेले भाग ठेवले.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">ते जतन करता आले नाही. पुन्हा प्रयत्न करा.</string>
+
+    <string name="detail_group_play">%1$s साठी प्ले करा</string>
+    <string name="detail_group_resume">%1$s साठी पुन्हा सुरू करा</string>
+    <string name="detail_group_play_next">पुढे प्ले करा</string>
+    <string name="detail_group_add_to_queue">रांगेत जोडा</string>
+    <string name="detail_message_group_play">गटाला हे प्ले करण्यास सांगितले.</string>
+    <string name="detail_message_group_play_next">गटासाठी पुढे रांगेत ठेवले.</string>
+    <string name="detail_message_group_queued">गटाच्या रांगेत जोडले.</string>
+
+    <string name="detail_delete_download_dialog_title">डाउनलोड हटवायचा का?</string>
+    <string name="detail_delete_download_dialog_message">हे या डिव्हाइसवरून काढून टाकेल. आपण ते कधीही पुन्हा डाउनलोड करू शकता.</string>
+    <string name="detail_delete_download_dialog_confirm">हटवा</string>
+    <string name="detail_delete_download_dialog_cancel">रद्द करा</string>
+</resources>

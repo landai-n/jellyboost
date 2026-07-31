@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Další možnosti</string>
+    <string name="home_settings">Nastavení</string>
+    <string name="settings_offline_mode">Offline režim</string>
+
+    <string name="state_on">Zapnuto</string>
+    <string name="state_off">Vypnuto</string>
+
+    <string name="nav_home">Domů</string>
+    <string name="nav_libraries">Knihovny</string>
+    <string name="nav_search">Hledat</string>
+    <string name="nav_downloads">Stahování</string>
+
+    <string name="offline_no_network">Žádné připojení — zobrazují se stažená média</string>
+    <string name="offline_server_unreachable">Server není dostupný — zobrazují se stažená média</string>
+    <string name="offline_forced">Offline režim je zapnutý — zobrazují se stažená média</string>
+    <string name="offline_retry">Zkusit znovu</string>
+    <string name="offline_go_online">Přejít online</string>
+
+    <string name="syncplay_groups_action">Skupiny SyncPlay</string>
+    <string name="syncplay_groups_action_active">Skupiny SyncPlay — jste ve skupině</string>
+</resources>

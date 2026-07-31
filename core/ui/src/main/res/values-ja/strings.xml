@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ダウンロード済み</string>
+    <string name="badge_download_queued">ダウンロード待ち</string>
+    <string name="badge_download_paused">ダウンロード一時停止中</string>
+    <string name="badge_download_failed">ダウンロード失敗</string>
+
+    <string name="media_row_see_all">すべて表示</string>
+    <string name="media_card_watched">視聴済み</string>
+
+    <plurals name="selection_count">
+        <item quantity="other">%1$d 件選択中</item>
+    </plurals>
+    <string name="selection_close">選択を解除</string>
+    <string name="selection_select_all">すべて選択</string>
+    <string name="selection_mark_watched">視聴済みにする</string>
+    <string name="selection_mark_unwatched">未視聴にする</string>
+    <string name="selection_download">ダウンロード</string>
+
+    <string name="selection_item_selected">選択済み</string>
+    <string name="selection_item_not_selected">未選択</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="other">%1$d 件を視聴済みにしました</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d 件を視聴済みにしました（%2$d 件失敗）</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="other">%1$d 件を視聴済みにできませんでした</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="other">%1$d 件を未視聴にしました</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d 件を未視聴にしました（%2$d 件失敗）</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="other">%1$d 件を未視聴にできませんでした</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="other">%1$d 件をダウンロードに追加しました</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d 件をダウンロードに追加しました（%2$d 件失敗）</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="other">%1$d 件をダウンロードに追加できませんでした</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d 件をダウンロードに追加しました — %2$d 件はこの端末にすでにあります</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="other">%1$d 件はこの端末にすでにあります</item>
+    </plurals>
+</resources>

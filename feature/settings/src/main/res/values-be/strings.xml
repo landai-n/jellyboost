@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Налады</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Галоўная</string>
+
+    <string name="settings_section_playback">Прайграванне</string>
+    <string name="settings_skip_intro">Прапусціць уступ</string>
+    <string name="settings_skip_outro">Прапусціць канцоўку</string>
+    <string name="settings_skip_mode_off">Нічога не рабіць</string>
+    <string name="settings_skip_mode_show_button">Паказваць кнопку прапуску</string>
+    <string name="settings_skip_mode_auto">Прапускаць аўтаматычна</string>
+    <string name="settings_pip">Малюнак у малюнку</string>
+    <string name="settings_pip_supporting">Працягваць прайграванне ў плаваючым акне пры выхадзе з праграмы.</string>
+
+    <string name="settings_section_downloads">Спампоўкі</string>
+    <string name="settings_wifi_only">Толькі Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Прыпыняць спампоўку пры мабільным трафіку.</string>
+    <string name="settings_quality">Якасць спампоўкі</string>
+    <string name="settings_quality_original">Арыгінальны файл — дакладная копія, з магчымасцю аднаўлення</string>
+    <string name="settings_quality_high">Высокая — каля 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Сярэдняя — каля 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Нізкая — каля 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Усё, акрамя арыгінальнага файла, канвертуецца вашым серверам падчас перадачы, таму памер, паказаны падчас спампоўкі, — прыблізны, а перарваная перадача пачынаецца зноўку.</string>
+    <string name="settings_storage_label">Сховішча</string>
+    <string name="settings_storage_summary">%1$s выкарыстана · %2$s вольна на гэтай прыладзе</string>
+    <string name="settings_storage_location">Спампоўкі захоўваюцца ў %1$s</string>
+    <string name="settings_storage_picker">Месца захоўвання</string>
+    <string name="settings_storage_internal">Унутранае сховішча</string>
+    <string name="settings_storage_sd_card">SD-карта</string>
+    <string name="settings_storage_volume_free">%1$s вольна</string>
+    <string name="settings_storage_missing">Абранае вамі сховішча зараз недаступнае, таму спампоўкі накіроўваюцца ў месца, выбранае ніжэй.</string>
+    <string name="settings_storage_switch_title">Перамясціць спампоўкі?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Спампоўкі пакуль нельга перамяшчаць паміж месцамі, таму %1$d, ужо наяўная на гэтай прыладзе, будзе выдалена. Вы зможаце спампаваць яе зноў у новае месца.</item>
+        <item quantity="few">Спампоўкі пакуль нельга перамяшчаць паміж месцамі, таму %1$d, ужо наяўныя на гэтай прыладзе, будуць выдалены. Вы зможаце спампаваць іх зноў у новае месца.</item>
+        <item quantity="many">Спампоўкі пакуль нельга перамяшчаць паміж месцамі, таму %1$d, ужо наяўных на гэтай прыладзе, будуць выдалены. Вы зможаце спампаваць іх зноў у новае месца.</item>
+        <item quantity="other">Спампоўкі пакуль нельга перамяшчаць паміж месцамі, таму %1$d, ужо наяўных на гэтай прыладзе, будуць выдалены. Вы зможаце спампаваць іх зноў у новае месца.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Выдаліць і пераключыць</string>
+
+    <string name="settings_section_connectivity">Злучэнне</string>
+    <string name="settings_offline_mode">Аўтаномны рэжым</string>
+    <string name="settings_offline_mode_supporting">Паказваць толькі медыя, якія ўжо ёсць на гэтай прыладзе.</string>
+
+    <string name="settings_section_account">Уліковы запіс</string>
+    <string name="settings_account_user">Уваход выкананы як</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Уваход не выкананы</string>
+    <string name="settings_sign_out">Выйсці</string>
+    <string name="settings_sign_out_dialog_title">Выйсці з сістэмы?</string>
+    <string name="settings_sign_out_dialog_message">Каб увайсці зноў, вам спатрэбяцца адрас сервера і пароль.</string>
+    <string name="settings_sign_out_delete_downloads">Таксама выдаліць спампоўкі з гэтай прылады</string>
+    <string name="settings_cancel">Скасаваць</string>
+</resources>

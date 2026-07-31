@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Поиск фильмов, сериалов и эпизодов</string>
+    <string name="search_clear">Очистить</string>
+
+    <string name="search_section_movies">Фильмы</string>
+    <string name="search_section_series">Сериалы</string>
+    <string name="search_section_episodes">Эпизоды</string>
+
+    <string name="search_prompt">Начните вводить, чтобы найти в своих библиотеках.</string>
+    <string name="search_no_results">Совпадений для «%1$s» не найдено.</string>
+
+    <string name="search_error_network">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
+    <string name="search_error_unauthorized">Срок действия сеанса истёк. Войдите снова, чтобы продолжить.</string>
+    <string name="search_error_not_found">Этого элемента больше нет на сервере.</string>
+    <string name="search_error_server">Сервер вернул ошибку.</string>
+    <string name="search_error_server_with_code">Сервер вернул ошибку (%1$d).</string>
+    <string name="search_error_storage">Не удалось прочитать локальные данные.</string>
+    <string name="search_error_unknown">Что-то пошло не так во время поиска.</string>
+</resources>

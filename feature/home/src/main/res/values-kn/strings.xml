@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ಇನ್ನೂ ವೀಕ್ಷಿಸಲು ಏನೂ ಇಲ್ಲ. ಸರ್ವರ್‌ನಲ್ಲಿರುವ ನಿಮ್ಮ ಲೈಬ್ರರಿಗಳಿಗೆ ಮಾಧ್ಯಮ ಸೇರಿಸಿ.</string>
+    <string name="home_empty_refresh">ರಿಫ್ರೆಶ್</string>
+
+    <string name="home_section_my_media">ನನ್ನ ಮಾಧ್ಯಮ</string>
+    <string name="home_section_continue_watching">ವೀಕ್ಷಣೆ ಮುಂದುವರಿಸಿ</string>
+    <string name="home_section_next_up">ಮುಂದಿನದು</string>
+    <string name="home_section_latest">ಇತ್ತೀಚಿನ %1$s</string>
+</resources>

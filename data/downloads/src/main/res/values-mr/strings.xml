@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">डाउनलोड्स</string>
+    <string name="downloads_channel_description">या डिव्हाइसवर मीडिया डाउनलोड होण्याची प्रगती.</string>
+
+    <string name="downloads_notification_preparing">डाउनलोड्स तयार करत आहे…</string>
+    <string name="downloads_notification_downloading">डाउनलोड करत आहे…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">डाउनलोड करत आहे…</string>
+    <string name="downloads_action_pause">थांबवा</string>
+    <string name="downloads_action_cancel">रद्द करा</string>
+</resources>

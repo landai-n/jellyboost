@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Opsi lainnya</string>
+    <string name="home_settings">Pengaturan</string>
+    <string name="settings_offline_mode">Mode luring</string>
+    <string name="state_on">Aktif</string>
+    <string name="state_off">Nonaktif</string>
+    <string name="nav_home">Beranda</string>
+    <string name="nav_libraries">Perpustakaan</string>
+    <string name="nav_search">Cari</string>
+    <string name="nav_downloads">Unduhan</string>
+    <string name="offline_no_network">Tidak ada jaringan — menampilkan media yang diunduh</string>
+    <string name="offline_server_unreachable">Tidak dapat menjangkau server — menampilkan media yang diunduh</string>
+    <string name="offline_forced">Mode luring aktif — menampilkan media yang diunduh</string>
+    <string name="offline_retry">Coba lagi</string>
+    <string name="offline_go_online">Sambungkan kembali</string>
+    <string name="syncplay_groups_action">Grup SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grup SyncPlay — Anda berada dalam grup</string>
+</resources>

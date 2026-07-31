@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Alla laaditud</string>
+    <string name="badge_download_queued">Allalaadimise järjekorras</string>
+    <string name="badge_download_paused">Allalaadimine peatatud</string>
+    <string name="badge_download_failed">Allalaadimine ebaõnnestus</string>
+
+    <string name="media_row_see_all">Vaata kõiki</string>
+    <string name="media_card_watched">Vaadatud</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d valitud</item>
+        <item quantity="other">%1$d valitud</item>
+    </plurals>
+    <string name="selection_close">Tühista valik</string>
+    <string name="selection_select_all">Vali kõik</string>
+    <string name="selection_mark_watched">Märgi vaadatuks</string>
+    <string name="selection_mark_unwatched">Märgi vaatamata</string>
+    <string name="selection_download">Laadi alla</string>
+
+    <string name="selection_item_selected">Valitud</string>
+    <string name="selection_item_not_selected">Valimata</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d märgitud vaadatuks</item>
+        <item quantity="other">%1$d märgitud vaadatuks</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d märgitud vaadatuks, %2$d ebaõnnestus</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d üksuse vaadatuks märkimine ebaõnnestus</item>
+        <item quantity="other">%1$d üksuse vaadatuks märkimine ebaõnnestus</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d märgitud vaatamata</item>
+        <item quantity="other">%1$d märgitud vaatamata</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d märgitud vaatamata, %2$d ebaõnnestus</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d üksuse vaatamata märkimine ebaõnnestus</item>
+        <item quantity="other">%1$d üksuse vaatamata märkimine ebaõnnestus</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d lisatud allalaadimistesse</item>
+        <item quantity="other">%1$d lisatud allalaadimistesse</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d lisatud allalaadimistesse, %2$d ebaõnnestus</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d üksuse lisamine allalaadimistesse ebaõnnestus</item>
+        <item quantity="other">%1$d üksuse lisamine allalaadimistesse ebaõnnestus</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d lisatud allalaadimistesse – %2$d on juba selles seadmes</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d üksus on juba selles seadmes</item>
+        <item quantity="other">%1$d üksust on juba selles seadmes</item>
+    </plurals>
+</resources>

@@ -7,6 +7,16 @@
   of "Mark watched" are two chances for one screen's wording to drift from the other's.
 -->
 <resources>
+    <!-- Download badge states -->
+    <string name="badge_downloaded">Downloaded</string>
+    <string name="badge_download_queued">Queued for download</string>
+    <string name="badge_download_paused">Download paused</string>
+    <string name="badge_download_failed">Download failed</string>
+
+    <!-- Media rows and cards -->
+    <string name="media_row_see_all">See all</string>
+    <string name="media_card_watched">Watched</string>
+
     <!-- Contextual action bar -->
     <plurals name="selection_count">
         <item quantity="one">%1$d selected</item>

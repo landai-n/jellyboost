@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">إغلاق المشغّل</string>
+    <string name="player_play">تشغيل</string>
+    <string name="player_pause">إيقاف مؤقت</string>
+    <string name="player_rewind">الرجوع 10 ثوانٍ</string>
+    <string name="player_forward">التقدّم 30 ثانية</string>
+
+    <string name="player_audio">الصوت</string>
+    <string name="player_subtitles">الترجمة</string>
+    <string name="player_subtitles_off">إيقاف</string>
+    <string name="player_quality">الجودة</string>
+    <string name="player_speed">السرعة</string>
+
+    <string name="player_skip_intro">تخطي المقدمة</string>
+    <string name="player_skip_outro">تخطي الخاتمة</string>
+
+    <string name="player_quality_auto">تلقائي</string>
+    <string name="player_quality_high">عالية — 20 ميغابت/ث</string>
+    <string name="player_quality_medium">متوسطة — 8 ميغابت/ث</string>
+    <string name="player_quality_low">منخفضة — 3 ميغابت/ث</string>
+    <string name="player_quality_lowest">الأدنى — 720 kbps</string>
+
+    <string name="player_method_direct_play">التشغيل المباشر</string>
+    <string name="player_method_direct_stream">البث المباشر</string>
+    <string name="player_method_transcode">تحويل الترميز</string>
+
+    <string name="player_message_transcode">تعذّر على جهازك فك تشفير هذا الملف، لذا يقوم الخادم بتحويل ترميزه.</string>
+    <string name="player_message_lower_quality">تعطّل البث — تجري إعادة المحاولة بجودة أقل.</string>
+    <string name="player_message_track_restart">تعيّن على الخادم إعادة ترميز البث لهذا المقطع.</string>
+    <string name="player_message_track_streaming">هذا المقطع غير موجود في التنزيل — تتم بثّه من خادمك.</string>
+    <string name="player_message_track_offline">هذا المقطع غير موجود في الملف الذي تم تنزيله.</string>
+    <string name="player_message_failed">فشل التشغيل.</string>
+
+    <string name="player_syncplay_group">المجموعة</string>
+    <string name="player_syncplay_waiting">بانتظار المجموعة…</string>
+    <string name="player_syncplay_shuffle">ترتيب عشوائي لقائمة الانتظار</string>
+    <string name="player_syncplay_repeat">التكرار</string>
+    <string name="player_syncplay_repeat_none">إيقاف</string>
+    <string name="player_syncplay_repeat_one">هذا العنصر</string>
+    <string name="player_syncplay_repeat_all">قائمة الانتظار بأكملها</string>
+    <string name="player_syncplay_leave">مغادرة المجموعة</string>
+    <string name="player_syncplay_leave_title">مغادرة هذه المجموعة؟</string>
+    <string name="player_syncplay_leave_body">يستمر التشغيل هنا بمفرده. الانضمام مرة أخرى يعني اختيار المجموعة من جديد.</string>
+
+    <string name="player_syncplay_cancel">إلغاء</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="zero">لا أحد يشاهد</item>
+        <item quantity="one">شخص واحد يشاهد</item>
+        <item quantity="two">شخصان يشاهدان</item>
+        <item quantity="few">%d أشخاص يشاهدون</item>
+        <item quantity="many">%d شخصًا يشاهدون</item>
+        <item quantity="other">%d شخص يشاهدون</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s ‎+%2$d آخرون</string>
+
+    <string name="player_syncplay_queue">قائمة الانتظار</string>
+    <string name="player_syncplay_queue_empty">لم تُضِف المجموعة أي شيء إلى قائمة الانتظار بعد.</string>
+    <string name="player_syncplay_queue_item_loading">جارٍ التحميل…</string>
+    <string name="player_syncplay_queue_playing">قيد التشغيل الآن</string>
+    <string name="player_syncplay_queue_next">العنصر التالي</string>
+    <string name="player_syncplay_queue_previous">العنصر السابق</string>
+    <string name="player_syncplay_queue_move_up">تحريك للأعلى</string>
+    <string name="player_syncplay_queue_move_down">تحريك للأسفل</string>
+    <string name="player_syncplay_queue_remove">إزالة من قائمة الانتظار</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="zero">لا عناصر في قائمة الانتظار</item>
+        <item quantity="one">عنصر واحد في قائمة الانتظار</item>
+        <item quantity="two">عنصران في قائمة الانتظار</item>
+        <item quantity="few">%d عناصر في قائمة الانتظار</item>
+        <item quantity="many">%d عنصرًا في قائمة الانتظار</item>
+        <item quantity="other">%d عنصر في قائمة الانتظار</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">تم الخروج من SyncPlay — فُقد الاتصال</string>
+    <string name="player_message_syncplay_rejoined">تمت إعادة الانضمام إلى مجموعة SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">تعذّر الانضمام إلى مجموعة SyncPlay هذه.</string>
+    <string name="player_message_syncplay_group_ended">انتهت مجموعة SyncPlay.</string>
+    <string name="player_message_syncplay_removed">لم تعد ضمن مجموعة SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">تشاهد المجموعة شيئًا ليس لديك صلاحية الوصول إليه.</string>
+    <string name="player_message_syncplay_item_unavailable">تعذّر فتح ما تشاهده المجموعة.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">رجوع</string>
+    <string name="player_syncplay_groups_home">الرئيسية</string>
+    <string name="player_syncplay_groups_create">إنشاء مجموعة</string>
+    <string name="player_syncplay_groups_create_title">سمِّ مجموعتك</string>
+    <string name="player_syncplay_groups_create_hint">اسم المجموعة</string>
+    <string name="player_syncplay_groups_create_confirm">إنشاء</string>
+    <string name="player_syncplay_groups_joining">جارٍ الانضمام…</string>
+    <string name="player_syncplay_groups_active_label">أنت في هذه المجموعة</string>
+    <string name="player_syncplay_groups_open_player">فتح المشغّل</string>
+    <string name="player_syncplay_groups_empty">لا أحد آخر يشاهد معًا الآن.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay معطّل لحسابك.</string>
+    <string name="player_syncplay_groups_error">تعذّر تحميل مجموعات SyncPlay.</string>
+
+    <string name="player_syncplay_presence_channel_name">مجموعة SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">يحافظ على مكانك في مجموعة مشاهدة مشتركة أثناء عمل التطبيق في الخلفية.</string>
+    <string name="player_syncplay_presence_title">في مجموعة SyncPlay</string>
+    <string name="player_syncplay_presence_text">بانتظار المجموعة</string>
+    <string name="player_syncplay_presence_leave">مغادرة</string>
+
+    <string name="player_syncplay_state_idle">خامل</string>
+    <string name="player_syncplay_state_waiting">بانتظار</string>
+    <string name="player_syncplay_state_paused">متوقف مؤقتًا</string>
+    <string name="player_syncplay_state_playing">قيد التشغيل</string>
+
+    <string name="player_cast">البث إلى جهاز</string>
+
+    <string name="player_cast_device_unnamed">تلفازك</string>
+    <string name="player_message_cast_transferred">التشغيل الآن على %1$s.</string>
+    <string name="player_message_cast_left_syncplay">تمت مغادرة مجموعة SyncPlay للبث إلى %1$s.</string>
+    <string name="player_message_cast_failed">تعذّر تشغيل ذلك على %1$s.</string>
+
+    <string name="player_casting_to">جارٍ البث إلى %1$s</string>
+</resources>

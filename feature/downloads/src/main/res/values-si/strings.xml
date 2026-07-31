@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">බාගත කළ</string>
+    <string name="downloads_tab_queue">පෝලිම</string>
+    <string name="downloads_wifi_only">Wi‑Fi පමණි</string>
+    <string name="downloads_group_movies">චිත්‍රපට</string>
+    <string name="downloads_storage_summary">%1$s භාවිතයි · %2$s නිදහස්</string>
+    <string name="downloads_action_delete">බාගත කිරීම මකන්න</string>
+    <string name="downloads_action_cancel">බාගත කිරීම අවලංගු කරන්න</string>
+    <string name="downloads_action_pause">බාගත කිරීම විරාම කරන්න</string>
+    <string name="downloads_action_resume">බාගත කිරීම නැවත ආරම්භ කරන්න</string>
+    <string name="downloads_action_move_up">පෝලිමේ ඉහළට ගෙන යන්න</string>
+    <string name="downloads_action_move_down">පෝලිමේ පහළට ගෙන යන්න</string>
+    <string name="downloads_action_pause_all">සියල්ල විරාම කරන්න</string>
+    <string name="downloads_action_resume_all">සියල්ල නැවත ආරම්භ කරන්න</string>
+    <string name="downloads_action_cancel_all">සියල්ල අවලංගු කරන්න</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">මෙම බාගත කිරීම අවලංගු කරන්නද?</item>
+        <item quantity="other">බාගත කිරීම් %1$d ම අවලංගු කරන්නද?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">පෝලිම හිස් කරන අතර අර්ධ වශයෙන් බාගත කළ ගොනු ඉවත් කරනු ලැබේ. නිමකළ බාගත කිරීම්වලට බලපෑමක් නැත.</string>
+    <string name="downloads_cancel_all_dialog_confirm">බාගත කිරීම් අවලංගු කරන්න</string>
+    <string name="downloads_cancel_all_dialog_dismiss">තබා ගන්න</string>
+    <string name="downloads_delete_dialog_title">%1$s මකන්නද?</string>
+    <string name="downloads_delete_dialog_message">බාගත කළ ගොනු මෙම උපාංගයෙන් ඉවත් කරනු ලැබේ. ඔබට පසුව එය නැවත බාගත කළ හැක.</string>
+    <string name="downloads_delete_dialog_confirm">මකන්න</string>
+    <string name="downloads_delete_dialog_cancel">අවලංගු කරන්න</string>
+    <string name="downloads_progress_of">%2$s න් %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s න් %1$s</string>
+    <string name="downloads_progress_of_capped">%2$s දක්වා ප්‍රමාණයෙන් %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s දක්වා</string>
+    <string name="downloads_speed">තත්පරයට %1$s</string>
+    <string name="downloads_eta">%1$s ඉතිරිය</string>
+    <string name="downloads_eta_approx">~%1$s ඉතිරිය</string>
+    <string name="downloads_transcoded_marker">පරිවර්තනය කර ඇත</string>
+    <string name="downloads_status_queued">රැඳී සිටී</string>
+    <string name="downloads_status_paused">විරාම කර ඇත</string>
+    <string name="downloads_status_failed">බාගත කිරීම අසාර්ථක විය</string>
+    <string name="downloads_status_failed_reason">බාගත කිරීම අසාර්ථක විය: %1$s</string>
+    <string name="downloads_empty_downloaded">තවම කිසිවක් බාගත කර නැත. චිත්‍රපටයක් හෝ කථාංගයක් මෙම උපාංගයේ තබා ගැනීමට බාගත කරන්න මත තට්ටු කරන්න.</string>
+    <string name="downloads_empty_queue">බාගත කිරීමේ පෝලිම හිස් ය.</string>
+    <string name="downloads_load_failed">ඔබගේ බාගත කිරීම් කියවිය නොහැකි විය. නැවත උත්සාහ කිරීමට මෙම තිරය නැවත විවෘත කරන්න.</string>
+    <string name="downloads_message_delete_failed">එම බාගත කිරීම මකා දැමිය නොහැකි විය.</string>
+    <string name="downloads_message_action_failed">පෝලිම යාවත්කාලීන කළ නොහැකි විය.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d ක් විරාම කරන ලදී — පරිවර්තනය %2$d ක් බාගත වෙමින් පවතී (පරිවර්තනයක් විරාම කළ නොහැක).</item>
+        <item quantity="other">%1$d ක් විරාම කරන ලදී — පරිවර්තන %2$d ක් බාගත වෙමින් පවතී (පරිවර්තනයක් විරාම කළ නොහැක).</item>
+    </plurals>
+</resources>

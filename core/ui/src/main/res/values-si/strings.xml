@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">බාගත කර ඇත</string>
+    <string name="badge_download_queued">බාගත කිරීම සඳහා පෝලිමේ ඇත</string>
+    <string name="badge_download_paused">බාගත කිරීම විරාම කර ඇත</string>
+    <string name="badge_download_failed">බාගත කිරීම අසාර්ථක විය</string>
+    <string name="media_row_see_all">සියල්ල බලන්න</string>
+    <string name="media_card_watched">නරඹා ඇත</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ක් තෝරා ඇත</item>
+        <item quantity="other">%1$d ක් තෝරා ඇත</item>
+    </plurals>
+    <string name="selection_close">තේරීම හිස් කරන්න</string>
+    <string name="selection_select_all">සියල්ල තෝරන්න</string>
+    <string name="selection_mark_watched">නරඹන ලද ලෙස සලකුණු කරන්න</string>
+    <string name="selection_mark_unwatched">නොනරඹන ලද ලෙස සලකුණු කරන්න</string>
+    <string name="selection_download">බාගත කරන්න</string>
+    <string name="selection_item_selected">තෝරා ඇත</string>
+    <string name="selection_item_not_selected">තෝරා නැත</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d ක් නරඹන ලද ලෙස සලකුණු කරන ලදී</item>
+        <item quantity="other">%1$d ක් නරඹන ලද ලෙස සලකුණු කරන ලදී</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d ක් නරඹන ලද ලෙස සලකුණු කරන ලදී, %2$d ක් අසාර්ථක විය</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d අයිතමය නරඹන ලද ලෙස සලකුණු කළ නොහැකි විය</item>
+        <item quantity="other">%1$d අයිතම නරඹන ලද ලෙස සලකුණු කළ නොහැකි විය</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d ක් නොනරඹන ලද ලෙස සලකුණු කරන ලදී</item>
+        <item quantity="other">%1$d ක් නොනරඹන ලද ලෙස සලකුණු කරන ලදී</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d ක් නොනරඹන ලද ලෙස සලකුණු කරන ලදී, %2$d ක් අසාර්ථක විය</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d අයිතමය නොනරඹන ලද ලෙස සලකුණු කළ නොහැකි විය</item>
+        <item quantity="other">%1$d අයිතම නොනරඹන ලද ලෙස සලකුණු කළ නොහැකි විය</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d ක් බාගත කිරීම් වෙත එක් කරන ලදී</item>
+        <item quantity="other">%1$d ක් බාගත කිරීම් වෙත එක් කරන ලදී</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d ක් බාගත කිරීම් වෙත එක් කරන ලදී, %2$d ක් අසාර්ථක විය</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d අයිතමය බාගත කිරීම් වෙත එක් කළ නොහැකි විය</item>
+        <item quantity="other">%1$d අයිතම බාගත කිරීම් වෙත එක් කළ නොහැකි විය</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d ක් බාගත කිරීම් වෙත එක් කරන ලදී — %2$d ක් දැනටමත් මෙම උපාංගයේ ඇත</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d අයිතමය දැනටමත් මෙම උපාංගයේ ඇත</item>
+        <item quantity="other">%1$d අයිතම දැනටමත් මෙම උපාංගයේ ඇත</item>
+    </plurals>
+</resources>

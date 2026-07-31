@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">பதிவிறக்கப்பட்டவை</string>
+    <string name="downloads_tab_queue">வரிசை</string>
+    <string name="downloads_wifi_only">Wi‑Fi மட்டும்</string>
+
+    <string name="downloads_group_movies">திரைப்படங்கள்</string>
+
+    <string name="downloads_storage_summary">%1$s பயன்படுத்தப்பட்டது · %2$s காலி</string>
+
+    <string name="downloads_action_delete">பதிவிறக்கத்தை நீக்கு</string>
+    <string name="downloads_action_cancel">பதிவிறக்கத்தை ரத்துசெய்</string>
+    <string name="downloads_action_pause">பதிவிறக்கத்தை இடைநிறுத்து</string>
+    <string name="downloads_action_resume">பதிவிறக்கத்தைத் தொடர்</string>
+    <string name="downloads_action_move_up">வரிசையில் மேலே நகர்த்து</string>
+    <string name="downloads_action_move_down">வரிசையில் கீழே நகர்த்து</string>
+
+    <string name="downloads_action_pause_all">அனைத்தையும் இடைநிறுத்து</string>
+    <string name="downloads_action_resume_all">அனைத்தையும் தொடர்</string>
+    <string name="downloads_action_cancel_all">அனைத்தையும் ரத்துசெய்</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">இந்தப் பதிவிறக்கத்தை ரத்துசெய்யவா?</item>
+        <item quantity="other">அனைத்து %1$d பதிவிறக்கங்களையும் ரத்துசெய்யவா?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">வரிசை காலி செய்யப்படும், பகுதியாகப் பதிவிறக்கப்பட்ட கோப்புகள் அகற்றப்படும். முடிக்கப்பட்ட பதிவிறக்கங்கள் பாதிக்கப்படாது.</string>
+    <string name="downloads_cancel_all_dialog_confirm">பதிவிறக்கங்களை ரத்துசெய்</string>
+    <string name="downloads_cancel_all_dialog_dismiss">வைத்திரு</string>
+
+    <string name="downloads_delete_dialog_title">%1$s ஐ நீக்கவா?</string>
+    <string name="downloads_delete_dialog_message">பதிவிறக்கப்பட்ட கோப்புகள் இந்தச் சாதனத்திலிருந்து அகற்றப்படும். பின்னர் மீண்டும் பதிவிறக்கலாம்.</string>
+    <string name="downloads_delete_dialog_confirm">நீக்கு</string>
+    <string name="downloads_delete_dialog_cancel">ரத்துசெய்</string>
+
+    <string name="downloads_progress_of">%2$s இல் %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s இல் %1$s</string>
+    <string name="downloads_progress_of_capped">அதிகபட்சம் %2$s இல் %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">அதிகபட்சம் %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s மீதம்</string>
+    <string name="downloads_eta_approx">~%1$s மீதம்</string>
+    <string name="downloads_transcoded_marker">டிரான்ஸ்கோட் செய்யப்பட்டது</string>
+    <string name="downloads_status_queued">காத்திருக்கிறது</string>
+    <string name="downloads_status_paused">இடைநிறுத்தப்பட்டது</string>
+    <string name="downloads_status_failed">பதிவிறக்கம் தோல்வியடைந்தது</string>
+    <string name="downloads_status_failed_reason">பதிவிறக்கம் தோல்வியடைந்தது: %1$s</string>
+
+    <string name="downloads_empty_downloaded">இதுவரை எதுவும் பதிவிறக்கப்படவில்லை. ஒரு திரைப்படம் அல்லது எபிசோடில் பதிவிறக்கு என்பதைத் தட்டி இந்தச் சாதனத்தில் வைத்திருங்கள்.</string>
+    <string name="downloads_empty_queue">பதிவிறக்க வரிசை காலியாக உள்ளது.</string>
+    <string name="downloads_load_failed">உங்கள் பதிவிறக்கங்களைப் படிக்க முடியவில்லை. மீண்டும் முயற்சிக்க இந்தத் திரையை மீண்டும் திறக்கவும்.</string>
+    <string name="downloads_message_delete_failed">அந்தப் பதிவிறக்கத்தை நீக்க முடியவில்லை.</string>
+    <string name="downloads_message_action_failed">வரிசையைப் புதுப்பிக்க முடியவில்லை.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d இடைநிறுத்தப்பட்டது — %2$d டிரான்ஸ்கோட் பதிவிறக்கம் தொடர்கிறது (ஒரு டிரான்ஸ்கோடை இடைநிறுத்த முடியாது).</item>
+        <item quantity="other">%1$d இடைநிறுத்தப்பட்டது — %2$d டிரான்ஸ்கோடுகள் பதிவிறக்கம் தொடர்கின்றன (ஒரு டிரான்ஸ்கோடை இடைநிறுத்த முடியாது).</item>
+    </plurals>
+</resources>

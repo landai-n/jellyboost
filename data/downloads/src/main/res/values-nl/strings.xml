@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Downloads</string>
+    <string name="downloads_channel_description">Voortgang van media die naar dit apparaat worden gedownload.</string>
+
+    <string name="downloads_notification_preparing">Downloads worden voorbereid…</string>
+    <string name="downloads_notification_downloading">Downloaden…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Downloaden…</string>
+    <string name="downloads_action_pause">Pauzeren</string>
+    <string name="downloads_action_cancel">Annuleren</string>
+</resources>

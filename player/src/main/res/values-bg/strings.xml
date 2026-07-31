@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Затвори плейъра</string>
+    <string name="player_play">Пусни</string>
+    <string name="player_pause">Пауза</string>
+    <string name="player_rewind">Назад 10 секунди</string>
+    <string name="player_forward">Напред 30 секунди</string>
+
+    <string name="player_audio">Аудио</string>
+    <string name="player_subtitles">Субтитри</string>
+    <string name="player_subtitles_off">Изключени</string>
+    <string name="player_quality">Качество</string>
+    <string name="player_speed">Скорост</string>
+
+    <string name="player_skip_intro">Пропускане на въведението</string>
+    <string name="player_skip_outro">Пропускане на финалните надписи</string>
+
+    <string name="player_quality_auto">Автоматично</string>
+    <string name="player_quality_high">Високо — 20 Mbps</string>
+    <string name="player_quality_medium">Средно — 8 Mbps</string>
+    <string name="player_quality_low">Ниско — 3 Mbps</string>
+    <string name="player_quality_lowest">Най-ниско — 720 kbps</string>
+
+    <string name="player_method_direct_play">Директно възпроизвеждане</string>
+    <string name="player_method_direct_stream">Директен поток</string>
+    <string name="player_method_transcode">Транскодиране</string>
+
+    <string name="player_message_transcode">Устройството ви не можа да декодира този файл, затова сървърът го транскодира.</string>
+    <string name="player_message_lower_quality">Потокът заседна — нов опит с по-ниско качество.</string>
+    <string name="player_message_track_restart">Сървърът трябваше да прекодира потока за тази пътечка.</string>
+    <string name="player_message_track_streaming">Тази пътечка не е в изтеглянето — стриймва се от сървъра ви.</string>
+    <string name="player_message_track_offline">Тази пътечка не е в изтегления файл.</string>
+    <string name="player_message_failed">Възпроизвеждането е неуспешно.</string>
+
+    <string name="player_syncplay_group">Група</string>
+    <string name="player_syncplay_waiting">Изчакване на групата…</string>
+    <string name="player_syncplay_shuffle">Разбъркай опашката</string>
+    <string name="player_syncplay_repeat">Повторение</string>
+    <string name="player_syncplay_repeat_none">Изключено</string>
+    <string name="player_syncplay_repeat_one">Този елемент</string>
+    <string name="player_syncplay_repeat_all">Цялата опашка</string>
+    <string name="player_syncplay_leave">Напусни групата</string>
+    <string name="player_syncplay_leave_title">Да напуснете ли тази група?</string>
+    <string name="player_syncplay_leave_body">Възпроизвеждането продължава тук самостоятелно. Повторното присъединяване означава да изберете групата отново.</string>
+
+    <string name="player_syncplay_cancel">Отказ</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d човек гледа</item>
+        <item quantity="other">%d души гледат</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d още</string>
+
+    <string name="player_syncplay_queue">Опашка</string>
+    <string name="player_syncplay_queue_empty">Групата все още не е добавила нищо в опашката.</string>
+    <string name="player_syncplay_queue_item_loading">Зареждане…</string>
+    <string name="player_syncplay_queue_playing">В момента се възпроизвежда</string>
+    <string name="player_syncplay_queue_next">Следващ елемент</string>
+    <string name="player_syncplay_queue_previous">Предишен елемент</string>
+    <string name="player_syncplay_queue_move_up">Премести нагоре</string>
+    <string name="player_syncplay_queue_move_down">Премести надолу</string>
+    <string name="player_syncplay_queue_remove">Премахни от опашката</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d елемент в опашката</item>
+        <item quantity="other">%d елемента в опашката</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Излязохте от SyncPlay — връзката е загубена</string>
+    <string name="player_message_syncplay_rejoined">Присъединихте се отново към SyncPlay групата</string>
+    <string name="player_message_syncplay_join_failed">Не можахте да се присъедините към тази SyncPlay група.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay групата приключи.</string>
+    <string name="player_message_syncplay_removed">Вече не сте в SyncPlay групата.</string>
+    <string name="player_message_syncplay_library_denied">Групата гледа нещо, до което нямате достъп.</string>
+    <string name="player_message_syncplay_item_unavailable">Не можа да се отвори това, което групата гледа.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Назад</string>
+    <string name="player_syncplay_groups_home">Начало</string>
+    <string name="player_syncplay_groups_create">Създай група</string>
+    <string name="player_syncplay_groups_create_title">Наименувайте групата си</string>
+    <string name="player_syncplay_groups_create_hint">Име на групата</string>
+    <string name="player_syncplay_groups_create_confirm">Създай</string>
+    <string name="player_syncplay_groups_joining">Присъединяване…</string>
+    <string name="player_syncplay_groups_active_label">Вие сте в тази група</string>
+    <string name="player_syncplay_groups_open_player">Отвори плейъра</string>
+    <string name="player_syncplay_groups_empty">Никой друг не гледа заедно в момента.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay е забранен за вашия акаунт.</string>
+    <string name="player_syncplay_groups_error">Не можаха да се заредят SyncPlay групите.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay група</string>
+    <string name="player_syncplay_presence_channel_description">Пази мястото ви в група за съвместно гледане, докато приложението е на заден план.</string>
+    <string name="player_syncplay_presence_title">В SyncPlay група</string>
+    <string name="player_syncplay_presence_text">Изчакване на групата</string>
+    <string name="player_syncplay_presence_leave">Напусни</string>
+
+    <string name="player_syncplay_state_idle">Неактивно</string>
+    <string name="player_syncplay_state_waiting">Изчакване</string>
+    <string name="player_syncplay_state_paused">Пауза</string>
+    <string name="player_syncplay_state_playing">Възпроизвежда се</string>
+
+    <string name="player_cast">Прехвърли на устройство</string>
+
+    <string name="player_cast_device_unnamed">вашия телевизор</string>
+    <string name="player_message_cast_transferred">Сега се възпроизвежда на %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Напуснахте SyncPlay групата, за да прехвърлите на %1$s.</string>
+    <string name="player_message_cast_failed">Не можа да се пусне това на %1$s.</string>
+
+    <string name="player_casting_to">Прехвърляне на %1$s</string>
+</resources>

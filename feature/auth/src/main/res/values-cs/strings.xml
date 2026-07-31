@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Připojit se k serveru</string>
+    <string name="server_setup_discovered_title">Servery v této síti</string>
+    <string name="server_setup_discovering">Prohledává se místní síť…</string>
+    <string name="server_setup_no_servers_found">Žádný server se neohlásil. Zadejte adresu níže.</string>
+    <string name="server_setup_manual_title">Adresa serveru</string>
+    <string name="server_setup_address_label">Adresa nebo URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org or 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Připojit</string>
+    <string name="server_setup_connecting">Kontaktuje se server…</string>
+    <string name="server_setup_session_lost">Vaše uložené přihlášení se nepodařilo obnovit, proto jste byli odhlášeni. Přihlaste se prosím znovu.</string>
+
+    <string name="login_title">Přihlášení</string>
+    <string name="login_server_version">Verze %1$s</string>
+    <string name="login_server_version_unknown">Verze neznámá</string>
+    <string name="login_public_users_title">Kdo se dívá?</string>
+    <string name="login_username_label">Uživatelské jméno</string>
+    <string name="login_password_label">Heslo</string>
+    <string name="login_show_password">Zobrazit heslo</string>
+    <string name="login_hide_password">Skrýt heslo</string>
+    <string name="login_sign_in">Přihlásit se</string>
+    <string name="login_change_server">Použít jiný server</string>
+    <string name="login_loading">Načítají se údaje o serveru…</string>
+    <string name="login_or">nebo</string>
+
+    <string name="login_quick_connect">Použít Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Otevřete Jellyfin na zařízení, na kterém jste již přihlášeni, přejděte na Quick Connect a zadejte tento kód.</string>
+    <string name="login_quick_connect_waiting">Čeká se na potvrzení…</string>
+    <string name="login_quick_connect_cancel">Zrušit</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Vyzkoušena %d možná adresa, bez úspěchu.</item>
+        <item quantity="few">Vyzkoušeny %d možné adresy, bez úspěchu.</item>
+        <item quantity="many">Vyzkoušeno %d možných adres, bez úspěchu.</item>
+        <item quantity="other">Vyzkoušeno %d možných adres, bez úspěchu.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Server není dostupný</string>
+    <string name="auth_error_unsupported_version_or_product">Nepodporovaná verze nebo produkt</string>
+    <string name="auth_error_cannot_connect">Nepodařilo se navázat spojení.\nZkontrolujte adresu serveru a připojení k síti.</string>
+    <string name="auth_error_invalid_credentials">Nesprávné uživatelské jméno nebo heslo.</string>
+    <string name="auth_error_quick_connect_expired">Platnost tohoto kódu vypršela. Vyžádejte si nový a zkuste to znovu.</string>
+    <string name="auth_error_server">Server odpověděl chybou. Zkuste to znovu.</string>
+    <string name="auth_error_server_with_code">Server odpověděl chybou (%1$d). Zkuste to znovu.</string>
+</resources>

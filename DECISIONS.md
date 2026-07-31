@@ -3302,3 +3302,21 @@ Seeded from the approved plan; listed for traceability, no divergence:
   missing. A rule added "to be safe" would be indistinguishable, six months from now, from one that
   is load-bearing.
 
+
+## 2026-07-31 — Full app localization (not in plan)
+- **Scope:** all 10 modules' `res/values*/strings.xml`, `app/build.gradle.kts`
+  (`generateLocaleConfig`), `app/src/main/res/resources.properties`, remaining hardcoded
+  strings in `core/ui` components (DownloadBadge, MediaRow, MediaCardArtwork).
+- **Plan said:** nothing — `docs/PLAN.md` does not mention i18n, localization, or
+  translations anywhere; all milestones assume the existing English-only resources.
+- **Done instead:** completed string externalization, enabled AGP `generateLocaleConfig`
+  for Android 13+ per-app language selection, and added translated `values-<locale>/`
+  resources for the 68 locales shipped by the official jellyfin-android client (its
+  `values-*` set minus `chn`/`lzh`, which are not valid Android locale qualifiers).
+  Translations are machine-generated (Claude), flagged for future review via Weblate or
+  native speakers. No in-app language picker: on 33+ the OS per-app setting is used; below
+  33 the app follows the system locale (a picker would require migrating MainActivity off
+  FragmentActivity or adding AppCompat — out of proportion for this feature).
+- **Reason:** direct user request ("Add translation support across the app, translate into
+  all the officially supported languages from jellyfin"); the jellyfin-android locale set
+  is the closest definition of "officially supported" for an Android client.

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Изтеглено</string>
+    <string name="badge_download_queued">Изчаква изтегляне</string>
+    <string name="badge_download_paused">Изтеглянето е паузирано</string>
+    <string name="badge_download_failed">Изтеглянето е неуспешно</string>
+
+    <string name="media_row_see_all">Виж всички</string>
+    <string name="media_card_watched">Гледано</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Избран е %1$d елемент</item>
+        <item quantity="other">Избрани са %1$d елемента</item>
+    </plurals>
+    <string name="selection_close">Изчисти избора</string>
+    <string name="selection_select_all">Избери всички</string>
+    <string name="selection_mark_watched">Маркирай като гледано</string>
+    <string name="selection_mark_unwatched">Маркирай като негледано</string>
+    <string name="selection_download">Изтегли</string>
+
+    <string name="selection_item_selected">Избрано</string>
+    <string name="selection_item_not_selected">Не е избрано</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Маркиран %1$d елемент като гледан</item>
+        <item quantity="other">Маркирани %1$d елемента като гледани</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Маркирани %1$d като гледани, %2$d неуспешни</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Не можа да се маркира %1$d елемент като гледан</item>
+        <item quantity="other">Не можаха да се маркират %1$d елемента като гледани</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Маркиран %1$d елемент като негледан</item>
+        <item quantity="other">Маркирани %1$d елемента като негледани</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Маркирани %1$d като негледани, %2$d неуспешни</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Не можа да се маркира %1$d елемент като негледан</item>
+        <item quantity="other">Не можаха да се маркират %1$d елемента като негледани</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Добавен %1$d елемент към изтеглянията</item>
+        <item quantity="other">Добавени %1$d елемента към изтеглянията</item>
+    </plurals>
+    <string name="selection_result_download_partial">Добавени %1$d към изтеглянията, %2$d неуспешни</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Не можа да се добави %1$d елемент към изтеглянията</item>
+        <item quantity="other">Не можаха да се добавят %1$d елемента към изтеглянията</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Добавени %1$d към изтеглянията — %2$d вече са на това устройство</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d елемент вече е на това устройство</item>
+        <item quantity="other">%1$d елемента вече са на това устройство</item>
+    </plurals>
+</resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Înapoi</string>
+    <string name="detail_home">Acasă</string>
+    <string name="detail_play">Redă</string>
+    <string name="detail_resume">Continuă</string>
+    <string name="detail_download">Descarcă</string>
+    <string name="detail_download_cancel">Anulează</string>
+    <string name="detail_download_remove">Elimină</string>
+    <string name="detail_download_retry">Reîncearcă</string>
+    <string name="detail_play_episode">Redă acest episod</string>
+    <string name="detail_mark_watched">Marchează ca vizionat</string>
+    <string name="detail_mark_unwatched">Marchează ca nevizionat</string>
+    <string name="detail_add_favorite">Adaugă la favorite</string>
+    <string name="detail_remove_favorite">Elimină din favorite</string>
+    <string name="detail_section_seasons">Sezoane</string>
+    <string name="detail_section_next_up">Urmează</string>
+    <string name="detail_section_episodes">Episoade</string>
+    <string name="detail_section_similar">Titluri similare</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min rămase</string>
+    <string name="detail_size_on_device">%1$s pe dispozitiv</string>
+    <string name="detail_directed_by">Regizat de %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezon</item>
+        <item quantity="few">%1$d sezoane</item>
+        <item quantity="other">%1$d de sezoane</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episod</item>
+        <item quantity="few">%1$d episoade</item>
+        <item quantity="other">%1$d de episoade</item>
+    </plurals>
+    <string name="detail_empty">Acest element nu mai este disponibil.</string>
+    <string name="detail_message_download_queued">Adăugat la descărcări.</string>
+    <string name="detail_message_download_failed">Descărcarea nu a putut fi pornită.</string>
+    <string name="detail_message_download_deleted">Eliminat de pe acest dispozitiv.</string>
+    <string name="detail_message_download_delete_failed">Descărcarea nu a putut fi eliminată.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Descărcare anulată — %1$d episod terminat păstrat.</item>
+        <item quantity="few">Descărcare anulată — %1$d episoade terminate păstrate.</item>
+        <item quantity="other">Descărcare anulată — %1$d de episoade terminate păstrate.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nu s-a putut salva. Încercați din nou.</string>
+    <string name="detail_group_play">Redă pentru %1$s</string>
+    <string name="detail_group_resume">Continuă pentru %1$s</string>
+    <string name="detail_group_play_next">Redă următorul</string>
+    <string name="detail_group_add_to_queue">Adaugă la coadă</string>
+    <string name="detail_message_group_play">Grupul a fost rugat să redea acest conținut.</string>
+    <string name="detail_message_group_play_next">Adăugat ca următor pentru grup.</string>
+    <string name="detail_message_group_queued">Adăugat la coada grupului.</string>
+    <string name="detail_delete_download_dialog_title">Ștergeți descărcarea?</string>
+    <string name="detail_delete_download_dialog_message">Aceasta o elimină de pe acest dispozitiv. O puteți descărca din nou oricând.</string>
+    <string name="detail_delete_download_dialog_confirm">Șterge</string>
+    <string name="detail_delete_download_dialog_cancel">Anulează</string>
+</resources>

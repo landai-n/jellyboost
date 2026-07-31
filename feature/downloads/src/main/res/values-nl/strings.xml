@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Gedownload</string>
+    <string name="downloads_tab_queue">Wachtrij</string>
+    <string name="downloads_wifi_only">Alleen wifi</string>
+
+    <string name="downloads_group_movies">Films</string>
+
+    <string name="downloads_storage_summary">%1$s gebruikt · %2$s vrij</string>
+
+    <string name="downloads_action_delete">Download verwijderen</string>
+    <string name="downloads_action_cancel">Download annuleren</string>
+    <string name="downloads_action_pause">Download pauzeren</string>
+    <string name="downloads_action_resume">Download hervatten</string>
+    <string name="downloads_action_move_up">Omhoog in de wachtrij</string>
+    <string name="downloads_action_move_down">Omlaag in de wachtrij</string>
+
+    <string name="downloads_action_pause_all">Alles pauzeren</string>
+    <string name="downloads_action_resume_all">Alles hervatten</string>
+    <string name="downloads_action_cancel_all">Alles annuleren</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Deze download annuleren?</item>
+        <item quantity="other">Alle %1$d downloads annuleren?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">De wachtrij wordt geleegd en gedeeltelijk gedownloade bestanden worden verwijderd. Voltooide downloads blijven ongewijzigd.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Downloads annuleren</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behouden</string>
+
+    <string name="downloads_delete_dialog_title">%1$s verwijderen?</string>
+    <string name="downloads_delete_dialog_message">De gedownloade bestanden worden van dit apparaat verwijderd. Je kunt het later opnieuw downloaden.</string>
+    <string name="downloads_delete_dialog_confirm">Verwijderen</string>
+    <string name="downloads_delete_dialog_cancel">Annuleren</string>
+
+    <string name="downloads_progress_of">%1$s van %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s van ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s van maximaal %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">maximaal %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Nog %1$s</string>
+    <string name="downloads_eta_approx">Nog ~%1$s</string>
+    <string name="downloads_transcoded_marker">Getranscodeerd</string>
+    <string name="downloads_status_queued">Wachten</string>
+    <string name="downloads_status_paused">Gepauzeerd</string>
+    <string name="downloads_status_failed">Download mislukt</string>
+    <string name="downloads_status_failed_reason">Download mislukt: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Nog niets gedownload. Tik op Downloaden bij een film of aflevering om deze op dit apparaat te bewaren.</string>
+    <string name="downloads_empty_queue">De downloadwachtrij is leeg.</string>
+    <string name="downloads_load_failed">Kon je downloads niet lezen. Open dit scherm opnieuw om het nogmaals te proberen.</string>
+    <string name="downloads_message_delete_failed">Kon die download niet verwijderen.</string>
+    <string name="downloads_message_action_failed">Kon de wachtrij niet bijwerken.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d gepauzeerd – %2$d transcodering blijft downloaden (een transcodering kan niet worden gepauzeerd).</item>
+        <item quantity="other">%1$d gepauzeerd – %2$d transcoderingen blijven downloaden (een transcodering kan niet worden gepauzeerd).</item>
+    </plurals>
+</resources>

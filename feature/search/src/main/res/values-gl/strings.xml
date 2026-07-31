@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Buscar películas, series e episodios</string>
+    <string name="search_clear">Limpar</string>
+    <string name="search_section_movies">Películas</string>
+    <string name="search_section_series">Series</string>
+    <string name="search_section_episodes">Episodios</string>
+    <string name="search_prompt">Escribe para buscar nas túas bibliotecas.</string>
+    <string name="search_no_results">Nada coincide con “%1$s”.</string>
+    <string name="search_error_network">Non é posible contactar co teu servidor. Comproba a túa conexión e téntao de novo.</string>
+    <string name="search_error_unauthorized">A túa sesión caducou. Inicia sesión de novo para continuar.</string>
+    <string name="search_error_not_found">Ese elemento xa non está no servidor.</string>
+    <string name="search_error_server">O servidor devolveu un erro.</string>
+    <string name="search_error_server_with_code">O servidor devolveu un erro (%1$d).</string>
+    <string name="search_error_storage">Non foi posible ler os datos locais.</string>
+    <string name="search_error_unknown">Algo fallou durante a busca.</string>
+</resources>

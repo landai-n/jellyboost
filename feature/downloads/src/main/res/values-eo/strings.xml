@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Elŝutitaj</string>
+    <string name="downloads_tab_queue">Atendovico</string>
+    <string name="downloads_wifi_only">Nur Wi‑Fi</string>
+    <string name="downloads_group_movies">Filmoj</string>
+    <string name="downloads_storage_summary">%1$s uzataj · %2$s liberaj</string>
+    <string name="downloads_action_delete">Forigi elŝuton</string>
+    <string name="downloads_action_cancel">Nuligi elŝuton</string>
+    <string name="downloads_action_pause">Paŭzigi elŝuton</string>
+    <string name="downloads_action_resume">Daŭrigi elŝuton</string>
+    <string name="downloads_action_move_up">Movi supren en la atendovico</string>
+    <string name="downloads_action_move_down">Movi malsupren en la atendovico</string>
+    <string name="downloads_action_pause_all">Paŭzigi ĉiujn</string>
+    <string name="downloads_action_resume_all">Daŭrigi ĉiujn</string>
+    <string name="downloads_action_cancel_all">Nuligi ĉiujn</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Ĉu nuligi ĉi tiun elŝuton?</item>
+        <item quantity="other">Ĉu nuligi ĉiujn %1$d elŝutojn?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">La atendovico estas malplenigita kaj ĉiuj parte elŝutitaj dosieroj estas forigitaj. Finitaj elŝutoj ne estas trafitaj.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Nuligi elŝutojn</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Konservi</string>
+    <string name="downloads_delete_dialog_title">Ĉu forigi %1$s?</string>
+    <string name="downloads_delete_dialog_message">La elŝutitaj dosieroj estas forigitaj el ĉi tiu aparato. Vi povas denove elŝuti ĝin poste.</string>
+    <string name="downloads_delete_dialog_confirm">Forigi</string>
+    <string name="downloads_delete_dialog_cancel">Nuligi</string>
+    <string name="downloads_progress_of">%1$s el %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s el ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s el ĝis %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">ĝis %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s restas</string>
+    <string name="downloads_eta_approx">~%1$s restas</string>
+    <string name="downloads_transcoded_marker">Transkodita</string>
+    <string name="downloads_status_queued">Atendante</string>
+    <string name="downloads_status_paused">Paŭzigita</string>
+    <string name="downloads_status_failed">Elŝuto malsukcesis</string>
+    <string name="downloads_status_failed_reason">Elŝuto malsukcesis: %1$s</string>
+    <string name="downloads_empty_downloaded">Nenio elŝutita ankoraŭ. Tuŝu Elŝuti ĉe filmo aŭ epizodo por konservi ĝin sur ĉi tiu aparato.</string>
+    <string name="downloads_empty_queue">La elŝuta atendovico estas malplena.</string>
+    <string name="downloads_load_failed">Ne eblis legi viajn elŝutojn. Remalfermu ĉi tiun ekranon por reprovi.</string>
+    <string name="downloads_message_delete_failed">Ne eblis forigi tiun elŝuton.</string>
+    <string name="downloads_message_action_failed">Ne eblis ĝisdatigi la atendovicon.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d paŭzigita — %2$d transkodo daŭre elŝutiĝas (transkodo ne povas esti paŭzigita).</item>
+        <item quantity="other">%1$d paŭzigitaj — %2$d transkodoj daŭre elŝutiĝas (transkodo ne povas esti paŭzigita).</item>
+    </plurals>
+</resources>

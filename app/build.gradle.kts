@@ -105,6 +105,13 @@ android {
         compose = true
     }
 
+    androidResources {
+        // Generates the API 33+ LocaleConfig from the values-* folders so the OS offers
+        // Jellyboost in Settings > System > Languages > App languages. The default locale
+        // comes from res/resources.properties (unqualifiedResLocale).
+        generateLocaleConfig = true
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

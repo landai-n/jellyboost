@@ -16,10 +16,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
@@ -67,7 +69,7 @@ fun <T> MediaRow(
             )
             if (onSeeAll != null) {
                 TextButton(onClick = onSeeAll) {
-                    Text(text = "See all", style = MaterialTheme.typography.labelLarge)
+                    Text(text = stringResource(R.string.media_row_see_all), style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">සේවාදායකයට සම්බන්ධ වන්න</string>
+    <string name="server_setup_discovered_title">මෙම ජාලයේ ඇති සේවාදායකයන්</string>
+    <string name="server_setup_discovering">දේශීය ජාලය සොයමින්…</string>
+    <string name="server_setup_no_servers_found">කිසිදු සේවාදායකයක් ප්‍රකාශයට පත් නොවීය. පහත ලිපිනයක් ඇතුළත් කරන්න.</string>
+    <string name="server_setup_manual_title">සේවාදායක ලිපිනය</string>
+    <string name="server_setup_address_label">සත්කාරකය හෝ URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org හෝ 192.168.1.10:8096</string>
+    <string name="server_setup_connect">සම්බන්ධ වන්න</string>
+    <string name="server_setup_connecting">සේවාදායකය සම්බන්ධ කරමින්…</string>
+    <string name="server_setup_session_lost">ඔබගේ සුරකින ලද පිවිසුම ප්‍රතිස්ථාපනය කළ නොහැකි වූ බැවින්, ඔබ නික්මවා ඇත. කරුණාකර නැවත පිවිසෙන්න.</string>
+    <string name="login_title">පිවිසෙන්න</string>
+    <string name="login_server_version">අනුවාදය %1$s</string>
+    <string name="login_server_version_unknown">අනුවාදය නොදනී</string>
+    <string name="login_public_users_title">නරඹන්නේ කවුරුන්ද?</string>
+    <string name="login_username_label">පරිශීලක නාමය</string>
+    <string name="login_password_label">මුරපදය</string>
+    <string name="login_show_password">මුරපදය පෙන්වන්න</string>
+    <string name="login_hide_password">මුරපදය සඟවන්න</string>
+    <string name="login_sign_in">පිවිසෙන්න</string>
+    <string name="login_change_server">වෙනත් සේවාදායකයක් භාවිත කරන්න</string>
+    <string name="login_loading">සේවාදායක විස්තර පූරණය කරමින්…</string>
+    <string name="login_or">හෝ</string>
+    <string name="login_quick_connect">Quick Connect භාවිත කරන්න</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">දැනටමත් පිවිසී ඇති උපාංගයක Jellyfin විවෘත කර, Quick Connect වෙත ගොස් මෙම කේතය ඇතුළත් කරන්න.</string>
+    <string name="login_quick_connect_waiting">අනුමැතිය සඳහා රැඳී සිටිමින්…</string>
+    <string name="login_quick_connect_cancel">අවලංගු කරන්න</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">අපේක්ෂිත ලිපිනය %d ක් උත්සාහ කරන ලදී, සාර්ථක නොවීය.</item>
+        <item quantity="other">අපේක්ෂිත ලිපින %d ක් උත්සාහ කරන ලදී, සාර්ථක නොවීය.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">සේවාදායකයට ළඟා විය නොහැක</string>
+    <string name="auth_error_unsupported_version_or_product">සහාය නොදක්වන අනුවාදයක් හෝ නිෂ්පාදනයක්</string>
+    <string name="auth_error_cannot_connect">සම්බන්ධතාවය ස්ථාපිත කළ නොහැක.\nසත්කාරක නාමය සහ ඔබගේ ජාල සම්බන්ධතාවය පරීක්ෂා කරන්න.</string>
+    <string name="auth_error_invalid_credentials">වැරදි පරිශීලක නාමයක් හෝ මුරපදයකි.</string>
+    <string name="auth_error_quick_connect_expired">එම කේතයේ කාලය ඉකුත් විය. නව එකක් ඉල්ලා නැවත උත්සාහ කරන්න.</string>
+    <string name="auth_error_server">සේවාදායකය දෝෂයක් සමඟ පිළිතුරු දුන්නේය. නැවත උත්සාහ කරන්න.</string>
+    <string name="auth_error_server_with_code">සේවාදායකය දෝෂයක් (%1$d) සමඟ පිළිතුරු දුන්නේය. නැවත උත්සාහ කරන්න.</string>
+</resources>

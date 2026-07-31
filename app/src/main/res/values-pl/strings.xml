@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Więcej opcji</string>
+    <string name="home_settings">Ustawienia</string>
+    <string name="settings_offline_mode">Tryb offline</string>
+
+    <string name="state_on">Włączone</string>
+    <string name="state_off">Wyłączone</string>
+
+    <string name="nav_home">Strona główna</string>
+    <string name="nav_libraries">Biblioteki</string>
+    <string name="nav_search">Szukaj</string>
+    <string name="nav_downloads">Pobrania</string>
+
+    <string name="offline_no_network">Brak sieci — wyświetlane są pobrane multimedia</string>
+    <string name="offline_server_unreachable">Nie można połączyć się z serwerem — wyświetlane są pobrane multimedia</string>
+    <string name="offline_forced">Tryb offline jest włączony — wyświetlane są pobrane multimedia</string>
+    <string name="offline_retry">Spróbuj ponownie</string>
+    <string name="offline_go_online">Przejdź online</string>
+
+    <string name="syncplay_groups_action">Grupy SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grupy SyncPlay — jesteś w grupie</string>
+</resources>

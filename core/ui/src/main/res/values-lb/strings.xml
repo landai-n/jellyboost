@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Erofgeluede</string>
+    <string name="badge_download_queued">An der Downloadwarteschlaang</string>
+    <string name="badge_download_paused">Download pauséiert</string>
+    <string name="badge_download_failed">Download feelgeschloen</string>
+
+    <string name="media_row_see_all">Alles weisen</string>
+    <string name="media_card_watched">Gekuckt</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ausgewielt</item>
+        <item quantity="other">%1$d ausgewielt</item>
+    </plurals>
+    <string name="selection_close">Auswiel opheiwen</string>
+    <string name="selection_select_all">Alles auswielen</string>
+    <string name="selection_mark_watched">Als gekuckt markéieren</string>
+    <string name="selection_mark_unwatched">Als net gekuckt markéieren</string>
+    <string name="selection_download">Eroflueden</string>
+
+    <string name="selection_item_selected">Ausgewielt</string>
+    <string name="selection_item_not_selected">Net ausgewielt</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d als gekuckt markéiert</item>
+        <item quantity="other">%1$d als gekuckt markéiert</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d als gekuckt markéiert, %2$d feelgeschloen</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d Element konnt net als gekuckt markéiert ginn</item>
+        <item quantity="other">%1$d Elementer konnten net als gekuckt markéiert ginn</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d als net gekuckt markéiert</item>
+        <item quantity="other">%1$d als net gekuckt markéiert</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d als net gekuckt markéiert, %2$d feelgeschloen</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d Element konnt net als net gekuckt markéiert ginn</item>
+        <item quantity="other">%1$d Elementer konnten net als net gekuckt markéiert ginn</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d zu den Downloads bäigefüügt</item>
+        <item quantity="other">%1$d zu den Downloads bäigefüügt</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d zu den Downloads bäigefüügt, %2$d feelgeschloen</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d Element konnt net zu den Downloads bäigefüügt ginn</item>
+        <item quantity="other">%1$d Elementer konnten net zu den Downloads bäigefüügt ginn</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d zu den Downloads bäigefüügt – %2$d schonn op dësem Apparat</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d Element ass schonn op dësem Apparat</item>
+        <item quantity="other">%1$d Elementer sinn schonn op dësem Apparat</item>
+    </plurals>
+</resources>

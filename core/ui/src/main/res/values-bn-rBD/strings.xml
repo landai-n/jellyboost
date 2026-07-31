@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ডাউনলোড হয়েছে</string>
+    <string name="badge_download_queued">ডাউনলোডের জন্য সারিবদ্ধ</string>
+    <string name="badge_download_paused">ডাউনলোড থামানো হয়েছে</string>
+    <string name="badge_download_failed">ডাউনলোড ব্যর্থ হয়েছে</string>
+    <string name="media_row_see_all">সব দেখুন</string>
+    <string name="media_card_watched">দেখা হয়েছে</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$dটি নির্বাচিত</item>
+        <item quantity="other">%1$dটি নির্বাচিত</item>
+    </plurals>
+    <string name="selection_close">নির্বাচন সাফ করুন</string>
+    <string name="selection_select_all">সব নির্বাচন করুন</string>
+    <string name="selection_mark_watched">দেখা হয়েছে চিহ্নিত করুন</string>
+    <string name="selection_mark_unwatched">দেখা হয়নি চিহ্নিত করুন</string>
+    <string name="selection_download">ডাউনলোড</string>
+    <string name="selection_item_selected">নির্বাচিত</string>
+    <string name="selection_item_not_selected">নির্বাচিত নয়</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$dটি দেখা হয়েছে চিহ্নিত করা হয়েছে</item>
+        <item quantity="other">%1$dটি দেখা হয়েছে চিহ্নিত করা হয়েছে</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$dটি দেখা হয়েছে চিহ্নিত করা হয়েছে, %2$dটি ব্যর্থ হয়েছে</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$dটি আইটেম দেখা হয়েছে চিহ্নিত করা যায়নি</item>
+        <item quantity="other">%1$dটি আইটেম দেখা হয়েছে চিহ্নিত করা যায়নি</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$dটি দেখা হয়নি চিহ্নিত করা হয়েছে</item>
+        <item quantity="other">%1$dটি দেখা হয়নি চিহ্নিত করা হয়েছে</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$dটি দেখা হয়নি চিহ্নিত করা হয়েছে, %2$dটি ব্যর্থ হয়েছে</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$dটি আইটেম দেখা হয়নি চিহ্নিত করা যায়নি</item>
+        <item quantity="other">%1$dটি আইটেম দেখা হয়নি চিহ্নিত করা যায়নি</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$dটি ডাউনলোডে যোগ করা হয়েছে</item>
+        <item quantity="other">%1$dটি ডাউনলোডে যোগ করা হয়েছে</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$dটি ডাউনলোডে যোগ করা হয়েছে, %2$dটি ব্যর্থ হয়েছে</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$dটি আইটেম ডাউনলোডে যোগ করা যায়নি</item>
+        <item quantity="other">%1$dটি আইটেম ডাউনলোডে যোগ করা যায়নি</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$dটি ডাউনলোডে যোগ করা হয়েছে — %2$dটি ইতিমধ্যে এই ডিভাইসে আছে</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$dটি আইটেম ইতিমধ্যে এই ডিভাইসে আছে</item>
+        <item quantity="other">%1$dটি আইটেম ইতিমধ্যে এই ডিভাইসে আছে</item>
+    </plurals>
+</resources>

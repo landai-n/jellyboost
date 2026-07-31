@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">設定</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_home">主頁</string>
+
+    <string name="settings_section_playback">播放</string>
+    <string name="settings_skip_intro">跳過片頭</string>
+    <string name="settings_skip_outro">跳過片尾</string>
+    <string name="settings_skip_mode_off">咩都唔做</string>
+    <string name="settings_skip_mode_show_button">顯示跳過掣</string>
+    <string name="settings_skip_mode_auto">自動跳過</string>
+    <string name="settings_pip">子母畫面</string>
+    <string name="settings_pip_supporting">離開應用程式之後喺浮動視窗度繼續播放。</string>
+
+    <string name="settings_section_downloads">下載</string>
+    <string name="settings_wifi_only">淨係 Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">用緊行動數據嗰陣暫停下載。</string>
+    <string name="settings_quality">下載畫質</string>
+    <string name="settings_quality_original">原始檔案——完全複製，可續傳</string>
+    <string name="settings_quality_high">高——大約 20 Mbps，1080p</string>
+    <string name="settings_quality_medium">中——大約 8 Mbps，1080p</string>
+    <string name="settings_quality_low">低——大約 3 Mbps，720p</string>
+    <string name="settings_quality_supporting">除咗原始檔案之外，其他畫質都會喺你部伺服器傳送嗰陣轉換，所以下載過程中顯示嘅大小淨係估計值，傳輸中斷之後會重新開始。</string>
+    <string name="settings_storage_label">儲存空間</string>
+    <string name="settings_storage_summary">呢部裝置已用 %1$s · 仲有 %2$s</string>
+    <string name="settings_storage_location">下載內容存放喺 %1$s</string>
+    <string name="settings_storage_picker">儲存位置</string>
+    <string name="settings_storage_internal">內部儲存空間</string>
+    <string name="settings_storage_sd_card">SD 卡</string>
+    <string name="settings_storage_volume_free">仲有 %1$s</string>
+    <string name="settings_storage_missing">你揀嘅儲存位置而家用唔到，下載內容會改為存放去下面揀嘅位置。</string>
+    <string name="settings_storage_switch_title">要搬啲下載內容嗎？</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">下載內容而家仲未可以喺唔同位置之間搬，所以呢部裝置上已有嘅 %1$d 樣嘢會被刪除。你可以重新下載去新位置。</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">刪除同埋切換</string>
+
+    <string name="settings_section_connectivity">連線</string>
+    <string name="settings_offline_mode">離線模式</string>
+    <string name="settings_offline_mode_supporting">淨係顯示呢部裝置上已經有嘅媒體。</string>
+
+    <string name="settings_section_account">帳戶</string>
+    <string name="settings_account_user">已登入為</string>
+    <string name="settings_account_server">伺服器</string>
+    <string name="settings_account_unknown">未登入</string>
+    <string name="settings_sign_out">登出</string>
+    <string name="settings_sign_out_dialog_title">要登出？</string>
+    <string name="settings_sign_out_dialog_message">你需要伺服器地址同密碼先可以再登入。</string>
+    <string name="settings_sign_out_delete_downloads">同時刪除呢部裝置上嘅下載內容</string>
+    <string name="settings_cancel">取消</string>
+</resources>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Elŝutita</string>
+    <string name="badge_download_queued">En atendo por elŝuto</string>
+    <string name="badge_download_paused">Elŝuto paŭzigita</string>
+    <string name="badge_download_failed">Elŝuto malsukcesis</string>
+    <string name="media_row_see_all">Vidi ĉiujn</string>
+    <string name="media_card_watched">Spektita</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d elektita</item>
+        <item quantity="other">%1$d elektitaj</item>
+    </plurals>
+    <string name="selection_close">Forigi elekton</string>
+    <string name="selection_select_all">Elekti ĉiujn</string>
+    <string name="selection_mark_watched">Marki kiel spektita</string>
+    <string name="selection_mark_unwatched">Marki kiel nespektita</string>
+    <string name="selection_download">Elŝuti</string>
+    <string name="selection_item_selected">Elektita</string>
+    <string name="selection_item_not_selected">Ne elektita</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d markita kiel spektita</item>
+        <item quantity="other">%1$d markitaj kiel spektitaj</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d markitaj kiel spektitaj, %2$d malsukcesis</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Ne eblis marki %1$d eron kiel spektita</item>
+        <item quantity="other">Ne eblis marki %1$d erojn kiel spektitaj</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d markita kiel nespektita</item>
+        <item quantity="other">%1$d markitaj kiel nespektitaj</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d markitaj kiel nespektitaj, %2$d malsukcesis</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Ne eblis marki %1$d eron kiel nespektita</item>
+        <item quantity="other">Ne eblis marki %1$d erojn kiel nespektitaj</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d aldonita al elŝutoj</item>
+        <item quantity="other">%1$d aldonitaj al elŝutoj</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d aldonitaj al elŝutoj, %2$d malsukcesis</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Ne eblis aldoni %1$d eron al elŝutoj</item>
+        <item quantity="other">Ne eblis aldoni %1$d erojn al elŝutoj</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d aldonitaj al elŝutoj — %2$d jam sur ĉi tiu aparato</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d ero jam estas sur ĉi tiu aparato</item>
+        <item quantity="other">%1$d eroj jam estas sur ĉi tiu aparato</item>
+    </plurals>
+</resources>

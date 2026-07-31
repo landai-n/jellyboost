@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Heruntergeladen</string>
+    <string name="downloads_tab_queue">Warteschlange</string>
+    <string name="downloads_wifi_only">Nur WLAN</string>
+
+    <string name="downloads_group_movies">Filme</string>
+
+    <string name="downloads_storage_summary">%1$s belegt · %2$s frei</string>
+
+    <string name="downloads_action_delete">Download löschen</string>
+    <string name="downloads_action_cancel">Download abbrechen</string>
+    <string name="downloads_action_pause">Download pausieren</string>
+    <string name="downloads_action_resume">Download fortsetzen</string>
+    <string name="downloads_action_move_up">In der Warteschlange nach oben</string>
+    <string name="downloads_action_move_down">In der Warteschlange nach unten</string>
+
+    <string name="downloads_action_pause_all">Alle pausieren</string>
+    <string name="downloads_action_resume_all">Alle fortsetzen</string>
+    <string name="downloads_action_cancel_all">Alle abbrechen</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Diesen Download abbrechen?</item>
+        <item quantity="other">Alle %1$d Downloads abbrechen?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Die Warteschlange wird geleert und teilweise heruntergeladene Dateien werden entfernt. Abgeschlossene Downloads sind davon nicht betroffen.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Downloads abbrechen</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behalten</string>
+
+    <string name="downloads_delete_dialog_title">%1$s löschen?</string>
+    <string name="downloads_delete_dialog_message">Die heruntergeladenen Dateien werden von diesem Gerät entfernt. Du kannst sie später erneut herunterladen.</string>
+    <string name="downloads_delete_dialog_confirm">Löschen</string>
+    <string name="downloads_delete_dialog_cancel">Abbrechen</string>
+
+    <string name="downloads_progress_of">%1$s von %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s von ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s von bis zu %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">bis zu %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Noch %1$s</string>
+    <string name="downloads_eta_approx">Noch ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transkodiert</string>
+    <string name="downloads_status_queued">Wartet</string>
+    <string name="downloads_status_paused">Pausiert</string>
+    <string name="downloads_status_failed">Download fehlgeschlagen</string>
+    <string name="downloads_status_failed_reason">Download fehlgeschlagen: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Noch nichts heruntergeladen. Tippe bei einem Film oder einer Folge auf „Herunterladen“, um ihn auf diesem Gerät zu behalten.</string>
+    <string name="downloads_empty_queue">Die Downloadwarteschlange ist leer.</string>
+    <string name="downloads_load_failed">Deine Downloads konnten nicht gelesen werden. Öffne diesen Bildschirm erneut, um es noch einmal zu versuchen.</string>
+    <string name="downloads_message_delete_failed">Der Download konnte nicht gelöscht werden.</string>
+    <string name="downloads_message_action_failed">Die Warteschlange konnte nicht aktualisiert werden.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d pausiert – %2$d Transkodierung wird weiter heruntergeladen (eine Transkodierung kann nicht pausiert werden).</item>
+        <item quantity="other">%1$d pausiert – %2$d Transkodierungen werden weiter heruntergeladen (eine Transkodierung kann nicht pausiert werden).</item>
+    </plurals>
+</resources>

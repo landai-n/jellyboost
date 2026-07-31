@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Lastet ned</string>
+    <string name="badge_download_queued">I kø for nedlasting</string>
+    <string name="badge_download_paused">Nedlasting satt på pause</string>
+    <string name="badge_download_failed">Nedlasting mislyktes</string>
+
+    <string name="media_row_see_all">Se alle</string>
+    <string name="media_card_watched">Sett</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d valgt</item>
+        <item quantity="other">%1$d valgt</item>
+    </plurals>
+    <string name="selection_close">Fjern valg</string>
+    <string name="selection_select_all">Velg alle</string>
+    <string name="selection_mark_watched">Merk som sett</string>
+    <string name="selection_mark_unwatched">Merk som usett</string>
+    <string name="selection_download">Last ned</string>
+
+    <string name="selection_item_selected">Valgt</string>
+    <string name="selection_item_not_selected">Ikke valgt</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Merket %1$d som sett</item>
+        <item quantity="other">Merket %1$d som sett</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Merket %1$d som sett, %2$d mislyktes</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kunne ikke merke %1$d element som sett</item>
+        <item quantity="other">Kunne ikke merke %1$d elementer som sett</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Merket %1$d som usett</item>
+        <item quantity="other">Merket %1$d som usett</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Merket %1$d som usett, %2$d mislyktes</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kunne ikke merke %1$d element som usett</item>
+        <item quantity="other">Kunne ikke merke %1$d elementer som usett</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d lagt til i nedlastinger</item>
+        <item quantity="other">%1$d lagt til i nedlastinger</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d lagt til i nedlastinger, %2$d mislyktes</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kunne ikke legge til %1$d element i nedlastinger</item>
+        <item quantity="other">Kunne ikke legge til %1$d elementer i nedlastinger</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d lagt til i nedlastinger – %2$d er allerede på denne enheten</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element er allerede på denne enheten</item>
+        <item quantity="other">%1$d elementer er allerede på denne enheten</item>
+    </plurals>
+</resources>

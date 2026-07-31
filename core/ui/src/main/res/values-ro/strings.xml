@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Descărcat</string>
+    <string name="badge_download_queued">În așteptare pentru descărcare</string>
+    <string name="badge_download_paused">Descărcare în pauză</string>
+    <string name="badge_download_failed">Descărcare eșuată</string>
+    <string name="media_row_see_all">Vezi tot</string>
+    <string name="media_card_watched">Vizionat</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selectat</item>
+        <item quantity="few">%1$d selectate</item>
+        <item quantity="other">%1$d selectate</item>
+    </plurals>
+    <string name="selection_close">Șterge selecția</string>
+    <string name="selection_select_all">Selectează tot</string>
+    <string name="selection_mark_watched">Marchează ca vizionat</string>
+    <string name="selection_mark_unwatched">Marchează ca nevizionat</string>
+    <string name="selection_download">Descarcă</string>
+    <string name="selection_item_selected">Selectat</string>
+    <string name="selection_item_not_selected">Neselectat</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d marcat ca vizionat</item>
+        <item quantity="few">%1$d marcate ca vizionate</item>
+        <item quantity="other">%1$d marcate ca vizionate</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d marcate ca vizionate, %2$d eșuate</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nu s-a putut marca %1$d element ca vizionat</item>
+        <item quantity="few">Nu s-au putut marca %1$d elemente ca vizionate</item>
+        <item quantity="other">Nu s-au putut marca %1$d de elemente ca vizionate</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d marcat ca nevizionat</item>
+        <item quantity="few">%1$d marcate ca nevizionate</item>
+        <item quantity="other">%1$d marcate ca nevizionate</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d marcate ca nevizionate, %2$d eșuate</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nu s-a putut marca %1$d element ca nevizionat</item>
+        <item quantity="few">Nu s-au putut marca %1$d elemente ca nevizionate</item>
+        <item quantity="other">Nu s-au putut marca %1$d de elemente ca nevizionate</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d adăugat la descărcări</item>
+        <item quantity="few">%1$d adăugate la descărcări</item>
+        <item quantity="other">%1$d adăugate la descărcări</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d adăugate la descărcări, %2$d eșuate</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nu s-a putut adăuga %1$d element la descărcări</item>
+        <item quantity="few">Nu s-au putut adăuga %1$d elemente la descărcări</item>
+        <item quantity="other">Nu s-au putut adăuga %1$d de elemente la descărcări</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d adăugate la descărcări — %2$d deja pe acest dispozitiv</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element este deja pe acest dispozitiv</item>
+        <item quantity="few">%1$d elemente sunt deja pe acest dispozitiv</item>
+        <item quantity="other">%1$d de elemente sunt deja pe acest dispozitiv</item>
+    </plurals>
+</resources>

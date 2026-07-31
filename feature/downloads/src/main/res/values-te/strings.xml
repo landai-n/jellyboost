@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">డౌన్‌లోడ్ చేసినవి</string>
+    <string name="downloads_tab_queue">క్యూ</string>
+    <string name="downloads_wifi_only">Wi‑Fi మాత్రమే</string>
+
+    <string name="downloads_group_movies">సినిమాలు</string>
+
+    <string name="downloads_storage_summary">%1$s ఉపయోగించబడింది · %2$s ఖాళీగా ఉంది</string>
+
+    <string name="downloads_action_delete">డౌన్‌లోడ్‌ను తొలగించండి</string>
+    <string name="downloads_action_cancel">డౌన్‌లోడ్‌ను రద్దు చేయండి</string>
+    <string name="downloads_action_pause">డౌన్‌లోడ్‌ను పాజ్ చేయండి</string>
+    <string name="downloads_action_resume">డౌన్‌లోడ్‌ను కొనసాగించండి</string>
+    <string name="downloads_action_move_up">క్యూలో పైకి జరపండి</string>
+    <string name="downloads_action_move_down">క్యూలో కిందికి జరపండి</string>
+
+    <string name="downloads_action_pause_all">అన్నింటినీ పాజ్ చేయండి</string>
+    <string name="downloads_action_resume_all">అన్నింటినీ కొనసాగించండి</string>
+    <string name="downloads_action_cancel_all">అన్నింటినీ రద్దు చేయండి</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">ఈ డౌన్‌లోడ్‌ను రద్దు చేయాలా?</item>
+        <item quantity="other">అన్ని %1$d డౌన్‌లోడ్‌లను రద్దు చేయాలా?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">క్యూ ఖాళీ చేయబడుతుంది మరియు పాక్షికంగా డౌన్‌లోడ్ అయిన ఫైళ్లు తీసివేయబడతాయి. పూర్తయిన డౌన్‌లోడ్‌లపై ప్రభావం ఉండదు.</string>
+    <string name="downloads_cancel_all_dialog_confirm">డౌన్‌లోడ్‌లను రద్దు చేయండి</string>
+    <string name="downloads_cancel_all_dialog_dismiss">ఉంచండి</string>
+
+    <string name="downloads_delete_dialog_title">%1$sను తొలగించాలా?</string>
+    <string name="downloads_delete_dialog_message">డౌన్‌లోడ్ చేసిన ఫైళ్లు ఈ పరికరం నుండి తీసివేయబడతాయి. మీరు తర్వాత దీన్ని మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</string>
+    <string name="downloads_delete_dialog_confirm">తొలగించండి</string>
+    <string name="downloads_delete_dialog_cancel">రద్దు చేయండి</string>
+
+    <string name="downloads_progress_of">%2$sలో %1$s</string>
+    <string name="downloads_progress_of_approx">సుమారు %2$sలో %1$s</string>
+    <string name="downloads_progress_of_capped">గరిష్టంగా %2$sలో %1$s</string>
+    <string name="downloads_size_approx">సుమారు %1$s</string>
+    <string name="downloads_size_capped">గరిష్టంగా %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s మిగిలి ఉంది</string>
+    <string name="downloads_eta_approx">సుమారు %1$s మిగిలి ఉంది</string>
+    <string name="downloads_transcoded_marker">ట్రాన్స్‌కోడ్ చేయబడింది</string>
+    <string name="downloads_status_queued">వేచి ఉంది</string>
+    <string name="downloads_status_paused">పాజ్ చేయబడింది</string>
+    <string name="downloads_status_failed">డౌన్‌లోడ్ విఫలమైంది</string>
+    <string name="downloads_status_failed_reason">డౌన్‌లోడ్ విఫలమైంది: %1$s</string>
+
+    <string name="downloads_empty_downloaded">ఇంకా ఏమీ డౌన్‌లోడ్ చేయలేదు. సినిమా లేదా ఎపిసోడ్‌ను ఈ పరికరంలో ఉంచడానికి డౌన్‌లోడ్‌ను నొక్కండి.</string>
+    <string name="downloads_empty_queue">డౌన్‌లోడ్ క్యూ ఖాళీగా ఉంది.</string>
+    <string name="downloads_load_failed">మీ డౌన్‌లోడ్‌లను చదవలేకపోయాం. మళ్లీ ప్రయత్నించడానికి ఈ స్క్రీన్‌ను మళ్లీ తెరవండి.</string>
+    <string name="downloads_message_delete_failed">ఆ డౌన్‌లోడ్‌ను తొలగించలేకపోయాం.</string>
+    <string name="downloads_message_action_failed">క్యూను అప్‌డేట్ చేయలేకపోయాం.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d పాజ్ చేయబడింది — %2$d ట్రాన్స్‌కోడ్ డౌన్‌లోడ్ కొనసాగుతోంది (ట్రాన్స్‌కోడ్‌ను పాజ్ చేయలేరు).</item>
+        <item quantity="other">%1$d పాజ్ చేయబడ్డాయి — %2$d ట్రాన్స్‌కోడ్‌లు డౌన్‌లోడ్ కొనసాగుతున్నాయి (ట్రాన్స్‌కోడ్‌ను పాజ్ చేయలేరు).</item>
+    </plurals>
+</resources>

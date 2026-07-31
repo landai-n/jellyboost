@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Преземено</string>
+    <string name="downloads_tab_queue">Редица</string>
+    <string name="downloads_wifi_only">Само Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Филмови</string>
+
+    <string name="downloads_storage_summary">%1$s искористено · %2$s слободно</string>
+
+    <string name="downloads_action_delete">Избриши преземање</string>
+    <string name="downloads_action_cancel">Откажи преземање</string>
+    <string name="downloads_action_pause">Паузирај преземање</string>
+    <string name="downloads_action_resume">Продолжи преземање</string>
+    <string name="downloads_action_move_up">Помести нагоре во редицата</string>
+    <string name="downloads_action_move_down">Помести надолу во редицата</string>
+
+    <string name="downloads_action_pause_all">Паузирај ги сите</string>
+    <string name="downloads_action_resume_all">Продолжи ги сите</string>
+    <string name="downloads_action_cancel_all">Откажи ги сите</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Да се откаже ова преземање?</item>
+        <item quantity="other">Да се откажат сите %1$d преземања?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Редицата се празни и сите делумично преземени датотеки се отстрануваат. Завршените преземања не се засегнати.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Откажи ги преземањата</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Задржи</string>
+
+    <string name="downloads_delete_dialog_title">Да се избрише %1$s?</string>
+    <string name="downloads_delete_dialog_message">Преземените датотеки се отстрануваат од овој уред. Можете да го преземете повторно подоцна.</string>
+    <string name="downloads_delete_dialog_confirm">Избриши</string>
+    <string name="downloads_delete_dialog_cancel">Откажи</string>
+
+    <string name="downloads_progress_of">%1$s од %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s од ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s од најмногу %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">до %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Уште %1$s</string>
+    <string name="downloads_eta_approx">Уште ~%1$s</string>
+    <string name="downloads_transcoded_marker">Транскодирано</string>
+    <string name="downloads_status_queued">Чека</string>
+    <string name="downloads_status_paused">Паузирано</string>
+    <string name="downloads_status_failed">Преземањето не успеа</string>
+    <string name="downloads_status_failed_reason">Преземањето не успеа: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Сè уште ништо не е преземено. Допрете Преземи на филм или епизода за да ја задржите на овој уред.</string>
+    <string name="downloads_empty_queue">Редицата за преземање е празна.</string>
+    <string name="downloads_load_failed">Не можеа да се вчитаат вашите преземања. Отворете го овој екран повторно за да се обидете пак.</string>
+    <string name="downloads_message_delete_failed">Не можеше да се избрише тоа преземање.</string>
+    <string name="downloads_message_action_failed">Не можеше да се ажурира редицата.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Паузирано %1$d — %2$d транскодирање продолжува да се презема (транскодирањето не може да се паузира).</item>
+        <item quantity="other">Паузирано %1$d — %2$d транскодирања продолжуваат да се преземаат (транскодирањето не може да се паузира).</item>
+    </plurals>
+</resources>

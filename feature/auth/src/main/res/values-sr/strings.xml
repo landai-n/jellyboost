@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Повежи се са сервером</string>
+    <string name="server_setup_discovered_title">Сервери на овој мрежи</string>
+    <string name="server_setup_discovering">Претрага локалне мреже…</string>
+    <string name="server_setup_no_servers_found">Ниједан сервер се није јавио. Унесите адресу испод.</string>
+    <string name="server_setup_manual_title">Адреса сервера</string>
+    <string name="server_setup_address_label">Хост или URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org или 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Повежи се</string>
+    <string name="server_setup_connecting">Контактирање сервера…</string>
+    <string name="server_setup_session_lost">Ваша сачувана пријава није могла да се обнови, па сте одјављени. Пријавите се поново.</string>
+
+    <string name="login_title">Пријава</string>
+    <string name="login_server_version">Верзија %1$s</string>
+    <string name="login_server_version_unknown">Верзија непозната</string>
+    <string name="login_public_users_title">Ко гледа?</string>
+    <string name="login_username_label">Корисничко име</string>
+    <string name="login_password_label">Лозинка</string>
+    <string name="login_show_password">Прикажи лозинку</string>
+    <string name="login_hide_password">Сакриј лозинку</string>
+    <string name="login_sign_in">Пријави се</string>
+    <string name="login_change_server">Користи други сервер</string>
+    <string name="login_loading">Учитавање детаља сервера…</string>
+    <string name="login_or">или</string>
+
+    <string name="login_quick_connect">Користи Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Отворите Jellyfin на уређају на коме сте већ пријављени, идите на Quick Connect и унесите овај код.</string>
+    <string name="login_quick_connect_waiting">Чекање на одобрење…</string>
+    <string name="login_quick_connect_cancel">Откажи</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Покушано је %d кандидатска адреса, без успеха.</item>
+        <item quantity="few">Покушане су %d кандидатске адресе, без успеха.</item>
+        <item quantity="other">Покушано је %d кандидатских адреса, без успеха.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Сервер није доступан</string>
+    <string name="auth_error_unsupported_version_or_product">Неподржана верзија или производ</string>
+    <string name="auth_error_cannot_connect">Веза не може да се успостави.\nПроверите назив хоста и мрежну везу.</string>
+    <string name="auth_error_invalid_credentials">Погрешно корисничко име или лозинка.</string>
+    <string name="auth_error_quick_connect_expired">Тај код је истекао. Затражите нови и покушајте поново.</string>
+    <string name="auth_error_server">Сервер је одговорио грешком. Покушајте поново.</string>
+    <string name="auth_error_server_with_code">Сервер је одговорио грешком (%1$d). Покушајте поново.</string>
+</resources>

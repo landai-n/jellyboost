@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">已下載</string>
+    <string name="badge_download_queued">已加入下載佇列</string>
+    <string name="badge_download_paused">下載已暫停</string>
+    <string name="badge_download_failed">下載失敗</string>
+
+    <string name="media_row_see_all">查看全部</string>
+    <string name="media_card_watched">已觀看</string>
+
+    <plurals name="selection_count">
+        <item quantity="other">已揀 %1$d 項</item>
+    </plurals>
+    <string name="selection_close">清除揀選</string>
+    <string name="selection_select_all">全選</string>
+    <string name="selection_mark_watched">標記為已觀看</string>
+    <string name="selection_mark_unwatched">標記為未觀看</string>
+    <string name="selection_download">下載</string>
+
+    <string name="selection_item_selected">已揀</string>
+    <string name="selection_item_not_selected">未揀</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="other">已將 %1$d 項標記為已觀看</item>
+    </plurals>
+    <string name="selection_result_watched_partial">已將 %1$d 項標記為已觀看，%2$d 項失敗</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="other">冇辦法將 %1$d 項標記為已觀看</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="other">已將 %1$d 項標記為未觀看</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">已將 %1$d 項標記為未觀看，%2$d 項失敗</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="other">冇辦法將 %1$d 項標記為未觀看</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="other">已將 %1$d 項加入下載</item>
+    </plurals>
+    <string name="selection_result_download_partial">已將 %1$d 項加入下載，%2$d 項失敗</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="other">冇辦法將 %1$d 項加入下載</item>
+    </plurals>
+    <string name="selection_result_download_skipped">已將 %1$d 項加入下載——%2$d 項已喺呢部裝置上</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="other">%1$d 項已喺呢部裝置上</item>
+    </plurals>
+</resources>

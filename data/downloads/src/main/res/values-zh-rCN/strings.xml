@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">下载</string>
+    <string name="downloads_channel_description">媒体下载到此设备的进度。</string>
+
+    <string name="downloads_notification_preparing">正在准备下载…</string>
+    <string name="downloads_notification_downloading">正在下载…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">正在下载…</string>
+    <string name="downloads_action_pause">暂停</string>
+    <string name="downloads_action_cancel">取消</string>
+</resources>

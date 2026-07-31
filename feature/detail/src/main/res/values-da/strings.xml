@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Tilbage</string>
+    <string name="detail_home">Hjem</string>
+    <string name="detail_play">Afspil</string>
+    <string name="detail_resume">Genoptag</string>
+    <string name="detail_download">Download</string>
+    <string name="detail_download_cancel">Annuller</string>
+    <string name="detail_download_remove">Fjern</string>
+    <string name="detail_download_retry">Prøv igen</string>
+    <string name="detail_play_episode">Afspil denne episode</string>
+    <string name="detail_mark_watched">Markér som set</string>
+    <string name="detail_mark_unwatched">Markér som ikke set</string>
+    <string name="detail_add_favorite">Føj til favoritter</string>
+    <string name="detail_remove_favorite">Fjern fra favoritter</string>
+
+    <string name="detail_section_seasons">Sæsoner</string>
+    <string name="detail_section_next_up">Op næste</string>
+    <string name="detail_section_episodes">Episoder</string>
+    <string name="detail_section_similar">Mere som dette</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min tilbage</string>
+    <string name="detail_size_on_device">%1$s på enheden</string>
+    <string name="detail_directed_by">Instrueret af %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sæson</item>
+        <item quantity="other">%1$d sæsoner</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episoder</item>
+    </plurals>
+
+    <string name="detail_empty">Dette element er ikke længere tilgængeligt.</string>
+    <string name="detail_message_download_queued">Føjet til downloads.</string>
+    <string name="detail_message_download_failed">Kunne ikke starte den download.</string>
+    <string name="detail_message_download_deleted">Fjernet fra denne enhed.</string>
+    <string name="detail_message_download_delete_failed">Kunne ikke fjerne den download.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Download annulleret – %1$d færdig episode beholdt.</item>
+        <item quantity="other">Download annulleret – %1$d færdige episoder beholdt.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Kunne ikke gemme det. Prøv igen.</string>
+
+    <string name="detail_group_play">Afspil for %1$s</string>
+    <string name="detail_group_resume">Genoptag for %1$s</string>
+    <string name="detail_group_play_next">Afspil som det næste</string>
+    <string name="detail_group_add_to_queue">Føj til kø</string>
+    <string name="detail_message_group_play">Bad gruppen om at afspille dette.</string>
+    <string name="detail_message_group_play_next">Sat i kø som det næste for gruppen.</string>
+    <string name="detail_message_group_queued">Føjet til gruppens kø.</string>
+
+    <string name="detail_delete_download_dialog_title">Slet download?</string>
+    <string name="detail_delete_download_dialog_message">Dette fjerner den fra denne enhed. Du kan downloade den igen når som helst.</string>
+    <string name="detail_delete_download_dialog_confirm">Slet</string>
+    <string name="detail_delete_download_dialog_cancel">Annuller</string>
+</resources>

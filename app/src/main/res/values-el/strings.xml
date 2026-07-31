@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Περισσότερες επιλογές</string>
+    <string name="home_settings">Ρυθμίσεις</string>
+    <string name="settings_offline_mode">Λειτουργία εκτός σύνδεσης</string>
+
+    <string name="state_on">Ενεργό</string>
+    <string name="state_off">Ανενεργό</string>
+
+    <string name="nav_home">Αρχική</string>
+    <string name="nav_libraries">Βιβλιοθήκες</string>
+    <string name="nav_search">Αναζήτηση</string>
+    <string name="nav_downloads">Λήψεις</string>
+
+    <string name="offline_no_network">Χωρίς δίκτυο — εμφανίζονται τα ληφθέντα μέσα</string>
+    <string name="offline_server_unreachable">Ο διακομιστής δεν είναι προσβάσιμος — εμφανίζονται τα ληφθέντα μέσα</string>
+    <string name="offline_forced">Η λειτουργία εκτός σύνδεσης είναι ενεργή — εμφανίζονται τα ληφθέντα μέσα</string>
+    <string name="offline_retry">Επανάληψη</string>
+    <string name="offline_go_online">Σύνδεση στο δίκτυο</string>
+
+    <string name="syncplay_groups_action">Ομάδες SyncPlay</string>
+    <string name="syncplay_groups_action_active">Ομάδες SyncPlay — είστε σε ομάδα</string>
+</resources>

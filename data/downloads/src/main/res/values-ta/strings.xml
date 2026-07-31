@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">பதிவிறக்கங்கள்</string>
+    <string name="downloads_channel_description">இந்தச் சாதனத்திற்கு மீடியா பதிவிறக்கும் முன்னேற்றம்.</string>
+
+    <string name="downloads_notification_preparing">பதிவிறக்கங்களைத் தயார் செய்கிறது…</string>
+    <string name="downloads_notification_downloading">பதிவிறக்குகிறது…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">பதிவிறக்குகிறது…</string>
+    <string name="downloads_action_pause">இடைநிறுத்து</string>
+    <string name="downloads_action_cancel">ரத்துசெய்</string>
+</resources>

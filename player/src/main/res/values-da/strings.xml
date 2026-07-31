@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Luk afspiller</string>
+    <string name="player_play">Afspil</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_rewind">Spol 10 sekunder tilbage</string>
+    <string name="player_forward">Spol 30 sekunder frem</string>
+
+    <string name="player_audio">Lyd</string>
+    <string name="player_subtitles">Undertekster</string>
+    <string name="player_subtitles_off">Fra</string>
+    <string name="player_quality">Kvalitet</string>
+    <string name="player_speed">Hastighed</string>
+
+    <string name="player_skip_intro">Spring intro over</string>
+    <string name="player_skip_outro">Spring outro over</string>
+
+    <string name="player_quality_auto">Automatisk</string>
+    <string name="player_quality_high">Høj – 20 Mbps</string>
+    <string name="player_quality_medium">Mellem – 8 Mbps</string>
+    <string name="player_quality_low">Lav – 3 Mbps</string>
+    <string name="player_quality_lowest">Lavest – 720 kbps</string>
+
+    <string name="player_method_direct_play">Direkte afspilning</string>
+    <string name="player_method_direct_stream">Direkte stream</string>
+    <string name="player_method_transcode">Transkodning</string>
+
+    <string name="player_message_transcode">Din enhed kunne ikke afkode denne fil, så serveren transkoder den.</string>
+    <string name="player_message_lower_quality">Streamen gik i stå – prøver igen med lavere kvalitet.</string>
+    <string name="player_message_track_restart">Serveren måtte genkode streamen for det spor.</string>
+    <string name="player_message_track_streaming">Det spor er ikke i downloaden – streamer det fra din server.</string>
+    <string name="player_message_track_offline">Det spor er ikke i den downloadede fil.</string>
+    <string name="player_message_failed">Afspilning mislykkedes.</string>
+
+    <string name="player_syncplay_group">Gruppe</string>
+    <string name="player_syncplay_waiting">Venter på gruppe…</string>
+    <string name="player_syncplay_shuffle">Bland kø</string>
+    <string name="player_syncplay_repeat">Gentag</string>
+    <string name="player_syncplay_repeat_none">Fra</string>
+    <string name="player_syncplay_repeat_one">Dette element</string>
+    <string name="player_syncplay_repeat_all">Hele køen</string>
+    <string name="player_syncplay_leave">Forlad gruppe</string>
+    <string name="player_syncplay_leave_title">Forlad denne gruppe?</string>
+    <string name="player_syncplay_leave_body">Afspilningen fortsætter her på egen hånd. For at deltage igen skal du vælge gruppen igen.</string>
+
+    <string name="player_syncplay_cancel">Annuller</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d person ser med</item>
+        <item quantity="other">%d personer ser med</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d mere</string>
+
+    <string name="player_syncplay_queue">Kø</string>
+    <string name="player_syncplay_queue_empty">Gruppen har endnu ikke sat noget i kø.</string>
+    <string name="player_syncplay_queue_item_loading">Indlæser…</string>
+    <string name="player_syncplay_queue_playing">Afspiller nu</string>
+    <string name="player_syncplay_queue_next">Næste element</string>
+    <string name="player_syncplay_queue_previous">Forrige element</string>
+    <string name="player_syncplay_queue_move_up">Flyt op</string>
+    <string name="player_syncplay_queue_move_down">Flyt ned</string>
+    <string name="player_syncplay_queue_remove">Fjern fra kø</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d element i kø</item>
+        <item quantity="other">%d elementer i kø</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Forlod SyncPlay – forbindelsen tabt</string>
+    <string name="player_message_syncplay_rejoined">Sluttede sig til SyncPlay-gruppen igen</string>
+    <string name="player_message_syncplay_join_failed">Kunne ikke deltage i den SyncPlay-gruppe.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay-gruppen er afsluttet.</string>
+    <string name="player_message_syncplay_removed">Du er ikke længere i SyncPlay-gruppen.</string>
+    <string name="player_message_syncplay_library_denied">Gruppen ser noget, du ikke har adgang til.</string>
+    <string name="player_message_syncplay_item_unavailable">Kunne ikke åbne det, gruppen ser.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Tilbage</string>
+    <string name="player_syncplay_groups_home">Hjem</string>
+    <string name="player_syncplay_groups_create">Opret gruppe</string>
+    <string name="player_syncplay_groups_create_title">Navngiv din gruppe</string>
+    <string name="player_syncplay_groups_create_hint">Gruppenavn</string>
+    <string name="player_syncplay_groups_create_confirm">Opret</string>
+    <string name="player_syncplay_groups_joining">Tilslutter…</string>
+    <string name="player_syncplay_groups_active_label">Du er i denne gruppe</string>
+    <string name="player_syncplay_groups_open_player">Åbn afspiller</string>
+    <string name="player_syncplay_groups_empty">Ingen andre ser med sammen lige nu.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay er deaktiveret for din konto.</string>
+    <string name="player_syncplay_groups_error">Kunne ikke indlæse SyncPlay-grupper.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-gruppe</string>
+    <string name="player_syncplay_presence_channel_description">Holder din plads i en gruppe, der ser sammen, mens appen kører i baggrunden.</string>
+    <string name="player_syncplay_presence_title">I en SyncPlay-gruppe</string>
+    <string name="player_syncplay_presence_text">Venter på gruppen</string>
+    <string name="player_syncplay_presence_leave">Forlad</string>
+
+    <string name="player_syncplay_state_idle">Inaktiv</string>
+    <string name="player_syncplay_state_waiting">Venter</string>
+    <string name="player_syncplay_state_paused">Sat på pause</string>
+    <string name="player_syncplay_state_playing">Afspiller</string>
+
+    <string name="player_cast">Cast til en enhed</string>
+
+    <string name="player_cast_device_unnamed">dit tv</string>
+    <string name="player_message_cast_transferred">Afspiller nu på %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Forlod SyncPlay-gruppen for at caste til %1$s.</string>
+    <string name="player_message_cast_failed">Kunne ikke afspille det på %1$s.</string>
+
+    <string name="player_casting_to">Caster til %1$s</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Пока нет библиотек. Добавьте её на сервере.</string>
+
+    <string name="library_back">Назад</string>
+    <string name="library_home">Главная</string>
+    <string name="library_sort">Сортировка</string>
+    <string name="library_filter">Фильтр</string>
+
+    <string name="library_sort_title">Сортировать по</string>
+    <string name="library_sort_name">Названию</string>
+    <string name="library_sort_date_added">Дате добавления</string>
+    <string name="library_sort_premiere_date">Дате выхода</string>
+    <string name="library_sort_community_rating">Рейтингу</string>
+    <string name="library_sort_runtime">Продолжительности</string>
+    <string name="library_sort_random">Случайно</string>
+    <string name="library_sort_direction">Направление</string>
+    <string name="library_sort_ascending">По возрастанию</string>
+    <string name="library_sort_descending">По убыванию</string>
+
+    <string name="library_filters_title">Фильтры</string>
+    <string name="library_filters_genres">Жанры</string>
+    <string name="library_filters_years">Годы</string>
+    <string name="library_filters_played">Просмотрено</string>
+    <string name="library_filters_played_any">Любое</string>
+    <string name="library_filters_played_yes">Просмотрено</string>
+    <string name="library_filters_played_no">Не просмотрено</string>
+    <string name="library_filters_clear">Очистить всё</string>
+    <string name="library_filters_apply">Показать результаты</string>
+    <string name="library_filters_none">В этой библиотеке нет доступных фильтров.</string>
+    <string name="library_filters_loading">Загрузка фильтров…</string>
+
+    <string name="library_empty">Здесь пока ничего нет.</string>
+    <string name="library_empty_filtered">Нет элементов, соответствующих этим фильтрам.</string>
+    <string name="library_empty_clear_filters">Очистить фильтры</string>
+    <string name="library_retry">Повторить</string>
+
+    <string name="library_error_network">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
+    <string name="library_error_unauthorized">Срок действия сеанса истёк. Войдите снова, чтобы продолжить.</string>
+    <string name="library_error_not_found">Этой библиотеки больше нет на сервере.</string>
+    <string name="library_error_server">Сервер вернул ошибку.</string>
+    <string name="library_error_server_with_code">Сервер вернул ошибку (%1$d).</string>
+    <string name="library_error_storage">Не удалось прочитать локальные данные.</string>
+    <string name="library_error_unknown">Что-то пошло не так при загрузке этой библиотеки.</string>
+</resources>

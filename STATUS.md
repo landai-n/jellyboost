@@ -55,6 +55,25 @@ syncplay, downloads). Screenshot-test frameworks evaluated and rejected for now 
 compileSdk 37.1 blocks Roborazzi/Paparazzi; no disk for an emulator — see DECISIONS).
 Left on the device: HotD S3:E1 stays downloaded (useful for M11's local-in-group DoD item).
 
+## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
+
+Full app translation into the 69 locales the official jellyfin-android client ships
+(its `values-*` set minus the invalid `chn`/`lzh` qualifiers). What landed:
+- Last hardcoded strings externalized (`core/ui` badges/labels, `feature/home` section
+  titles + empty state — new res dir with a proper `Latest %1$s` format string);
+  `app_name` marked `translatable="false"`.
+- `generateLocaleConfig = true` + `res/resources.properties` (`unqualifiedResLocale=en-US`)
+  → Android 13+ offers Jellyboost in the OS per-app language setting. No in-app picker
+  (see DECISIONS). Below API 33 the system locale list applies as usual.
+- 759 translated `values-<locale>/strings.xml` files (11 modules × 69 locales), machine-
+  generated (Claude) with Jellyfin terminology conventions; validated by
+  `scripts/validate_i18n.py` (name parity, `%1$s` placeholder parity, CLDR plural
+  quantities, escaping) — 0 problems. NOT native-speaker reviewed; per-agent uncertain-term
+  notes live in the i18n commit message trailer / docs/features/localization.md.
+- Known follow-ups: `feature/auth`'s `auth_app_name` could also be `translatable="false"`
+  (currently carries a literal "Jellyboost" entry in every locale); dv (Divehi) and fo
+  (Faroese) are the lowest-confidence locales.
+
 ## Current milestone: M11 — SyncPlay (IN PROGRESS: all 6 phases landed 2026-07-30, device DoD owed)
 
 Full plan: `docs/notes/syncplay-m11-plan.md`; feature doc `docs/features/syncplay.md`.

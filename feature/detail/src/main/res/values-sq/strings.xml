@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Mbrapa</string>
+    <string name="detail_home">Kryefaqja</string>
+    <string name="detail_play">Luaj</string>
+    <string name="detail_resume">Vazhdo</string>
+    <string name="detail_download">Shkarko</string>
+    <string name="detail_download_cancel">Anulo</string>
+    <string name="detail_download_remove">Hiq</string>
+    <string name="detail_download_retry">Provo përsëri</string>
+    <string name="detail_play_episode">Luaj këtë episod</string>
+    <string name="detail_mark_watched">Shëno si të shikuar</string>
+    <string name="detail_mark_unwatched">Shëno si të pashikuar</string>
+    <string name="detail_add_favorite">Shto te të preferuarat</string>
+    <string name="detail_remove_favorite">Hiq nga të preferuarat</string>
+
+    <string name="detail_section_seasons">Sezonet</string>
+    <string name="detail_section_next_up">Në vijim</string>
+    <string name="detail_section_episodes">Episodet</string>
+    <string name="detail_section_similar">Të ngjashme me këtë</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Edhe %1$d min</string>
+    <string name="detail_size_on_device">%1$s në pajisje</string>
+    <string name="detail_directed_by">Regjizor: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezon</item>
+        <item quantity="other">%1$d sezone</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episod</item>
+        <item quantity="other">%1$d episode</item>
+    </plurals>
+
+    <string name="detail_empty">Ky artikull nuk është më i disponueshëm.</string>
+    <string name="detail_message_download_queued">U shtua te shkarkimet.</string>
+    <string name="detail_message_download_failed">Nuk u nis dot ai shkarkim.</string>
+    <string name="detail_message_download_deleted">U hoq nga kjo pajisje.</string>
+    <string name="detail_message_download_delete_failed">Nuk u hoq dot ai shkarkim.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Shkarkimi u anulua — %1$d episod i përfunduar u ruajt.</item>
+        <item quantity="other">Shkarkimi u anulua — %1$d episode të përfunduara u ruajtën.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nuk u ruajt dot. Provo përsëri.</string>
+
+    <string name="detail_group_play">Luaj për %1$s</string>
+    <string name="detail_group_resume">Vazhdo për %1$s</string>
+    <string name="detail_group_play_next">Luaj më pas</string>
+    <string name="detail_group_add_to_queue">Shto në radhë</string>
+    <string name="detail_message_group_play">Grupi u kërkua ta luajë këtë.</string>
+    <string name="detail_message_group_play_next">U vendos si i radhës për grupin.</string>
+    <string name="detail_message_group_queued">U shtua në radhën e grupit.</string>
+
+    <string name="detail_delete_download_dialog_title">Të fshihet shkarkimi?</string>
+    <string name="detail_delete_download_dialog_message">Kjo e heq nga kjo pajisje. Mund ta shkarkosh përsëri kur të duash.</string>
+    <string name="detail_delete_download_dialog_confirm">Fshi</string>
+    <string name="detail_delete_download_dialog_cancel">Anulo</string>
+</resources>

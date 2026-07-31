@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Cài đặt</string>
+    <string name="settings_back">Quay lại</string>
+    <string name="settings_home">Trang chủ</string>
+    <string name="settings_section_playback">Phát lại</string>
+    <string name="settings_skip_intro">Bỏ qua đoạn giới thiệu</string>
+    <string name="settings_skip_outro">Bỏ qua đoạn kết</string>
+    <string name="settings_skip_mode_off">Không làm gì</string>
+    <string name="settings_skip_mode_show_button">Hiện nút bỏ qua</string>
+    <string name="settings_skip_mode_auto">Tự động bỏ qua</string>
+    <string name="settings_pip">Hình trong hình</string>
+    <string name="settings_pip_supporting">Tiếp tục phát trong cửa sổ nổi khi bạn rời khỏi ứng dụng.</string>
+    <string name="settings_section_downloads">Tải xuống</string>
+    <string name="settings_wifi_only">Chỉ dùng Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Tạm dừng tải xuống khi dùng dữ liệu di động.</string>
+    <string name="settings_quality">Chất lượng tải xuống</string>
+    <string name="settings_quality_original">Tệp gốc — bản sao chính xác, có thể tiếp tục</string>
+    <string name="settings_quality_high">Cao — khoảng 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Trung bình — khoảng 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Thấp — khoảng 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Mọi lựa chọn khác ngoài tệp gốc đều được máy chủ của bạn chuyển đổi khi gửi đi, vì vậy dung lượng hiển thị trong lúc tải xuống chỉ là ước tính và một lượt truyền bị gián đoạn sẽ bắt đầu lại từ đầu.</string>
+    <string name="settings_storage_label">Bộ nhớ</string>
+    <string name="settings_storage_summary">%1$s đã dùng · %2$s còn trống trên thiết bị này</string>
+    <string name="settings_storage_location">Tải xuống được lưu tại %1$s</string>
+    <string name="settings_storage_picker">Vị trí lưu trữ</string>
+    <string name="settings_storage_internal">Bộ nhớ trong</string>
+    <string name="settings_storage_sd_card">Thẻ SD</string>
+    <string name="settings_storage_volume_free">Còn trống %1$s</string>
+    <string name="settings_storage_missing">Bộ nhớ bạn đã chọn hiện không khả dụng, vì vậy tải xuống sẽ được lưu vào vị trí được chọn bên dưới.</string>
+    <string name="settings_storage_switch_title">Chuyển tải xuống?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">Hiện chưa thể di chuyển tải xuống giữa các vị trí, vì vậy %1$d mục đã có trên thiết bị này sẽ bị xóa. Bạn có thể tải xuống lại chúng vào vị trí mới.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Xóa và chuyển</string>
+    <string name="settings_section_connectivity">Kết nối</string>
+    <string name="settings_offline_mode">Chế độ ngoại tuyến</string>
+    <string name="settings_offline_mode_supporting">Chỉ hiển thị media đã có sẵn trên thiết bị này.</string>
+    <string name="settings_section_account">Tài khoản</string>
+    <string name="settings_account_user">Đã đăng nhập với tên</string>
+    <string name="settings_account_server">Máy chủ</string>
+    <string name="settings_account_unknown">Chưa đăng nhập</string>
+    <string name="settings_sign_out">Đăng xuất</string>
+    <string name="settings_sign_out_dialog_title">Đăng xuất?</string>
+    <string name="settings_sign_out_dialog_message">Bạn sẽ cần địa chỉ máy chủ và mật khẩu để đăng nhập lại.</string>
+    <string name="settings_sign_out_delete_downloads">Đồng thời xóa các tải xuống khỏi thiết bị này</string>
+    <string name="settings_cancel">Hủy</string>
+</resources>

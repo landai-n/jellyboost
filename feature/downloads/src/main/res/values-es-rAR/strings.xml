@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Descargado</string>
+    <string name="downloads_tab_queue">Cola</string>
+    <string name="downloads_wifi_only">Solo Wi‑Fi</string>
+    <string name="downloads_group_movies">Películas</string>
+    <string name="downloads_storage_summary">%1$s usados · %2$s libres</string>
+    <string name="downloads_action_delete">Eliminar descarga</string>
+    <string name="downloads_action_cancel">Cancelar descarga</string>
+    <string name="downloads_action_pause">Pausar descarga</string>
+    <string name="downloads_action_resume">Reanudar descarga</string>
+    <string name="downloads_action_move_up">Subir en la cola</string>
+    <string name="downloads_action_move_down">Bajar en la cola</string>
+    <string name="downloads_action_pause_all">Pausar todo</string>
+    <string name="downloads_action_resume_all">Reanudar todo</string>
+    <string name="downloads_action_cancel_all">Cancelar todo</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">¿Cancelar esta descarga?</item>
+        <item quantity="other">¿Cancelar las %1$d descargas?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">La cola se vacía y se eliminan los archivos parcialmente descargados. Las descargas terminadas no se ven afectadas.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Cancelar descargas</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Mantener</string>
+    <string name="downloads_delete_dialog_title">¿Eliminar %1$s?</string>
+    <string name="downloads_delete_dialog_message">Los archivos descargados se eliminan de este dispositivo. Podés volver a descargarlo más tarde.</string>
+    <string name="downloads_delete_dialog_confirm">Eliminar</string>
+    <string name="downloads_delete_dialog_cancel">Cancelar</string>
+    <string name="downloads_progress_of">%1$s de %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s de hasta %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">hasta %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s restante</string>
+    <string name="downloads_eta_approx">~%1$s restante</string>
+    <string name="downloads_transcoded_marker">Transcodificado</string>
+    <string name="downloads_status_queued">Esperando</string>
+    <string name="downloads_status_paused">Pausado</string>
+    <string name="downloads_status_failed">Descarga fallida</string>
+    <string name="downloads_status_failed_reason">Descarga fallida: %1$s</string>
+    <string name="downloads_empty_downloaded">Aún no hay nada descargado. Tocá Descargar en una película o episodio para guardarlo en este dispositivo.</string>
+    <string name="downloads_empty_queue">La cola de descargas está vacía.</string>
+    <string name="downloads_load_failed">No se pudieron leer tus descargas. Volvé a abrir esta pantalla para intentarlo de nuevo.</string>
+    <string name="downloads_message_delete_failed">No se pudo eliminar esa descarga.</string>
+    <string name="downloads_message_action_failed">No se pudo actualizar la cola.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Se pausó %1$d — %2$d transcodificación sigue descargándose (una transcodificación no se puede pausar).</item>
+        <item quantity="other">Se pausaron %1$d — %2$d transcodificaciones siguen descargándose (una transcodificación no se puede pausar).</item>
+    </plurals>
+</resources>

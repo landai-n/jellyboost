@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">සැකසුම්</string>
+    <string name="settings_back">ආපසු</string>
+    <string name="settings_home">මුල් පිටුව</string>
+    <string name="settings_section_playback">වාදනය</string>
+    <string name="settings_skip_intro">හැඳින්වීම මඟහරින්න</string>
+    <string name="settings_skip_outro">අවසානය මඟහරින්න</string>
+    <string name="settings_skip_mode_off">කිසිවක් නොකරන්න</string>
+    <string name="settings_skip_mode_show_button">මඟහැරීමේ බොත්තමක් පෙන්වන්න</string>
+    <string name="settings_skip_mode_auto">ස්වයංක්‍රීයව මඟහරින්න</string>
+    <string name="settings_pip">පින්තූරය තුළ පින්තූරය</string>
+    <string name="settings_pip_supporting">ඔබ යෙදුමෙන් ඉවත් වූ විට පාවෙන කවුළුවක වාදනය දිගටම කරගෙන යන්න.</string>
+    <string name="settings_section_downloads">බාගත කිරීම්</string>
+    <string name="settings_wifi_only">Wi‑Fi පමණි</string>
+    <string name="settings_wifi_only_supporting">ජංගම දත්ත මත බාගත කිරීම් විරාම කරන්න.</string>
+    <string name="settings_quality">බාගත කිරීමේ ගුණත්වය</string>
+    <string name="settings_quality_original">මුල් ගොනුව — නිශ්චිත පිටපතක්, නැවත ආරම්භ කළ හැක</string>
+    <string name="settings_quality_high">ඉහළ — 20 Mbps ක් පමණ, 1080p</string>
+    <string name="settings_quality_medium">මධ්‍යම — 8 Mbps ක් පමණ, 1080p</string>
+    <string name="settings_quality_low">අඩු — 3 Mbps ක් පමණ, 720p</string>
+    <string name="settings_quality_supporting">මුල් ගොනුව හැර වෙනත් ඕනෑම දෙයක් එය එවන අතරතුර ඔබගේ සේවාදායකය විසින් පරිවර්තනය කරනු ලබන බැවින්, බාගත වන අතරතුර පෙන්වන ප්‍රමාණය ඇස්තමේන්තුවක් වන අතර බාධා වූ මාරුවක් නැවත ආරම්භ වේ.</string>
+    <string name="settings_storage_label">ආචයනය</string>
+    <string name="settings_storage_summary">මෙම උපාංගයේ %1$s භාවිතයි · %2$s නිදහස්</string>
+    <string name="settings_storage_location">බාගත කිරීම් %1$s හි තබා ඇත</string>
+    <string name="settings_storage_picker">ආචයන ස්ථානය</string>
+    <string name="settings_storage_internal">අභ්‍යන්තර ආචයනය</string>
+    <string name="settings_storage_sd_card">SD කාඩ්පත</string>
+    <string name="settings_storage_volume_free">%1$s නිදහස්</string>
+    <string name="settings_storage_missing">ඔබ තෝරාගත් ආචයනය දැනට ලබා ගත නොහැකි බැවින්, බාගත කිරීම් පහත තෝරාගත් ස්ථානයට යනු ඇත.</string>
+    <string name="settings_storage_switch_title">බාගත කිරීම් ගෙන යන්නද?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">බාගත කිරීම් තවම ස්ථාන අතර ගෙන යා නොහැකි බැවින්, මෙම උපාංගයේ දැනටමත් ඇති එක මකා දමනු ලැබේ. ඔබට එය නව ස්ථානයට නැවත බාගත කළ හැක.</item>
+        <item quantity="other">බාගත කිරීම් තවම ස්ථාන අතර ගෙන යා නොහැකි බැවින්, මෙම උපාංගයේ දැනටමත් ඇති %1$d මකා දමනු ලැබේ. ඔබට ඒවා නව ස්ථානයට නැවත බාගත කළ හැක.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">මකා මාරු වන්න</string>
+    <string name="settings_section_connectivity">සම්බන්ධතාවය</string>
+    <string name="settings_offline_mode">නොබැඳි ප්‍රකාරය</string>
+    <string name="settings_offline_mode_supporting">මෙම උපාංගයේ දැනටමත් ඇති මාධ්‍ය පමණක් පෙන්වන්න.</string>
+    <string name="settings_section_account">ගිණුම</string>
+    <string name="settings_account_user">ලෙස පිවිසී ඇත</string>
+    <string name="settings_account_server">සේවාදායකය</string>
+    <string name="settings_account_unknown">පිවිසී නැත</string>
+    <string name="settings_sign_out">නික්මෙන්න</string>
+    <string name="settings_sign_out_dialog_title">නික්මෙන්නද?</string>
+    <string name="settings_sign_out_dialog_message">ආපසු පිවිසීමට ඔබට ඔබගේ සේවාදායක ලිපිනය සහ මුරපදය අවශ්‍ය වේ.</string>
+    <string name="settings_sign_out_delete_downloads">මෙම උපාංගයෙන් බාගත කිරීම් ද මකන්න</string>
+    <string name="settings_cancel">අවලංගු කරන්න</string>
+</resources>

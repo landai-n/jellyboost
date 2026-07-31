@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Mga Setting</string>
+    <string name="settings_back">Bumalik</string>
+    <string name="settings_home">Home</string>
+    <string name="settings_section_playback">Playback</string>
+    <string name="settings_skip_intro">Laktawan ang intro</string>
+    <string name="settings_skip_outro">Laktawan ang outro</string>
+    <string name="settings_skip_mode_off">Walang gagawin</string>
+    <string name="settings_skip_mode_show_button">Ipakita ang skip button</string>
+    <string name="settings_skip_mode_auto">Awtomatikong laktawan</string>
+    <string name="settings_pip">Picture-in-picture</string>
+    <string name="settings_pip_supporting">Ipagpatuloy ang pag-play sa isang lumulutang na window kapag umalis ka sa app.</string>
+    <string name="settings_section_downloads">Mga Download</string>
+    <string name="settings_wifi_only">Wi‑Fi lang</string>
+    <string name="settings_wifi_only_supporting">I-pause ang mga download kapag gumagamit ng mobile data.</string>
+    <string name="settings_quality">Kalidad ng download</string>
+    <string name="settings_quality_original">Orihinal na file — eksaktong kopya, maaaring ipagpatuloy</string>
+    <string name="settings_quality_high">Mataas — humigit-kumulang 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Katamtaman — humigit-kumulang 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Mababa — humigit-kumulang 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Anumang bagay maliban sa orihinal na file ay kino-convert ng server mo habang ipinapadala ito, kaya ang laki na ipinapakita habang nagda-download ay isang tantiya lamang, at ang naantalang paglipat ay magsisimula ulit.</string>
+    <string name="settings_storage_label">Storage</string>
+    <string name="settings_storage_summary">%1$s ginamit · %2$s libre sa device na ito</string>
+    <string name="settings_storage_location">Naka-save ang mga download sa %1$s</string>
+    <string name="settings_storage_picker">Lokasyon ng storage</string>
+    <string name="settings_storage_internal">Internal na storage</string>
+    <string name="settings_storage_sd_card">SD card</string>
+    <string name="settings_storage_volume_free">%1$s libre</string>
+    <string name="settings_storage_missing">Hindi available ngayon ang storage na pinili mo, kaya pupunta ang mga download sa lokasyon na napili sa ibaba.</string>
+    <string name="settings_storage_switch_title">Ilipat ang mga download?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Hindi pa maaaring ilipat ang mga download sa pagitan ng mga lokasyon, kaya buburahin ang nasa device na ito. Puwede mo itong i-download ulit sa bagong lokasyon.</item>
+        <item quantity="other">Hindi pa maaaring ilipat ang mga download sa pagitan ng mga lokasyon, kaya buburahin ang %1$d na nasa device na ito. Puwede mo silang i-download ulit sa bagong lokasyon.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Tanggalin at lumipat</string>
+    <string name="settings_section_connectivity">Connectivity</string>
+    <string name="settings_offline_mode">Offline mode</string>
+    <string name="settings_offline_mode_supporting">Ipakita lang ang media na nasa device na ito na.</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_user">Naka-sign in bilang</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Hindi naka-sign in</string>
+    <string name="settings_sign_out">Mag-sign out</string>
+    <string name="settings_sign_out_dialog_title">Mag-sign out?</string>
+    <string name="settings_sign_out_dialog_message">Kakailanganin mo ang address ng server at password mo para makapag-sign in ulit.</string>
+    <string name="settings_sign_out_delete_downloads">Tanggalin din ang mga download sa device na ito</string>
+    <string name="settings_cancel">Kanselahin</string>
+</resources>

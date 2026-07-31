@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Oraindik ez dago ezer ikusteko. Gehitu multimedia zerbitzariko zure liburutegietan.</string>
+    <string name="home_empty_refresh">Freskatu</string>
+    <string name="home_section_my_media">Nire Multimedia</string>
+    <string name="home_section_continue_watching">Ikusten Jarraitu</string>
+    <string name="home_section_next_up">Hurrengoa</string>
+    <string name="home_section_latest">%1$s berrienak</string>
+</resources>

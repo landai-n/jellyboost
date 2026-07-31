@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Pobrane</string>
+    <string name="badge_download_queued">W kolejce do pobrania</string>
+    <string name="badge_download_paused">Pobieranie wstrzymane</string>
+    <string name="badge_download_failed">Pobieranie nie powiodło się</string>
+
+    <string name="media_row_see_all">Zobacz wszystko</string>
+    <string name="media_card_watched">Obejrzane</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d zaznaczona</item>
+        <item quantity="few">%1$d zaznaczone</item>
+        <item quantity="many">%1$d zaznaczonych</item>
+        <item quantity="other">%1$d zaznaczonych</item>
+    </plurals>
+    <string name="selection_close">Wyczyść zaznaczenie</string>
+    <string name="selection_select_all">Zaznacz wszystko</string>
+    <string name="selection_mark_watched">Oznacz jako obejrzane</string>
+    <string name="selection_mark_unwatched">Oznacz jako nieobejrzane</string>
+    <string name="selection_download">Pobierz</string>
+
+    <string name="selection_item_selected">Zaznaczone</string>
+    <string name="selection_item_not_selected">Niezaznaczone</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Oznaczono %1$d jako obejrzaną</item>
+        <item quantity="few">Oznaczono %1$d jako obejrzane</item>
+        <item quantity="many">Oznaczono %1$d jako obejrzane</item>
+        <item quantity="other">Oznaczono %1$d jako obejrzane</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Oznaczono %1$d jako obejrzane, %2$d nie powiodło się</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nie udało się oznaczyć %1$d pozycji jako obejrzanej</item>
+        <item quantity="few">Nie udało się oznaczyć %1$d pozycji jako obejrzanych</item>
+        <item quantity="many">Nie udało się oznaczyć %1$d pozycji jako obejrzanych</item>
+        <item quantity="other">Nie udało się oznaczyć %1$d pozycji jako obejrzanych</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Oznaczono %1$d jako nieobejrzaną</item>
+        <item quantity="few">Oznaczono %1$d jako nieobejrzane</item>
+        <item quantity="many">Oznaczono %1$d jako nieobejrzane</item>
+        <item quantity="other">Oznaczono %1$d jako nieobejrzane</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Oznaczono %1$d jako nieobejrzane, %2$d nie powiodło się</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nie udało się oznaczyć %1$d pozycji jako nieobejrzanej</item>
+        <item quantity="few">Nie udało się oznaczyć %1$d pozycji jako nieobejrzanych</item>
+        <item quantity="many">Nie udało się oznaczyć %1$d pozycji jako nieobejrzanych</item>
+        <item quantity="other">Nie udało się oznaczyć %1$d pozycji jako nieobejrzanych</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Dodano %1$d do pobrań</item>
+        <item quantity="few">Dodano %1$d do pobrań</item>
+        <item quantity="many">Dodano %1$d do pobrań</item>
+        <item quantity="other">Dodano %1$d do pobrań</item>
+    </plurals>
+    <string name="selection_result_download_partial">Dodano %1$d do pobrań, %2$d nie powiodło się</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nie udało się dodać %1$d pozycji do pobrań</item>
+        <item quantity="few">Nie udało się dodać %1$d pozycji do pobrań</item>
+        <item quantity="many">Nie udało się dodać %1$d pozycji do pobrań</item>
+        <item quantity="other">Nie udało się dodać %1$d pozycji do pobrań</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Dodano %1$d do pobrań — %2$d już na tym urządzeniu</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d pozycja jest już na tym urządzeniu</item>
+        <item quantity="few">%1$d pozycje są już na tym urządzeniu</item>
+        <item quantity="many">%1$d pozycji jest już na tym urządzeniu</item>
+        <item quantity="other">%1$d pozycji jest już na tym urządzeniu</item>
+    </plurals>
+</resources>

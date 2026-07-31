@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Letöltve</string>
+    <string name="badge_download_queued">Letöltésre várakozik</string>
+    <string name="badge_download_paused">Letöltés szüneteltetve</string>
+    <string name="badge_download_failed">A letöltés sikertelen</string>
+
+    <string name="media_row_see_all">Összes megtekintése</string>
+    <string name="media_card_watched">Megnézve</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d kiválasztva</item>
+        <item quantity="other">%1$d kiválasztva</item>
+    </plurals>
+    <string name="selection_close">Kijelölés törlése</string>
+    <string name="selection_select_all">Összes kijelölése</string>
+    <string name="selection_mark_watched">Megjelölés megnézettként</string>
+    <string name="selection_mark_unwatched">Megjelölés nem nézettként</string>
+    <string name="selection_download">Letöltés</string>
+
+    <string name="selection_item_selected">Kiválasztva</string>
+    <string name="selection_item_not_selected">Nincs kiválasztva</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d elem megnézettként megjelölve</item>
+        <item quantity="other">%1$d elem megnézettként megjelölve</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d elem megnézettként megjelölve, %2$d sikertelen</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d elemet nem sikerült megnézettként megjelölni</item>
+        <item quantity="other">%1$d elemet nem sikerült megnézettként megjelölni</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d elem nem nézettként megjelölve</item>
+        <item quantity="other">%1$d elem nem nézettként megjelölve</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d elem nem nézettként megjelölve, %2$d sikertelen</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d elemet nem sikerült nem nézettként megjelölni</item>
+        <item quantity="other">%1$d elemet nem sikerült nem nézettként megjelölni</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d elem hozzáadva a letöltésekhez</item>
+        <item quantity="other">%1$d elem hozzáadva a letöltésekhez</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d elem hozzáadva a letöltésekhez, %2$d sikertelen</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d elemet nem sikerült hozzáadni a letöltésekhez</item>
+        <item quantity="other">%1$d elemet nem sikerült hozzáadni a letöltésekhez</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d elem hozzáadva a letöltésekhez – %2$d már ezen az eszközön van</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d elem már ezen az eszközön van</item>
+        <item quantity="other">%1$d elem már ezen az eszközön van</item>
+    </plurals>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Altre opzioni</string>
+    <string name="home_settings">Impostazioni</string>
+    <string name="settings_offline_mode">Modalità offline</string>
+    <string name="state_on">Attivato</string>
+    <string name="state_off">Disattivato</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_libraries">Librerie</string>
+    <string name="nav_search">Cerca</string>
+    <string name="nav_downloads">Download</string>
+    <string name="offline_no_network">Nessuna rete — visualizzazione dei contenuti scaricati</string>
+    <string name="offline_server_unreachable">Impossibile raggiungere il server — visualizzazione dei contenuti scaricati</string>
+    <string name="offline_forced">Modalità offline attiva — visualizzazione dei contenuti scaricati</string>
+    <string name="offline_retry">Riprova</string>
+    <string name="offline_go_online">Torna online</string>
+    <string name="syncplay_groups_action">Gruppi SyncPlay</string>
+    <string name="syncplay_groups_action_active">Gruppi SyncPlay — sei in un gruppo</string>
+</resources>

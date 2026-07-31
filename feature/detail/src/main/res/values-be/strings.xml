@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Назад</string>
+    <string name="detail_home">Галоўная</string>
+    <string name="detail_play">Прайграць</string>
+    <string name="detail_resume">Працягнуць</string>
+    <string name="detail_download">Спампаваць</string>
+    <string name="detail_download_cancel">Скасаваць</string>
+    <string name="detail_download_remove">Выдаліць</string>
+    <string name="detail_download_retry">Паўтарыць</string>
+    <string name="detail_play_episode">Прайграць гэты эпізод</string>
+    <string name="detail_mark_watched">Пазначыць прагледжаным</string>
+    <string name="detail_mark_unwatched">Пазначыць непрагледжаным</string>
+    <string name="detail_add_favorite">Дадаць у абранае</string>
+    <string name="detail_remove_favorite">Выдаліць з абранага</string>
+
+    <string name="detail_section_seasons">Сезоны</string>
+    <string name="detail_section_next_up">Далей</string>
+    <string name="detail_section_episodes">Эпізоды</string>
+    <string name="detail_section_similar">Падобнае</string>
+
+    <string name="detail_runtime_minutes">%1$d мін</string>
+    <string name="detail_remaining_minutes">Засталося %1$d мін</string>
+    <string name="detail_size_on_device">%1$s на прыладзе</string>
+    <string name="detail_directed_by">Рэжысёр: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d сезон</item>
+        <item quantity="few">%1$d сезоны</item>
+        <item quantity="many">%1$d сезонаў</item>
+        <item quantity="other">%1$d сезонаў</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d эпізод</item>
+        <item quantity="few">%1$d эпізоды</item>
+        <item quantity="many">%1$d эпізодаў</item>
+        <item quantity="other">%1$d эпізодаў</item>
+    </plurals>
+
+    <string name="detail_empty">Гэты элемент больш недаступны.</string>
+    <string name="detail_message_download_queued">Дададзена ў спампоўкі.</string>
+    <string name="detail_message_download_failed">Не ўдалося пачаць спампоўку.</string>
+    <string name="detail_message_download_deleted">Выдалена з гэтай прылады.</string>
+    <string name="detail_message_download_delete_failed">Не ўдалося выдаліць гэтую спампоўку.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Спампоўку скасавана — %1$d завершаны эпізод захаваны.</item>
+        <item quantity="few">Спампоўку скасавана — %1$d завершаныя эпізоды захаваны.</item>
+        <item quantity="many">Спампоўку скасавана — %1$d завершаных эпізодаў захавана.</item>
+        <item quantity="other">Спампоўку скасавана — %1$d завершаных эпізодаў захавана.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Не ўдалося захаваць. Паспрабуйце зноў.</string>
+
+    <string name="detail_group_play">Прайграць для %1$s</string>
+    <string name="detail_group_resume">Працягнуць для %1$s</string>
+    <string name="detail_group_play_next">Прайграць наступным</string>
+    <string name="detail_group_add_to_queue">Дадаць у чаргу</string>
+    <string name="detail_message_group_play">Групе прапанавана прайграць гэта.</string>
+    <string name="detail_message_group_play_next">Дададзена наступным у чаргу групы.</string>
+    <string name="detail_message_group_queued">Дададзена ў чаргу групы.</string>
+
+    <string name="detail_delete_download_dialog_title">Выдаліць спампоўку?</string>
+    <string name="detail_delete_download_dialog_message">Гэта выдаліць яе з гэтай прылады. Вы можаце спампаваць яе зноў у любы час.</string>
+    <string name="detail_delete_download_dialog_confirm">Выдаліць</string>
+    <string name="detail_delete_download_dialog_cancel">Скасаваць</string>
+</resources>

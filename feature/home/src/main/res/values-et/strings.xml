@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Pole veel midagi vaadata. Lisa meediat oma teekidesse serveris.</string>
+    <string name="home_empty_refresh">Värskenda</string>
+
+    <string name="home_section_my_media">Minu meedia</string>
+    <string name="home_section_continue_watching">Jätka vaatamist</string>
+    <string name="home_section_next_up">Järgmisena</string>
+    <string name="home_section_latest">Uusimad %1$s</string>
+</resources>

@@ -75,7 +75,7 @@ internal fun PlayerControls(
         TopBar(state = state, onBack = actions.onBack, modifier = Modifier.align(Alignment.TopStart))
 
         TransportRow(
-            isPlaying = state.isPlaying,
+            isPlaying = state.showsPlaying,
             onPlayPause = actions.onPlayPause,
             onSeekBy = actions.onSeekBy,
             modifier = Modifier.align(Alignment.Center),

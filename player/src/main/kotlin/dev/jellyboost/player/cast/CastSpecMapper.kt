@@ -18,8 +18,9 @@ import javax.inject.Singleton
  *
  * **Credentials.** Every URL the app itself opens is authorised by `JellyfinAuthInterceptor`, an
  * OkHttp interceptor on the media client. A receiver fetches its own bytes over its own network
- * stack, so nothing of ours is in that loop: the token has to travel in the URL, on the media URL
- * *and* on every subtitle URL. Probed against the dev server (2026-07-31), a transcode's
+ * stack, so nothing of ours is in that loop: the token has to travel in the URL, on the media URL,
+ * on every subtitle URL *and* on the poster the television draws. Probed against the dev server
+ * (2026-07-31), a transcode's
  * `TranscodingUrl` and every external-subtitle `DeliveryUrl` already arrive with `ApiKey` on them —
  * but a direct-play or direct-stream URL, which the SDK builds locally, does not. Applying
  * [StreamUrlFactory.withApiKey] to all of them and relying on its idempotence is what covers both
@@ -42,8 +43,8 @@ class CastSpecMapper
          * @param spec what the same source would have been opened with locally; its URL and
          *   side-loaded subtitles are already the right ones, and only their credentials and their
          *   ids need translating.
-         * @param metadata what the receiver should display; the player screen owns it, so it is
-         *   passed in rather than dug out of the negotiation.
+         * @param metadata what the receiver should display; the player screen owns it
+         *   ([CastMetadataHolder]), so it is passed in rather than dug out of the negotiation.
          */
         fun map(
             spec: PlaybackMediaItemSpec,
@@ -59,9 +60,24 @@ class CastSpecMapper
                 streamType = if (source.runTimeTicks > 0L) CastStreamType.Buffered else CastStreamType.Live,
                 durationMs = source.runTimeTicks.ticksToMillis(),
                 startPositionMs = source.startPositionTicks.ticksToMillis(),
-                metadata = metadata,
+                metadata = metadata.signed(),
                 tracks = spec.tracks(),
             )
+
+        /**
+         * The metadata with its poster addressed to a fetcher that is not this app.
+         *
+         * The title and the subtitle are strings and pass through untouched; the poster is a third
+         * URL the receiver opens itself, and it belongs under the same rule as the media and the
+         * subtitles rather than under an exception nobody would remember. Probed against the dev
+         * server (2026-07-31): image endpoints answer `200` with no credentials at all, so today the
+         * token changes nothing — but that is the *server's* current policy, not a property of the
+         * URL, and the cost of being wrong about it is a television showing a blank card.
+         *
+         * Idempotent through [StreamUrlFactory.withApiKey], like every other URL here.
+         */
+        private fun CastMetadata.signed(): CastMetadata =
+            posterUrl?.let { copy(posterUrl = urls.withApiKey(it)) } ?: this
 
         /**
          * The MIME type the receiver is told to expect.

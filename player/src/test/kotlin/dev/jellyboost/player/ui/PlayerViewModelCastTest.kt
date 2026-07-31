@@ -5,6 +5,10 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.player.PlayerFixtures
+import dev.jellyboost.player.cast.CastConnection
+import dev.jellyboost.player.cast.CastMetadata
+import dev.jellyboost.player.cast.CastMetadataHolder
 import dev.jellyboost.player.cast.CastSessionCoordinator
 import dev.jellyboost.player.cast.CastSessionListener
 import dev.jellyboost.player.cast.CastSessionMonitor
@@ -28,6 +32,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -59,6 +64,9 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
     private val routing = RoutingPlayerHandle(local, Provider { castHandle })
 
     private val castStatus = CastStatusHolder()
+
+    /** What the receiver would be loaded with; the handle reads it at `prepare`. */
+    private val castMetadata = CastMetadataHolder()
 
     /** Captures the coordinator's listener, so a test can be the Cast framework. */
     private val monitor =
@@ -112,6 +120,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             syncPlayLocalSession = syncPlayLocalSession,
             savedStateHandle = navArgs(),
             castStatus = castStatus,
+            castMetadata = castMetadata,
             castCoordinator = coordinator,
         )
 
@@ -518,6 +527,64 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             model.uiState.value.artworkUrl shouldBe POSTER
+        }
+
+    // ---- what the television says it is playing (Phase 5) -----------------------------------------
+
+    @Test
+    fun `the receiver is told what it is playing, and where to get the picture`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(any()) } returns AppResult.Success(item(backdrop = BACKDROP, primary = POSTER))
+
+            castViewModel()
+            advanceUntilIdle()
+
+            // A `PlaybackInfo` response names nothing, so without this the Cast notification and the
+            // television both show an unlabelled stream.
+            castMetadata.metadataFor(PlayerFixtures.ITEM_ID.toString()) shouldBe
+                CastMetadata(title = "Arrival", subtitle = null, posterUrl = BACKDROP)
+        }
+
+    @Test
+    fun `a cast open waits for the item, because a receiver is only loaded once`() =
+        runTest(dispatcher) {
+            val named = CompletableDeferred<Unit>()
+            coEvery { repository.getItem(any()) } coAnswers {
+                named.await()
+                AppResult.Success(item(backdrop = BACKDROP, primary = POSTER))
+            }
+            castStatus.setConnection(CastConnection.Connected("Living Room TV"))
+            val requests = recordResolves()
+
+            castViewModel()
+            advanceUntilIdle()
+
+            // Nothing has been negotiated yet: loading the receiver now would put a nameless film on
+            // the television for the rest of the session.
+            requests.shouldBeEmpty()
+
+            named.complete(Unit)
+            advanceUntilIdle()
+
+            requests.single().castTarget shouldBe true
+            castMetadata.metadataFor(PlayerFixtures.ITEM_ID.toString()).title shouldBe "Arrival"
+        }
+
+    @Test
+    fun `local playback waits for nothing, because a title arriving late is invisible`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(any()) } coAnswers {
+                CompletableDeferred<Unit>().await()
+                error("unreachable")
+            }
+            val requests = recordResolves()
+
+            castViewModel()
+            advanceUntilIdle()
+
+            // The first frame is never behind a cosmetic fetch on this device.
+            requests.single().castTarget shouldBe false
+            castHandle.prepared.shouldBeEmpty()
         }
 
     private fun item(

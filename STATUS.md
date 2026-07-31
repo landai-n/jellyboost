@@ -86,7 +86,7 @@ All implementation phases committed same-day, each `/verify`-green
    verified (50 SyncPlay SDK classes + serializers kept, zero new keep
    rules; REST polling exercised on-device minified, clean logcat).
 
-## Planned milestone: M12 — Chromecast (approved 2026-07-31, implementation started; closes after M11)
+## Planned milestone: M12 — Chromecast (all 5 phases landed 2026-07-31; device DoD + tag owed, gated on M11)
 
 User-approved scope extension (DECISIONS 2026-07-31): phone-orchestrated Google
 Cast via media3-cast `CastPlayer` + Google's default receiver (NOT the Jellyfin
@@ -193,8 +193,51 @@ works from the poster screen, no speed picker on a receiver without a rate, leav
 while casting does **not** enter PiP (TV plays on), and the top-bar cast button is absent in
 a SyncPlay group. Tablet *and* phone-size layout check of the casting screen.
 
-Phase 5 (hardening, docs, close) awaiting implementation: minified-build cast smoke,
-`docs/features/chromecast.md` + `docs/ARCHITECTURE.md`, full DoD walk, tag `m12`.
+**Phase 5 landed (cast metadata, release verification, docs) — the last code gap is closed.**
+New in `:player`: `CastMetadataHolder`, the channel that finally gives the receiver a name.
+Phase 4 flagged that `CastPlayerHandle` mapped every spec with a default `CastMetadata()`, so
+the television and the Cast notification showed an unlabelled stream; the ViewModel's existing
+item fetch (the one that already loads the title and the casting backdrop) now publishes
+`CastMetadata(title, subtitle, posterUrl)` under the item's id, `CastPlayerHandle.prepare` reads
+it back under `spec.mediaId`, and `CastSpecMapper` signs the poster with `withApiKey` alongside
+the media and subtitle URLs. A **cast** open now joins that fetch before negotiating (a receiver
+is loaded exactly once); a local open never waits. `:player` 650 → **661** unit tests, 0 failures;
+full gate green in one run; **no pre-existing test file was touched** except `CastSpecMapperTest`,
+whose single metadata pass-through case is replaced by four stronger ones (logged in DECISIONS).
+
+**Release build verified, no keep rule needed.** `assembleRelease` (R8 full mode +
+`shrinkResources`) is green with **zero** missing-class warnings for `com.google.android.gms.cast.*`
+or `androidx.media3.cast.*`. `dev.jellyboost.player.cast.JellyboostCastOptionsProvider` survives
+**unrenamed** in the release dex (`mapping.txt` maps it to itself; `apkanalyzer dex packages` shows
+the class, its `<init>()` and both interface methods), kept by the framework's own consumer rule
+`-keep public class * implements com.google.android.gms.cast.framework.OptionsProvider` at
+`configuration.txt:480` — so `app/proguard-rules.pro` gains nothing. The merged release manifest
+still carries the `OPTIONS_PROVIDER_CLASS_NAME` meta-data with the exact FQN, plus Cast's
+`MediaIntentReceiver` and `ReconnectionService`. The release APK was installed on the test tablet
+and cold-started: process up, `MainActivity` focused, frames drawn, **no** `FATAL`/
+`ClassNotFoundException`/`NoSuchMethodError` in its logcat.
+
+**Docs:** `docs/features/chromecast.md` (new — architecture, key classes, negotiation flow,
+transfers, reporting ownership, what is deliberately not supported, the WebVTT discovery, the
+GMS-less contract, test coverage), `docs/ARCHITECTURE.md` (the `cast/` package, the routing-handle
+seam in the `:player` layout, and a Chromecast (M12) section). Two DECISIONS entries (2026-07-31)
+cover the metadata carry and the verified-not-assumed absence of a cast keep rule.
+
+### What remains to close M12
+
+Nothing in code. Three things, in this order:
+
+1. **M11 closes first** — M12 was approved as a post-M11 milestone and its DoD shares the device.
+2. **The user runs DoD walks 1–9** (`docs/notes/chromecast-m12-plan.md` § Verification) on a real
+   Chromecast + the test tablet + the dev server. They are the accumulated "Owed" items of phases
+   1–4 plus walk 9's edges: cast icon/chooser/hardware volume; direct play; transcode + quality
+   change; transport from both the controls and the Cast notification; text subtitle (no restart),
+   image subtitle and audio switch (restart); transfer both ways; stop mid-film → resume position in
+   jellyfin-web and no stray ffmpeg; background and kill; in-group no button, system-UI connect
+   leaves the group, downloaded item casts as a stream, GMS-less device shows nothing and does not
+   crash, and walks 2/3/5 repeated on the **minified** build (now installed on the tablet as
+   `dev.jellyboost.app`).
+3. **`git tag m12`** once the walk passes, with STATUS.md flipped to COMPLETE.
 
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)
 

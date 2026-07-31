@@ -59,6 +59,14 @@ Below 480.dp of viewport width, episode rows shrink their thumb from 160dp to 12
 title/overview column keeps enough room to read (`compact` is measured once at the screen level
 and threaded down — no per-row subcomposition).
 
+Compact widths also reshape the header (user-driven polish, DECISIONS 2026-07-31 rounds 2–3):
+the portrait banner takes 0.32 of the viewport height instead of 0.40; the action buttons form
+one edge-to-edge row — Play keeps the only label (16dp padding so "Resume" fits beside three
+58dp-minimum circles) while watched/favorite/download are icon-only with their labels as
+`contentDescription`; and the overview clamps to five lines, expanding and collapsing on tap
+(tappable only when it actually overflows). At 480dp+ all of this stays on the original
+FlowRow/full-label/unclamped path.
+
 Episode rows reuse `ThumbCard` for their artwork so the watched tick, resume bar and download
 badge are byte-identical to the ones the home rows show.
 

@@ -50,7 +50,7 @@ zero slack, over-tall SyncPlay queue sheet, crushed download queue-row titles �
 `/verify`-green commits (`08d44d9`, `43e3e07`, `2cef508`, `fcac1c0`), each with JVM sizing
 tests and phone-width previews; re-swept on-device at phone sizes and tablet-native (zero
 tablet regression; tablet-portrait player bar intentionally icon-only). Full record:
-`docs/POLISH.md` "Phone sizes"; feature docs updated (library-grid, item-detail, playback,
+`docs/POLISH.md` "Phone sizes" (incl. the round 2–3 user-feedback polish); feature docs updated (library-grid, item-detail, playback,
 syncplay, downloads). Screenshot-test frameworks evaluated and rejected for now (preview
 compileSdk 37.1 blocks Roborazzi/Paparazzi; no disk for an emulator — see DECISIONS).
 Left on the device: HotD S3:E1 stays downloaded (useful for M11's local-in-group DoD item).

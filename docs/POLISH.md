@@ -78,3 +78,12 @@ group/audio sheets, player transport + gesture zones (landscape), overflow menu.
 still labelled) — zero tablet regression. Screenshot evidence in the session scratchpad
 (`sweep/*.png`); skip-intro button padding (F5 in the plan) was unverifiable — no media with
 intro segments on the dev server — and was deliberately left unchanged.
+
+### Round 2–3 (same day, user feedback on the fixed build)
+"Screens work in theory but use the space inefficiently / don't look polished":
+- Home: thumb cards 210dp → 160dp below 600dp (two full cards + a peek at 360dp).
+- Detail: portrait banner 0.40 → 0.32 of height on compact; actions became one
+  edge-to-edge row (Play labelled + three icon-only circles, 12/16dp compact paddings —
+  Material's 24dp default ellipsized "Resume"); overview clamps to 5 lines with
+  tap-to-expand. All device-verified at 360×800dp; wide/tablet paths byte-identical.
+Commits: fc0ffb5, 57e9c1c, 9943008, e5d9ee2.

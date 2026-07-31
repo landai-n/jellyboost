@@ -151,8 +151,12 @@ internal class PlayerSyncPlayBridge(
 private fun SyncPlayState.toPlayerState(): PlayerSyncPlayState =
     when (this) {
         // Joining is deliberately not "in a group": it lasts a round trip, and a control surface
-        // that rearranges itself for it would flicker on every join.
+        // that rearranges itself for it would flicker on every join. Rejoining is not either, and
+        // for a stronger reason — the server really does not have this session in the group, so a
+        // surface that still said "in a group" would offer transport requests nothing would answer.
         SyncPlayState.Idle, SyncPlayState.Joining -> PlayerSyncPlayState()
+
+        is SyncPlayState.Rejoining -> PlayerSyncPlayState()
 
         is SyncPlayState.InGroup ->
             PlayerSyncPlayState(
@@ -185,6 +189,7 @@ private fun SyncPlayPhase.toPlayerPhase(): PlayerSyncPlayPhase =
 private fun SyncPlayMessage.toPlayerMessage(): PlayerMessage =
     when (this) {
         SyncPlayMessage.ConnectionLost -> PlayerMessage.SyncPlayConnectionLost
+        SyncPlayMessage.Rejoined -> PlayerMessage.SyncPlayRejoined
         SyncPlayMessage.JoinFailed -> PlayerMessage.SyncPlayJoinFailed
         SyncPlayMessage.GroupEnded -> PlayerMessage.SyncPlayGroupEnded
         SyncPlayMessage.RemovedFromGroup -> PlayerMessage.SyncPlayRemoved

@@ -28,6 +28,22 @@ sealed interface SyncPlayState {
         val queue: SyncPlayGroupQueue?,
         val phase: SyncPlayPhase,
     ) : SyncPlayState
+
+    /**
+     * Membership was lost server-side without anyone here asking for it, and is being taken back.
+     *
+     * Deliberately **not** a kind of [InGroup]: while this lasts the server really does not have this
+     * session in [group], so anything keyed on membership — the reported server session for a
+     * downloaded file above all (`SyncPlayLocalSession`) — has to see it go away and come back.
+     * Short-lived by construction, like [Joining]: it ends at [InGroup] or at [Idle], within
+     * `SyncPlayController.REJOIN_MAX_ATTEMPTS` attempts.
+     *
+     * @param attempt 1-based, for the log and for the UI to be able to say "still trying".
+     */
+    data class Rejoining(
+        val group: SyncPlayGroupSummary,
+        val attempt: Int,
+    ) : SyncPlayState
 }
 
 /**
@@ -78,9 +94,18 @@ enum class SyncPlayMessage {
      * The connection was confirmed lost while in a group, so the group was left and playback paused.
      *
      * The user-visible copy is "Left SyncPlay — connection lost" (docs/notes/syncplay-m11-plan.md,
-     * key decision 10 as amended): resuming from here plays solo, and rejoining is manual.
+     * key decision 10 as amended twice): resuming from here plays solo. It is only reached once an
+     * automatic rejoin has been tried and could not get the membership back.
      */
     ConnectionLost,
+
+    /**
+     * The server had dropped this session from the group and it has been taken back automatically.
+     *
+     * Low-key on purpose: nothing is asked of the user, and the group's own state has already put
+     * this member back in step (DECISIONS.md 2026-07-31, auto-rejoin).
+     */
+    Rejoined,
 
     /** The join or create call failed; nothing was joined. */
     JoinFailed,

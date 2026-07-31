@@ -420,6 +420,7 @@ private fun SyncPlayGroupState.labelRes(): Int =
 private fun SyncPlayMessage.textRes(): Int =
     when (this) {
         SyncPlayMessage.ConnectionLost -> R.string.player_message_syncplay_connection_lost
+        SyncPlayMessage.Rejoined -> R.string.player_message_syncplay_rejoined
         SyncPlayMessage.JoinFailed -> R.string.player_message_syncplay_join_failed
         SyncPlayMessage.GroupEnded -> R.string.player_message_syncplay_group_ended
         SyncPlayMessage.RemovedFromGroup -> R.string.player_message_syncplay_removed

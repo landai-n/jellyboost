@@ -216,9 +216,12 @@ enum class PlayerMessage {
      * The connection dropped while in a group, so the group was left and playback paused.
      *
      * Key decision 10 as amended (docs/notes/syncplay-m11-plan.md): resuming from here plays solo —
-     * from the downloaded file if there is one — and rejoining is a deliberate act.
+     * from the downloaded file if there is one. Only shown once an automatic rejoin has been tried.
      */
     SyncPlayConnectionLost,
+
+    /** The server had dropped this session from the group, and it was taken back automatically. */
+    SyncPlayRejoined,
 
     /** The group could not be joined; nothing changed. */
     SyncPlayJoinFailed,

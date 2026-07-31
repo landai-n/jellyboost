@@ -81,6 +81,7 @@
     </plurals>
 
     <string name="player_message_syncplay_connection_lost">Left SyncPlay — connection lost</string>
+    <string name="player_message_syncplay_rejoined">Rejoined SyncPlay group</string>
     <string name="player_message_syncplay_join_failed">Couldn\'t join that SyncPlay group.</string>
     <string name="player_message_syncplay_group_ended">The SyncPlay group has ended.</string>
     <string name="player_message_syncplay_removed">You\'re no longer in the SyncPlay group.</string>

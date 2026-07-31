@@ -2151,4 +2151,79 @@ Seeded from the approved plan; listed for traceability, no divergence:
   are cheap (one unauthenticated `getPublicSystemInfo` per tick, refresh only when a fallback
   actually happened).
 
+## 2026-07-31 — SyncPlay: a membership the server drops is taken back, not reported (user-requested)
+- **Scope:** `player/.../syncplay/SyncPlayController.kt`, `SyncPlayState.kt` (new
+  `SyncPlayState.Rejoining`, new `SyncPlayMessage.Rejoined`), `ui/PlayerSyncPlayBridge.kt`,
+  `ui/PlayerUiState.kt`, `ui/PlayerScreen.kt`, `syncplay/ui/SyncPlayGroupsViewModel.kt`,
+  `syncplay/ui/SyncPlayGroupsScreen.kt`, `res/values/strings.xml`, `SyncPlayControllerTest`,
+  `SyncPlayTestDoubles`, `docs/features/syncplay.md`.
+- **Plan said:** key decision 10 as amended on 2026-07-30 — a connection drop mid-group pauses the
+  player, leaves the group, says "Left SyncPlay — connection lost", and **"rejoining the group is
+  manual via the groups UI"**.
+- **Done instead:** manual only when the group is genuinely unrecoverable. Losing the membership
+  *server-side without anyone here asking* now stands the session down into `Rejoining` and takes it
+  back automatically. Precisely:
+  - the group is remembered (`rejoinTarget`) from the moment it is entered, and forgotten by every
+    deliberate exit — `leaveGroup()`, sign-out, `LibraryAccessDenied`, `GroupGone`, and a
+    `NotInGroup`/`Left` that arrives with the connection healthy. None of those ever auto-rejoin.
+  - "healthy" is `recentlyTroubled()`: connectivity going offline, a failed ping cycle, or the
+    socket leaving `Connected` stamps `troubledAt`, and a removal within
+    `REJOIN_TROUBLE_WINDOW_MS` (30 s) of one is blamed on it. The window exists because the removal
+    is discovered by the *next* request, not at the moment of the trouble.
+  - **a confirmed loss goes the same way.** `confirmLoss()` (socket collection ended,
+    `PING_FAILURE_STREAK`, grace window expired) no longer tears the group down: with a group
+    remembered it hands over to the rejoin, and reaches the old `Idle` + `ConnectionLost` ending
+    only if the attempts fail. This is a delta from the requested scope and it is the one the
+    device forced — see the reason below.
+  - the attempt is "list the groups; if ours is still there, run the ordinary join flow" — socket
+    re-collected, join REST, handshake with a `ready`, the existing self-sync net behind it. Up to
+    `REJOIN_MAX_ATTEMPTS` (3) attempts `REJOIN_RETRY_DELAY_MS` (2 s) apart, the retries covering a
+    server still reaping the old session, and each attempt gated on `awaitOnline()` — a bounded
+    wait of the same 2 s, because the radio comes back several seconds after `svc wifi enable`
+    returns and an attempt fired into a dead network is an attempt thrown away. Group absent from
+    the list → it dissolved (we were its last member) → `GroupEnded`. Attempts exhausted → the old
+    ending, `ConnectionLost`. No background loop afterwards: once at `Idle`, we stay out until the
+    user acts.
+  - the player is **paused** for the whole of it and is never started by the rejoin; the group's
+    answer to this member's `ready` is what resyncs it. A success says "Rejoined SyncPlay group".
+  - `Rejoining` is deliberately not a kind of `InGroup`, because the server really does not have
+    this session in the group: membership falls and rises, which is what re-mints the server-visible
+    session of a downloaded file (`SyncPlayLocalSession`, key decision 9). A test collects the exact
+    flow `PlayerSyncPlayBridge.membership` is built from and pins `false → true` on the rejoin, so
+    a `StateFlow` conflating the two writes would fail rather than silently skip the mint.
+  - two supporting changes: the sign-out watcher moved from the group session to the controller's
+    own scope (a rejoin cancels the session scope, and a sign-out mid-rejoin has to be able to abort
+    it), and `enterGroup` re-sends `setIgnoreWait(true)` when the rejoin lands with no player
+    attached, because the new server session knows nothing of the old one's ignore-wait.
+- **Reason:** user decision, 2026-07-31. On Jellyfin 10.11 a websocket drop is fatal to the
+  membership and to nothing else: `SessionManager` raises `SessionEnded`,
+  `SyncPlayManager.OnSessionEnded` calls `LeaveGroup` on this client's behalf, and the next REST
+  call arrives on a fresh session that belongs to no group (verified against
+  `Emby.Server.Implementations/SyncPlay/SyncPlayManager.cs`, release-10.11.z). So a two-second Wi-Fi
+  blip that the client survives — the grace window already keeps the group locally — still ended the
+  group *on the server*, and the honest-but-useless answer was "Left SyncPlay — connection lost"
+  followed by the user opening the Groups screen and rejoining by hand, every time. The bounds are
+  what keeps decision 10's spirit: the client never quietly plays on out of step, never retries for
+  ever, and never re-enters a group anybody meant to leave.
+- **Deltas from the request, and why:**
+  1. **`confirmLoss()` rejoins instead of ending the group.** The request scoped the trigger to
+     "membership turns out to be lost server-side" (a `NotInGroup` or a `403` after recovery) and
+     left `confirmLoss` alone. The first device run showed that path is unreachable on this
+     hardware: `svc wifi disable; sleep 3; svc wifi enable` costs **~5.0 s** of reported-offline
+     once association, DHCP and the reachability probe are counted (offline at 06:25:45.2, grace
+     expired at 06:25:50.2, server reachable again at 06:25:53.1), so the grace window expires
+     before anything has the chance to discover the removal and the user gets the very
+     "Left SyncPlay — connection lost" the decision exists to remove. Routing `confirmLoss` through
+     the rejoin costs nothing when the connection really has gone — the player is frozen from the
+     same instant, every attempt is gated on being online, and the ending is the same message a few
+     seconds later — and it is what makes the feature work on the device. Three existing loss tests
+     were updated to the new spec accordingly (they now model a dead connection by failing
+     `getGroups` too, and assert "frozen at once, given up on after the attempts").
+  2. **`GroupGone` is definitive** rather than routed through an attempt — the id a rejoin would ask
+     for is the one the server has just said does not exist.
+  3. A `403` on the first call after a blip is honoured as specified, though on 10.11 the server's
+     actual answer is a `SyncPlayNotInGroupUpdate` on the websocket (the SyncPlay REST endpoints
+     return 204 whether or not the session is in a group), and the ping loop's five-second cadence
+     is what discovers it when nothing else is happening.
+
 <!-- END -->

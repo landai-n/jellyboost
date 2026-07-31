@@ -139,6 +139,12 @@ class FakeSyncPlayApi(
     /** Thrown by [joinGroup] and [createGroup] when set — the failed-join path. */
     var joinError: Throwable? = null
 
+    /** Thrown by every [getGroups] while set — a rejoin that cannot even see the group list. */
+    var getGroupsError: Throwable? = null
+
+    /** Thrown by the next [reportBuffering] and then cleared — one refused call. */
+    var failNextBuffering: Throwable? = null
+
     /** How far the fake server's clock runs ahead of the test clock, in milliseconds. */
     var serverOffsetMillis = 0L
 
@@ -158,6 +164,7 @@ class FakeSyncPlayApi(
 
     override suspend fun getGroups(): List<SyncPlayGroupSummary> {
         calls += SyncPlayCall.GetGroups
+        getGroupsError?.let { throw it }
         return groups
     }
 
@@ -183,6 +190,10 @@ class FakeSyncPlayApi(
         playlistItemId: UUID,
     ) {
         calls += SyncPlayCall.ReportBuffering(at, positionTicks, isPlaying, playlistItemId)
+        failNextBuffering?.let {
+            failNextBuffering = null
+            throw it
+        }
     }
 
     override suspend fun reportReady(

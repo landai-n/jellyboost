@@ -58,7 +58,58 @@ All implementation phases committed same-day, each `/verify`-green
    verified (50 SyncPlay SDK classes + serializers kept, zero new keep
    rules; REST polling exercised on-device minified, clean logcat).
 
-### Owed to the M11 device DoD session (two clients: test tablet + jellyfin-web)
+### Device DoD session #1 — 2026-07-31 (app + jellyfin-web in the tablet's Chrome)
+
+**Core PASSES:** group create/web join + badge; play-for-group of a downloaded
+item **from disk** (LocalPlaybackResolver, `PlayMethod=DirectPlay`, zero
+`/Videos/*` requests, exactly one mint `PlaybackInfo` POST, both sessions on
+the server); lockstep both directions (pause ~50 ms, unpause ~0.9 s, app
+transport → API only, ~45 ms RTT; time-sync compensates the measured 0.55 s
+clock offset correctly); WAITING overlay renders; queue add/reorder/next with
+next item resolved from disk + auto-relaunch; backgrounded commands during
+playback (foreground service holds network, PiP works); **Wi-Fi kill → pause
++ solo manual resume from disk (amended decision 10 verified)**; ended-in-
+group keeps screen open and reloads in place; **minified release app joined,
+received queue over websocket, auto-launched at group position, zero R8
+serialization errors**. Protocol assumptions largely confirmed (socket-before-
+join works; seek does not pause; ping accepted; rejoin re-syncs to anchor).
+
+**Bugs found (fix batch owed):**
+- HIGH B1 Ready↔Pause feedback storm: any in-group pause loops
+  apply-Pause → `POST /SyncPlay/Ready` → rebroadcast, ~13 req/s until unpause.
+- HIGH B2 past-due commands re-applied ~1/s indefinitely (same scheduled
+  instant re-fires); likely cause of an observed one-off ~28 s forward jump.
+- HIGH B3 member wedges after automatic queue advance: next item loads,
+  handshake completes, group says Playing but no unpause arrives → stuck
+  paused at 0:00 under the overlay; only manual play (or Pause+Unpause pair)
+  recovers.
+- MED B4 stale title/duration after in-place item change (queue sheet is
+  right, controls header is not).
+- MED B5 WAITING overlay is cosmetic — member keeps playing behind it and
+  drifts ahead (web pauses; we don't).
+- MED B6 groups screen shows only a participant count; names exist in
+  `SyncPlayGroupSummary.participants` and the in-player sheet lists them
+  (user expectation: list names).
+- MED B7 two-real-client Waiting deadlock observed once — retest needed with
+  exactly two real clients (a third, never-ready REST member polluted it).
+- MED B8 sustained REST/socket failure while OS reports online is never
+  treated as connection loss (the OEM ROM cut background network; controller stayed
+  "in group" 3+ min while the server disposed the group; recovered only via
+  foreground `NotInGroup`).
+- TUNING B9 a 2 s Wi-Fi blip ejects the group immediately (offline signal
+  fires on the transition; the "socket survives a blip" intent unmet).
+- MINOR B10 create-group dialog mixes locales ("Annuler"/"Create");
+  per-progress-tick `POST /UserItems/{id}/UserData` chattiness (assess —
+  may predate M11).
+
+**Still owed / blocked:** sign-out-leaves-group (needs a safe re-login path —
+skipped to avoid stranding the device); 403 disabled-account copy (needs
+admin to toggle `SyncPlayAccess` on a spare account); queue remove /
+previous / shuffle / repeat buttons; "Left SyncPlay" snackbar text on
+screen; true frame-level skew measurement; drift-monitor corrective seek
+never observed in 40 min (2 s threshold untested in practice).
+
+### Original DoD checklist (reference)
 - **Full DoD walk** (PLAN.md M11): lockstep play/pause/seek <~1 s both
   directions; downloaded item plays from disk in-group — dashboard shows both
   sessions, zero stream traffic, web commands land; WAITING overlay on peer

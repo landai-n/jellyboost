@@ -40,16 +40,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.R
+import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.TrickplayTiles
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * The transport controls drawn over the video.
@@ -208,69 +214,96 @@ private fun BottomBar(
             onSeekTo = actions.onSeekTo,
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
+        // One subcomposition for the whole picker row, not one per button: the question — is there
+        // room for words next to the icons? — is about the row's total width, and every button in it
+        // has to answer it the same way.
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val showLabels = showSheetButtonLabels(maxWidth)
 
-            if (state.audioTracks.size > 1) {
-                SheetButton(
-                    label = stringResource(R.string.player_audio),
-                    onClick = { onOpenSheet(PlayerSheet.AUDIO) },
-                    icon = Icons.Outlined.MusicNote,
-                )
-            }
-            if (state.subtitleTracks.isNotEmpty()) {
-                SheetButton(
-                    label = stringResource(R.string.player_subtitles),
-                    onClick = { onOpenSheet(PlayerSheet.SUBTITLES) },
-                    icon = Icons.Outlined.ClosedCaption,
-                )
-            }
-            // No per-member playback rate exists in SyncPlay: playing faster than the group is
-            // drifting from it, so the control is not offered rather than offered and refused
-            // (docs/notes/syncplay-m11-plan.md, key decision 11).
-            if (!state.syncPlay.inGroup) {
-                SheetButton(
-                    // The current rate replaces the word once it is not 1×, so the control says what
-                    // it is doing without needing a second badge next to it.
-                    label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
-                    onClick = { onOpenSheet(PlayerSheet.SPEED) },
-                    icon = Icons.Outlined.Speed,
-                )
-            }
-            // Watching with other people is worth a permanent control, not a badge: it is where the
-            // participants, the group's shuffle/repeat and the way out live (M11 Phase 3).
-            if (state.syncPlay.inGroup) {
-                SheetButton(
-                    label = stringResource(R.string.player_syncplay_group),
-                    onClick = actions.onOpenGroupSheet,
-                    icon = Icons.Outlined.Groups,
-                )
-            }
-            // A control of its own rather than a row inside the group sheet: what the group watches
-            // next is edited far more often than its shuffle mode, and two taps to reach a queue is
-            // one too many while a film is running (M11 Phase 4). Offered only once the group has a
-            // queue — before the first `PlayQueueUpdate` the sheet would have nothing in it.
-            if (state.syncPlay.inGroup && state.syncPlay.hasQueue) {
-                SheetButton(
-                    label = stringResource(R.string.player_syncplay_queue),
-                    onClick = actions.onOpenQueueSheet,
-                    icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                )
-            }
-            // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
-            if (!state.isLocalPlayback) {
-                SheetButton(
-                    label = stringResource(R.string.player_quality),
-                    onClick = { onOpenSheet(PlayerSheet.QUALITY) },
-                    icon = Icons.Outlined.HighQuality,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
+
+                if (state.audioTracks.size > 1) {
+                    SheetButton(
+                        label = stringResource(R.string.player_audio),
+                        onClick = { onOpenSheet(PlayerSheet.AUDIO) },
+                        icon = Icons.Outlined.MusicNote,
+                        showLabel = showLabels,
+                    )
+                }
+                if (state.subtitleTracks.isNotEmpty()) {
+                    SheetButton(
+                        label = stringResource(R.string.player_subtitles),
+                        onClick = { onOpenSheet(PlayerSheet.SUBTITLES) },
+                        icon = Icons.Outlined.ClosedCaption,
+                        showLabel = showLabels,
+                    )
+                }
+                // No per-member playback rate exists in SyncPlay: playing faster than the group is
+                // drifting from it, so the control is not offered rather than offered and refused
+                // (docs/notes/syncplay-m11-plan.md, key decision 11).
+                if (!state.syncPlay.inGroup) {
+                    SheetButton(
+                        // The current rate replaces the word once it is not 1×, so the control says what
+                        // it is doing without needing a second badge next to it.
+                        label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
+                        onClick = { onOpenSheet(PlayerSheet.SPEED) },
+                        icon = Icons.Outlined.Speed,
+                        showLabel = showLabels,
+                    )
+                }
+                // Watching with other people is worth a permanent control, not a badge: it is where the
+                // participants, the group's shuffle/repeat and the way out live (M11 Phase 3).
+                if (state.syncPlay.inGroup) {
+                    SheetButton(
+                        label = stringResource(R.string.player_syncplay_group),
+                        onClick = actions.onOpenGroupSheet,
+                        icon = Icons.Outlined.Groups,
+                        showLabel = showLabels,
+                    )
+                }
+                // A control of its own rather than a row inside the group sheet: what the group watches
+                // next is edited far more often than its shuffle mode, and two taps to reach a queue is
+                // one too many while a film is running (M11 Phase 4). Offered only once the group has a
+                // queue — before the first `PlayQueueUpdate` the sheet would have nothing in it.
+                if (state.syncPlay.inGroup && state.syncPlay.hasQueue) {
+                    SheetButton(
+                        label = stringResource(R.string.player_syncplay_queue),
+                        onClick = actions.onOpenQueueSheet,
+                        icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
+                        showLabel = showLabels,
+                    )
+                }
+                // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
+                if (!state.isLocalPlayback) {
+                    SheetButton(
+                        label = stringResource(R.string.player_quality),
+                        onClick = { onOpenSheet(PlayerSheet.QUALITY) },
+                        icon = Icons.Outlined.HighQuality,
+                        showLabel = showLabels,
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * Whether the bottom bar's pickers have room to say what they are, given [maxWidth] — the width the
+ * picker row itself was handed, inside the bar's padding.
+ *
+ * A device sweep put the fullest bar — five pickers plus the clock — at near-zero slack once its row
+ * drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first, and then the last
+ * picker clips off the end. Phone landscape (roughly 640–800 dp of viewport) and tablet portrait
+ * (711 dp) both land there, so both go icon-only rather than squeezing the readout out; tablet
+ * landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled exactly as before.
+ *
+ * Pure and `internal` so the threshold is a unit test rather than a screenshot.
+ */
+internal fun showSheetButtonLabels(maxWidth: Dp): Boolean = maxWidth >= LABELLED_BUTTONS_MIN_WIDTH
 
 /**
  * The elapsed / total readout.
@@ -382,12 +415,28 @@ private fun Scrubber(
     }
 }
 
+/**
+ * One picker in the bottom bar, with the word next to the icon or without it.
+ *
+ * The two forms carry the *same* semantics on purpose: labelled, the visible [Text] names the button
+ * and the icon is decorative, so its description stays null; icon-only, there is no text left to read
+ * out, so the description moves onto the icon. Either way TalkBack announces "Audio", and the narrow
+ * form loses nothing but the pixels.
+ */
 @Composable
 private fun SheetButton(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
+    showLabel: Boolean = true,
 ) {
+    if (!showLabel) {
+        IconButton(onClick = onClick) {
+            Icon(imageVector = icon, contentDescription = label, tint = Color.White)
+        }
+        return
+    }
+
     TextButton(onClick = onClick) {
         Icon(imageVector = icon, contentDescription = null, tint = Color.White)
         Text(
@@ -432,5 +481,72 @@ private val SECONDARY_ICON = 40.dp
 /** Wide enough for a 21:9 film's controls, narrow enough to stay one glance on a tablet. */
 private val MAX_BAR_WIDTH = 1000.dp
 
+/**
+ * Below this much room for the picker row, the pickers drop their words — see
+ * [showSheetButtonLabels] for what the sweep measured.
+ */
+private val LABELLED_BUTTONS_MIN_WIDTH = 840.dp
+
 private val PREVIEW_GAP = 8.dp
 private val PREVIEW_LABEL_HEIGHT = 18.dp
+
+/** The fullest bar there is — five pickers plus the clock — at a phone's landscape width. */
+@Preview(name = "Bottom bar · phone landscape", widthDp = 800, heightDp = 360)
+@Composable
+private fun BottomBarPhoneLandscapePreview() {
+    BottomBarPreview()
+}
+
+/** The same bar on the tablet, where there is room for the words. */
+@Preview(name = "Bottom bar · tablet landscape", widthDp = 1138, heightDp = 640)
+@Composable
+private fun BottomBarTabletLandscapePreview() {
+    BottomBarPreview()
+}
+
+@Composable
+private fun BottomBarPreview() {
+    JellyfinTheme {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            BottomBar(
+                state =
+                    PlayerUiState(
+                        isLoading = false,
+                        title = "The Original",
+                        durationMs = 45.minutes.inWholeMilliseconds,
+                        audioTracks =
+                            listOf(
+                                previewTrack(index = 1, label = "English"),
+                                previewTrack(index = 2, label = "Français"),
+                            ),
+                        subtitleTracks = listOf(previewTrack(index = 3, label = "English (SDH)")),
+                        // In a group with a queue: audio, subtitles, group, queue and quality — the
+                        // five-picker worst case the narrow bar has to survive.
+                        syncPlay = PlayerSyncPlayState(inGroup = true, groupName = "Film night", hasQueue = true),
+                    ),
+                position = MutableStateFlow(PlaybackPosition(positionMs = 12.minutes.inWholeMilliseconds)),
+                actions = previewActions(),
+                onOpenSheet = {},
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+    }
+}
+
+private fun previewTrack(
+    index: Int,
+    label: String,
+) = PlaybackTrack(index = index, label = label, language = null, codec = null)
+
+private fun previewActions() =
+    PlayerActions(
+        onPlayPause = {},
+        onSeekTo = {},
+        onSeekBy = {},
+        onSelectAudio = {},
+        onSelectSubtitle = {},
+        onSelectQuality = {},
+        onSelectSpeed = {},
+        onSkipSegment = {},
+        onBack = {},
+    )

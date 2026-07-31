@@ -2935,3 +2935,113 @@ Seeded from the approved plan; listed for traceability, no divergence:
   1. `MediaRouteButton.showDialogForType()` calls `getFragmentManager()`, which returns `null` unless the host activity is a `FragmentActivity`, and then **throws** `IllegalStateException("The activity must be a subclass of FragmentActivity")`. Under a plain `ComponentActivity` the first tap on the cast button crashes the app — not a styling problem. `FragmentActivity` is the minimal fix; `AppCompatActivity` would also satisfy it, but drags `AppCompatDelegate` into every lifecycle callback of a Compose-only activity for no further gain.
   2. The chooser and controller dialogs are `DialogFragment`s hosted by the *activity*, so they are themed from the *activity's* theme: `MediaRouterThemeHelper.createThemedDialogContext` copies it and applies `Theme.MediaRouter` — a `ThemeOverlay.AppCompat.Dark` — on top. An overlay over a `Theme.Material` base does not define the `AppCompatTheme` attributes `AppCompatDialog` demands, and our `ContextThemeWrapper` cannot reach them: it themes the *button*, never the dialog. An AppCompat window theme is what the ecosystem assumes, and it costs nothing here — `Theme.Jellyboost` exists only for the window background and the pre-Compose splash frame (all in-app colour is Compose), and `Theme.AppCompat.NoActionBar` is dark, matching the app's dark-only design. Deliberately **not** `DayNight`, for the reason already recorded for the splash theme.
 - **Not done:** no `mediaRouteTheme` attribute on the app theme. With an AppCompat window theme the dialogs fall back to `Theme.MediaRouter` by themselves, which is the standard and best-tested path; custom dialog styling can be added later without touching `:app` again.
+
+## 2026-07-31 — M12 Phase 2: the cast profile asks for WebVTT only, and what the live server actually returns
+- **Scope:** `player/.../deviceprofile/CastDeviceProfile.kt`, `player/.../cast/CastSpecMapper.kt`
+- **Plan said:** `docs/notes/chromecast-m12-plan.md` decision 2 — "subtitles `vtt` external-delivery,
+  image subs (PGS/DVB) burn in". The Phase 2 brief additionally listed `srt`/`subrip` alongside `vtt`
+  among the profile's subtitle formats.
+- **Done instead:** the profile declares **`vtt` and `webvtt` and nothing else** as
+  `SubtitleDeliveryMethod.EXTERNAL`, and `CastSpecMapper` announces every side-loaded cast track as
+  `text/vtt` regardless of the codec the local spec named.
+- **Reason:** probed against the dev server (10.11.11, item `e1a3302888b0d5fa1dfcc68a09a0208b`,
+  2026-07-31). A subtitle profile's format list decides what the server **converts a stream into**,
+  not which sources it accepts. With `srt,subrip,vtt` declared, a `subrip` stream comes back as
+  `…/Subtitles/4/0/Stream.subrip`; with only `vtt`/`webvtt` declared, the very same stream comes back
+  as `…/Stream.vtt`. The Cast Application Framework parses WebVTT and TTML and has no SRT parser, so
+  the wider list is strictly worse — it hands the receiver a file it silently ignores. The mapper's
+  forced MIME type follows from the same fact: `PlaybackInfoResolver` derives the spec's MIME type
+  from the *source* codec (`application/x-subrip`), which is right locally and wrong for a URL that
+  now serves `.vtt`.
+- **Also recorded from the same probe** (the plan note asked for it):
+  - `TranscodingUrl` already carries `&ApiKey=<token>`, and so does every external-subtitle
+    `DeliveryUrl`. Only the SDK-built direct-play / direct-stream URLs lack one. `withApiKey` is
+    therefore applied to all of them and is idempotent, rather than being a table of which endpoint
+    needs it.
+  - The transcode is `/videos/{id}/master.m3u8?…&SegmentContainer=ts` with
+    `TranscodingSubProtocol: hls` — the HLS-ts flavour the cast profile asks for, end to end.
+
+## 2026-07-31 — M12 Phase 2: `PlayerHandle` gains a `prepare` overload that carries the resolved source
+- **Scope:** `player/.../session/PlayerHandle.kt`, `player/.../session/PlaybackSessionController.kt`
+- **Plan said:** nothing about how the negotiated `PlaybackMediaSource` reaches `CastPlayerHandle`;
+  the note only fixes `CastSpecMapper`'s signature as
+  `PlaybackMediaItemSpec + RemotePlaybackMediaSource → CastMediaSpec`, and `PlayerHandle.prepare`
+  takes the spec alone.
+- **Done instead:** `PlayerHandle` has a second `prepare(source, spec, startPositionMs, playWhenReady)`
+  whose **default body drops the source and calls the three-argument one**;
+  `PlaybackSessionController.open` — the one place that holds both — calls the new overload.
+  `ExoPlayerHandle` and every test double are untouched and behave identically.
+- **Reason:** a receiver fetches its own bytes, so it needs what the URL alone does not say: the
+  runtime (`MediaInfo.streamDuration`), the container the server settled on (the content type, which
+  a receiver does not sniff) and the Jellyfin stream indices behind the side-loaded subtitles (the
+  Cast track ids). The alternatives were worse: a fourth parameter on the existing `prepare` breaks
+  every implementation and every fake; a `currentSource` setter makes the load order-dependent;
+  caching the source in the coordinator couples it to the handle in both directions. The overload
+  leaves the local path a literal no-op, which is what keeps the regression gate — every pre-existing
+  test passing byte-unchanged — intact.
+- **Carry into the converter:** the `CastMediaSpec` rides to `CastMediaItemConverter` as the
+  `MediaItem`'s `localConfiguration.tag`, because media3-cast hands a converter a `MediaItem` and
+  nothing else. Everything decidable is settled in `CastSpecMapper`'s plain data (and tested there);
+  the converter is mechanical `MediaInfo` assembly that could not run off a device anyway.
+
+## 2026-07-31 — M12 Phase 2: `CastSessionCoordinator` is started by `JellyboostApplication`
+- **Scope:** `app/.../JellyboostApplication.kt`, `player/.../cast/CastSessionCoordinator.kt`, `player/.../ui/PlayerViewModel.kt`
+- **Plan said:** the coordinator is a `@Singleton` that "owns session state, flips routing, and keeps
+  the progress ticker on the detached scope after the screen closes", and the Phase 2 brief has
+  `PlayerViewModel` read `coordinator.isCasting`. Phase 1 put the Cast stack's own initialisation in
+  `MainActivity.onCreate`. Nothing said who constructs the coordinator.
+- **Done instead:** an `@Inject lateinit var` in `JellyboostApplication` plus `start()` in
+  `onCreate`, exactly as `userDataSyncTrigger`, `downloadedMetadataRefresher` and
+  `syncPlayPresenceCoordinator` already are. The class is public with an **internal constructor**, so
+  `RoutingPlayerHandle`, `CastSessionMonitor` and `CastPlaybackHost` all stay module-internal.
+  `PlayerViewModel` reads a new GMS-free `CastStatusHolder` instead of the coordinator.
+- **Reason:** a Hilt `@Singleton` is lazy, and every other candidate to construct this one is a
+  screen. Constructing it from `PlayerViewModel` would mean the routing handle is only correct once a
+  player has been opened — and the everyday case is connecting from the home top bar and *then*
+  tapping Play, where the first resolve would be negotiated with the local profile. The application
+  is the only place whose lifetime matches what the object is for: a cast session outlives every
+  screen, and its final stop report and encoder kill have to be sent whether or not one exists. The
+  holder (modelled on `SyncPlayStatusHolder`, which `PlaybackReporter` takes for the same reason) is
+  what keeps every `com.google.android.gms` type out of the ViewModel and lets the existing ViewModel
+  fixture construct one unchanged.
+
+## 2026-07-31 — M12 Phase 2: a cast playback failure reuses `PlayerMessage.PlaybackFailed`
+- **Scope:** `player/.../ui/PlayerViewModel.kt`
+- **Plan said:** decision 8 — "a receiver error surfaces as one `CastPlaybackFailed` message and
+  stops."
+- **Done instead:** the fallback ladder is bypassed while casting exactly as specified, but the
+  failure surfaces as the existing `PlayerMessage.PlaybackFailed` and the ladder's own error copy.
+- **Reason:** a new message means a new `PlayerMessage` case, its string, and the `when` in
+  `PlayerScreen` that renders it — all of which is Phase 4's cast UI work, arriving alongside
+  `PlayerCastState`, "Casting to <device>" and the two transfer messages. Adding one message here
+  would touch the UI layer this phase deliberately does not, for copy that is about to be written
+  with three others. The *behaviour* the decision is about — no retry ladder, one message, stop — is
+  in place.
+
+## 2026-07-31 — M12 Phase 2: `StreamUrlFactory.withApiKey` defaults to the identity
+- **Scope:** `player/.../api/StreamUrlFactory.kt`
+- **Plan said:** "`StreamUrlFactory.withApiKey(url)` (idempotent)", with nothing about the
+  interface's other implementations.
+- **Done instead:** the interface method has a default body returning the URL unchanged;
+  `SdkStreamUrlFactory` overrides it and is the only implementation that holds a token.
+- **Reason:** two existing test files implement the interface as an anonymous object
+  (`ExoMediaSourceFactoryTest`, `TrickplayResolverTest`), and the M12 regression gate is that every
+  pre-existing test passes **byte-unchanged**. The default is also the honest answer for a factory
+  with no credentials: a `file://` URI has nothing to sign. An implementation that forgot to override
+  would fail loudly and immediately — a 401 on the television on the first cast.
+
+## 2026-07-31 — M12 Phase 2: the Cast framework's media session is the one that survives while casting
+- **Scope:** `player/.../cast/CastPlayerHandle.kt`, `player/.../di/PlayerModule.kt`
+- **Plan said:** decision 1 — "Local player stops while casting → local media notification
+  disappears; the Cast framework's own notification (`NotificationOptions`) takes over." Phase 1
+  additionally found that `CastMediaOptions.setMediaSessionEnabled` defaults to `true`.
+- **Done instead (stated explicitly, since it is a choice not to act):** the default is left alone,
+  so the framework publishes its own `MediaSession` and notification while casting; `CastPlayerHandle`
+  deliberately does **not** start `PlaybackService`, and `PlaybackService` keeps injecting the
+  concrete `ExoPlayerHandle` rather than the routing one.
+- **Reason:** exactly one media session should describe what is playing. `PlaybackService`'s session
+  is the *local* player's, and while casting that player is stopped — a notification with transport
+  controls for a player that is not playing is worse than none. Routing `PlaybackService` through
+  `RoutingPlayerHandle` would have made the local notification follow the cast player instead, which
+  duplicates the framework's own and puts two sessions in the system's media controls.
+

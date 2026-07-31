@@ -44,6 +44,11 @@ import javax.inject.Singleton
  * not hold can only come from the server. Rule 1 would hand back the same file and the same tracks,
  * which is precisely the loop `PlayerMessage.TrackUnavailableOffline` was invented to stop. Offline
  * it fails like any other request with nothing to reach, and the caller falls back to the file.
+ *
+ * [PlaybackResolveRequest.castTarget] joins it on the same line, for a blunter reason: the file on
+ * disk is on *this* device, and the receiver that would have to open it is on the other side of the
+ * network. Casting therefore always streams from the server, and serving the download over a local
+ * HTTP server is explicitly out of scope (docs/notes/chromecast-m12-plan.md, key decision 3).
  */
 @Singleton
 class PlaybackSourceResolver
@@ -55,7 +60,7 @@ class PlaybackSourceResolver
     ) {
         /** Resolves [request] into something the player can open, wherever it lives. */
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<PlaybackMediaSource> {
-            if (request.enableDirectPlay != false && !request.forceRemote) {
+            if (request.enableDirectPlay != false && !request.forceRemote && !request.castTarget) {
                 local.resolve(request)?.let { return AppResult.Success(it) }
             }
 

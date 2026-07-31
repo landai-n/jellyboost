@@ -56,6 +56,7 @@ internal class CastPlayerHandle
         private val availability: CastAvailability,
         private val specMapper: CastSpecMapper,
         private val converter: CastMediaItemConverter,
+        private val metadata: CastMetadataHolder,
     ) : PlayerHandle {
         private val _events =
             MutableSharedFlow<PlayerEvent>(
@@ -166,7 +167,11 @@ internal class CastPlayerHandle
                 return
             }
 
-            val castSpec = specMapper.map(spec, remote)
+            // The one thing the negotiation cannot supply: what the television should say this is.
+            // `PlayerViewModel` publishes it under the item's id when the item arrives, and a cast
+            // open waits for that before it opens — a receiver is loaded once, and metadata that
+            // arrived afterwards could only be applied by loading it a second time.
+            val castSpec = specMapper.map(spec, remote, metadata.metadataFor(spec.mediaId))
             loaded = castSpec
             Timber.d("Casting %s as %s", castSpec.mediaId, castSpec.contentType)
             with(player) {

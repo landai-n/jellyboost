@@ -174,6 +174,13 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.androidx.activity.compose)
+    // M12 Chromecast, both for the cast button and for it alone (DECISIONS.md 2026-07-31):
+    // MediaRouter's chooser dialog is a DialogFragment hosted by the activity — hence
+    // `FragmentActivity` — and it inflates against AppCompat attributes it takes from the
+    // activity's own theme, hence `Theme.AppCompat.NoActionBar` in themes.xml. Neither pulls
+    // AppCompat *views* into the app; every screen is still pure Compose.
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.compose)

@@ -50,6 +50,18 @@ composeBom = "2026.06.01"
 # Media
 media3 = "1.9.0"
 jellyfinMedia3Ffmpeg = "1.9.0+1"
+# M12 Chromecast. The GMS Cast framework is pinned to exactly what media3-cast 1.9.0's POM
+# declares — CastPlayer talks to it directly, so the two move together, not independently.
+playServicesCast = "22.1.0"
+# MediaRouter (the cast button and its chooser/controller dialogs) and AppCompat: both arrive
+# transitively with the cast framework, declared here because `:player` uses their types itself
+# (MediaRouteButton, and the AppCompat theme its dialogs inflate against).
+androidxMediarouter = "1.8.1"
+androidxAppcompat = "1.7.1"
+# `MainActivity` has to be a FragmentActivity for MediaRouter's chooser dialog to open at all
+# (DECISIONS.md 2026-07-31). Already in the graph transitively; declared because `:app` names the
+# type.
+androidxFragment = "1.8.9"
 
 # Network / images
 jellyfinSdk = "1.8.12"
@@ -165,7 +177,16 @@ androidx-media3-ui-compose = { group = "androidx.media3", name = "media3-ui-comp
 # Used by `:data:downloads`, not by the player: an audio sidecar is fetched as video+audio (the only
 # shape the server hands a named `audioStreamIndex` over in) and transmuxed to audio-only on device.
 androidx-media3-transformer = { group = "androidx.media3", name = "media3-transformer", version.ref = "media3" }
+# M12: `CastPlayer` — an `androidx.media3.common.Player` talking to a Cast receiver.
+androidx-media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "media3" }
 jellyfin-media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "jellyfinMedia3Ffmpeg" }
+
+# Cast (M12) — all confined to `:player`'s `cast/` package so a GMS-less device never
+# class-loads one of these types.
+play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCast" }
+androidx-mediarouter = { group = "androidx.mediarouter", name = "mediarouter", version.ref = "androidxMediarouter" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidxAppcompat" }
+androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "androidxFragment" }
 
 # Network / images
 jellyfin-sdk = { group = "org.jellyfin.sdk", name = "jellyfin-core", version.ref = "jellyfinSdk" }

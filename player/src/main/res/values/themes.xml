@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The theme the cast button is built against (`ui/CastRouteButton.kt` wraps the Compose
+        context in a ContextThemeWrapper over this).
+
+        `MediaRouteButton` is an AppCompat view: it resolves AppCompat and MediaRouter attributes
+        from its own context, and this app's windows carry a theme that exists only for the window
+        background. Giving the button its own theme keeps that arrangement explicit — and keeps the
+        button's appearance ours rather than a side effect of whatever the activity theme happens to
+        be. It does NOT reach the chooser/controller dialogs: those are DialogFragments hosted by
+        the activity and are themed from the *activity's* theme, which is why
+        `app/src/main/res/values/themes.xml` is AppCompat-derived (DECISIONS.md 2026-07-31).
+
+        NOT DayNight — the app is dark-only by design, whatever the system is set to.
+    -->
+    <style name="Theme.Jellyboost.Cast" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorAccent">@color/cast_accent</item>
+        <item name="android:colorBackground">@color/cast_background</item>
+        <item name="android:textColorPrimary">@color/cast_on_surface</item>
+        <!-- The cast icon itself, which sits on the app's own top bar. -->
+        <item name="mediaRouteButtonTint">@color/cast_on_surface</item>
+    </style>
+
+    <!--
+        Copied from :core:ui's JellyfinColors rather than shared with it: those colours live in
+        Compose, which has no XML resources to point at.
+    -->
+    <color name="cast_background">#FF101010</color>
+    <color name="cast_accent">#FF00A4DC</color>
+    <color name="cast_on_surface">#FFFFFFFF</color>
+</resources>

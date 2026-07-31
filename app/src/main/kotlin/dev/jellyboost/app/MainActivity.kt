@@ -8,7 +8,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.Rational
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -22,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +29,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.player.cast.CastAvailability
 import dev.jellyboost.player.pip.PipController
 import dev.jellyboost.player.pip.PipState
 import kotlinx.coroutines.launch
@@ -41,9 +42,13 @@ import javax.inject.Inject
  * It holds the splash screen until session restore has answered, then hands the resulting
  * [SessionState] to [JellyboostApp], which picks the start destination from it. The bottom
  * navigation bar and the offline banner join the NavHost in M2/M6.
+ *
+ * A `FragmentActivity` rather than a plain `ComponentActivity`, and for exactly one reason: the
+ * Cast chooser is a `DialogFragment` and `MediaRouteButton` throws without a fragment manager to
+ * show it in (M12, DECISIONS.md 2026-07-31). No fragment is ever added by this app's own code.
  */
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     /**
@@ -55,6 +60,17 @@ class MainActivity : ComponentActivity() {
      */
     @Inject
     lateinit var pipController: PipController
+
+    /**
+     * The Cast stack, brought up once from here (M12 Phase 1).
+     *
+     * `CastContext` is process-wide and has to be created from an Android context on the main
+     * thread, which makes the single activity the natural — and the framework's own recommended —
+     * place. Injected rather than reached through a ViewModel because there is nothing to observe
+     * here: this activity only starts it, and the button observes what comes out.
+     */
+    @Inject
+    lateinit var castAvailability: CastAvailability
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -72,6 +88,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         observePictureInPictureReadiness()
+        // A no-op, silently, on a device without Google Play services — which is the whole point.
+        castAvailability.initialize(this)
 
         setContent {
             JellyfinTheme {

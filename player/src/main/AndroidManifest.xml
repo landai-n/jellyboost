@@ -20,6 +20,17 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application>
+        <!--
+          How the Google Cast framework finds its configuration: it reflects on this class name at
+          initialisation time (see cast/JellyboostCastOptionsProvider.kt). The manifest merger
+          carries it into :app, which is where the framework actually reads it, so :app needs to
+          know nothing about casting. The value is a fully-qualified name, not a code reference —
+          moving or renaming the class means editing this line too.
+        -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="dev.jellyboost.player.cast.JellyboostCastOptionsProvider" />
+
         <service
             android:name=".session.PlaybackService"
             android:exported="false"

@@ -3,6 +3,7 @@ package dev.jellyboost.player.syncplay.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -96,53 +98,75 @@ private fun QueueSheetContent(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
 ) {
-    Column(
-        modifier =
-            Modifier
-                // Capped and centred like the group sheet: full-bleed rows on a 2560 px tablet put a
-                // title and the buttons that act on it a hand-span apart.
-                .widthIn(max = SHEET_MAX_WIDTH)
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding)
-                .padding(bottom = Dimens.SpaceExtraLarge),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-    ) {
-        QueueHeader(
-            state = state,
-            onNext = onNext,
-            onPrevious = onPrevious,
-        )
+    // The list's cap has to know how tall the sheet is allowed to be: a fixed 420 dp is more than a
+    // phone-landscape sheet has in total, and a long queue then pushes the header and the
+    // next/previous buttons off the top of it.
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val listMaxHeight = queueListMaxHeight(maxHeight)
 
-        HorizontalDivider()
-
-        if (state.isEmpty) {
-            Text(
-                text = stringResource(R.string.player_syncplay_queue_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = Dimens.SpaceLarge),
-            )
-            return@Column
-        }
-
-        LazyColumn(
-            modifier = Modifier.heightIn(max = LIST_MAX_HEIGHT),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+        Column(
+            modifier =
+                Modifier
+                    // Capped and centred like the group sheet: full-bleed rows on a 2560 px tablet put a
+                    // title and the buttons that act on it a hand-span apart.
+                    .widthIn(max = SHEET_MAX_WIDTH)
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.ScreenPadding)
+                    .padding(bottom = Dimens.SpaceExtraLarge),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         ) {
-            itemsIndexed(items = state.rows, key = { _, row -> row.playlistItemId }) { index, row ->
-                QueueRow(
-                    row = row,
-                    canMoveUp = index > 0,
-                    canMoveDown = index < state.rows.lastIndex,
-                    onPlay = { onPlay(row.playlistItemId) },
-                    onMoveUp = { onMove(row.playlistItemId, index - 1) },
-                    onMoveDown = { onMove(row.playlistItemId, index + 1) },
-                    onRemove = { onRemove(row.playlistItemId) },
+            QueueHeader(
+                state = state,
+                onNext = onNext,
+                onPrevious = onPrevious,
+            )
+
+            HorizontalDivider()
+
+            if (state.isEmpty) {
+                Text(
+                    text = stringResource(R.string.player_syncplay_queue_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = Dimens.SpaceLarge),
                 )
+                return@Column
+            }
+
+            LazyColumn(
+                modifier = Modifier.heightIn(max = listMaxHeight),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+            ) {
+                itemsIndexed(items = state.rows, key = { _, row -> row.playlistItemId }) { index, row ->
+                    QueueRow(
+                        row = row,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < state.rows.lastIndex,
+                        onPlay = { onPlay(row.playlistItemId) },
+                        onMoveUp = { onMove(row.playlistItemId, index - 1) },
+                        onMoveDown = { onMove(row.playlistItemId, index + 1) },
+                        onRemove = { onRemove(row.playlistItemId) },
+                    )
+                }
             }
         }
     }
 }
+
+/**
+ * How tall the queue list may grow inside a sheet that has [maxHeight] to give.
+ *
+ * [LIST_MAX_HEIGHT] alone was written for a landscape *tablet*, where it is a comfortable half of the
+ * sheet. On a phone in landscape — the orientation the player forces — the whole sheet is about
+ * 330 dp tall, so a fixed 420 dp list is taller than everything it is supposed to share the sheet
+ * with, and the header and the next/previous buttons get pushed out of view. Taking at most
+ * [LIST_MAX_HEIGHT_FRACTION] of what the sheet has leaves them on screen and still shows three or
+ * four rows, which is enough to see what is coming and to move it.
+ *
+ * On any tablet the fraction lands well above [LIST_MAX_HEIGHT], so the old cap keeps winning and
+ * nothing there changes. An unbounded sheet — no measured height at all — falls into the same case.
+ */
+internal fun queueListMaxHeight(maxHeight: Dp): Dp = minOf(LIST_MAX_HEIGHT, maxHeight * LIST_MAX_HEIGHT_FRACTION)
 
 @Composable
 private fun QueueHeader(
@@ -275,12 +299,30 @@ private val SHEET_MAX_WIDTH = 720.dp
 /** Caps the list so the sheet never grows past a comfortable half of a landscape tablet. */
 private val LIST_MAX_HEIGHT = 420.dp
 
+/** How much of a *short* sheet the list may take before the header stops fitting above it. */
+private const val LIST_MAX_HEIGHT_FRACTION = 0.6f
+
 private val ROW_THUMB_WIDTH = 96.dp
 private val ROW_THUMB_HEIGHT = 54.dp
 
 @Preview(name = "Queue sheet", showBackground = true, widthDp = 800)
 @Composable
 private fun QueueSheetContentPreview() {
+    QueueSheetPreviewContent()
+}
+
+/**
+ * The same sheet with only a phone-landscape sheet's worth of height, where the list has to give way
+ * to the header rather than the other way round.
+ */
+@Preview(name = "Queue sheet · phone landscape", showBackground = true, widthDp = 800, heightDp = 360)
+@Composable
+private fun QueueSheetContentPhoneLandscapePreview() {
+    QueueSheetPreviewContent()
+}
+
+@Composable
+private fun QueueSheetPreviewContent() {
     JellyfinTheme {
         QueueSheetContent(
             state =

@@ -54,25 +54,43 @@ internal class SdkStreamUrlFactory
          *
          * Trickplay is an authorised endpoint, and the sheet is fetched by Coil — an image loader
          * with no knowledge of this app's `Authorization` header. Jellyfin accepts the token as the
-         * `ApiKey` query parameter for exactly this case (`ApiClient.QUERY_ACCESS_TOKEN`), which
-         * keeps the seam a plain `String` the scrubber can hand to any loader.
+         * `ApiKey` query parameter for exactly this case, which keeps the seam a plain `String` the
+         * scrubber can hand to any loader. The Cast receiver needs the identical treatment, which is
+         * why the appending itself now lives in [withApiKey].
          */
         override fun trickplayTileUrl(
             itemId: UUID,
             width: Int,
             tileIndex: Int,
             mediaSourceId: String?,
-        ): String {
-            val url =
+        ): String =
+            withApiKey(
                 apiClient.trickplayApi.getTrickplayTileImageUrl(
                     itemId = itemId,
                     width = width,
                     index = tileIndex,
                     mediaSourceId = mediaSourceId?.let { runCatching { UUID.fromString(it) }.getOrNull() },
-                )
+                ),
+            )
+
+        /**
+         * Appends `ApiKey`, unless the URL already has one.
+         *
+         * The guard matches the parameter as a *parameter* rather than as a substring: a URL that
+         * merely contains the letters — a subtitle path, an item name — must not be mistaken for one
+         * that is already authorised, because the mistake surfaces as a 401 on the television and
+         * nowhere else.
+         */
+        override fun withApiKey(url: String): String {
+            if (API_KEY_PARAMETER.containsMatchIn(url)) return url
             val token = apiClient.accessToken
             if (token.isNullOrEmpty()) return url
             val separator = if (url.contains('?')) '&' else '?'
             return "$url$separator${ApiClient.QUERY_ACCESS_TOKEN}=$token"
+        }
+
+        private companion object {
+            /** Jellyfin's query parameters are case-insensitive; the server spells it `ApiKey`. */
+            val API_KEY_PARAMETER = Regex("[?&]${ApiClient.QUERY_ACCESS_TOKEN}=", RegexOption.IGNORE_CASE)
         }
     }

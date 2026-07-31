@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.PlayerApi
+import dev.jellyboost.player.deviceprofile.CastDeviceProfile
 import dev.jellyboost.player.deviceprofile.CodecHelpers
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.model.ExternalSubtitle
@@ -154,7 +155,16 @@ class PlaybackInfoResolver
                 // selection does nothing". Verified against jellyfin-android's
                 // MediaSourceResolver.kt:58 and Jellyfin's MediaInfoHelper.cs:196-201.
                 mediaSourceId = mediaSourceId ?: itemId.toString().replace("-", ""),
-                deviceProfile = deviceProfileBuilder.getDeviceProfile(maxStreamingBitrate = maxStreamingBitrate),
+                // The profile is a claim about the decoders on the far end of the stream, and while
+                // casting those are the television's, not this tablet's. Sending the probed local
+                // profile for a receiver is how a file that plays in the hand becomes a black screen
+                // (docs/notes/chromecast-m12-plan.md, key decision 2).
+                deviceProfile =
+                    if (castTarget) {
+                        CastDeviceProfile.build(maxStreamingBitrate = maxStreamingBitrate)
+                    } else {
+                        deviceProfileBuilder.getDeviceProfile(maxStreamingBitrate = maxStreamingBitrate)
+                    },
                 maxStreamingBitrate = maxStreamingBitrate,
                 startTimeTicks = startPositionTicks.takeIf { it > 0L },
                 audioStreamIndex = audioStreamIndex,

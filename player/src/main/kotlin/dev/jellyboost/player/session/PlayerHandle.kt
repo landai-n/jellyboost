@@ -39,6 +39,25 @@ interface PlayerHandle {
         playWhenReady: Boolean,
     )
 
+    /**
+     * The same load, told which negotiation produced [spec].
+     *
+     * The overload every caller with a resolved source should use, and the only one that carries
+     * enough for a *remote* player: a Cast receiver fetches its own bytes, so it needs what the URL
+     * alone does not say — the runtime, the container the server settled on, and the stream indices
+     * behind the side-loaded subtitles ([dev.jellyboost.player.cast.CastSpecMapper]).
+     *
+     * An overload rather than a fourth parameter because the local player genuinely does not need
+     * it: the default drops the source and calls [prepare], which is the whole implementation for
+     * [ExoPlayerHandle] and for every test double.
+     */
+    fun prepare(
+        source: PlaybackMediaSource,
+        spec: PlaybackMediaItemSpec,
+        startPositionMs: Long,
+        playWhenReady: Boolean,
+    ) = prepare(spec, startPositionMs, playWhenReady)
+
     fun play()
 
     fun pause()

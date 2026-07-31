@@ -3088,3 +3088,94 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `RoutingPlayerHandle` would have made the local notification follow the cast player instead, which
   duplicates the framework's own and puts two sessions in the system's media controls.
 
+## 2026-07-31 — M12 Phase 3: the transfer edges are pushed to the screen with a snapshot, not collected
+- **Scope:** `player/.../cast/CastPlaybackHost.kt`, `player/.../cast/CastSessionCoordinator.kt`,
+  `player/.../ui/PlayerCastBridge.kt`
+- **Plan said:** `docs/notes/chromecast-m12-plan.md`, Phase 3 — the ViewModel's cast bridge "collects
+  `coordinator.connection`" and performs the two transfers off it.
+- **Done instead:** `CastPlaybackHost` gained two default-bodied callbacks, `onCastStarted(deviceName,
+  from)` and `onCastEnded(at)`, each carrying a `PlaybackSnapshot` the coordinator takes itself. The
+  connection flow is still collected — but only to draw `PlayerUiState.cast`.
+- **Reason:** the position a transfer resumes at is only readable for an instant. A session start
+  flips `RoutingPlayerHandle` to the cast player and stops the local one, so by the time *any*
+  collector of a `StateFlow` runs, the only player anyone can ask is a receiver sitting at zero;
+  symmetrically, a disconnect routes back to a local player that has never played this film. The
+  coordinator is the one object present at both edges with the outgoing player still in charge, so it
+  reads the snapshot and hands it over. Collecting the flow for the transfer would have needed the
+  coordinator to publish the position *through* the flow — putting a number that changes every tick
+  into a state the control surface recomposes on — or the ViewModel to keep its own shadow position,
+  which is the same reading taken less accurately.
+
+## 2026-07-31 — M12 Phase 3: `CastPlaybackHost` becomes public, and the bridge — not the ViewModel — implements it
+- **Scope:** `player/.../cast/CastPlaybackHost.kt`, `player/.../ui/PlayerCastBridge.kt`,
+  `player/.../ui/PlayerViewModel.kt`, `player/.../di/PlayerModule.kt`
+- **Plan said:** the Phase 2 entry above records that `RoutingPlayerHandle`, `CastSessionMonitor` and
+  `CastPlaybackHost` "all stay module-internal"; the Phase 3 brief has `PlayerViewModel` implement
+  `CastPlaybackHost` directly, mirroring `SyncPlayPlaybackHost`.
+- **Done instead:** `CastPlaybackHost` is `public`, joined by a `public` `CastPlaybackCoordinator`
+  (the two-method attach/detach seam `CastSessionCoordinator` now implements) and by
+  `NoCastPlaybackCoordinator`, the default `PlayerViewModel` takes. `PlayerCastBridge` is the host,
+  forwarding `castSource` and the two callbacks to the ViewModel.
+- **Reason:** Kotlin does not allow it any other way. `PlayerViewModel` is public, and a public class
+  can neither implement an internal interface nor take one as a constructor parameter — both are
+  visibility-exposure errors, and the ViewModel needs *both* (the host to be attached, and something
+  to attach it to). The coordinator itself cannot be the parameter type: it has to be defaultable,
+  because every pre-M12 test fixture constructs this ViewModel without one and the regression gate is
+  that they keep compiling byte-unchanged, and a coordinator cannot be constructed without the Cast
+  framework's session manager behind it. Nothing GMS crosses the new boundary — `CastPlaybackHost`
+  names only `PlaybackMediaSource` and `PlaybackSnapshot` — so the confinement the Phase 2 entry was
+  actually about is intact. The bridge implementing the interface is the same trade
+  `PlayerSyncPlayBridge` already makes for its own vocabulary, one level further.
+
+## 2026-07-31 — M12 Phase 3: a transfer is a stop-then-open, and while casting the screen's teardown does neither
+- **Scope:** `player/.../ui/PlayerViewModel.kt`
+- **Plan said:** decision 11 — local→cast is "snapshot → stop report → `reopenSession(castTarget =
+  true)`", cast→local is "reopen locally at the receiver's last position, paused".
+- **Done instead:** both transfers go through `openSession(request, playWhenReady, message,
+  endingAt = snapshot)`, a new parameter that closes the outgoing session — `endCurrentSource(at)`,
+  which is the stop report — inside the same coroutine, before the next negotiation. `reopenSession`
+  is untouched and still owns every *re-negotiation*. `releaseSession` additionally skips the stop
+  report **and** `stop()`/`release()` while casting.
+- **Reason:** `reopenSession` reads the player twice — for the resume position and for
+  `playWhenReady` — and across a routing flip both readings are the wrong player's: the receiver has
+  not started (position 0, not playing), so the television would have opened at the beginning,
+  paused. It would also have sent a second `stopTranscoding` behind the stop report, which already
+  carries one. What decision 11 is about — one snapshot, one stop report, then one negotiation, in
+  one coroutine so the encoder dies before the next `PlaybackInfo` — is exactly what the new
+  parameter does. The teardown half is the other side of decision 5's invariant: a television is not
+  the screen's to end, so the stop report belongs to the coordinator from the moment the host
+  detaches, and `playerHandle` is the *routing* handle — stopping or releasing it while casting would
+  stop the receiver from a screen the user merely backed out of.
+
+## 2026-07-31 — M12 Phase 3: `RoutingPlayerHandle.stopInactive`, because nothing was stopping the local player
+- **Scope:** `player/.../session/RoutingPlayerHandle.kt`, `player/.../cast/CastSessionCoordinator.kt`
+- **Plan said:** decision 1 — "Local player stops while casting → local media notification
+  disappears". Nothing in the plan says who performs it, and Phase 2 landed nothing that did.
+- **Done instead:** `RoutingPlayerHandle` gained `stopInactive()`, which stops whichever handle is
+  *not* in charge, and the coordinator calls it immediately after `setActive(Cast)`. The cast handle
+  is remembered when it is first routed to, so this can silence one that exists without asking the
+  `Provider` for one that does not.
+- **Reason:** without it a cast session starts with the phone still playing the same film out loud,
+  and the local media notification still offering transport for it. It is not folded into
+  `setActive` for two reasons: an existing `RoutingPlayerHandleTest` pins that a switch touches
+  nothing on the handle it leaves (which is what makes the pass-through claim testable), and the
+  order matters in a way only the caller knows — the flip has to come *first*, so the local player's
+  shutdown events land on a subscription `flatMapLatest` has already discarded, and stopping it
+  before the flip would deliver `IsPlayingChanged(false)` to a screen that is opening a session, not
+  closing one.
+
+## 2026-07-31 — M12 Phase 3: `PlayerMessage.CastTransferred` carries no device name
+- **Scope:** `player/.../ui/PlayerUiState.kt`, `player/.../ui/PlayerScreen.kt`,
+  `player/src/main/res/values/strings.xml`
+- **Plan said:** the Phase 3 brief lists the message as `CastTransferred(deviceName)`.
+- **Done instead:** `PlayerMessage` stays the plain enum it has been since M5. The three new cast
+  messages are plain entries, and `PlayerScreen` formats *every* message with the receiver's name
+  taken from `PlayerUiState.cast.deviceName` (falling back to `player_cast_device_unnamed`, "your
+  TV"); a string with no placeholder simply drops the argument.
+- **Reason:** the enum exists so that the ViewModel never handles copy — the whole point of the type,
+  stated in its own KDoc — and a parameterised case would have made it a sealed hierarchy, rewritten
+  every `PlayerMessage.X` reference in the module and both exhaustive `when`s, for a value the screen
+  already holds. The name is on `PlayerUiState.cast` because Phase 4 needs it there anyway for
+  "Casting to <device>", so the message reads it from the same place at the moment it is drawn, which
+  is also the moment it is correct.
+

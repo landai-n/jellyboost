@@ -165,4 +165,36 @@ class RoutingPlayerHandleTest {
 
         handle.activeHandle.value shouldBe local
     }
+
+    @Test
+    fun `the player that was in charge is the one stopped when the other takes over`() {
+        handle.setActive(PlaybackTarget.Cast)
+
+        handle.stopInactive()
+
+        // A phone that kept playing under a television is what skipping this sounds like.
+        local.stopped shouldBe true
+        cast.stopped shouldBe false
+    }
+
+    @Test
+    fun `stopping the inactive player never builds a cast one that does not exist`() {
+        var built = 0
+        val untouched =
+            RoutingPlayerHandle(
+                local,
+                Provider {
+                    built++
+                    cast
+                },
+            )
+
+        untouched.stopInactive()
+
+        // Asking the provider here would load the app's first `com.google.android.gms` class on a
+        // device that has no Play services — for a player nothing has ever routed to.
+        built shouldBe 0
+        cast.stopped shouldBe false
+        local.stopped shouldBe false
+    }
 }

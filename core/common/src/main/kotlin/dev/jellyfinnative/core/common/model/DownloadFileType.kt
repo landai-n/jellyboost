@@ -30,4 +30,19 @@ enum class DownloadFileType(
 
     /** One trickplay tile sheet — offline scrubbing thumbnails (M9 consumes them). */
     TRICKPLAY_TILE(essential = false),
+
+    /**
+     * An extra audio language of a transcoded download, one row per stream.
+     *
+     * A transcode bakes in exactly one audio track (`DownloadQuality`'s "hard ceiling"), so every
+     * other language is fetched separately — as a video+audio `.mkv`, the only shape the server will
+     * hand a specific `audioStreamIndex` over in (docs/notes/offline-multitrack-design.md, phase 2)
+     * — and stripped locally to `audio.<index>.<lang>.m4a`, the file this row actually names.
+     *
+     * No migration: an unrecognised stored name decodes to [TRICKPLAY_TILE] (`DownloadConverters.kt`,
+     * `DownloadFileTypeConverter.toDownloadFileType`), the least-essential kind, so a row an older
+     * build cannot read degrades to a silently-skipped optional file rather than crashing it. Schema
+     * stays v8 — this entry needs no column, only a name Room has never seen.
+     */
+    AUDIO(essential = false),
 }

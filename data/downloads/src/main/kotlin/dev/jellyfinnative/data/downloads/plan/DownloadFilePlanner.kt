@@ -48,8 +48,10 @@ data class PlannedFile(
  * 1. the primary image, so the queue row and the notification have artwork within a second;
  * 2. the media file, the item's whole point and usually 99.9 % of the bytes;
  * 3. the backdrop and the parent series' poster, which the offline detail page draws;
- * 4. text subtitle sidecars, one per stream;
- * 5. trickplay tiles, for offline scrubbing (M9 renders them).
+ * 4. text subtitle sidecars, one per stream — kilobytes, so they finish first;
+ * 5. extra audio language sidecars, one per stream not already baked into the media file — every
+ *    other language outranks scrub thumbnails, but not the subtitles a viewer needs from second one;
+ * 6. trickplay tiles, for offline scrubbing (M9 renders them).
  *
  * Only step 2 is essential. Everything else failing degrades the offline experience without making
  * the item unplayable, which is why they come after it and are attempted independently.
@@ -106,7 +108,9 @@ class DownloadFilePlanner
                 backdropImage(item)?.let(::add)
                 seriesImage(item)?.let(::add)
                 if (mediaSourceId != null) {
-                    addAll(subtitles(item, mediaSourceId, mediaSource.mediaStreams.orEmpty(), quality))
+                    val streams = mediaSource.mediaStreams.orEmpty()
+                    addAll(subtitles(item, mediaSourceId, streams, quality))
+                    addAll(audioSidecars(item, mediaSourceId, streams, quality, audioStreamIndex))
                 }
                 addAll(trickplayTiles(item))
             }
@@ -227,6 +231,44 @@ class DownloadFilePlanner
                         streamIndex = stream.index,
                     )
                 }
+
+        /**
+         * Every audio language a transcode did *not* bake into the media file, fetched as its own
+         * sidecar (docs/notes/offline-multitrack-design.md, phase 2).
+         *
+         * Two guards, both narrower than [subtitles]'s: [DownloadQuality.isTranscoded], because an
+         * `ORIGINAL` download already holds every track in the one file — a sidecar there would be a
+         * duplicate, exactly as for an embedded subtitle — and [audioStreamIndex] not `null`, because
+         * that is the plan's own record of "no audio streams at all" (no track exists to bake in,
+         * so none exist to sidecar either). What survives the guards is every [MediaStreamType.AUDIO]
+         * stream of the first media source except the one [audioStreamIndex] names — that one is
+         * already in the media file the sibling `media()` entry is fetching.
+         *
+         * The URL, not the bytes, is where the real work happens: see [DownloadUrlFactory.audioStreamUrl]
+         * for why an audio sidecar is fetched through `/Videos` with a junk video track rather than
+         * through the audio-only endpoint its name would suggest.
+         */
+        private fun audioSidecars(
+            item: BaseItemDto,
+            mediaSourceId: String,
+            streams: List<MediaStream>,
+            quality: DownloadQuality,
+            audioStreamIndex: Int?,
+        ): List<PlannedFile> {
+            if (!quality.isTranscoded || audioStreamIndex == null) return emptyList()
+
+            return streams
+                .filter { stream -> stream.type == MediaStreamType.AUDIO && stream.index != audioStreamIndex }
+                .map { stream ->
+                    val language = stream.language?.takeIf { it.isNotBlank() } ?: UNDEFINED_LANGUAGE
+                    PlannedFile(
+                        type = DownloadFileType.AUDIO,
+                        fileName = "audio.${stream.index}.$language.${DownloadQuality.AUDIO_SIDECAR_CONTAINER}",
+                        url = urls.audioStreamUrl(item.id, mediaSourceId, stream.index),
+                        streamIndex = stream.index,
+                    )
+                }
+        }
 
         /**
          * Every trickplay tile sheet of the *largest* resolution the server generated.

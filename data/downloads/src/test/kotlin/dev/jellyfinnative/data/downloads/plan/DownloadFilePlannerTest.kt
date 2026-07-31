@@ -396,6 +396,91 @@ class DownloadFilePlannerTest {
         plan.media().url shouldBe "download://${uuid(1)}"
     }
 
+    // ---- audio sidecars (phase 2, docs/notes/offline-multitrack-design.md) -----------------------
+
+    @Test
+    fun `a transcode fetches a sidecar for every audio stream except the one it baked in`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(
+                            audioStream(index = 1, language = "eng"),
+                            audioStream(index = 2, language = "fra"),
+                            audioStream(index = 3, language = "spa"),
+                        ),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+                audioStreamIndex = 2,
+            )
+
+        val audioRows = plan.filter { it.type == DownloadFileType.AUDIO }
+        audioRows.map { it.fileName } shouldContainExactly listOf("audio.1.eng.m4a", "audio.3.spa.m4a")
+        audioRows.map { it.streamIndex } shouldContainExactly listOf(1, 3)
+        audioRows.map { it.url } shouldContainExactly
+            listOf(
+                "audio://${uuid(1)}?mediaSourceId=source-1&audioStreamIndex=1",
+                "audio://${uuid(1)}?mediaSourceId=source-1&audioStreamIndex=3",
+            )
+    }
+
+    @Test
+    fun `audio sidecars come after subtitle rows and before trickplay tiles`() {
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(
+                            subtitleStream(index = 5, language = "eng"),
+                            audioStream(index = 1),
+                            audioStream(index = 2),
+                        ),
+                    trickplay = trickplay(width = 320, thumbnails = 10),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+                audioStreamIndex = 1,
+            )
+
+        plan
+            .map { it.type }
+            .filter { it in setOf(DownloadFileType.SUBTITLE, DownloadFileType.AUDIO, DownloadFileType.TRICKPLAY_TILE) }
+            .shouldContainExactly(DownloadFileType.SUBTITLE, DownloadFileType.AUDIO, DownloadFileType.TRICKPLAY_TILE)
+    }
+
+    @Test
+    fun `an original download plans no audio sidecars, because it keeps them all`() {
+        // Same reasoning as the embedded-subtitle guard: the file being fetched already holds every
+        // track, so a sidecar would be a duplicate download and a second route to one picker entry.
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1), audioStream(index = 2)), defaultAudioStreamIndex = 1),
+                DIRECTORY,
+            )
+
+        plan.filter { it.type == DownloadFileType.AUDIO }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a single audio stream is the one already baked in, so it gets no sidecar`() {
+        val plan =
+            planner.plan(
+                movie(streams = listOf(audioStream(index = 1))),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+            )
+
+        plan.filter { it.type == DownloadFileType.AUDIO }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `an item with no audio streams at all plans no audio sidecars`() {
+        val plan = planner.plan(movie(), DIRECTORY, quality = DownloadQuality.MEDIUM)
+
+        plan.filter { it.type == DownloadFileType.AUDIO }.shouldBeEmpty()
+    }
+
     // ---- trickplay ------------------------------------------------------------------------------
 
     @Test
@@ -507,4 +592,10 @@ private class FakeDownloadUrlFactory : DownloadUrlFactory {
         width: Int,
         tileIndex: Int,
     ) = "trickplay://$itemId/$width/$tileIndex"
+
+    override fun audioStreamUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+        streamIndex: Int,
+    ) = "audio://$itemId?mediaSourceId=$mediaSourceId&audioStreamIndex=$streamIndex"
 }

@@ -434,17 +434,24 @@ verification on the minified build.
   the Downloaded tab as grouped/sizes/delete only). **Device-verified**: tapping
   a Pat' Patrouille row started playback immediately, no crash.
 
-### Awaiting user design decision
-- **Offline multi-track downloads** — full design study in
-  `docs/notes/offline-multitrack-design.md`. One file with all tracks is
-  impossible (server API takes exactly one `audioStreamIndex`/
-  `subtitleStreamIndex`); the study phases the workaround: Phase 0 extract
-  embedded text subs as sidecars (small, no schema change, closes most of the
-  complaint), Phase 1 pin + record the baked audio track (small migration),
-  Phase 2 extra audio tracks as `.mka` sidecars merged via
-  `MergingMediaSource` (device-risky, moves source assembly out of the pure
-  factory). Each phase needs a DECISIONS entry; none fits M10 as scoped —
-  divergence or M11 is the user's call.
+### Offline multi-track Phase 2 — IN PROGRESS (decided 2026-07-31, user)
+- **All audio tracks of a transcoded download.** Design study
+  `docs/notes/offline-multitrack-design.md`; DECISIONS entry 2026-07-31
+  ("Offline multi-track Phase 2") records the user decisions (always-on, new
+  downloads only, sidecars not remux) and the **amended fetch**: `/Audio`
+  ignores `audioStreamIndex` on 10.11 (hard-coded null server-side, verified
+  in source + empirically on the dev server), so each extra track is fetched
+  via `/Videos/{id}/stream.mkv?audioStreamIndex=N` with junk video
+  (h264 50 kbps 4 fps, ~54× realtime measured) and stripped locally by a
+  Media3 Transformer transmux into `audio.<index>.<lang>.m4a`.
+- Progress: chunk 0 (endpoint verification gate) DONE — refuted the design
+  note's `/Audio` assumption, produced the amended fetch above; chunk 1
+  (governance) DONE; chunk 2 (plan layer: `DownloadFileType.AUDIO`, fetch
+  constants, `DownloadUrlFactory.audioStreamUrl`, planner sidecar rows +
+  tests) DONE. Next: chunk 3 engine (transfer semantics, Transformer strip
+  stage, size estimate), chunk 4 offline surface, chunks 5–6 player
+  (resolver/spec + `MergingMediaSource` assembly and track mapping),
+  chunk 8 docs + user-run device walk.
 
 ### Next
 1. ~~**Audit backlog Tier 2 + cleanup wave**~~ — DONE. All Tier 1 (11), all Tier 2

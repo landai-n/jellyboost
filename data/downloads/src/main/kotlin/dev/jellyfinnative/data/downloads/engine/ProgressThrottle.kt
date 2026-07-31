@@ -13,7 +13,8 @@ package dev.jellyfinnative.data.downloads.engine
  * bound keeps a slow transfer visibly moving, the percentage bound keeps a fast one from jumping
  * from 0 % to 40 % between two ticks.
  *
- * Not thread-safe on purpose: exactly one download runs at a time and one instance belongs to it.
+ * Not thread-safe on purpose: an instance belongs to one *file's* transfer, and a file has exactly
+ * one writer — an item's two lanes (`DownloadQueue.transfer`) each create their own as they go.
  */
 class ProgressThrottle(
     private val intervalMillis: Long = DEFAULT_INTERVAL_MILLIS,

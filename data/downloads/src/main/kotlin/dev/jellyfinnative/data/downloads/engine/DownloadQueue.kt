@@ -16,6 +16,8 @@ import dev.jellyfinnative.data.downloads.storage.DownloadStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -24,6 +26,7 @@ import timber.log.Timber
 import java.io.File
 import java.time.Clock
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -82,11 +85,15 @@ internal class MissingMetadataException(
  * Runs the download queue: one item at a time, in `queuePosition` order, until nothing runnable is
  * left (docs/PLAN.md, "Download pipeline").
  *
- * ### Why one at a time
+ * ### Why one item at a time
  * It matches the unique-work model (`enqueueUniqueWork("downloads", KEEP)`), it makes the "which
  * item is downloading" question have exactly one answer for the notification and the badges, and on
  * a single home connection two parallel transfers finish no sooner than two sequential ones while
  * doubling the number of half-written files a kill can leave behind.
+ *
+ * *Inside* one item there is exactly one exception, and it is not a bandwidth bet: an extra audio
+ * language is a live server transcode whose wire rate is its own stream's bitrate, so it does not
+ * compete with the media file for the link — see [transfer].
  *
  * ### Failure policy
  * The plan's essential/optional split decides *which* failures matter: any file other than the
@@ -146,6 +153,20 @@ internal class DownloadQueue
          * stalled-but-live transfer and making resume-after-a-crash wait out the window.
          */
         private val drainLease = Mutex()
+
+        /**
+         * Held across one progress publication, so an item's two lanes (see [transfer]) never make
+         * one at the same moment.
+         *
+         * [publish] is a read of the shared [ItemProgress] followed by a Room write *and* a call
+         * into the host's listener, and that listener keeps state of its own: `DownloadNotifier`
+         * remembers the figure it last posted so it can skip a re-post nothing would render. One
+         * lease turns two lanes back into a single writer for that instant — neither the row nor
+         * the notification can be left carrying a sample the other lane already overtook, and
+         * nothing outside this file has to learn about the second lane. It is held for one `UPDATE`
+         * and one notification comparison, a handful of times a second at worst.
+         */
+        private val progressLease = Mutex()
 
         /**
          * Drains the queue.
@@ -350,7 +371,32 @@ internal class DownloadQueue
         }
 
         /**
-         * Fetches an item's files in plan order.
+         * Fetches an item's files: the ordinary ones in plan order, its audio sidecars alongside
+         * them.
+         *
+         * ### Two lanes
+         * An extra audio language is a live `/Videos` transcode of one stream, so what arrives over
+         * the wire is that stream's bitrate multiplied by the server's encoding speed — a few
+         * hundred KB/s no matter how good the link is. Draining those rows *after* the media file
+         * therefore added their whole duration to the item's: two tracks cost about eleven minutes
+         * after the film itself had finished, on the first device walk. Run alongside the media
+         * file the same minutes disappear into it, and an item costs `max(media, sidecars)` rather
+         * than their sum (DECISIONS.md, 2026-07-31, "Audio sidecars fetch concurrently with the
+         * media file").
+         *
+         * **At most two live encodes per item, by construction.** The sidecar lane runs its own
+         * rows strictly sequentially, and the only other transcode in the plan is the media file
+         * the ordinary lane is on — so the server is never asked for a third, and the CPU it does
+         * not spend on sidecars stays with the encode the user is actually waiting for.
+         *
+         * ### What a failure costs, unchanged
+         * A sidecar that fails marks its own row [DownloadStatus.ERROR] and its lane carries on to
+         * the next language — the same optional-file rule the ordinary lane applies to a subtitle.
+         * The media file failing throws out of this scope, which cancels the lane where it stands:
+         * a *cancelled* sidecar is not a failed one, so its row keeps `DOWNLOADING` and its
+         * unresumable fetch is deleted ([downloadOne]), leaving the retry a row to re-plan from
+         * scratch rather than an `ERROR` to explain. Either way the item is finished only once
+         * **both** lanes are, which [coroutineScope] is what guarantees.
          *
          * @return `false` when the item's row disappeared mid-transfer. The delete cascade runs
          *   while this coroutine may still be alive (WorkManager's cancellation is asynchronous),
@@ -363,13 +409,39 @@ internal class DownloadQueue
             dto: BaseItemDto,
             files: List<DownloadFileEntity>,
             listener: DownloadQueueListener,
+        ): Boolean =
+            coroutineScope {
+                val progress =
+                    ItemProgress(
+                        files,
+                        estimatedTotal = download.bytesTotal,
+                        seededProjection = download.projectedBytes,
+                    )
+                // `partition` keeps plan order on both sides, which is what makes the sidecar lane
+                // ascend by stream index without sorting anything.
+                val (sidecars, ordinary) = files.partition { it.type == DownloadFileType.AUDIO }
+                val lane = launch { drainSidecars(download, sidecars, progress, listener) }
+
+                val alive = drainOrdinary(download, dto, ordinary, progress, listener)
+                // The row is gone, which is not a failure and so does not cancel the scope by
+                // itself. Stop the lane anyway: every file it opens re-creates the item directory
+                // the cascade has just unlinked.
+                if (!alive) lane.cancel()
+                alive
+            }
+
+        /**
+         * Everything but the audio sidecars, in plan order — the lane the queue has always had.
+         *
+         * @return `false` when the item's row disappeared mid-transfer; see [transfer].
+         */
+        private suspend fun drainOrdinary(
+            download: DownloadEntity,
+            dto: BaseItemDto,
+            files: List<DownloadFileEntity>,
+            progress: ItemProgress,
+            listener: DownloadQueueListener,
         ): Boolean {
-            val progress =
-                ItemProgress(
-                    files,
-                    estimatedTotal = download.bytesTotal,
-                    seededProjection = download.projectedBytes,
-                )
             val projector = projectorFor(download, dto)
 
             for (file in files) {
@@ -379,7 +451,7 @@ internal class DownloadQueue
                 }
 
                 // Only the media file is Matroska, and only it is worth projecting: everything else
-                // in the plan is artwork and subtitles whose sizes the server does declare.
+                // in this lane is artwork and subtitles whose sizes the server does declare.
                 // An audio sidecar is a transcode too and declares no length either, but its share
                 // of the item is a term of the enqueue-time ceiling (`DownloadEnqueuer.sizeEstimate`)
                 // rather than something to project: one projector per item measures the media file.
@@ -395,6 +467,36 @@ internal class DownloadQueue
                 }
             }
             return true
+        }
+
+        /**
+         * The audio lane: every sidecar of this item, one after another, alongside [drainOrdinary].
+         *
+         * Sequential on purpose — see [transfer] for the two-encodes-per-item ceiling that keeps
+         * the server's CPU on the media file. No projector is ever passed: a sidecar declares no
+         * length, but the item's one [TranscodeSizeProjector] measures the media file and a second
+         * scanner reading a second stream would only fight it for the same row.
+         *
+         * A cancellation leaves the loop *without* recording anything: it means the item failed or
+         * was withdrawn, and both lanes are unwinding together.
+         */
+        private suspend fun drainSidecars(
+            download: DownloadEntity,
+            files: List<DownloadFileEntity>,
+            progress: ItemProgress,
+            listener: DownloadQueueListener,
+        ) {
+            for (file in files) {
+                // The same guard the ordinary lane keeps, for the same reason: this lane opens
+                // files of its own, and the delete cascade can land between any two of them.
+                if (downloadDao.get(download.itemId) == null) return
+
+                runCatching { downloadOne(download, file, progress, projector = null, listener) }
+                    .onFailure { error ->
+                        if (error is CancellationException) throw error
+                        Timber.w(error, "Audio sidecar %s failed; item keeps its other tracks", file.fileName)
+                    }
+            }
         }
 
         /**
@@ -553,14 +655,7 @@ internal class DownloadQueue
             downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADING)
             val throttle = ProgressThrottle()
             val sink = projector?.let { MediaChunkSink(it::consume) }
-            // The live encodes: the media file of a transcoded row, and every audio sidecar of one
-            // (which is a `/Videos` transcode of its own). The server ignores `Range` on both, so
-            // neither may be resumed — a second encode's bytes appended to a first one's prefix is
-            // a file that opens and is wrong. Images and subtitles are ordinary files the server
-            // already holds, and they resume like any other.
-            val transcoded =
-                download.quality.isTranscoded &&
-                    (file.type == DownloadFileType.MEDIA || file.type == DownloadFileType.AUDIO)
+            val transcoded = download.isLiveEncode(file)
 
             try {
                 val fetched =
@@ -589,7 +684,15 @@ internal class DownloadQueue
                 publish(download, progress, listener)
             } catch (cancellation: CancellationException) {
                 // A cancelled file keeps its DOWNLOADING status and its bytes; the next run picks
-                // both up again. Marking it ERROR here would look like a real failure.
+                // both up again. Marking it ERROR here would look like a real failure — and for a
+                // sidecar it would be one the retry never clears, since the audio lane is cancelled
+                // by design whenever the media file fails (see [transfer]).
+                //
+                // Its *bytes*, though, are worth nothing: a sidecar's fetch cannot be resumed, so
+                // the part file would be re-truncated on the next attempt anyway, and until then it
+                // is a junk video sitting in the item's directory — hundreds of megabytes, for a
+                // download the user may have paused for a week.
+                if (audio) fetchTarget.delete()
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
@@ -602,6 +705,19 @@ internal class DownloadQueue
                 throw error
             }
         }
+
+        /**
+         * `true` when this file arrives as an encode the server is performing right now.
+         *
+         * Two of them, and they are exactly the two lanes' transcodes: the media file of a
+         * transcoded row, and every audio sidecar of one (a `/Videos` transcode of its own). The
+         * server ignores `Range` on both, so neither may be resumed — a second encode's bytes
+         * appended to a first one's prefix is a file that opens and is wrong. Images and subtitles
+         * are ordinary files the server already holds, and they resume like any other.
+         */
+        private fun DownloadEntity.isLiveEncode(file: DownloadFileEntity): Boolean =
+            quality.isTranscoded &&
+                (file.type == DownloadFileType.MEDIA || file.type == DownloadFileType.AUDIO)
 
         /**
          * `true` when this audio row's sidecar is already on disk and finished.
@@ -644,19 +760,22 @@ internal class DownloadQueue
             return target.length()
         }
 
+        /** One progress sample to Room and to the host, under [progressLease]. */
         private suspend fun publish(
             download: DownloadEntity,
             progress: ItemProgress,
             listener: DownloadQueueListener,
-        ) {
+        ) = progressLease.withLock {
+            val bytesDownloaded = progress.bytesDownloaded
+            val bytesTotal = progress.bytesTotal
             downloadDao.updateProgress(
                 itemId = download.itemId,
-                bytesDownloaded = progress.bytesDownloaded,
-                bytesTotal = progress.bytesTotal,
+                bytesDownloaded = bytesDownloaded,
+                bytesTotal = bytesTotal,
                 projectedBytes = progress.projectedBytes,
                 updatedAt = clock.instant(),
             )
-            listener.onProgress(download, progress.bytesDownloaded, progress.bytesTotal)
+            listener.onProgress(download, bytesDownloaded, bytesTotal)
         }
 
         private fun PlannedFile.toEntity(
@@ -719,14 +838,23 @@ internal class DownloadQueue
  *   episode, what its finished siblings at the same quality suggest it will weigh. It holds the
  *   line until the scanner has read a cluster of its own, so the very first sample of a seeded
  *   download does not blank the figure the user was already shown.
+ *
+ * ### Two writers
+ * An item is drained by two lanes (`DownloadQueue.transfer`), and both report into this one total —
+ * that is the whole point of it. They never meet on the same entry, because a key is a file id and
+ * a file belongs to exactly one lane, but they do write while the other is summing: hence the
+ * concurrent maps, which cost a lock-free `put` per 64 KB callback and rule out the
+ * `ConcurrentModificationException` a plain `LinkedHashMap` would eventually raise in the middle of
+ * a two-hour download. The sums are weakly consistent by construction, which is what a progress
+ * figure asks for: no sample can be *lost*, only briefly overtaken.
  */
 private class ItemProgress(
     files: List<DownloadFileEntity>,
     private val estimatedTotal: Long,
     seededProjection: Long? = null,
 ) {
-    private val downloaded = files.associate { it.id to it.bytesDownloaded }.toMutableMap()
-    private val totals = files.associate { it.id to it.bytesTotal }.toMutableMap()
+    private val downloaded = ConcurrentHashMap(files.associate { it.id to it.bytesDownloaded })
+    private val totals = ConcurrentHashMap(files.associate { it.id to it.bytesTotal })
 
     /**
      * The media file's projected finished size, or `null` for "no better answer than the ceiling".
@@ -735,7 +863,11 @@ private class ItemProgress(
      * Deliberately *not* folded into [bytesTotal]: the ceiling is a promise the enqueue step made
      * and the projection is evidence arriving afterwards, and conflating them would let a mid-flight
      * guess overwrite the only deterministic number on the row.
+     *
+     * `@Volatile` because the ordinary lane writes it and the sidecar lane reads it through
+     * [projectedBytes] on every publication of its own.
      */
+    @Volatile
     var mediaProjection: Long? = seededProjection
 
     /**

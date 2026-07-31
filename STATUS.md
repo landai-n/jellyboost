@@ -462,6 +462,13 @@ verification on the minified build.
   Only chunk 8's **device walk is outstanding** (user-run): a transcoded
   multi-language download offline, picking each language, seeking each one,
   confirming the offline audio picker lists them all.
+- **Sidecars now drain concurrently with the media file** (DECISIONS 2026-07-31,
+  "Audio sidecars fetch concurrently with the media file"): `DownloadQueue.transfer`
+  splits the plan into an ordinary lane and a sequential AUDIO lane, so an item
+  costs `max(media, sidecars)` rather than their sum — the first device walk was
+  spending ~11 minutes on two sidecars after the film had already finished.
+  New `DownloadQueueAudioLaneTest` pins the overlap, the lane's own sequencing,
+  and both failure directions.
 
 - **Downloads queue polish (2026-07-31):** ETA on downloading rows (`… · 8,4 MB/s
   · 2 min left`, `~` on a `CEILING` total, hidden when speed is unknown/stalled or

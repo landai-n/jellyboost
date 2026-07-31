@@ -277,6 +277,13 @@ A full 0→1 sweep is 0.66 of the screen height (jellyfin-android's ratio). Swip
 48 dp of the left/right edges or 64 dp of the top/bottom are left to the system, and the surface
 also calls `Modifier.systemGestureExclusion()`.
 
+The bottom bar's sheet buttons (audio/subtitles/speed/group/queue/quality) render labelled
+`TextButton`s only when the measured button row is at least 840dp wide; below that they are
+icon-only `IconButton`s whose `contentDescription` keeps the label for TalkBack. The five-button
+worst case fit an 800dp phone-landscape bar with zero slack and was already crowding tablet
+portrait (711dp), so both go icon-only; the tablet-landscape bar (capped at 1000dp) keeps its
+labels (2026-07-31 phone-size sweep, DECISIONS entry).
+
 ### Playback speed
 
 0.5×–2× in jellyfin-web's steps, applied through `PlayerHandle.setPlaybackSpeed`. Session-scoped by

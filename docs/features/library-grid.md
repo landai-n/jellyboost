@@ -80,9 +80,14 @@ Paging failures travel as `AppErrorException` (`:core:common`) so the screen can
 
 ## Layout
 
-`LazyVerticalGrid(GridCells.Adaptive(110.dp))` — three columns on a phone, six or more on the
-tablet in landscape, with no separate layout. Each cell measures itself with `BoxWithConstraints`
-and hands the width to `PosterCard`, so cards fill their column instead of overflowing a narrow one.
+`LazyVerticalGrid(GridCells.Adaptive(120.dp))` — two columns of ~160dp on a 360dp phone
+(device-verified in the 2026-07-31 phone-size sweep), five or more on the tablet, with no separate
+layout. Cells pass `Dp.Unspecified` to `PosterCard` so cards fill their column without per-cell
+subcomposition (the earlier per-cell `BoxWithConstraints` was removed in the cleanup wave).
+
+The *Libraries* tab (`LibrariesScreen`) is the screen with a width branch: its adaptive floor is
+`Dimens.ThumbWidth` (210dp) at 600dp+ but 150dp below that, because a 210dp floor folds to a
+single full-width column on a phone (see `librariesMinCellWidth` and DECISIONS 2026-07-31).
 
 ## Navigation
 

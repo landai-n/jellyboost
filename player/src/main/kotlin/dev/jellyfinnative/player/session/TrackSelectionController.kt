@@ -19,15 +19,24 @@ import timber.log.Timber
  * - ExoPlayer sees one track group per stream it was actually given, numbered per type, and knows
  *   nothing about streams the server withheld.
  *
- * Two bridges close the gap: side-loaded subtitles carry an `external:<jellyfinIndex>` track id
- * (set by `ExoMediaSourceFactory`), and embedded streams are matched by their position among the
- * *embedded* streams of the same type, which is the order ExoPlayer exposes them in.
+ * Three bridges close the gap:
+ *
+ * - **side-loaded subtitles** carry an `external:<jellyfinIndex>` track id, set by
+ *   `ExoMediaSourceFactory` and read back through [jellyfinIndexOfTrackId];
+ * - **side-loaded audio** — a downloaded item's per-language sidecar files — has no id to carry:
+ *   `MediaItem` cannot name an audio source's tracks the way `SubtitleConfiguration` names a
+ *   subtitle's. It is matched by **merge-child position** instead, the k-th external audio track of
+ *   the source being merge child `k + 1` because `ExoPlayerHandle.prepare` builds them in exactly
+ *   that order (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2");
+ * - **embedded streams** are matched by their position among the *embedded* streams of the same
+ *   type, which is the order ExoPlayer exposes them in.
  *
  * The id the player hands back is not the id that went in — merging a side-loaded source prefixes
- * it with the child's index — which is why the read goes through [jellyfinIndexOfTrackId] and never
- * compares strings here. Both branches depend on it: an id it fails to decode is not merely a
- * missed exact match, it also makes a side-loaded group indistinguishable from a container one and
- * so shifts the positional count for everything else.
+ * every format and group with the child's index — which is why the subtitle read goes through
+ * [jellyfinIndexOfTrackId] and never compares strings here, and why the audio read has anything to
+ * navigate by at all. Every branch depends on it: a prefix misread is not merely a missed match, it
+ * also makes a side-loaded group indistinguishable from a container one and so shifts the
+ * positional count for everything else.
  */
 internal class TrackSelectionController(
     private val player: Player,
@@ -55,6 +64,22 @@ internal class TrackSelectionController(
     }
 
     /**
+     * Selects the audio stream [jellyfinIndex].
+     *
+     * Two kinds of track, and which one this is decides how it is found:
+     *
+     * - **side-loaded** (a downloaded item's audio sidecars): matched by *merge-child position*.
+     *   The source's external audio tracks are in the same ascending-index order the spec listed
+     *   the sidecar files in, and [ExoPlayerHandle.prepare] made file `i` merge child `i + 1`, so
+     *   the k-th external track is the group whose id begins `"${k + 1}:"`. There is no id to match
+     *   on the way subtitles have one — `MediaItem` cannot name an audio source's tracks.
+     * - **in the container** (everything streamed, and an original download): matched by position
+     *   among the *container's* audio groups, as before. The sidecar groups share the list and are
+     *   excluded first by the same prefix; a group with no prefix, prefix 0, or a prefix past the
+     *   last sidecar is the primary source's.
+     *
+     * With no sidecars the exclusion is empty and this is the plain positional match it always was.
+     *
      * @return `false` when the requested audio stream is not in the current ExoPlayer track list,
      *   meaning the caller has to ask the server for it instead.
      */
@@ -62,13 +87,30 @@ internal class TrackSelectionController(
         source: PlaybackMediaSource,
         jellyfinIndex: Int,
     ): Boolean {
-        val position =
-            source.audioTracks
-                .filterNot { it.isExternal }
-                .indexOfFirst { it.index == jellyfinIndex }
-                .takeIf { it >= 0 } ?: return false
+        val audioGroups = groupsOfType(C.TRACK_TYPE_AUDIO)
+        val sideLoaded = source.audioTracks.filter { it.isExternal }
+        val sidecarChildren = 1..sideLoaded.size
 
-        val group = groupsOfType(C.TRACK_TYPE_AUDIO).getOrNull(position) ?: return false
+        val group =
+            when (val ordinal = sideLoaded.indexOfFirst { it.index == jellyfinIndex }) {
+                -1 -> {
+                    val position =
+                        source.audioTracks
+                            .filterNot { it.isExternal }
+                            .indexOfFirst { it.index == jellyfinIndex }
+                            .takeIf { it >= 0 } ?: return false
+                    audioGroups
+                        .filterNot { group ->
+                            mergeChildIndex(group.mediaTrackGroup.id)?.let { it in sidecarChildren } == true
+                        }.getOrNull(position)
+                }
+
+                else ->
+                    audioGroups.firstOrNull { group ->
+                        mergeChildIndex(group.mediaTrackGroup.id) == ordinal + 1
+                    }
+            } ?: return false
+
         applyOverride(C.TRACK_TYPE_AUDIO, group)
         return true
     }
@@ -123,6 +165,27 @@ internal class TrackSelectionController(
 
     private fun groupsOfType(trackType: Int): List<Tracks.Group> =
         player.currentTracks.groups.filter { it.type == trackType }
+
+    /**
+     * Which merge child published this track group, or `null` when nothing merged it.
+     *
+     * `MergingMediaPeriod.onPrepared` republishes each child's groups as
+     * `new TrackGroup(childIndex + ":" + trackGroup.id, …)` (Media3 1.9.0), so the **leading** run
+     * of digits before the first `:` is the child index. Only the leading one is read: a doubly
+     * merged group — the main source of a downloaded item that has audio sidecars *and* subtitles
+     * is merged once by `DefaultMediaSourceFactory` and again by `ExoPlayerHandle` — reads `0:0:1`
+     * and is child 0 of the outer merge, which is what matters here.
+     *
+     * A group whose own id merely starts with digits and a colon cannot be told apart from a merged
+     * one, and is not meant to be: unmerged, nothing else claims a child index, and merged, the
+     * prefix in front of it is the answer.
+     */
+    private fun mergeChildIndex(id: String?): Int? {
+        val separator = id?.indexOf(':') ?: return null
+        if (separator <= 0) return null
+        val prefix = id.substring(0, separator)
+        return if (prefix.all(Char::isDigit)) prefix.toIntOrNull() else null
+    }
 
     private fun applyOverride(
         trackType: Int,

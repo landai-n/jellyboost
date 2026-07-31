@@ -2,6 +2,7 @@ package dev.jellyfinnative.player.session
 
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
+import dev.jellyfinnative.player.model.AudioSidecarSpec
 import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 
 /**
@@ -27,3 +28,15 @@ internal fun PlaybackMediaItemSpec.toMediaItem(): MediaItem =
                     .build()
             },
         ).build()
+
+/**
+ * An audio sidecar as its own [MediaItem], for [ExoPlayerHandle.prepare] to merge alongside the
+ * main one.
+ *
+ * The URI is all of it. There is no id to set — the merge does not let us name a child's tracks, so
+ * selection navigates by child *position* instead
+ * (`TrackSelectionController.selectAudio`) — and no label or language either: the picker draws
+ * `PlaybackTrack`s built from the cached `BaseItemDto`, never ExoPlayer's own metadata, so anything
+ * set here would be written and never read.
+ */
+internal fun AudioSidecarSpec.toMediaItem(): MediaItem = MediaItem.fromUri(uri.toUri())

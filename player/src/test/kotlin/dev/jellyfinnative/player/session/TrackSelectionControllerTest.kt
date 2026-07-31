@@ -357,6 +357,135 @@ class TrackSelectionControllerTest {
         controller.selectAudio(source, jellyfinIndex = 5) shouldBe false
     }
 
+    // ---- audio sidecars, matched by merge-child order (phase 2) ---------------------------------
+
+    @Test
+    fun `selects a sidecar audio track by the merge child it was built as`() {
+        // A transcoded download of Élémentaire with every language kept: the file holds the baked
+        // French VFF, and `audio.4.fra.m4a` / `audio.5.eng.m4a` are merged in as children 1 and 2.
+        // There is no id to match on — `MediaItem` cannot name an audio source's tracks — so the
+        // child prefix `MergingMediaPeriod` puts on the group id is the whole of the mapping.
+        val controller =
+            controller(
+                mergedAudioGroup("0:1"),
+                mergedAudioGroup("1:0"),
+                mergedAudioGroup("2:0"),
+            )
+
+        controller.selectAudio(sidecarFilm(), jellyfinIndex = 5) shouldBe true
+
+        // Stream 5 is the *second* external track, so it is child 2 — not child 1, which a plain
+        // positional count over the audio groups would have picked.
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .id shouldBe "2:0"
+    }
+
+    @Test
+    fun `selects the first sidecar audio track`() {
+        val controller =
+            controller(
+                mergedAudioGroup("0:1"),
+                mergedAudioGroup("1:0"),
+                mergedAudioGroup("2:0"),
+            )
+
+        controller.selectAudio(sidecarFilm(), jellyfinIndex = 4) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .id shouldBe "1:0"
+    }
+
+    @Test
+    fun `the baked audio track is still found positionally, past the sidecar groups`() {
+        val controller =
+            controller(
+                mergedAudioGroup("0:1"),
+                mergedAudioGroup("1:0"),
+                mergedAudioGroup("2:0"),
+            )
+
+        controller.selectAudio(sidecarFilm(), jellyfinIndex = 3) shouldBe true
+
+        // The two sidecar groups are excluded before counting; counting them would put the baked
+        // track on child 1 and play the wrong language.
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .id shouldBe "0:1"
+    }
+
+    @Test
+    fun `a doubly merged primary group still counts as the container's own`() {
+        // The film also has subtitle sidecars, so `DefaultMediaSourceFactory` merged the main item
+        // once for those before `ExoPlayerHandle` merged the audio files in around it: the
+        // container's audio group arrives prefixed twice. Only the outer prefix is the child index.
+        val controller =
+            controller(
+                mergedAudioGroup("0:0:1"),
+                mergedAudioGroup("1:0"),
+                mergedAudioGroup("2:0"),
+            )
+
+        controller.selectAudio(sidecarFilm(), jellyfinIndex = 3) shouldBe true
+
+        applied.captured.overrides.values
+            .single()
+            .mediaTrackGroup
+            .id shouldBe "0:0:1"
+    }
+
+    @Test
+    fun `refuses an audio track no sidecar and no container group supplies`() {
+        // Only one sidecar was merged in, but the source claims two — a file that failed to
+        // download. Selecting the missing one must fail rather than land on the wrong child.
+        val controller = controller(mergedAudioGroup("0:1"), mergedAudioGroup("1:0"))
+
+        controller.selectAudio(sidecarFilm(), jellyfinIndex = 5) shouldBe false
+    }
+
+    /**
+     * A transcoded download with its extra languages back: the baked French VFF in the file, and
+     * streams 4 and 5 as audio sidecars — flagged side-loaded by `LocalPlaybackResolver`, in the
+     * ascending-index order that *is* the merge-child order.
+     */
+    private fun sidecarFilm() =
+        PlayerFixtures.localSource(
+            audioTracks =
+                listOf(
+                    PlaybackTrack(index = 3, label = "French VFF", language = "fra", codec = "aac"),
+                    PlaybackTrack(index = 4, label = "French VFQ", language = "fra", codec = "aac", isExternal = true),
+                    PlaybackTrack(index = 5, label = "English VO", language = "eng", codec = "aac", isExternal = true),
+                ),
+        )
+
+    /**
+     * An audio track group as a *merged* player reports it.
+     *
+     * The child prefix lands on the `TrackGroup`'s own id, not only on its formats:
+     * `MergingMediaPeriod.onPrepared` publishes `new TrackGroup(childIndex + ":" + trackGroup.id,
+     * …)` (read off the Media3 1.9.0 bytecode). That id is what selection navigates by, so it is
+     * what these groups have to carry.
+     */
+    private fun mergedAudioGroup(groupId: String): Tracks.Group =
+        Tracks.Group(
+            TrackGroup(
+                groupId,
+                Format
+                    .Builder()
+                    .setId(groupId)
+                    .setSampleMimeType(MimeTypes.AUDIO_AAC)
+                    .build(),
+            ),
+            // adaptiveSupported =
+            false,
+            intArrayOf(C.FORMAT_HANDLED),
+            booleanArrayOf(false),
+        )
+
     /**
      * A text track group as the player reports it.
      *

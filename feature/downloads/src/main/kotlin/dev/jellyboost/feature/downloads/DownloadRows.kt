@@ -99,6 +99,12 @@ internal fun DownloadedRow(
  * @param progress the fraction to draw, which is **not** `item.progress`: it comes through
  *   [DownloadProgressRatchet] so the bar can never run backwards while the projection behind its
  *   denominator settles.
+ * @param compact below the `COMPACT_MAX_WIDTH` breakpoint (`DownloadsScreen.kt`), a single row of
+ *   [THUMB_SIZE] thumbnail, weighted text column and up to four 48dp [QueueRowActions] buttons
+ *   leaves the title under ~90dp — a device-verified defect that crushed titles to ~4 characters
+ *   ("Hous…") on a 360dp phone. Compact switches to two tiers: artwork+text get the full row
+ *   width, and the actions move to their own end-aligned row below rather than shrinking to fit.
+ *   Decided once at the screen level (`DownloadsScreen.kt`'s `BoxWithConstraints`), not per row.
  */
 @Composable
 internal fun QueueRow(
@@ -107,49 +113,88 @@ internal fun QueueRow(
     speedBytesPerSecond: Long?,
     actions: DownloadsActions,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RowArtwork(item = item)
-
+    if (compact) {
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         ) {
-            Text(
-                text = item.rowTitle(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                drawStopIndicator = {},
-            )
-            Text(
-                text = item.statusLine(speedBytesPerSecond),
-                style = MaterialTheme.typography.bodySmall,
-                color =
-                    if (item.status == DownloadStatus.ERROR) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RowArtwork(item = item)
+                QueueRowText(
+                    item = item,
+                    progress = progress,
+                    speedBytesPerSecond = speedBytesPerSecond,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            QueueRowActions(item = item, actions = actions, modifier = Modifier.align(Alignment.End))
         }
+    } else {
+        Row(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RowArtwork(item = item)
+            QueueRowText(
+                item = item,
+                progress = progress,
+                speedBytesPerSecond = speedBytesPerSecond,
+                modifier = Modifier.weight(1f),
+            )
+            QueueRowActions(item = item, actions = actions)
+        }
+    }
+}
 
-        QueueRowActions(item = item, actions = actions)
+/** The title, progress bar and status line shared by both [QueueRow] layouts. */
+@Composable
+private fun QueueRowText(
+    item: DownloadItem,
+    progress: Float,
+    speedBytesPerSecond: Long?,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+    ) {
+        Text(
+            text = item.rowTitle(),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primary,
+            drawStopIndicator = {},
+        )
+        Text(
+            text = item.statusLine(speedBytesPerSecond),
+            style = MaterialTheme.typography.bodySmall,
+            color =
+                if (item.status == DownloadStatus.ERROR) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -157,8 +202,9 @@ internal fun QueueRow(
 private fun QueueRowActions(
     item: DownloadItem,
     actions: DownloadsActions,
+    modifier: Modifier = Modifier,
 ) {
-    Row {
+    Row(modifier = modifier) {
         IconButton(onClick = { actions.onMoveUp(item) }) {
             Icon(
                 imageVector = Icons.Filled.ArrowUpward,

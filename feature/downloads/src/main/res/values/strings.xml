@@ -52,6 +52,13 @@
     <!-- The same ceiling, alone, for a row that has not started transferring yet. -->
     <string name="downloads_size_capped">up to %1$s</string>
     <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s left</string>
+    <!-- Same hedge as downloads_size_approx: the total behind the ETA is a ceiling, not a measured
+         figure, so the time left it implies is stated as an estimate too. -->
+    <string name="downloads_eta_approx">~%1$s left</string>
+    <!-- A re-encoded download's marker, appended as the last segment of the queue row and the
+         Downloaded tab's size line — see DownloadQuality.isTranscoded. -->
+    <string name="downloads_transcoded_marker">Transcoded</string>
     <string name="downloads_status_queued">Waiting</string>
     <string name="downloads_status_paused">Paused</string>
     <string name="downloads_status_failed">Download failed</string>

@@ -463,6 +463,14 @@ verification on the minified build.
   multi-language download offline, picking each language, seeking each one,
   confirming the offline audio picker lists them all.
 
+- **Downloads queue polish (2026-07-31):** ETA on downloading rows (`… · 8,4 MB/s
+  · 2 min left`, `~` on a `CEILING` total, hidden when speed is unknown/stalled or
+  the estimate tops 24 h; new shared `formatDurationSeconds` in `:core:common`),
+  and a `Transcoded` marker on queue + Downloaded rows (`quality.isTranscoded`).
+  An extra-audio-sidecar stage indicator was speced, started, then **dropped at
+  the user's request** — fully reverted, nothing remains in the tree. In flight:
+  detail-page "on device" size when a local copy exists (worktree agent).
+
 ### Next
 1. ~~**Audit backlog Tier 2 + cleanup wave**~~ — DONE. All Tier 1 (11), all Tier 2
    headliners, and the entire cleanup wave (MKV/hygiene/perf/structural batches)

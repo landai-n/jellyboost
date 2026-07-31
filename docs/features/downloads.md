@@ -16,7 +16,7 @@ on disk plus Room rows; tapping Play on a downloaded item still takes the online
 |---|---|
 | Detail screen | *Download* enqueues; the same button then reads *Cancel* / *Remove* / *Retry* and shows live progress. On a **season or series** it enqueues the episodes underneath (see [Containers](#containers-a-season-is-its-episodes)). |
 | Every item card | `DownloadBadge` — queued, downloading (ring), paused, downloaded (tick), failed. |
-| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
+| Downloads tab | *Downloaded* (episodes grouped under their series heading; once any series is present, every film is gathered under one shared "Movies" heading placed after the series groups — so a film never reads as part of the series above it; with no series on the tab, films stay as their own headerless rows; sizes, delete) and *Queue* (progress, speed, ETA, pause/resume/cancel/reorder per row, plus a *Pause all* / *Resume all* / *Cancel all* bar above the list, no grouping), with a storage header and the Wi-Fi-only toggle. |
 | Notification | Foreground, per-item progress, Pause and Cancel actions. |
 | Offline | Every downloaded item appears in the offline home / library / search, because the pipeline writes `ItemEntity(source = DOWNLOAD)` rows (M6 reads exactly those). |
 
@@ -79,6 +79,8 @@ DownloadRepository.enqueue(itemId)
 | `DownloadDeleter` | `:data:downloads` | The delete cascade. |
 | `DownloadsViewModel` / `DownloadsScreen` | `:feature:downloads` | The two tabs, the storage header, the Wi-Fi-only toggle. |
 | `DownloadSpeedTracker` | `:feature:downloads` | Derives bytes/second from successive Room emissions (no speed column exists). |
+| `DownloadRows.etaSeconds` | `:feature:downloads` | Whole seconds left from the smoothed speed and `displayTotalBytes`; hidden when the speed is unknown, the transfer is stalled, or the estimate exceeds 24 h. Worded `~X left` on a `CEILING` total, since the ETA is exactly as approximate as the size behind it. A queue/downloaded row whose `quality.isTranscoded` also appends a `Transcoded` marker to its status/size line. |
+| `formatDurationSeconds` | `:core:common` | The shared duration formatter (`45 s` / `3 min` / `1 h 20 min`, minutes ceil'd), beside `formatBytes` per ARCH-11. |
 
 ---
 

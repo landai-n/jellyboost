@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MONOCHROME layer for Android 13+ themed icons. Generated from
+    logo/ic_launcher_monochrome.svg.
+
+    Same geometry and safe-zone fit as ic_launcher_foreground, flattened to a single
+    flat fill: the system replaces this colour with the user's wallpaper-derived tint,
+    so the value here is only a placeholder — what matters is that it is one flat
+    colour with no gradient.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.315"
+        android:scaleY="0.315"
+        android:translateX="-26.64"
+        android:translateY="7.065">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M336,82 C290,96 250,130 232,176 C226,190 224,204 226,216 C262,214 296,190 316,156 C330,132 336,106 336,82 Z" />
+        <path
+            android:pathData="M196,116 L246,116"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="12" />
+        <path
+            android:pathData="M182,150 L226,150"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="12" />
+        <path
+            android:pathData="M194,188 L214,188"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="12" />
+    </group>
+</vector>

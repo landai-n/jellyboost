@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <!-- Adaptive icon FOREGROUND layer. Transparent 108x108dp canvas.
+       Mark is scaled 0.315 and centred on (54,54); its farthest point (the blade
+       tip) sits at radius 32.9dp, just inside the 33dp safe-zone circle, so no
+       launcher mask can crop it. -->
+  <defs>
+    <linearGradient id="finGradient" gradientUnits="userSpaceOnUse"
+                    x1="176" y1="82" x2="336" y2="216">
+      <stop offset="0" stop-color="#AA5CC3"/>
+      <stop offset="1" stop-color="#00A4DC"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-26.64 7.065) scale(0.315)">
+    <path fill="url(#finGradient)"
+          d="M336 82 C290 96, 250 130, 232 176 C226 190, 224 204, 226 216 C262 214, 296 190, 316 156 C330 132, 336 106, 336 82 Z"/>
+    <g stroke="url(#finGradient)" stroke-width="12" stroke-linecap="round" fill="none">
+      <path d="M196 116 L246 116"/>
+      <path d="M182 150 L226 150"/>
+      <path d="M194 188 L214 188"/>
+    </g>
+  </g>
+</svg>

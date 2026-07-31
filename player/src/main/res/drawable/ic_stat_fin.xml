@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NOTIFICATION small icon. Generated from logo/ic_stat_fin.svg, which stays the source
+    of truth; `:data:downloads` carries an identical copy because the two modules that post
+    notifications share no Android module (`:core:common` is pure JVM, and a data module
+    must not depend on the Compose `:core:ui`).
+
+    Flat white on transparent: the status bar tints it and discards colour entirely, so
+    neither the gradient nor the navy tile may appear here. Simplified for legibility at
+    24dp — the third, shortest trail is dropped (it collapsed to under 1dp) and the
+    remaining two are respaced and thickened so they do not visually merge.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:scaleX="0.1"
+        android:scaleY="0.1"
+        android:translateX="-13.1"
+        android:translateY="-2.9">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M336,82 C290,96 250,130 232,176 C226,190 224,204 226,216 C262,214 296,190 316,156 C330,132 336,106 336,82 Z" />
+        <path
+            android:pathData="M190,110 L250,110"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="24" />
+        <path
+            android:pathData="M178,158 L222,158"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="24" />
+    </group>
+</vector>

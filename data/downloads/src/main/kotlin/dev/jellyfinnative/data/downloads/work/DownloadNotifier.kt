@@ -101,7 +101,7 @@ class DownloadNotifier
                 NOTIFICATION_ID,
                 NotificationCompat
                     .Builder(context, CHANNEL_ID)
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setSmallIcon(R.drawable.ic_stat_fin)
                     .setContentTitle(context.getString(R.string.downloads_notification_preparing))
                     .setOngoing(true)
                     .setSilent(true)
@@ -125,7 +125,7 @@ class DownloadNotifier
             val publicVersion =
                 NotificationCompat
                     .Builder(context, CHANNEL_ID)
-                    .setSmallIcon(android.R.drawable.stat_sys_download)
+                    .setSmallIcon(R.drawable.ic_stat_fin)
                     .setContentTitle(context.getString(R.string.downloads_notification_generic_title))
                     .setProgress(PERCENT, progress.percent, progress.indeterminate)
                     .setOngoing(true)
@@ -135,7 +135,7 @@ class DownloadNotifier
 
             return NotificationCompat
                 .Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_sys_download)
+                .setSmallIcon(R.drawable.ic_stat_fin)
                 .setContentTitle(title)
                 .setContentText(
                     if (progress.indeterminate) {

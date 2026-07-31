@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">அமைப்புகள்</string>
+    <string name="settings_back">பின்</string>
+    <string name="settings_home">முகப்பு</string>
+
+    <string name="settings_section_playback">பிளேபேக்</string>
+    <string name="settings_skip_intro">தொடக்கத்தைத் தவிர்</string>
+    <string name="settings_skip_outro">முடிவைத் தவிர்</string>
+    <string name="settings_skip_mode_off">எதுவும் செய்யாதே</string>
+    <string name="settings_skip_mode_show_button">தவிர்க்கும் பொத்தானைக் காட்டு</string>
+    <string name="settings_skip_mode_auto">தானாகவே தவிர்</string>
+    <string name="settings_pip">படத்திற்குள் படம்</string>
+    <string name="settings_pip_supporting">ஆப்பை விட்டு வெளியேறும்போது மிதக்கும் சாளரத்தில் இயக்கத்தைத் தொடரும்.</string>
+
+    <string name="settings_section_downloads">பதிவிறக்கங்கள்</string>
+    <string name="settings_wifi_only">Wi‑Fi மட்டும்</string>
+    <string name="settings_wifi_only_supporting">மொபைல் தரவில் பதிவிறக்கங்களை இடைநிறுத்து.</string>
+    <string name="settings_quality">பதிவிறக்கத் தரம்</string>
+    <string name="settings_quality_original">அசல் கோப்பு — சரியான நகல், மீண்டும் தொடரக்கூடியது</string>
+    <string name="settings_quality_high">உயர்தரம் — சுமார் 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">நடுத்தரம் — சுமார் 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">குறைந்த — சுமார் 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">அசல் கோப்பைத் தவிர வேறு எதுவும் உங்கள் சேவையகத்தால் அனுப்பும்போதே மாற்றப்படுகிறது, எனவே பதிவிறக்கும்போது காட்டப்படும் அளவு ஒரு மதிப்பீடே, தடைபட்ட பரிமாற்றம் மீண்டும் தொடங்கும்.</string>
+    <string name="settings_storage_label">சேமிப்பகம்</string>
+    <string name="settings_storage_summary">%1$s பயன்படுத்தப்பட்டது · %2$s காலி இந்தச் சாதனத்தில்</string>
+    <string name="settings_storage_location">பதிவிறக்கங்கள் %1$s இல் வைக்கப்படுகின்றன</string>
+    <string name="settings_storage_picker">சேமிப்பக இடம்</string>
+    <string name="settings_storage_internal">உள் சேமிப்பகம்</string>
+    <string name="settings_storage_sd_card">SD கார்டு</string>
+    <string name="settings_storage_volume_free">%1$s காலி</string>
+    <string name="settings_storage_missing">நீங்கள் தேர்ந்தெடுத்த சேமிப்பகம் தற்போது கிடைக்கவில்லை, எனவே பதிவிறக்கங்கள் கீழே தேர்ந்தெடுக்கப்பட்ட இடத்திற்குச் செல்கின்றன.</string>
+    <string name="settings_storage_switch_title">பதிவிறக்கங்களை நகர்த்தவா?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">பதிவிறக்கங்களை இடங்களுக்கு இடையே இன்னும் நகர்த்த முடியாது, எனவே இந்தச் சாதனத்தில் ஏற்கனவே உள்ள ஒன்று நீக்கப்படும். புதிய இடத்திற்கு மீண்டும் பதிவிறக்கலாம்.</item>
+        <item quantity="other">பதிவிறக்கங்களை இடங்களுக்கு இடையே இன்னும் நகர்த்த முடியாது, எனவே இந்தச் சாதனத்தில் ஏற்கனவே உள்ள %1$d நீக்கப்படும். புதிய இடத்திற்கு அவற்றை மீண்டும் பதிவிறக்கலாம்.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">நீக்கி மாற்று</string>
+
+    <string name="settings_section_connectivity">இணைப்பு</string>
+    <string name="settings_offline_mode">ஆஃப்லைன் பயன்முறை</string>
+    <string name="settings_offline_mode_supporting">இந்தச் சாதனத்தில் ஏற்கனவே உள்ள மீடியாவை மட்டும் காட்டு.</string>
+
+    <string name="settings_section_account">கணக்கு</string>
+    <string name="settings_account_user">இதாக உள்நுழைந்துள்ளீர்கள்</string>
+    <string name="settings_account_server">சேவையகம்</string>
+    <string name="settings_account_unknown">உள்நுழையவில்லை</string>
+    <string name="settings_sign_out">வெளியேறு</string>
+    <string name="settings_sign_out_dialog_title">வெளியேறவா?</string>
+    <string name="settings_sign_out_dialog_message">மீண்டும் உள்நுழைய உங்கள் சேவையக முகவரி மற்றும் கடவுச்சொல் தேவைப்படும்.</string>
+    <string name="settings_sign_out_delete_downloads">இந்தச் சாதனத்திலிருந்து பதிவிறக்கங்களையும் நீக்கு</string>
+    <string name="settings_cancel">ரத்துசெய்</string>
+</resources>

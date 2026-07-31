@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">பதிவிறக்கப்பட்டது</string>
+    <string name="badge_download_queued">பதிவிறக்கத்திற்கு வரிசையில் உள்ளது</string>
+    <string name="badge_download_paused">பதிவிறக்கம் இடைநிறுத்தப்பட்டது</string>
+    <string name="badge_download_failed">பதிவிறக்கம் தோல்வியடைந்தது</string>
+
+    <string name="media_row_see_all">அனைத்தையும் காண்க</string>
+    <string name="media_card_watched">பார்க்கப்பட்டது</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d தேர்ந்தெடுக்கப்பட்டது</item>
+        <item quantity="other">%1$d தேர்ந்தெடுக்கப்பட்டன</item>
+    </plurals>
+    <string name="selection_close">தேர்வை அழி</string>
+    <string name="selection_select_all">அனைத்தையும் தேர்ந்தெடு</string>
+    <string name="selection_mark_watched">பார்த்ததாகக் குறி</string>
+    <string name="selection_mark_unwatched">பார்க்காததாகக் குறி</string>
+    <string name="selection_download">பதிவிறக்கு</string>
+
+    <string name="selection_item_selected">தேர்ந்தெடுக்கப்பட்டது</string>
+    <string name="selection_item_not_selected">தேர்ந்தெடுக்கப்படவில்லை</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d பார்த்ததாகக் குறிக்கப்பட்டது</item>
+        <item quantity="other">%1$d பார்த்ததாகக் குறிக்கப்பட்டன</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d பார்த்ததாகக் குறிக்கப்பட்டது, %2$d தோல்வியடைந்தது</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d உருப்படியை பார்த்ததாகக் குறிக்க முடியவில்லை</item>
+        <item quantity="other">%1$d உருப்படிகளை பார்த்ததாகக் குறிக்க முடியவில்லை</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d பார்க்காததாகக் குறிக்கப்பட்டது</item>
+        <item quantity="other">%1$d பார்க்காததாகக் குறிக்கப்பட்டன</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d பார்க்காததாகக் குறிக்கப்பட்டது, %2$d தோல்வியடைந்தது</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d உருப்படியை பார்க்காததாகக் குறிக்க முடியவில்லை</item>
+        <item quantity="other">%1$d உருப்படிகளை பார்க்காததாகக் குறிக்க முடியவில்லை</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d பதிவிறக்கங்களில் சேர்க்கப்பட்டது</item>
+        <item quantity="other">%1$d பதிவிறக்கங்களில் சேர்க்கப்பட்டன</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d பதிவிறக்கங்களில் சேர்க்கப்பட்டது, %2$d தோல்வியடைந்தது</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d உருப்படியைப் பதிவிறக்கங்களில் சேர்க்க முடியவில்லை</item>
+        <item quantity="other">%1$d உருப்படிகளைப் பதிவிறக்கங்களில் சேர்க்க முடியவில்லை</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d பதிவிறக்கங்களில் சேர்க்கப்பட்டது — %2$d ஏற்கனவே இந்தச் சாதனத்தில் உள்ளது</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d உருப்படி ஏற்கனவே இந்தச் சாதனத்தில் உள்ளது</item>
+        <item quantity="other">%1$d உருப்படிகள் ஏற்கனவே இந்தச் சாதனத்தில் உள்ளன</item>
+    </plurals>
+</resources>

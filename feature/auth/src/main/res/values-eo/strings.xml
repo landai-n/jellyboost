@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Konekti al servilo</string>
+    <string name="server_setup_discovered_title">Serviloj en ĉi tiu reto</string>
+    <string name="server_setup_discovering">Serĉante en la loka reto…</string>
+    <string name="server_setup_no_servers_found">Neniu servilo anoncis sin. Enigu adreson malsupre.</string>
+    <string name="server_setup_manual_title">Adreso de la servilo</string>
+    <string name="server_setup_address_label">Gastigo aŭ URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org aŭ 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Konekti</string>
+    <string name="server_setup_connecting">Kontaktante la servilon…</string>
+    <string name="server_setup_session_lost">Via konservita ensaluto ne povis esti restaŭrita, do vi estas adiaŭigita. Bonvolu ensaluti denove.</string>
+    <string name="login_title">Ensaluti</string>
+    <string name="login_server_version">Versio %1$s</string>
+    <string name="login_server_version_unknown">Nekonata versio</string>
+    <string name="login_public_users_title">Kiu spektas?</string>
+    <string name="login_username_label">Uzantonomo</string>
+    <string name="login_password_label">Pasvorto</string>
+    <string name="login_show_password">Montri pasvorton</string>
+    <string name="login_hide_password">Kaŝi pasvorton</string>
+    <string name="login_sign_in">Ensaluti</string>
+    <string name="login_change_server">Uzi alian servilon</string>
+    <string name="login_loading">Ŝargante servilajn detalojn…</string>
+    <string name="login_or">aŭ</string>
+    <string name="login_quick_connect">Uzi Rapidan Konekton</string>
+    <string name="login_quick_connect_title">Rapida Konekto</string>
+    <string name="login_quick_connect_instructions">Malfermu Jellyfin sur aparato, kie vi jam estas ensalutinta, iru al Rapida Konekto kaj enigu ĉi tiun kodon.</string>
+    <string name="login_quick_connect_waiting">Atendante aprobon…</string>
+    <string name="login_quick_connect_cancel">Nuligi</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Provita %d kandidata adreso, sen sukceso.</item>
+        <item quantity="other">Provitaj %d kandidataj adresoj, sen sukceso.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Ne eblas atingi la servilon</string>
+    <string name="auth_error_unsupported_version_or_product">Nesubtenata versio aŭ produkto</string>
+    <string name="auth_error_cannot_connect">Konekto ne povis esti establita.\nKontrolu la gastignomon kaj vian retkonekton.</string>
+    <string name="auth_error_invalid_credentials">Malĝusta uzantonomo aŭ pasvorto.</string>
+    <string name="auth_error_quick_connect_expired">Tiu kodo eksvalidiĝis. Petu novan kaj reprovu.</string>
+    <string name="auth_error_server">La servilo respondis kun eraro. Reprovu.</string>
+    <string name="auth_error_server_with_code">La servilo respondis kun eraro (%1$d). Reprovu.</string>
+</resources>

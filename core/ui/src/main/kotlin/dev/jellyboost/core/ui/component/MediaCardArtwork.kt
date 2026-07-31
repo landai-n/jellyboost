@@ -156,7 +156,7 @@ private fun BoxScope.CardOverlays(
         ) {
             Icon(
                 imageVector = Icons.Filled.Check,
-                contentDescription = "Watched",
+                contentDescription = stringResource(R.string.media_card_watched),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(2.dp),
             )

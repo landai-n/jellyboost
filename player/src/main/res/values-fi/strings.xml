@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Sulje soitin</string>
+    <string name="player_play">Toista</string>
+    <string name="player_pause">Keskeytä</string>
+    <string name="player_rewind">Siirry 10 sekuntia taaksepäin</string>
+    <string name="player_forward">Siirry 30 sekuntia eteenpäin</string>
+
+    <string name="player_audio">Ääni</string>
+    <string name="player_subtitles">Tekstitykset</string>
+    <string name="player_subtitles_off">Pois</string>
+    <string name="player_quality">Laatu</string>
+    <string name="player_speed">Nopeus</string>
+
+    <string name="player_skip_intro">Ohita intro</string>
+    <string name="player_skip_outro">Ohita outro</string>
+
+    <string name="player_quality_auto">Automaattinen</string>
+    <string name="player_quality_high">Korkea — 20 Mbps</string>
+    <string name="player_quality_medium">Keskitaso — 8 Mbps</string>
+    <string name="player_quality_low">Matala — 3 Mbps</string>
+    <string name="player_quality_lowest">Matalin — 720 kbps</string>
+
+    <string name="player_method_direct_play">Suora toisto</string>
+    <string name="player_method_direct_stream">Suoratoisto</string>
+    <string name="player_method_transcode">Transkoodaus</string>
+
+    <string name="player_message_transcode">Laitteesi ei pystynyt purkamaan tätä tiedostoa, joten palvelin transkoodaa sen.</string>
+    <string name="player_message_lower_quality">Suoratoisto pysähtyi – yritetään uudelleen heikommalla laadulla.</string>
+    <string name="player_message_track_restart">Palvelimen piti koodata suoratoisto uudelleen kyseistä raitaa varten.</string>
+    <string name="player_message_track_streaming">Tämä raita ei ole latauksessa – suoratoistetaan sitä palvelimeltasi.</string>
+    <string name="player_message_track_offline">Tämä raita ei ole ladatussa tiedostossa.</string>
+    <string name="player_message_failed">Toisto epäonnistui.</string>
+
+    <string name="player_syncplay_group">Ryhmä</string>
+    <string name="player_syncplay_waiting">Odotetaan ryhmää…</string>
+    <string name="player_syncplay_shuffle">Sekoita jono</string>
+    <string name="player_syncplay_repeat">Toista uudelleen</string>
+    <string name="player_syncplay_repeat_none">Pois</string>
+    <string name="player_syncplay_repeat_one">Tämä kohde</string>
+    <string name="player_syncplay_repeat_all">Koko jono</string>
+    <string name="player_syncplay_leave">Poistu ryhmästä</string>
+    <string name="player_syncplay_leave_title">Poistutaanko tästä ryhmästä?</string>
+    <string name="player_syncplay_leave_body">Toisto jatkuu täällä omillaan. Uudelleen liittyminen tarkoittaa ryhmän valitsemista uudelleen.</string>
+
+    <string name="player_syncplay_cancel">Peruuta</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d henkilö katsoo</item>
+        <item quantity="other">%d henkilöä katsoo</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d lisää</string>
+
+    <string name="player_syncplay_queue">Jono</string>
+    <string name="player_syncplay_queue_empty">Ryhmä ei ole vielä lisännyt mitään jonoon.</string>
+    <string name="player_syncplay_queue_item_loading">Ladataan…</string>
+    <string name="player_syncplay_queue_playing">Toistetaan nyt</string>
+    <string name="player_syncplay_queue_next">Seuraava kohde</string>
+    <string name="player_syncplay_queue_previous">Edellinen kohde</string>
+    <string name="player_syncplay_queue_move_up">Siirrä ylös</string>
+    <string name="player_syncplay_queue_move_down">Siirrä alas</string>
+    <string name="player_syncplay_queue_remove">Poista jonosta</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d kohde jonossa</item>
+        <item quantity="other">%d kohdetta jonossa</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Poistuttiin SyncPlaystä – yhteys katkesi</string>
+    <string name="player_message_syncplay_rejoined">Liityttiin uudelleen SyncPlay-ryhmään</string>
+    <string name="player_message_syncplay_join_failed">Kyseiseen SyncPlay-ryhmään ei voitu liittyä.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay-ryhmä on päättynyt.</string>
+    <string name="player_message_syncplay_removed">Et ole enää SyncPlay-ryhmässä.</string>
+    <string name="player_message_syncplay_library_denied">Ryhmä katsoo jotain, johon sinulla ei ole pääsyä.</string>
+    <string name="player_message_syncplay_item_unavailable">Ryhmän katsomaa sisältöä ei voitu avata.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Takaisin</string>
+    <string name="player_syncplay_groups_home">Koti</string>
+    <string name="player_syncplay_groups_create">Luo ryhmä</string>
+    <string name="player_syncplay_groups_create_title">Nimeä ryhmäsi</string>
+    <string name="player_syncplay_groups_create_hint">Ryhmän nimi</string>
+    <string name="player_syncplay_groups_create_confirm">Luo</string>
+    <string name="player_syncplay_groups_joining">Liitytään…</string>
+    <string name="player_syncplay_groups_active_label">Olet tässä ryhmässä</string>
+    <string name="player_syncplay_groups_open_player">Avaa soitin</string>
+    <string name="player_syncplay_groups_empty">Kukaan muu ei katso yhdessä juuri nyt.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay on poistettu käytöstä tililtäsi.</string>
+    <string name="player_syncplay_groups_error">SyncPlay-ryhmiä ei voitu ladata.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-ryhmä</string>
+    <string name="player_syncplay_presence_channel_description">Pitää paikkasi yhdessä katsomisen ryhmässä tallessa, kun sovellus on taustalla.</string>
+    <string name="player_syncplay_presence_title">SyncPlay-ryhmässä</string>
+    <string name="player_syncplay_presence_text">Odotetaan ryhmää</string>
+    <string name="player_syncplay_presence_leave">Poistu</string>
+
+    <string name="player_syncplay_state_idle">Toimeton</string>
+    <string name="player_syncplay_state_waiting">Odottaa</string>
+    <string name="player_syncplay_state_paused">Keskeytetty</string>
+    <string name="player_syncplay_state_playing">Toistetaan</string>
+
+    <string name="player_cast">Striimaa toiselle laitteelle</string>
+
+    <string name="player_cast_device_unnamed">TV:si</string>
+    <string name="player_message_cast_transferred">Toistetaan nyt laitteella %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Poistuttiin SyncPlay-ryhmästä striimatakseen laitteelle %1$s.</string>
+    <string name="player_message_cast_failed">Toisto laitteella %1$s epäonnistui.</string>
+
+    <string name="player_casting_to">Striimataan laitteelle %1$s</string>
+</resources>

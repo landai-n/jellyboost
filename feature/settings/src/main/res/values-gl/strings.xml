@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Configuración</string>
+    <string name="settings_back">Atrás</string>
+    <string name="settings_home">Inicio</string>
+    <string name="settings_section_playback">Reprodución</string>
+    <string name="settings_skip_intro">Saltar introdución</string>
+    <string name="settings_skip_outro">Saltar créditos finais</string>
+    <string name="settings_skip_mode_off">Non facer nada</string>
+    <string name="settings_skip_mode_show_button">Amosar un botón para saltar</string>
+    <string name="settings_skip_mode_auto">Saltar automaticamente</string>
+    <string name="settings_pip">Pantalla dentro de pantalla</string>
+    <string name="settings_pip_supporting">Seguir reproducindo nunha xanela flotante ao saír da aplicación.</string>
+    <string name="settings_section_downloads">Descargas</string>
+    <string name="settings_wifi_only">Só Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pausar descargas cos datos móbiles.</string>
+    <string name="settings_quality">Calidade de descarga</string>
+    <string name="settings_quality_original">Ficheiro orixinal — copia exacta, retomable</string>
+    <string name="settings_quality_high">Alta — uns 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Media — uns 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Baixa — uns 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Calquera opción distinta do ficheiro orixinal é convertida polo teu servidor ao envialo, así que o tamaño amosado mentres se descarga é unha estimación e unha transferencia interrompida comeza de novo.</string>
+    <string name="settings_storage_label">Almacenamento</string>
+    <string name="settings_storage_summary">%1$s usados · %2$s libres neste dispositivo</string>
+    <string name="settings_storage_location">As descargas gárdanse en %1$s</string>
+    <string name="settings_storage_picker">Lugar de almacenamento</string>
+    <string name="settings_storage_internal">Almacenamento interno</string>
+    <string name="settings_storage_sd_card">Tarxeta SD</string>
+    <string name="settings_storage_volume_free">%1$s libres</string>
+    <string name="settings_storage_missing">O almacenamento que escolliches non está dispoñible agora mesmo, así que as descargas van para o lugar seleccionado embaixo.</string>
+    <string name="settings_storage_switch_title">Mover descargas?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">As descargas aínda non se poden mover entre lugares, así que a que xa está neste dispositivo eliminarase. Podes descargala de novo no novo lugar.</item>
+        <item quantity="other">As descargas aínda non se poden mover entre lugares, así que as %1$d xa neste dispositivo eliminaranse. Podes descargalas de novo no novo lugar.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Eliminar e cambiar</string>
+    <string name="settings_section_connectivity">Conectividade</string>
+    <string name="settings_offline_mode">Modo sen conexión</string>
+    <string name="settings_offline_mode_supporting">Amosar só contido que xa está neste dispositivo.</string>
+    <string name="settings_section_account">Conta</string>
+    <string name="settings_account_user">Sesión iniciada como</string>
+    <string name="settings_account_server">Servidor</string>
+    <string name="settings_account_unknown">Sen sesión iniciada</string>
+    <string name="settings_sign_out">Pechar sesión</string>
+    <string name="settings_sign_out_dialog_title">Pechar sesión?</string>
+    <string name="settings_sign_out_dialog_message">Precisarás o enderezo do teu servidor e o contrasinal para iniciar sesión de novo.</string>
+    <string name="settings_sign_out_delete_downloads">Eliminar tamén as descargas deste dispositivo</string>
+    <string name="settings_cancel">Cancelar</string>
+</resources>

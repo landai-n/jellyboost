@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">ސަރވަރއަށް ގުޅާ</string>
+    <string name="server_setup_discovered_title">މި ނެޓްވޯކްގައި ހުރި ސަރވަރތައް</string>
+    <string name="server_setup_discovering">ލޯކަލް ނެޓްވޯކް ބަލަނީ…</string>
+    <string name="server_setup_no_servers_found">އެއްވެސް ސަރވަރއަކުން ސިގްނަލެއް ނުދިން. ތިރީގައި އެޑްރެހެއް ޖަހާ.</string>
+    <string name="server_setup_manual_title">ސަރވަރ އެޑްރެސް</string>
+    <string name="server_setup_address_label">ހޯސްޓް ނުވަތަ URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ނުވަތަ 192.168.1.10:8096</string>
+    <string name="server_setup_connect">ގުޅާ</string>
+    <string name="server_setup_connecting">ސަރވަރއަށް ގުޅަނީ…</string>
+    <string name="server_setup_session_lost">ތިޔަ ސޭވްކޮށްފައިވާ ސައިން އިން އަނބުރާ ނުގެނެވުނު، ވީމާ ސައިން އައުޓް ކުރެވިއްޖެ. އަލުން ސައިން އިން ކުރައްވާ.</string>
+
+    <string name="login_title">ސައިން އިން</string>
+    <string name="login_server_version">ވާރޝަން %1$s</string>
+    <string name="login_server_version_unknown">ވާރޝަން ނޭނގޭ</string>
+    <string name="login_public_users_title">ބަލަނީ ކާކު؟</string>
+    <string name="login_username_label">ޔޫޒަރނޭމް</string>
+    <string name="login_password_label">ޕާސްވޯޑް</string>
+    <string name="login_show_password">ޕާސްވޯޑް ދައްކާ</string>
+    <string name="login_hide_password">ޕާސްވޯޑް ފޮރުވާ</string>
+    <string name="login_sign_in">ސައިން އިން</string>
+    <string name="login_change_server">އެހެން ސަރވަރއެއް ބޭނުންކުރޭ</string>
+    <string name="login_loading">ސަރވަރގެ މައުލޫމާތު ލޯޑްކުރަނީ…</string>
+    <string name="login_or">ނުވަތަ</string>
+
+    <string name="login_quick_connect">Quick Connect ބޭނުންކުރޭ</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">ތިޔަ މިހާރުވެސް ސައިން އިންވެފައިވާ ޑިވައިސްއެއްގައި Jellyfin ހުޅުވާ، Quick Connect އަށް ގޮސް، މި ކޯޑު ޖަހާ.</string>
+    <string name="login_quick_connect_waiting">ހުއްދައަށް އިންތިޒާރުކުރަނީ…</string>
+    <string name="login_quick_connect_cancel">ކެންސަލްކުރޭ</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d އެޑްރެސް ބަލައި، ކާމިޔާބެއް ނުވި.</item>
+        <item quantity="other">%d އެޑްރެސް ބަލައި، ކާމިޔާބެއް ނުވި.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">ސަރވަރއަށް ނުދެވުނު</string>
+    <string name="auth_error_unsupported_version_or_product">ސަޕޯޓް ނުކުރާ ވާރޝަނެއް ނުވަތަ ޕްރޮޑަކްޓެއް</string>
+    <string name="auth_error_cannot_connect">ގުޅުމެއް ނުހެދުނު.\nހޯސްޓް ނަމާއި ނެޓްވޯކް ގުޅުން ބައްލަވާ.</string>
+    <string name="auth_error_invalid_credentials">ޔޫޒަރނޭމް ނުވަތަ ޕާސްވޯޑް ގޯސް.</string>
+    <string name="auth_error_quick_connect_expired">މި ކޯޑުގެ މުއްދަތު ހަމަވެއްޖެ. އާ ކޯޑަކަށް އެދި، އަލުން މަސައްކަތްކުރޭ.</string>
+    <string name="auth_error_server">ސަރވަރއިން ގޯހެއް ދިނީ. އަލުން މަސައްކަތްކުރޭ.</string>
+    <string name="auth_error_server_with_code">ސަރވަރއިން ގޯހެއް ދިނީ (%1$d). އަލުން މަސައްކަތްކުރޭ.</string>
+</resources>

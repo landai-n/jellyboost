@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Mga Download</string>
+    <string name="downloads_channel_description">Progreso ng media na dina-download sa device na ito.</string>
+    <string name="downloads_notification_preparing">Inihahanda ang mga download…</string>
+    <string name="downloads_notification_downloading">Nagda-download…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Nagda-download…</string>
+    <string name="downloads_action_pause">I-pause</string>
+    <string name="downloads_action_cancel">Kanselahin</string>
+</resources>

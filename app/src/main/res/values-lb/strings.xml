@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Méi Optiounen</string>
+    <string name="home_settings">Astellungen</string>
+    <string name="settings_offline_mode">Offline-Modus</string>
+
+    <string name="state_on">Un</string>
+    <string name="state_off">Aus</string>
+
+    <string name="nav_home">Start</string>
+    <string name="nav_libraries">Bibliothéiken</string>
+    <string name="nav_search">Sichen</string>
+    <string name="nav_downloads">Downloads</string>
+
+    <string name="offline_no_network">Kee Netzwierk – weist erofgeluede Medien</string>
+    <string name="offline_server_unreachable">Server net erreechbar – weist erofgeluede Medien</string>
+    <string name="offline_forced">Offline-Modus ass aktiv – weist erofgeluede Medien</string>
+    <string name="offline_retry">Nach eng Kéier probéieren</string>
+    <string name="offline_go_online">Online goen</string>
+
+    <string name="syncplay_groups_action">SyncPlay-Gruppen</string>
+    <string name="syncplay_groups_action_active">SyncPlay-Gruppen – du bass an enger Grupp</string>
+</resources>

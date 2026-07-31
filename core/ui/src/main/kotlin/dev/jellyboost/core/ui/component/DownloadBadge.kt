@@ -17,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.common.model.DownloadState
+import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
@@ -48,28 +50,28 @@ fun DownloadBadge(
             is DownloadState.Downloaded ->
                 Icon(
                     imageVector = Icons.Filled.DownloadForOffline,
-                    contentDescription = "Downloaded",
+                    contentDescription = stringResource(R.string.badge_downloaded),
                     tint = MaterialTheme.colorScheme.primary,
                 )
 
             is DownloadState.Queued ->
                 Icon(
                     imageVector = Icons.Filled.Schedule,
-                    contentDescription = "Queued for download",
+                    contentDescription = stringResource(R.string.badge_download_queued),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
             is DownloadState.Paused ->
                 Icon(
                     imageVector = Icons.Filled.PauseCircleFilled,
-                    contentDescription = "Download paused",
+                    contentDescription = stringResource(R.string.badge_download_paused),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
             is DownloadState.Failed ->
                 Icon(
                     imageVector = Icons.Filled.ErrorOutline,
-                    contentDescription = "Download failed",
+                    contentDescription = stringResource(R.string.badge_download_failed),
                     tint = MaterialTheme.colorScheme.error,
                 )
 

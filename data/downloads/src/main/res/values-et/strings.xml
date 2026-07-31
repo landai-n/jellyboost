@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Allalaadimised</string>
+    <string name="downloads_channel_description">Sellesse seadmesse allalaaditava meedia edenemine.</string>
+
+    <string name="downloads_notification_preparing">Allalaadimiste ettevalmistamine…</string>
+    <string name="downloads_notification_downloading">Allalaadimine…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Allalaadimine…</string>
+    <string name="downloads_action_pause">Peata</string>
+    <string name="downloads_action_cancel">Tühista</string>
+</resources>

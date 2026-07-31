@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Ladattu</string>
+    <string name="badge_download_queued">Jonossa latausta varten</string>
+    <string name="badge_download_paused">Lataus keskeytetty</string>
+    <string name="badge_download_failed">Lataus epäonnistui</string>
+
+    <string name="media_row_see_all">Näytä kaikki</string>
+    <string name="media_card_watched">Katsottu</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d valittu</item>
+        <item quantity="other">%1$d valittu</item>
+    </plurals>
+    <string name="selection_close">Poista valinta</string>
+    <string name="selection_select_all">Valitse kaikki</string>
+    <string name="selection_mark_watched">Merkitse katsotuksi</string>
+    <string name="selection_mark_unwatched">Merkitse katsomattomaksi</string>
+    <string name="selection_download">Lataa</string>
+
+    <string name="selection_item_selected">Valittu</string>
+    <string name="selection_item_not_selected">Ei valittu</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Merkitty %1$d katsotuksi</item>
+        <item quantity="other">Merkitty %1$d katsotuksi</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Merkitty %1$d katsotuksi, %2$d epäonnistui</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d kohteen merkitseminen katsotuksi epäonnistui</item>
+        <item quantity="other">%1$d kohteen merkitseminen katsotuksi epäonnistui</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Merkitty %1$d katsomattomaksi</item>
+        <item quantity="other">Merkitty %1$d katsomattomaksi</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Merkitty %1$d katsomattomaksi, %2$d epäonnistui</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d kohteen merkitseminen katsomattomaksi epäonnistui</item>
+        <item quantity="other">%1$d kohteen merkitseminen katsomattomaksi epäonnistui</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d lisätty latauksiin</item>
+        <item quantity="other">%1$d lisätty latauksiin</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d lisätty latauksiin, %2$d epäonnistui</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d kohteen lisääminen latauksiin epäonnistui</item>
+        <item quantity="other">%1$d kohteen lisääminen latauksiin epäonnistui</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d lisätty latauksiin – %2$d on jo tällä laitteella</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d kohde on jo tällä laitteella</item>
+        <item quantity="other">%1$d kohdetta on jo tällä laitteella</item>
+    </plurals>
+</resources>

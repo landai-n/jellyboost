@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_back">Kembali</string>
+    <string name="settings_home">Beranda</string>
+    <string name="settings_section_playback">Pemutaran</string>
+    <string name="settings_skip_intro">Lewati intro</string>
+    <string name="settings_skip_outro">Lewati outro</string>
+    <string name="settings_skip_mode_off">Jangan lakukan apa pun</string>
+    <string name="settings_skip_mode_show_button">Tampilkan tombol lewati</string>
+    <string name="settings_skip_mode_auto">Lewati secara otomatis</string>
+    <string name="settings_pip">Gambar-dalam-gambar</string>
+    <string name="settings_pip_supporting">Terus putar dalam jendela mengambang saat Anda meninggalkan aplikasi.</string>
+    <string name="settings_section_downloads">Unduhan</string>
+    <string name="settings_wifi_only">Hanya Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Jeda unduhan saat menggunakan data seluler.</string>
+    <string name="settings_quality">Kualitas unduhan</string>
+    <string name="settings_quality_original">File asli — salinan persis, dapat dilanjutkan</string>
+    <string name="settings_quality_high">Tinggi — sekitar 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Sedang — sekitar 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Rendah — sekitar 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Selain file asli, semua akan dikonversi oleh server Anda saat dikirim, sehingga ukuran yang ditampilkan selama pengunduhan adalah perkiraan, dan transfer yang terputus akan dimulai lagi dari awal.</string>
+    <string name="settings_storage_label">Penyimpanan</string>
+    <string name="settings_storage_summary">%1$s digunakan · %2$s tersisa di perangkat ini</string>
+    <string name="settings_storage_location">Unduhan disimpan di %1$s</string>
+    <string name="settings_storage_picker">Lokasi penyimpanan</string>
+    <string name="settings_storage_internal">Penyimpanan internal</string>
+    <string name="settings_storage_sd_card">Kartu SD</string>
+    <string name="settings_storage_volume_free">%1$s tersisa</string>
+    <string name="settings_storage_missing">Penyimpanan yang Anda pilih tidak tersedia saat ini, sehingga unduhan akan disimpan di lokasi yang dipilih di bawah.</string>
+    <string name="settings_storage_switch_title">Pindahkan unduhan?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">Unduhan belum dapat dipindahkan antar lokasi, sehingga %1$d unduhan yang sudah ada di perangkat ini akan dihapus. Anda dapat mengunduhnya lagi ke lokasi baru.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Hapus dan alihkan</string>
+    <string name="settings_section_connectivity">Konektivitas</string>
+    <string name="settings_offline_mode">Mode luring</string>
+    <string name="settings_offline_mode_supporting">Hanya tampilkan media yang sudah ada di perangkat ini.</string>
+    <string name="settings_section_account">Akun</string>
+    <string name="settings_account_user">Masuk sebagai</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Belum masuk</string>
+    <string name="settings_sign_out">Keluar</string>
+    <string name="settings_sign_out_dialog_title">Keluar?</string>
+    <string name="settings_sign_out_dialog_message">Anda memerlukan alamat server dan kata sandi untuk masuk kembali.</string>
+    <string name="settings_sign_out_delete_downloads">Hapus juga unduhan dari perangkat ini</string>
+    <string name="settings_cancel">Batal</string>
+</resources>

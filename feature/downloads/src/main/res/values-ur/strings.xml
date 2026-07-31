@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ڈاؤن لوڈ شدہ</string>
+    <string name="downloads_tab_queue">قطار</string>
+    <string name="downloads_wifi_only">صرف Wi‑Fi</string>
+
+    <string name="downloads_group_movies">فلمیں</string>
+
+    <string name="downloads_storage_summary">%1$s استعمال شدہ · %2$s خالی</string>
+
+    <string name="downloads_action_delete">ڈاؤن لوڈ حذف کریں</string>
+    <string name="downloads_action_cancel">ڈاؤن لوڈ منسوخ کریں</string>
+    <string name="downloads_action_pause">ڈاؤن لوڈ موقوف کریں</string>
+    <string name="downloads_action_resume">ڈاؤن لوڈ دوبارہ شروع کریں</string>
+    <string name="downloads_action_move_up">قطار میں اوپر منتقل کریں</string>
+    <string name="downloads_action_move_down">قطار میں نیچے منتقل کریں</string>
+
+    <string name="downloads_action_pause_all">سب موقوف کریں</string>
+    <string name="downloads_action_resume_all">سب دوبارہ شروع کریں</string>
+    <string name="downloads_action_cancel_all">سب منسوخ کریں</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">یہ ڈاؤن لوڈ منسوخ کریں؟</item>
+        <item quantity="other">تمام %1$d ڈاؤن لوڈز منسوخ کریں؟</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">قطار خالی کر دی جائے گی اور جزوی طور پر ڈاؤن لوڈ شدہ فائلیں ہٹا دی جائیں گی۔ مکمل شدہ ڈاؤن لوڈز متاثر نہیں ہوں گے۔</string>
+    <string name="downloads_cancel_all_dialog_confirm">ڈاؤن لوڈز منسوخ کریں</string>
+    <string name="downloads_cancel_all_dialog_dismiss">رکھیں</string>
+
+    <string name="downloads_delete_dialog_title">%1$s حذف کریں؟</string>
+    <string name="downloads_delete_dialog_message">ڈاؤن لوڈ شدہ فائلیں اس ڈیوائس سے ہٹا دی جائیں گی۔ آپ بعد میں اسے دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</string>
+    <string name="downloads_delete_dialog_confirm">حذف کریں</string>
+    <string name="downloads_delete_dialog_cancel">منسوخ کریں</string>
+
+    <string name="downloads_progress_of">%2$s میں سے %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s میں سے %1$s</string>
+    <string name="downloads_progress_of_capped">%2$s تک میں سے %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s تک</string>
+    <string name="downloads_speed">%1$s/سیکنڈ</string>
+    <string name="downloads_eta">%1$s باقی</string>
+    <string name="downloads_eta_approx">~%1$s باقی</string>
+    <string name="downloads_transcoded_marker">ٹرانس کوڈ شدہ</string>
+    <string name="downloads_status_queued">انتظار میں</string>
+    <string name="downloads_status_paused">موقوف</string>
+    <string name="downloads_status_failed">ڈاؤن لوڈ ناکام ہوگیا</string>
+    <string name="downloads_status_failed_reason">ڈاؤن لوڈ ناکام ہوگیا: %1$s</string>
+
+    <string name="downloads_empty_downloaded">ابھی تک کچھ ڈاؤن لوڈ نہیں ہوا۔ کسی فلم یا قسط کو اس ڈیوائس پر رکھنے کے لیے ڈاؤن لوڈ پر ٹیپ کریں۔</string>
+    <string name="downloads_empty_queue">ڈاؤن لوڈ کی قطار خالی ہے۔</string>
+    <string name="downloads_load_failed">آپ کے ڈاؤن لوڈز پڑھنا ممکن نہیں تھا۔ دوبارہ کوشش کرنے کے لیے یہ اسکرین دوبارہ کھولیں۔</string>
+    <string name="downloads_message_delete_failed">وہ ڈاؤن لوڈ حذف کرنا ممکن نہیں تھا۔</string>
+    <string name="downloads_message_action_failed">قطار اپ ڈیٹ کرنا ممکن نہیں تھا۔</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d موقوف کیے گئے — %2$d ٹرانس کوڈ اب بھی ڈاؤن لوڈ ہو رہا ہے (ٹرانس کوڈ موقوف نہیں کیا جا سکتا)۔</item>
+        <item quantity="other">%1$d موقوف کیے گئے — %2$d ٹرانس کوڈز اب بھی ڈاؤن لوڈ ہو رہے ہیں (ٹرانس کوڈ موقوف نہیں کیا جا سکتا)۔</item>
+    </plurals>
+</resources>

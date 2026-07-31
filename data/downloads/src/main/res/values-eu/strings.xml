@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Deskargak</string>
+    <string name="downloads_channel_description">Gailu honetara deskargatzen ari den multimediaren aurrerapena.</string>
+    <string name="downloads_notification_preparing">Deskargak prestatzen…</string>
+    <string name="downloads_notification_downloading">Deskargatzen…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Deskargatzen…</string>
+    <string name="downloads_action_pause">Pausatu</string>
+    <string name="downloads_action_cancel">Utzi</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ਦੇਖਣ ਲਈ ਹਾਲੇ ਕੁਝ ਨਹੀਂ ਹੈ। ਸਰਵਰ ਉੱਤੇ ਆਪਣੀਆਂ ਲਾਇਬ੍ਰੇਰੀਆਂ ਵਿੱਚ ਮੀਡੀਆ ਸ਼ਾਮਲ ਕਰੋ।</string>
+    <string name="home_empty_refresh">ਤਾਜ਼ਾ ਕਰੋ</string>
+
+    <string name="home_section_my_media">ਮੇਰੀ ਮੀਡੀਆ</string>
+    <string name="home_section_continue_watching">ਦੇਖਣਾ ਜਾਰੀ ਰੱਖੋ</string>
+    <string name="home_section_next_up">ਅੱਗੇ</string>
+    <string name="home_section_latest">ਨਵੀਨਤਮ %1$s</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Még nincs mit nézni. Adj hozzá tartalmat a könyvtáraidhoz a szerveren.</string>
+    <string name="home_empty_refresh">Frissítés</string>
+
+    <string name="home_section_my_media">Saját tartalom</string>
+    <string name="home_section_continue_watching">Folytatás</string>
+    <string name="home_section_next_up">Következő</string>
+    <string name="home_section_latest">Legújabb: %1$s</string>
+</resources>

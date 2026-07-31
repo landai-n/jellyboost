@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">प्लेयर बंद करा</string>
+    <string name="player_play">प्ले करा</string>
+    <string name="player_pause">थांबवा</string>
+    <string name="player_rewind">10 सेकंद मागे जा</string>
+    <string name="player_forward">30 सेकंद पुढे जा</string>
+
+    <string name="player_audio">ऑडिओ</string>
+    <string name="player_subtitles">सबटायटल्स</string>
+    <string name="player_subtitles_off">बंद</string>
+    <string name="player_quality">गुणवत्ता</string>
+    <string name="player_speed">वेग</string>
+
+    <string name="player_skip_intro">इंट्रो वगळा</string>
+    <string name="player_skip_outro">आउट्रो वगळा</string>
+
+    <string name="player_quality_auto">स्वयं</string>
+    <string name="player_quality_high">उच्च — 20 Mbps</string>
+    <string name="player_quality_medium">मध्यम — 8 Mbps</string>
+    <string name="player_quality_low">कमी — 3 Mbps</string>
+    <string name="player_quality_lowest">सर्वात कमी — 720 kbps</string>
+
+    <string name="player_method_direct_play">डायरेक्ट प्ले</string>
+    <string name="player_method_direct_stream">डायरेक्ट स्ट्रीम</string>
+    <string name="player_method_transcode">ट्रान्सकोडिंग</string>
+
+    <string name="player_message_transcode">आपले डिव्हाइस ही फाइल डीकोड करू शकले नाही, त्यामुळे सर्व्हर ती ट्रान्सकोड करत आहे.</string>
+    <string name="player_message_lower_quality">स्ट्रीम थांबली — कमी गुणवत्तेत पुन्हा प्रयत्न करत आहे.</string>
+    <string name="player_message_track_restart">त्या ट्रॅकसाठी सर्व्हरला स्ट्रीम पुन्हा एन्कोड करावी लागली.</string>
+    <string name="player_message_track_streaming">तो ट्रॅक डाउनलोडमध्ये नाही — आपल्या सर्व्हरवरून स्ट्रीम करत आहे.</string>
+    <string name="player_message_track_offline">तो ट्रॅक डाउनलोड केलेल्या फाइलमध्ये नाही.</string>
+    <string name="player_message_failed">प्लेबॅक अयशस्वी झाला.</string>
+
+    <string name="player_syncplay_group">गट</string>
+    <string name="player_syncplay_waiting">गटाची वाट पाहत आहे…</string>
+    <string name="player_syncplay_shuffle">रांग शफल करा</string>
+    <string name="player_syncplay_repeat">पुनरावृत्ती</string>
+    <string name="player_syncplay_repeat_none">बंद</string>
+    <string name="player_syncplay_repeat_one">हा आयटम</string>
+    <string name="player_syncplay_repeat_all">संपूर्ण रांग</string>
+    <string name="player_syncplay_leave">गट सोडा</string>
+    <string name="player_syncplay_leave_title">हा गट सोडायचा का?</string>
+    <string name="player_syncplay_leave_body">प्लेबॅक इथे स्वतंत्रपणे सुरू राहील. पुन्हा सामील होण्यासाठी गट पुन्हा निवडावा लागेल.</string>
+
+    <string name="player_syncplay_cancel">रद्द करा</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d व्यक्ती पाहत आहे</item>
+        <item quantity="other">%d व्यक्ती पाहत आहेत</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d अधिक</string>
+
+    <string name="player_syncplay_queue">रांग</string>
+    <string name="player_syncplay_queue_empty">गटाने अद्याप काहीही रांगेत ठेवलेले नाही.</string>
+    <string name="player_syncplay_queue_item_loading">लोड करत आहे…</string>
+    <string name="player_syncplay_queue_playing">आता प्ले होत आहे</string>
+    <string name="player_syncplay_queue_next">पुढील आयटम</string>
+    <string name="player_syncplay_queue_previous">मागील आयटम</string>
+    <string name="player_syncplay_queue_move_up">वर हलवा</string>
+    <string name="player_syncplay_queue_move_down">खाली हलवा</string>
+    <string name="player_syncplay_queue_remove">रांगेतून काढून टाका</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d आयटम रांगेत आहे</item>
+        <item quantity="other">%d आयटम रांगेत आहेत</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay सोडले — कनेक्शन तुटले</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay गटात पुन्हा सामील झाले</string>
+    <string name="player_message_syncplay_join_failed">त्या SyncPlay गटात सामील होता आले नाही.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay गट संपला आहे.</string>
+    <string name="player_message_syncplay_removed">आपण आता SyncPlay गटात नाही.</string>
+    <string name="player_message_syncplay_library_denied">गट असे काहीतरी पाहत आहे ज्यावर आपला प्रवेश नाही.</string>
+    <string name="player_message_syncplay_item_unavailable">गट जे पाहत आहे ते उघडता आले नाही.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">मागे</string>
+    <string name="player_syncplay_groups_home">मुख्यपृष्ठ</string>
+    <string name="player_syncplay_groups_create">गट तयार करा</string>
+    <string name="player_syncplay_groups_create_title">आपल्या गटाला नाव द्या</string>
+    <string name="player_syncplay_groups_create_hint">गटाचे नाव</string>
+    <string name="player_syncplay_groups_create_confirm">तयार करा</string>
+    <string name="player_syncplay_groups_joining">सामील होत आहे…</string>
+    <string name="player_syncplay_groups_active_label">आपण या गटात आहात</string>
+    <string name="player_syncplay_groups_open_player">प्लेयर उघडा</string>
+    <string name="player_syncplay_groups_empty">सध्या कोणीही एकत्र पाहत नाही.</string>
+    <string name="player_syncplay_groups_disabled">आपल्या खात्यासाठी SyncPlay अक्षम आहे.</string>
+    <string name="player_syncplay_groups_error">SyncPlay गट लोड करता आले नाहीत.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay गट</string>
+    <string name="player_syncplay_presence_channel_description">अ‍ॅप बॅकग्राउंडमध्ये असताना एकत्र पाहण्याच्या गटातील आपले स्थान राखते.</string>
+    <string name="player_syncplay_presence_title">SyncPlay गटात</string>
+    <string name="player_syncplay_presence_text">गटाची वाट पाहत आहे</string>
+    <string name="player_syncplay_presence_leave">सोडा</string>
+
+    <string name="player_syncplay_state_idle">निष्क्रिय</string>
+    <string name="player_syncplay_state_waiting">प्रतीक्षेत</string>
+    <string name="player_syncplay_state_paused">थांबवले</string>
+    <string name="player_syncplay_state_playing">प्ले होत आहे</string>
+
+    <string name="player_cast">डिव्हाइसवर कास्ट करा</string>
+
+    <string name="player_cast_device_unnamed">आपला टीव्ही</string>
+    <string name="player_message_cast_transferred">%1$s वर आता प्ले होत आहे.</string>
+    <string name="player_message_cast_left_syncplay">%1$s वर कास्ट करण्यासाठी SyncPlay गट सोडला.</string>
+    <string name="player_message_cast_failed">%1$s वर ते प्ले करता आले नाही.</string>
+
+    <string name="player_casting_to">%1$s वर कास्ट करत आहे</string>
+</resources>

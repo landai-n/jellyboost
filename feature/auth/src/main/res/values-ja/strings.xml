@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">サーバーに接続</string>
+    <string name="server_setup_discovered_title">このネットワーク上のサーバー</string>
+    <string name="server_setup_discovering">ローカルネットワークを検索しています…</string>
+    <string name="server_setup_no_servers_found">サーバーが見つかりませんでした。下にアドレスを入力してください。</string>
+    <string name="server_setup_manual_title">サーバーアドレス</string>
+    <string name="server_setup_address_label">ホストまたはURL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org または 192.168.1.10:8096</string>
+    <string name="server_setup_connect">接続</string>
+    <string name="server_setup_connecting">サーバーに接続しています…</string>
+    <string name="server_setup_session_lost">保存されたサインイン情報を復元できなかったため、サインアウトされました。もう一度サインインしてください。</string>
+
+    <string name="login_title">サインイン</string>
+    <string name="login_server_version">バージョン %1$s</string>
+    <string name="login_server_version_unknown">バージョン不明</string>
+    <string name="login_public_users_title">視聴するユーザーを選択</string>
+    <string name="login_username_label">ユーザー名</string>
+    <string name="login_password_label">パスワード</string>
+    <string name="login_show_password">パスワードを表示</string>
+    <string name="login_hide_password">パスワードを隠す</string>
+    <string name="login_sign_in">サインイン</string>
+    <string name="login_change_server">別のサーバーを使う</string>
+    <string name="login_loading">サーバー情報を読み込んでいます…</string>
+    <string name="login_or">または</string>
+
+    <string name="login_quick_connect">クイックコネクトを使う</string>
+    <string name="login_quick_connect_title">クイックコネクト</string>
+    <string name="login_quick_connect_instructions">すでにサインインしている端末で Jellyfin を開き、クイックコネクトに進んでこのコードを入力してください。</string>
+    <string name="login_quick_connect_waiting">承認を待っています…</string>
+    <string name="login_quick_connect_cancel">キャンセル</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">%d 件の候補アドレスを試しましたが、失敗しました。</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">サーバーに接続できません</string>
+    <string name="auth_error_unsupported_version_or_product">サポートされていないバージョンまたは製品です</string>
+    <string name="auth_error_cannot_connect">接続を確立できません。\nホスト名とネットワーク接続を確認してください。</string>
+    <string name="auth_error_invalid_credentials">ユーザー名またはパスワードが違います。</string>
+    <string name="auth_error_quick_connect_expired">このコードは期限切れです。新しいコードを取得してもう一度お試しください。</string>
+    <string name="auth_error_server">サーバーがエラーを返しました。もう一度お試しください。</string>
+    <string name="auth_error_server_with_code">サーバーがエラーを返しました (%1$d)。もう一度お試しください。</string>
+</resources>

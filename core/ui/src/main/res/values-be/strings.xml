@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Спампавана</string>
+    <string name="badge_download_queued">У чарзе на спампоўку</string>
+    <string name="badge_download_paused">Спампоўка прыпынена</string>
+    <string name="badge_download_failed">Спампоўка не ўдалася</string>
+
+    <string name="media_row_see_all">Паказаць усё</string>
+    <string name="media_card_watched">Прагледжана</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Выбраны %1$d элемент</item>
+        <item quantity="few">Выбрана %1$d элементы</item>
+        <item quantity="many">Выбрана %1$d элементаў</item>
+        <item quantity="other">Выбрана %1$d элемента</item>
+    </plurals>
+    <string name="selection_close">Ачысціць выбар</string>
+    <string name="selection_select_all">Выбраць усё</string>
+    <string name="selection_mark_watched">Пазначыць прагледжаным</string>
+    <string name="selection_mark_unwatched">Пазначыць непрагледжаным</string>
+    <string name="selection_download">Спампаваць</string>
+
+    <string name="selection_item_selected">Выбрана</string>
+    <string name="selection_item_not_selected">Не выбрана</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Пазначана %1$d элемент прагледжаным</item>
+        <item quantity="few">Пазначана %1$d элементы прагледжанымі</item>
+        <item quantity="many">Пазначана %1$d элементаў прагледжанымі</item>
+        <item quantity="other">Пазначана %1$d элементаў прагледжанымі</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Пазначана %1$d элементаў прагледжанымі, %2$d не ўдалося</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Не ўдалося пазначыць %1$d элемент прагледжаным</item>
+        <item quantity="few">Не ўдалося пазначыць %1$d элементы прагледжанымі</item>
+        <item quantity="many">Не ўдалося пазначыць %1$d элементаў прагледжанымі</item>
+        <item quantity="other">Не ўдалося пазначыць %1$d элементаў прагледжанымі</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Пазначана %1$d элемент непрагледжаным</item>
+        <item quantity="few">Пазначана %1$d элементы непрагледжанымі</item>
+        <item quantity="many">Пазначана %1$d элементаў непрагледжанымі</item>
+        <item quantity="other">Пазначана %1$d элементаў непрагледжанымі</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Пазначана %1$d элементаў непрагледжанымі, %2$d не ўдалося</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Не ўдалося пазначыць %1$d элемент непрагледжаным</item>
+        <item quantity="few">Не ўдалося пазначыць %1$d элементы непрагледжанымі</item>
+        <item quantity="many">Не ўдалося пазначыць %1$d элементаў непрагледжанымі</item>
+        <item quantity="other">Не ўдалося пазначыць %1$d элементаў непрагледжанымі</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Дадана %1$d элемент у спампоўкі</item>
+        <item quantity="few">Дадана %1$d элементы у спампоўкі</item>
+        <item quantity="many">Дадана %1$d элементаў у спампоўкі</item>
+        <item quantity="other">Дадана %1$d элементаў у спампоўкі</item>
+    </plurals>
+    <string name="selection_result_download_partial">Дададзена %1$d элементаў у спампоўкі, %2$d не ўдалося</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Не ўдалося дадаць %1$d элемент у спампоўкі</item>
+        <item quantity="few">Не ўдалося дадаць %1$d элементы у спампоўкі</item>
+        <item quantity="many">Не ўдалося дадаць %1$d элементаў у спампоўкі</item>
+        <item quantity="other">Не ўдалося дадаць %1$d элементаў у спампоўкі</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Дададзена %1$d элементаў у спампоўкі — %2$d ужо на гэтай прыладзе</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d элемент ужо на гэтай прыладзе</item>
+        <item quantity="few">%1$d элементы ужо на гэтай прыладзе</item>
+        <item quantity="many">%1$d элементаў ужо на гэтай прыладзе</item>
+        <item quantity="other">%1$d элементаў ужо на гэтай прыладзе</item>
+    </plurals>
+</resources>

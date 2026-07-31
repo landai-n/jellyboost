@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Падключэнне да сервера</string>
+    <string name="server_setup_discovered_title">Серверы ў гэтай сетцы</string>
+    <string name="server_setup_discovering">Пошук у лакальнай сетцы…</string>
+    <string name="server_setup_no_servers_found">Ніводны сервер сябе не абвясціў. Увядзіце адрас ніжэй.</string>
+    <string name="server_setup_manual_title">Адрас сервера</string>
+    <string name="server_setup_address_label">Хост або URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org або 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Падключыцца</string>
+    <string name="server_setup_connecting">Звязванне з серверам…</string>
+    <string name="server_setup_session_lost">Не ўдалося аднавіць захаваны ўваход, таму вы выйшлі з сістэмы. Увайдзіце зноў.</string>
+
+    <string name="login_title">Увайсці</string>
+    <string name="login_server_version">Версія %1$s</string>
+    <string name="login_server_version_unknown">Версія невядомая</string>
+    <string name="login_public_users_title">Хто глядзіць?</string>
+    <string name="login_username_label">Імя карыстальніка</string>
+    <string name="login_password_label">Пароль</string>
+    <string name="login_show_password">Паказаць пароль</string>
+    <string name="login_hide_password">Схаваць пароль</string>
+    <string name="login_sign_in">Увайсці</string>
+    <string name="login_change_server">Выкарыстаць іншы сервер</string>
+    <string name="login_loading">Загрузка звестак пра сервер…</string>
+    <string name="login_or">або</string>
+
+    <string name="login_quick_connect">Выкарыстаць Хуткае падключэнне</string>
+    <string name="login_quick_connect_title">Хуткае падключэнне</string>
+    <string name="login_quick_connect_instructions">Адкрыйце Jellyfin на прыладзе, дзе вы ўжо ўвайшлі, перайдзіце ў Хуткае падключэнне і ўвядзіце гэты код.</string>
+    <string name="login_quick_connect_waiting">Чаканне пацвярджэння…</string>
+    <string name="login_quick_connect_cancel">Скасаваць</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Паспрабавалі %d магчымы адрас, беспаспяхова.</item>
+        <item quantity="few">Паспрабавалі %d магчымыя адрасы, беспаспяхова.</item>
+        <item quantity="many">Паспрабавалі %d магчымых адрасоў, беспаспяхова.</item>
+        <item quantity="other">Паспрабавалі %d магчымых адрасоў, беспаспяхова.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Не ўдалося звязацца з серверам</string>
+    <string name="auth_error_unsupported_version_or_product">Непадтрымліваная версія або прадукт</string>
+    <string name="auth_error_cannot_connect">Не ўдалося ўсталяваць злучэнне.\nПраверце адрас хоста і сеткавае злучэнне.</string>
+    <string name="auth_error_invalid_credentials">Няправільнае імя карыстальніка або пароль.</string>
+    <string name="auth_error_quick_connect_expired">Тэрмін дзеяння кода скончыўся. Запытайце новы і паспрабуйце зноў.</string>
+    <string name="auth_error_server">Сервер адказаў памылкай. Паспрабуйце зноў.</string>
+    <string name="auth_error_server_with_code">Сервер адказаў памылкай (%1$d). Паспрабуйце зноў.</string>
+</resources>

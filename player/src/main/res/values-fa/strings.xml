@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">بستن پخش‌کننده</string>
+    <string name="player_play">پخش</string>
+    <string name="player_pause">توقف موقت</string>
+    <string name="player_rewind">10 ثانیه عقب بروید</string>
+    <string name="player_forward">30 ثانیه جلو بروید</string>
+
+    <string name="player_audio">صدا</string>
+    <string name="player_subtitles">زیرنویس</string>
+    <string name="player_subtitles_off">خاموش</string>
+    <string name="player_quality">کیفیت</string>
+    <string name="player_speed">سرعت</string>
+
+    <string name="player_skip_intro">رد کردن مقدمه</string>
+    <string name="player_skip_outro">رد کردن پایان‌بندی</string>
+
+    <string name="player_quality_auto">خودکار</string>
+    <string name="player_quality_high">بالا — 20 مگابیت بر ثانیه</string>
+    <string name="player_quality_medium">متوسط — 8 مگابیت بر ثانیه</string>
+    <string name="player_quality_low">پایین — 3 مگابیت بر ثانیه</string>
+    <string name="player_quality_lowest">پایین‌ترین — 720 kbps</string>
+
+    <string name="player_method_direct_play">پخش مستقیم</string>
+    <string name="player_method_direct_stream">استریم مستقیم</string>
+    <string name="player_method_transcode">ترنسکد</string>
+
+    <string name="player_message_transcode">دستگاه شما نتوانست این فایل را رمزگشایی کند، بنابراین سرور در حال ترنسکد کردن آن است.</string>
+    <string name="player_message_lower_quality">پخش متوقف شد — تلاش دوباره با کیفیت پایین‌تر.</string>
+    <string name="player_message_track_restart">سرور مجبور شد استریم این تِرک را دوباره رمزگذاری کند.</string>
+    <string name="player_message_track_streaming">این تِرک در دانلود موجود نیست — در حال استریم از سرور شما.</string>
+    <string name="player_message_track_offline">این تِرک در فایل دانلودشده موجود نیست.</string>
+    <string name="player_message_failed">پخش ناموفق بود.</string>
+
+    <string name="player_syncplay_group">گروه</string>
+    <string name="player_syncplay_waiting">در انتظار گروه…</string>
+    <string name="player_syncplay_shuffle">پخش تصادفی صف</string>
+    <string name="player_syncplay_repeat">تکرار</string>
+    <string name="player_syncplay_repeat_none">خاموش</string>
+    <string name="player_syncplay_repeat_one">این مورد</string>
+    <string name="player_syncplay_repeat_all">کل صف</string>
+    <string name="player_syncplay_leave">ترک گروه</string>
+    <string name="player_syncplay_leave_title">این گروه ترک شود؟</string>
+    <string name="player_syncplay_leave_body">پخش اینجا، به‌طور مستقل ادامه می‌یابد. پیوستن دوباره به معنی انتخاب دوباره گروه است.</string>
+
+    <string name="player_syncplay_cancel">لغو</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d نفر در حال تماشا</item>
+        <item quantity="other">%d نفر در حال تماشا</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s ‎+%2$d نفر دیگر</string>
+
+    <string name="player_syncplay_queue">صف</string>
+    <string name="player_syncplay_queue_empty">گروه هنوز چیزی را در صف قرار نداده است.</string>
+    <string name="player_syncplay_queue_item_loading">در حال بارگذاری…</string>
+    <string name="player_syncplay_queue_playing">اکنون در حال پخش</string>
+    <string name="player_syncplay_queue_next">مورد بعدی</string>
+    <string name="player_syncplay_queue_previous">مورد قبلی</string>
+    <string name="player_syncplay_queue_move_up">انتقال به بالا</string>
+    <string name="player_syncplay_queue_move_down">انتقال به پایین</string>
+    <string name="player_syncplay_queue_remove">حذف از صف</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d مورد در صف</item>
+        <item quantity="other">%d مورد در صف</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">از SyncPlay خارج شد — اتصال قطع شد</string>
+    <string name="player_message_syncplay_rejoined">دوباره به گروه SyncPlay پیوست</string>
+    <string name="player_message_syncplay_join_failed">پیوستن به این گروه SyncPlay ممکن نبود.</string>
+    <string name="player_message_syncplay_group_ended">گروه SyncPlay پایان یافته است.</string>
+    <string name="player_message_syncplay_removed">دیگر در گروه SyncPlay نیستید.</string>
+    <string name="player_message_syncplay_library_denied">گروه در حال تماشای چیزی است که شما به آن دسترسی ندارید.</string>
+    <string name="player_message_syncplay_item_unavailable">باز کردن آنچه گروه تماشا می‌کند ممکن نبود.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">بازگشت</string>
+    <string name="player_syncplay_groups_home">خانه</string>
+    <string name="player_syncplay_groups_create">ایجاد گروه</string>
+    <string name="player_syncplay_groups_create_title">گروه خود را نام‌گذاری کنید</string>
+    <string name="player_syncplay_groups_create_hint">نام گروه</string>
+    <string name="player_syncplay_groups_create_confirm">ایجاد</string>
+    <string name="player_syncplay_groups_joining">در حال پیوستن…</string>
+    <string name="player_syncplay_groups_active_label">شما در این گروه هستید</string>
+    <string name="player_syncplay_groups_open_player">باز کردن پخش‌کننده</string>
+    <string name="player_syncplay_groups_empty">در حال حاضر کسی دیگری با هم تماشا نمی‌کند.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay برای حساب شما غیرفعال است.</string>
+    <string name="player_syncplay_groups_error">بارگذاری گروه‌های SyncPlay ممکن نبود.</string>
+
+    <string name="player_syncplay_presence_channel_name">گروه SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">در حالی که برنامه در پس‌زمینه است، جای شما را در یک گروه تماشای مشترک حفظ می‌کند.</string>
+    <string name="player_syncplay_presence_title">در یک گروه SyncPlay</string>
+    <string name="player_syncplay_presence_text">در انتظار گروه</string>
+    <string name="player_syncplay_presence_leave">ترک کردن</string>
+
+    <string name="player_syncplay_state_idle">بی‌کار</string>
+    <string name="player_syncplay_state_waiting">در انتظار</string>
+    <string name="player_syncplay_state_paused">متوقف شده</string>
+    <string name="player_syncplay_state_playing">در حال پخش</string>
+
+    <string name="player_cast">پخش روی دستگاه دیگر</string>
+
+    <string name="player_cast_device_unnamed">تلویزیون شما</string>
+    <string name="player_message_cast_transferred">اکنون روی %1$s در حال پخش است.</string>
+    <string name="player_message_cast_left_syncplay">برای پخش روی %1$s گروه SyncPlay ترک شد.</string>
+    <string name="player_message_cast_failed">پخش آن روی %1$s ممکن نبود.</string>
+
+    <string name="player_casting_to">در حال پخش روی %1$s</string>
+</resources>

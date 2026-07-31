@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Preuzimanja</string>
+    <string name="downloads_channel_description">Napredak preuzimanja medija na ovaj uređaj.</string>
+
+    <string name="downloads_notification_preparing">Priprema preuzimanja…</string>
+    <string name="downloads_notification_downloading">Preuzimanje…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Preuzimanje…</string>
+    <string name="downloads_action_pause">Pauziraj</string>
+    <string name="downloads_action_cancel">Otkaži</string>
+</resources>

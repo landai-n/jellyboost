@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Të shkarkuara</string>
+    <string name="downloads_tab_queue">Radha</string>
+    <string name="downloads_wifi_only">Vetëm Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filma</string>
+
+    <string name="downloads_storage_summary">%1$s të përdorura · %2$s të lira</string>
+
+    <string name="downloads_action_delete">Fshi shkarkimin</string>
+    <string name="downloads_action_cancel">Anulo shkarkimin</string>
+    <string name="downloads_action_pause">Ndalo shkarkimin përkohësisht</string>
+    <string name="downloads_action_resume">Vazhdo shkarkimin</string>
+    <string name="downloads_action_move_up">Zhvendos lart në radhë</string>
+    <string name="downloads_action_move_down">Zhvendos poshtë në radhë</string>
+
+    <string name="downloads_action_pause_all">Ndalo të gjitha përkohësisht</string>
+    <string name="downloads_action_resume_all">Vazhdo të gjitha</string>
+    <string name="downloads_action_cancel_all">Anulo të gjitha</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Të anulohet ky shkarkim?</item>
+        <item quantity="other">Të anulohen të gjitha %1$d shkarkimet?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Radha zbrazet dhe skedarët e shkarkuar pjesërisht hiqen. Shkarkimet e përfunduara nuk preken.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Anulo shkarkimet</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Ruaj</string>
+
+    <string name="downloads_delete_dialog_title">Të fshihet %1$s?</string>
+    <string name="downloads_delete_dialog_message">Skedarët e shkarkuar hiqen nga kjo pajisje. Mund ta shkarkosh përsëri më vonë.</string>
+    <string name="downloads_delete_dialog_confirm">Fshi</string>
+    <string name="downloads_delete_dialog_cancel">Anulo</string>
+
+    <string name="downloads_progress_of">%1$s nga %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s nga ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s nga deri në %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">deri në %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Edhe %1$s</string>
+    <string name="downloads_eta_approx">Edhe ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transkoduar</string>
+    <string name="downloads_status_queued">Në pritje</string>
+    <string name="downloads_status_paused">Ndaluar përkohësisht</string>
+    <string name="downloads_status_failed">Shkarkimi dështoi</string>
+    <string name="downloads_status_failed_reason">Shkarkimi dështoi: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Asgjë e shkarkuar ende. Prek Shkarko te një film ose episod për ta ruajtur në këtë pajisje.</string>
+    <string name="downloads_empty_queue">Radha e shkarkimeve është bosh.</string>
+    <string name="downloads_load_failed">Shkarkimet nuk u lexuan dot. Rihap këtë ekran për të provuar përsëri.</string>
+    <string name="downloads_message_delete_failed">Nuk u fshi dot ai shkarkim.</string>
+    <string name="downloads_message_action_failed">Radha nuk u përditësua dot.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">U ndal përkohësisht %1$d — %2$d transkodim vazhdon të shkarkohet (një transkodim nuk mund të ndalet përkohësisht).</item>
+        <item quantity="other">U ndalën përkohësisht %1$d — %2$d transkodime vazhdojnë të shkarkohen (një transkodim nuk mund të ndalet përkohësisht).</item>
+    </plurals>
+</resources>

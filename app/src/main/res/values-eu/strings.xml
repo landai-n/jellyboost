@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Aukera gehiago</string>
+    <string name="home_settings">Ezarpenak</string>
+    <string name="settings_offline_mode">Lineaz kanpoko modua</string>
+    <string name="state_on">Piztuta</string>
+    <string name="state_off">Itzalita</string>
+    <string name="nav_home">Hasiera</string>
+    <string name="nav_libraries">Liburutegiak</string>
+    <string name="nav_search">Bilatu</string>
+    <string name="nav_downloads">Deskargak</string>
+    <string name="offline_no_network">Ez dago sarerik — deskargatutako multimedia erakusten</string>
+    <string name="offline_server_unreachable">Ezin da zerbitzaria erdietsi — deskargatutako multimedia erakusten</string>
+    <string name="offline_forced">Lineaz kanpoko modua aktibatuta dago — deskargatutako multimedia erakusten</string>
+    <string name="offline_retry">Berriz saiatu</string>
+    <string name="offline_go_online">Konektatu</string>
+    <string name="syncplay_groups_action">SyncPlay taldeak</string>
+    <string name="syncplay_groups_action_active">SyncPlay taldeak — talde batean zaude</string>
+</resources>

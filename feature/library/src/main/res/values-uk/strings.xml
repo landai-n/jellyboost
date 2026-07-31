@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Ще немає бібліотек. Додайте одну на сервері.</string>
+
+    <string name="library_back">Назад</string>
+    <string name="library_home">Головна</string>
+    <string name="library_sort">Сортування</string>
+    <string name="library_filter">Фільтр</string>
+
+    <string name="library_sort_title">Сортувати за</string>
+    <string name="library_sort_name">Назвою</string>
+    <string name="library_sort_date_added">Дата додавання</string>
+    <string name="library_sort_premiere_date">Дата виходу</string>
+    <string name="library_sort_community_rating">Рейтинг спільноти</string>
+    <string name="library_sort_runtime">Тривалість</string>
+    <string name="library_sort_random">Випадково</string>
+    <string name="library_sort_direction">Напрямок</string>
+    <string name="library_sort_ascending">За зростанням</string>
+    <string name="library_sort_descending">За спаданням</string>
+
+    <string name="library_filters_title">Фільтри</string>
+    <string name="library_filters_genres">Жанри</string>
+    <string name="library_filters_years">Роки</string>
+    <string name="library_filters_played">Перегляд</string>
+    <string name="library_filters_played_any">Будь-який</string>
+    <string name="library_filters_played_yes">Переглянуто</string>
+    <string name="library_filters_played_no">Непереглянуто</string>
+    <string name="library_filters_clear">Очистити все</string>
+    <string name="library_filters_apply">Показати результати</string>
+    <string name="library_filters_none">У цій бібліотеці немає параметрів для фільтрації.</string>
+    <string name="library_filters_loading">Завантаження фільтрів…</string>
+
+    <string name="library_empty">Тут нічого показувати.</string>
+    <string name="library_empty_filtered">Жоден елемент не відповідає цим фільтрам.</string>
+    <string name="library_empty_clear_filters">Очистити фільтри</string>
+    <string name="library_retry">Повторити</string>
+
+    <string name="library_error_network">Не вдалося з’єднатися із сервером. Перевірте підключення і спробуйте ще раз.</string>
+    <string name="library_error_unauthorized">Термін дії сесії минув. Увійдіть знову, щоб продовжити.</string>
+    <string name="library_error_not_found">Цієї бібліотеки більше немає на сервері.</string>
+    <string name="library_error_server">Сервер повернув помилку.</string>
+    <string name="library_error_server_with_code">Сервер повернув помилку (%1$d).</string>
+    <string name="library_error_storage">Не вдалося прочитати локальні дані.</string>
+    <string name="library_error_unknown">Під час завантаження бібліотеки сталася помилка.</string>
+</resources>

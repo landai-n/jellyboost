@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">暫時未有媒體庫。請喺伺服器度加一個。</string>
+
+    <string name="library_back">返回</string>
+    <string name="library_home">主頁</string>
+    <string name="library_sort">排序</string>
+    <string name="library_filter">篩選</string>
+
+    <string name="library_sort_title">排序方式</string>
+    <string name="library_sort_name">名稱</string>
+    <string name="library_sort_date_added">加入日期</string>
+    <string name="library_sort_premiere_date">上映日期</string>
+    <string name="library_sort_community_rating">社群評分</string>
+    <string name="library_sort_runtime">片長</string>
+    <string name="library_sort_random">隨機</string>
+    <string name="library_sort_direction">順序</string>
+    <string name="library_sort_ascending">遞增</string>
+    <string name="library_sort_descending">遞減</string>
+
+    <string name="library_filters_title">篩選條件</string>
+    <string name="library_filters_genres">類型</string>
+    <string name="library_filters_years">年份</string>
+    <string name="library_filters_played">觀看狀態</string>
+    <string name="library_filters_played_any">全部</string>
+    <string name="library_filters_played_yes">已觀看</string>
+    <string name="library_filters_played_no">未觀看</string>
+    <string name="library_filters_clear">清除全部</string>
+    <string name="library_filters_apply">顯示結果</string>
+    <string name="library_filters_none">呢個媒體庫冇嘢好篩選。</string>
+    <string name="library_filters_loading">載入緊篩選條件…</string>
+
+    <string name="library_empty">呢度冇嘢顯示。</string>
+    <string name="library_empty_filtered">冇項目符合呢啲篩選條件。</string>
+    <string name="library_empty_clear_filters">清除篩選條件</string>
+    <string name="library_retry">重試</string>
+
+    <string name="library_error_network">連唔到你嘅伺服器。請檢查網絡連線再試一次。</string>
+    <string name="library_error_unauthorized">你嘅登入時效已過期。請重新登入先可以繼續。</string>
+    <string name="library_error_not_found">呢個媒體庫已經唔喺伺服器度。</string>
+    <string name="library_error_server">伺服器回覆咗一個錯誤。</string>
+    <string name="library_error_server_with_code">伺服器回覆咗一個錯誤 (%1$d)。</string>
+    <string name="library_error_storage">冇辦法讀取本機資料。</string>
+    <string name="library_error_unknown">載入呢個媒體庫嗰陣出咗問題。</string>
+</resources>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">பிளேயரை மூடு</string>
+    <string name="player_play">இயக்கு</string>
+    <string name="player_pause">இடைநிறுத்து</string>
+    <string name="player_rewind">10 வினாடிகள் பின்செல்</string>
+    <string name="player_forward">30 வினாடிகள் முன்செல்</string>
+
+    <string name="player_audio">ஆடியோ</string>
+    <string name="player_subtitles">வசன வரிகள்</string>
+    <string name="player_subtitles_off">ஆஃப்</string>
+    <string name="player_quality">தரம்</string>
+    <string name="player_speed">வேகம்</string>
+
+    <string name="player_skip_intro">தொடக்கத்தைத் தவிர்</string>
+    <string name="player_skip_outro">முடிவைத் தவிர்</string>
+
+    <string name="player_quality_auto">தானியங்கி</string>
+    <string name="player_quality_high">உயர்தரம் — 20 Mbps</string>
+    <string name="player_quality_medium">நடுத்தரம் — 8 Mbps</string>
+    <string name="player_quality_low">குறைந்த — 3 Mbps</string>
+    <string name="player_quality_lowest">மிகக் குறைந்த — 720 kbps</string>
+
+    <string name="player_method_direct_play">நேரடி இயக்கம்</string>
+    <string name="player_method_direct_stream">நேரடி ஸ்ட்ரீம்</string>
+    <string name="player_method_transcode">டிரான்ஸ்கோடிங்</string>
+
+    <string name="player_message_transcode">உங்கள் சாதனத்தால் இந்தக் கோப்பை டிகோட் செய்ய முடியவில்லை, எனவே சேவையகம் அதை டிரான்ஸ்கோட் செய்கிறது.</string>
+    <string name="player_message_lower_quality">ஸ்ட்ரீம் தேங்கியது — குறைந்த தரத்தில் மீண்டும் முயற்சிக்கிறது.</string>
+    <string name="player_message_track_restart">அந்தத் தட்டிற்காக சேவையகம் ஸ்ட்ரீமை மீண்டும் என்கோட் செய்ய வேண்டியிருந்தது.</string>
+    <string name="player_message_track_streaming">அந்தத் தட்டு பதிவிறக்கத்தில் இல்லை — உங்கள் சேவையகத்திலிருந்து ஸ்ட்ரீம் செய்யப்படுகிறது.</string>
+    <string name="player_message_track_offline">அந்தத் தட்டு பதிவிறக்கப்பட்ட கோப்பில் இல்லை.</string>
+    <string name="player_message_failed">பிளேபேக் தோல்வியடைந்தது.</string>
+
+    <string name="player_syncplay_group">குழு</string>
+    <string name="player_syncplay_waiting">குழுவிற்காகக் காத்திருக்கிறது…</string>
+    <string name="player_syncplay_shuffle">வரிசையைக் கலை</string>
+    <string name="player_syncplay_repeat">மீண்டும் இயக்கு</string>
+    <string name="player_syncplay_repeat_none">ஆஃப்</string>
+    <string name="player_syncplay_repeat_one">இந்த உருப்படி</string>
+    <string name="player_syncplay_repeat_all">முழு வரிசை</string>
+    <string name="player_syncplay_leave">குழுவை விட்டு வெளியேறு</string>
+    <string name="player_syncplay_leave_title">இந்தக் குழுவை விட்டு வெளியேறவா?</string>
+    <string name="player_syncplay_leave_body">பிளேபேக் இங்கு தானாகவே தொடரும். மீண்டும் சேர வேண்டுமெனில் குழுவை மீண்டும் தேர்ந்தெடுக்க வேண்டும்.</string>
+
+    <string name="player_syncplay_cancel">ரத்துசெய்</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d நபர் பார்க்கிறார்</item>
+        <item quantity="other">%d பேர் பார்க்கிறார்கள்</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d மேலும்</string>
+
+    <string name="player_syncplay_queue">வரிசை</string>
+    <string name="player_syncplay_queue_empty">குழு இதுவரை எதையும் வரிசைப்படுத்தவில்லை.</string>
+    <string name="player_syncplay_queue_item_loading">ஏற்றுகிறது…</string>
+    <string name="player_syncplay_queue_playing">இப்போது இயங்குகிறது</string>
+    <string name="player_syncplay_queue_next">அடுத்த உருப்படி</string>
+    <string name="player_syncplay_queue_previous">முந்தைய உருப்படி</string>
+    <string name="player_syncplay_queue_move_up">மேலே நகர்த்து</string>
+    <string name="player_syncplay_queue_move_down">கீழே நகர்த்து</string>
+    <string name="player_syncplay_queue_remove">வரிசையிலிருந்து அகற்று</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d உருப்படி வரிசையில் உள்ளது</item>
+        <item quantity="other">%d உருப்படிகள் வரிசையில் உள்ளன</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay இலிருந்து வெளியேறியது — இணைப்பு துண்டிக்கப்பட்டது</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay குழுவில் மீண்டும் சேர்ந்தது</string>
+    <string name="player_message_syncplay_join_failed">அந்த SyncPlay குழுவில் சேர முடியவில்லை.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay குழு முடிவடைந்தது.</string>
+    <string name="player_message_syncplay_removed">நீங்கள் இனி SyncPlay குழுவில் இல்லை.</string>
+    <string name="player_message_syncplay_library_denied">உங்களுக்கு அணுகல் இல்லாத ஒன்றைக் குழு பார்க்கிறது.</string>
+    <string name="player_message_syncplay_item_unavailable">குழு பார்ப்பதைத் திறக்க முடியவில்லை.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">பின்</string>
+    <string name="player_syncplay_groups_home">முகப்பு</string>
+    <string name="player_syncplay_groups_create">குழுவை உருவாக்கு</string>
+    <string name="player_syncplay_groups_create_title">உங்கள் குழுவிற்குப் பெயரிடுங்கள்</string>
+    <string name="player_syncplay_groups_create_hint">குழுவின் பெயர்</string>
+    <string name="player_syncplay_groups_create_confirm">உருவாக்கு</string>
+    <string name="player_syncplay_groups_joining">சேர்கிறது…</string>
+    <string name="player_syncplay_groups_active_label">நீங்கள் இந்தக் குழுவில் உள்ளீர்கள்</string>
+    <string name="player_syncplay_groups_open_player">பிளேயரைத் திற</string>
+    <string name="player_syncplay_groups_empty">தற்போது வேறு யாரும் சேர்ந்து பார்க்கவில்லை.</string>
+    <string name="player_syncplay_groups_disabled">உங்கள் கணக்கிற்கு SyncPlay முடக்கப்பட்டுள்ளது.</string>
+    <string name="player_syncplay_groups_error">SyncPlay குழுக்களை ஏற்ற முடியவில்லை.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay குழு</string>
+    <string name="player_syncplay_presence_channel_description">ஆப் பின்னணியில் இருக்கும்போது சேர்ந்து பார்க்கும் குழுவில் உங்கள் இடத்தைத் தக்கவைக்கிறது.</string>
+    <string name="player_syncplay_presence_title">SyncPlay குழுவில் உள்ளீர்கள்</string>
+    <string name="player_syncplay_presence_text">குழுவிற்காகக் காத்திருக்கிறது</string>
+    <string name="player_syncplay_presence_leave">வெளியேறு</string>
+
+    <string name="player_syncplay_state_idle">செயலற்றது</string>
+    <string name="player_syncplay_state_waiting">காத்திருக்கிறது</string>
+    <string name="player_syncplay_state_paused">இடைநிறுத்தப்பட்டது</string>
+    <string name="player_syncplay_state_playing">இயங்குகிறது</string>
+
+    <string name="player_cast">ஒரு சாதனத்திற்குக் கேஸ்ட் செய்</string>
+
+    <string name="player_cast_device_unnamed">உங்கள் டிவி</string>
+    <string name="player_message_cast_transferred">தற்போது %1$s இல் இயங்குகிறது.</string>
+    <string name="player_message_cast_left_syncplay">%1$s க்கு கேஸ்ட் செய்ய SyncPlay குழுவிலிருந்து வெளியேறியது.</string>
+    <string name="player_message_cast_failed">%1$s இல் அதை இயக்க முடியவில்லை.</string>
+
+    <string name="player_casting_to">%1$s க்கு கேஸ்ட் செய்கிறது</string>
+</resources>

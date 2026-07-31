@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Одоогоор сан алга. Сервер дээр сан нэмнэ үү.</string>
+
+    <string name="library_back">Буцах</string>
+    <string name="library_home">Нүүр</string>
+    <string name="library_sort">Эрэмбэлэх</string>
+    <string name="library_filter">Шүүлтүүр</string>
+
+    <string name="library_sort_title">Эрэмбэлэх шалгуур</string>
+    <string name="library_sort_name">Нэр</string>
+    <string name="library_sort_date_added">Нэмэгдсэн огноо</string>
+    <string name="library_sort_premiere_date">Гарсан огноо</string>
+    <string name="library_sort_community_rating">Олон нийтийн үнэлгээ</string>
+    <string name="library_sort_runtime">Үргэлжлэх хугацаа</string>
+    <string name="library_sort_random">Санамсаргүй</string>
+    <string name="library_sort_direction">Чиглэл</string>
+    <string name="library_sort_ascending">Өсөхөөр</string>
+    <string name="library_sort_descending">Буурахаар</string>
+
+    <string name="library_filters_title">Шүүлтүүрүүд</string>
+    <string name="library_filters_genres">Төрөл</string>
+    <string name="library_filters_years">Он</string>
+    <string name="library_filters_played">Үзсэн</string>
+    <string name="library_filters_played_any">Бүгд</string>
+    <string name="library_filters_played_yes">Үзсэн</string>
+    <string name="library_filters_played_no">Үзээгүй</string>
+    <string name="library_filters_clear">Бүгдийг цэвэрлэх</string>
+    <string name="library_filters_apply">Үр дүнг харуулах</string>
+    <string name="library_filters_none">Энэ санд шүүх зүйл алга байна.</string>
+    <string name="library_filters_loading">Шүүлтүүрийг ачаалж байна…</string>
+
+    <string name="library_empty">Энд харуулах зүйл алга.</string>
+    <string name="library_empty_filtered">Эдгээр шүүлтүүрт тохирох зүйл алга.</string>
+    <string name="library_empty_clear_filters">Шүүлтүүрийг цэвэрлэх</string>
+    <string name="library_retry">Дахин оролдох</string>
+
+    <string name="library_error_network">Серверт холбогдож чадсангүй. Холболтоо шалгаад дахин оролдоно уу.</string>
+    <string name="library_error_unauthorized">Таны сесс дууссан байна. Үргэлжлүүлэхийн тулд дахин нэвтэрнэ үү.</string>
+    <string name="library_error_not_found">Тухайн сан серверт байхгүй боллоо.</string>
+    <string name="library_error_server">Сервер алдаа буцаалаа.</string>
+    <string name="library_error_server_with_code">Сервер алдаа буцаалаа (%1$d).</string>
+    <string name="library_error_storage">Локал өгөгдлийг уншиж чадсангүй.</string>
+    <string name="library_error_unknown">Энэ санг ачаалахад алдаа гарлаа.</string>
+</resources>

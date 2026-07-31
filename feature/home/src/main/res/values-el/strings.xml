@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Δεν υπάρχει ακόμη τίποτα για παρακολούθηση. Προσθέστε μέσα στις βιβλιοθήκες σας στον διακομιστή.</string>
+    <string name="home_empty_refresh">Ανανέωση</string>
+
+    <string name="home_section_my_media">Τα μέσα μου</string>
+    <string name="home_section_continue_watching">Συνέχιση παρακολούθησης</string>
+    <string name="home_section_next_up">Επόμενα</string>
+    <string name="home_section_latest">Πιο πρόσφατα: %1$s</string>
+</resources>

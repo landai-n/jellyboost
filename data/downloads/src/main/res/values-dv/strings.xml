@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">ޑައުންލޯޑްތައް</string>
+    <string name="downloads_channel_description">މި ޑިވައިސްއަށް މީޑިއާ ޑައުންލޯޑްވަމުންދާ ގޮތް.</string>
+
+    <string name="downloads_notification_preparing">ޑައުންލޯޑްތައް ތައްޔާރުކުރަނީ…</string>
+    <string name="downloads_notification_downloading">ޑައުންލޯޑްކުރަނީ…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">ޑައުންލޯޑްކުރަނީ…</string>
+    <string name="downloads_action_pause">މެދުކަނޑާލާ</string>
+    <string name="downloads_action_cancel">ކެންސަލްކުރޭ</string>
+</resources>

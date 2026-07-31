@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Instellings</string>
+    <string name="settings_back">Terug</string>
+    <string name="settings_home">Tuis</string>
+
+    <string name="settings_section_playback">Terugspeel</string>
+    <string name="settings_skip_intro">Slaan intro oor</string>
+    <string name="settings_skip_outro">Slaan uittrede oor</string>
+    <string name="settings_skip_mode_off">Doen niks</string>
+    <string name="settings_skip_mode_show_button">Wys \'n oorslaan-knoppie</string>
+    <string name="settings_skip_mode_auto">Slaan outomaties oor</string>
+    <string name="settings_pip">Prent-in-prent</string>
+    <string name="settings_pip_supporting">Speel voort in \'n swewende venster wanneer jy die app verlaat.</string>
+
+    <string name="settings_section_downloads">Aflaaie</string>
+    <string name="settings_wifi_only">Slegs Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pouseer aflaaie op mobiele data.</string>
+    <string name="settings_quality">Aflaaigehalte</string>
+    <string name="settings_quality_original">Oorspronklike lêer — presiese kopie, hervatbaar</string>
+    <string name="settings_quality_high">Hoog — omtrent 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Medium — omtrent 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Laag — omtrent 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Enigiets anders as die oorspronklike lêer word deur jou bediener omgeskakel terwyl dit gestuur word, so die grootte wat tydens aflaai gewys word, is \'n skatting, en \'n onderbroke oordrag begin weer van voor af.</string>
+    <string name="settings_storage_label">Berging</string>
+    <string name="settings_storage_summary">%1$s gebruik · %2$s beskikbaar op hierdie toestel</string>
+    <string name="settings_storage_location">Aflaaie word in %1$s gehou</string>
+    <string name="settings_storage_picker">Bergingsplek</string>
+    <string name="settings_storage_internal">Interne berging</string>
+    <string name="settings_storage_sd_card">SD-kaart</string>
+    <string name="settings_storage_volume_free">%1$s beskikbaar</string>
+    <string name="settings_storage_missing">Die berging wat jy gekies het, is nou nie beskikbaar nie, so aflaaie gaan na die plek hieronder gekies.</string>
+    <string name="settings_storage_switch_title">Skuif aflaaie?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Aflaaie kan nog nie tussen plekke geskuif word nie, so die een wat reeds op hierdie toestel is, sal geskrap word. Jy kan dit weer na die nuwe plek aflaai.</item>
+        <item quantity="other">Aflaaie kan nog nie tussen plekke geskuif word nie, so die %1$d wat reeds op hierdie toestel is, sal geskrap word. Jy kan hulle weer na die nuwe plek aflaai.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Skrap en skuif</string>
+
+    <string name="settings_section_connectivity">Konnektiwiteit</string>
+    <string name="settings_offline_mode">Vanlynmodus</string>
+    <string name="settings_offline_mode_supporting">Wys slegs media wat reeds op hierdie toestel is.</string>
+
+    <string name="settings_section_account">Rekening</string>
+    <string name="settings_account_user">Aangemeld as</string>
+    <string name="settings_account_server">Bediener</string>
+    <string name="settings_account_unknown">Nie aangemeld nie</string>
+    <string name="settings_sign_out">Meld af</string>
+    <string name="settings_sign_out_dialog_title">Meld af?</string>
+    <string name="settings_sign_out_dialog_message">Jy sal jou bedieneradres en wagwoord nodig hê om weer aan te meld.</string>
+    <string name="settings_sign_out_delete_downloads">Skrap ook aflaaie van hierdie toestel</string>
+    <string name="settings_cancel">Kanselleer</string>
+</resources>

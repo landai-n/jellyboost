@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">İndirildi</string>
+    <string name="downloads_tab_queue">Kuyruk</string>
+    <string name="downloads_wifi_only">Yalnızca Wi‑Fi</string>
+    <string name="downloads_group_movies">Filmler</string>
+    <string name="downloads_storage_summary">%1$s kullanıldı · %2$s boş</string>
+    <string name="downloads_action_delete">İndirmeyi sil</string>
+    <string name="downloads_action_cancel">İndirmeyi iptal et</string>
+    <string name="downloads_action_pause">İndirmeyi duraklat</string>
+    <string name="downloads_action_resume">İndirmeye devam et</string>
+    <string name="downloads_action_move_up">Kuyrukta yukarı taşı</string>
+    <string name="downloads_action_move_down">Kuyrukta aşağı taşı</string>
+    <string name="downloads_action_pause_all">Tümünü duraklat</string>
+    <string name="downloads_action_resume_all">Tümüne devam et</string>
+    <string name="downloads_action_cancel_all">Tümünü iptal et</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Bu indirme iptal edilsin mi?</item>
+        <item quantity="other">Tüm %1$d indirme iptal edilsin mi?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Kuyruk boşaltılır ve kısmen indirilmiş dosyalar kaldırılır. Tamamlanmış indirmeler etkilenmez.</string>
+    <string name="downloads_cancel_all_dialog_confirm">İndirmeleri iptal et</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Sakla</string>
+    <string name="downloads_delete_dialog_title">%1$s silinsin mi?</string>
+    <string name="downloads_delete_dialog_message">İndirilen dosyalar bu cihazdan kaldırılır. Daha sonra tekrar indirebilirsiniz.</string>
+    <string name="downloads_delete_dialog_confirm">Sil</string>
+    <string name="downloads_delete_dialog_cancel">İptal</string>
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / en fazla %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">en fazla %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s kaldı</string>
+    <string name="downloads_eta_approx">~%1$s kaldı</string>
+    <string name="downloads_transcoded_marker">Yeniden kodlandı</string>
+    <string name="downloads_status_queued">Bekliyor</string>
+    <string name="downloads_status_paused">Duraklatıldı</string>
+    <string name="downloads_status_failed">İndirme başarısız oldu</string>
+    <string name="downloads_status_failed_reason">İndirme başarısız oldu: %1$s</string>
+    <string name="downloads_empty_downloaded">Henüz bir şey indirilmedi. Bu cihazda saklamak için bir film veya bölümde İndir\'e dokunun.</string>
+    <string name="downloads_empty_queue">İndirme kuyruğu boş.</string>
+    <string name="downloads_load_failed">İndirmeleriniz okunamadı. Tekrar denemek için bu ekranı yeniden açın.</string>
+    <string name="downloads_message_delete_failed">O indirme silinemedi.</string>
+    <string name="downloads_message_action_failed">Kuyruk güncellenemedi.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d duraklatıldı — %2$d transcode indirilmeye devam ediyor (bir transcode duraklatılamaz).</item>
+        <item quantity="other">%1$d duraklatıldı — %2$d transcode indirilmeye devam ediyor (bir transcode duraklatılamaz).</item>
+    </plurals>
+</resources>

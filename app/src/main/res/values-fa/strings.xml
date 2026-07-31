@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">گزینه‌های بیشتر</string>
+    <string name="home_settings">تنظیمات</string>
+    <string name="settings_offline_mode">حالت آفلاین</string>
+
+    <string name="state_on">روشن</string>
+    <string name="state_off">خاموش</string>
+
+    <string name="nav_home">خانه</string>
+    <string name="nav_libraries">کتابخانه‌ها</string>
+    <string name="nav_search">جستجو</string>
+    <string name="nav_downloads">دانلودها</string>
+
+    <string name="offline_no_network">شبکه‌ای در دسترس نیست — رسانه‌های دانلودشده نمایش داده می‌شوند</string>
+    <string name="offline_server_unreachable">دسترسی به سرور ممکن نیست — رسانه‌های دانلودشده نمایش داده می‌شوند</string>
+    <string name="offline_forced">حالت آفلاین روشن است — رسانه‌های دانلودشده نمایش داده می‌شوند</string>
+    <string name="offline_retry">تلاش دوباره</string>
+    <string name="offline_go_online">اتصال به اینترنت</string>
+
+    <string name="syncplay_groups_action">گروه‌های SyncPlay</string>
+    <string name="syncplay_groups_action_active">گروه‌های SyncPlay — شما در یک گروه هستید</string>
+</resources>

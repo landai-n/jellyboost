@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ਡਾਊਨਲੋਡ ਕੀਤੇ</string>
+    <string name="downloads_tab_queue">ਕਤਾਰ</string>
+    <string name="downloads_wifi_only">ਸਿਰਫ਼ Wi‑Fi</string>
+
+    <string name="downloads_group_movies">ਫ਼ਿਲਮਾਂ</string>
+
+    <string name="downloads_storage_summary">%1$s ਵਰਤਿਆ · %2$s ਖਾਲੀ</string>
+
+    <string name="downloads_action_delete">ਡਾਊਨਲੋਡ ਮਿਟਾਓ</string>
+    <string name="downloads_action_cancel">ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੋ</string>
+    <string name="downloads_action_pause">ਡਾਊਨਲੋਡ ਰੋਕੋ</string>
+    <string name="downloads_action_resume">ਡਾਊਨਲੋਡ ਜਾਰੀ ਰੱਖੋ</string>
+    <string name="downloads_action_move_up">ਕਤਾਰ ਵਿੱਚ ਉੱਪਰ ਲਿਜਾਓ</string>
+    <string name="downloads_action_move_down">ਕਤਾਰ ਵਿੱਚ ਹੇਠਾਂ ਲਿਜਾਓ</string>
+
+    <string name="downloads_action_pause_all">ਸਾਰੇ ਰੋਕੋ</string>
+    <string name="downloads_action_resume_all">ਸਾਰੇ ਜਾਰੀ ਰੱਖੋ</string>
+    <string name="downloads_action_cancel_all">ਸਾਰੇ ਰੱਦ ਕਰੋ</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">ਇਹ ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੀਏ?</item>
+        <item quantity="other">ਸਾਰੇ %1$d ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੀਏ?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">ਕਤਾਰ ਖਾਲੀ ਕਰ ਦਿੱਤੀ ਜਾਵੇਗੀ ਅਤੇ ਕੋਈ ਵੀ ਅੱਧ-ਡਾਊਨਲੋਡ ਹੋਈਆਂ ਫਾਈਲਾਂ ਹਟਾ ਦਿੱਤੀਆਂ ਜਾਣਗੀਆਂ। ਪੂਰੇ ਹੋ ਚੁੱਕੇ ਡਾਊਨਲੋਡਾਂ ਉੱਤੇ ਕੋਈ ਅਸਰ ਨਹੀਂ ਪਵੇਗਾ।</string>
+    <string name="downloads_cancel_all_dialog_confirm">ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੋ</string>
+    <string name="downloads_cancel_all_dialog_dismiss">ਰੱਖੋ</string>
+
+    <string name="downloads_delete_dialog_title">%1$s ਮਿਟਾਈਏ?</string>
+    <string name="downloads_delete_dialog_message">ਡਾਊਨਲੋਡ ਕੀਤੀਆਂ ਫਾਈਲਾਂ ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਹਟਾ ਦਿੱਤੀਆਂ ਜਾਣਗੀਆਂ। ਤੁਸੀਂ ਇਸਨੂੰ ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</string>
+    <string name="downloads_delete_dialog_confirm">ਮਿਟਾਓ</string>
+    <string name="downloads_delete_dialog_cancel">ਰੱਦ ਕਰੋ</string>
+
+    <string name="downloads_progress_of">%2$s ਵਿੱਚੋਂ %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s ਵਿੱਚੋਂ %1$s</string>
+    <string name="downloads_progress_of_capped">%2$s ਤੱਕ ਵਿੱਚੋਂ %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">%1$s ਤੱਕ</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s ਬਾਕੀ</string>
+    <string name="downloads_eta_approx">~%1$s ਬਾਕੀ</string>
+    <string name="downloads_transcoded_marker">ਟ੍ਰਾਂਸਕੋਡ ਕੀਤਾ</string>
+    <string name="downloads_status_queued">ਉਡੀਕ ਵਿੱਚ</string>
+    <string name="downloads_status_paused">ਰੋਕਿਆ ਗਿਆ</string>
+    <string name="downloads_status_failed">ਡਾਊਨਲੋਡ ਅਸਫਲ ਰਿਹਾ</string>
+    <string name="downloads_status_failed_reason">ਡਾਊਨਲੋਡ ਅਸਫਲ ਰਿਹਾ: %1$s</string>
+
+    <string name="downloads_empty_downloaded">ਹਾਲੇ ਤੱਕ ਕੁਝ ਵੀ ਡਾਊਨਲੋਡ ਨਹੀਂ ਹੋਇਆ। ਕਿਸੇ ਫਿਲਮ ਜਾਂ ਐਪੀਸੋਡ ਨੂੰ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਰੱਖਣ ਲਈ ਡਾਊਨਲੋਡ ਉੱਤੇ ਟੈਪ ਕਰੋ।</string>
+    <string name="downloads_empty_queue">ਡਾਊਨਲੋਡ ਕਤਾਰ ਖਾਲੀ ਹੈ।</string>
+    <string name="downloads_load_failed">ਤੁਹਾਡੇ ਡਾਊਨਲੋਡ ਪੜ੍ਹੇ ਨਹੀਂ ਜਾ ਸਕੇ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰਨ ਲਈ ਇਹ ਸਕ੍ਰੀਨ ਦੁਬਾਰਾ ਖੋਲ੍ਹੋ।</string>
+    <string name="downloads_message_delete_failed">ਉਹ ਡਾਊਨਲੋਡ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
+    <string name="downloads_message_action_failed">ਕਤਾਰ ਅੱਪਡੇਟ ਨਹੀਂ ਹੋ ਸਕੀ।</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d ਰੋਕੇ ਗਏ — %2$d ਟ੍ਰਾਂਸਕੋਡ ਡਾਊਨਲੋਡ ਹੁੰਦਾ ਰਹਿੰਦਾ ਹੈ (ਟ੍ਰਾਂਸਕੋਡ ਨੂੰ ਰੋਕਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ)।</item>
+        <item quantity="other">%1$d ਰੋਕੇ ਗਏ — %2$d ਟ੍ਰਾਂਸਕੋਡ ਡਾਊਨਲੋਡ ਹੁੰਦੇ ਰਹਿੰਦੇ ਹਨ (ਟ੍ਰਾਂਸਕੋਡ ਨੂੰ ਰੋਕਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ)।</item>
+    </plurals>
+</resources>

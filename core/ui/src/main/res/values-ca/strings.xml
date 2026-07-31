@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Baixat</string>
+    <string name="badge_download_queued">En cua per baixar</string>
+    <string name="badge_download_paused">Baixada en pausa</string>
+    <string name="badge_download_failed">Baixada fallida</string>
+    <string name="media_row_see_all">Mostra-ho tot</string>
+    <string name="media_card_watched">Vist</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d seleccionat</item>
+        <item quantity="other">%1$d seleccionats</item>
+    </plurals>
+    <string name="selection_close">Tanca la selecció</string>
+    <string name="selection_select_all">Selecciona-ho tot</string>
+    <string name="selection_mark_watched">Marca com a vist</string>
+    <string name="selection_mark_unwatched">Marca com a no vist</string>
+    <string name="selection_download">Baixa</string>
+    <string name="selection_item_selected">Seleccionat</string>
+    <string name="selection_item_not_selected">No seleccionat</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d marcat com a vist</item>
+        <item quantity="other">%1$d marcats com a vistos</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d marcats com a vistos, %2$d amb error</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">No s\'ha pogut marcar %1$d element com a vist</item>
+        <item quantity="other">No s\'han pogut marcar %1$d elements com a vistos</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d marcat com a no vist</item>
+        <item quantity="other">%1$d marcats com a no vistos</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d marcats com a no vistos, %2$d amb error</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">No s\'ha pogut marcar %1$d element com a no vist</item>
+        <item quantity="other">No s\'han pogut marcar %1$d elements com a no vistos</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d afegit a les baixades</item>
+        <item quantity="other">%1$d afegits a les baixades</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d afegits a les baixades, %2$d amb error</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">No s\'ha pogut afegir %1$d element a les baixades</item>
+        <item quantity="other">No s\'han pogut afegir %1$d elements a les baixades</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d afegits a les baixades — %2$d ja eren en aquest dispositiu</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element ja és en aquest dispositiu</item>
+        <item quantity="other">%1$d elements ja són en aquest dispositiu</item>
+    </plurals>
+</resources>

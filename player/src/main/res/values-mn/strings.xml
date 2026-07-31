@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Тоглуулагчийг хаах</string>
+    <string name="player_play">Тоглуулах</string>
+    <string name="player_pause">Түр зогсоох</string>
+    <string name="player_rewind">10 секунд ухрах</string>
+    <string name="player_forward">30 секунд урагшлах</string>
+
+    <string name="player_audio">Аудио</string>
+    <string name="player_subtitles">Хадмал орчуулга</string>
+    <string name="player_subtitles_off">Идэвхгүй</string>
+    <string name="player_quality">Чанар</string>
+    <string name="player_speed">Хурд</string>
+
+    <string name="player_skip_intro">Эхлэлийг алгасах</string>
+    <string name="player_skip_outro">Төгсгөлийг алгасах</string>
+
+    <string name="player_quality_auto">Автомат</string>
+    <string name="player_quality_high">Өндөр — 20 Mbps</string>
+    <string name="player_quality_medium">Дунд — 8 Mbps</string>
+    <string name="player_quality_low">Бага — 3 Mbps</string>
+    <string name="player_quality_lowest">Хамгийн бага — 720 kbps</string>
+
+    <string name="player_method_direct_play">Шууд тоглуулалт</string>
+    <string name="player_method_direct_stream">Шууд дамжуулалт</string>
+    <string name="player_method_transcode">Кодчилол хөрвүүлэлт</string>
+
+    <string name="player_message_transcode">Таны төхөөрөмж энэ файлыг дэкодлож чадаагүй тул сервер үүнийг хөрвүүлж байна.</string>
+    <string name="player_message_lower_quality">Дамжуулалт зогслоо — бага чанараар дахин оролдож байна.</string>
+    <string name="player_message_track_restart">Сервер тухайн трекийн дамжуулалтыг дахин кодлох шаардлагатай болсон.</string>
+    <string name="player_message_track_streaming">Тухайн трек татсан файлд алга — серверээс дамжуулж байна.</string>
+    <string name="player_message_track_offline">Тухайн трек татсан файлд алга байна.</string>
+    <string name="player_message_failed">Тоглуулалт амжилтгүй боллоо.</string>
+
+    <string name="player_syncplay_group">Бүлэг</string>
+    <string name="player_syncplay_waiting">Бүлгийг хүлээж байна…</string>
+    <string name="player_syncplay_shuffle">Дараалал холих</string>
+    <string name="player_syncplay_repeat">Давтах</string>
+    <string name="player_syncplay_repeat_none">Идэвхгүй</string>
+    <string name="player_syncplay_repeat_one">Энэ зүйл</string>
+    <string name="player_syncplay_repeat_all">Бүх дараалал</string>
+    <string name="player_syncplay_leave">Бүлгээс гарах</string>
+    <string name="player_syncplay_leave_title">Энэ бүлгээс гарах уу?</string>
+    <string name="player_syncplay_leave_body">Тоглуулалт энд бие даан үргэлжилнэ. Дахин нэгдэхийн тулд бүлгийг дахин сонгох хэрэгтэй.</string>
+
+    <string name="player_syncplay_cancel">Цуцлах</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d хүн үзэж байна</item>
+        <item quantity="other">%d хүн үзэж байна</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d бусад</string>
+
+    <string name="player_syncplay_queue">Дараалал</string>
+    <string name="player_syncplay_queue_empty">Бүлэг одоогоор юу ч дараалалд оруулаагүй байна.</string>
+    <string name="player_syncplay_queue_item_loading">Ачаалж байна…</string>
+    <string name="player_syncplay_queue_playing">Одоо тоглуулж байна</string>
+    <string name="player_syncplay_queue_next">Дараагийн зүйл</string>
+    <string name="player_syncplay_queue_previous">Өмнөх зүйл</string>
+    <string name="player_syncplay_queue_move_up">Дээш зөөх</string>
+    <string name="player_syncplay_queue_move_down">Доош зөөх</string>
+    <string name="player_syncplay_queue_remove">Дараалалаас хасах</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d зүйл дараалалд орсон</item>
+        <item quantity="other">%d зүйл дараалалд орсон</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay-с гарлаа — холболт тасарлаа</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay бүлэгт дахин нэгдлээ</string>
+    <string name="player_message_syncplay_join_failed">Тухайн SyncPlay бүлэгт нэгдэж чадсангүй.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay бүлэг дууслаа.</string>
+    <string name="player_message_syncplay_removed">Та цаашид SyncPlay бүлэгт байхгүй боллоо.</string>
+    <string name="player_message_syncplay_library_denied">Бүлэг таны хандах эрхгүй зүйлийг үзэж байна.</string>
+    <string name="player_message_syncplay_item_unavailable">Бүлгийн үзэж буй зүйлийг нээж чадсангүй.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Буцах</string>
+    <string name="player_syncplay_groups_home">Нүүр</string>
+    <string name="player_syncplay_groups_create">Бүлэг үүсгэх</string>
+    <string name="player_syncplay_groups_create_title">Бүлгээ нэрлэнэ үү</string>
+    <string name="player_syncplay_groups_create_hint">Бүлгийн нэр</string>
+    <string name="player_syncplay_groups_create_confirm">Үүсгэх</string>
+    <string name="player_syncplay_groups_joining">Нэгдэж байна…</string>
+    <string name="player_syncplay_groups_active_label">Та энэ бүлэгт байна</string>
+    <string name="player_syncplay_groups_open_player">Тоглуулагчийг нээх</string>
+    <string name="player_syncplay_groups_empty">Одоогоор хамт үзэж буй хэн ч алга.</string>
+    <string name="player_syncplay_groups_disabled">Таны бүртгэлд SyncPlay идэвхгүй байна.</string>
+    <string name="player_syncplay_groups_error">SyncPlay бүлгүүдийг ачаалж чадсангүй.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay бүлэг</string>
+    <string name="player_syncplay_presence_channel_description">Апп дэвсгэрт ажиллаж байх үед хамт үзэх бүлэгт таны байрыг хадгална.</string>
+    <string name="player_syncplay_presence_title">SyncPlay бүлэгт байна</string>
+    <string name="player_syncplay_presence_text">Бүлгийг хүлээж байна</string>
+    <string name="player_syncplay_presence_leave">Гарах</string>
+
+    <string name="player_syncplay_state_idle">Идэвхгүй</string>
+    <string name="player_syncplay_state_waiting">Хүлээж байна</string>
+    <string name="player_syncplay_state_paused">Түр зогссон</string>
+    <string name="player_syncplay_state_playing">Тоглуулж байна</string>
+
+    <string name="player_cast">Төхөөрөмж рүү дамжуулах</string>
+
+    <string name="player_cast_device_unnamed">таны ТВ</string>
+    <string name="player_message_cast_transferred">Одоо %1$s дээр тоглуулж байна.</string>
+    <string name="player_message_cast_left_syncplay">%1$s рүү дамжуулахын тулд SyncPlay бүлгээс гарлаа.</string>
+    <string name="player_message_cast_failed">%1$s дээр үүнийг тоглуулж чадсангүй.</string>
+
+    <string name="player_casting_to">%1$s рүү дамжуулж байна</string>
+</resources>

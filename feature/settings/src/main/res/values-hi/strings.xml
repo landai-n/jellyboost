@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="settings_back">वापस</string>
+    <string name="settings_home">होम</string>
+
+    <!-- Playback -->
+    <string name="settings_section_playback">प्लेबैक</string>
+    <string name="settings_skip_intro">इंट्रो छोड़ें</string>
+    <string name="settings_skip_outro">आउट्रो छोड़ें</string>
+    <string name="settings_skip_mode_off">कुछ न करें</string>
+    <string name="settings_skip_mode_show_button">स्किप बटन दिखाएँ</string>
+    <string name="settings_skip_mode_auto">स्वतः छोड़ें</string>
+    <string name="settings_pip">पिक्चर-इन-पिक्चर</string>
+    <string name="settings_pip_supporting">ऐप छोड़ने पर एक फ़्लोटिंग विंडो में चलाना जारी रखें।</string>
+
+    <!-- Downloads -->
+    <string name="settings_section_downloads">डाउनलोड</string>
+    <string name="settings_wifi_only">केवल Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">मोबाइल डेटा पर डाउनलोड रोकें।</string>
+    <string name="settings_quality">डाउनलोड गुणवत्ता</string>
+    <string name="settings_quality_original">मूल फ़ाइल — बिल्कुल सटीक प्रतिलिपि, फिर से शुरू की जा सकने वाली</string>
+    <string name="settings_quality_high">उच्च — लगभग 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">मध्यम — लगभग 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">निम्न — लगभग 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">मूल फ़ाइल के अलावा कुछ भी आपके सर्वर द्वारा भेजते समय बदला जाता है, इसलिए डाउनलोड के दौरान दिखाया गया आकार एक अनुमान है और बीच में रुका हुआ ट्रांसफ़र फिर से शुरू से होता है।</string>
+    <string name="settings_storage_label">स्टोरेज</string>
+    <string name="settings_storage_summary">इस डिवाइस पर %1$s उपयोग में · %2$s खाली</string>
+    <string name="settings_storage_location">डाउनलोड %1$s में रखे जाते हैं</string>
+    <string name="settings_storage_picker">स्टोरेज स्थान</string>
+    <string name="settings_storage_internal">आंतरिक स्टोरेज</string>
+    <string name="settings_storage_sd_card">SD कार्ड</string>
+    <string name="settings_storage_volume_free">%1$s खाली</string>
+    <string name="settings_storage_missing">आपने जो स्टोरेज चुना है वह अभी उपलब्ध नहीं है, इसलिए डाउनलोड नीचे चुने गए स्थान पर जा रहे हैं।</string>
+    <string name="settings_storage_switch_title">डाउनलोड स्थानांतरित करें?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">डाउनलोड अभी स्थानों के बीच स्थानांतरित नहीं किए जा सकते, इसलिए इस डिवाइस पर पहले से मौजूद डाउनलोड हटा दिया जाएगा। आप इसे नए स्थान पर फिर से डाउनलोड कर सकते हैं।</item>
+        <item quantity="other">डाउनलोड अभी स्थानों के बीच स्थानांतरित नहीं किए जा सकते, इसलिए इस डिवाइस पर पहले से मौजूद %1$d डाउनलोड हटा दिए जाएंगे। आप उन्हें नए स्थान पर फिर से डाउनलोड कर सकते हैं।</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">हटाएँ और बदलें</string>
+
+    <!-- Connectivity -->
+    <string name="settings_section_connectivity">कनेक्टिविटी</string>
+    <string name="settings_offline_mode">ऑफ़लाइन मोड</string>
+    <string name="settings_offline_mode_supporting">केवल वही मीडिया दिखाएँ जो पहले से इस डिवाइस पर है।</string>
+
+    <!-- Account -->
+    <string name="settings_section_account">खाता</string>
+    <string name="settings_account_user">इस रूप में साइन इन है</string>
+    <string name="settings_account_server">सर्वर</string>
+    <string name="settings_account_unknown">साइन इन नहीं है</string>
+    <string name="settings_sign_out">साइन आउट करें</string>
+    <string name="settings_sign_out_dialog_title">साइन आउट करें?</string>
+    <string name="settings_sign_out_dialog_message">फिर से साइन इन करने के लिए आपको अपने सर्वर का पता और पासवर्ड चाहिए होगा।</string>
+    <string name="settings_sign_out_delete_downloads">इस डिवाइस से डाउनलोड भी हटाएँ</string>
+    <string name="settings_cancel">रद्द करें</string>
+</resources>

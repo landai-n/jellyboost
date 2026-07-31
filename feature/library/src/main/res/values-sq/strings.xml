@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Ende s\'ka biblioteka. Shto një në server.</string>
+
+    <string name="library_back">Mbrapa</string>
+    <string name="library_home">Kryefaqja</string>
+    <string name="library_sort">Rendit</string>
+    <string name="library_filter">Filtro</string>
+
+    <string name="library_sort_title">Rendit sipas</string>
+    <string name="library_sort_name">Emri</string>
+    <string name="library_sort_date_added">Data e shtimit</string>
+    <string name="library_sort_premiere_date">Data e daljes</string>
+    <string name="library_sort_community_rating">Vlerësimi i komunitetit</string>
+    <string name="library_sort_runtime">Kohëzgjatja</string>
+    <string name="library_sort_random">Rastësisht</string>
+    <string name="library_sort_direction">Drejtimi</string>
+    <string name="library_sort_ascending">Rritës</string>
+    <string name="library_sort_descending">Zbritës</string>
+
+    <string name="library_filters_title">Filtrat</string>
+    <string name="library_filters_genres">Zhanret</string>
+    <string name="library_filters_years">Vitet</string>
+    <string name="library_filters_played">Shikuar</string>
+    <string name="library_filters_played_any">Cilido</string>
+    <string name="library_filters_played_yes">Shikuar</string>
+    <string name="library_filters_played_no">I pashikuar</string>
+    <string name="library_filters_clear">Pastro të gjitha</string>
+    <string name="library_filters_apply">Shfaq rezultatet</string>
+    <string name="library_filters_none">Kjo bibliotekë nuk ofroi asgjë për filtrim.</string>
+    <string name="library_filters_loading">Duke ngarkuar filtrat…</string>
+
+    <string name="library_empty">Nuk ka asgjë për t\'u shfaqur këtu.</string>
+    <string name="library_empty_filtered">Asnjë artikull nuk përputhet me këta filtra.</string>
+    <string name="library_empty_clear_filters">Pastro filtrat</string>
+    <string name="library_retry">Provo përsëri</string>
+
+    <string name="library_error_network">Serveri nuk mund të arrihet. Kontrollo lidhjen dhe provo përsëri.</string>
+    <string name="library_error_unauthorized">Sesioni yt skadoi. Identifikohu përsëri për të vazhduar.</string>
+    <string name="library_error_not_found">Ajo bibliotekë nuk është më në server.</string>
+    <string name="library_error_server">Serveri ktheu një gabim.</string>
+    <string name="library_error_server_with_code">Serveri ktheu një gabim (%1$d).</string>
+    <string name="library_error_storage">Të dhënat lokale nuk u lexuan dot.</string>
+    <string name="library_error_unknown">Diçka shkoi keq gjatë ngarkimit të kësaj biblioteke.</string>
+</resources>

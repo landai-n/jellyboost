@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Đã tải xuống</string>
+    <string name="downloads_tab_queue">Hàng đợi</string>
+    <string name="downloads_wifi_only">Chỉ dùng Wi‑Fi</string>
+    <string name="downloads_group_movies">Phim</string>
+    <string name="downloads_storage_summary">%1$s đã dùng · %2$s còn trống</string>
+    <string name="downloads_action_delete">Xóa tải xuống</string>
+    <string name="downloads_action_cancel">Hủy tải xuống</string>
+    <string name="downloads_action_pause">Tạm dừng tải xuống</string>
+    <string name="downloads_action_resume">Tiếp tục tải xuống</string>
+    <string name="downloads_action_move_up">Di chuyển lên trong hàng đợi</string>
+    <string name="downloads_action_move_down">Di chuyển xuống trong hàng đợi</string>
+    <string name="downloads_action_pause_all">Tạm dừng tất cả</string>
+    <string name="downloads_action_resume_all">Tiếp tục tất cả</string>
+    <string name="downloads_action_cancel_all">Hủy tất cả</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">Hủy tất cả %1$d lượt tải xuống?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Hàng đợi sẽ được xóa và mọi tệp đã tải xuống một phần sẽ bị xóa. Các tải xuống đã hoàn tất không bị ảnh hưởng.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Hủy tải xuống</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Giữ lại</string>
+    <string name="downloads_delete_dialog_title">Xóa %1$s?</string>
+    <string name="downloads_delete_dialog_message">Các tệp đã tải xuống sẽ bị xóa khỏi thiết bị này. Bạn có thể tải xuống lại sau.</string>
+    <string name="downloads_delete_dialog_confirm">Xóa</string>
+    <string name="downloads_delete_dialog_cancel">Hủy</string>
+    <string name="downloads_progress_of">%1$s trên %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s trên ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s trên tối đa %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">tối đa %1$s</string>
+    <string name="downloads_speed">%1$s/giây</string>
+    <string name="downloads_eta">Còn %1$s</string>
+    <string name="downloads_eta_approx">Còn khoảng %1$s</string>
+    <string name="downloads_transcoded_marker">Đã chuyển mã</string>
+    <string name="downloads_status_queued">Đang chờ</string>
+    <string name="downloads_status_paused">Đã tạm dừng</string>
+    <string name="downloads_status_failed">Tải xuống thất bại</string>
+    <string name="downloads_status_failed_reason">Tải xuống thất bại: %1$s</string>
+    <string name="downloads_empty_downloaded">Chưa có gì được tải xuống. Nhấn Tải xuống trên một phim hoặc tập để giữ lại trên thiết bị này.</string>
+    <string name="downloads_empty_queue">Hàng đợi tải xuống đang trống.</string>
+    <string name="downloads_load_failed">Không thể đọc danh sách tải xuống của bạn. Mở lại màn hình này để thử lại.</string>
+    <string name="downloads_message_delete_failed">Không thể xóa tải xuống đó.</string>
+    <string name="downloads_message_action_failed">Không thể cập nhật hàng đợi.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">Đã tạm dừng %1$d — %2$d bản chuyển mã vẫn đang tải xuống (không thể tạm dừng bản chuyển mã).</item>
+    </plurals>
+</resources>

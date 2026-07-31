@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Kërko filma, seriale dhe episode</string>
+    <string name="search_clear">Pastro</string>
+
+    <string name="search_section_movies">Filma</string>
+    <string name="search_section_series">Seriale</string>
+    <string name="search_section_episodes">Episode</string>
+
+    <string name="search_prompt">Shkruaj për të kërkuar në bibliotekat e tua.</string>
+    <string name="search_no_results">Asnjë përputhje për «%1$s».</string>
+
+    <string name="search_error_network">Serveri nuk mund të arrihet. Kontrollo lidhjen dhe provo përsëri.</string>
+    <string name="search_error_unauthorized">Sesioni yt skadoi. Identifikohu përsëri për të vazhduar.</string>
+    <string name="search_error_not_found">Ai artikull nuk është më në server.</string>
+    <string name="search_error_server">Serveri ktheu një gabim.</string>
+    <string name="search_error_server_with_code">Serveri ktheu një gabim (%1$d).</string>
+    <string name="search_error_storage">Të dhënat lokale nuk u lexuan dot.</string>
+    <string name="search_error_unknown">Diçka shkoi keq gjatë kërkimit.</string>
+</resources>

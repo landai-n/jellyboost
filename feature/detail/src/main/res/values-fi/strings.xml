@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Takaisin</string>
+    <string name="detail_home">Koti</string>
+    <string name="detail_play">Toista</string>
+    <string name="detail_resume">Jatka</string>
+    <string name="detail_download">Lataa</string>
+    <string name="detail_download_cancel">Peruuta</string>
+    <string name="detail_download_remove">Poista</string>
+    <string name="detail_download_retry">Yritä uudelleen</string>
+    <string name="detail_play_episode">Toista tämä jakso</string>
+    <string name="detail_mark_watched">Merkitse katsotuksi</string>
+    <string name="detail_mark_unwatched">Merkitse katsomattomaksi</string>
+    <string name="detail_add_favorite">Lisää suosikkeihin</string>
+    <string name="detail_remove_favorite">Poista suosikeista</string>
+
+    <string name="detail_section_seasons">Kaudet</string>
+    <string name="detail_section_next_up">Seuraavaksi</string>
+    <string name="detail_section_episodes">Jaksot</string>
+    <string name="detail_section_similar">Samankaltaiset</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min jäljellä</string>
+    <string name="detail_size_on_device">%1$s laitteella</string>
+    <string name="detail_directed_by">Ohjaaja: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d kausi</item>
+        <item quantity="other">%1$d kautta</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d jakso</item>
+        <item quantity="other">%1$d jaksoa</item>
+    </plurals>
+
+    <string name="detail_empty">Tämä kohde ei ole enää saatavilla.</string>
+    <string name="detail_message_download_queued">Lisätty latauksiin.</string>
+    <string name="detail_message_download_failed">Latauksen aloittaminen epäonnistui.</string>
+    <string name="detail_message_download_deleted">Poistettu tältä laitteelta.</string>
+    <string name="detail_message_download_delete_failed">Latauksen poistaminen epäonnistui.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Lataus peruutettu – %1$d valmis jakso säilytettiin.</item>
+        <item quantity="other">Lataus peruutettu – %1$d valmista jaksoa säilytettiin.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Tallentaminen epäonnistui. Yritä uudelleen.</string>
+
+    <string name="detail_group_play">Toista ryhmälle: %1$s</string>
+    <string name="detail_group_resume">Jatka ryhmälle: %1$s</string>
+    <string name="detail_group_play_next">Toista seuraavaksi</string>
+    <string name="detail_group_add_to_queue">Lisää jonoon</string>
+    <string name="detail_message_group_play">Pyydettiin ryhmää toistamaan tämän.</string>
+    <string name="detail_message_group_play_next">Lisätty ryhmän jonoon seuraavaksi.</string>
+    <string name="detail_message_group_queued">Lisätty ryhmän jonoon.</string>
+
+    <string name="detail_delete_download_dialog_title">Poistetaanko lataus?</string>
+    <string name="detail_delete_download_dialog_message">Tämä poistaa sen tältä laitteelta. Voit ladata sen uudelleen milloin tahansa.</string>
+    <string name="detail_delete_download_dialog_confirm">Poista</string>
+    <string name="detail_delete_download_dialog_cancel">Peruuta</string>
+</resources>

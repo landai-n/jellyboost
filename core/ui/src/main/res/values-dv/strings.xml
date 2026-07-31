@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ޑައުންލޯޑްކޮށްފި</string>
+    <string name="badge_download_queued">ޑައުންލޯޑަށް ކިޔޫގައި</string>
+    <string name="badge_download_paused">ޑައުންލޯޑް މެދުކަނޑާލައިފި</string>
+    <string name="badge_download_failed">ޑައުންލޯޑް ފެއިލްވެއްޖެ</string>
+
+    <string name="media_row_see_all">ހުރިހާ އެއްޗެއް ބަލާ</string>
+    <string name="media_card_watched">ބަލައިފި</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ހޮވިއްޖެ</item>
+        <item quantity="other">%1$d ހޮވިއްޖެ</item>
+    </plurals>
+    <string name="selection_close">ހޮވުން ކެންސަލްކުރޭ</string>
+    <string name="selection_select_all">ހުރިހާ އައިޓަމެއް ހޮވާ</string>
+    <string name="selection_mark_watched">ބަލައިފި ކަމަށް ފާހަގަކުރޭ</string>
+    <string name="selection_mark_unwatched">ނުބަލާ ކަމަށް ފާހަގަކުރޭ</string>
+    <string name="selection_download">ޑައުންލޯޑް</string>
+
+    <string name="selection_item_selected">ހޮވިއްޖެ</string>
+    <string name="selection_item_not_selected">ނުހޮވޭ</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d ބަލައިފި ކަމަށް ފާހަގަކުރެވިއްޖެ</item>
+        <item quantity="other">%1$d ބަލައިފި ކަމަށް ފާހަގަކުރެވިއްޖެ</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d ބަލައިފި ކަމަށް ފާހަގަކުރެވިއްޖެ، %2$d ފެއިލްވެއްޖެ</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d އައިޓަމް ބަލައިފި ކަމަށް ފާހަގައެއް ނުކުރެވުނު</item>
+        <item quantity="other">%1$d އައިޓަމް ބަލައިފި ކަމަށް ފާހަގައެއް ނުކުރެވުނު</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d ނުބަލާ ކަމަށް ފާހަގަކުރެވިއްޖެ</item>
+        <item quantity="other">%1$d ނުބަލާ ކަމަށް ފާހަގަކުރެވިއްޖެ</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d ނުބަލާ ކަމަށް ފާހަގަކުރެވިއްޖެ، %2$d ފެއިލްވެއްޖެ</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d އައިޓަމް ނުބަލާ ކަމަށް ފާހަގައެއް ނުކުރެވުނު</item>
+        <item quantity="other">%1$d އައިޓަމް ނުބަލާ ކަމަށް ފާހަގައެއް ނުކުރެވުނު</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ</item>
+        <item quantity="other">%1$d ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ، %2$d ފެއިލްވެއްޖެ</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d އައިޓަމް ޑައުންލޯޑްތަކަށް އިތުރެއް ނުކުރެވުނު</item>
+        <item quantity="other">%1$d އައިޓަމް ޑައުންލޯޑްތަކަށް އިތުރެއް ނުކުރެވުނު</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ — %2$d މިހާރުވެސް މި ޑިވައިސްގައި އެބަހުރި</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d އައިޓަމް މިހާރުވެސް މި ޑިވައިސްގައި އެބަހުރި</item>
+        <item quantity="other">%1$d އައިޓަމް މިހާރުވެސް މި ޑިވައިސްގައި އެބަހުރި</item>
+    </plurals>
+</resources>

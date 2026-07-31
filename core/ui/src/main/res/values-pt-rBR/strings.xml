@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Baixado</string>
+    <string name="badge_download_queued">Na fila para download</string>
+    <string name="badge_download_paused">Download pausado</string>
+    <string name="badge_download_failed">Falha no download</string>
+    <string name="media_row_see_all">Ver tudo</string>
+    <string name="media_card_watched">Assistido</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selecionado</item>
+        <item quantity="other">%1$d selecionados</item>
+    </plurals>
+    <string name="selection_close">Limpar seleção</string>
+    <string name="selection_select_all">Selecionar tudo</string>
+    <string name="selection_mark_watched">Marcar como assistido</string>
+    <string name="selection_mark_unwatched">Marcar como não assistido</string>
+    <string name="selection_download">Baixar</string>
+    <string name="selection_item_selected">Selecionado</string>
+    <string name="selection_item_not_selected">Não selecionado</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d marcado como assistido</item>
+        <item quantity="other">%1$d marcados como assistidos</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d marcados como assistidos, %2$d falharam</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Não foi possível marcar %1$d item como assistido</item>
+        <item quantity="other">Não foi possível marcar %1$d itens como assistidos</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d marcado como não assistido</item>
+        <item quantity="other">%1$d marcados como não assistidos</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d marcados como não assistidos, %2$d falharam</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Não foi possível marcar %1$d item como não assistido</item>
+        <item quantity="other">Não foi possível marcar %1$d itens como não assistidos</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d adicionado aos downloads</item>
+        <item quantity="other">%1$d adicionados aos downloads</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d adicionados aos downloads, %2$d falharam</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Não foi possível adicionar %1$d item aos downloads</item>
+        <item quantity="other">Não foi possível adicionar %1$d itens aos downloads</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d adicionados aos downloads — %2$d já estavam neste dispositivo</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d item já está neste dispositivo</item>
+        <item quantity="other">%1$d itens já estão neste dispositivo</item>
+    </plurals>
+</resources>

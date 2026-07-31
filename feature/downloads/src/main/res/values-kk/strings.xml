@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Жүктелгендер</string>
+    <string name="downloads_tab_queue">Кезек</string>
+    <string name="downloads_wifi_only">Тек Wi-Fi</string>
+
+    <string name="downloads_group_movies">Фильмдер</string>
+
+    <string name="downloads_storage_summary">%1$s қолданылды · %2$s бос</string>
+
+    <string name="downloads_action_delete">Жүктеуді жою</string>
+    <string name="downloads_action_cancel">Жүктеуден бас тарту</string>
+    <string name="downloads_action_pause">Жүктеуді кідірту</string>
+    <string name="downloads_action_resume">Жүктеуді жалғастыру</string>
+    <string name="downloads_action_move_up">Кезекте жоғары жылжыту</string>
+    <string name="downloads_action_move_down">Кезекте төмен жылжыту</string>
+
+    <string name="downloads_action_pause_all">Барлығын кідірту</string>
+    <string name="downloads_action_resume_all">Барлығын жалғастыру</string>
+    <string name="downloads_action_cancel_all">Барлығынан бас тарту</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Бұл жүктеуден бас тарту керек пе?</item>
+        <item quantity="other">Барлық %1$d жүктеуден бас тарту керек пе?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Кезек тазаланады және ішінара жүктелген файлдар жойылады. Аяқталған жүктеулерге әсер етпейді.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Жүктеулерден бас тарту</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Қалдыру</string>
+
+    <string name="downloads_delete_dialog_title">%1$s жою керек пе?</string>
+    <string name="downloads_delete_dialog_message">Жүктелген файлдар осы құрылғыдан жойылады. Оны кейін қайта жүктеп алуға болады.</string>
+    <string name="downloads_delete_dialog_confirm">Жою</string>
+    <string name="downloads_delete_dialog_cancel">Бас тарту</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / ең көбі %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">ең көбі %1$s</string>
+    <string name="downloads_speed">%1$s/с</string>
+    <string name="downloads_eta">%1$s қалды</string>
+    <string name="downloads_eta_approx">~%1$s қалды</string>
+    <string name="downloads_transcoded_marker">Қайта кодталған</string>
+    <string name="downloads_status_queued">Күтуде</string>
+    <string name="downloads_status_paused">Кідіртілді</string>
+    <string name="downloads_status_failed">Жүктеу сәтсіз аяқталды</string>
+    <string name="downloads_status_failed_reason">Жүктеу сәтсіз аяқталды: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Әзірге ештеңе жүктелмеген. Оны осы құрылғыда сақтау үшін фильм немесе бөлімде «Жүктеп алу» түймесін басыңыз.</string>
+    <string name="downloads_empty_queue">Жүктеу кезегі бос.</string>
+    <string name="downloads_load_failed">Жүктеулеріңізді оқу мүмкін болмады. Қайта көру үшін бұл экранды қайта ашыңыз.</string>
+    <string name="downloads_message_delete_failed">Бұл жүктеуді жою мүмкін болмады.</string>
+    <string name="downloads_message_action_failed">Кезекті жаңарту мүмкін болмады.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d кідіртілді — %2$d қайта кодтау жүктеле береді (қайта кодтауды кідірту мүмкін емес).</item>
+        <item quantity="other">%1$d кідіртілді — %2$d қайта кодтау жүктеле береді (қайта кодтауды кідірту мүмкін емес).</item>
+    </plurals>
+</resources>

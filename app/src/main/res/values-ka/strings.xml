@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">მეტი ვარიანტი</string>
+    <string name="home_settings">პარამეტრები</string>
+    <string name="settings_offline_mode">ოფლაინ რეჟიმი</string>
+    <string name="state_on">ჩართული</string>
+    <string name="state_off">გამორთული</string>
+    <string name="nav_home">მთავარი</string>
+    <string name="nav_libraries">ბიბლიოთეკები</string>
+    <string name="nav_search">ძებნა</string>
+    <string name="nav_downloads">გადმოწერები</string>
+    <string name="offline_no_network">ქსელი არ არის — ნაჩვენებია გადმოწერილი მედია</string>
+    <string name="offline_server_unreachable">სერვერთან დაკავშირება ვერ ხერხდება — ნაჩვენებია გადმოწერილი მედია</string>
+    <string name="offline_forced">ოფლაინ რეჟიმი ჩართულია — ნაჩვენებია გადმოწერილი მედია</string>
+    <string name="offline_retry">ხელახლა ცდა</string>
+    <string name="offline_go_online">ონლაინში გადასვლა</string>
+    <string name="syncplay_groups_action">SyncPlay ჯგუფები</string>
+    <string name="syncplay_groups_action_active">SyncPlay ჯგუფები — თქვენ ჯგუფში ხართ</string>
+</resources>

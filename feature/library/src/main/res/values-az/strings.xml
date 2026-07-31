@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Hələ kitabxana yoxdur. Serverdə bir dənə əlavə edin.</string>
+    <string name="library_back">Geri</string>
+    <string name="library_home">Əsas səhifə</string>
+    <string name="library_sort">Sırala</string>
+    <string name="library_filter">Filtrlə</string>
+    <string name="library_sort_title">Sırala:</string>
+    <string name="library_sort_name">Ad</string>
+    <string name="library_sort_date_added">Əlavə edilmə tarixi</string>
+    <string name="library_sort_premiere_date">Buraxılış tarixi</string>
+    <string name="library_sort_community_rating">İcma reytinqi</string>
+    <string name="library_sort_runtime">Müddət</string>
+    <string name="library_sort_random">Təsadüfi</string>
+    <string name="library_sort_direction">İstiqamət</string>
+    <string name="library_sort_ascending">Artan</string>
+    <string name="library_sort_descending">Azalan</string>
+    <string name="library_filters_title">Filtrlər</string>
+    <string name="library_filters_genres">Janrlar</string>
+    <string name="library_filters_years">İllər</string>
+    <string name="library_filters_played">İzlənilib</string>
+    <string name="library_filters_played_any">İstənilən</string>
+    <string name="library_filters_played_yes">İzlənilib</string>
+    <string name="library_filters_played_no">İzlənilməyib</string>
+    <string name="library_filters_clear">Hamısını təmizlə</string>
+    <string name="library_filters_apply">Nəticələri göstər</string>
+    <string name="library_filters_none">Bu kitabxana filtrləmək üçün heç nə təklif etmir.</string>
+    <string name="library_filters_loading">Filtrlər yüklənir…</string>
+    <string name="library_empty">Burada göstəriləcək heç nə yoxdur.</string>
+    <string name="library_empty_filtered">Bu filtrlərə uyğun element yoxdur.</string>
+    <string name="library_empty_clear_filters">Filtrləri təmizlə</string>
+    <string name="library_retry">Yenidən cəhd et</string>
+    <string name="library_error_network">Serverinizə çatmaq mümkün deyil. Bağlantınızı yoxlayın və yenidən cəhd edin.</string>
+    <string name="library_error_unauthorized">Sessiyanızın müddəti bitib. Davam etmək üçün yenidən daxil olun.</string>
+    <string name="library_error_not_found">Bu kitabxana artıq serverdə yoxdur.</string>
+    <string name="library_error_server">Server xəta qaytardı.</string>
+    <string name="library_error_server_with_code">Server xəta qaytardı (%1$d).</string>
+    <string name="library_error_storage">Yerli data oxuna bilmədi.</string>
+    <string name="library_error_unknown">Bu kitabxananın yüklənməsi zamanı xəta baş verdi.</string>
+</resources>

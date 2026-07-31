@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Rechercher des films, séries et épisodes</string>
+    <string name="search_clear">Effacer</string>
+    <string name="search_section_movies">Films</string>
+    <string name="search_section_series">Séries</string>
+    <string name="search_section_episodes">Épisodes</string>
+    <string name="search_prompt">Tapez pour rechercher dans vos bibliothèques.</string>
+    <string name="search_no_results">Aucun résultat pour « %1$s ».</string>
+    <string name="search_error_network">Impossible de joindre votre serveur. Vérifiez votre connexion et réessayez.</string>
+    <string name="search_error_unauthorized">Votre session a expiré. Reconnectez-vous pour continuer.</string>
+    <string name="search_error_not_found">Cet élément n\'est plus sur le serveur.</string>
+    <string name="search_error_server">Le serveur a renvoyé une erreur.</string>
+    <string name="search_error_server_with_code">Le serveur a renvoyé une erreur (%1$d).</string>
+    <string name="search_error_storage">Impossible de lire les données locales.</string>
+    <string name="search_error_unknown">Une erreur est survenue lors de la recherche.</string>
+</resources>

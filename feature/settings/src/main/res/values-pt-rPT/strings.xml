@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Definições</string>
+    <string name="settings_back">Retroceder</string>
+    <string name="settings_home">Início</string>
+    <string name="settings_section_playback">Reprodução</string>
+    <string name="settings_skip_intro">Saltar abertura</string>
+    <string name="settings_skip_outro">Saltar créditos finais</string>
+    <string name="settings_skip_mode_off">Não fazer nada</string>
+    <string name="settings_skip_mode_show_button">Mostrar um botão para saltar</string>
+    <string name="settings_skip_mode_auto">Saltar automaticamente</string>
+    <string name="settings_pip">Ecrã dentro de ecrã</string>
+    <string name="settings_pip_supporting">Continuar a reproduzir numa janela flutuante ao sair da aplicação.</string>
+    <string name="settings_section_downloads">Transferências</string>
+    <string name="settings_wifi_only">Apenas Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pausar transferências em dados móveis.</string>
+    <string name="settings_quality">Qualidade da transferência</string>
+    <string name="settings_quality_original">Ficheiro original — cópia exata, retomável</string>
+    <string name="settings_quality_high">Alta — cerca de 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Média — cerca de 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Baixa — cerca de 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Tudo o que não seja o ficheiro original é convertido pelo seu servidor à medida que o envia, pelo que o tamanho apresentado durante a transferência é uma estimativa e uma transferência interrompida recomeça do início.</string>
+    <string name="settings_storage_label">Armazenamento</string>
+    <string name="settings_storage_summary">%1$s usados · %2$s livres neste dispositivo</string>
+    <string name="settings_storage_location">As transferências são guardadas em %1$s</string>
+    <string name="settings_storage_picker">Local de armazenamento</string>
+    <string name="settings_storage_internal">Armazenamento interno</string>
+    <string name="settings_storage_sd_card">Cartão SD</string>
+    <string name="settings_storage_volume_free">%1$s livres</string>
+    <string name="settings_storage_missing">O armazenamento que escolheu não está disponível neste momento, pelo que as transferências vão para o local selecionado abaixo.</string>
+    <string name="settings_storage_switch_title">Mover transferências?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">As transferências ainda não podem ser movidas entre locais, pelo que a que já está neste dispositivo será eliminada. Pode transferi-la novamente para o novo local.</item>
+        <item quantity="other">As transferências ainda não podem ser movidas entre locais, pelo que as %1$d já neste dispositivo serão eliminadas. Pode transferi-las novamente para o novo local.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Eliminar e mudar</string>
+    <string name="settings_section_connectivity">Conetividade</string>
+    <string name="settings_offline_mode">Modo offline</string>
+    <string name="settings_offline_mode_supporting">Mostrar apenas conteúdo que já está neste dispositivo.</string>
+    <string name="settings_section_account">Conta</string>
+    <string name="settings_account_user">Sessão iniciada como</string>
+    <string name="settings_account_server">Servidor</string>
+    <string name="settings_account_unknown">Sem sessão iniciada</string>
+    <string name="settings_sign_out">Terminar sessão</string>
+    <string name="settings_sign_out_dialog_title">Terminar sessão?</string>
+    <string name="settings_sign_out_dialog_message">Vai precisar do endereço do servidor e da palavra-passe para iniciar sessão novamente.</string>
+    <string name="settings_sign_out_delete_downloads">Eliminar também as transferências deste dispositivo</string>
+    <string name="settings_cancel">Cancelar</string>
+</resources>

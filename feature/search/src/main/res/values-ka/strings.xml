@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">ფილმების, სერიალების და ეპიზოდების ძებნა</string>
+    <string name="search_clear">გასუფთავება</string>
+    <string name="search_section_movies">ფილმები</string>
+    <string name="search_section_series">სერიალები</string>
+    <string name="search_section_episodes">ეპიზოდები</string>
+    <string name="search_prompt">აკრიფეთ თქვენს ბიბლიოთეკებში საძებნად.</string>
+    <string name="search_no_results">ვერაფერი მოიძებნა „%1$s“-სთვის.</string>
+    <string name="search_error_network">თქვენს სერვერთან დაკავშირება ვერ ხერხდება. შეამოწმეთ თქვენი კავშირი და სცადეთ ხელახლა.</string>
+    <string name="search_error_unauthorized">თქვენი სესია ვადაგასულია. გასაგრძელებლად ხელახლა შედით.</string>
+    <string name="search_error_not_found">ეს ერთეული აღარ არის სერვერზე.</string>
+    <string name="search_error_server">სერვერმა შეცდომა დააბრუნა.</string>
+    <string name="search_error_server_with_code">სერვერმა შეცდომა დააბრუნა (%1$d).</string>
+    <string name="search_error_storage">ლოკალური მონაცემების წაკითხვა ვერ მოხერხდა.</string>
+    <string name="search_error_unknown">ძებნისას რაღაც შეცდომა მოხდა.</string>
+</resources>

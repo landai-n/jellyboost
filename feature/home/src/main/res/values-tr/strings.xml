@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Henüz izlenecek bir şey yok. Sunucudaki kitaplıklarınıza medya ekleyin.</string>
+    <string name="home_empty_refresh">Yenile</string>
+    <string name="home_section_my_media">Medyalarım</string>
+    <string name="home_section_continue_watching">İzlemeye Devam Et</string>
+    <string name="home_section_next_up">Sırada</string>
+    <string name="home_section_latest">En Yeni %1$s</string>
+</resources>

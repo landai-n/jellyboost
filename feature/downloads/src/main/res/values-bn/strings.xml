@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ডাউনলোড হয়েছে</string>
+    <string name="downloads_tab_queue">সারি</string>
+    <string name="downloads_wifi_only">শুধু Wi‑Fi</string>
+    <string name="downloads_group_movies">সিনেমা</string>
+    <string name="downloads_storage_summary">%1$s ব্যবহৃত · %2$s খালি</string>
+    <string name="downloads_action_delete">ডাউনলোড মুছুন</string>
+    <string name="downloads_action_cancel">ডাউনলোড বাতিল করুন</string>
+    <string name="downloads_action_pause">ডাউনলোড থামান</string>
+    <string name="downloads_action_resume">ডাউনলোড আবার শুরু করুন</string>
+    <string name="downloads_action_move_up">সারিতে উপরে নিন</string>
+    <string name="downloads_action_move_down">সারিতে নিচে নিন</string>
+    <string name="downloads_action_pause_all">সব থামান</string>
+    <string name="downloads_action_resume_all">সব আবার শুরু করুন</string>
+    <string name="downloads_action_cancel_all">সব বাতিল করুন</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">এই ডাউনলোডটি বাতিল করবেন?</item>
+        <item quantity="other">সব %1$d ডাউনলোড বাতিল করবেন?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">সারিটি খালি করা হবে এবং আংশিক ডাউনলোড করা ফাইলগুলো সরানো হবে। সম্পন্ন ডাউনলোডগুলোতে কোনো প্রভাব পড়বে না।</string>
+    <string name="downloads_cancel_all_dialog_confirm">ডাউনলোড বাতিল করুন</string>
+    <string name="downloads_cancel_all_dialog_dismiss">রাখুন</string>
+    <string name="downloads_delete_dialog_title">%1$s মুছবেন?</string>
+    <string name="downloads_delete_dialog_message">ডাউনলোড করা ফাইলগুলো এই ডিভাইস থেকে সরানো হবে। আপনি পরে আবার এটি ডাউনলোড করতে পারবেন।</string>
+    <string name="downloads_delete_dialog_confirm">মুছুন</string>
+    <string name="downloads_delete_dialog_cancel">বাতিল করুন</string>
+    <string name="downloads_progress_of">%2$s এর মধ্যে %1$s</string>
+    <string name="downloads_progress_of_approx">~%2$s এর মধ্যে %1$s</string>
+    <string name="downloads_progress_of_capped">সর্বোচ্চ %2$s এর মধ্যে %1$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">সর্বোচ্চ %1$s</string>
+    <string name="downloads_speed">%1$s/সে</string>
+    <string name="downloads_eta">%1$s বাকি</string>
+    <string name="downloads_eta_approx">~%1$s বাকি</string>
+    <string name="downloads_transcoded_marker">ট্রান্সকোড করা</string>
+    <string name="downloads_status_queued">অপেক্ষমাণ</string>
+    <string name="downloads_status_paused">থামানো হয়েছে</string>
+    <string name="downloads_status_failed">ডাউনলোড ব্যর্থ হয়েছে</string>
+    <string name="downloads_status_failed_reason">ডাউনলোড ব্যর্থ হয়েছে: %1$s</string>
+    <string name="downloads_empty_downloaded">এখনও কিছু ডাউনলোড হয়নি। কোনো সিনেমা বা পর্বে ডাউনলোড ট্যাপ করে এটি এই ডিভাইসে রাখুন।</string>
+    <string name="downloads_empty_queue">ডাউনলোড সারি খালি।</string>
+    <string name="downloads_load_failed">আপনার ডাউনলোড পড়া যায়নি। আবার চেষ্টা করতে এই স্ক্রিনটি পুনরায় খুলুন।</string>
+    <string name="downloads_message_delete_failed">সেই ডাউনলোডটি মুছা যায়নি।</string>
+    <string name="downloads_message_action_failed">সারি আপডেট করা যায়নি।</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$dটি থামানো হয়েছে — %2$dটি ট্রান্সকোড ডাউনলোড হতে থাকবে (ট্রান্সকোড থামানো যায় না)।</item>
+        <item quantity="other">%1$dটি থামানো হয়েছে — %2$dটি ট্রান্সকোড ডাউনলোড হতে থাকবে (ট্রান্সকোড থামানো যায় না)।</item>
+    </plurals>
+</resources>

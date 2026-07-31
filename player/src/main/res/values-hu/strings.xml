@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Lejátszó bezárása</string>
+    <string name="player_play">Lejátszás</string>
+    <string name="player_pause">Szünet</string>
+    <string name="player_rewind">10 másodperc vissza</string>
+    <string name="player_forward">30 másodperc előre</string>
+
+    <string name="player_audio">Hang</string>
+    <string name="player_subtitles">Feliratok</string>
+    <string name="player_subtitles_off">Ki</string>
+    <string name="player_quality">Minőség</string>
+    <string name="player_speed">Sebesség</string>
+
+    <string name="player_skip_intro">Bevezető kihagyása</string>
+    <string name="player_skip_outro">Végjelenet kihagyása</string>
+
+    <string name="player_quality_auto">Automatikus</string>
+    <string name="player_quality_high">Magas – 20 Mbps</string>
+    <string name="player_quality_medium">Közepes – 8 Mbps</string>
+    <string name="player_quality_low">Alacsony – 3 Mbps</string>
+    <string name="player_quality_lowest">Legalacsonyabb – 720 kbps</string>
+
+    <string name="player_method_direct_play">Közvetlen lejátszás</string>
+    <string name="player_method_direct_stream">Közvetlen streamelés</string>
+    <string name="player_method_transcode">Átkódolás</string>
+
+    <string name="player_message_transcode">Az eszközöd nem tudta dekódolni ezt a fájlt, ezért a szerver átkódolja.</string>
+    <string name="player_message_lower_quality">A stream elakadt – újrapróbálkozás alacsonyabb minőséggel.</string>
+    <string name="player_message_track_restart">A szervernek újra kellett kódolnia a streamet ehhez a sávhoz.</string>
+    <string name="player_message_track_streaming">Ez a sáv nincs a letöltésben – streamelés a szerverről.</string>
+    <string name="player_message_track_offline">Ez a sáv nincs a letöltött fájlban.</string>
+    <string name="player_message_failed">A lejátszás sikertelen.</string>
+
+    <string name="player_syncplay_group">Csoport</string>
+    <string name="player_syncplay_waiting">Várakozás a csoportra…</string>
+    <string name="player_syncplay_shuffle">Sor keverése</string>
+    <string name="player_syncplay_repeat">Ismétlés</string>
+    <string name="player_syncplay_repeat_none">Ki</string>
+    <string name="player_syncplay_repeat_one">Ez az elem</string>
+    <string name="player_syncplay_repeat_all">Teljes sor</string>
+    <string name="player_syncplay_leave">Kilépés a csoportból</string>
+    <string name="player_syncplay_leave_title">Kilépsz ebből a csoportból?</string>
+    <string name="player_syncplay_leave_body">A lejátszás itt önállóan folytatódik. Az újracsatlakozáshoz újra ki kell választanod a csoportot.</string>
+
+    <string name="player_syncplay_cancel">Mégse</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d fő nézi</item>
+        <item quantity="other">%d fő nézi</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d további</string>
+
+    <string name="player_syncplay_queue">Sor</string>
+    <string name="player_syncplay_queue_empty">A csoport még nem tett semmit a sorba.</string>
+    <string name="player_syncplay_queue_item_loading">Betöltés…</string>
+    <string name="player_syncplay_queue_playing">Most játszik</string>
+    <string name="player_syncplay_queue_next">Következő elem</string>
+    <string name="player_syncplay_queue_previous">Előző elem</string>
+    <string name="player_syncplay_queue_move_up">Feljebb</string>
+    <string name="player_syncplay_queue_move_down">Lejjebb</string>
+    <string name="player_syncplay_queue_remove">Eltávolítás a sorból</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d elem a sorban</item>
+        <item quantity="other">%d elem a sorban</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Kilépés a SyncPlay-ből – megszakadt a kapcsolat</string>
+    <string name="player_message_syncplay_rejoined">Újracsatlakozás a SyncPlay csoporthoz</string>
+    <string name="player_message_syncplay_join_failed">Nem sikerült csatlakozni a SyncPlay csoporthoz.</string>
+    <string name="player_message_syncplay_group_ended">A SyncPlay csoport véget ért.</string>
+    <string name="player_message_syncplay_removed">Már nem vagy a SyncPlay csoportban.</string>
+    <string name="player_message_syncplay_library_denied">A csoport olyasmit néz, amihez nincs hozzáférésed.</string>
+    <string name="player_message_syncplay_item_unavailable">Nem sikerült megnyitni, amit a csoport néz.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Vissza</string>
+    <string name="player_syncplay_groups_home">Kezdőlap</string>
+    <string name="player_syncplay_groups_create">Csoport létrehozása</string>
+    <string name="player_syncplay_groups_create_title">Add meg a csoport nevét</string>
+    <string name="player_syncplay_groups_create_hint">Csoport neve</string>
+    <string name="player_syncplay_groups_create_confirm">Létrehozás</string>
+    <string name="player_syncplay_groups_joining">Csatlakozás…</string>
+    <string name="player_syncplay_groups_active_label">Ebben a csoportban vagy</string>
+    <string name="player_syncplay_groups_open_player">Lejátszó megnyitása</string>
+    <string name="player_syncplay_groups_empty">Jelenleg senki más nem néz együtt.</string>
+    <string name="player_syncplay_groups_disabled">A SyncPlay le van tiltva a fiókodnál.</string>
+    <string name="player_syncplay_groups_error">Nem sikerült betölteni a SyncPlay csoportokat.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay csoport</string>
+    <string name="player_syncplay_presence_channel_description">Megőrzi a helyedet egy közös nézési csoportban, amíg az app a háttérben fut.</string>
+    <string name="player_syncplay_presence_title">SyncPlay csoportban</string>
+    <string name="player_syncplay_presence_text">Várakozás a csoportra</string>
+    <string name="player_syncplay_presence_leave">Kilépés</string>
+
+    <string name="player_syncplay_state_idle">Üresjárat</string>
+    <string name="player_syncplay_state_waiting">Várakozás</string>
+    <string name="player_syncplay_state_paused">Szüneteltetve</string>
+    <string name="player_syncplay_state_playing">Lejátszás</string>
+
+    <string name="player_cast">Küldés eszközre</string>
+
+    <string name="player_cast_device_unnamed">a TV-d</string>
+    <string name="player_message_cast_transferred">Most ezen játszik: %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Kilépett a SyncPlay csoportból, hogy erre küldjön: %1$s.</string>
+    <string name="player_message_cast_failed">Nem sikerült lejátszani ezen: %1$s.</string>
+
+    <string name="player_casting_to">Küldés erre: %1$s</string>
+</resources>

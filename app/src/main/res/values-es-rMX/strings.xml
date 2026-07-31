@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Más opciones</string>
+    <string name="home_settings">Ajustes</string>
+    <string name="settings_offline_mode">Modo sin conexión</string>
+    <string name="state_on">Activado</string>
+    <string name="state_off">Desactivado</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_libraries">Bibliotecas</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_downloads">Descargas</string>
+    <string name="offline_no_network">Sin conexión — mostrando contenido descargado</string>
+    <string name="offline_server_unreachable">No se puede contactar con el servidor — mostrando contenido descargado</string>
+    <string name="offline_forced">El modo sin conexión está activado — mostrando contenido descargado</string>
+    <string name="offline_retry">Reintentar</string>
+    <string name="offline_go_online">Conectarse</string>
+    <string name="syncplay_groups_action">Grupos de SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grupos de SyncPlay — estás en un grupo</string>
+</resources>

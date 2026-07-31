@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Transferências</string>
+    <string name="downloads_channel_description">Progresso da transferência de conteúdo multimédia para este dispositivo.</string>
+    <string name="downloads_notification_preparing">A preparar transferências…</string>
+    <string name="downloads_notification_downloading">A transferir…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">A transferir…</string>
+    <string name="downloads_action_pause">Pausar</string>
+    <string name="downloads_action_cancel">Cancelar</string>
+</resources>

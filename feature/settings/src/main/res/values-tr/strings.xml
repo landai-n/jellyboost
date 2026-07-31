@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_back">Geri</string>
+    <string name="settings_home">Ana Sayfa</string>
+    <string name="settings_section_playback">Oynatma</string>
+    <string name="settings_skip_intro">Girişi atla</string>
+    <string name="settings_skip_outro">Kapanışı atla</string>
+    <string name="settings_skip_mode_off">Hiçbir şey yapma</string>
+    <string name="settings_skip_mode_show_button">Bir atlama düğmesi göster</string>
+    <string name="settings_skip_mode_auto">Otomatik olarak atla</string>
+    <string name="settings_pip">Resim içinde resim</string>
+    <string name="settings_pip_supporting">Uygulamadan çıktığınızda kayan bir pencerede oynatmaya devam et.</string>
+    <string name="settings_section_downloads">İndirilenler</string>
+    <string name="settings_wifi_only">Yalnızca Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Mobil veride indirmeleri duraklat.</string>
+    <string name="settings_quality">İndirme kalitesi</string>
+    <string name="settings_quality_original">Orijinal dosya — birebir kopya, devam ettirilebilir</string>
+    <string name="settings_quality_high">Yüksek — yaklaşık 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Orta — yaklaşık 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Düşük — yaklaşık 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Orijinal dosya dışındaki her şey, sunucunuz tarafından gönderilirken dönüştürülür; bu yüzden indirilirken gösterilen boyut bir tahmindir ve kesintiye uğrayan bir aktarım yeniden baştan başlar.</string>
+    <string name="settings_storage_label">Depolama</string>
+    <string name="settings_storage_summary">Bu cihazda %1$s kullanıldı · %2$s boş</string>
+    <string name="settings_storage_location">İndirmeler %1$s içinde tutulur</string>
+    <string name="settings_storage_picker">Depolama konumu</string>
+    <string name="settings_storage_internal">Dahili depolama</string>
+    <string name="settings_storage_sd_card">SD kart</string>
+    <string name="settings_storage_volume_free">%1$s boş</string>
+    <string name="settings_storage_missing">Seçtiğiniz depolama şu anda kullanılamıyor, bu yüzden indirmeler aşağıda seçilen konuma gidiyor.</string>
+    <string name="settings_storage_switch_title">İndirmeler taşınsın mı?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">İndirmeler henüz konumlar arasında taşınamıyor, bu yüzden bu cihazdaki mevcut olan silinecek. Yeni konuma tekrar indirebilirsiniz.</item>
+        <item quantity="other">İndirmeler henüz konumlar arasında taşınamıyor, bu yüzden bu cihazdaki %1$d tanesi silinecek. Yeni konuma tekrar indirebilirsiniz.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Sil ve değiştir</string>
+    <string name="settings_section_connectivity">Bağlantı</string>
+    <string name="settings_offline_mode">Çevrimdışı mod</string>
+    <string name="settings_offline_mode_supporting">Yalnızca bu cihazda zaten bulunan medyayı göster.</string>
+    <string name="settings_section_account">Hesap</string>
+    <string name="settings_account_user">Şu olarak giriş yapıldı:</string>
+    <string name="settings_account_server">Sunucu</string>
+    <string name="settings_account_unknown">Oturum açılmadı</string>
+    <string name="settings_sign_out">Oturumu kapat</string>
+    <string name="settings_sign_out_dialog_title">Oturum kapatılsın mı?</string>
+    <string name="settings_sign_out_dialog_message">Tekrar giriş yapmak için sunucu adresinize ve şifrenize ihtiyacınız olacak.</string>
+    <string name="settings_sign_out_delete_downloads">Bu cihazdaki indirmeleri de sil</string>
+    <string name="settings_cancel">İptal</string>
+</resources>

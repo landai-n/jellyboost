@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Έγινε λήψη</string>
+    <string name="badge_download_queued">Σε αναμονή για λήψη</string>
+    <string name="badge_download_paused">Η λήψη διακόπηκε</string>
+    <string name="badge_download_failed">Η λήψη απέτυχε</string>
+
+    <string name="media_row_see_all">Προβολή όλων</string>
+    <string name="media_card_watched">Παρακολουθήθηκε</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d επιλεγμένο</item>
+        <item quantity="other">%1$d επιλεγμένα</item>
+    </plurals>
+    <string name="selection_close">Απαλοιφή επιλογής</string>
+    <string name="selection_select_all">Επιλογή όλων</string>
+    <string name="selection_mark_watched">Σήμανση ως παρακολουθημένο</string>
+    <string name="selection_mark_unwatched">Σήμανση ως μη παρακολουθημένο</string>
+    <string name="selection_download">Λήψη</string>
+
+    <string name="selection_item_selected">Επιλεγμένο</string>
+    <string name="selection_item_not_selected">Μη επιλεγμένο</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Σημειώθηκε %1$d ως παρακολουθημένο</item>
+        <item quantity="other">Σημειώθηκαν %1$d ως παρακολουθημένα</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Σημειώθηκαν %1$d ως παρακολουθημένα, %2$d απέτυχαν</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Δεν ήταν δυνατή η σήμανση %1$d στοιχείου ως παρακολουθημένου</item>
+        <item quantity="other">Δεν ήταν δυνατή η σήμανση %1$d στοιχείων ως παρακολουθημένων</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Σημειώθηκε %1$d ως μη παρακολουθημένο</item>
+        <item quantity="other">Σημειώθηκαν %1$d ως μη παρακολουθημένα</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Σημειώθηκαν %1$d ως μη παρακολουθημένα, %2$d απέτυχαν</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Δεν ήταν δυνατή η σήμανση %1$d στοιχείου ως μη παρακολουθημένου</item>
+        <item quantity="other">Δεν ήταν δυνατή η σήμανση %1$d στοιχείων ως μη παρακολουθημένων</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Προστέθηκε %1$d στις λήψεις</item>
+        <item quantity="other">Προστέθηκαν %1$d στις λήψεις</item>
+    </plurals>
+    <string name="selection_result_download_partial">Προστέθηκαν %1$d στις λήψεις, %2$d απέτυχαν</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Δεν ήταν δυνατή η προσθήκη %1$d στοιχείου στις λήψεις</item>
+        <item quantity="other">Δεν ήταν δυνατή η προσθήκη %1$d στοιχείων στις λήψεις</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Προστέθηκαν %1$d στις λήψεις — %2$d υπάρχουν ήδη σε αυτή τη συσκευή</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d στοιχείο υπάρχει ήδη σε αυτή τη συσκευή</item>
+        <item quantity="other">%1$d στοιχεία υπάρχουν ήδη σε αυτή τη συσκευή</item>
+    </plurals>
+</resources>

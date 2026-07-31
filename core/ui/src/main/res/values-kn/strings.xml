@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ಡೌನ್‌ಲೋಡ್ ಆಗಿದೆ</string>
+    <string name="badge_download_queued">ಡೌನ್‌ಲೋಡ್‌ಗಾಗಿ ಸರತಿಯಲ್ಲಿದೆ</string>
+    <string name="badge_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಂಡಿದೆ</string>
+    <string name="badge_download_failed">ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ</string>
+
+    <string name="media_row_see_all">ಎಲ್ಲವನ್ನೂ ನೋಡಿ</string>
+    <string name="media_card_watched">ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ಆಯ್ಕೆಯಾಗಿದೆ</item>
+        <item quantity="other">%1$d ಆಯ್ಕೆಯಾಗಿವೆ</item>
+    </plurals>
+    <string name="selection_close">ಆಯ್ಕೆಯನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
+    <string name="selection_select_all">ಎಲ್ಲವನ್ನೂ ಆಯ್ಕೆಮಾಡಿ</string>
+    <string name="selection_mark_watched">ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ</string>
+    <string name="selection_mark_unwatched">ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ</string>
+    <string name="selection_download">ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ</string>
+
+    <string name="selection_item_selected">ಆಯ್ಕೆಯಾಗಿದೆ</string>
+    <string name="selection_item_not_selected">ಆಯ್ಕೆಯಾಗಿಲ್ಲ</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ</item>
+        <item quantity="other">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ, %2$d ವಿಫಲವಾಗಿದೆ</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d ಐಟಂ ಅನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+        <item quantity="other">%1$d ಐಟಂಗಳನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ</item>
+        <item quantity="other">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ, %2$d ವಿಫಲವಾಗಿದೆ</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d ಐಟಂ ಅನ್ನು ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+        <item quantity="other">%1$d ಐಟಂಗಳನ್ನು ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d ಅನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ</item>
+        <item quantity="other">%1$d ಅನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d ಅನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ, %2$d ವಿಫಲವಾಗಿದೆ</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d ಐಟಂ ಅನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+        <item quantity="other">%1$d ಐಟಂಗಳನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d ಅನ್ನು ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ — %2$d ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿವೆ</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d ಐಟಂ ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿದೆ</item>
+        <item quantity="other">%1$d ಐಟಂಗಳು ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿವೆ</item>
+    </plurals>
+</resources>

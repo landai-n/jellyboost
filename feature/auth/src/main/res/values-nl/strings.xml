@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Verbinden met server</string>
+    <string name="server_setup_discovered_title">Servers op dit netwerk</string>
+    <string name="server_setup_discovering">Lokaal netwerk doorzoeken…</string>
+    <string name="server_setup_no_servers_found">Er hebben zich geen servers gemeld. Voer hieronder een adres in.</string>
+    <string name="server_setup_manual_title">Serveradres</string>
+    <string name="server_setup_address_label">Host of URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org of 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Verbinden</string>
+    <string name="server_setup_connecting">Contact maken met de server…</string>
+    <string name="server_setup_session_lost">Je opgeslagen aanmelding kon niet worden hersteld, dus je bent afgemeld. Meld je opnieuw aan.</string>
+
+    <string name="login_title">Aanmelden</string>
+    <string name="login_server_version">Versie %1$s</string>
+    <string name="login_server_version_unknown">Versie onbekend</string>
+    <string name="login_public_users_title">Wie kijkt er?</string>
+    <string name="login_username_label">Gebruikersnaam</string>
+    <string name="login_password_label">Wachtwoord</string>
+    <string name="login_show_password">Wachtwoord tonen</string>
+    <string name="login_hide_password">Wachtwoord verbergen</string>
+    <string name="login_sign_in">Aanmelden</string>
+    <string name="login_change_server">Andere server gebruiken</string>
+    <string name="login_loading">Servergegevens laden…</string>
+    <string name="login_or">of</string>
+
+    <string name="login_quick_connect">Quick Connect gebruiken</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Open Jellyfin op een apparaat waarop je al bent aangemeld, ga naar Quick Connect en voer deze code in.</string>
+    <string name="login_quick_connect_waiting">Wachten op goedkeuring…</string>
+    <string name="login_quick_connect_cancel">Annuleren</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d mogelijk adres geprobeerd, zonder succes.</item>
+        <item quantity="other">%d mogelijke adressen geprobeerd, zonder succes.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Kan de server niet bereiken</string>
+    <string name="auth_error_unsupported_version_or_product">Niet-ondersteunde versie of niet-ondersteund product</string>
+    <string name="auth_error_cannot_connect">Er kan geen verbinding worden gemaakt.\nControleer de hostnaam en je netwerkverbinding.</string>
+    <string name="auth_error_invalid_credentials">Onjuiste gebruikersnaam of onjuist wachtwoord.</string>
+    <string name="auth_error_quick_connect_expired">Die code is verlopen. Vraag een nieuwe aan en probeer het opnieuw.</string>
+    <string name="auth_error_server">De server antwoordde met een fout. Probeer het opnieuw.</string>
+    <string name="auth_error_server_with_code">De server antwoordde met een fout (%1$d). Probeer het opnieuw.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">لا يوجد شيء لمشاهدته بعد. أضف وسائط إلى مكتباتك على الخادم.</string>
+    <string name="home_empty_refresh">تحديث</string>
+
+    <string name="home_section_my_media">وسائطي</string>
+    <string name="home_section_continue_watching">متابعة المشاهدة</string>
+    <string name="home_section_next_up">التالي</string>
+    <string name="home_section_latest">أحدث %1$s</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Cerca film, serie ed episodi</string>
+    <string name="search_clear">Cancella</string>
+    <string name="search_section_movies">Film</string>
+    <string name="search_section_series">Serie</string>
+    <string name="search_section_episodes">Episodi</string>
+    <string name="search_prompt">Digita per cercare nelle tue librerie.</string>
+    <string name="search_no_results">Nessun risultato per “%1$s”.</string>
+    <string name="search_error_network">Impossibile raggiungere il tuo server. Controlla la connessione e riprova.</string>
+    <string name="search_error_unauthorized">La tua sessione è scaduta. Accedi di nuovo per continuare.</string>
+    <string name="search_error_not_found">Questo elemento non è più sul server.</string>
+    <string name="search_error_server">Il server ha restituito un errore.</string>
+    <string name="search_error_server_with_code">Il server ha restituito un errore (%1$d).</string>
+    <string name="search_error_storage">Impossibile leggere i dati locali.</string>
+    <string name="search_error_unknown">Si è verificato un errore durante la ricerca.</string>
+</resources>

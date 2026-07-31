@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">關閉播放器</string>
+    <string name="player_play">播放</string>
+    <string name="player_pause">暫停</string>
+    <string name="player_rewind">倒返 10 秒</string>
+    <string name="player_forward">快進 30 秒</string>
+
+    <string name="player_audio">音軌</string>
+    <string name="player_subtitles">字幕</string>
+    <string name="player_subtitles_off">關閉</string>
+    <string name="player_quality">畫質</string>
+    <string name="player_speed">速度</string>
+
+    <string name="player_skip_intro">跳過片頭</string>
+    <string name="player_skip_outro">跳過片尾</string>
+
+    <string name="player_quality_auto">自動</string>
+    <string name="player_quality_high">高——20 Mbps</string>
+    <string name="player_quality_medium">中——8 Mbps</string>
+    <string name="player_quality_low">低——3 Mbps</string>
+    <string name="player_quality_lowest">最低——720 kbps</string>
+
+    <string name="player_method_direct_play">直接播放</string>
+    <string name="player_method_direct_stream">直接串流</string>
+    <string name="player_method_transcode">轉碼</string>
+
+    <string name="player_message_transcode">你部裝置解唔到呢個檔案，所以伺服器幫緊佢轉碼。</string>
+    <string name="player_message_lower_quality">串流頓咗——用緊較低畫質再試。</string>
+    <string name="player_message_track_restart">伺服器要幫嗰條音軌重新編碼串流。</string>
+    <string name="player_message_track_streaming">呢條音軌唔喺下載內容入面——由伺服器度串流緊。</string>
+    <string name="player_message_track_offline">呢條音軌唔喺已下載嘅檔案入面。</string>
+    <string name="player_message_failed">播放失敗。</string>
+
+    <string name="player_syncplay_group">群組</string>
+    <string name="player_syncplay_waiting">等緊群組…</string>
+    <string name="player_syncplay_shuffle">隨機播放佇列</string>
+    <string name="player_syncplay_repeat">循環播放</string>
+    <string name="player_syncplay_repeat_none">關閉</string>
+    <string name="player_syncplay_repeat_one">單項循環</string>
+    <string name="player_syncplay_repeat_all">成個佇列</string>
+    <string name="player_syncplay_leave">離開群組</string>
+    <string name="player_syncplay_leave_title">要離開呢個群組？</string>
+    <string name="player_syncplay_leave_body">播放會喺度自己繼續。再加入嘅話要再揀過群組。</string>
+
+    <string name="player_syncplay_cancel">取消</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="other">%d 人喺度睇緊</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s 同另外 %2$d 人</string>
+
+    <string name="player_syncplay_queue">佇列</string>
+    <string name="player_syncplay_queue_empty">個群組仲未加過任何嘢入佇列。</string>
+    <string name="player_syncplay_queue_item_loading">載入緊…</string>
+    <string name="player_syncplay_queue_playing">依家播緊</string>
+    <string name="player_syncplay_queue_next">下一項</string>
+    <string name="player_syncplay_queue_previous">上一項</string>
+    <string name="player_syncplay_queue_move_up">上移</string>
+    <string name="player_syncplay_queue_move_down">下移</string>
+    <string name="player_syncplay_queue_remove">由佇列度移除</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="other">已加咗 %d 項入佇列</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">已離開 SyncPlay——連線斷咗</string>
+    <string name="player_message_syncplay_rejoined">已重新加入 SyncPlay 群組</string>
+    <string name="player_message_syncplay_join_failed">冇辦法加入嗰個 SyncPlay 群組。</string>
+    <string name="player_message_syncplay_group_ended">呢個 SyncPlay 群組已經結束。</string>
+    <string name="player_message_syncplay_removed">你已經唔喺呢個 SyncPlay 群組入面。</string>
+    <string name="player_message_syncplay_library_denied">個群組睇緊啲你冇權限睇嘅嘢。</string>
+    <string name="player_message_syncplay_item_unavailable">冇辦法打開個群組睇緊嘅嘢。</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">返回</string>
+    <string name="player_syncplay_groups_home">主頁</string>
+    <string name="player_syncplay_groups_create">建立群組</string>
+    <string name="player_syncplay_groups_create_title">幫你嘅群組改個名</string>
+    <string name="player_syncplay_groups_create_hint">群組名稱</string>
+    <string name="player_syncplay_groups_create_confirm">建立</string>
+    <string name="player_syncplay_groups_joining">加入緊…</string>
+    <string name="player_syncplay_groups_active_label">你已經喺呢個群組入面</string>
+    <string name="player_syncplay_groups_open_player">打開播放器</string>
+    <string name="player_syncplay_groups_empty">而家冇其他人一齊睇緊。</string>
+    <string name="player_syncplay_groups_disabled">你嘅帳戶已停用 SyncPlay。</string>
+    <string name="player_syncplay_groups_error">冇辦法載入 SyncPlay 群組。</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay 群組</string>
+    <string name="player_syncplay_presence_channel_description">喺應用程式喺背景運行嗰陣，保留你喺一齊睇群組入面嘅位置。</string>
+    <string name="player_syncplay_presence_title">喺 SyncPlay 群組入面</string>
+    <string name="player_syncplay_presence_text">等緊個群組</string>
+    <string name="player_syncplay_presence_leave">離開</string>
+
+    <string name="player_syncplay_state_idle">閒置</string>
+    <string name="player_syncplay_state_waiting">等緊</string>
+    <string name="player_syncplay_state_paused">已暫停</string>
+    <string name="player_syncplay_state_playing">播緊</string>
+
+    <string name="player_cast">投放去裝置</string>
+
+    <string name="player_cast_device_unnamed">你嘅電視</string>
+    <string name="player_message_cast_transferred">而家喺 %1$s 度播緊。</string>
+    <string name="player_message_cast_left_syncplay">已經離開咗 SyncPlay 群組，投放去 %1$s。</string>
+    <string name="player_message_cast_failed">冇辦法喺 %1$s 度播嗰個。</string>
+
+    <string name="player_casting_to">投放緊去 %1$s</string>
+</resources>

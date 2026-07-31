@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">ڈاؤن لوڈز</string>
+    <string name="downloads_channel_description">اس ڈیوائس پر میڈیا ڈاؤن لوڈ ہونے کی پیش رفت۔</string>
+
+    <string name="downloads_notification_preparing">ڈاؤن لوڈز تیار کیے جا رہے ہیں…</string>
+    <string name="downloads_notification_downloading">ڈاؤن لوڈ ہو رہا ہے…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">ڈاؤن لوڈ ہو رہا ہے…</string>
+    <string name="downloads_action_pause">موقوف کریں</string>
+    <string name="downloads_action_cancel">منسوخ کریں</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">দেখার মতো এখনও কিছু নেই। সার্ভারে আপনার লাইব্রেরিতে মিডিয়া যোগ করুন।</string>
+    <string name="home_empty_refresh">রিফ্রেশ করুন</string>
+    <string name="home_section_my_media">আমার মিডিয়া</string>
+    <string name="home_section_continue_watching">দেখা চালিয়ে যান</string>
+    <string name="home_section_next_up">পরবর্তী</string>
+    <string name="home_section_latest">সাম্প্রতিক %1$s</string>
+</resources>

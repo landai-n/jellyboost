@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Inställningar</string>
+    <string name="settings_back">Tillbaka</string>
+    <string name="settings_home">Hem</string>
+
+    <string name="settings_section_playback">Uppspelning</string>
+    <string name="settings_skip_intro">Hoppa över intro</string>
+    <string name="settings_skip_outro">Hoppa över outro</string>
+    <string name="settings_skip_mode_off">Gör ingenting</string>
+    <string name="settings_skip_mode_show_button">Visa en hoppa över-knapp</string>
+    <string name="settings_skip_mode_auto">Hoppa över automatiskt</string>
+    <string name="settings_pip">Bild‑i‑bild</string>
+    <string name="settings_pip_supporting">Fortsätt spela upp i ett flytande fönster när du lämnar appen.</string>
+
+    <string name="settings_section_downloads">Nedladdningar</string>
+    <string name="settings_wifi_only">Endast Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Pausa nedladdningar vid mobildata.</string>
+    <string name="settings_quality">Nedladdningskvalitet</string>
+    <string name="settings_quality_original">Originalfil – exakt kopia, kan återupptas</string>
+    <string name="settings_quality_high">Hög – cirka 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Medel – cirka 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Låg – cirka 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Allt förutom originalfilen konverteras av din server när den skickas, så storleken som visas under nedladdningen är en uppskattning, och en avbruten överföring börjar om från början.</string>
+    <string name="settings_storage_label">Lagring</string>
+    <string name="settings_storage_summary">%1$s använt · %2$s ledigt på den här enheten</string>
+    <string name="settings_storage_location">Nedladdningar sparas i %1$s</string>
+    <string name="settings_storage_picker">Lagringsplats</string>
+    <string name="settings_storage_internal">Internt lagringsutrymme</string>
+    <string name="settings_storage_sd_card">SD-kort</string>
+    <string name="settings_storage_volume_free">%1$s ledigt</string>
+    <string name="settings_storage_missing">Lagringsutrymmet du valde är inte tillgängligt just nu, så nedladdningar går till platsen som valts nedan.</string>
+    <string name="settings_storage_switch_title">Flytta nedladdningar?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Nedladdningar kan inte flyttas mellan platser än, så den som redan finns på den här enheten tas bort. Du kan ladda ner den igen till den nya platsen.</item>
+        <item quantity="other">Nedladdningar kan inte flyttas mellan platser än, så de %1$d som redan finns på den här enheten tas bort. Du kan ladda ner dem igen till den nya platsen.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Ta bort och byt</string>
+
+    <string name="settings_section_connectivity">Anslutning</string>
+    <string name="settings_offline_mode">Offlineläge</string>
+    <string name="settings_offline_mode_supporting">Visa bara innehåll som redan finns på den här enheten.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Inloggad som</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Inte inloggad</string>
+    <string name="settings_sign_out">Logga ut</string>
+    <string name="settings_sign_out_dialog_title">Logga ut?</string>
+    <string name="settings_sign_out_dialog_message">Du behöver din serveradress och ditt lösenord för att logga in igen.</string>
+    <string name="settings_sign_out_delete_downloads">Ta även bort nedladdningar från den här enheten</string>
+    <string name="settings_cancel">Avbryt</string>
+</resources>

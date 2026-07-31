@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Verbind met bediener</string>
+    <string name="server_setup_discovered_title">Bedieners op hierdie netwerk</string>
+    <string name="server_setup_discovering">Deursoek die plaaslike netwerk…</string>
+    <string name="server_setup_no_servers_found">Geen bedieners het hulself aangekondig nie. Voer \'n adres hieronder in.</string>
+    <string name="server_setup_manual_title">Bediener-adres</string>
+    <string name="server_setup_address_label">Gasheer of URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org of 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Verbind</string>
+    <string name="server_setup_connecting">Kontak die bediener…</string>
+    <string name="server_setup_session_lost">Jou gestoorde aanmelding kon nie herstel word nie, so jy is afgemeld. Meld asseblief weer aan.</string>
+
+    <string name="login_title">Meld aan</string>
+    <string name="login_server_version">Weergawe %1$s</string>
+    <string name="login_server_version_unknown">Weergawe onbekend</string>
+    <string name="login_public_users_title">Wie kyk?</string>
+    <string name="login_username_label">Gebruikersnaam</string>
+    <string name="login_password_label">Wagwoord</string>
+    <string name="login_show_password">Wys wagwoord</string>
+    <string name="login_hide_password">Versteek wagwoord</string>
+    <string name="login_sign_in">Meld aan</string>
+    <string name="login_change_server">Gebruik \'n ander bediener</string>
+    <string name="login_loading">Laai bedienerbesonderhede…</string>
+    <string name="login_or">of</string>
+
+    <string name="login_quick_connect">Gebruik Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Maak Jellyfin oop op \'n toestel waar jy reeds aangemeld is, gaan na Quick Connect en voer hierdie kode in.</string>
+    <string name="login_quick_connect_waiting">Wag vir goedkeuring…</string>
+    <string name="login_quick_connect_cancel">Kanselleer</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d kandidaat-adres probeer, sonder sukses.</item>
+        <item quantity="other">%d kandidaat-adresse probeer, sonder sukses.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Kan nie die bediener bereik nie</string>
+    <string name="auth_error_unsupported_version_or_product">Nie-ondersteunde weergawe of produk</string>
+    <string name="auth_error_cannot_connect">Kon nie verbinding maak nie.\nGaan die gasheernaam en jou netwerkverbinding na.</string>
+    <string name="auth_error_invalid_credentials">Verkeerde gebruikersnaam of wagwoord.</string>
+    <string name="auth_error_quick_connect_expired">Daardie kode het verval. Vra \'n nuwe een aan en probeer weer.</string>
+    <string name="auth_error_server">Die bediener het met \'n fout geantwoord. Probeer weer.</string>
+    <string name="auth_error_server_with_code">Die bediener het met \'n fout geantwoord (%1$d). Probeer weer.</string>
+</resources>

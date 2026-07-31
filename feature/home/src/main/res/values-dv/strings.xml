@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">އަދި ބަލާނެ އެއްޗެއް ނެތް. ސަރވަރގައި ތިޔަ ލައިބްރަރީތަކަށް މީޑިއާ އިތުރުކުރޭ.</string>
+    <string name="home_empty_refresh">ރިފްރެޝްކުރޭ</string>
+
+    <string name="home_section_my_media">ތިމަންގެ މީޑިއާ</string>
+    <string name="home_section_continue_watching">ބެލުން ކުރިއަށް</string>
+    <string name="home_section_next_up">ދެން އޮތީ</string>
+    <string name="home_section_latest">އެންމެ ފަހުގެ %1$s</string>
+</resources>

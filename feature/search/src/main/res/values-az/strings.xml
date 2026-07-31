@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Film, serial və epizod axtar</string>
+    <string name="search_clear">Təmizlə</string>
+    <string name="search_section_movies">Filmlər</string>
+    <string name="search_section_series">Seriallar</string>
+    <string name="search_section_episodes">Epizodlar</string>
+    <string name="search_prompt">Kitabxanalarınızda axtarmaq üçün yazın.</string>
+    <string name="search_no_results">“%1$s” ilə uyğun heç nə tapılmadı.</string>
+    <string name="search_error_network">Serverinizə çatmaq mümkün deyil. Bağlantınızı yoxlayın və yenidən cəhd edin.</string>
+    <string name="search_error_unauthorized">Sessiyanızın müddəti bitib. Davam etmək üçün yenidən daxil olun.</string>
+    <string name="search_error_not_found">Bu element artıq serverdə yoxdur.</string>
+    <string name="search_error_server">Server xəta qaytardı.</string>
+    <string name="search_error_server_with_code">Server xəta qaytardı (%1$d).</string>
+    <string name="search_error_storage">Yerli data oxuna bilmədi.</string>
+    <string name="search_error_unknown">Axtarış zamanı xəta baş verdi.</string>
+</resources>

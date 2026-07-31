@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Пакуль няма бібліятэк. Дадайце адну на серверы.</string>
+
+    <string name="library_back">Назад</string>
+    <string name="library_home">Галоўная</string>
+    <string name="library_sort">Сартаванне</string>
+    <string name="library_filter">Фільтр</string>
+
+    <string name="library_sort_title">Сартаваць па</string>
+    <string name="library_sort_name">Назве</string>
+    <string name="library_sort_date_added">Даце дадання</string>
+    <string name="library_sort_premiere_date">Даце выхаду</string>
+    <string name="library_sort_community_rating">Рэйтынгу супольнасці</string>
+    <string name="library_sort_runtime">Працягласці</string>
+    <string name="library_sort_random">Выпадкова</string>
+    <string name="library_sort_direction">Кірунак</string>
+    <string name="library_sort_ascending">Па ўзрастанні</string>
+    <string name="library_sort_descending">Па спаданні</string>
+
+    <string name="library_filters_title">Фільтры</string>
+    <string name="library_filters_genres">Жанры</string>
+    <string name="library_filters_years">Гады</string>
+    <string name="library_filters_played">Прагледжана</string>
+    <string name="library_filters_played_any">Любыя</string>
+    <string name="library_filters_played_yes">Прагледжаныя</string>
+    <string name="library_filters_played_no">Непрагледжаныя</string>
+    <string name="library_filters_clear">Ачысціць усё</string>
+    <string name="library_filters_apply">Паказаць вынікі</string>
+    <string name="library_filters_none">У гэтай бібліятэцы няма па чым фільтраваць.</string>
+    <string name="library_filters_loading">Загрузка фільтраў…</string>
+
+    <string name="library_empty">Тут няма чаго паказаць.</string>
+    <string name="library_empty_filtered">Ніводны элемент не адпавядае гэтым фільтрам.</string>
+    <string name="library_empty_clear_filters">Ачысціць фільтры</string>
+    <string name="library_retry">Паўтарыць</string>
+
+    <string name="library_error_network">Не ўдаецца звязацца з вашым серверам. Праверце злучэнне і паспрабуйце зноў.</string>
+    <string name="library_error_unauthorized">Тэрмін дзеяння сесіі скончыўся. Увайдзіце зноў, каб працягнуць.</string>
+    <string name="library_error_not_found">Гэтай бібліятэкі больш няма на серверы.</string>
+    <string name="library_error_server">Сервер вярнуў памылку.</string>
+    <string name="library_error_server_with_code">Сервер вярнуў памылку (%1$d).</string>
+    <string name="library_error_storage">Не ўдалося прачытаць лакальныя дадзеныя.</string>
+    <string name="library_error_unknown">Пры загрузцы гэтай бібліятэкі нешта пайшло не так.</string>
+</resources>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Atgal</string>
+    <string name="detail_home">Pradžia</string>
+    <string name="detail_play">Leisti</string>
+    <string name="detail_resume">Tęsti</string>
+    <string name="detail_download">Atsisiųsti</string>
+    <string name="detail_download_cancel">Atšaukti</string>
+    <string name="detail_download_remove">Pašalinti</string>
+    <string name="detail_download_retry">Bandyti dar kartą</string>
+    <string name="detail_play_episode">Leisti šį epizodą</string>
+    <string name="detail_mark_watched">Žymėti kaip žiūrėtą</string>
+    <string name="detail_mark_unwatched">Žymėti kaip nežiūrėtą</string>
+    <string name="detail_add_favorite">Pridėti prie mėgstamų</string>
+    <string name="detail_remove_favorite">Pašalinti iš mėgstamų</string>
+
+    <string name="detail_section_seasons">Sezonai</string>
+    <string name="detail_section_next_up">Kas toliau</string>
+    <string name="detail_section_episodes">Epizodai</string>
+    <string name="detail_section_similar">Panašūs</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Liko %1$d min</string>
+    <string name="detail_size_on_device">%1$s įrenginyje</string>
+    <string name="detail_directed_by">Režisierius: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezonas</item>
+        <item quantity="few">%1$d sezonai</item>
+        <item quantity="many">%1$d sezonų</item>
+        <item quantity="other">%1$d sezonų</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d epizodas</item>
+        <item quantity="few">%1$d epizodai</item>
+        <item quantity="many">%1$d epizodų</item>
+        <item quantity="other">%1$d epizodų</item>
+    </plurals>
+
+    <string name="detail_empty">Šio elemento nebėra.</string>
+    <string name="detail_message_download_queued">Pridėta prie atsisiuntimų.</string>
+    <string name="detail_message_download_failed">Nepavyko pradėti šio atsisiuntimo.</string>
+    <string name="detail_message_download_deleted">Pašalinta iš šio įrenginio.</string>
+    <string name="detail_message_download_delete_failed">Nepavyko pašalinti šio atsisiuntimo.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Atsisiuntimas atšauktas – išsaugotas %1$d baigtas epizodas.</item>
+        <item quantity="few">Atsisiuntimas atšauktas – išsaugoti %1$d baigti epizodai.</item>
+        <item quantity="many">Atsisiuntimas atšauktas – išsaugota %1$d baigtų epizodų.</item>
+        <item quantity="other">Atsisiuntimas atšauktas – išsaugota %1$d baigtų epizodų.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nepavyko to išsaugoti. Bandykite dar kartą.</string>
+
+    <string name="detail_group_play">Leisti grupei: %1$s</string>
+    <string name="detail_group_resume">Tęsti grupei: %1$s</string>
+    <string name="detail_group_play_next">Leisti kitą</string>
+    <string name="detail_group_add_to_queue">Pridėti į eilę</string>
+    <string name="detail_message_group_play">Paprašyta grupės tai leisti.</string>
+    <string name="detail_message_group_play_next">Įtraukta kitu numeriu į grupės eilę.</string>
+    <string name="detail_message_group_queued">Pridėta į grupės eilę.</string>
+
+    <string name="detail_delete_download_dialog_title">Ištrinti atsisiuntimą?</string>
+    <string name="detail_delete_download_dialog_message">Tai pašalins jį iš šio įrenginio. Galite bet kada atsisiųsti jį iš naujo.</string>
+    <string name="detail_delete_download_dialog_confirm">Ištrinti</string>
+    <string name="detail_delete_download_dialog_cancel">Atšaukti</string>
+</resources>

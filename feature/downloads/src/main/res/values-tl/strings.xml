@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Na-download</string>
+    <string name="downloads_tab_queue">Pila</string>
+    <string name="downloads_wifi_only">Wi‑Fi lang</string>
+    <string name="downloads_group_movies">Mga Pelikula</string>
+    <string name="downloads_storage_summary">%1$s ginamit · %2$s libre</string>
+    <string name="downloads_action_delete">Tanggalin ang download</string>
+    <string name="downloads_action_cancel">Kanselahin ang download</string>
+    <string name="downloads_action_pause">I-pause ang download</string>
+    <string name="downloads_action_resume">Ipagpatuloy ang download</string>
+    <string name="downloads_action_move_up">Ilipat pataas sa pila</string>
+    <string name="downloads_action_move_down">Ilipat pababa sa pila</string>
+    <string name="downloads_action_pause_all">I-pause lahat</string>
+    <string name="downloads_action_resume_all">Ipagpatuloy lahat</string>
+    <string name="downloads_action_cancel_all">Kanselahin lahat</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Kanselahin ang download na ito?</item>
+        <item quantity="other">Kanselahin lahat ng %1$d download?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Ma-e-empty ang pila at aalisin ang anumang bahagyang na-download na file. Hindi maaapektuhan ang mga tapos nang download.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Kanselahin ang mga download</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Panatilihin</string>
+    <string name="downloads_delete_dialog_title">Tanggalin ang %1$s?</string>
+    <string name="downloads_delete_dialog_message">Aalisin ang mga na-download na file sa device na ito. Puwede mo itong i-download ulit sa ibang pagkakataon.</string>
+    <string name="downloads_delete_dialog_confirm">Tanggalin</string>
+    <string name="downloads_delete_dialog_cancel">Kanselahin</string>
+    <string name="downloads_progress_of">%1$s ng %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s ng ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s ng hanggang %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">hanggang %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s na lang</string>
+    <string name="downloads_eta_approx">~%1$s na lang</string>
+    <string name="downloads_transcoded_marker">Na-transcode</string>
+    <string name="downloads_status_queued">Naghihintay</string>
+    <string name="downloads_status_paused">Naka-pause</string>
+    <string name="downloads_status_failed">Nabigo ang download</string>
+    <string name="downloads_status_failed_reason">Nabigo ang download: %1$s</string>
+    <string name="downloads_empty_downloaded">Wala pang na-download. I-tap ang Download sa isang pelikula o episode para itago ito sa device na ito.</string>
+    <string name="downloads_empty_queue">Walang laman ang pila ng download.</string>
+    <string name="downloads_load_failed">Hindi mabasa ang mga download mo. Buksan ulit ang screen na ito para subukan muli.</string>
+    <string name="downloads_message_delete_failed">Hindi matanggal ang download na iyon.</string>
+    <string name="downloads_message_action_failed">Hindi ma-update ang pila.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Na-pause ang %1$d — %2$d transcode ang patuloy na dina-download (hindi puwedeng i-pause ang transcode).</item>
+        <item quantity="other">Na-pause ang %1$d — %2$d transcode ang patuloy na dina-download (hindi puwedeng i-pause ang transcode).</item>
+    </plurals>
+</resources>

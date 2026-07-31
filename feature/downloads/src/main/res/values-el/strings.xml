@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Ληφθέντα</string>
+    <string name="downloads_tab_queue">Ουρά</string>
+    <string name="downloads_wifi_only">Μόνο Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Ταινίες</string>
+
+    <string name="downloads_storage_summary">%1$s σε χρήση · %2$s ελεύθερα</string>
+
+    <string name="downloads_action_delete">Διαγραφή λήψης</string>
+    <string name="downloads_action_cancel">Ακύρωση λήψης</string>
+    <string name="downloads_action_pause">Παύση λήψης</string>
+    <string name="downloads_action_resume">Συνέχιση λήψης</string>
+    <string name="downloads_action_move_up">Μετακίνηση επάνω στην ουρά</string>
+    <string name="downloads_action_move_down">Μετακίνηση κάτω στην ουρά</string>
+
+    <string name="downloads_action_pause_all">Παύση όλων</string>
+    <string name="downloads_action_resume_all">Συνέχιση όλων</string>
+    <string name="downloads_action_cancel_all">Ακύρωση όλων</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Ακύρωση αυτής της λήψης;</item>
+        <item quantity="other">Ακύρωση και των %1$d λήψεων;</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Η ουρά αδειάζει και τα μερικώς ληφθέντα αρχεία αφαιρούνται. Οι ολοκληρωμένες λήψεις δεν επηρεάζονται.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Ακύρωση λήψεων</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Διατήρηση</string>
+
+    <string name="downloads_delete_dialog_title">Διαγραφή %1$s;</string>
+    <string name="downloads_delete_dialog_message">Τα ληφθέντα αρχεία αφαιρούνται από αυτή τη συσκευή. Μπορείτε να το κατεβάσετε ξανά αργότερα.</string>
+    <string name="downloads_delete_dialog_confirm">Διαγραφή</string>
+    <string name="downloads_delete_dialog_cancel">Άκυρο</string>
+
+    <string name="downloads_progress_of">%1$s από %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s από ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s από έως %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">έως %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Απομένουν %1$s</string>
+    <string name="downloads_eta_approx">Απομένουν ~%1$s</string>
+    <string name="downloads_transcoded_marker">Μετακωδικοποιημένο</string>
+    <string name="downloads_status_queued">Σε αναμονή</string>
+    <string name="downloads_status_paused">Σε παύση</string>
+    <string name="downloads_status_failed">Η λήψη απέτυχε</string>
+    <string name="downloads_status_failed_reason">Η λήψη απέτυχε: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Δεν έχει γίνει ακόμη καμία λήψη. Πατήστε Λήψη σε μια ταινία ή επεισόδιο για να το κρατήσετε σε αυτή τη συσκευή.</string>
+    <string name="downloads_empty_queue">Η ουρά λήψεων είναι άδεια.</string>
+    <string name="downloads_load_failed">Δεν ήταν δυνατή η ανάγνωση των λήψεών σας. Ανοίξτε ξανά αυτή την οθόνη για να δοκιμάσετε ξανά.</string>
+    <string name="downloads_message_delete_failed">Δεν ήταν δυνατή η διαγραφή αυτής της λήψης.</string>
+    <string name="downloads_message_action_failed">Δεν ήταν δυνατή η ενημέρωση της ουράς.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Έγινε παύση %1$d — %2$d μετακωδικοποίηση συνεχίζει να λαμβάνεται (μια μετακωδικοποίηση δεν μπορεί να τεθεί σε παύση).</item>
+        <item quantity="other">Έγινε παύση %1$d — %2$d μετακωδικοποιήσεις συνεχίζουν να λαμβάνονται (μια μετακωδικοποίηση δεν μπορεί να τεθεί σε παύση).</item>
+    </plurals>
+</resources>

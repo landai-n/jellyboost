@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Ďalšie možnosti</string>
+    <string name="home_settings">Nastavenia</string>
+    <string name="settings_offline_mode">Režim offline</string>
+
+    <string name="state_on">Zapnuté</string>
+    <string name="state_off">Vypnuté</string>
+
+    <string name="nav_home">Domov</string>
+    <string name="nav_libraries">Knižnice</string>
+    <string name="nav_search">Hľadať</string>
+    <string name="nav_downloads">Stiahnutia</string>
+
+    <string name="offline_no_network">Žiadne pripojenie — zobrazujú sa stiahnuté médiá</string>
+    <string name="offline_server_unreachable">Server nie je dostupný — zobrazujú sa stiahnuté médiá</string>
+    <string name="offline_forced">Režim offline je zapnutý — zobrazujú sa stiahnuté médiá</string>
+    <string name="offline_retry">Skúsiť znova</string>
+    <string name="offline_go_online">Prejsť online</string>
+
+    <string name="syncplay_groups_action">Skupiny SyncPlay</string>
+    <string name="syncplay_groups_action_active">Skupiny SyncPlay — ste v skupine</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Nog geen bibliotheken. Voeg er een toe op de server.</string>
+
+    <string name="library_back">Terug</string>
+    <string name="library_home">Start</string>
+    <string name="library_sort">Sorteren</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sorteren op</string>
+    <string name="library_sort_name">Naam</string>
+    <string name="library_sort_date_added">Datum toegevoegd</string>
+    <string name="library_sort_premiere_date">Releasedatum</string>
+    <string name="library_sort_community_rating">Community-beoordeling</string>
+    <string name="library_sort_runtime">Duur</string>
+    <string name="library_sort_random">Willekeurig</string>
+    <string name="library_sort_direction">Richting</string>
+    <string name="library_sort_ascending">Oplopend</string>
+    <string name="library_sort_descending">Aflopend</string>
+
+    <string name="library_filters_title">Filters</string>
+    <string name="library_filters_genres">Genres</string>
+    <string name="library_filters_years">Jaren</string>
+    <string name="library_filters_played">Bekeken</string>
+    <string name="library_filters_played_any">Alle</string>
+    <string name="library_filters_played_yes">Bekeken</string>
+    <string name="library_filters_played_no">Onbekeken</string>
+    <string name="library_filters_clear">Alles wissen</string>
+    <string name="library_filters_apply">Resultaten tonen</string>
+    <string name="library_filters_none">Deze bibliotheek biedt niets om op te filteren.</string>
+    <string name="library_filters_loading">Filters laden…</string>
+
+    <string name="library_empty">Hier is niets te zien.</string>
+    <string name="library_empty_filtered">Geen item komt overeen met deze filters.</string>
+    <string name="library_empty_clear_filters">Filters wissen</string>
+    <string name="library_retry">Opnieuw proberen</string>
+
+    <string name="library_error_network">Kan je server niet bereiken. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="library_error_unauthorized">Je sessie is verlopen. Meld je opnieuw aan om door te gaan.</string>
+    <string name="library_error_not_found">Die bibliotheek staat niet meer op de server.</string>
+    <string name="library_error_server">De server gaf een fout terug.</string>
+    <string name="library_error_server_with_code">De server gaf een fout terug (%1$d).</string>
+    <string name="library_error_storage">Kon lokale gegevens niet lezen.</string>
+    <string name="library_error_unknown">Er ging iets mis bij het laden van deze bibliotheek.</string>
+</resources>

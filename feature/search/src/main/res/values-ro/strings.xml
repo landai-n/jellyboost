@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Caută filme, seriale și episoade</string>
+    <string name="search_clear">Șterge</string>
+    <string name="search_section_movies">Filme</string>
+    <string name="search_section_series">Seriale</string>
+    <string name="search_section_episodes">Episoade</string>
+    <string name="search_prompt">Tastați pentru a căuta în bibliotecile dvs.</string>
+    <string name="search_no_results">Niciun rezultat pentru „%1$s”.</string>
+    <string name="search_error_network">Serverul nu poate fi contactat. Verificați conexiunea și încercați din nou.</string>
+    <string name="search_error_unauthorized">Sesiunea a expirat. Autentificați-vă din nou pentru a continua.</string>
+    <string name="search_error_not_found">Acest element nu mai este pe server.</string>
+    <string name="search_error_server">Serverul a returnat o eroare.</string>
+    <string name="search_error_server_with_code">Serverul a returnat o eroare (%1$d).</string>
+    <string name="search_error_storage">Datele locale nu au putut fi citite.</string>
+    <string name="search_error_unknown">Ceva nu a mers bine în timpul căutării.</string>
+</resources>

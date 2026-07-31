@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">ফিরে যান</string>
+    <string name="detail_home">হোম</string>
+    <string name="detail_play">চালান</string>
+    <string name="detail_resume">আবার শুরু করুন</string>
+    <string name="detail_download">ডাউনলোড</string>
+    <string name="detail_download_cancel">বাতিল করুন</string>
+    <string name="detail_download_remove">সরান</string>
+    <string name="detail_download_retry">আবার চেষ্টা করুন</string>
+    <string name="detail_play_episode">এই পর্বটি চালান</string>
+    <string name="detail_mark_watched">দেখা হয়েছে চিহ্নিত করুন</string>
+    <string name="detail_mark_unwatched">দেখা হয়নি চিহ্নিত করুন</string>
+    <string name="detail_add_favorite">প্রিয়তে যোগ করুন</string>
+    <string name="detail_remove_favorite">প্রিয় থেকে সরান</string>
+    <string name="detail_section_seasons">সিজন</string>
+    <string name="detail_section_next_up">পরবর্তী</string>
+    <string name="detail_section_episodes">পর্বসমূহ</string>
+    <string name="detail_section_similar">এই ধরনের আরও</string>
+    <string name="detail_runtime_minutes">%1$d মিনিট</string>
+    <string name="detail_remaining_minutes">%1$d মিনিট বাকি</string>
+    <string name="detail_size_on_device">ডিভাইসে %1$s</string>
+    <string name="detail_directed_by">পরিচালনায় %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d সিজন</item>
+        <item quantity="other">%1$d সিজন</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d পর্ব</item>
+        <item quantity="other">%1$d পর্ব</item>
+    </plurals>
+    <string name="detail_empty">এই আইটেমটি আর উপলব্ধ নেই।</string>
+    <string name="detail_message_download_queued">ডাউনলোডে যোগ করা হয়েছে।</string>
+    <string name="detail_message_download_failed">সেই ডাউনলোডটি শুরু করা যায়নি।</string>
+    <string name="detail_message_download_deleted">এই ডিভাইস থেকে সরানো হয়েছে।</string>
+    <string name="detail_message_download_delete_failed">সেই ডাউনলোডটি সরানো যায়নি।</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">ডাউনলোড বাতিল করা হয়েছে — %1$dটি সম্পন্ন পর্ব রাখা হয়েছে।</item>
+        <item quantity="other">ডাউনলোড বাতিল করা হয়েছে — %1$dটি সম্পন্ন পর্ব রাখা হয়েছে।</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">সেটি সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।</string>
+    <string name="detail_group_play">%1$s-এর জন্য চালান</string>
+    <string name="detail_group_resume">%1$s-এর জন্য আবার শুরু করুন</string>
+    <string name="detail_group_play_next">পরে চালান</string>
+    <string name="detail_group_add_to_queue">সারিতে যোগ করুন</string>
+    <string name="detail_message_group_play">গ্রুপকে এটি চালাতে বলা হয়েছে।</string>
+    <string name="detail_message_group_play_next">গ্রুপের জন্য পরে চালাতে সারিবদ্ধ করা হয়েছে।</string>
+    <string name="detail_message_group_queued">গ্রুপের সারিতে যোগ করা হয়েছে।</string>
+    <string name="detail_delete_download_dialog_title">ডাউনলোড মুছবেন?</string>
+    <string name="detail_delete_download_dialog_message">এটি এই ডিভাইস থেকে সরিয়ে দেবে। আপনি যেকোনো সময় আবার এটি ডাউনলোড করতে পারবেন।</string>
+    <string name="detail_delete_download_dialog_confirm">মুছুন</string>
+    <string name="detail_delete_download_dialog_cancel">বাতিল করুন</string>
+</resources>

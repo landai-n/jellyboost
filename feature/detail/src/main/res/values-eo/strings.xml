@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Reen</string>
+    <string name="detail_home">Hejmo</string>
+    <string name="detail_play">Ludi</string>
+    <string name="detail_resume">Daŭrigi</string>
+    <string name="detail_download">Elŝuti</string>
+    <string name="detail_download_cancel">Nuligi</string>
+    <string name="detail_download_remove">Forigi</string>
+    <string name="detail_download_retry">Reprovi</string>
+    <string name="detail_play_episode">Ludi ĉi tiun epizodon</string>
+    <string name="detail_mark_watched">Marki kiel spektita</string>
+    <string name="detail_mark_unwatched">Marki kiel nespektita</string>
+    <string name="detail_add_favorite">Aldoni al preferataj</string>
+    <string name="detail_remove_favorite">Forigi el preferataj</string>
+    <string name="detail_section_seasons">Sezonoj</string>
+    <string name="detail_section_next_up">Sekve</string>
+    <string name="detail_section_episodes">Epizodoj</string>
+    <string name="detail_section_similar">Pli simila enhavo</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min restas</string>
+    <string name="detail_size_on_device">%1$s sur la aparato</string>
+    <string name="detail_directed_by">Reĝisorita de %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezono</item>
+        <item quantity="other">%1$d sezonoj</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d epizodo</item>
+        <item quantity="other">%1$d epizodoj</item>
+    </plurals>
+    <string name="detail_empty">Ĉi tiu ero ne plu disponeblas.</string>
+    <string name="detail_message_download_queued">Aldonita al elŝutoj.</string>
+    <string name="detail_message_download_failed">Ne eblis komenci tiun elŝuton.</string>
+    <string name="detail_message_download_deleted">Forigita el ĉi tiu aparato.</string>
+    <string name="detail_message_download_delete_failed">Ne eblis forigi tiun elŝuton.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Elŝuto nuligita — %1$d finita epizodo konservita.</item>
+        <item quantity="other">Elŝuto nuligita — %1$d finitaj epizodoj konservitaj.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Ne eblis konservi tion. Reprovu.</string>
+    <string name="detail_group_play">Ludi por %1$s</string>
+    <string name="detail_group_resume">Daŭrigi por %1$s</string>
+    <string name="detail_group_play_next">Ludi sekve</string>
+    <string name="detail_group_add_to_queue">Aldoni al atendovico</string>
+    <string name="detail_message_group_play">Petis la grupon ludi ĉi tion.</string>
+    <string name="detail_message_group_play_next">Envicigita sekve por la grupo.</string>
+    <string name="detail_message_group_queued">Aldonita al la atendovico de la grupo.</string>
+    <string name="detail_delete_download_dialog_title">Ĉu forigi la elŝuton?</string>
+    <string name="detail_delete_download_dialog_message">Ĉi tio forigas ĝin el ĉi tiu aparato. Vi povas denove elŝuti ĝin iam ajn.</string>
+    <string name="detail_delete_download_dialog_confirm">Forigi</string>
+    <string name="detail_delete_download_dialog_cancel">Nuligi</string>
+</resources>

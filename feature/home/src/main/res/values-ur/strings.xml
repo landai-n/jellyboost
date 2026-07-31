@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ابھی دیکھنے کے لیے کچھ نہیں ہے۔ سرور پر اپنی لائبریریوں میں میڈیا شامل کریں۔</string>
+    <string name="home_empty_refresh">تازہ کریں</string>
+
+    <string name="home_section_my_media">میرا میڈیا</string>
+    <string name="home_section_continue_watching">دیکھنا جاری رکھیں</string>
+    <string name="home_section_next_up">اگلا</string>
+    <string name="home_section_latest">تازہ ترین %1$s</string>
+</resources>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Nustatymai</string>
+    <string name="settings_back">Atgal</string>
+    <string name="settings_home">Pradžia</string>
+
+    <string name="settings_section_playback">Atkūrimas</string>
+    <string name="settings_skip_intro">Praleisti įžangą</string>
+    <string name="settings_skip_outro">Praleisti pabaigą</string>
+    <string name="settings_skip_mode_off">Nieko nedaryti</string>
+    <string name="settings_skip_mode_show_button">Rodyti praleidimo mygtuką</string>
+    <string name="settings_skip_mode_auto">Praleisti automatiškai</string>
+    <string name="settings_pip">Vaizdas vaizde</string>
+    <string name="settings_pip_supporting">Tęsti leidimą plaukiojančiame lange, kai išeinate iš programėlės.</string>
+
+    <string name="settings_section_downloads">Atsisiuntimai</string>
+    <string name="settings_wifi_only">Tik Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pristabdyti atsisiuntimus naudojant mobilųjį ryšį.</string>
+    <string name="settings_quality">Atsisiuntimo kokybė</string>
+    <string name="settings_quality_original">Originalus failas — tiksli kopija, galima tęsti</string>
+    <string name="settings_quality_high">Aukšta — apie 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Vidutinė — apie 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Žema — apie 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Viską, išskyrus originalų failą, jūsų serveris konvertuoja siųsdamas, todėl atsisiuntimo metu rodomas dydis yra apytikslis, o nutrūkęs perkėlimas prasideda iš naujo.</string>
+    <string name="settings_storage_label">Saugykla</string>
+    <string name="settings_storage_summary">Naudota %1$s · laisva %2$s šiame įrenginyje</string>
+    <string name="settings_storage_location">Atsisiuntimai saugomi čia: %1$s</string>
+    <string name="settings_storage_picker">Saugyklos vieta</string>
+    <string name="settings_storage_internal">Vidinė atmintis</string>
+    <string name="settings_storage_sd_card">SD kortelė</string>
+    <string name="settings_storage_volume_free">Laisva %1$s</string>
+    <string name="settings_storage_missing">Pasirinkta saugykla šiuo metu nepasiekiama, todėl atsisiuntimai bus saugomi žemiau pasirinktoje vietoje.</string>
+    <string name="settings_storage_switch_title">Perkelti atsisiuntimus?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Atsisiuntimų kol kas negalima perkelti tarp vietų, todėl šiame įrenginyje jau esantis atsisiuntimas bus ištrintas. Galėsite jį atsisiųsti iš naujo į naują vietą.</item>
+        <item quantity="few">Atsisiuntimų kol kas negalima perkelti tarp vietų, todėl %1$d šiame įrenginyje jau esantys bus ištrinti. Galėsite juos atsisiųsti iš naujo į naują vietą.</item>
+        <item quantity="many">Atsisiuntimų kol kas negalima perkelti tarp vietų, todėl %1$d šiame įrenginyje jau esančių bus ištrinta. Galėsite juos atsisiųsti iš naujo į naują vietą.</item>
+        <item quantity="other">Atsisiuntimų kol kas negalima perkelti tarp vietų, todėl %1$d šiame įrenginyje jau esančių bus ištrinta. Galėsite juos atsisiųsti iš naujo į naują vietą.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Ištrinti ir perjungti</string>
+
+    <string name="settings_section_connectivity">Ryšys</string>
+    <string name="settings_offline_mode">Neprisijungimo režimas</string>
+    <string name="settings_offline_mode_supporting">Rodyti tik mediją, kuri jau yra šiame įrenginyje.</string>
+
+    <string name="settings_section_account">Paskyra</string>
+    <string name="settings_account_user">Prisijungęs kaip</string>
+    <string name="settings_account_server">Serveris</string>
+    <string name="settings_account_unknown">Neprisijungęs</string>
+    <string name="settings_sign_out">Atsijungti</string>
+    <string name="settings_sign_out_dialog_title">Atsijungti?</string>
+    <string name="settings_sign_out_dialog_message">Norėdami vėl prisijungti, turėsite žinoti savo serverio adresą ir slaptažodį.</string>
+    <string name="settings_sign_out_delete_downloads">Taip pat ištrinti atsisiuntimus iš šio įrenginio</string>
+    <string name="settings_cancel">Atšaukti</string>
+</resources>

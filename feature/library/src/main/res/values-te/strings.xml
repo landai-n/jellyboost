@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">ఇంకా లైబ్రరీలు లేవు. సర్వర్‌లో ఒకటి జోడించండి.</string>
+
+    <string name="library_back">వెనుకకు</string>
+    <string name="library_home">హోమ్</string>
+    <string name="library_sort">క్రమం</string>
+    <string name="library_filter">ఫిల్టర్</string>
+
+    <string name="library_sort_title">దీని ప్రకారం క్రమబద్ధీకరించు</string>
+    <string name="library_sort_name">పేరు</string>
+    <string name="library_sort_date_added">జోడించిన తేదీ</string>
+    <string name="library_sort_premiere_date">విడుదల తేదీ</string>
+    <string name="library_sort_community_rating">కమ్యూనిటీ రేటింగ్</string>
+    <string name="library_sort_runtime">నిడివి</string>
+    <string name="library_sort_random">యాదృచ్ఛికం</string>
+    <string name="library_sort_direction">దిశ</string>
+    <string name="library_sort_ascending">ఆరోహణ క్రమం</string>
+    <string name="library_sort_descending">అవరోహణ క్రమం</string>
+
+    <string name="library_filters_title">ఫిల్టర్‌లు</string>
+    <string name="library_filters_genres">జానర్‌లు</string>
+    <string name="library_filters_years">సంవత్సరాలు</string>
+    <string name="library_filters_played">చూసినవి</string>
+    <string name="library_filters_played_any">ఏదైనా</string>
+    <string name="library_filters_played_yes">చూసినవి</string>
+    <string name="library_filters_played_no">చూడనివి</string>
+    <string name="library_filters_clear">అన్నీ తీసివేయండి</string>
+    <string name="library_filters_apply">ఫలితాలను చూపించు</string>
+    <string name="library_filters_none">ఈ లైబ్రరీలో ఫిల్టర్ చేయడానికి ఏమీ లేదు.</string>
+    <string name="library_filters_loading">ఫిల్టర్‌లను లోడ్ చేస్తోంది…</string>
+
+    <string name="library_empty">ఇక్కడ చూపించడానికి ఏమీ లేదు.</string>
+    <string name="library_empty_filtered">ఈ ఫిల్టర్‌లకు సరిపోలే అంశం లేదు.</string>
+    <string name="library_empty_clear_filters">ఫిల్టర్‌లను తీసివేయండి</string>
+    <string name="library_retry">మళ్లీ ప్రయత్నించండి</string>
+
+    <string name="library_error_network">మీ సర్వర్‌ను చేరుకోలేకపోయాం. మీ కనెక్షన్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.</string>
+    <string name="library_error_unauthorized">మీ సెషన్ గడువు ముగిసింది. కొనసాగించడానికి మళ్లీ సైన్ ఇన్ అవ్వండి.</string>
+    <string name="library_error_not_found">ఆ లైబ్రరీ ఇకపై సర్వర్‌లో లేదు.</string>
+    <string name="library_error_server">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది.</string>
+    <string name="library_error_server_with_code">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది (%1$d).</string>
+    <string name="library_error_storage">స్థానిక డేటాను చదవలేకపోయాం.</string>
+    <string name="library_error_unknown">ఈ లైబ్రరీని లోడ్ చేయడంలో ఏదో తప్పు జరిగింది.</string>
+</resources>

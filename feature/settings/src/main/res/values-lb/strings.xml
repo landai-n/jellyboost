@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Astellungen</string>
+    <string name="settings_back">Zréck</string>
+    <string name="settings_home">Start</string>
+
+    <string name="settings_section_playback">Widderginn</string>
+    <string name="settings_skip_intro">Intro iwwersprangen</string>
+    <string name="settings_skip_outro">Outro iwwersprangen</string>
+    <string name="settings_skip_mode_off">Näischt maachen</string>
+    <string name="settings_skip_mode_show_button">En „Iwwersprangen“-Knäppchen weisen</string>
+    <string name="settings_skip_mode_auto">Automatesch iwwersprangen</string>
+    <string name="settings_pip">Bild‑am‑Bild</string>
+    <string name="settings_pip_supporting">Widderginn an engem schwiewenden Fënster weiderféieren, wann s du d\'App verléiss.</string>
+
+    <string name="settings_section_downloads">Downloads</string>
+    <string name="settings_wifi_only">Nëmmen WLAN</string>
+    <string name="settings_wifi_only_supporting">Downloads bei mobille Donnéeën pauséieren.</string>
+    <string name="settings_quality">Downloadqualitéit</string>
+    <string name="settings_quality_original">Original-Fichier – exakt Kopie, kann weidergefouert ginn</string>
+    <string name="settings_quality_high">Héich – ongeféier 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Mëttel – ongeféier 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Niddreg – ongeféier 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alles ausser dem Original-Fichier gëtt vun dengem Server konvertéiert, wärend en geschéckt gëtt. Dowéinst ass d\'Gréisst, déi während dem Download ugewise gëtt, nëmmen eng Schätzung, an eng ënnerbrach Iwwerdroung fänkt vun vir un.</string>
+    <string name="settings_storage_label">Späicherplaz</string>
+    <string name="settings_storage_summary">%1$s benotzt · %2$s fräi op dësem Apparat</string>
+    <string name="settings_storage_location">Downloads ginn a(n) %1$s gespäichert</string>
+    <string name="settings_storage_picker">Späicherplaz</string>
+    <string name="settings_storage_internal">Interne Späicher</string>
+    <string name="settings_storage_sd_card">SD-Kaart</string>
+    <string name="settings_storage_volume_free">%1$s fräi</string>
+    <string name="settings_storage_missing">De Späicher, deen s du ausgewielt hues, ass grad net disponibel, dofir ginn d\'Downloads op de Standuert hei ënnendrënner gespäichert.</string>
+    <string name="settings_storage_switch_title">Downloads réckelen?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Downloads kënnen nach net tëscht Standuerter réckelt ginn, dofir gëtt deen, deen schonn op dësem Apparat ass, geläscht. Du kanns en nach eng Kéier un den neie Standuert eroflueden.</item>
+        <item quantity="other">Downloads kënnen nach net tëscht Standuerter réckelt ginn, dofir ginn déi %1$d, déi schonn op dësem Apparat sinn, geläscht. Du kanns se nach eng Kéier un den neie Standuert eroflueden.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Läschen a wiesselen</string>
+
+    <string name="settings_section_connectivity">Konnektivitéit</string>
+    <string name="settings_offline_mode">Offline-Modus</string>
+    <string name="settings_offline_mode_supporting">Nëmme Medien weisen, déi schonn op dësem Apparat sinn.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Ugemellt als</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Net ugemellt</string>
+    <string name="settings_sign_out">Ofmellen</string>
+    <string name="settings_sign_out_dialog_title">Ofmellen?</string>
+    <string name="settings_sign_out_dialog_message">Du wäerts deng Serveradress an däi Passwuert brauchen, fir dech nees unzemellen.</string>
+    <string name="settings_sign_out_delete_downloads">Och d\'Downloads vun dësem Apparat läschen</string>
+    <string name="settings_cancel">Ofbriechen</string>
+</resources>

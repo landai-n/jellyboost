@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">הורד</string>
+    <string name="badge_download_queued">בתור להורדה</string>
+    <string name="badge_download_paused">ההורדה הושהתה</string>
+    <string name="badge_download_failed">ההורדה נכשלה</string>
+
+    <string name="media_row_see_all">הצג הכול</string>
+    <string name="media_card_watched">נצפה</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">פריט אחד נבחר</item>
+        <item quantity="two">שני פריטים נבחרו</item>
+        <item quantity="many">%1$d פריטים נבחרו</item>
+        <item quantity="other">%1$d פריטים נבחרו</item>
+    </plurals>
+    <string name="selection_close">ניקוי הבחירה</string>
+    <string name="selection_select_all">בחירת הכול</string>
+    <string name="selection_mark_watched">סימון כנצפה</string>
+    <string name="selection_mark_unwatched">סימון כלא נצפה</string>
+    <string name="selection_download">הורדה</string>
+
+    <string name="selection_item_selected">נבחר</string>
+    <string name="selection_item_not_selected">לא נבחר</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">פריט אחד סומן כנצפה</item>
+        <item quantity="two">שני פריטים סומנו כנצפו</item>
+        <item quantity="many">%1$d פריטים סומנו כנצפו</item>
+        <item quantity="other">%1$d פריטים סומנו כנצפו</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d סומנו כנצפו, %2$d נכשלו</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">לא ניתן היה לסמן פריט אחד כנצפה</item>
+        <item quantity="two">לא ניתן היה לסמן שני פריטים כנצפו</item>
+        <item quantity="many">לא ניתן היה לסמן %1$d פריטים כנצפו</item>
+        <item quantity="other">לא ניתן היה לסמן %1$d פריטים כנצפו</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">פריט אחד סומן כלא נצפה</item>
+        <item quantity="two">שני פריטים סומנו כלא נצפו</item>
+        <item quantity="many">%1$d פריטים סומנו כלא נצפו</item>
+        <item quantity="other">%1$d פריטים סומנו כלא נצפו</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d סומנו כלא נצפו, %2$d נכשלו</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">לא ניתן היה לסמן פריט אחד כלא נצפה</item>
+        <item quantity="two">לא ניתן היה לסמן שני פריטים כלא נצפו</item>
+        <item quantity="many">לא ניתן היה לסמן %1$d פריטים כלא נצפו</item>
+        <item quantity="other">לא ניתן היה לסמן %1$d פריטים כלא נצפו</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">פריט אחד נוסף להורדות</item>
+        <item quantity="two">שני פריטים נוספו להורדות</item>
+        <item quantity="many">%1$d פריטים נוספו להורדות</item>
+        <item quantity="other">%1$d פריטים נוספו להורדות</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d נוספו להורדות, %2$d נכשלו</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">לא ניתן היה להוסיף פריט אחד להורדות</item>
+        <item quantity="two">לא ניתן היה להוסיף שני פריטים להורדות</item>
+        <item quantity="many">לא ניתן היה להוסיף %1$d פריטים להורדות</item>
+        <item quantity="other">לא ניתן היה להוסיף %1$d פריטים להורדות</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d נוספו להורדות — %2$d כבר נמצאים במכשיר זה</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">פריט אחד כבר נמצא במכשיר זה</item>
+        <item quantity="two">שני פריטים כבר נמצאים במכשיר זה</item>
+        <item quantity="many">%1$d פריטים כבר נמצאים במכשיר זה</item>
+        <item quantity="other">%1$d פריטים כבר נמצאים במכשיר זה</item>
+    </plurals>
+</resources>

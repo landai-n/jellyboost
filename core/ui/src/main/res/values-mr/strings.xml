@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">डाउनलोड केलेले</string>
+    <string name="badge_download_queued">डाउनलोडसाठी रांगेत</string>
+    <string name="badge_download_paused">डाउनलोड थांबवले</string>
+    <string name="badge_download_failed">डाउनलोड अयशस्वी</string>
+
+    <string name="media_row_see_all">सर्व पाहा</string>
+    <string name="media_card_watched">पाहिले</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d निवडले</item>
+        <item quantity="other">%1$d निवडले</item>
+    </plurals>
+    <string name="selection_close">निवड रद्द करा</string>
+    <string name="selection_select_all">सर्व निवडा</string>
+    <string name="selection_mark_watched">पाहिले म्हणून चिन्हांकित करा</string>
+    <string name="selection_mark_unwatched">न पाहिलेले म्हणून चिन्हांकित करा</string>
+    <string name="selection_download">डाउनलोड करा</string>
+
+    <string name="selection_item_selected">निवडले</string>
+    <string name="selection_item_not_selected">निवडलेले नाही</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d पाहिले म्हणून चिन्हांकित केले</item>
+        <item quantity="other">%1$d पाहिले म्हणून चिन्हांकित केले</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d पाहिले म्हणून चिन्हांकित केले, %2$d अयशस्वी</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d आयटम पाहिले म्हणून चिन्हांकित करता आले नाही</item>
+        <item quantity="other">%1$d आयटम पाहिले म्हणून चिन्हांकित करता आले नाहीत</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d न पाहिलेले म्हणून चिन्हांकित केले</item>
+        <item quantity="other">%1$d न पाहिलेले म्हणून चिन्हांकित केले</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d न पाहिलेले म्हणून चिन्हांकित केले, %2$d अयशस्वी</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d आयटम न पाहिलेले म्हणून चिन्हांकित करता आले नाही</item>
+        <item quantity="other">%1$d आयटम न पाहिलेले म्हणून चिन्हांकित करता आले नाहीत</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d डाउनलोडमध्ये जोडले</item>
+        <item quantity="other">%1$d डाउनलोडमध्ये जोडले</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d डाउनलोडमध्ये जोडले, %2$d अयशस्वी</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d आयटम डाउनलोडमध्ये जोडता आला नाही</item>
+        <item quantity="other">%1$d आयटम डाउनलोडमध्ये जोडता आले नाहीत</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d डाउनलोडमध्ये जोडले — %2$d आधीच या डिव्हाइसवर आहेत</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d आयटम आधीच या डिव्हाइसवर आहे</item>
+        <item quantity="other">%1$d आयटम आधीच या डिव्हाइसवर आहेत</item>
+    </plurals>
+</resources>

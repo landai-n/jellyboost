@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Ladattu</string>
+    <string name="downloads_tab_queue">Jono</string>
+    <string name="downloads_wifi_only">Vain Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Elokuvat</string>
+
+    <string name="downloads_storage_summary">%1$s käytetty · %2$s vapaana</string>
+
+    <string name="downloads_action_delete">Poista lataus</string>
+    <string name="downloads_action_cancel">Peruuta lataus</string>
+    <string name="downloads_action_pause">Keskeytä lataus</string>
+    <string name="downloads_action_resume">Jatka latausta</string>
+    <string name="downloads_action_move_up">Siirrä ylemmäs jonossa</string>
+    <string name="downloads_action_move_down">Siirrä alemmas jonossa</string>
+
+    <string name="downloads_action_pause_all">Keskeytä kaikki</string>
+    <string name="downloads_action_resume_all">Jatka kaikkia</string>
+    <string name="downloads_action_cancel_all">Peruuta kaikki</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Peruutetaanko tämä lataus?</item>
+        <item quantity="other">Peruutetaanko kaikki %1$d latausta?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Jono tyhjennetään ja mahdolliset osittain ladatut tiedostot poistetaan. Valmiit lataukset eivät muutu.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Peruuta lataukset</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Säilytä</string>
+
+    <string name="downloads_delete_dialog_title">Poistetaanko %1$s?</string>
+    <string name="downloads_delete_dialog_message">Ladatut tiedostot poistetaan tältä laitteelta. Voit ladata sen uudelleen myöhemmin.</string>
+    <string name="downloads_delete_dialog_confirm">Poista</string>
+    <string name="downloads_delete_dialog_cancel">Peruuta</string>
+
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / enintään %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">enintään %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s jäljellä</string>
+    <string name="downloads_eta_approx">~%1$s jäljellä</string>
+    <string name="downloads_transcoded_marker">Transkoodattu</string>
+    <string name="downloads_status_queued">Odottaa</string>
+    <string name="downloads_status_paused">Keskeytetty</string>
+    <string name="downloads_status_failed">Lataus epäonnistui</string>
+    <string name="downloads_status_failed_reason">Lataus epäonnistui: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Ei vielä mitään ladattuna. Napauta Lataa elokuvassa tai jaksossa säilyttääksesi sen tällä laitteella.</string>
+    <string name="downloads_empty_queue">Latausjono on tyhjä.</string>
+    <string name="downloads_load_failed">Latauksiasi ei voitu lukea. Avaa tämä näyttö uudelleen ja yritä uudelleen.</string>
+    <string name="downloads_message_delete_failed">Latauksen poistaminen epäonnistui.</string>
+    <string name="downloads_message_action_failed">Jonon päivittäminen epäonnistui.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d keskeytetty – %2$d transkoodaus jatkuu (transkoodausta ei voi keskeyttää).</item>
+        <item quantity="other">%1$d keskeytetty – %2$d transkoodausta jatkuu (transkoodausta ei voi keskeyttää).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Søk i filmer, serier og episoder</string>
+    <string name="search_clear">Fjern</string>
+
+    <string name="search_section_movies">Filmer</string>
+    <string name="search_section_series">Serier</string>
+    <string name="search_section_episodes">Episoder</string>
+
+    <string name="search_prompt">Skriv for å søke i bibliotekene dine.</string>
+    <string name="search_no_results">Ingen treff på «%1$s».</string>
+
+    <string name="search_error_network">Får ikke kontakt med serveren din. Sjekk tilkoblingen og prøv igjen.</string>
+    <string name="search_error_unauthorized">Økten din er utløpt. Logg inn på nytt for å fortsette.</string>
+    <string name="search_error_not_found">Det elementet er ikke lenger på serveren.</string>
+    <string name="search_error_server">Serveren returnerte en feil.</string>
+    <string name="search_error_server_with_code">Serveren returnerte en feil (%1$d).</string>
+    <string name="search_error_storage">Kunne ikke lese lokale data.</string>
+    <string name="search_error_unknown">Noe gikk galt under søket.</string>
+</resources>

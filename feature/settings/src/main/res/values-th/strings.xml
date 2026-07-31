@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">การตั้งค่า</string>
+    <string name="settings_back">ย้อนกลับ</string>
+    <string name="settings_home">หน้าแรก</string>
+    <string name="settings_section_playback">การเล่น</string>
+    <string name="settings_skip_intro">ข้ามอินโทร</string>
+    <string name="settings_skip_outro">ข้ามเอาต์โทร</string>
+    <string name="settings_skip_mode_off">ไม่ต้องทำอะไร</string>
+    <string name="settings_skip_mode_show_button">แสดงปุ่มข้าม</string>
+    <string name="settings_skip_mode_auto">ข้ามอัตโนมัติ</string>
+    <string name="settings_pip">ภาพซ้อนภาพ</string>
+    <string name="settings_pip_supporting">เล่นต่อในหน้าต่างลอยเมื่อคุณออกจากแอป</string>
+    <string name="settings_section_downloads">ดาวน์โหลด</string>
+    <string name="settings_wifi_only">Wi‑Fi เท่านั้น</string>
+    <string name="settings_wifi_only_supporting">หยุดดาวน์โหลดชั่วคราวเมื่อใช้เน็ตมือถือ</string>
+    <string name="settings_quality">คุณภาพการดาวน์โหลด</string>
+    <string name="settings_quality_original">ไฟล์ต้นฉบับ — สำเนาที่เหมือนต้นฉบับทุกประการ ดาวน์โหลดต่อได้</string>
+    <string name="settings_quality_high">สูง — ประมาณ 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">ปานกลาง — ประมาณ 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">ต่ำ — ประมาณ 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">ไฟล์ใดก็ตามที่ไม่ใช่ไฟล์ต้นฉบับจะถูกแปลงโดยเซิร์ฟเวอร์ของคุณขณะส่งข้อมูล ดังนั้นขนาดที่แสดงระหว่างดาวน์โหลดจึงเป็นค่าประมาณ และการถ่ายโอนที่ถูกขัดจังหวะจะเริ่มต้นใหม่</string>
+    <string name="settings_storage_label">พื้นที่จัดเก็บ</string>
+    <string name="settings_storage_summary">ใช้ไป %1$s · เหลือ %2$s บนอุปกรณ์นี้</string>
+    <string name="settings_storage_location">ดาวน์โหลดถูกเก็บไว้ใน %1$s</string>
+    <string name="settings_storage_picker">ตำแหน่งจัดเก็บ</string>
+    <string name="settings_storage_internal">พื้นที่จัดเก็บภายใน</string>
+    <string name="settings_storage_sd_card">การ์ด SD</string>
+    <string name="settings_storage_volume_free">เหลือ %1$s</string>
+    <string name="settings_storage_missing">พื้นที่จัดเก็บที่คุณเลือกไม่พร้อมใช้งานในขณะนี้ ดาวน์โหลดจึงถูกส่งไปยังตำแหน่งที่เลือกไว้ด้านล่าง</string>
+    <string name="settings_storage_switch_title">ย้ายดาวน์โหลดหรือไม่?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">ยังไม่สามารถย้ายดาวน์โหลดระหว่างตำแหน่งได้ %1$d รายการที่มีอยู่ในอุปกรณ์นี้จะถูกลบ คุณสามารถดาวน์โหลดใหม่ไปยังตำแหน่งใหม่ได้</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">ลบและเปลี่ยน</string>
+    <string name="settings_section_connectivity">การเชื่อมต่อ</string>
+    <string name="settings_offline_mode">โหมดออฟไลน์</string>
+    <string name="settings_offline_mode_supporting">แสดงเฉพาะสื่อที่มีอยู่ในอุปกรณ์นี้แล้ว</string>
+    <string name="settings_section_account">บัญชี</string>
+    <string name="settings_account_user">เข้าสู่ระบบในชื่อ</string>
+    <string name="settings_account_server">เซิร์ฟเวอร์</string>
+    <string name="settings_account_unknown">ยังไม่ได้เข้าสู่ระบบ</string>
+    <string name="settings_sign_out">ออกจากระบบ</string>
+    <string name="settings_sign_out_dialog_title">ออกจากระบบหรือไม่?</string>
+    <string name="settings_sign_out_dialog_message">คุณจะต้องใช้ที่อยู่เซิร์ฟเวอร์และรหัสผ่านเพื่อเข้าสู่ระบบอีกครั้ง</string>
+    <string name="settings_sign_out_delete_downloads">ลบดาวน์โหลดออกจากอุปกรณ์นี้ด้วย</string>
+    <string name="settings_cancel">ยกเลิก</string>
+</resources>

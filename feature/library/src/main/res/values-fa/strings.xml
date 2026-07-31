@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">هنوز کتابخانه‌ای وجود ندارد. یکی در سرور اضافه کنید.</string>
+
+    <string name="library_back">بازگشت</string>
+    <string name="library_home">خانه</string>
+    <string name="library_sort">مرتب‌سازی</string>
+    <string name="library_filter">فیلتر</string>
+
+    <string name="library_sort_title">مرتب‌سازی بر اساس</string>
+    <string name="library_sort_name">نام</string>
+    <string name="library_sort_date_added">تاریخ افزودن</string>
+    <string name="library_sort_premiere_date">تاریخ انتشار</string>
+    <string name="library_sort_community_rating">امتیاز کاربران</string>
+    <string name="library_sort_runtime">مدت زمان</string>
+    <string name="library_sort_random">تصادفی</string>
+    <string name="library_sort_direction">جهت</string>
+    <string name="library_sort_ascending">صعودی</string>
+    <string name="library_sort_descending">نزولی</string>
+
+    <string name="library_filters_title">فیلترها</string>
+    <string name="library_filters_genres">ژانرها</string>
+    <string name="library_filters_years">سال‌ها</string>
+    <string name="library_filters_played">تماشا شده</string>
+    <string name="library_filters_played_any">همه</string>
+    <string name="library_filters_played_yes">تماشا شده</string>
+    <string name="library_filters_played_no">تماشا نشده</string>
+    <string name="library_filters_clear">پاک کردن همه</string>
+    <string name="library_filters_apply">نمایش نتایج</string>
+    <string name="library_filters_none">این کتابخانه چیزی برای فیلتر کردن ارائه نکرد.</string>
+    <string name="library_filters_loading">در حال بارگذاری فیلترها…</string>
+
+    <string name="library_empty">چیزی برای نمایش وجود ندارد.</string>
+    <string name="library_empty_filtered">هیچ موردی با این فیلترها مطابقت ندارد.</string>
+    <string name="library_empty_clear_filters">پاک کردن فیلترها</string>
+    <string name="library_retry">تلاش دوباره</string>
+
+    <string name="library_error_network">دسترسی به سرور شما ممکن نیست. اتصال خود را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="library_error_unauthorized">نشست شما منقضی شده است. برای ادامه دوباره وارد شوید.</string>
+    <string name="library_error_not_found">این کتابخانه دیگر روی سرور نیست.</string>
+    <string name="library_error_server">سرور خطایی برگرداند.</string>
+    <string name="library_error_server_with_code">سرور خطایی برگرداند (%1$d).</string>
+    <string name="library_error_storage">خواندن داده‌های محلی ممکن نبود.</string>
+    <string name="library_error_unknown">هنگام بارگذاری این کتابخانه مشکلی پیش آمد.</string>
+</resources>

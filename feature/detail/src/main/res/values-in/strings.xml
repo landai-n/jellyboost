@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Kembali</string>
+    <string name="detail_home">Beranda</string>
+    <string name="detail_play">Putar</string>
+    <string name="detail_resume">Lanjutkan</string>
+    <string name="detail_download">Unduh</string>
+    <string name="detail_download_cancel">Batal</string>
+    <string name="detail_download_remove">Hapus</string>
+    <string name="detail_download_retry">Coba lagi</string>
+    <string name="detail_play_episode">Putar episode ini</string>
+    <string name="detail_mark_watched">Tandai sudah ditonton</string>
+    <string name="detail_mark_unwatched">Tandai belum ditonton</string>
+    <string name="detail_add_favorite">Tambahkan ke favorit</string>
+    <string name="detail_remove_favorite">Hapus dari favorit</string>
+    <string name="detail_section_seasons">Musim</string>
+    <string name="detail_section_next_up">Berikutnya</string>
+    <string name="detail_section_episodes">Episode</string>
+    <string name="detail_section_similar">Lainnya seperti ini</string>
+    <string name="detail_runtime_minutes">%1$d mnt</string>
+    <string name="detail_remaining_minutes">%1$d mnt tersisa</string>
+    <string name="detail_size_on_device">%1$s di perangkat</string>
+    <string name="detail_directed_by">Disutradarai oleh %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="other">%1$d musim</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="other">%1$d episode</item>
+    </plurals>
+    <string name="detail_empty">Item ini tidak lagi tersedia.</string>
+    <string name="detail_message_download_queued">Ditambahkan ke unduhan.</string>
+    <string name="detail_message_download_failed">Tidak dapat memulai unduhan itu.</string>
+    <string name="detail_message_download_deleted">Dihapus dari perangkat ini.</string>
+    <string name="detail_message_download_delete_failed">Tidak dapat menghapus unduhan itu.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="other">Unduhan dibatalkan — %1$d episode yang selesai tetap disimpan.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Tidak dapat menyimpan itu. Coba lagi.</string>
+    <string name="detail_group_play">Putar untuk %1$s</string>
+    <string name="detail_group_resume">Lanjutkan untuk %1$s</string>
+    <string name="detail_group_play_next">Putar berikutnya</string>
+    <string name="detail_group_add_to_queue">Tambahkan ke antrean</string>
+    <string name="detail_message_group_play">Meminta grup untuk memutar ini.</string>
+    <string name="detail_message_group_play_next">Diantrekan berikutnya untuk grup.</string>
+    <string name="detail_message_group_queued">Ditambahkan ke antrean grup.</string>
+    <string name="detail_delete_download_dialog_title">Hapus unduhan?</string>
+    <string name="detail_delete_download_dialog_message">Ini akan menghapusnya dari perangkat ini. Anda dapat mengunduhnya lagi kapan saja.</string>
+    <string name="detail_delete_download_dialog_confirm">Hapus</string>
+    <string name="detail_delete_download_dialog_cancel">Batal</string>
+</resources>

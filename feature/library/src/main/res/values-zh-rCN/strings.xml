@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">暂无媒体库。请在服务器上添加一个。</string>
+
+    <string name="library_back">返回</string>
+    <string name="library_home">主页</string>
+    <string name="library_sort">排序</string>
+    <string name="library_filter">筛选</string>
+
+    <string name="library_sort_title">排序方式</string>
+    <string name="library_sort_name">名称</string>
+    <string name="library_sort_date_added">添加日期</string>
+    <string name="library_sort_premiere_date">发行日期</string>
+    <string name="library_sort_community_rating">社区评分</string>
+    <string name="library_sort_runtime">时长</string>
+    <string name="library_sort_random">随机</string>
+    <string name="library_sort_direction">顺序</string>
+    <string name="library_sort_ascending">升序</string>
+    <string name="library_sort_descending">降序</string>
+
+    <string name="library_filters_title">筛选条件</string>
+    <string name="library_filters_genres">类型</string>
+    <string name="library_filters_years">年份</string>
+    <string name="library_filters_played">观看状态</string>
+    <string name="library_filters_played_any">任意</string>
+    <string name="library_filters_played_yes">已观看</string>
+    <string name="library_filters_played_no">未观看</string>
+    <string name="library_filters_clear">清除全部</string>
+    <string name="library_filters_apply">显示结果</string>
+    <string name="library_filters_none">此媒体库没有可筛选的内容。</string>
+    <string name="library_filters_loading">正在加载筛选条件…</string>
+
+    <string name="library_empty">这里没有内容可显示。</string>
+    <string name="library_empty_filtered">没有内容匹配这些筛选条件。</string>
+    <string name="library_empty_clear_filters">清除筛选条件</string>
+    <string name="library_retry">重试</string>
+
+    <string name="library_error_network">无法连接到你的服务器。请检查网络连接后重试。</string>
+    <string name="library_error_unauthorized">你的会话已过期。请重新登录以继续。</string>
+    <string name="library_error_not_found">该媒体库已不在服务器上。</string>
+    <string name="library_error_server">服务器返回了一个错误。</string>
+    <string name="library_error_server_with_code">服务器返回了一个错误 (%1$d)。</string>
+    <string name="library_error_storage">无法读取本地数据。</string>
+    <string name="library_error_unknown">加载此媒体库时出现问题。</string>
+</resources>

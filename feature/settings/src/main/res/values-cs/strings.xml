@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Nastavení</string>
+    <string name="settings_back">Zpět</string>
+    <string name="settings_home">Domů</string>
+
+    <string name="settings_section_playback">Přehrávání</string>
+    <string name="settings_skip_intro">Přeskočit úvod</string>
+    <string name="settings_skip_outro">Přeskočit závěr</string>
+    <string name="settings_skip_mode_off">Nic nedělat</string>
+    <string name="settings_skip_mode_show_button">Zobrazit tlačítko přeskočit</string>
+    <string name="settings_skip_mode_auto">Přeskakovat automaticky</string>
+    <string name="settings_pip">Obraz v obraze</string>
+    <string name="settings_pip_supporting">Po opuštění aplikace pokračovat v přehrávání v plovoucím okně.</string>
+
+    <string name="settings_section_downloads">Stahování</string>
+    <string name="settings_wifi_only">Pouze Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Pozastavit stahování při použití mobilních dat.</string>
+    <string name="settings_quality">Kvalita stahování</string>
+    <string name="settings_quality_original">Původní soubor — přesná kopie, lze obnovit</string>
+    <string name="settings_quality_high">Vysoká — přibližně 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Střední — přibližně 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Nízká — přibližně 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Cokoli kromě původního souboru server při odesílání převádí, takže velikost zobrazená během stahování je pouze odhad a přerušený přenos začíná znovu od začátku.</string>
+    <string name="settings_storage_label">Úložiště</string>
+    <string name="settings_storage_summary">%1$s využito · %2$s volno na tomto zařízení</string>
+    <string name="settings_storage_location">Stahování se ukládají do %1$s</string>
+    <string name="settings_storage_picker">Umístění úložiště</string>
+    <string name="settings_storage_internal">Interní úložiště</string>
+    <string name="settings_storage_sd_card">SD karta</string>
+    <string name="settings_storage_volume_free">%1$s volno</string>
+    <string name="settings_storage_missing">Zvolené úložiště není momentálně dostupné, takže stahování směřují do umístění vybraného níže.</string>
+    <string name="settings_storage_switch_title">Přesunout stahování?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Stahování zatím nelze přesouvat mezi umístěními. Stažený soubor, který už je v tomto zařízení, bude smazán. Do nového umístění si ho můžete stáhnout znovu.</item>
+        <item quantity="few">Stahování zatím nelze přesouvat mezi umístěními. %1$d stažené soubory, které už jsou v tomto zařízení, budou smazány. Do nového umístění si je můžete stáhnout znovu.</item>
+        <item quantity="many">Stahování zatím nelze přesouvat mezi umístěními. %1$d stažených souborů, které už jsou v tomto zařízení, bude smazáno. Do nového umístění si je můžete stáhnout znovu.</item>
+        <item quantity="other">Stahování zatím nelze přesouvat mezi umístěními. %1$d stažených souborů, které už jsou v tomto zařízení, bude smazáno. Do nového umístění si je můžete stáhnout znovu.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Smazat a přepnout</string>
+
+    <string name="settings_section_connectivity">Připojení</string>
+    <string name="settings_offline_mode">Offline režim</string>
+    <string name="settings_offline_mode_supporting">Zobrazovat pouze média, která už jsou v tomto zařízení.</string>
+
+    <string name="settings_section_account">Účet</string>
+    <string name="settings_account_user">Přihlášen jako</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Nepřihlášen</string>
+    <string name="settings_sign_out">Odhlásit se</string>
+    <string name="settings_sign_out_dialog_title">Odhlásit se?</string>
+    <string name="settings_sign_out_dialog_message">Pro opětovné přihlášení budete potřebovat adresu serveru a heslo.</string>
+    <string name="settings_sign_out_delete_downloads">Také smazat stahování z tohoto zařízení</string>
+    <string name="settings_cancel">Zrušit</string>
+</resources>

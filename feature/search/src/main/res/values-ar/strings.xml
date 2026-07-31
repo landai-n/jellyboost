@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">ابحث عن أفلام ومسلسلات وحلقات</string>
+    <string name="search_clear">مسح</string>
+
+    <string name="search_section_movies">الأفلام</string>
+    <string name="search_section_series">المسلسلات</string>
+    <string name="search_section_episodes">الحلقات</string>
+
+    <string name="search_prompt">اكتب للبحث في مكتباتك.</string>
+    <string name="search_no_results">لم يتم العثور على أي تطابق مع «%1$s».</string>
+
+    <string name="search_error_network">تعذّر الوصول إلى خادمك. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="search_error_unauthorized">انتهت صلاحية جلستك. سجّل الدخول مرة أخرى للمتابعة.</string>
+    <string name="search_error_not_found">هذا العنصر لم يعد على الخادم.</string>
+    <string name="search_error_server">أعاد الخادم خطأ.</string>
+    <string name="search_error_server_with_code">أعاد الخادم خطأ (%1$d).</string>
+    <string name="search_error_storage">تعذّرت قراءة البيانات المحلية.</string>
+    <string name="search_error_unknown">حدث خطأ ما أثناء البحث.</string>
+</resources>

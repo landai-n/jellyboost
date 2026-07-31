@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">এখনও কোনো লাইব্রেরি নেই। সার্ভারে একটি যোগ করুন।</string>
+    <string name="library_back">ফিরে যান</string>
+    <string name="library_home">হোম</string>
+    <string name="library_sort">সাজান</string>
+    <string name="library_filter">ফিল্টার</string>
+    <string name="library_sort_title">যেভাবে সাজাবেন</string>
+    <string name="library_sort_name">নাম</string>
+    <string name="library_sort_date_added">যোগ করার তারিখ</string>
+    <string name="library_sort_premiere_date">মুক্তির তারিখ</string>
+    <string name="library_sort_community_rating">কমিউনিটি রেটিং</string>
+    <string name="library_sort_runtime">সময়কাল</string>
+    <string name="library_sort_random">এলোমেলো</string>
+    <string name="library_sort_direction">দিক</string>
+    <string name="library_sort_ascending">ঊর্ধ্বক্রম</string>
+    <string name="library_sort_descending">নিম্নক্রম</string>
+    <string name="library_filters_title">ফিল্টার</string>
+    <string name="library_filters_genres">ধরন</string>
+    <string name="library_filters_years">বছর</string>
+    <string name="library_filters_played">দেখা হয়েছে</string>
+    <string name="library_filters_played_any">যেকোনো</string>
+    <string name="library_filters_played_yes">দেখা হয়েছে</string>
+    <string name="library_filters_played_no">দেখা হয়নি</string>
+    <string name="library_filters_clear">সব সাফ করুন</string>
+    <string name="library_filters_apply">ফলাফল দেখান</string>
+    <string name="library_filters_none">এই লাইব্রেরিতে ফিল্টার করার মতো কিছু নেই।</string>
+    <string name="library_filters_loading">ফিল্টার লোড হচ্ছে…</string>
+    <string name="library_empty">এখানে দেখানোর মতো কিছু নেই।</string>
+    <string name="library_empty_filtered">এই ফিল্টারগুলোর সাথে কোনো আইটেম মেলে না।</string>
+    <string name="library_empty_clear_filters">ফিল্টার সাফ করুন</string>
+    <string name="library_retry">আবার চেষ্টা করুন</string>
+    <string name="library_error_network">আপনার সার্ভারে পৌঁছানো যাচ্ছে না। আপনার সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।</string>
+    <string name="library_error_unauthorized">আপনার সেশনের মেয়াদ শেষ হয়ে গেছে। চালিয়ে যেতে আবার সাইন ইন করুন।</string>
+    <string name="library_error_not_found">সেই লাইব্রেরি আর সার্ভারে নেই।</string>
+    <string name="library_error_server">সার্ভার একটি ত্রুটি ফেরত দিয়েছে।</string>
+    <string name="library_error_server_with_code">সার্ভার একটি ত্রুটি ফেরত দিয়েছে (%1$d)।</string>
+    <string name="library_error_storage">স্থানীয় ডেটা পড়া যায়নি।</string>
+    <string name="library_error_unknown">এই লাইব্রেরি লোড করতে কিছু ভুল হয়েছে।</string>
+</resources>

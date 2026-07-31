@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Otsi filme, sarju ja osi</string>
+    <string name="search_clear">Tühjenda</string>
+
+    <string name="search_section_movies">Filmid</string>
+    <string name="search_section_series">Sarjad</string>
+    <string name="search_section_episodes">Osad</string>
+
+    <string name="search_prompt">Kirjuta, et otsida oma teekidest.</string>
+    <string name="search_no_results">Päringule „%1$s” ei leitud vasteid.</string>
+
+    <string name="search_error_network">Serveriga ei saa ühendust. Kontrolli oma ühendust ja proovi uuesti.</string>
+    <string name="search_error_unauthorized">Sinu seanss aegus. Jätkamiseks logi uuesti sisse.</string>
+    <string name="search_error_not_found">Seda üksust pole enam serveris.</string>
+    <string name="search_error_server">Server tagastas vea.</string>
+    <string name="search_error_server_with_code">Server tagastas vea (%1$d).</string>
+    <string name="search_error_storage">Kohalikke andmeid ei õnnestunud lugeda.</string>
+    <string name="search_error_unknown">Otsimisel läks midagi valesti.</string>
+</resources>

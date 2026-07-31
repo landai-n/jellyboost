@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Einki at hyggja at enn. Legg tilfar afturat í savnini á ambætaranum.</string>
+    <string name="home_empty_refresh">Endurles</string>
+
+    <string name="home_section_my_media">Mítt tilfar</string>
+    <string name="home_section_continue_watching">Halda áfram at hyggja</string>
+    <string name="home_section_next_up">Næsta</string>
+    <string name="home_section_latest">Nýggjastu %1$s</string>
+</resources>

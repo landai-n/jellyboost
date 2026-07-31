@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Bilatu filmak, telesailak eta atalak</string>
+    <string name="search_clear">Garbitu</string>
+    <string name="search_section_movies">Filmak</string>
+    <string name="search_section_series">Telesailak</string>
+    <string name="search_section_episodes">Atalak</string>
+    <string name="search_prompt">Idatzi zure liburutegietan bilatzeko.</string>
+    <string name="search_no_results">Ez da ezer aurkitu “%1$s”(r)ekin bat.</string>
+    <string name="search_error_network">Ezin da zure zerbitzaria erdietsi. Egiaztatu zure konexioa eta saiatu berriro.</string>
+    <string name="search_error_unauthorized">Zure saioa iraungi da. Hasi saioa berriro jarraitzeko.</string>
+    <string name="search_error_not_found">Elementu hori ez dago jada zerbitzarian.</string>
+    <string name="search_error_server">Zerbitzariak errore bat itzuli du.</string>
+    <string name="search_error_server_with_code">Zerbitzariak errore bat itzuli du (%1$d).</string>
+    <string name="search_error_storage">Ezin izan dira datu lokalak irakurri.</string>
+    <string name="search_error_unknown">Zerbait gaizki joan da bilatzean.</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">További lehetőségek</string>
+    <string name="home_settings">Beállítások</string>
+    <string name="settings_offline_mode">Offline mód</string>
+
+    <string name="state_on">Be</string>
+    <string name="state_off">Ki</string>
+
+    <string name="nav_home">Kezdőlap</string>
+    <string name="nav_libraries">Könyvtárak</string>
+    <string name="nav_search">Keresés</string>
+    <string name="nav_downloads">Letöltések</string>
+
+    <string name="offline_no_network">Nincs hálózat – letöltött tartalom megjelenítése</string>
+    <string name="offline_server_unreachable">A szerver nem érhető el – letöltött tartalom megjelenítése</string>
+    <string name="offline_forced">Az offline mód be van kapcsolva – letöltött tartalom megjelenítése</string>
+    <string name="offline_retry">Újra</string>
+    <string name="offline_go_online">Online mód</string>
+
+    <string name="syncplay_groups_action">SyncPlay csoportok</string>
+    <string name="syncplay_groups_action_active">SyncPlay csoportok – jelenleg egy csoportban vagy</string>
+</resources>

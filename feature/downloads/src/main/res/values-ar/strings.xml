@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">تم تنزيله</string>
+    <string name="downloads_tab_queue">قائمة الانتظار</string>
+    <string name="downloads_wifi_only">Wi‑Fi فقط</string>
+
+    <string name="downloads_group_movies">الأفلام</string>
+
+    <string name="downloads_storage_summary">%1$s مستخدَمة · %2$s متاحة</string>
+
+    <string name="downloads_action_delete">حذف التنزيل</string>
+    <string name="downloads_action_cancel">إلغاء التنزيل</string>
+    <string name="downloads_action_pause">إيقاف التنزيل مؤقتًا</string>
+    <string name="downloads_action_resume">استئناف التنزيل</string>
+    <string name="downloads_action_move_up">تحريك للأعلى في قائمة الانتظار</string>
+    <string name="downloads_action_move_down">تحريك للأسفل في قائمة الانتظار</string>
+
+    <string name="downloads_action_pause_all">إيقاف الكل مؤقتًا</string>
+    <string name="downloads_action_resume_all">استئناف الكل</string>
+    <string name="downloads_action_cancel_all">إلغاء الكل</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="zero">إلغاء كل التنزيلات؟</item>
+        <item quantity="one">إلغاء هذا التنزيل؟</item>
+        <item quantity="two">إلغاء التنزيلين؟</item>
+        <item quantity="few">إلغاء التنزيلات الـ%1$d؟</item>
+        <item quantity="many">إلغاء التنزيلات الـ%1$d؟</item>
+        <item quantity="other">إلغاء كل %1$d تنزيل؟</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">سيتم إفراغ قائمة الانتظار وإزالة أي ملفات تم تنزيلها جزئيًا. التنزيلات المكتملة لن تتأثر.</string>
+    <string name="downloads_cancel_all_dialog_confirm">إلغاء التنزيلات</string>
+    <string name="downloads_cancel_all_dialog_dismiss">إبقاء</string>
+
+    <string name="downloads_delete_dialog_title">حذف %1$s؟</string>
+    <string name="downloads_delete_dialog_message">ستتم إزالة الملفات التي تم تنزيلها من هذا الجهاز. يمكنك تنزيلها مرة أخرى لاحقًا.</string>
+    <string name="downloads_delete_dialog_confirm">حذف</string>
+    <string name="downloads_delete_dialog_cancel">إلغاء</string>
+
+    <string name="downloads_progress_of">%1$s من %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s من ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s مما يصل إلى %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">يصل إلى %1$s</string>
+    <string name="downloads_speed">%1$s/ث</string>
+    <string name="downloads_eta">%1$s متبقٍ</string>
+    <string name="downloads_eta_approx">~%1$s متبقٍ</string>
+    <string name="downloads_transcoded_marker">تحويل ترميز</string>
+    <string name="downloads_status_queued">بالانتظار</string>
+    <string name="downloads_status_paused">متوقف مؤقتًا</string>
+    <string name="downloads_status_failed">فشل التنزيل</string>
+    <string name="downloads_status_failed_reason">فشل التنزيل: %1$s</string>
+
+    <string name="downloads_empty_downloaded">لا يوجد أي شيء تم تنزيله بعد. اضغط على \"تنزيل\" على فيلم أو حلقة للاحتفاظ به على هذا الجهاز.</string>
+    <string name="downloads_empty_queue">قائمة انتظار التنزيل فارغة.</string>
+    <string name="downloads_load_failed">تعذّرت قراءة تنزيلاتك. أعد فتح هذه الشاشة للمحاولة مرة أخرى.</string>
+    <string name="downloads_message_delete_failed">تعذّر حذف هذا التنزيل.</string>
+    <string name="downloads_message_action_failed">تعذّر تحديث قائمة الانتظار.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="zero">تم إيقاف %1$d مؤقتًا — لا توجد تحويلات ترميز مستمرة في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+        <item quantity="one">تم إيقاف %1$d مؤقتًا — تحويل ترميز واحد مستمر في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+        <item quantity="two">تم إيقاف %1$d مؤقتًا — تحويلا ترميز مستمران في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+        <item quantity="few">تم إيقاف %1$d مؤقتًا — %2$d تحويلات ترميز مستمرة في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+        <item quantity="many">تم إيقاف %1$d مؤقتًا — %2$d تحويل ترميز مستمر في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+        <item quantity="other">تم إيقاف %1$d مؤقتًا — %2$d تحويل ترميز مستمر في التنزيل (لا يمكن إيقاف تحويل الترميز مؤقتًا).</item>
+    </plurals>
+</resources>

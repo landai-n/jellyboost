@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Vairāk opciju</string>
+    <string name="home_settings">Iestatījumi</string>
+    <string name="settings_offline_mode">Bezsaistes režīms</string>
+
+    <string name="state_on">Ieslēgts</string>
+    <string name="state_off">Izslēgts</string>
+
+    <string name="nav_home">Sākums</string>
+    <string name="nav_libraries">Bibliotēkas</string>
+    <string name="nav_search">Meklēt</string>
+    <string name="nav_downloads">Lejupielādes</string>
+
+    <string name="offline_no_network">Nav tīkla — tiek rādīts lejupielādētais saturs</string>
+    <string name="offline_server_unreachable">Nevar sasniegt serveri — tiek rādīts lejupielādētais saturs</string>
+    <string name="offline_forced">Bezsaistes režīms ir ieslēgts — tiek rādīts lejupielādētais saturs</string>
+    <string name="offline_retry">Mēģināt vēlreiz</string>
+    <string name="offline_go_online">Pāriet tiešsaistē</string>
+
+    <string name="syncplay_groups_action">SyncPlay grupas</string>
+    <string name="syncplay_groups_action_active">SyncPlay grupas — esat grupā</string>
+</resources>

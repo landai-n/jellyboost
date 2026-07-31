@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ยังไม่มีอะไรให้ดู เพิ่มสื่อลงในคลังของคุณบนเซิร์ฟเวอร์</string>
+    <string name="home_empty_refresh">รีเฟรช</string>
+    <string name="home_section_my_media">สื่อของฉัน</string>
+    <string name="home_section_continue_watching">ดูต่อ</string>
+    <string name="home_section_next_up">ตอนถัดไป</string>
+    <string name="home_section_latest">%1$s ล่าสุด</string>
+</resources>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Player zoumaachen</string>
+    <string name="player_play">Ofspillen</string>
+    <string name="player_pause">Paus</string>
+    <string name="player_rewind">10 Sekonnen zréckspréngen</string>
+    <string name="player_forward">30 Sekonnen no vir sprangen</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Ënnertitelen</string>
+    <string name="player_subtitles_off">Aus</string>
+    <string name="player_quality">Qualitéit</string>
+    <string name="player_speed">Vitesse</string>
+
+    <string name="player_skip_intro">Intro iwwersprangen</string>
+    <string name="player_skip_outro">Outro iwwersprangen</string>
+
+    <string name="player_quality_auto">Automatesch</string>
+    <string name="player_quality_high">Héich – 20 Mbps</string>
+    <string name="player_quality_medium">Mëttel – 8 Mbps</string>
+    <string name="player_quality_low">Niddreg – 3 Mbps</string>
+    <string name="player_quality_lowest">Nidderegst – 720 kbps</string>
+
+    <string name="player_method_direct_play">Direktwiddergab</string>
+    <string name="player_method_direct_stream">Direktstream</string>
+    <string name="player_method_transcode">Transkodéierung</string>
+
+    <string name="player_message_transcode">Däin Apparat konnt dëse Fichier net decodéieren, dofir transkodéiert de Server en.</string>
+    <string name="player_message_lower_quality">De Stream ass hänke bliwwen – et gëtt mat enger niddregerer Qualitéit nees probéiert.</string>
+    <string name="player_message_track_restart">De Server huet de Stream fir dëse Titel nei kodéiere missen.</string>
+    <string name="player_message_track_streaming">Dëse Titel ass net am Download – hie gëtt vun dengem Server gestreamt.</string>
+    <string name="player_message_track_offline">Dëse Titel ass net am erofgeluedene Fichier.</string>
+    <string name="player_message_failed">D\'Widderginn ass feelgeschloen.</string>
+
+    <string name="player_syncplay_group">Grupp</string>
+    <string name="player_syncplay_waiting">Waart op d\'Grupp…</string>
+    <string name="player_syncplay_shuffle">Warteschlaang mëschen</string>
+    <string name="player_syncplay_repeat">Widderhuelen</string>
+    <string name="player_syncplay_repeat_none">Aus</string>
+    <string name="player_syncplay_repeat_one">Dëst Element</string>
+    <string name="player_syncplay_repeat_all">Ganz Warteschlaang</string>
+    <string name="player_syncplay_leave">Grupp verloossen</string>
+    <string name="player_syncplay_leave_title">Dës Grupp verloossen?</string>
+    <string name="player_syncplay_leave_body">D\'Widderginn geet hei eleng weider. Fir nees bäizekommen, muss d\'Grupp nees ausgewielt ginn.</string>
+
+    <string name="player_syncplay_cancel">Ofbriechen</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d Persoun kuckt mat</item>
+        <item quantity="other">%d Persounen kucken mat</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d weider</string>
+
+    <string name="player_syncplay_queue">Warteschlaang</string>
+    <string name="player_syncplay_queue_empty">D\'Grupp huet nach näischt an d\'Warteschlaang gesat.</string>
+    <string name="player_syncplay_queue_item_loading">Gëtt gelueden…</string>
+    <string name="player_syncplay_queue_playing">Spillt elo</string>
+    <string name="player_syncplay_queue_next">Nächst Element</string>
+    <string name="player_syncplay_queue_previous">Vireregt Element</string>
+    <string name="player_syncplay_queue_move_up">No uewen</string>
+    <string name="player_syncplay_queue_move_down">No ënnen</string>
+    <string name="player_syncplay_queue_remove">Aus der Warteschlaang ewechhuelen</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d Element an der Warteschlaang</item>
+        <item quantity="other">%d Elementer an der Warteschlaang</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay verlooss – Verbindung verluer</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay-Grupp nees bäigetrueden</string>
+    <string name="player_message_syncplay_join_failed">Dëser SyncPlay-Grupp konnt net bäigetruede ginn.</string>
+    <string name="player_message_syncplay_group_ended">D\'SyncPlay-Grupp ass eriwwer.</string>
+    <string name="player_message_syncplay_removed">Du bass net méi an der SyncPlay-Grupp.</string>
+    <string name="player_message_syncplay_library_denied">D\'Grupp kuckt eppes, op dat s du keen Zougang hues.</string>
+    <string name="player_message_syncplay_item_unavailable">Konnt net opmaachen, wat d\'Grupp kuckt.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Zréck</string>
+    <string name="player_syncplay_groups_home">Start</string>
+    <string name="player_syncplay_groups_create">Grupp erstellen</string>
+    <string name="player_syncplay_groups_create_title">Gëff denger Grupp en Numm</string>
+    <string name="player_syncplay_groups_create_hint">Gruppennumm</string>
+    <string name="player_syncplay_groups_create_confirm">Erstellen</string>
+    <string name="player_syncplay_groups_joining">Trëtt bäi…</string>
+    <string name="player_syncplay_groups_active_label">Du bass an dëser Grupp</string>
+    <string name="player_syncplay_groups_open_player">Player opmaachen</string>
+    <string name="player_syncplay_groups_empty">Grad kuckt keen anere mat.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay ass fir däi Konto deaktivéiert.</string>
+    <string name="player_syncplay_groups_error">SyncPlay-Gruppe konnte net gelueden ginn.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-Grupp</string>
+    <string name="player_syncplay_presence_channel_description">Behält däi Plaz an enger gemeinsamer Kuckgrupp, wärend d\'App am Hannergrond leeft.</string>
+    <string name="player_syncplay_presence_title">An enger SyncPlay-Grupp</string>
+    <string name="player_syncplay_presence_text">Waart op d\'Grupp</string>
+    <string name="player_syncplay_presence_leave">Verloossen</string>
+
+    <string name="player_syncplay_state_idle">Inaktiv</string>
+    <string name="player_syncplay_state_waiting">Waart</string>
+    <string name="player_syncplay_state_paused">Pauséiert</string>
+    <string name="player_syncplay_state_playing">Spillt</string>
+
+    <string name="player_cast">Op en Apparat streamen</string>
+
+    <string name="player_cast_device_unnamed">dengem Fernseher</string>
+    <string name="player_message_cast_transferred">Spillt elo op %1$s.</string>
+    <string name="player_message_cast_left_syncplay">D\'SyncPlay-Grupp verlooss fir op %1$s ze streamen.</string>
+    <string name="player_message_cast_failed">Konnt dat net op %1$s ofspillen.</string>
+
+    <string name="player_casting_to">Gëtt op %1$s gestreamt</string>
+</resources>

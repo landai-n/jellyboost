@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Stillingar</string>
+    <string name="settings_back">Aftur</string>
+    <string name="settings_home">Heim</string>
+
+    <string name="settings_section_playback">Avspæling</string>
+    <string name="settings_skip_intro">Sleppa intro</string>
+    <string name="settings_skip_outro">Sleppa outro</string>
+    <string name="settings_skip_mode_off">Ger einki</string>
+    <string name="settings_skip_mode_show_button">Sýn ein sleppa-knøtt</string>
+    <string name="settings_skip_mode_auto">Sleppa sjálvvirkandi</string>
+    <string name="settings_pip">Mynd-í-mynd</string>
+    <string name="settings_pip_supporting">Halt áfram at spæla í einum fljótandi glugga, tá ið tú fert úr appini.</string>
+
+    <string name="settings_section_downloads">Niðurhal</string>
+    <string name="settings_wifi_only">Bert Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Steðga niðurhali á mobilum dátum.</string>
+    <string name="settings_quality">Niðurhalsgæði</string>
+    <string name="settings_quality_original">Upprunafíla — nágreiniligt eintak, kann haldast áfram</string>
+    <string name="settings_quality_high">Høgt — umleið 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Meðal — umleið 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Lágt — umleið 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alt uttan upprunafíluna verður umbroytt av ambætaranum, meðan hann sendir hana, so stødd, sum verður sýnd undir niðurhali, er eitt mett tal, og ein avbrotin flyting byrjar aftur frá byrjan.</string>
+    <string name="settings_storage_label">Goymsla</string>
+    <string name="settings_storage_summary">%1$s brúkt · %2$s frítt á hesum tólinum</string>
+    <string name="settings_storage_location">Niðurhal verða goymd í %1$s</string>
+    <string name="settings_storage_picker">Goymslustaður</string>
+    <string name="settings_storage_internal">Innvortis goymsla</string>
+    <string name="settings_storage_sd_card">SD-kort</string>
+    <string name="settings_storage_volume_free">%1$s frítt</string>
+    <string name="settings_storage_missing">Goymslan, sum tú valdi, er ikki tøk beint nú, so niðurhal fara til staðin, sum er valdur niðanfyri.</string>
+    <string name="settings_storage_switch_title">Flyt niðurhal?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Niðurhal kunnu ikki flytast millum staðir enn, so tað, sum longu er á hesum tólinum, verður strikað. Tú kanst hala tað niður aftur til nýggja staðin.</item>
+        <item quantity="other">Niðurhal kunnu ikki flytast millum staðir enn, so tey %1$d, sum longu eru á hesum tólinum, verða strikað. Tú kanst hala tey niður aftur til nýggja staðin.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Strika og skift</string>
+
+    <string name="settings_section_connectivity">Samband</string>
+    <string name="settings_offline_mode">Frákoplaður háttur</string>
+    <string name="settings_offline_mode_supporting">Sýn bert tilfar, sum longu er á hesum tólinum.</string>
+
+    <string name="settings_section_account">Konta</string>
+    <string name="settings_account_user">Innritað(ur) sum</string>
+    <string name="settings_account_server">Ambætari</string>
+    <string name="settings_account_unknown">Ikki innritað(ur)</string>
+    <string name="settings_sign_out">Rita út</string>
+    <string name="settings_sign_out_dialog_title">Rita út?</string>
+    <string name="settings_sign_out_dialog_message">Tær tørvar ambætaraadressuna og loyniorðið fyri at innrita teg aftur.</string>
+    <string name="settings_sign_out_delete_downloads">Strika eisini niðurhal frá hesum tólinum</string>
+    <string name="settings_cancel">Avlýs</string>
+</resources>

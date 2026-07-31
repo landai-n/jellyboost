@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">डाउनलोड हो गया</string>
+    <string name="badge_download_queued">डाउनलोड के लिए कतार में</string>
+    <string name="badge_download_paused">डाउनलोड रोका गया</string>
+    <string name="badge_download_failed">डाउनलोड विफल</string>
+
+    <string name="media_row_see_all">सभी देखें</string>
+    <string name="media_card_watched">देखा गया</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d चयनित</item>
+        <item quantity="other">%1$d चयनित</item>
+    </plurals>
+    <string name="selection_close">चयन साफ़ करें</string>
+    <string name="selection_select_all">सभी चुनें</string>
+    <string name="selection_mark_watched">देखा हुआ चिह्नित करें</string>
+    <string name="selection_mark_unwatched">न देखा हुआ चिह्नित करें</string>
+    <string name="selection_download">डाउनलोड करें</string>
+
+    <string name="selection_item_selected">चयनित</string>
+    <string name="selection_item_not_selected">चयनित नहीं</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d को देखा हुआ चिह्नित किया गया</item>
+        <item quantity="other">%1$d को देखा हुआ चिह्नित किया गया</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d को देखा हुआ चिह्नित किया गया, %2$d विफल</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d आइटम को देखा हुआ चिह्नित नहीं किया जा सका</item>
+        <item quantity="other">%1$d आइटम को देखा हुआ चिह्नित नहीं किया जा सका</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d को न देखा हुआ चिह्नित किया गया</item>
+        <item quantity="other">%1$d को न देखा हुआ चिह्नित किया गया</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d को न देखा हुआ चिह्नित किया गया, %2$d विफल</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d आइटम को न देखा हुआ चिह्नित नहीं किया जा सका</item>
+        <item quantity="other">%1$d आइटम को न देखा हुआ चिह्नित नहीं किया जा सका</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d को डाउनलोड में जोड़ा गया</item>
+        <item quantity="other">%1$d को डाउनलोड में जोड़ा गया</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d को डाउनलोड में जोड़ा गया, %2$d विफल</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d आइटम को डाउनलोड में नहीं जोड़ा जा सका</item>
+        <item quantity="other">%1$d आइटम को डाउनलोड में नहीं जोड़ा जा सका</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d को डाउनलोड में जोड़ा गया — %2$d पहले से इस डिवाइस पर मौजूद हैं</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d आइटम पहले से इस डिवाइस पर मौजूद है</item>
+        <item quantity="other">%1$d आइटम पहले से इस डिवाइस पर मौजूद हैं</item>
+    </plurals>
+</resources>

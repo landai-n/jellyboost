@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Tənzimləmələr</string>
+    <string name="settings_back">Geri</string>
+    <string name="settings_home">Əsas səhifə</string>
+    <string name="settings_section_playback">Oxutma</string>
+    <string name="settings_skip_intro">Girişi keç</string>
+    <string name="settings_skip_outro">Sonluğu keç</string>
+    <string name="settings_skip_mode_off">Heç nə etmə</string>
+    <string name="settings_skip_mode_show_button">Keçid düyməsi göstər</string>
+    <string name="settings_skip_mode_auto">Avtomatik keç</string>
+    <string name="settings_pip">Şəkil içində şəkil</string>
+    <string name="settings_pip_supporting">Tətbiqi tərk etdikdə üzən pəncərədə oxutmağa davam et.</string>
+    <string name="settings_section_downloads">Yükləmələr</string>
+    <string name="settings_wifi_only">Yalnız Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Mobil datada yükləmələri dayandır.</string>
+    <string name="settings_quality">Yükləmə keyfiyyəti</string>
+    <string name="settings_quality_original">Orijinal fayl — dəqiq surət, davam etdirilə bilər</string>
+    <string name="settings_quality_high">Yüksək — təxminən 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Orta — təxminən 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Aşağı — təxminən 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Orijinal fayldan başqa hər şey serveriniz tərəfindən göndərilərkən çevrilir, ona görə də yüklənərkən göstərilən ölçü təxminidir və kəsilən ötürmə yenidən başlayır.</string>
+    <string name="settings_storage_label">Yaddaş</string>
+    <string name="settings_storage_summary">Bu cihazda %1$s istifadə olunub · %2$s boşdur</string>
+    <string name="settings_storage_location">Yükləmələr %1$s-də saxlanılır</string>
+    <string name="settings_storage_picker">Yaddaş yeri</string>
+    <string name="settings_storage_internal">Daxili yaddaş</string>
+    <string name="settings_storage_sd_card">SD kart</string>
+    <string name="settings_storage_volume_free">%1$s boş</string>
+    <string name="settings_storage_missing">Seçdiyiniz yaddaş hazırda mövcud deyil, ona görə də yükləmələr aşağıda seçilmiş yerə gedəcək.</string>
+    <string name="settings_storage_switch_title">Yükləmələr köçürülsün?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Yükləmələr hələ məkanlar arasında köçürülə bilmir, ona görə də bu cihazdakı silinəcək. Onu yeni məkana yenidən yükləyə bilərsiniz.</item>
+        <item quantity="other">Yükləmələr hələ məkanlar arasında köçürülə bilmir, ona görə də bu cihazdakı %1$d ədəd silinəcək. Onları yeni məkana yenidən yükləyə bilərsiniz.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Sil və dəyiş</string>
+    <string name="settings_section_connectivity">Bağlantı</string>
+    <string name="settings_offline_mode">Oflayn rejim</string>
+    <string name="settings_offline_mode_supporting">Yalnız bu cihazda artıq olan medianı göstər.</string>
+    <string name="settings_section_account">Hesab</string>
+    <string name="settings_account_user">Bu ad ilə daxil olunub:</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Daxil olunmayıb</string>
+    <string name="settings_sign_out">Çıxış et</string>
+    <string name="settings_sign_out_dialog_title">Çıxış edilsin?</string>
+    <string name="settings_sign_out_dialog_message">Yenidən daxil olmaq üçün server ünvanınıza və şifrənizə ehtiyacınız olacaq.</string>
+    <string name="settings_sign_out_delete_downloads">Bu cihazdakı yükləmələri də sil</string>
+    <string name="settings_cancel">Ləğv et</string>
+</resources>

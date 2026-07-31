@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Преземено</string>
+    <string name="badge_download_queued">На ред за преземање</string>
+    <string name="badge_download_paused">Преземањето е паузирано</string>
+    <string name="badge_download_failed">Преземањето не успеа</string>
+
+    <string name="media_row_see_all">Прикажи ги сите</string>
+    <string name="media_card_watched">Гледано</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d избрана ставка</item>
+        <item quantity="other">%1$d избрани ставки</item>
+    </plurals>
+    <string name="selection_close">Исчисти го изборот</string>
+    <string name="selection_select_all">Избери сè</string>
+    <string name="selection_mark_watched">Означи како гледано</string>
+    <string name="selection_mark_unwatched">Означи како негледано</string>
+    <string name="selection_download">Преземи</string>
+
+    <string name="selection_item_selected">Избрано</string>
+    <string name="selection_item_not_selected">Не е избрано</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Означена %1$d ставка како гледана</item>
+        <item quantity="other">Означени %1$d ставки како гледани</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Означени %1$d како гледани, %2$d не успеаја</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Не можеше да се означи %1$d ставка како гледана</item>
+        <item quantity="other">Не можеа да се означат %1$d ставки како гледани</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Означена %1$d ставка како негледана</item>
+        <item quantity="other">Означени %1$d ставки како негледани</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Означени %1$d како негледани, %2$d не успеаја</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Не можеше да се означи %1$d ставка како негледана</item>
+        <item quantity="other">Не можеа да се означат %1$d ставки како негледани</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Додадена %1$d ставка во преземања</item>
+        <item quantity="other">Додадени %1$d ставки во преземања</item>
+    </plurals>
+    <string name="selection_result_download_partial">Додадени %1$d во преземања, %2$d не успеаја</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Не можеше да се додаде %1$d ставка во преземања</item>
+        <item quantity="other">Не можеа да се додадат %1$d ставки во преземања</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Додадени %1$d во преземања — %2$d веќе се на овој уред</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d ставка веќе е на овој уред</item>
+        <item quantity="other">%1$d ставки веќе се на овој уред</item>
+    </plurals>
+</resources>

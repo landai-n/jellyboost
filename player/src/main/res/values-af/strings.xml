@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Maak speler toe</string>
+    <string name="player_play">Speel</string>
+    <string name="player_pause">Pouseer</string>
+    <string name="player_rewind">Spring 10 sekondes terug</string>
+    <string name="player_forward">Spring 30 sekondes vorentoe</string>
+
+    <string name="player_audio">Oudio</string>
+    <string name="player_subtitles">Onderskrifte</string>
+    <string name="player_subtitles_off">Af</string>
+    <string name="player_quality">Gehalte</string>
+    <string name="player_speed">Spoed</string>
+
+    <string name="player_skip_intro">Slaan intro oor</string>
+    <string name="player_skip_outro">Slaan uittrede oor</string>
+
+    <string name="player_quality_auto">Outomaties</string>
+    <string name="player_quality_high">Hoog — 20 Mbps</string>
+    <string name="player_quality_medium">Medium — 8 Mbps</string>
+    <string name="player_quality_low">Laag — 3 Mbps</string>
+    <string name="player_quality_lowest">Laagste — 720 kbps</string>
+
+    <string name="player_method_direct_play">Direkte terugspeel</string>
+    <string name="player_method_direct_stream">Direkte stroom</string>
+    <string name="player_method_transcode">Transkodering</string>
+
+    <string name="player_message_transcode">Jou toestel kon nie hierdie lêer dekodeer nie, so die bediener transkodeer dit.</string>
+    <string name="player_message_lower_quality">Die stroom het gehaper — probeer weer teen \'n laer gehalte.</string>
+    <string name="player_message_track_restart">Die bediener moes die stroom vir daardie baan herenkodeer.</string>
+    <string name="player_message_track_streaming">Daardie baan is nie in die aflaai nie — stroom dit vanaf jou bediener.</string>
+    <string name="player_message_track_offline">Daardie baan is nie in die afgelaaide lêer nie.</string>
+    <string name="player_message_failed">Terugspeel het misluk.</string>
+
+    <string name="player_syncplay_group">Groep</string>
+    <string name="player_syncplay_waiting">Wag vir groep…</string>
+    <string name="player_syncplay_shuffle">Skommel wagtou</string>
+    <string name="player_syncplay_repeat">Herhaal</string>
+    <string name="player_syncplay_repeat_none">Af</string>
+    <string name="player_syncplay_repeat_one">Hierdie item</string>
+    <string name="player_syncplay_repeat_all">Hele wagtou</string>
+    <string name="player_syncplay_leave">Verlaat groep</string>
+    <string name="player_syncplay_leave_title">Verlaat hierdie groep?</string>
+    <string name="player_syncplay_leave_body">Terugspeel gaan hier op sy eie voort. Om weer aan te sluit beteken jy kies die groep weer.</string>
+
+    <string name="player_syncplay_cancel">Kanselleer</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d persoon kyk</item>
+        <item quantity="other">%d mense kyk</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d meer</string>
+
+    <string name="player_syncplay_queue">Wagtou</string>
+    <string name="player_syncplay_queue_empty">Die groep het nog niks in die wagtou gesit nie.</string>
+    <string name="player_syncplay_queue_item_loading">Laai tans…</string>
+    <string name="player_syncplay_queue_playing">Speel tans</string>
+    <string name="player_syncplay_queue_next">Volgende item</string>
+    <string name="player_syncplay_queue_previous">Vorige item</string>
+    <string name="player_syncplay_queue_move_up">Skuif op</string>
+    <string name="player_syncplay_queue_move_down">Skuif af</string>
+    <string name="player_syncplay_queue_remove">Verwyder uit wagtou</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d item in wagtou</item>
+        <item quantity="other">%d items in wagtou</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay verlaat — verbinding verloor</string>
+    <string name="player_message_syncplay_rejoined">Weer by SyncPlay-groep aangesluit</string>
+    <string name="player_message_syncplay_join_failed">Kon nie by daardie SyncPlay-groep aansluit nie.</string>
+    <string name="player_message_syncplay_group_ended">Die SyncPlay-groep het beëindig.</string>
+    <string name="player_message_syncplay_removed">Jy is nie meer in die SyncPlay-groep nie.</string>
+    <string name="player_message_syncplay_library_denied">Die groep kyk na iets waartoe jy nie toegang het nie.</string>
+    <string name="player_message_syncplay_item_unavailable">Kon nie oopmaak wat die groep kyk nie.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Terug</string>
+    <string name="player_syncplay_groups_home">Tuis</string>
+    <string name="player_syncplay_groups_create">Skep groep</string>
+    <string name="player_syncplay_groups_create_title">Gee jou groep \'n naam</string>
+    <string name="player_syncplay_groups_create_hint">Groepnaam</string>
+    <string name="player_syncplay_groups_create_confirm">Skep</string>
+    <string name="player_syncplay_groups_joining">Sluit aan…</string>
+    <string name="player_syncplay_groups_active_label">Jy is in hierdie groep</string>
+    <string name="player_syncplay_groups_open_player">Maak speler oop</string>
+    <string name="player_syncplay_groups_empty">Niemand anders kyk tans saam nie.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay is gedeaktiveer vir jou rekening.</string>
+    <string name="player_syncplay_groups_error">Kon nie SyncPlay-groepe laai nie.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-groep</string>
+    <string name="player_syncplay_presence_channel_description">Hou jou plek in \'n saam-kyk-groep terwyl die app op die agtergrond is.</string>
+    <string name="player_syncplay_presence_title">In \'n SyncPlay-groep</string>
+    <string name="player_syncplay_presence_text">Wag vir die groep</string>
+    <string name="player_syncplay_presence_leave">Verlaat</string>
+
+    <string name="player_syncplay_state_idle">Ledig</string>
+    <string name="player_syncplay_state_waiting">Wag</string>
+    <string name="player_syncplay_state_paused">Gepouseer</string>
+    <string name="player_syncplay_state_playing">Speel tans</string>
+
+    <string name="player_cast">Stuur na \'n toestel</string>
+
+    <string name="player_cast_device_unnamed">jou TV</string>
+    <string name="player_message_cast_transferred">Speel nou op %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Het die SyncPlay-groep verlaat om na %1$s te stuur.</string>
+    <string name="player_message_cast_failed">Kon nie dit op %1$s speel nie.</string>
+
+    <string name="player_casting_to">Stuur tans na %1$s</string>
+</resources>

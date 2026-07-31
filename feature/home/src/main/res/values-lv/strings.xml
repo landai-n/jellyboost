@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Vēl nav ko skatīties. Pievienojiet saturu savām bibliotēkām serverī.</string>
+    <string name="home_empty_refresh">Atsvaidzināt</string>
+
+    <string name="home_section_my_media">Mani mediji</string>
+    <string name="home_section_continue_watching">Turpināt skatīties</string>
+    <string name="home_section_next_up">Nākamais</string>
+    <string name="home_section_latest">Jaunākie %1$s</string>
+</resources>

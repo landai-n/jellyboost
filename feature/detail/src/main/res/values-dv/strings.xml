@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">ފަހަތަށް</string>
+    <string name="detail_home">ހޯމް</string>
+    <string name="detail_play">ޕްލޭ</string>
+    <string name="detail_resume">ކުރިއަށް ގެންދޭ</string>
+    <string name="detail_download">ޑައުންލޯޑް</string>
+    <string name="detail_download_cancel">ކެންސަލްކުރޭ</string>
+    <string name="detail_download_remove">ނަގާ</string>
+    <string name="detail_download_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
+    <string name="detail_play_episode">މި އެޕިސޯޑް ޕްލޭކުރޭ</string>
+    <string name="detail_mark_watched">ބަލައިފި ކަމަށް ފާހަގަކުރޭ</string>
+    <string name="detail_mark_unwatched">ނުބަލާ ކަމަށް ފާހަގަކުރޭ</string>
+    <string name="detail_add_favorite">ފެވަރިޓަށް އިތުރުކުރޭ</string>
+    <string name="detail_remove_favorite">ފެވަރިޓުން ނަގާ</string>
+
+    <string name="detail_section_seasons">ސީޒަންތައް</string>
+    <string name="detail_section_next_up">ދެން އޮތީ</string>
+    <string name="detail_section_episodes">އެޕިސޯޑްތައް</string>
+    <string name="detail_section_similar">މިކަހަލަ އިތުރު</string>
+
+    <string name="detail_runtime_minutes">%1$d މިނިޓް</string>
+    <string name="detail_remaining_minutes">%1$d މިނިޓް ބާކީ</string>
+    <string name="detail_size_on_device">%1$s ޑިވައިސްގައި</string>
+    <string name="detail_directed_by">ޑައިރެކްޓްކުރީ %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d ސީޒަން</item>
+        <item quantity="other">%1$d ސީޒަން</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d އެޕިސޯޑް</item>
+        <item quantity="other">%1$d އެޕިސޯޑް</item>
+    </plurals>
+
+    <string name="detail_empty">މި އައިޓަމް މިހާރު ނެތް.</string>
+    <string name="detail_message_download_queued">ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ.</string>
+    <string name="detail_message_download_failed">އެ ޑައުންލޯޑް ފެށޭގޮތެއް ނުވި.</string>
+    <string name="detail_message_download_deleted">މި ޑިވައިސްއިން ނަގައިފި.</string>
+    <string name="detail_message_download_delete_failed">އެ ޑައުންލޯޑް ނެގޭގޮތެއް ނުވި.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">ޑައުންލޯޑް ކެންސަލްކުރެވިއްޖެ — ނިމިފައިވާ %1$d އެޕިސޯޑް ބަހައްޓައިފި.</item>
+        <item quantity="other">ޑައުންލޯޑް ކެންސަލްކުރެވިއްޖެ — ނިމިފައިވާ %1$d އެޕިސޯޑް ބަހައްޓައިފި.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">އެ ރައްކާނުކުރެވުނު. އަލުން މަސައްކަތްކުރޭ.</string>
+
+    <string name="detail_group_play">%1$s އަށްޓަކައި ޕްލޭކުރޭ</string>
+    <string name="detail_group_resume">%1$s އަށްޓަކައި ކުރިއަށް ގެންދޭ</string>
+    <string name="detail_group_play_next">ދެން ޕްލޭކުރޭ</string>
+    <string name="detail_group_add_to_queue">ކިއޫއަށް އިތުރުކުރޭ</string>
+    <string name="detail_message_group_play">މިއީ ޕްލޭކުރުމަށް ގްރޫޕަށް އެދިއްޖެ.</string>
+    <string name="detail_message_group_play_next">ދެން ޕްލޭކުރުމަށް ގްރޫޕްގެ ކިއޫއަށް އިތުރުކުރެވިއްޖެ.</string>
+    <string name="detail_message_group_queued">ގްރޫޕްގެ ކިއޫއަށް އިތުރުކުރެވިއްޖެ.</string>
+
+    <string name="detail_delete_download_dialog_title">ޑައުންލޯޑް ފޮހެލަންހޭ؟</string>
+    <string name="detail_delete_download_dialog_message">މިކަމުން މި ޑިވައިސްއިން އެ ނަގާނެ. ކޮންމެ ވަގުތެއްގައިވެސް އަލުން ޑައުންލޯޑްކުރެވިދާނެ.</string>
+    <string name="detail_delete_download_dialog_confirm">ފޮހެލާ</string>
+    <string name="detail_delete_download_dialog_cancel">ކެންސަލްކުރޭ</string>
+</resources>

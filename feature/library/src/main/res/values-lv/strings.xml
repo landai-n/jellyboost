@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Vēl nav neviena bibliotēka. Pievienojiet vienu serverī.</string>
+
+    <string name="library_back">Atpakaļ</string>
+    <string name="library_home">Sākums</string>
+    <string name="library_sort">Kārtot</string>
+    <string name="library_filter">Filtrs</string>
+
+    <string name="library_sort_title">Kārtot pēc</string>
+    <string name="library_sort_name">Nosaukums</string>
+    <string name="library_sort_date_added">Pievienošanas datums</string>
+    <string name="library_sort_premiere_date">Iznākšanas datums</string>
+    <string name="library_sort_community_rating">Kopienas vērtējums</string>
+    <string name="library_sort_runtime">Ilgums</string>
+    <string name="library_sort_random">Nejauši</string>
+    <string name="library_sort_direction">Virziens</string>
+    <string name="library_sort_ascending">Augoši</string>
+    <string name="library_sort_descending">Dilstoši</string>
+
+    <string name="library_filters_title">Filtri</string>
+    <string name="library_filters_genres">Žanri</string>
+    <string name="library_filters_years">Gadi</string>
+    <string name="library_filters_played">Skatīts</string>
+    <string name="library_filters_played_any">Jebkurš</string>
+    <string name="library_filters_played_yes">Skatīts</string>
+    <string name="library_filters_played_no">Neskatīts</string>
+    <string name="library_filters_clear">Notīrīt visu</string>
+    <string name="library_filters_apply">Rādīt rezultātus</string>
+    <string name="library_filters_none">Šai bibliotēkai nebija nekā, pēc kā filtrēt.</string>
+    <string name="library_filters_loading">Filtru ielāde…</string>
+
+    <string name="library_empty">Šeit nav ko rādīt.</string>
+    <string name="library_empty_filtered">Neviens vienums neatbilst šiem filtriem.</string>
+    <string name="library_empty_clear_filters">Notīrīt filtrus</string>
+    <string name="library_retry">Mēģināt vēlreiz</string>
+
+    <string name="library_error_network">Nevar sasniegt jūsu serveri. Pārbaudiet savienojumu un mēģiniet vēlreiz.</string>
+    <string name="library_error_unauthorized">Jūsu sesija ir beigusies. Piesakieties vēlreiz, lai turpinātu.</string>
+    <string name="library_error_not_found">Šīs bibliotēkas serverī vairs nav.</string>
+    <string name="library_error_server">Serveris atgrieza kļūdu.</string>
+    <string name="library_error_server_with_code">Serveris atgrieza kļūdu (%1$d).</string>
+    <string name="library_error_storage">Neizdevās nolasīt lokālos datus.</string>
+    <string name="library_error_unknown">Ielādējot šo bibliotēku, kaut kas nogāja greizi.</string>
+</resources>

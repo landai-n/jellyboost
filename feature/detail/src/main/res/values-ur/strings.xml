@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">واپس</string>
+    <string name="detail_home">ہوم</string>
+    <string name="detail_play">چلائیں</string>
+    <string name="detail_resume">دوبارہ شروع کریں</string>
+    <string name="detail_download">ڈاؤن لوڈ</string>
+    <string name="detail_download_cancel">منسوخ کریں</string>
+    <string name="detail_download_remove">ہٹائیں</string>
+    <string name="detail_download_retry">دوبارہ کوشش کریں</string>
+    <string name="detail_play_episode">یہ قسط چلائیں</string>
+    <string name="detail_mark_watched">دیکھا گیا نشان زد کریں</string>
+    <string name="detail_mark_unwatched">نہیں دیکھا گیا نشان زد کریں</string>
+    <string name="detail_add_favorite">پسندیدہ میں شامل کریں</string>
+    <string name="detail_remove_favorite">پسندیدہ سے ہٹائیں</string>
+
+    <string name="detail_section_seasons">سیزنز</string>
+    <string name="detail_section_next_up">اگلا</string>
+    <string name="detail_section_episodes">اقساط</string>
+    <string name="detail_section_similar">اس جیسے مزید</string>
+
+    <string name="detail_runtime_minutes">%1$d منٹ</string>
+    <string name="detail_remaining_minutes">%1$d منٹ باقی</string>
+    <string name="detail_size_on_device">%1$s ڈیوائس پر</string>
+    <string name="detail_directed_by">ہدایت کار: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d سیزن</item>
+        <item quantity="other">%1$d سیزنز</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d قسط</item>
+        <item quantity="other">%1$d اقساط</item>
+    </plurals>
+
+    <string name="detail_empty">یہ آئٹم اب دستیاب نہیں ہے۔</string>
+    <string name="detail_message_download_queued">ڈاؤن لوڈز میں شامل کر دیا گیا۔</string>
+    <string name="detail_message_download_failed">وہ ڈاؤن لوڈ شروع کرنا ممکن نہیں تھا۔</string>
+    <string name="detail_message_download_deleted">اس ڈیوائس سے ہٹا دیا گیا۔</string>
+    <string name="detail_message_download_delete_failed">وہ ڈاؤن لوڈ ہٹانا ممکن نہیں تھا۔</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">ڈاؤن لوڈ منسوخ ہو گیا — %1$d مکمل شدہ قسط محفوظ رکھی گئی۔</item>
+        <item quantity="other">ڈاؤن لوڈ منسوخ ہو گیا — %1$d مکمل شدہ اقساط محفوظ رکھی گئیں۔</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">وہ محفوظ کرنا ممکن نہیں تھا۔ دوبارہ کوشش کریں۔</string>
+
+    <string name="detail_group_play">%1$s کے لیے چلائیں</string>
+    <string name="detail_group_resume">%1$s کے لیے دوبارہ شروع کریں</string>
+    <string name="detail_group_play_next">اگلا چلائیں</string>
+    <string name="detail_group_add_to_queue">قطار میں شامل کریں</string>
+    <string name="detail_message_group_play">گروپ سے یہ چلانے کے لیے کہا گیا۔</string>
+    <string name="detail_message_group_play_next">اگلا چلانے کے لیے گروپ کی قطار میں شامل کر دیا گیا۔</string>
+    <string name="detail_message_group_queued">گروپ کی قطار میں شامل کر دیا گیا۔</string>
+
+    <string name="detail_delete_download_dialog_title">ڈاؤن لوڈ حذف کریں؟</string>
+    <string name="detail_delete_download_dialog_message">یہ اسے اس ڈیوائس سے ہٹا دے گا۔ آپ اسے کسی بھی وقت دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</string>
+    <string name="detail_delete_download_dialog_confirm">حذف کریں</string>
+    <string name="detail_delete_download_dialog_cancel">منسوخ کریں</string>
+</resources>

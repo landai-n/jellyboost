@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Kol kas nėra bibliotekų. Pridėkite vieną serveryje.</string>
+
+    <string name="library_back">Atgal</string>
+    <string name="library_home">Pradžia</string>
+    <string name="library_sort">Rikiuoti</string>
+    <string name="library_filter">Filtras</string>
+
+    <string name="library_sort_title">Rikiuoti pagal</string>
+    <string name="library_sort_name">Pavadinimas</string>
+    <string name="library_sort_date_added">Pridėjimo data</string>
+    <string name="library_sort_premiere_date">Išleidimo data</string>
+    <string name="library_sort_community_rating">Bendruomenės įvertinimas</string>
+    <string name="library_sort_runtime">Trukmė</string>
+    <string name="library_sort_random">Atsitiktinai</string>
+    <string name="library_sort_direction">Kryptis</string>
+    <string name="library_sort_ascending">Didėjančiai</string>
+    <string name="library_sort_descending">Mažėjančiai</string>
+
+    <string name="library_filters_title">Filtrai</string>
+    <string name="library_filters_genres">Žanrai</string>
+    <string name="library_filters_years">Metai</string>
+    <string name="library_filters_played">Žiūrėta</string>
+    <string name="library_filters_played_any">Bet kuris</string>
+    <string name="library_filters_played_yes">Žiūrėta</string>
+    <string name="library_filters_played_no">Nežiūrėta</string>
+    <string name="library_filters_clear">Išvalyti viską</string>
+    <string name="library_filters_apply">Rodyti rezultatus</string>
+    <string name="library_filters_none">Šioje bibliotekoje nebuvo nieko, pagal ką filtruoti.</string>
+    <string name="library_filters_loading">Įkeliami filtrai…</string>
+
+    <string name="library_empty">Čia nėra ką rodyti.</string>
+    <string name="library_empty_filtered">Nė vienas elementas neatitinka šių filtrų.</string>
+    <string name="library_empty_clear_filters">Išvalyti filtrus</string>
+    <string name="library_retry">Bandyti dar kartą</string>
+
+    <string name="library_error_network">Nepavyksta pasiekti jūsų serverio. Patikrinkite ryšį ir bandykite dar kartą.</string>
+    <string name="library_error_unauthorized">Jūsų seansas baigėsi. Prisijunkite iš naujo, kad tęstumėte.</string>
+    <string name="library_error_not_found">Šios bibliotekos serveryje nebėra.</string>
+    <string name="library_error_server">Serveris grąžino klaidą.</string>
+    <string name="library_error_server_with_code">Serveris grąžino klaidą (%1$d).</string>
+    <string name="library_error_storage">Nepavyko nuskaityti vietinių duomenų.</string>
+    <string name="library_error_unknown">Įkeliant šią biblioteką kažkas nutiko ne taip.</string>
+</resources>

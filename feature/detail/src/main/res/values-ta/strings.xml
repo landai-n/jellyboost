@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">பின்</string>
+    <string name="detail_home">முகப்பு</string>
+    <string name="detail_play">இயக்கு</string>
+    <string name="detail_resume">தொடர்</string>
+    <string name="detail_download">பதிவிறக்கு</string>
+    <string name="detail_download_cancel">ரத்துசெய்</string>
+    <string name="detail_download_remove">அகற்று</string>
+    <string name="detail_download_retry">மீண்டும் முயற்சி</string>
+    <string name="detail_play_episode">இந்த எபிசோடை இயக்கு</string>
+    <string name="detail_mark_watched">பார்த்ததாகக் குறி</string>
+    <string name="detail_mark_unwatched">பார்க்காததாகக் குறி</string>
+    <string name="detail_add_favorite">விருப்பங்களில் சேர்</string>
+    <string name="detail_remove_favorite">விருப்பங்களிலிருந்து அகற்று</string>
+
+    <string name="detail_section_seasons">சீசன்கள்</string>
+    <string name="detail_section_next_up">அடுத்தது</string>
+    <string name="detail_section_episodes">எபிசோடுகள்</string>
+    <string name="detail_section_similar">இது போன்ற மேலும்</string>
+
+    <string name="detail_runtime_minutes">%1$d நிமி</string>
+    <string name="detail_remaining_minutes">%1$d நிமிடம் மீதம்</string>
+    <string name="detail_size_on_device">%1$s சாதனத்தில்</string>
+    <string name="detail_directed_by">இயக்கியவர் %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d சீசன்</item>
+        <item quantity="other">%1$d சீசன்கள்</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d எபிசோட்</item>
+        <item quantity="other">%1$d எபிசோடுகள்</item>
+    </plurals>
+
+    <string name="detail_empty">இந்த உருப்படி இனி கிடைக்கவில்லை.</string>
+    <string name="detail_message_download_queued">பதிவிறக்கங்களில் சேர்க்கப்பட்டது.</string>
+    <string name="detail_message_download_failed">அந்தப் பதிவிறக்கத்தைத் தொடங்க முடியவில்லை.</string>
+    <string name="detail_message_download_deleted">இந்தச் சாதனத்திலிருந்து அகற்றப்பட்டது.</string>
+    <string name="detail_message_download_delete_failed">அந்தப் பதிவிறக்கத்தை அகற்ற முடியவில்லை.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">பதிவிறக்கம் ரத்துசெய்யப்பட்டது — முடிந்த %1$d எபிசோட் வைக்கப்பட்டது.</item>
+        <item quantity="other">பதிவிறக்கம் ரத்துசெய்யப்பட்டது — முடிந்த %1$d எபிசோடுகள் வைக்கப்பட்டன.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">அதைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.</string>
+
+    <string name="detail_group_play">%1$s க்காக இயக்கு</string>
+    <string name="detail_group_resume">%1$s க்காக தொடர்</string>
+    <string name="detail_group_play_next">அடுத்ததாக இயக்கு</string>
+    <string name="detail_group_add_to_queue">வரிசையில் சேர்</string>
+    <string name="detail_message_group_play">இதை இயக்கக் குழுவிடம் கேட்கப்பட்டது.</string>
+    <string name="detail_message_group_play_next">குழுவிற்காக அடுத்ததாக வரிசைப்படுத்தப்பட்டது.</string>
+    <string name="detail_message_group_queued">குழுவின் வரிசையில் சேர்க்கப்பட்டது.</string>
+
+    <string name="detail_delete_download_dialog_title">பதிவிறக்கத்தை நீக்கவா?</string>
+    <string name="detail_delete_download_dialog_message">இது இதை இந்தச் சாதனத்திலிருந்து அகற்றும். எப்போது வேண்டுமானாலும் மீண்டும் பதிவிறக்கலாம்.</string>
+    <string name="detail_delete_download_dialog_confirm">நீக்கு</string>
+    <string name="detail_delete_download_dialog_cancel">ரத்துசெய்</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Retroceder</string>
+    <string name="detail_home">Início</string>
+    <string name="detail_play">Reproduzir</string>
+    <string name="detail_resume">Retomar</string>
+    <string name="detail_download">Transferir</string>
+    <string name="detail_download_cancel">Cancelar</string>
+    <string name="detail_download_remove">Remover</string>
+    <string name="detail_download_retry">Tentar novamente</string>
+    <string name="detail_play_episode">Reproduzir este episódio</string>
+    <string name="detail_mark_watched">Marcar como visto</string>
+    <string name="detail_mark_unwatched">Marcar como não visto</string>
+    <string name="detail_add_favorite">Adicionar aos favoritos</string>
+    <string name="detail_remove_favorite">Remover dos favoritos</string>
+    <string name="detail_section_seasons">Temporadas</string>
+    <string name="detail_section_next_up">A seguir</string>
+    <string name="detail_section_episodes">Episódios</string>
+    <string name="detail_section_similar">Semelhantes</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Faltam %1$d min</string>
+    <string name="detail_size_on_device">%1$s no dispositivo</string>
+    <string name="detail_directed_by">Realizado por %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d temporada</item>
+        <item quantity="other">%1$d temporadas</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d episódio</item>
+        <item quantity="other">%1$d episódios</item>
+    </plurals>
+    <string name="detail_empty">Este item já não está disponível.</string>
+    <string name="detail_message_download_queued">Adicionado às transferências.</string>
+    <string name="detail_message_download_failed">Não foi possível iniciar essa transferência.</string>
+    <string name="detail_message_download_deleted">Removido deste dispositivo.</string>
+    <string name="detail_message_download_delete_failed">Não foi possível remover essa transferência.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Transferência cancelada — %1$d episódio concluído foi mantido.</item>
+        <item quantity="other">Transferência cancelada — %1$d episódios concluídos foram mantidos.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Não foi possível guardar isso. Tente novamente.</string>
+    <string name="detail_group_play">Reproduzir para %1$s</string>
+    <string name="detail_group_resume">Retomar para %1$s</string>
+    <string name="detail_group_play_next">Reproduzir a seguir</string>
+    <string name="detail_group_add_to_queue">Adicionar à fila</string>
+    <string name="detail_message_group_play">Pedido ao grupo para reproduzir isto.</string>
+    <string name="detail_message_group_play_next">Colocado a seguir na fila do grupo.</string>
+    <string name="detail_message_group_queued">Adicionado à fila do grupo.</string>
+    <string name="detail_delete_download_dialog_title">Eliminar transferência?</string>
+    <string name="detail_delete_download_dialog_message">Isto remove-a deste dispositivo. Pode transferi-la novamente a qualquer momento.</string>
+    <string name="detail_delete_download_dialog_confirm">Eliminar</string>
+    <string name="detail_delete_download_dialog_cancel">Cancelar</string>
+</resources>

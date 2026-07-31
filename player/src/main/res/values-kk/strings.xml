@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Ойнатқышты жабу</string>
+    <string name="player_play">Ойнату</string>
+    <string name="player_pause">Кідірту</string>
+    <string name="player_rewind">10 секундқа артқа айналдыру</string>
+    <string name="player_forward">30 секундқа алға айналдыру</string>
+
+    <string name="player_audio">Аудио</string>
+    <string name="player_subtitles">Субтитрлер</string>
+    <string name="player_subtitles_off">Өшірулі</string>
+    <string name="player_quality">Сапа</string>
+    <string name="player_speed">Жылдамдық</string>
+
+    <string name="player_skip_intro">Кіріспені өткізіп жіберу</string>
+    <string name="player_skip_outro">Соңғы титрді өткізіп жіберу</string>
+
+    <string name="player_quality_auto">Авто</string>
+    <string name="player_quality_high">Жоғары — 20 Mbps</string>
+    <string name="player_quality_medium">Орташа — 8 Mbps</string>
+    <string name="player_quality_low">Төмен — 3 Mbps</string>
+    <string name="player_quality_lowest">Ең төмен — 720 kbps</string>
+
+    <string name="player_method_direct_play">Тікелей ойнату</string>
+    <string name="player_method_direct_stream">Тікелей трансляция</string>
+    <string name="player_method_transcode">Қайта кодтау</string>
+
+    <string name="player_message_transcode">Құрылғыңыз бұл файлды декодтай алмады, сондықтан сервер оны қайта кодтауда.</string>
+    <string name="player_message_lower_quality">Трансляция тоқтап қалды — төменірек сападан қайта көрілуде.</string>
+    <string name="player_message_track_restart">Сервер осы трек үшін трансляцияны қайта кодтауға мәжбүр болды.</string>
+    <string name="player_message_track_streaming">Бұл трек жүктелген файлда жоқ — ол серверіңізден трансляцияланып жатыр.</string>
+    <string name="player_message_track_offline">Бұл трек жүктелген файлда жоқ.</string>
+    <string name="player_message_failed">Ойнату сәтсіз аяқталды.</string>
+
+    <string name="player_syncplay_group">Топ</string>
+    <string name="player_syncplay_waiting">Топ күтілуде…</string>
+    <string name="player_syncplay_shuffle">Кезекті араластыру</string>
+    <string name="player_syncplay_repeat">Қайталау</string>
+    <string name="player_syncplay_repeat_none">Өшірулі</string>
+    <string name="player_syncplay_repeat_one">Осы элемент</string>
+    <string name="player_syncplay_repeat_all">Бүкіл кезек</string>
+    <string name="player_syncplay_leave">Топтан шығу</string>
+    <string name="player_syncplay_leave_title">Бұл топтан шығу керек пе?</string>
+    <string name="player_syncplay_leave_body">Ойнату осы жерде өз бетінше жалғаса береді. Қайта қосылу үшін топты қайта таңдау керек болады.</string>
+
+    <string name="player_syncplay_cancel">Бас тарту</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d адам көріп жатыр</item>
+        <item quantity="other">%d адам көріп жатыр</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s және тағы %2$d</string>
+
+    <string name="player_syncplay_queue">Кезек</string>
+    <string name="player_syncplay_queue_empty">Топ әлі ештеңе кезекке қоймады.</string>
+    <string name="player_syncplay_queue_item_loading">Жүктелуде…</string>
+    <string name="player_syncplay_queue_playing">Қазір ойнатылуда</string>
+    <string name="player_syncplay_queue_next">Келесі элемент</string>
+    <string name="player_syncplay_queue_previous">Алдыңғы элемент</string>
+    <string name="player_syncplay_queue_move_up">Жоғары жылжыту</string>
+    <string name="player_syncplay_queue_move_down">Төмен жылжыту</string>
+    <string name="player_syncplay_queue_remove">Кезектен жою</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d элемент кезекте</item>
+        <item quantity="other">%d элемент кезекте</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay-дан шықты — байланыс үзілді</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay тобына қайта қосылды</string>
+    <string name="player_message_syncplay_join_failed">Бұл SyncPlay тобына қосылу мүмкін болмады.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay тобы аяқталды.</string>
+    <string name="player_message_syncplay_removed">Сіз енді SyncPlay тобында емессіз.</string>
+    <string name="player_message_syncplay_library_denied">Топ сізде қолжетімділік жоқ нәрсені қарап жатыр.</string>
+    <string name="player_message_syncplay_item_unavailable">Топ көріп отырғанды ашу мүмкін болмады.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Артқа</string>
+    <string name="player_syncplay_groups_home">Басты бет</string>
+    <string name="player_syncplay_groups_create">Топ құру</string>
+    <string name="player_syncplay_groups_create_title">Тобыңызға атау беріңіз</string>
+    <string name="player_syncplay_groups_create_hint">Топ атауы</string>
+    <string name="player_syncplay_groups_create_confirm">Құру</string>
+    <string name="player_syncplay_groups_joining">Қосылуда…</string>
+    <string name="player_syncplay_groups_active_label">Сіз осы топ ішіндесіз</string>
+    <string name="player_syncplay_groups_open_player">Ойнатқышты ашу</string>
+    <string name="player_syncplay_groups_empty">Қазір бірге көріп жатқан ешкім жоқ.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay сіздің есептік жазбаңыз үшін өшірілген.</string>
+    <string name="player_syncplay_groups_error">SyncPlay топтарын жүктеу мүмкін болмады.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay тобы</string>
+    <string name="player_syncplay_presence_channel_description">Қолданба фондық режимде болғанда бірге көру тобындағы орныңызды сақтайды.</string>
+    <string name="player_syncplay_presence_title">SyncPlay тобында</string>
+    <string name="player_syncplay_presence_text">Топ күтілуде</string>
+    <string name="player_syncplay_presence_leave">Шығу</string>
+
+    <string name="player_syncplay_state_idle">Бос тұр</string>
+    <string name="player_syncplay_state_waiting">Күтуде</string>
+    <string name="player_syncplay_state_paused">Кідіртілді</string>
+    <string name="player_syncplay_state_playing">Ойнатылуда</string>
+
+    <string name="player_cast">Құрылғыға тарату</string>
+
+    <string name="player_cast_device_unnamed">теледидарыңыз</string>
+    <string name="player_message_cast_transferred">Қазір %1$s құрылғысында ойнатылуда.</string>
+    <string name="player_message_cast_left_syncplay">%1$s құрылғысына тарату үшін SyncPlay тобынан шықты.</string>
+    <string name="player_message_cast_failed">Мұны %1$s құрылғысында ойнату мүмкін болмады.</string>
+
+    <string name="player_casting_to">%1$s құрылғысына таратылуда</string>
+</resources>

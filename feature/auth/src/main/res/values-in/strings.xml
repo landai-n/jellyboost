@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Hubungkan ke server</string>
+    <string name="server_setup_discovered_title">Server di jaringan ini</string>
+    <string name="server_setup_discovering">Mencari jaringan lokal…</string>
+    <string name="server_setup_no_servers_found">Tidak ada server yang mengumumkan diri. Masukkan alamat di bawah.</string>
+    <string name="server_setup_manual_title">Alamat server</string>
+    <string name="server_setup_address_label">Host atau URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org atau 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Hubungkan</string>
+    <string name="server_setup_connecting">Menghubungi server…</string>
+    <string name="server_setup_session_lost">Info masuk yang tersimpan tidak dapat dipulihkan, sehingga Anda telah keluar. Silakan masuk lagi.</string>
+    <string name="login_title">Masuk</string>
+    <string name="login_server_version">Versi %1$s</string>
+    <string name="login_server_version_unknown">Versi tidak diketahui</string>
+    <string name="login_public_users_title">Siapa yang menonton?</string>
+    <string name="login_username_label">Nama pengguna</string>
+    <string name="login_password_label">Kata sandi</string>
+    <string name="login_show_password">Tampilkan kata sandi</string>
+    <string name="login_hide_password">Sembunyikan kata sandi</string>
+    <string name="login_sign_in">Masuk</string>
+    <string name="login_change_server">Gunakan server lain</string>
+    <string name="login_loading">Memuat detail server…</string>
+    <string name="login_or">atau</string>
+    <string name="login_quick_connect">Gunakan Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Buka Jellyfin di perangkat tempat Anda sudah masuk, buka Quick Connect, lalu masukkan kode ini.</string>
+    <string name="login_quick_connect_waiting">Menunggu persetujuan…</string>
+    <string name="login_quick_connect_cancel">Batal</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">Mencoba %d alamat kandidat, tanpa keberhasilan.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Tidak dapat menjangkau server</string>
+    <string name="auth_error_unsupported_version_or_product">Versi atau produk tidak didukung</string>
+    <string name="auth_error_cannot_connect">Koneksi tidak dapat dibuat.\nPeriksa nama host dan koneksi jaringan Anda.</string>
+    <string name="auth_error_invalid_credentials">Nama pengguna atau kata sandi salah.</string>
+    <string name="auth_error_quick_connect_expired">Kode itu telah kedaluwarsa. Minta kode baru dan coba lagi.</string>
+    <string name="auth_error_server">Server merespons dengan kesalahan. Coba lagi.</string>
+    <string name="auth_error_server_with_code">Server merespons dengan kesalahan (%1$d). Coba lagi.</string>
+</resources>

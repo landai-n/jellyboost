@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">პარამეტრები</string>
+    <string name="settings_back">უკან</string>
+    <string name="settings_home">მთავარი</string>
+    <string name="settings_section_playback">დაკვრა</string>
+    <string name="settings_skip_intro">შესავლის გამოტოვება</string>
+    <string name="settings_skip_outro">დასასრულის გამოტოვება</string>
+    <string name="settings_skip_mode_off">არაფრის გაკეთება</string>
+    <string name="settings_skip_mode_show_button">გამოტოვების ღილაკის ჩვენება</string>
+    <string name="settings_skip_mode_auto">ავტომატურად გამოტოვება</string>
+    <string name="settings_pip">სურათი სურათში</string>
+    <string name="settings_pip_supporting">აპლიკაციიდან გასვლისას დაკვრის გაგრძელება მცურავ ფანჯარაში.</string>
+    <string name="settings_section_downloads">გადმოწერები</string>
+    <string name="settings_wifi_only">მხოლოდ Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">გადმოწერის შეჩერება მობილურ მონაცემებზე.</string>
+    <string name="settings_quality">გადმოწერის ხარისხი</string>
+    <string name="settings_quality_original">ორიგინალი ფაილი — ზუსტი ასლი, გაგრძელებადი</string>
+    <string name="settings_quality_high">მაღალი — დაახლოებით 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">საშუალო — დაახლოებით 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">დაბალი — დაახლოებით 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">ორიგინალის გარდა ყველაფერი გარდაიქმნება თქვენი სერვერის მიერ გაგზავნისას, ამიტომ გადმოწერისას ნაჩვენები ზომა მიახლოებითია და შეწყვეტილი გადაცემა თავიდან იწყება.</string>
+    <string name="settings_storage_label">მეხსიერება</string>
+    <string name="settings_storage_summary">%1$s გამოყენებულია · %2$s თავისუფალია ამ მოწყობილობაზე</string>
+    <string name="settings_storage_location">გადმოწერები ინახება %1$s-ში</string>
+    <string name="settings_storage_picker">შენახვის ადგილი</string>
+    <string name="settings_storage_internal">შიდა მეხსიერება</string>
+    <string name="settings_storage_sd_card">SD ბარათი</string>
+    <string name="settings_storage_volume_free">%1$s თავისუფალი</string>
+    <string name="settings_storage_missing">თქვენ მიერ არჩეული მეხსიერება ამჟამად ხელმისაწვდომი არ არის, ამიტომ გადმოწერები გადადის ქვემოთ არჩეულ ადგილას.</string>
+    <string name="settings_storage_switch_title">გადავიტანოთ გადმოწერები?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">გადმოწერების ადგილებს შორის გადატანა ჯერ არ არის შესაძლებელი, ამიტომ ეს მოწყობილობაზე უკვე არსებული წაიშლება. შეგიძლიათ ისევ გადმოწეროთ ახალ ადგილას.</item>
+        <item quantity="other">გადმოწერების ადგილებს შორის გადატანა ჯერ არ არის შესაძლებელი, ამიტომ ამ მოწყობილობაზე უკვე არსებული %1$d წაიშლება. შეგიძლიათ ისევ გადმოწეროთ ახალ ადგილას.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">წაშლა და გადართვა</string>
+    <string name="settings_section_connectivity">კავშირი</string>
+    <string name="settings_offline_mode">ოფლაინ რეჟიმი</string>
+    <string name="settings_offline_mode_supporting">მხოლოდ ამ მოწყობილობაზე უკვე არსებული მედიის ჩვენება.</string>
+    <string name="settings_section_account">ანგარიში</string>
+    <string name="settings_account_user">შესული ხართ როგორც</string>
+    <string name="settings_account_server">სერვერი</string>
+    <string name="settings_account_unknown">არ ხართ შესული</string>
+    <string name="settings_sign_out">გასვლა</string>
+    <string name="settings_sign_out_dialog_title">გავდივართ?</string>
+    <string name="settings_sign_out_dialog_message">ხელახლა შესასვლელად დაგჭირდებათ სერვერის მისამართი და პაროლი.</string>
+    <string name="settings_sign_out_delete_downloads">ასევე წაშალეთ გადმოწერები ამ მოწყობილობიდან</string>
+    <string name="settings_cancel">გაუქმება</string>
+</resources>

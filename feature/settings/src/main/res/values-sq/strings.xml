@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Cilësimet</string>
+    <string name="settings_back">Mbrapa</string>
+    <string name="settings_home">Kryefaqja</string>
+
+    <string name="settings_section_playback">Riprodhimi</string>
+    <string name="settings_skip_intro">Kapërce hyrjen</string>
+    <string name="settings_skip_outro">Kapërce mbylljen</string>
+    <string name="settings_skip_mode_off">Mos bëj asgjë</string>
+    <string name="settings_skip_mode_show_button">Shfaq një buton kapërcimi</string>
+    <string name="settings_skip_mode_auto">Kapërce automatikisht</string>
+    <string name="settings_pip">Foto-në-foto</string>
+    <string name="settings_pip_supporting">Vazhdo riprodhimin në një dritare lundruese kur del nga aplikacioni.</string>
+
+    <string name="settings_section_downloads">Shkarkimet</string>
+    <string name="settings_wifi_only">Vetëm Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Ndalo shkarkimet përkohësisht me të dhëna celulari.</string>
+    <string name="settings_quality">Cilësia e shkarkimit</string>
+    <string name="settings_quality_original">Skedari origjinal — kopje ekzakte, i rimarrshëm</string>
+    <string name="settings_quality_high">E lartë — rreth 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Mesatare — rreth 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">E ulët — rreth 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Çdo gjë përveç skedarit origjinal konvertohet nga serveri yt ndërsa e dërgon, kështu që madhësia e shfaqur gjatë shkarkimit është një vlerësim dhe një transferim i ndërprerë fillon nga e para.</string>
+    <string name="settings_storage_label">Hapësira ruajtëse</string>
+    <string name="settings_storage_summary">%1$s të përdorura · %2$s të lira në këtë pajisje</string>
+    <string name="settings_storage_location">Shkarkimet ruhen te %1$s</string>
+    <string name="settings_storage_picker">Vendndodhja e ruajtjes</string>
+    <string name="settings_storage_internal">Hapësira e brendshme</string>
+    <string name="settings_storage_sd_card">Kartë SD</string>
+    <string name="settings_storage_volume_free">%1$s të lira</string>
+    <string name="settings_storage_missing">Hapësira që zgjodhe nuk është e disponueshme tani, prandaj shkarkimet po shkojnë te vendndodhja e zgjedhur më poshtë.</string>
+    <string name="settings_storage_switch_title">Të zhvendosen shkarkimet?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Shkarkimet nuk mund të zhvendosen ende mes vendndodhjeve, prandaj ai që është tashmë në këtë pajisje do të fshihet. Mund ta shkarkosh përsëri te vendndodhja e re.</item>
+        <item quantity="other">Shkarkimet nuk mund të zhvendosen ende mes vendndodhjeve, prandaj %1$d tashmë në këtë pajisje do të fshihen. Mund t\'i shkarkosh përsëri te vendndodhja e re.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Fshi dhe kalo</string>
+
+    <string name="settings_section_connectivity">Lidhshmëria</string>
+    <string name="settings_offline_mode">Mënyra jashtë linje</string>
+    <string name="settings_offline_mode_supporting">Shfaq vetëm median që është tashmë në këtë pajisje.</string>
+
+    <string name="settings_section_account">Llogaria</string>
+    <string name="settings_account_user">I identifikuar si</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Nuk je i identifikuar</string>
+    <string name="settings_sign_out">Dil</string>
+    <string name="settings_sign_out_dialog_title">Të dilet nga llogaria?</string>
+    <string name="settings_sign_out_dialog_message">Do të të duhen adresa e serverit dhe fjalëkalimi për t\'u identifikuar përsëri.</string>
+    <string name="settings_sign_out_delete_downloads">Fshi gjithashtu shkarkimet nga kjo pajisje</string>
+    <string name="settings_cancel">Anulo</string>
+</resources>

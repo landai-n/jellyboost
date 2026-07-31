@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Staženo</string>
+    <string name="downloads_tab_queue">Fronta</string>
+    <string name="downloads_wifi_only">Pouze Wi-Fi</string>
+
+    <string name="downloads_group_movies">Filmy</string>
+
+    <string name="downloads_storage_summary">%1$s využito · %2$s volno</string>
+
+    <string name="downloads_action_delete">Smazat stažení</string>
+    <string name="downloads_action_cancel">Zrušit stahování</string>
+    <string name="downloads_action_pause">Pozastavit stahování</string>
+    <string name="downloads_action_resume">Pokračovat ve stahování</string>
+    <string name="downloads_action_move_up">Posunout výš ve frontě</string>
+    <string name="downloads_action_move_down">Posunout níž ve frontě</string>
+
+    <string name="downloads_action_pause_all">Pozastavit vše</string>
+    <string name="downloads_action_resume_all">Pokračovat ve všem</string>
+    <string name="downloads_action_cancel_all">Zrušit vše</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Zrušit toto stahování?</item>
+        <item quantity="few">Zrušit všechna %1$d stahování?</item>
+        <item quantity="many">Zrušit všech %1$d stahování?</item>
+        <item quantity="other">Zrušit všech %1$d stahování?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Fronta se vyprázdní a částečně stažené soubory se odstraní. Dokončená stahování zůstanou zachována.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Zrušit stahování</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Ponechat</string>
+
+    <string name="downloads_delete_dialog_title">Smazat %1$s?</string>
+    <string name="downloads_delete_dialog_message">Stažené soubory se odstraní z tohoto zařízení. Později si je můžete stáhnout znovu.</string>
+    <string name="downloads_delete_dialog_confirm">Smazat</string>
+    <string name="downloads_delete_dialog_cancel">Zrušit</string>
+
+    <string name="downloads_progress_of">%1$s z %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s z ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s z max. %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">max. %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Zbývá %1$s</string>
+    <string name="downloads_eta_approx">Zbývá ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transkódováno</string>
+    <string name="downloads_status_queued">Čeká</string>
+    <string name="downloads_status_paused">Pozastaveno</string>
+    <string name="downloads_status_failed">Stahování se nezdařilo</string>
+    <string name="downloads_status_failed_reason">Stahování se nezdařilo: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Zatím nic není stažené. Klepnutím na Stáhnout u filmu nebo epizody je uložíte do tohoto zařízení.</string>
+    <string name="downloads_empty_queue">Fronta stahování je prázdná.</string>
+    <string name="downloads_load_failed">Nepodařilo se načíst vaše stahování. Otevřete tuto obrazovku znovu pro nový pokus.</string>
+    <string name="downloads_message_delete_failed">Toto stahování se nepodařilo smazat.</string>
+    <string name="downloads_message_action_failed">Frontu se nepodařilo aktualizovat.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Pozastaveno %1$d — %2$d transkódovaná položka se stahuje dál (transkódování nelze pozastavit).</item>
+        <item quantity="few">Pozastaveno %1$d — %2$d transkódované položky se stahují dál (transkódování nelze pozastavit).</item>
+        <item quantity="many">Pozastaveno %1$d — %2$d transkódovaných položek se stahuje dál (transkódování nelze pozastavit).</item>
+        <item quantity="other">Pozastaveno %1$d — %2$d transkódovaných položek se stahuje dál (transkódování nelze pozastavit).</item>
+    </plurals>
+</resources>

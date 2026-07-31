@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Preneseno</string>
+    <string name="downloads_tab_queue">Čakalna vrsta</string>
+    <string name="downloads_wifi_only">Samo Wi-Fi</string>
+
+    <string name="downloads_group_movies">Filmi</string>
+
+    <string name="downloads_storage_summary">%1$s porabljeno · %2$s prosto</string>
+
+    <string name="downloads_action_delete">Izbriši prenos</string>
+    <string name="downloads_action_cancel">Prekliči prenos</string>
+    <string name="downloads_action_pause">Premor prenosa</string>
+    <string name="downloads_action_resume">Nadaljuj prenos</string>
+    <string name="downloads_action_move_up">Pomakni navzgor v vrsti</string>
+    <string name="downloads_action_move_down">Pomakni navzdol v vrsti</string>
+
+    <string name="downloads_action_pause_all">Premor za vse</string>
+    <string name="downloads_action_resume_all">Nadaljuj vse</string>
+    <string name="downloads_action_cancel_all">Prekliči vse</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Prekliči ta prenos?</item>
+        <item quantity="two">Prekliči vsa %1$d prenosa?</item>
+        <item quantity="few">Prekliči vse %1$d prenose?</item>
+        <item quantity="other">Prekliči vseh %1$d prenosov?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Čakalna vrsta se izprazni in delno preneseni podatki se odstranijo. Dokončani prenosi ostanejo nespremenjeni.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Prekliči prenose</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Obdrži</string>
+
+    <string name="downloads_delete_dialog_title">Izbriši %1$s?</string>
+    <string name="downloads_delete_dialog_message">Prenesene datoteke se odstranijo s te naprave. Pozneje jih lahko znova prenesete.</string>
+    <string name="downloads_delete_dialog_confirm">Izbriši</string>
+    <string name="downloads_delete_dialog_cancel">Prekliči</string>
+
+    <string name="downloads_progress_of">%1$s od %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s od ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s od največ %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">največ %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Še %1$s</string>
+    <string name="downloads_eta_approx">Še ~%1$s</string>
+    <string name="downloads_transcoded_marker">Prekodirano</string>
+    <string name="downloads_status_queued">Čaka</string>
+    <string name="downloads_status_paused">V premoru</string>
+    <string name="downloads_status_failed">Prenos ni uspel</string>
+    <string name="downloads_status_failed_reason">Prenos ni uspel: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Še ni prenesenih vsebin. Dotaknite se gumba Prenesi pri filmu ali epizodi, da jo shranite na to napravo.</string>
+    <string name="downloads_empty_queue">Čakalna vrsta za prenose je prazna.</string>
+    <string name="downloads_load_failed">Vaših prenosov ni bilo mogoče prebrati. Znova odprite ta zaslon za nov poskus.</string>
+    <string name="downloads_message_delete_failed">Tega prenosa ni bilo mogoče izbrisati.</string>
+    <string name="downloads_message_action_failed">Čakalne vrste ni bilo mogoče posodobiti.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">V premoru: %1$d — %2$d prekodiran prenos se nadaljuje (prekodiranja ni mogoče ustaviti).</item>
+        <item quantity="two">V premoru: %1$d — %2$d prekodirana prenosa se nadaljujeta (prekodiranja ni mogoče ustaviti).</item>
+        <item quantity="few">V premoru: %1$d — %2$d prekodirani prenosi se nadaljujejo (prekodiranja ni mogoče ustaviti).</item>
+        <item quantity="other">V premoru: %1$d — %2$d prekodiranih prenosov se nadaljuje (prekodiranja ni mogoče ustaviti).</item>
+    </plurals>
+</resources>

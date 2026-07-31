@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_back">رجوع</string>
+    <string name="settings_home">الرئيسية</string>
+
+    <string name="settings_section_playback">التشغيل</string>
+    <string name="settings_skip_intro">تخطي المقدمة</string>
+    <string name="settings_skip_outro">تخطي الخاتمة</string>
+    <string name="settings_skip_mode_off">عدم القيام بأي شيء</string>
+    <string name="settings_skip_mode_show_button">إظهار زر التخطي</string>
+    <string name="settings_skip_mode_auto">التخطي تلقائيًا</string>
+    <string name="settings_pip">الصورة داخل الصورة</string>
+    <string name="settings_pip_supporting">مواصلة التشغيل في نافذة عائمة عند مغادرة التطبيق.</string>
+
+    <string name="settings_section_downloads">التنزيلات</string>
+    <string name="settings_wifi_only">Wi‑Fi فقط</string>
+    <string name="settings_wifi_only_supporting">إيقاف التنزيلات مؤقتًا عند استخدام بيانات الجوال.</string>
+    <string name="settings_quality">جودة التنزيل</string>
+    <string name="settings_quality_original">الملف الأصلي — نسخة مطابقة، قابلة للاستئناف</string>
+    <string name="settings_quality_high">عالية — حوالي 20 ميغابت/ث، 1080p</string>
+    <string name="settings_quality_medium">متوسطة — حوالي 8 ميغابت/ث، 1080p</string>
+    <string name="settings_quality_low">منخفضة — حوالي 3 ميغابت/ث، 720p</string>
+    <string name="settings_quality_supporting">يتم تحويل أي شيء غير الملف الأصلي بواسطة خادمك أثناء إرساله، لذا فإن الحجم المعروض أثناء التنزيل هو تقدير، وأي عملية نقل منقطعة تبدأ من جديد.</string>
+    <string name="settings_storage_label">التخزين</string>
+    <string name="settings_storage_summary">%1$s مستخدَمة · %2$s متاحة على هذا الجهاز</string>
+    <string name="settings_storage_location">يتم الاحتفاظ بالتنزيلات في %1$s</string>
+    <string name="settings_storage_picker">موقع التخزين</string>
+    <string name="settings_storage_internal">التخزين الداخلي</string>
+    <string name="settings_storage_sd_card">بطاقة SD</string>
+    <string name="settings_storage_volume_free">%1$s متاحة</string>
+    <string name="settings_storage_missing">التخزين الذي اخترته غير متاح حاليًا، لذا تذهب التنزيلات إلى الموقع المحدد أدناه.</string>
+    <string name="settings_storage_switch_title">نقل التنزيلات؟</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="zero">لا يمكن نقل التنزيلات بين المواقع بعد، ولا يوجد أي تنزيل على هذا الجهاز حاليًا.</item>
+        <item quantity="one">لا يمكن نقل التنزيلات بين المواقع بعد، لذا سيتم حذف التنزيل الموجود بالفعل على هذا الجهاز. يمكنك تنزيله مرة أخرى إلى الموقع الجديد.</item>
+        <item quantity="two">لا يمكن نقل التنزيلات بين المواقع بعد، لذا سيتم حذف التنزيلين الموجودين بالفعل على هذا الجهاز. يمكنك تنزيلهما مرة أخرى إلى الموقع الجديد.</item>
+        <item quantity="few">لا يمكن نقل التنزيلات بين المواقع بعد، لذا سيتم حذف التنزيلات الـ%1$d الموجودة بالفعل على هذا الجهاز. يمكنك تنزيلها مرة أخرى إلى الموقع الجديد.</item>
+        <item quantity="many">لا يمكن نقل التنزيلات بين المواقع بعد، لذا سيتم حذف التنزيلات الـ%1$d الموجودة بالفعل على هذا الجهاز. يمكنك تنزيلها مرة أخرى إلى الموقع الجديد.</item>
+        <item quantity="other">لا يمكن نقل التنزيلات بين المواقع بعد، لذا سيتم حذف %1$d الموجودة بالفعل على هذا الجهاز. يمكنك تنزيلها مرة أخرى إلى الموقع الجديد.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">حذف والتبديل</string>
+
+    <string name="settings_section_connectivity">الاتصال</string>
+    <string name="settings_offline_mode">وضع عدم الاتصال</string>
+    <string name="settings_offline_mode_supporting">عرض الوسائط الموجودة بالفعل على هذا الجهاز فقط.</string>
+
+    <string name="settings_section_account">الحساب</string>
+    <string name="settings_account_user">تم تسجيل الدخول باسم</string>
+    <string name="settings_account_server">الخادم</string>
+    <string name="settings_account_unknown">لم يتم تسجيل الدخول</string>
+    <string name="settings_sign_out">تسجيل الخروج</string>
+    <string name="settings_sign_out_dialog_title">تسجيل الخروج؟</string>
+    <string name="settings_sign_out_dialog_message">ستحتاج إلى عنوان خادمك وكلمة المرور لتسجيل الدخول مرة أخرى.</string>
+    <string name="settings_sign_out_delete_downloads">حذف التنزيلات من هذا الجهاز أيضًا</string>
+    <string name="settings_cancel">إلغاء</string>
+</resources>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Lejupielādēts</string>
+    <string name="badge_download_queued">Rindā lejupielādei</string>
+    <string name="badge_download_paused">Lejupielāde pauzēta</string>
+    <string name="badge_download_failed">Lejupielāde neizdevās</string>
+
+    <string name="media_row_see_all">Skatīt visu</string>
+    <string name="media_card_watched">Skatīts</string>
+
+    <plurals name="selection_count">
+        <item quantity="zero">%1$d atlasīti</item>
+        <item quantity="one">%1$d atlasīts</item>
+        <item quantity="other">%1$d atlasīti</item>
+    </plurals>
+    <string name="selection_close">Notīrīt atlasi</string>
+    <string name="selection_select_all">Atlasīt visu</string>
+    <string name="selection_mark_watched">Atzīmēt kā skatītu</string>
+    <string name="selection_mark_unwatched">Atzīmēt kā neskatītu</string>
+    <string name="selection_download">Lejupielādēt</string>
+
+    <string name="selection_item_selected">Atlasīts</string>
+    <string name="selection_item_not_selected">Nav atlasīts</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="zero">Atzīmēti %1$d kā skatīti</item>
+        <item quantity="one">Atzīmēts %1$d kā skatīts</item>
+        <item quantity="other">Atzīmēti %1$d kā skatīti</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Atzīmēti %1$d kā skatīti, %2$d neizdevās</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="zero">Neizdevās atzīmēt %1$d vienumu kā skatītus</item>
+        <item quantity="one">Neizdevās atzīmēt %1$d vienumu kā skatītu</item>
+        <item quantity="other">Neizdevās atzīmēt %1$d vienumus kā skatītus</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="zero">Atzīmēti %1$d kā neskatīti</item>
+        <item quantity="one">Atzīmēts %1$d kā neskatīts</item>
+        <item quantity="other">Atzīmēti %1$d kā neskatīti</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Atzīmēti %1$d kā neskatīti, %2$d neizdevās</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="zero">Neizdevās atzīmēt %1$d vienumu kā neskatītus</item>
+        <item quantity="one">Neizdevās atzīmēt %1$d vienumu kā neskatītu</item>
+        <item quantity="other">Neizdevās atzīmēt %1$d vienumus kā neskatītus</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="zero">%1$d pievienoti lejupielādēm</item>
+        <item quantity="one">%1$d pievienots lejupielādēm</item>
+        <item quantity="other">%1$d pievienoti lejupielādēm</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d pievienoti lejupielādēm, %2$d neizdevās</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="zero">Neizdevās pievienot %1$d vienumu lejupielādēm</item>
+        <item quantity="one">Neizdevās pievienot %1$d vienumu lejupielādēm</item>
+        <item quantity="other">Neizdevās pievienot %1$d vienumus lejupielādēm</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d pievienoti lejupielādēm — %2$d jau ir šajā ierīcē</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="zero">%1$d vienumu jau ir šajā ierīcē</item>
+        <item quantity="one">%1$d vienums jau ir šajā ierīcē</item>
+        <item quantity="other">%1$d vienumi jau ir šajā ierīcē</item>
+    </plurals>
+</resources>

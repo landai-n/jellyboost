@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">އިތުރު އޮޕްޝަންތައް</string>
+    <string name="home_settings">ސެޓިންގްސް</string>
+    <string name="settings_offline_mode">އޮފްލައިން މޯޑް</string>
+
+    <string name="state_on">އޮން</string>
+    <string name="state_off">އޮފް</string>
+
+    <string name="nav_home">ހޯމް</string>
+    <string name="nav_libraries">ލައިބްރަރީތައް</string>
+    <string name="nav_search">ސާރޗް</string>
+    <string name="nav_downloads">ޑައުންލޯޑްތައް</string>
+
+    <string name="offline_no_network">ނެޓްވޯކް ނެތް — ޑައުންލޯޑްކޮށްފައިވާ މީޑިއާ ދައްކަނީ</string>
+    <string name="offline_server_unreachable">ސަރވަރއަށް ނުދެވުނު — ޑައުންލޯޑްކޮށްފައިވާ މީޑިއާ ދައްކަނީ</string>
+    <string name="offline_forced">އޮފްލައިން މޯޑް އޮން — ޑައުންލޯޑްކޮށްފައިވާ މީޑިއާ ދައްކަނީ</string>
+    <string name="offline_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
+    <string name="offline_go_online">އޮންލައިންވޭ</string>
+
+    <string name="syncplay_groups_action">SyncPlay ގްރޫޕްތައް</string>
+    <string name="syncplay_groups_action_active">SyncPlay ގްރޫޕްތައް — ތިޔަ ހުރީ ގްރޫޕެއްގައި</string>
+</resources>

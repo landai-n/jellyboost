@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Vissza</string>
+    <string name="detail_home">Kezdőlap</string>
+    <string name="detail_play">Lejátszás</string>
+    <string name="detail_resume">Folytatás</string>
+    <string name="detail_download">Letöltés</string>
+    <string name="detail_download_cancel">Mégse</string>
+    <string name="detail_download_remove">Eltávolítás</string>
+    <string name="detail_download_retry">Újra</string>
+    <string name="detail_play_episode">Epizód lejátszása</string>
+    <string name="detail_mark_watched">Megjelölés megnézettként</string>
+    <string name="detail_mark_unwatched">Megjelölés nem nézettként</string>
+    <string name="detail_add_favorite">Hozzáadás a kedvencekhez</string>
+    <string name="detail_remove_favorite">Eltávolítás a kedvencek közül</string>
+
+    <string name="detail_section_seasons">Évadok</string>
+    <string name="detail_section_next_up">Következő</string>
+    <string name="detail_section_episodes">Epizódok</string>
+    <string name="detail_section_similar">Hasonlók</string>
+
+    <string name="detail_runtime_minutes">%1$d perc</string>
+    <string name="detail_remaining_minutes">%1$d perc van hátra</string>
+    <string name="detail_size_on_device">%1$s az eszközön</string>
+    <string name="detail_directed_by">Rendezte: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d évad</item>
+        <item quantity="other">%1$d évad</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d epizód</item>
+        <item quantity="other">%1$d epizód</item>
+    </plurals>
+
+    <string name="detail_empty">Ez a tartalom már nem érhető el.</string>
+    <string name="detail_message_download_queued">Hozzáadva a letöltésekhez.</string>
+    <string name="detail_message_download_failed">Nem sikerült elindítani a letöltést.</string>
+    <string name="detail_message_download_deleted">Eltávolítva erről az eszközről.</string>
+    <string name="detail_message_download_delete_failed">Nem sikerült eltávolítani a letöltést.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Letöltés megszakítva – %1$d befejezett epizód megmaradt.</item>
+        <item quantity="other">Letöltés megszakítva – %1$d befejezett epizód megmaradt.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nem sikerült menteni. Próbáld újra.</string>
+
+    <string name="detail_group_play">Lejátszás %1$s számára</string>
+    <string name="detail_group_resume">Folytatás %1$s számára</string>
+    <string name="detail_group_play_next">Lejátszás következőként</string>
+    <string name="detail_group_add_to_queue">Hozzáadás a sorhoz</string>
+    <string name="detail_message_group_play">Megkértük a csoportot, hogy játssza le ezt.</string>
+    <string name="detail_message_group_play_next">Következőként besorolva a csoport számára.</string>
+    <string name="detail_message_group_queued">Hozzáadva a csoport sorához.</string>
+
+    <string name="detail_delete_download_dialog_title">Törlöd a letöltést?</string>
+    <string name="detail_delete_download_dialog_message">Ez eltávolítja az eszközről. Bármikor újra letöltheted.</string>
+    <string name="detail_delete_download_dialog_confirm">Törlés</string>
+    <string name="detail_delete_download_dialog_cancel">Mégse</string>
+</resources>

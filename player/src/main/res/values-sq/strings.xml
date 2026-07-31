@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Mbyll luajtësin</string>
+    <string name="player_play">Luaj</string>
+    <string name="player_pause">Pauzë</string>
+    <string name="player_rewind">Kthehu 10 sekonda</string>
+    <string name="player_forward">Përpara 30 sekonda</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Titrat</string>
+    <string name="player_subtitles_off">Joaktiv</string>
+    <string name="player_quality">Cilësia</string>
+    <string name="player_speed">Shpejtësia</string>
+
+    <string name="player_skip_intro">Kapërce hyrjen</string>
+    <string name="player_skip_outro">Kapërce mbylljen</string>
+
+    <string name="player_quality_auto">Automatike</string>
+    <string name="player_quality_high">E lartë — 20 Mbps</string>
+    <string name="player_quality_medium">Mesatare — 8 Mbps</string>
+    <string name="player_quality_low">E ulët — 3 Mbps</string>
+    <string name="player_quality_lowest">Më e ulëta — 720 kbps</string>
+
+    <string name="player_method_direct_play">Luajtje direkte</string>
+    <string name="player_method_direct_stream">Transmetim direkt</string>
+    <string name="player_method_transcode">Transkodim</string>
+
+    <string name="player_message_transcode">Pajisja jote nuk e dekodoi dot këtë skedar, prandaj serveri po e transkodon.</string>
+    <string name="player_message_lower_quality">Transmetimi u ndal — po riprovon me cilësi më të ulët.</string>
+    <string name="player_message_track_restart">Serveri u detyrua ta rikodojë transmetimin për atë gjurmë.</string>
+    <string name="player_message_track_streaming">Ajo gjurmë nuk është në shkarkim — po transmetohet nga serveri yt.</string>
+    <string name="player_message_track_offline">Ajo gjurmë nuk është në skedarin e shkarkuar.</string>
+    <string name="player_message_failed">Riprodhimi dështoi.</string>
+
+    <string name="player_syncplay_group">Grupi</string>
+    <string name="player_syncplay_waiting">Duke pritur grupin…</string>
+    <string name="player_syncplay_shuffle">Përziej radhën</string>
+    <string name="player_syncplay_repeat">Përsërit</string>
+    <string name="player_syncplay_repeat_none">Joaktiv</string>
+    <string name="player_syncplay_repeat_one">Këtë artikull</string>
+    <string name="player_syncplay_repeat_all">Të gjithë radhën</string>
+    <string name="player_syncplay_leave">Largohu nga grupi</string>
+    <string name="player_syncplay_leave_title">Të largohesh nga ky grup?</string>
+    <string name="player_syncplay_leave_body">Riprodhimi vazhdon këtu, i pavarur. Ribashkimi do të thotë të zgjedhësh grupin sërish.</string>
+
+    <string name="player_syncplay_cancel">Anulo</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d person po shikon</item>
+        <item quantity="other">%d persona po shikojnë</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d të tjerë</string>
+
+    <string name="player_syncplay_queue">Radha</string>
+    <string name="player_syncplay_queue_empty">Grupi nuk ka radhitur ende asgjë.</string>
+    <string name="player_syncplay_queue_item_loading">Duke ngarkuar…</string>
+    <string name="player_syncplay_queue_playing">Po luhet tani</string>
+    <string name="player_syncplay_queue_next">Artikulli tjetër</string>
+    <string name="player_syncplay_queue_previous">Artikulli i mëparshëm</string>
+    <string name="player_syncplay_queue_move_up">Zhvendos lart</string>
+    <string name="player_syncplay_queue_move_down">Zhvendos poshtë</string>
+    <string name="player_syncplay_queue_remove">Hiq nga radha</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d artikull në radhë</item>
+        <item quantity="other">%d artikuj në radhë</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">U largua nga SyncPlay — lidhja u humb</string>
+    <string name="player_message_syncplay_rejoined">U rikthye te grupi SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">Nuk u bashkua dot me atë grup SyncPlay.</string>
+    <string name="player_message_syncplay_group_ended">Grupi SyncPlay ka përfunduar.</string>
+    <string name="player_message_syncplay_removed">Nuk je më në grupin SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">Grupi po shikon diçka te e cila nuk ke qasje.</string>
+    <string name="player_message_syncplay_item_unavailable">Nuk u hap dot ajo që po shikon grupi.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Mbrapa</string>
+    <string name="player_syncplay_groups_home">Kryefaqja</string>
+    <string name="player_syncplay_groups_create">Krijo grup</string>
+    <string name="player_syncplay_groups_create_title">Emërto grupin tënd</string>
+    <string name="player_syncplay_groups_create_hint">Emri i grupit</string>
+    <string name="player_syncplay_groups_create_confirm">Krijo</string>
+    <string name="player_syncplay_groups_joining">Duke u bashkuar…</string>
+    <string name="player_syncplay_groups_active_label">Je në këtë grup</string>
+    <string name="player_syncplay_groups_open_player">Hap luajtësin</string>
+    <string name="player_syncplay_groups_empty">Askush tjetër nuk po shikon së bashku tani.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay është çaktivizuar për llogarinë tënde.</string>
+    <string name="player_syncplay_groups_error">Grupet SyncPlay nuk u ngarkuan dot.</string>
+
+    <string name="player_syncplay_presence_channel_name">Grupi SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">Ruan vendin tënd në një grup shikimi së bashku ndërsa aplikacioni është në sfond.</string>
+    <string name="player_syncplay_presence_title">Në një grup SyncPlay</string>
+    <string name="player_syncplay_presence_text">Duke pritur grupin</string>
+    <string name="player_syncplay_presence_leave">Largohu</string>
+
+    <string name="player_syncplay_state_idle">Në pritje</string>
+    <string name="player_syncplay_state_waiting">Duke pritur</string>
+    <string name="player_syncplay_state_paused">Në pauzë</string>
+    <string name="player_syncplay_state_playing">Duke u luajtur</string>
+
+    <string name="player_cast">Transmeto te një pajisje</string>
+
+    <string name="player_cast_device_unnamed">televizorin tënd</string>
+    <string name="player_message_cast_transferred">Tani po luhet te %1$s.</string>
+    <string name="player_message_cast_left_syncplay">U largua nga grupi SyncPlay për të transmetuar te %1$s.</string>
+    <string name="player_message_cast_failed">Nuk u luajt dot te %1$s.</string>
+
+    <string name="player_casting_to">Duke transmetuar te %1$s</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Diğer seçenekler</string>
+    <string name="home_settings">Ayarlar</string>
+    <string name="settings_offline_mode">Çevrimdışı mod</string>
+    <string name="state_on">Açık</string>
+    <string name="state_off">Kapalı</string>
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_libraries">Kitaplıklar</string>
+    <string name="nav_search">Ara</string>
+    <string name="nav_downloads">İndirilenler</string>
+    <string name="offline_no_network">Ağ yok — indirilen medya gösteriliyor</string>
+    <string name="offline_server_unreachable">Sunucuya ulaşılamıyor — indirilen medya gösteriliyor</string>
+    <string name="offline_forced">Çevrimdışı mod açık — indirilen medya gösteriliyor</string>
+    <string name="offline_retry">Tekrar dene</string>
+    <string name="offline_go_online">Çevrimiçi ol</string>
+    <string name="syncplay_groups_action">SyncPlay grupları</string>
+    <string name="syncplay_groups_action_active">SyncPlay grupları — bir grupta bulunuyorsunuz</string>
+</resources>

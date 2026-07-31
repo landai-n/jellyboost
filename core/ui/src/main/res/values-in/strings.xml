@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Diunduh</string>
+    <string name="badge_download_queued">Antre untuk diunduh</string>
+    <string name="badge_download_paused">Unduhan dijeda</string>
+    <string name="badge_download_failed">Unduhan gagal</string>
+    <string name="media_row_see_all">Lihat semua</string>
+    <string name="media_card_watched">Sudah ditonton</string>
+    <plurals name="selection_count">
+        <item quantity="other">%1$d dipilih</item>
+    </plurals>
+    <string name="selection_close">Hapus pilihan</string>
+    <string name="selection_select_all">Pilih semua</string>
+    <string name="selection_mark_watched">Tandai sudah ditonton</string>
+    <string name="selection_mark_unwatched">Tandai belum ditonton</string>
+    <string name="selection_download">Unduh</string>
+    <string name="selection_item_selected">Dipilih</string>
+    <string name="selection_item_not_selected">Tidak dipilih</string>
+    <plurals name="selection_result_watched">
+        <item quantity="other">Menandai %1$d sebagai sudah ditonton</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Menandai %1$d sebagai ditonton, %2$d gagal</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="other">Tidak dapat menandai %1$d item sebagai ditonton</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="other">Menandai %1$d sebagai belum ditonton</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Menandai %1$d sebagai belum ditonton, %2$d gagal</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="other">Tidak dapat menandai %1$d item sebagai belum ditonton</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="other">Menambahkan %1$d ke unduhan</item>
+    </plurals>
+    <string name="selection_result_download_partial">Menambahkan %1$d ke unduhan, %2$d gagal</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="other">Tidak dapat menambahkan %1$d item ke unduhan</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Menambahkan %1$d ke unduhan — %2$d sudah ada di perangkat ini</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="other">%1$d item sudah ada di perangkat ini</item>
+    </plurals>
+</resources>

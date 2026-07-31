@@ -594,6 +594,149 @@ class SyncPlayControllerTest {
         }
 
     @Test
+    fun `a group that says it is paused and sends no command pauses this member`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+            fixture.api.clearCalls()
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
+            )
+            runCurrent()
+
+            // Nothing local yet: the group's own `SendCommand` is still what is supposed to do this.
+            fixture.player.hadNoTransportCalls shouldBe true
+            val inGroup = fixture.controller.state.value as SyncPlayState.InGroup
+            inGroup.groupState shouldBe SyncPlayGroupState.Paused
+            inGroup.phase shouldBe SyncPlayPhase.Paused
+
+            advanceTimeBy(SyncPlayController.PAUSE_NET_TIMEOUT_MS)
+            runCurrent()
+
+            // The command never came, and a member playing on alone is the one failure the phase
+            // cannot even see: `Paused` shuts the drift monitor off with it.
+            fixture.player.pauseCount shouldBe 1
+            // The net only ever pauses — no seek, no `play`, and nothing said to the server.
+            fixture.player.seekedToMs shouldBe emptyList()
+            fixture.player.playCount shouldBe 0
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
+    @Test
+    fun `the group's own pause arriving in time stands the pause net down`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
+            )
+            runCurrent()
+            fixture.socket.emit(command(SyncPlayCommandType.Pause, now(), positionMs = 30_000))
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+
+            advanceTimeBy(SyncPlayController.PAUSE_NET_TIMEOUT_MS * 2)
+            runCurrent()
+
+            // Once, by the command the group sent — the net armed behind it must not pause again.
+            fixture.player.pauseCount shouldBe 1
+        }
+
+    @Test
+    fun `the pause net does nothing to a player that is already stopped`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture)
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.player.resetCalls()
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
+            )
+            advanceTimeBy(SyncPlayController.PAUSE_NET_TIMEOUT_MS * 2)
+            runCurrent()
+
+            fixture.player.hadNoTransportCalls shouldBe true
+        }
+
+    @Test
+    fun `joining a group that is already paused stops a player that was running solo`() =
+        runTest {
+            val fixture = fixture()
+            // The user was watching this alone, and joins a group that is sitting paused.
+            fixture.player.snapshot = PlaybackSnapshot(isPlaying = true)
+
+            fixture.controller.joinGroup(group(state = SyncPlayGroupState.Paused))
+            runCurrent()
+
+            (fixture.controller.state.value as SyncPlayState.InGroup).groupState shouldBe SyncPlayGroupState.Paused
+            fixture.player.hadNoTransportCalls shouldBe true
+
+            advanceTimeBy(SyncPlayController.PAUSE_NET_TIMEOUT_MS)
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+        }
+
+    @Test
+    fun `a waiting group holds a player that is still running, whatever this member's phase says`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+
+            // The pause the group sent never arrived: the phase says `Paused` over a player that is
+            // still playing, which is the reading the hold must not take its answer from.
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
+            )
+            runCurrent()
+            (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe SyncPlayPhase.Paused
+            fixture.player.hadNoTransportCalls shouldBe true
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Waiting, SyncPlayRequestKind.Buffer),
+            )
+            runCurrent()
+
+            // Held at once, well inside the pause net's window — a member that plays on behind the
+            // WAITING overlay is drifting ahead, phase or no phase.
+            fixture.player.pauseCount shouldBe 1
+        }
+
+    @Test
+    fun `a group that stops playing cancels the self-sync armed behind it`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture)
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Playing, SyncPlayRequestKind.Ready),
+            )
+            runCurrent()
+            fixture.player.resetCalls()
+
+            // The group changed its mind inside the net's window; nothing armed while it was playing
+            // may start playback in a group that is now paused.
+            advanceTimeBy(SyncPlayController.SELF_SYNC_TIMEOUT_MS - 1)
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Paused, SyncPlayRequestKind.Pause),
+            )
+            runCurrent()
+            advanceTimeBy(SyncPlayController.SELF_SYNC_TIMEOUT_MS * 2)
+            runCurrent()
+
+            fixture.player.hadNoTransportCalls shouldBe true
+        }
+
+    @Test
     fun `a queue update that puts everyone back to buffering is answered, slot unchanged or not`() =
         runTest {
             val fixture = fixture()

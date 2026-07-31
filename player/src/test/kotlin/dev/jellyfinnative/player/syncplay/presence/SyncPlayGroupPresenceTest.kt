@@ -3,6 +3,7 @@ package dev.jellyfinnative.player.syncplay.presence
 import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.syncplay.group
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -44,5 +45,11 @@ class SyncPlayGroupPresenceTest {
         syncPlayPresenceDemanded(rejoining, playbackServiceRunning = true) shouldBe false
     }
 
-    private fun inGroup() = SyncPlayState.InGroup(group(), queue = null, phase = SyncPlayPhase.Waiting)
+    private fun inGroup() =
+        SyncPlayState.InGroup(
+            group(),
+            queue = null,
+            groupState = SyncPlayGroupState.Idle,
+            phase = SyncPlayPhase.Waiting,
+        )
 }

@@ -238,6 +238,9 @@ class SyncPlayController
         /** The B3 safety net: fires when a completed handshake produced no command. */
         private var selfSyncJob: Job? = null
 
+        /** The other half of it: fires when a paused group produced no pause command. */
+        private var pauseNetJob: Job? = null
+
         /** The B9 grace window: fires when connectivity did not come back in time. */
         private var connectivityGraceJob: Job? = null
 
@@ -533,7 +536,8 @@ class SyncPlayController
             group: SyncPlayGroupSummary,
             session: CoroutineScope,
         ) {
-            _state.value = SyncPlayState.InGroup(pendingGroup ?: group, null, SyncPlayPhase.Waiting)
+            val entered = pendingGroup ?: group
+            _state.value = SyncPlayState.InGroup(entered, null, entered.state, SyncPlayPhase.Waiting)
             pendingGroup = null
             rejoinTarget = group
             troubledAt = null
@@ -547,6 +551,11 @@ class SyncPlayController
             session.launch { observeAnchor() }
             session.launch { watchConnectivity() }
             session.launch { watchSocket() }
+
+            // A group already paused when we arrived gets the same net as one that pauses while we
+            // are in it: nothing here can tell "paused before we joined" from "paused a moment ago
+            // and the command was lost", and the net only ever pauses a player that is running.
+            if (entered.state == SyncPlayGroupState.Paused) armPauseNet()
 
             // A rejoin lands on a new server session, which knows nothing of the ignore-wait this
             // client sent when it gave the player back — so a member with no player would silently
@@ -1079,7 +1088,8 @@ class SyncPlayController
         }
 
         /**
-         * Mirrors the group's own state onto this member's phase — except `Playing`.
+         * Mirrors the group's own state onto [SyncPlayState.InGroup.groupState], and onto this
+         * member's phase — except `Playing`.
          *
          * `Playing` is owned by the applied unpause, because that is the only thing that knows the
          * anchor; taking it from a state update would give the drift monitor nothing to measure. It
@@ -1090,22 +1100,35 @@ class SyncPlayController
          * member that keeps playing behind the overlay is not waiting, it is drifting ahead —
          * measured at seven seconds over eight on device (B5). jellyfin-web pauses here and so do
          * we. It is a command-like application, not a handshake: nothing is reported, and the
-         * position is held for the resume the server will schedule.
+         * position is held for the resume the server will schedule. The player itself is asked
+         * whether it is running, deliberately: the phase is the thing that lies after a lost
+         * command, and a member whose phase says `Paused` over a player that is still playing is
+         * exactly the case the hold exists for.
+         *
+         * **PAUSED arms a net.** The pause the group named reaches this member as a `SendCommand`
+         * and nothing here acts locally — but a command that never arrives leaves this member
+         * playing on for ever, with the drift monitor (which runs in `Playing` only) shut off along
+         * with it. See [armPauseNet]: the mirror image of [armSelfSync].
          */
         private suspend fun onGroupStateChanged(groupState: SyncPlayGroupState) {
+            setGroupState(groupState)
             if (groupState == SyncPlayGroupState.Playing) {
                 groupPlayingAnchor = inferredGroupAnchor()
+                cancelPauseNet()
                 // Either order is possible — the state update can beat this member's own `ready` or
                 // trail it — so the net is armed from both ends. It disarms on the first command.
                 armSelfSync()
                 return
             }
             groupPlayingAnchor = null
-            val wasPlaying = (_state.value as? SyncPlayState.InGroup)?.phase is SyncPlayPhase.Playing
-            if (groupState == SyncPlayGroupState.Waiting && wasPlaying) {
+            // Structural rather than incidental: a self-sync armed while the group was playing must
+            // never start playback in a group that has since stopped.
+            cancelSelfSync()
+            if (groupState == SyncPlayGroupState.Waiting && isPlayerRunning()) {
                 Timber.d("SyncPlay group is waiting; holding this member where it is")
                 withContext(mainDispatcher) { playerHandle.pause() }
             }
+            if (groupState == SyncPlayGroupState.Paused) armPauseNet()
             val phase =
                 when (groupState) {
                     SyncPlayGroupState.Waiting -> SyncPlayPhase.Waiting
@@ -1288,8 +1311,8 @@ class SyncPlayController
             readyOwedFor = null
             readyFallbackJob?.cancel()
             readyFallbackJob = null
-            selfSyncJob?.cancel()
-            selfSyncJob = null
+            cancelSelfSync()
+            cancelPauseNet()
         }
 
         /**
@@ -1313,6 +1336,11 @@ class SyncPlayController
                 }
         }
 
+        private fun cancelSelfSync() {
+            selfSyncJob?.cancel()
+            selfSyncJob = null
+        }
+
         private suspend fun selfSyncToGroup() {
             val current = _state.value as? SyncPlayState.InGroup ?: return
             if (current.phase is SyncPlayPhase.Playing) return
@@ -1331,6 +1359,53 @@ class SyncPlayController
             }
             setPhase(SyncPlayPhase.Playing(anchor))
         }
+
+        /**
+         * Starts the clock on "the group said stop and nothing came" — the mirror of [armSelfSync].
+         *
+         * The observed failure it exists for is the pause direction of B3, and it is the worse half:
+         * a `Pause` this client never receives leaves the member playing on alone, while the phase
+         * quietly goes to `Paused` and takes the drift monitor — which only runs in `Playing` — down
+         * with it. Nothing then measures anything, and the member free-runs for the rest of the
+         * evening (syncplay-bugreport.md, "Pause from browser: app continues playing").
+         *
+         * Two things separate it from the play net. It is **not** gated on a host: pausing a
+         * detached background player that the group has paused is right, where *starting* one would
+         * be sound from nowhere. And it takes no other action — no seek, no report, no `play` — so
+         * firing at a player that is already stopped costs nothing, which is what lets it be armed
+         * from the group's state alone rather than from a proof that this member is out of step.
+         */
+        private fun armPauseNet() {
+            pauseNetJob?.cancel()
+            pauseNetJob =
+                launchInSession {
+                    delay(PAUSE_NET_TIMEOUT_MS)
+                    pauseNetJob = null
+                    pauseToGroup()
+                }
+        }
+
+        private fun cancelPauseNet() {
+            pauseNetJob?.cancel()
+            pauseNetJob = null
+        }
+
+        private suspend fun pauseToGroup() {
+            if (_state.value !is SyncPlayState.InGroup) return
+            withContext(mainDispatcher) {
+                // A player that is already stopped is already where the group is: no pause, and
+                // nothing reported either way.
+                if (!playerHandle.snapshot().isPlaying) return@withContext
+                Timber.w("SyncPlay group is paused but sent no command; pausing this member")
+                playerHandle.pause()
+            }
+        }
+
+        /** Whether the player is actually running — the one reading no lost command can falsify. */
+        private suspend fun isPlayerRunning(): Boolean =
+            withContext(mainDispatcher) {
+                playerHandle.snapshot().isPlaying
+            }
 
         /**
          * Re-enters the handshake from a player that is already prepared — see [onConnectivityBack].
@@ -1396,9 +1471,9 @@ class SyncPlayController
         }
 
         private suspend fun onCommandApplied(applied: SyncPlayAppliedCommand) {
-            // The group has spoken, so the safety net is not needed for this handshake.
-            selfSyncJob?.cancel()
-            selfSyncJob = null
+            // The group has spoken, so neither safety net is needed for this handshake.
+            cancelSelfSync()
+            cancelPauseNet()
             val phase =
                 when (applied.command.type) {
                     SyncPlayCommandType.Unpause -> applied.anchor?.let(SyncPlayPhase::Playing) ?: SyncPlayPhase.Paused
@@ -1447,6 +1522,12 @@ class SyncPlayController
         private fun setPhase(phase: SyncPlayPhase) {
             _state.update { current ->
                 if (current is SyncPlayState.InGroup) current.copy(phase = phase) else current
+            }
+        }
+
+        private fun setGroupState(groupState: SyncPlayGroupState) {
+            _state.update { current ->
+                if (current is SyncPlayState.InGroup) current.copy(groupState = groupState) else current
             }
         }
 
@@ -1527,6 +1608,16 @@ class SyncPlayController
              * not coming at all.
              */
             const val SELF_SYNC_TIMEOUT_MS = 3_000L
+
+            /**
+             * How long a paused group waits for its pause command before this member pauses itself.
+             *
+             * The same three seconds as [SELF_SYNC_TIMEOUT_MS], and for the same reason: it is
+             * comfortably past the delay the server builds into a scheduled command, so only a
+             * command that is not coming at all is caught. Deliberately not shorter — a member that
+             * pauses ahead of the instant the group named is out of step just as surely.
+             */
+            const val PAUSE_NET_TIMEOUT_MS = 3_000L
 
             /**
              * How long an owed `ready` waits for a player that may never re-buffer, in milliseconds.

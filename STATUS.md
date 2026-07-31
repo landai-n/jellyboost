@@ -143,6 +143,38 @@ client to display):
   pre-M11 M5/M8 local-first user-data push (continues after group ends,
   independent of SyncPlay) — follow-up ticket material, out of M11 scope.
 
+**User two-client repro session + fixes, 2026-07-31** (real jellyfin-web as
+second member — the earlier walks' REST-member gap closed):
+- **Auto-rejoin landed** (`feat(player)` 280ed98, user-requested amendment of
+  decision 10): a membership the server drops (websocket blip → SessionEnded
+  → LeaveGroup on 10.11) is taken back — 3 attempts 2 s apart gated on
+  connectivity, `Rejoining` state, player stays paused, local file re-mints
+  its session; intentional exits (leave/sign-out/access-denied/GroupGone,
+  healthy-socket removal) never rejoin. Device-proven: kicked at wifi-kill,
+  back in on attempt 2 in ~4 s, lockstep resumed.
+- **"Browser couldn't play the media" was OURS** (`fix(player)` 128b559):
+  single-episode `SetNewQueue` trips a real jellyfin-web 10.11 crash (web
+  expands 1 episode → series tail locally, then indexes the 1-entry server
+  playlist → TypeError, playback never starts). We now expand a lone episode
+  into the series tail before queueing (new `getSeriesEpisodes` across
+  online/offline repos), mirroring web. Device-proven with real web both
+  directions.
+- **"Tablet doesn't react to web playback" was environmental** (same-tablet
+  usage: app backgrounded whenever web is used → the OEM ROM cuts app network in
+  ~40 s → membership lost, solo group disposed). Fixed structurally
+  (`feat(player)` fec8f45): `SyncPlayPresenceService` — `specialUse`
+  foreground service held while in a group without playback (notification +
+  Leave action, handover to/from PlaybackService both ways) keeps pings
+  alive (3.5 min clean vs ~40 s death); plus foreground-resume net:
+  10 min involuntary-loss memory survives teardown, `ProcessLifecycleOwner`
+  ON_START triggers silent rejoin (or immediate ping when InGroup).
+  Device-proven end-to-end: backgrounded app took the group's QueueChanged,
+  launched the player, was in lockstep on foreground.
+- Residual risks recorded: OEM may still kill a specialUse FGS (the
+  foreground net covers it); process death loses the rejoin memory (out of
+  scope); foreground-rejoin success branch unit-tested only (needs a second
+  physical device to prove live).
+
 **Still owed / blocked:** B7 two-real-client Waiting deadlock retest (the
 observed instance was polluted by a never-ready REST member);
 sign-out-leaves-group (needs a safe re-login path —

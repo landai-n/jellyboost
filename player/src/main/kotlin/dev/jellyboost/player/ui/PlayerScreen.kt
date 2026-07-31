@@ -107,7 +107,7 @@ fun PlayerScreen(
                 onLeaveGroup = viewModel::leaveGroup,
             )
         }
-    val message = state.userMessage?.let { stringResource(it.textRes()) }
+    val message = state.userMessage?.snackbarText(state.cast)
     var controlsVisible by remember { mutableStateOf(true) }
     val inPictureInPicture = pipState.isInPictureInPicture
 
@@ -391,6 +391,20 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
     }
 }
 
+/**
+ * The message, in the words the user reads.
+ *
+ * Every message is formatted with the receiver's name whether or not it mentions one: a format
+ * argument a string has no placeholder for is simply dropped, and one call site is cheaper than a
+ * second path for the three cast messages that do need it. [PlayerCastState.deviceName] is `null`
+ * whenever the Cast framework has not published a name, which reads as a generic "your TV" rather
+ * than as a gap in the sentence.
+ */
+@Composable
+private fun PlayerMessage.snackbarText(cast: PlayerCastState): String =
+    stringResource(textRes(), cast.deviceName ?: stringResource(R.string.player_cast_device_unnamed))
+
+@Suppress("CyclomaticComplexMethod") // A one-to-one table; splitting it would only hide it.
 private fun PlayerMessage.textRes(): Int =
     when (this) {
         PlayerMessage.SwitchedToTranscode -> R.string.player_message_transcode
@@ -406,6 +420,9 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.SyncPlayRemoved -> R.string.player_message_syncplay_removed
         PlayerMessage.SyncPlayLibraryAccessDenied -> R.string.player_message_syncplay_library_denied
         PlayerMessage.SyncPlayItemUnavailable -> R.string.player_message_syncplay_item_unavailable
+        PlayerMessage.CastTransferred -> R.string.player_message_cast_transferred
+        PlayerMessage.CastLeftSyncPlayGroup -> R.string.player_message_cast_left_syncplay
+        PlayerMessage.CastPlaybackFailed -> R.string.player_message_cast_failed
     }
 
 /** Enough contrast for white text over a bright frame, without blacking the video out. */

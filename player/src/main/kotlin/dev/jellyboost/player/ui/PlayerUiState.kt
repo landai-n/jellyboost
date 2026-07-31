@@ -87,6 +87,8 @@ data class PlayerUiState(
     val userMessage: PlayerMessage? = null,
     /** The group this session is watching with, or its default "no group" value (M11). */
     val syncPlay: PlayerSyncPlayState = PlayerSyncPlayState(),
+    /** The receiver this session is playing on, or its default "playing here" value (M12). */
+    val cast: PlayerCastState = PlayerCastState(),
 ) {
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
@@ -102,6 +104,25 @@ data class PlayerUiState(
      */
     val showsPlaying: Boolean get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying
 }
+
+/**
+ * The receiver, as much of it as the player screen draws (M12 Phase 3).
+ *
+ * Derived from `CastStatusHolder.connection` by [PlayerCastBridge] and deliberately not the same
+ * type: `CastConnection` is a sealed hierarchy the *playback* side matches on, and a control surface
+ * that has to unwrap a sealed class to decide whether to draw a poster would be answering the same
+ * question twice.
+ *
+ * @property isCasting `true` while a television has the film. It is the flag Phase 4's screen hangs
+ *   everything off: the video surface becomes a poster, the gesture layer goes away (brightness and
+ *   volume belong to a device that is not here) and picture-in-picture is suppressed.
+ * @property deviceName the receiver's friendly name, or `null` when the Cast framework has not
+ *   published one — which the screen draws as a generic "casting" rather than as an empty label.
+ */
+data class PlayerCastState(
+    val isCasting: Boolean = false,
+    val deviceName: String? = null,
+)
 
 /**
  * The group, as much of it as the player screen draws (M11 Phase 3).
@@ -258,6 +279,34 @@ enum class PlayerMessage {
 
     /** The group's current item could not be opened on this device. */
     SyncPlayItemUnavailable,
+
+    /**
+     * The film moved to a receiver, and is playing there from where it had got to here.
+     *
+     * The only message whose copy names the device, which it takes from
+     * [PlayerCastState.deviceName] at the moment it is drawn rather than from the message itself:
+     * this enum has stayed a plain one since M5 precisely so the ViewModel never handles copy, and
+     * the name is already on screen-bound state.
+     */
+    CastTransferred,
+
+    /**
+     * A receiver connected while this session was in a SyncPlay group, so the group was left.
+     *
+     * The two are mutually exclusive (docs/notes/chromecast-m12-plan.md, decision 6): SyncPlay
+     * synchronises *this* player, and a player whose bytes are being decoded in a television three
+     * metres away cannot be held to a group's millisecond.
+     */
+    CastLeftSyncPlayGroup,
+
+    /**
+     * The receiver could not play it, and nothing was retried.
+     *
+     * Distinct from [PlaybackFailed] because the diagnosis is: every rung of the decoder-fallback
+     * ladder is a statement about *this device's* decoders, and none of them is true of a failure
+     * at the far end of a network (decision 8).
+     */
+    CastPlaybackFailed,
 }
 
 /** Everything the controls can do, bundled so the composables stay under the parameter limit. */

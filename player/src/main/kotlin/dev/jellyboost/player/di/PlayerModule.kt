@@ -15,7 +15,9 @@ import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.api.SdkPlayerApi
 import dev.jellyboost.player.api.SdkStreamUrlFactory
 import dev.jellyboost.player.api.StreamUrlFactory
+import dev.jellyboost.player.cast.CastPlaybackCoordinator
 import dev.jellyboost.player.cast.CastPlayerHandle
+import dev.jellyboost.player.cast.CastSessionCoordinator
 import dev.jellyboost.player.cast.CastSessionMonitor
 import dev.jellyboost.player.cast.GmsCastSessionMonitor
 import dev.jellyboost.player.deviceprofile.MediaCodecProbe
@@ -76,6 +78,17 @@ internal interface PlayerBindingsModule {
     @Binds
     @Singleton
     fun bindCastSessionMonitor(impl: GmsCastSessionMonitor): CastSessionMonitor
+
+    /**
+     * Where the player screen hands its cast session over (M12 Phase 3).
+     *
+     * The interface, not the coordinator, because `PlayerViewModel` has to be constructible without
+     * one — `NoCastPlaybackCoordinator` is its default, and the graph's job here is only to make
+     * sure the real app never gets it.
+     */
+    @Binds
+    @Singleton
+    fun bindCastPlaybackCoordinator(impl: CastSessionCoordinator): CastPlaybackCoordinator
 }
 
 /** Objects the player needs that are not constructor-injectable. */

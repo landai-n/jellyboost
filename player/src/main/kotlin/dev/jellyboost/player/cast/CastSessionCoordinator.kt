@@ -33,11 +33,12 @@ import javax.inject.Singleton
  * scope, reading the position off the cast player through [RoutingPlayerHandle], and one final stop
  * (which also kills the transcode) when the session ends.
  *
- * ### What it does not do yet
- * Flipping the routing handle is all a session start does here. Moving what is *already* playing
- * from the phone to the television, and back again on disconnect, is a transfer — a stop report,
- * then a re-negotiation at the position reached — and it belongs to the screen that holds the
- * source (docs/notes/chromecast-m12-plan.md, Phase 3).
+ * ### Transfers
+ * Moving what is *already* playing from the phone to the television, and back again on disconnect,
+ * belongs to the screen that holds the source — it is a stop report and a re-negotiation, and this
+ * class has neither the item nor the resolver. What it owes the screen is the one thing only it can
+ * see: where the outgoing player was at the instant playback was routed away from it
+ * ([CastPlaybackHost.onCastStarted], [CastPlaybackHost.onCastEnded]).
  */
 @Singleton
 class CastSessionCoordinator
@@ -49,7 +50,7 @@ class CastSessionCoordinator
         private val status: CastStatusHolder,
         @DetachedPlayerScope detachedScope: CoroutineScope,
         @MainDispatcher mainDispatcher: CoroutineDispatcher,
-    ) {
+    ) : CastPlaybackCoordinator {
         /** The receiver this device is connected to, if any. */
         val connection: StateFlow<CastConnection> = status.connection
 
@@ -97,7 +98,7 @@ class CastSessionCoordinator
          * Idempotent by construction, and it silences this class's own reporting: from here the
          * host's ticker is the one telling the server where the film is.
          */
-        internal fun attachHost(host: CastPlaybackHost) {
+        override fun attachHost(host: CastPlaybackHost) {
             this.host = host
             detachedSource = null
             stopTicker()
@@ -113,17 +114,33 @@ class CastSessionCoordinator
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the screen that replaced it.
          */
-        internal fun detachHost(host: CastPlaybackHost) {
+        override fun detachHost(host: CastPlaybackHost) {
             if (this.host !== host) return
             this.host = null
             detachedSource = host.castSource
             startTicker()
         }
 
+        /**
+         * A receiver appeared.
+         *
+         * The order is the whole of it. The snapshot comes **first**, off the player that is still
+         * playing, because it is what the transfer resumes at and where the outgoing session's stop
+         * report belongs; a moment later the only readable player is a cast one at zero. The routing
+         * flip comes before [RoutingPlayerHandle.stopInactive] so that the local player's own
+         * shutdown events land on a subscription nothing is listening to any more — stopping it
+         * first would let its `IsPlayingChanged(false)` reach the screen as if the session it is
+         * about to open had failed. Stopping it at all is decision 1: two players must not sound at
+         * once, and the local media notification has no business surviving a film that has moved to
+         * a television.
+         */
         private fun onCastStarted(deviceName: String?) {
             Timber.i("Cast session started on %s", deviceName ?: "an unnamed receiver")
+            val handover = routing.snapshot()
             status.setConnection(CastConnection.Connected(deviceName))
             routing.setActive(PlaybackTarget.Cast)
+            routing.stopInactive()
+            host?.onCastStarted(deviceName, handover)
         }
 
         /**
@@ -136,18 +153,24 @@ class CastSessionCoordinator
          * [PlaybackReporter.reportStopDetached] carries the encoder kill with it — `reportStop`
          * calls `stopTranscoding` — which is what stops a cast transcode from outliving the session
          * that started it.
+         *
+         * With a screen attached none of that happens here and the snapshot goes to it instead: the
+         * screen owes the same stop report, at the same position, and it has somewhere to put the
+         * film afterwards — back on this device, paused where the television left it.
          */
         private fun onCastEnded() {
             Timber.i("Cast session ended")
+            val last = routing.snapshot()
             status.setConnection(CastConnection.None)
             stopTicker()
 
             val orphaned = detachedSource
             if (host == null && orphaned != null) {
-                reporter.reportStopDetached(orphaned, routing.snapshot())
+                reporter.reportStopDetached(orphaned, last)
             }
             detachedSource = null
             routing.setActive(PlaybackTarget.Local)
+            host?.onCastEnded(last)
         }
 
         private fun startTicker() {
@@ -168,14 +191,3 @@ class CastSessionCoordinator
             tickerJob = null
         }
     }
-
-/**
- * The screen driving a cast session, as the coordinator sees it.
- *
- * One property, because one thing is genuinely handed over: *what* is playing. Where it has got to
- * is asked of the player, which is still there after the screen is not.
- */
-internal interface CastPlaybackHost {
-    /** What the receiver is playing, or `null` when the host has nothing open. */
-    val castSource: PlaybackMediaSource?
-}

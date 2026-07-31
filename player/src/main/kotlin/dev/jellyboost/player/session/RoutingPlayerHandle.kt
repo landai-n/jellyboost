@@ -56,6 +56,15 @@ internal class RoutingPlayerHandle
         private val active: PlayerHandle get() = _activeHandle.value
 
         /**
+         * The cast handle, once something has actually asked for one.
+         *
+         * Remembered rather than re-fetched from the [Provider], so that [stopInactive] can silence
+         * a cast player that exists without *creating* one that does not — which on a device with no
+         * Play services would load the very classes this indirection exists to avoid.
+         */
+        private var castIfCreated: PlayerHandle? = null
+
+        /**
          * The active handle's events, and only the active one's.
          *
          * `flatMapLatest` rather than a merge: a collector that kept hearing from the player it just
@@ -71,11 +80,30 @@ internal class RoutingPlayerHandle
             val handle =
                 when (target) {
                     PlaybackTarget.Local -> local
-                    PlaybackTarget.Cast -> cast.get()
+                    PlaybackTarget.Cast -> cast.get().also { castIfCreated = it }
                 }
             if (_activeHandle.value === handle) return
             Timber.i("Playback now routed to %s", target)
             _activeHandle.value = handle
+        }
+
+        /**
+         * Silences the player that is no longer in charge.
+         *
+         * Separate from [setActive], and called only after it, because the two are not the same
+         * decision: routing says where the *next* command goes, while this ends what the previous
+         * player was still doing. A phone that kept playing under a television is the everyday
+         * consequence of skipping it, and `ExoPlayerHandle.stop` takes the local media notification
+         * down with it — which is precisely what should happen when the film has moved elsewhere
+         * (docs/notes/chromecast-m12-plan.md, decision 1).
+         *
+         * Not folded into [setActive] on purpose: a switch is not always a handover — the cast side
+         * of one ends with a receiver that has already gone — and the caller that knows which it is
+         * is [dev.jellyboost.player.cast.CastSessionCoordinator].
+         */
+        fun stopInactive() {
+            val inactive = if (active === local) castIfCreated else local
+            inactive?.stop()
         }
 
         override fun prepare(

@@ -373,8 +373,8 @@ class PlayerViewModel
         // ---- user actions -------------------------------------------------------------------------
 
         fun togglePlayPause() {
+            if (syncPlay.isInGroup) return syncPlay.requestPlayPause()
             val snapshot = playerHandle.snapshot()
-            if (syncPlay.isInGroup) return syncPlay.requestPlayPause(snapshot.isPlaying)
             if (snapshot.isPlaying) playerHandle.pause() else playerHandle.play()
         }
 

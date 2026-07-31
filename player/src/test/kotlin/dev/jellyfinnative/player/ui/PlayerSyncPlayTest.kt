@@ -78,7 +78,7 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     @Test
     fun `a pause tap in a group asks the server to pause, and never pauses this player`() =
         runTest(dispatcher) {
-            syncPlayState.value = inGroup()
+            syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Playing)
             playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
             val model = viewModel()
             advanceUntilIdle()
@@ -87,6 +87,44 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             model.togglePlayPause()
 
             verify(exactly = 1) { syncPlayController.requestPause() }
+            playerHandle.hadNoTransportCalls shouldBe true
+        }
+
+    @Test
+    fun `a missed echo leaves the local player still playing in a paused group, but a tap still asks to unpause`() =
+        runTest(dispatcher) {
+            // The group's own state is Paused, but this device never saw the SendCommand that
+            // should have paused it too — the exact drift a missed websocket message leaves behind.
+            syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Paused)
+            playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = true)
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.resetCalls()
+
+            model.togglePlayPause()
+
+            // Deciding from the local `isPlaying` here would re-send `requestPause` — the command
+            // that was already missed — and leave the group waiting on a second tap.
+            verify(exactly = 1) { syncPlayController.requestUnpause() }
+            verify(exactly = 0) { syncPlayController.requestPause() }
+            playerHandle.hadNoTransportCalls shouldBe true
+        }
+
+    @Test
+    fun `a stalled local player in a playing group still gets a pause request from a tap`() =
+        runTest(dispatcher) {
+            // The mirror image: the group is Playing, but this device is still catching up and its
+            // own player has not started yet.
+            syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Playing)
+            playerHandle.snapshot = PlaybackSnapshot(positionMs = 30_000L, isPlaying = false)
+            val model = viewModel()
+            advanceUntilIdle()
+            playerHandle.resetCalls()
+
+            model.togglePlayPause()
+
+            verify(exactly = 1) { syncPlayController.requestPause() }
+            verify(exactly = 0) { syncPlayController.requestUnpause() }
             playerHandle.hadNoTransportCalls shouldBe true
         }
 
@@ -327,6 +365,27 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             syncPlay.isShuffled shouldBe true
             syncPlay.repeatMode shouldBe SyncPlayRepeatMode.All
             syncPlay.isWaitingForGroup shouldBe false
+            // The fixture's group state is Paused (this member's own `phase` above is a different
+            // thing — see SyncPlayState.InGroup.groupState's doc).
+            syncPlay.groupPlaying shouldBe false
+        }
+
+    @Test
+    fun `the play-pause icon in a group follows the group's state, not the local player`() =
+        runTest(dispatcher) {
+            syncPlayState.value = inGroup(groupState = SyncPlayGroupState.Playing)
+            val model = viewModel()
+            advanceUntilIdle()
+
+            // The local player is still paused — it has not caught up to the group's Playing
+            // command yet — but the icon must not show "paused": that is exactly the state that
+            // invites the second, wrong tap the bug report describes.
+            playerHandle.emit(PlayerEvent.IsPlayingChanged(isPlaying = false))
+            advanceUntilIdle()
+
+            model.uiState.value.isPlaying shouldBe false
+            model.uiState.value.syncPlay.groupPlaying shouldBe true
+            model.uiState.value.showsPlaying shouldBe true
         }
 
     @Test

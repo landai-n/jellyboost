@@ -9,6 +9,7 @@ import dev.jellyfinnative.player.syncplay.SyncPlayMessage
 import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayPlaybackHost
 import dev.jellyfinnative.player.syncplay.SyncPlayState
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyfinnative.player.syncplay.model.SyncPlayShuffleMode
 import kotlinx.coroutines.flow.Flow
@@ -126,9 +127,18 @@ internal class PlayerSyncPlayBridge(
         if (isInGroup) controller.onHostBuffering()
     }
 
-    /** @param isPlaying what the player is doing now, which is what the tap is asking to reverse. */
-    fun requestPlayPause(isPlaying: Boolean) {
-        if (isPlaying) controller.requestPause() else controller.requestUnpause()
+    /**
+     * A play/pause tap, reversing what the **group** is doing — never what this player is doing.
+     *
+     * The local player only moves when the server echoes a command back, so after a missed echo its
+     * `isPlaying` can disagree with the group; a decision built on it just re-sends whatever the last
+     * successful echo already asked for, and the user has to tap twice to get anywhere. Reading
+     * `controller.state.value` instead — the group's own state — is what a tap is actually asking to
+     * reverse, whether or not this player has caught up to it yet.
+     */
+    fun requestPlayPause() {
+        val groupState = (controller.state.value as? SyncPlayState.InGroup)?.groupState
+        if (groupState == SyncPlayGroupState.Playing) controller.requestPause() else controller.requestUnpause()
     }
 
     fun requestSeek(positionMs: Long) {
@@ -168,6 +178,7 @@ private fun SyncPlayState.toPlayerState(): PlayerSyncPlayState =
                 hasQueue = queue?.playingEntry != null,
                 isShuffled = queue?.shuffleMode == SyncPlayShuffleMode.Shuffle,
                 repeatMode = queue?.repeatMode ?: SyncPlayRepeatMode.None,
+                groupPlaying = groupState == SyncPlayGroupState.Playing,
             )
     }
 

@@ -90,6 +90,17 @@ data class PlayerUiState(
 ) {
     /** `true` once there is something on screen to control. */
     val isReady: Boolean get() = !isLoading && errorMessage == null
+
+    /**
+     * What the play/pause icon draws.
+     *
+     * Solo, this is just [isPlaying]. In a group it is [PlayerSyncPlayState.groupPlaying] instead —
+     * the group's own state is the truth a tap reverses (`PlayerSyncPlayBridge.requestPlayPause`),
+     * and an icon still drawn from the local player's `isPlaying` after a missed echo would show the
+     * opposite of what the next tap actually needs to ask for, inviting the very second tap the M11
+     * bug report described.
+     */
+    val showsPlaying: Boolean get() = if (syncPlay.inGroup) syncPlay.groupPlaying else isPlaying
 }
 
 /**
@@ -118,6 +129,16 @@ data class PlayerSyncPlayState(
     val hasQueue: Boolean = false,
     val isShuffled: Boolean = false,
     val repeatMode: SyncPlayRepeatMode = SyncPlayRepeatMode.None,
+    /**
+     * `true` while the **group** — not this member — is playing, `SyncPlayGroupState.Playing`.
+     *
+     * This, not this player's own `isPlaying`, is what a play/pause tap reverses
+     * (`PlayerSyncPlayBridge.requestPlayPause`) and what [PlayerUiState.showsPlaying] draws in a
+     * group: after a `SendCommand` this device never received, the local `isPlaying` can say the
+     * opposite of what the group is doing, and a decision built on it either re-sends the command
+     * that was already missed or shows an icon promising the wrong thing.
+     */
+    val groupPlaying: Boolean = false,
 ) {
     /**
      * `true` while the group is not playing because someone — possibly this member — is not ready.

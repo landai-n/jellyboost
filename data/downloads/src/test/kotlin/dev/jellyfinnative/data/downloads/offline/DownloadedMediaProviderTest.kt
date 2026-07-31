@@ -304,6 +304,86 @@ class DownloadedMediaProviderTest {
                 .shouldContainExactly(emptyList())
         }
 
+    // ---- extra audio tracks ---------------------------------------------------------------------
+
+    @Test
+    fun `offers the downloaded audio sidecars sorted ascending by stream index`() =
+        runTest {
+            val german = write("audio.5.ger.m4a")
+            val french = write("audio.2.fre.m4a")
+            stored(
+                files =
+                    listOf(
+                        mediaFile(path = write("a.mkv").absolutePath),
+                        // Deliberately out of order: the player's `MergingMediaSource` order is the
+                        // contract, not whatever order Room happened to return the rows in.
+                        audioFile(id = 2L, streamIndex = 5, path = german.absolutePath),
+                        audioFile(id = 3L, streamIndex = 2, path = french.absolutePath),
+                    ),
+            )
+
+            val resolved = provider.get(itemId).shouldNotBeNull()
+
+            resolved.audio shouldContainExactly
+                listOf(
+                    DownloadedAudio(streamIndex = 2, uri = "file://${french.absolutePath}"),
+                    DownloadedAudio(streamIndex = 5, uri = "file://${german.absolutePath}"),
+                )
+        }
+
+    @Test
+    fun `withholds an extra audio track whose sidecar failed or vanished`() =
+        runTest {
+            val present = write("audio.2.fre.m4a")
+            stored(
+                files =
+                    listOf(
+                        mediaFile(path = write("a.mkv").absolutePath),
+                        audioFile(id = 2L, streamIndex = 2, path = present.absolutePath),
+                        audioFile(id = 3L, streamIndex = 5, path = File(storage, "gone.m4a").absolutePath),
+                    ),
+            )
+
+            // "Optional-file failure → item still playable" — with one fewer language on offer.
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .audio
+                .shouldContainExactly(
+                    listOf(DownloadedAudio(streamIndex = 2, uri = "file://${present.absolutePath}")),
+                )
+        }
+
+    @Test
+    fun `drops an audio row with no stream index`() =
+        runTest {
+            stored(
+                files =
+                    listOf(
+                        mediaFile(path = write("a.mkv").absolutePath),
+                        audioFile(id = 2L, streamIndex = null, path = write("audio.orphan.m4a").absolutePath),
+                    ),
+            )
+
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .audio
+                .shouldContainExactly(emptyList())
+        }
+
+    @Test
+    fun `an original download has no extra audio sidecars`() =
+        runTest {
+            stored(files = listOf(mediaFile(path = write("a.mkv").absolutePath)))
+
+            provider
+                .get(itemId)
+                .shouldNotBeNull()
+                .audio
+                .shouldContainExactly(emptyList())
+        }
+
     // ---- trickplay ----------------------------------------------------------------------------
 
     @Test
@@ -415,6 +495,20 @@ class DownloadedMediaProviderTest {
         id = id,
         itemId = itemId,
         type = DownloadFileType.SUBTITLE,
+        status = status,
+        path = path,
+        streamIndex = streamIndex,
+    )
+
+    private fun audioFile(
+        id: Long,
+        streamIndex: Int?,
+        path: String,
+        status: DownloadStatus = DownloadStatus.DOWNLOADED,
+    ) = DownloadFixtures.file(
+        id = id,
+        itemId = itemId,
+        type = DownloadFileType.AUDIO,
         status = status,
         path = path,
         streamIndex = streamIndex,

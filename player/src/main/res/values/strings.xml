@@ -114,4 +114,7 @@
     <string name="player_syncplay_state_waiting">Waiting</string>
     <string name="player_syncplay_state_paused">Paused</string>
     <string name="player_syncplay_state_playing">Playing</string>
+
+    <!-- The cast button. The view has no label of its own, so this is all TalkBack has to go on. -->
+    <string name="player_cast">Cast to a device</string>
 </resources>

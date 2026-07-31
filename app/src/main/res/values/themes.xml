@@ -4,13 +4,22 @@
         The app is dark-only by design (jellyfin-web dark theme is the reference).
         Compose owns all in-app colours; this theme only covers the window background
         and the pre-Compose splash frame.
+
+        AppCompat-derived since M12 (DECISIONS.md 2026-07-31), and for one reason only: the Cast
+        chooser/controller dialogs are DialogFragments hosted by this activity, so MediaRouter
+        themes them from *this* theme and AppCompatDialog then requires the AppCompatTheme
+        attributes to be there. Nothing else in the app is AppCompat — no AppCompat views, no
+        AppCompatActivity. NOT the DayNight variant: the app is always dark whatever the system
+        is set to, exactly as the splash theme below explains.
     -->
-    <style name="Theme.Jellyboost" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Jellyboost" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:colorBackground">@color/background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
+        <!-- What tints the Cast dialogs' controls; Compose never reads it. -->
+        <item name="colorAccent">@color/primary</item>
     </style>
 
     <style name="Theme.Jellyboost.Starting" parent="Theme.SplashScreen">

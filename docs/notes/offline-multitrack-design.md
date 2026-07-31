@@ -1,7 +1,36 @@
 # Offline multi-track downloads — design study (2026-07-30)
 
-> **Implemented 2026-07-30 (phases 0–1).** Phase 2 is untouched and still awaits the `/Audio`
-> endpoint check. Where the code differs from what is written below:
+> **Implemented 2026-07-30 (phases 0–1); phase 2 implemented 2026-07-31.** Where the code differs
+> from what is written below:
+>
+> - **Phase 2's one load-bearing unverified assumption did not hold, exactly as this note asked it
+>   be checked before committing.** `/Audio/{id}/stream.mka?audioStreamIndex=N` does *not* accept a
+>   Movie item id and honour the index on server 10.11: `EncodingHelper.AttachMediaSourceInfo`
+>   hard-codes `audioStreamIndex` to `null` for any non-video request, so the endpoint silently
+>   returns the source's *default* track whatever index was asked for — verified both in server
+>   source and empirically against the dev server (requested track 3/eng, received the default fre;
+>   decoded-audio cross-correlation 0.977 against the real French track). The amended route fetches
+>   through `/Videos/{id}/stream.mkv` instead, which does honour `audioStreamIndex`, with a junk
+>   video track present only because the endpoint requires one, and strips that video off
+>   *locally* once the whole file is down — a Media3 `Transformer` transmux
+>   (`AudioSidecarExtractor`, `setRemoveVideo(true)`, no re-encode) rather than the server producing
+>   an audio-only file directly (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2").
+> - **The sidecar is `m4a`, not `mka`.** The note below picked `mka` for the moov-at-end reason
+>   documented on `DownloadQuality.CONTAINER` — true of the server's *own* live-muxed output, but
+>   moot once the file is produced locally by a `Transformer` that already has every byte on disk
+>   before it starts and writes the `moov` up front. `m4a`/mp4 is exactly the container that reason
+>   ruled out for the *media* file; it is safe here for the opposite reason it was unsafe there.
+> - **No seek-repair gate exists for a sidecar, because none is needed.** A locally-transmuxed m4a
+>   is natively seekable the moment the strip finishes — `MatroskaSeekIndexRepair` never sees it and
+>   was never extended to. The gate that stands in front of a sidecar instead is the strip itself: a
+>   failed extract deletes both the fetch and the target and the row is `ERROR`, exactly as a failed
+>   fetch would be, so nothing unseekable or truncated is ever offered to the player.
+>
+> Where the rest of the sketch held: the fetch is still per extra language, `MergingMediaSource`
+> is still built in `ExoPlayerHandle` rather than `ExoMediaSourceFactory` (moved for the reason
+> predicted below — no audio analogue of `SubtitleConfiguration`), and the child-index track-group
+> prefix is exactly the mechanism predicted, confirmed and pinned by
+> `TrackSelectionControllerTest` rather than only by bytecode inspection.
 >
 > - **Phase 0 is quality-conditional, not unconditional.** The `stream.isExternal` filter is gone
 >   as described, but an *embedded* stream only earns a sidecar when the row's quality is

@@ -496,3 +496,51 @@ minted by one profile-less `PlaybackInfo` POST (`SyncPlayLocalSession` +
 M8's local-first reporting — the unconditional local position write above all — is untouched.
 See DECISIONS.md, 2026-07-30.
 <!-- END: SyncPlay (M11) -->
+
+<!-- BEGIN: Offline multi-track Phase 2 (post-M10) -->
+## Offline multi-track Phase 2 (post-M10)
+
+Full detail: [`docs/features/download-quality.md`](features/download-quality.md), *"Every other audio
+language, as its own file"*, and [`docs/features/offline-playback.md`](features/offline-playback.md),
+*"Merged playback and the child-order contract"*. Design study:
+[`docs/notes/offline-multitrack-design.md`](notes/offline-multitrack-design.md).
+
+**The rule the architecture enforces:** a transcode still bakes in exactly one audio track (the
+server API's own ceiling), but every other language of the source is fetched and stored as its own
+file and merged back with the primary one at playback — offline stops meaning "down to one language".
+
+### Module additions
+
+| module | added |
+|---|---|
+| `:core:common` | `DownloadFileType.AUDIO` — no schema change, an unrecognised stored name already degraded safely. |
+| `:data:downloads` | `engine/AudioSidecarExtractor` + `TransformerAudioSidecarExtractor` (a new engine stage, bound in `DownloadsModule`), a new `androidx.media3:media3-transformer` dependency (transmuxing only — no codec, no decoder); `DownloadUrlFactory.audioStreamUrl`; `DownloadFilePlanner.audioSidecars`; `DownloadQueue.downloadOne`/`strip` grown a second file shape (fetch to `.part.mkv`, strip to the row's `.m4a`); `offline/DownloadedMedia.audio` / `DownloadedAudio`. |
+| `:player` | `LocalPlaybackResolver` offers one track per on-disk sidecar after the baked one; `PlaybackMediaItemSpec.audioSidecars`, `AudioSidecarSpec`; `ExoPlayerHandle.prepare`/`toMergedSource` builds a `MergingMediaSource` when the spec has any; `TrackSelectionController.selectAudio` maps a merge child back to a Jellyfin stream index; `jellyfinIndexOfTrackId`'s prefix strip widened from one merge level to a run of them. |
+
+### Why `MediaSource` assembly moved into `ExoPlayerHandle`
+
+Every other side-loaded thing in this app — subtitles — rides along on the `MediaItem` itself, as a
+`SubtitleConfiguration`, which is why `ExoMediaSourceFactory`'s decision table could stay pure and
+testable on the JVM (`docs/features/offline-playback.md`, M8). `MediaItem` has no audio analogue: an
+extra audio track can only be added by wrapping a second `MediaSource` around the first one in a
+`MergingMediaSource`, and that type only exists where a `MediaSourceFactory` is available to build the
+children from. So `ExoPlayerHandle.prepare` is the one place in `:player` that assembles a
+`MediaSource` by hand instead of handing a `PlaybackMediaItemSpec` to the factory — a real, acknowledged
+dent in "URL selection is pure and testable", scoped to exactly this one call (DECISIONS.md,
+2026-07-31). Everything decidable — which sidecars exist, and in what order — stays in the pure spec;
+the handle performs only mechanical assembly.
+
+### Why the fetch goes through `/Videos`, not `/Audio`
+
+The design study's one unverified assumption was that `/Audio/{id}/stream.mka?audioStreamIndex=N`
+would honour the index. It does not, on server 10.11: `EncodingHelper.AttachMediaSourceInfo`
+hard-codes the parameter to `null` for any non-video request. `/Videos/{id}/stream.mkv` does honour
+it, so `:data:downloads` fetches an extra language through the video endpoint with a cheap junk video
+track (h264, 50 kbps, 4 fps, 144p) and a new engine stage, `AudioSidecarExtractor`, strips that video
+off locally — a Media3 `Transformer` transmux, no re-encode — once the whole file is on disk. The
+sidecar this produces is `.m4a`, not the `.mka` the design study picked: a `Transformer` that already
+holds every byte before it starts writes a complete `moov` up front, which is exactly the property
+`DownloadQuality.CONTAINER`'s own KDoc explains a *server's* live encode cannot have (see
+`docs/features/download-quality.md`, *"Why the container is mkv and not mp4"*) — so the sidecar needs
+no seek-index repair at all, unlike the media file it rides alongside.
+<!-- END: Offline multi-track Phase 2 (post-M10) -->

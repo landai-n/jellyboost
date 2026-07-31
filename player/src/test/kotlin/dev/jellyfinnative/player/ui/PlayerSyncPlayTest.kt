@@ -19,6 +19,7 @@ import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.syncplay.group
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupQueue
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueEntry
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueUpdateReason
 import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
@@ -414,7 +415,8 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
     private fun inGroup(
         phase: SyncPlayPhase = SyncPlayPhase.Paused,
         queue: SyncPlayGroupQueue? = queue(),
-    ) = SyncPlayState.InGroup(group(), queue, phase)
+        groupState: SyncPlayGroupState = SyncPlayGroupState.Paused,
+    ) = SyncPlayState.InGroup(group(), queue, groupState, phase)
 
     private fun queue(
         shuffle: SyncPlayShuffleMode = SyncPlayShuffleMode.Sorted,

@@ -1,6 +1,7 @@
 package dev.jellyfinnative.player.syncplay
 
 import dev.jellyfinnative.core.common.syncplay.SyncPlayGroupHandle
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueMode
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -46,6 +47,7 @@ class ControllerSyncPlaySessionTest {
                 SyncPlayState.InGroup(
                     group = group(participants = listOf("casey", "alex")),
                     queue = null,
+                    groupState = SyncPlayGroupState.Idle,
                     phase = SyncPlayPhase.Waiting,
                 )
             runCurrent()
@@ -62,7 +64,7 @@ class ControllerSyncPlaySessionTest {
     fun `leaving the group takes the handle with it`() =
         runTest {
             val fixture = fixture()
-            fixture.state.value = SyncPlayState.InGroup(group(), null, SyncPlayPhase.Paused)
+            fixture.state.value = SyncPlayState.InGroup(group(), null, SyncPlayGroupState.Paused, SyncPlayPhase.Paused)
             runCurrent()
 
             fixture.state.value = SyncPlayState.Idle

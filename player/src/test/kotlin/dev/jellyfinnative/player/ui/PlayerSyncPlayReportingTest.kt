@@ -6,6 +6,7 @@ import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.syncplay.group
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -46,7 +47,13 @@ internal class PlayerSyncPlayReportingTest : PlayerViewModelFixture() {
             viewModel()
             advanceUntilIdle()
 
-            syncPlayState.value = SyncPlayState.InGroup(group(), queue = null, phase = SyncPlayPhase.Waiting)
+            syncPlayState.value =
+                SyncPlayState.InGroup(
+                    group(),
+                    queue = null,
+                    groupState = SyncPlayGroupState.Idle,
+                    phase = SyncPlayPhase.Waiting,
+                )
             advanceUntilIdle()
 
             // Once for the open, once for the join: a download that was playing alone joins the
@@ -58,7 +65,13 @@ internal class PlayerSyncPlayReportingTest : PlayerViewModelFixture() {
     fun `leaving the group mid-playback reconciles the session away`() =
         runTest(dispatcher) {
             openingALocalFile()
-            syncPlayState.value = SyncPlayState.InGroup(group(), queue = null, phase = SyncPlayPhase.Waiting)
+            syncPlayState.value =
+                SyncPlayState.InGroup(
+                    group(),
+                    queue = null,
+                    groupState = SyncPlayGroupState.Idle,
+                    phase = SyncPlayPhase.Waiting,
+                )
             viewModel()
             advanceUntilIdle()
 
@@ -72,11 +85,23 @@ internal class PlayerSyncPlayReportingTest : PlayerViewModelFixture() {
     fun `a phase change inside the same group reconciles nothing`() =
         runTest(dispatcher) {
             openingALocalFile()
-            syncPlayState.value = SyncPlayState.InGroup(group(), queue = null, phase = SyncPlayPhase.Waiting)
+            syncPlayState.value =
+                SyncPlayState.InGroup(
+                    group(),
+                    queue = null,
+                    groupState = SyncPlayGroupState.Idle,
+                    phase = SyncPlayPhase.Waiting,
+                )
             viewModel()
             advanceUntilIdle()
 
-            syncPlayState.value = SyncPlayState.InGroup(group(), queue = null, phase = SyncPlayPhase.Paused)
+            syncPlayState.value =
+                SyncPlayState.InGroup(
+                    group(),
+                    queue = null,
+                    groupState = SyncPlayGroupState.Paused,
+                    phase = SyncPlayPhase.Paused,
+                )
             advanceUntilIdle()
 
             // Membership is the only thing that changes what the server should be told; a group

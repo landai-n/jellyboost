@@ -9,6 +9,7 @@ import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
 import dev.jellyfinnative.player.syncplay.group
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupQueue
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupSummary
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueEntry
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueUpdateReason
@@ -219,7 +220,12 @@ class SyncPlayGroupsViewModelTest {
                 awaitItem().membership shouldBe SyncPlayGroupsMembership.Joining
 
                 controllerState.value =
-                    SyncPlayState.InGroup(group = groupA, queue = playingQueue(), phase = SyncPlayPhase.Paused)
+                    SyncPlayState.InGroup(
+                        group = groupA,
+                        queue = playingQueue(),
+                        groupState = SyncPlayGroupState.Paused,
+                        phase = SyncPlayPhase.Paused,
+                    )
                 val inGroup = awaitItem()
                 val membership = inGroup.membership
                 check(membership is SyncPlayGroupsMembership.InGroup)

@@ -41,7 +41,7 @@ All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless state
 | Class | Responsibility |
 |---|---|
 | `SyncPlayController` | The coordinator. `@Singleton` with its own supervisor scope, **not** a ViewModel: membership outlives the player screen and survives backgrounding. Owns the state machine (`Idle / Joining / InGroup`), every user intent, the join handshake, connection-loss teardown and `launchRequests`. |
-| `SyncPlayState.kt` | `SyncPlayState` (`InGroup(group, queue, phase)`), `SyncPlayPhase` (`Waiting / Buffering / Playing(anchor) / Paused`), `SyncPlayMessage`, `SyncPlayLaunchRequest`. The phase is *this member's*, deliberately not the group's `SyncPlayGroupState` — the difference is what the WAITING overlay shows. |
+| `SyncPlayState.kt` | `SyncPlayState` (`InGroup(group, queue, groupState, phase)`), `SyncPlayPhase` (`Waiting / Buffering / Playing(anchor) / Paused`), `SyncPlayMessage`, `SyncPlayLaunchRequest`. The phase is *this member's* and the `groupState` is the group's own — the difference is what the WAITING overlay shows, and what the [pause net](#when-the-group-says-stop-and-nothing-comes) is measured against. |
 | `api/SyncPlayApi` + `api/SdkSyncPlayApi` | Facade over `apiClient.syncPlayApi` and `apiClient.timeSyncApi`, on `@IoDispatcher`. **The single SDK-time boundary**: the SDK's `DateTimeSerializer` treats `LocalDateTime` as local wall-clock, so every `Instant ↔ LocalDateTime` conversion happens here, through `:data`'s `SdkDateTime`. |
 | `socket/SyncPlaySocket` + `socket/SdkSyncPlaySocket` | `apiClient.webSocket.subscribe<SyncPlayGroupUpdateMessage>()` / `<SyncPlayCommandMessage>()` mapped to domain events. Collected only while in a group — collecting is what opens the socket (the SDK has no `connect()`), and the SDK owns reconnect and keep-alive. |
 | `SyncPlayDtoMapping.kt`, `SyncPlayEnumMapping.kt` | SDK DTO → `SyncPlayGroupEvent` / `SyncPlayCommand`, and the enum round-trips. Pure functions, densely tested. |
@@ -108,6 +108,29 @@ It exists for one observed failure: after an automatic queue advance the handsha
 group's state update said `Playing`, and no unpause ever arrived — leaving the member at 0:00 under
 the WAITING overlay, unrecoverable by a group `Unpause` because the group already *was* playing. It
 is a deliberate, bounded exception to key decision 11.
+
+### When the group says stop and nothing comes
+
+The mirror image, and the worse half: a `Pause` this client never receives leaves the member playing
+on alone, while the phase goes quietly to `Paused` and takes the drift monitor — which runs in
+`Playing` only — down with it, so nothing measures anything ever again
+(`syncplay-bugreport.md`: "Pause from browser: app continues playing"). So a group state of `Paused`
+arms a second 3 s timer (`PAUSE_NET_TIMEOUT_MS`), and when it fires the controller pauses this
+member itself.
+
+| | self-sync net (`Playing`) | pause net (`Paused`) |
+|---|---|---|
+| armed by | every `ready`, and `StateChanged(Playing)` | `StateChanged(Paused)`, and a group already paused at join |
+| disarmed by | any applied command, `StateChanged(Paused/Waiting/Idle)`, teardown | any applied command, `StateChanged(Playing)`, teardown |
+| needs a host | **yes** — starting a detached player would be sound from nowhere | **no** — pausing a detached player the group has paused is right |
+| does | seek to the group's inferred position, `play`, then hand over to the drift monitor | `pause`, and only if the player is actually running |
+| reports | nothing | nothing |
+
+Two supporting rules come with it. The group's own state now lives in
+`SyncPlayState.InGroup.groupState`, distinct from the member `phase` precisely because the phase is
+what a lost command falsifies. And the WAITING hold asks the *player* whether it is running rather
+than reading the phase, since a member whose phase says `Paused` over a player that is still playing
+is exactly the case both nets exist for.
 
 Leaving the player screen does **not** leave the group: the controller sends
 `syncPlaySetIgnoreWait(true)` on host detach (jellyfin-web's own mechanism) so a member without a
@@ -311,7 +334,7 @@ offline sessions do.
 
 | File | What it pins |
 |---|---|
-| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net, sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. Auto-rejoin: a blip-then-`NotInGroup` and a `403` both taken back (join re-run, handshake re-entered, player never started, one "Rejoined" message), membership falling and rising for the local-session re-mint, a dissolved group asked after exactly once, exhaustion at exactly 3 attempts 2 s apart then one message and silence, aborts mid-rejoin from leave and sign-out, the four exits that must never rejoin, and a confirmed loss the connection comes back from (no call spent while offline, rejoined when it returns). Foreground re-check: a membership the background cost us asked for again and got back, a group gone in the meantime forgotten without a word, a failed re-check that is silent, does not loop and is retried on the *next* foreground, a loss older than the 10-minute window dropped rather than acted on, a deliberate leave and a sign-out never taken back, and an immediate ping while still in a group. |
+| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net and the pause net (a paused group with no command pauses this member, the group's own pause standing the net down, no second pause on a player already stopped, a paused group at join, a WAITING hold over a phase that lies, and a self-sync cancelled when the group stops playing), sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. Auto-rejoin: a blip-then-`NotInGroup` and a `403` both taken back (join re-run, handshake re-entered, player never started, one "Rejoined" message), membership falling and rising for the local-session re-mint, a dissolved group asked after exactly once, exhaustion at exactly 3 attempts 2 s apart then one message and silence, aborts mid-rejoin from leave and sign-out, the four exits that must never rejoin, and a confirmed loss the connection comes back from (no call spent while offline, rejoined when it returns). Foreground re-check: a membership the background cost us asked for again and got back, a group gone in the meantime forgotten without a word, a failed re-check that is silent, does not loop and is retried on the *next* foreground, a loss older than the 10-minute window dropped rather than acted on, a deliberate leave and a sign-out never taken back, and an immediate ping while still in a group. |
 | `SyncPlayCommandSchedulerTest` | Future / past-due / replacement commands, seek epsilon, applied-once (identical re-send, repeated past-due, stale `emittedAt`). |
 | `SyncPlayDriftMonitorTest` | Threshold either side of 2 s, no correction while paused. |
 | `time/SyncPlayTimeSyncTest` | Server ahead/behind, asymmetric RTT, outlier rejection, rolling window. |

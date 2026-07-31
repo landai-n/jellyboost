@@ -2360,4 +2360,34 @@ Seeded from the approved plan; listed for traceability, no divergence:
   navigation-driven recomposition of the scaffold. It costs one new dependency,
   `androidx.lifecycle:lifecycle-process`, added to the version catalog.
 
+## 2026-07-31 — a paused group that sends no command pauses this member (the pause net)
+- **Scope:** `player/.../syncplay/SyncPlayState.kt` (`InGroup.groupState`),
+  `player/.../syncplay/SyncPlayController.kt` (`armPauseNet`, `pauseToGroup`, `setGroupState`,
+  `onGroupStateChanged`), `SyncPlayControllerTest` (+ the `InGroup` fixtures in five other test files).
+- **Plan said:** in-group transport never acts locally — the server's rebroadcast `SendCommand` is what
+  moves this player (key decision 11). The one exception logged so far is the self-sync net above, which
+  covers the *play* direction only.
+- **Done instead:** the group's own state is now carried in `SyncPlayState.InGroup.groupState`, seeded at
+  group entry and updated by every `StateChanged`; a `groupState` of `Paused` arms a
+  `PAUSE_NET_TIMEOUT_MS` = 3 s timer, and if it fires with no command applied in the meantime and the
+  player still running, this member pauses itself. Any applied command, a `StateChanged(Playing)` and
+  teardown all disarm it. Two smaller fixes ride with it: the WAITING hold now asks the *player* whether
+  it is running instead of reading the member phase, and a state change out of `Playing` cancels the
+  self-sync job structurally rather than relying on `groupPlayingAnchor` being null.
+- **Reason:** the device report (`syncplay-bugreport.md`, 2026-07-31): "Pause from browser: app continues
+  playing", after which nothing ever recovers — the phase goes to `Paused` on the group's state update,
+  which is also the phase the drift monitor refuses to run in, so the member free-runs with no measurement
+  and no net for the rest of the session. It is the same missing `SendCommand` as B3, in the direction
+  that has no floor under it.
+- **Why it is a smaller exception than the play net:** the pause net *only pauses*. It never seeks, never
+  plays, and reports nothing, so firing it at a player that is already stopped costs exactly nothing —
+  which is what lets it be armed from the group's state alone (including a group found already paused at
+  join) instead of from proof that this member is out of step. For the same reason it is deliberately
+  **not** gated on an attached host, unlike the play net: pausing a detached background player that the
+  group has paused is right, where starting one would be sound from nowhere.
+- **Why `groupState` and not the phase:** the member phase is precisely the value a lost command
+  falsifies — `Paused` over a player that is still playing is the bug — so a net measured against it
+  would be measured against the lie. The group's state is the server's own broadcast, and it is a public
+  `val` because a later phase surfaces it through the player UI bridge.
+
 <!-- END -->

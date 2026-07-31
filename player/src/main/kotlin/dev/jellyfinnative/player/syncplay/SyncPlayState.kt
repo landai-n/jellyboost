@@ -1,6 +1,7 @@
 package dev.jellyfinnative.player.syncplay
 
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupQueue
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupSummary
 import java.time.Instant
 import java.util.UUID
@@ -26,6 +27,15 @@ sealed interface SyncPlayState {
     data class InGroup(
         val group: SyncPlayGroupSummary,
         val queue: SyncPlayGroupQueue?,
+        /**
+         * What the **group** is doing, as of its last state update (seeded from the joined group).
+         *
+         * Deliberately kept apart from [phase]: the phase is what *this member* is doing, and after
+         * a `SendCommand` that never arrived it is a lie — a member whose phase says `Paused` can
+         * still be playing, and one whose phase says `Playing` can be sitting still. The group's own
+         * state is the truth every net is measured against, and the one the player UI shows.
+         */
+        val groupState: SyncPlayGroupState,
         val phase: SyncPlayPhase,
     ) : SyncPlayState
 

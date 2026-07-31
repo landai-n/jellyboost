@@ -11,6 +11,7 @@ import dev.jellyfinnative.player.syncplay.SyncPlayPhase
 import dev.jellyfinnative.player.syncplay.SyncPlayState
 import dev.jellyfinnative.player.syncplay.group
 import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupQueue
+import dev.jellyfinnative.player.syncplay.model.SyncPlayGroupState
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueEntry
 import dev.jellyfinnative.player.syncplay.model.SyncPlayQueueUpdateReason
 import dev.jellyfinnative.player.syncplay.model.SyncPlayRepeatMode
@@ -219,7 +220,12 @@ class SyncPlayQueueViewModelTest {
     }
 
     private fun inGroup(queue: SyncPlayGroupQueue) =
-        SyncPlayState.InGroup(group = group(), queue = queue, phase = SyncPlayPhase.Paused)
+        SyncPlayState.InGroup(
+            group = group(),
+            queue = queue,
+            groupState = SyncPlayGroupState.Paused,
+            phase = SyncPlayPhase.Paused,
+        )
 
     private fun queue(playingIndex: Int) =
         SyncPlayGroupQueue(

@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.android.library)
-    alias(libs.plugins.jellyfinnative.android.hilt)
+    alias(libs.plugins.jellyboost.android.library)
+    alias(libs.plugins.jellyboost.android.hilt)
 }
 
 android {
-    namespace = "dev.jellyfinnative.core.network"
+    namespace = "dev.jellyboost.core.network"
 }
 
 dependencies {

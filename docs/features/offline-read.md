@@ -248,7 +248,7 @@ changes when the probe rotates to another address.
 (`sortIndex`), so *My Media* looks the same either way.
 
 Migration: `@AutoMigration(2, 3)`, purely additive, schema exported to
-`core/database/schemas/dev.jellyfinnative.core.database.JellyfinDatabase/3.json`.
+`core/database/schemas/dev.jellyboost.core.database.JellyfinDatabase/3.json`.
 
 ### Write-through — `:data/cache/BrowseCacheWriter`
 
@@ -297,7 +297,7 @@ Welcome, but a side effect.
 `DownloadedMetadataRefresher` (`@Singleton`, `:data:downloads`) borrows `UserDataSyncTrigger`'s shape
 exactly — collect `ConnectionStateProvider.state`, map to online-ness, `distinctUntilChanged`, act on
 **every** `true` including the flow's initial value — so one code path covers both "the app started
-online" and "the connection came back". `JellyfinNativeApplication.onCreate` starts it, next to the
+online" and "the connection came back". `JellyboostApplication.onCreate` starts it, next to the
 sync trigger and for the same reason: it must run whether or not a screen is showing.
 
 One pass is:
@@ -353,7 +353,7 @@ are offline — tapping the icon shows the message, with the action, in a snackb
 | `OFFLINE_FORCED` | `AirplanemodeActive` | "Offline mode is on — showing downloaded media" | **Go online** → clears the preference |
 
 The `ConnectionState → ConnectionStatus` mapping is a plain function, pinned by
-`app/src/test/kotlin/dev/jellyfinnative/app/ConnectionStatusTest.kt`.
+`app/src/test/kotlin/dev/jellyboost/app/ConnectionStatusTest.kt`.
 
 `AppPreferences.forceOffline` (DataStore, `:core:datastore`) is the persisted setting; it feeds
 `ConnectionStateProvider` and is toggled either from the app bar's overflow menu or from the

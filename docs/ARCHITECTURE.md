@@ -205,7 +205,7 @@ a mode here either — it is which subtype the resolver returned.
 | `:data:downloads` | `offline/DownloadedMediaProvider` + `offline/DownloadedMedia` — "what is on disk for this item", Room joined with a real filesystem check. |
 | `:player` | `model/LocalPlaybackMediaSource`, `model/LocalTrickplay`; `resolve/LocalPlaybackResolver`, `resolve/PlaybackSourceResolver`; `ExoMediaSourceFactory` and `PlaybackReporter` and `DecoderFallbackHandler` widened to the sealed type; `PlayerUiState.isLocalPlayback`. |
 | `:data` | `userdata/UserDataSyncer` (most-recent-wins), `userdata/UserDataSyncTrigger`; `UserDataSyncWorker` is no longer a stub. |
-| `:app` | `JellyfinNativeApplication` starts `UserDataSyncTrigger`. |
+| `:app` | `JellyboostApplication` starts `UserDataSyncTrigger`. |
 
 ### Layering
 
@@ -315,7 +315,7 @@ Sign-out itself needed no new plumbing: `SettingsViewModel` calls `SessionReposi
 directly, and the pre-existing `LogoutRedirectEffect` in `JellyfinNavHost` (watching
 `SessionRepository.sessionState`) already redirects to `Routes.ServerSetup` on any transition to
 `SessionState.LoggedOut`, regardless of what triggered it. The `onSignOut` callback that used to
-thread `MainActivity → JellyfinNativeApp → AppScaffold → JellyfinNavHost → HomeRoute` is gone.
+thread `MainActivity → JellyboostApp → AppScaffold → JellyfinNavHost → HomeRoute` is gone.
 
 ### A second connectivity signal: connectivity changes
 

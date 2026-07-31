@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.kotlin.library)
+    alias(libs.plugins.jellyboost.kotlin.library)
     alias(libs.plugins.kotlin.serialization)
 }
 

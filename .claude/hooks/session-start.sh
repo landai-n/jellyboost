@@ -10,7 +10,7 @@ fi
 cd "$REPO_ROOT" 2>/dev/null || exit 0
 
 {
-  echo "== jellyfin-native governance =="
+  echo "== Jellyboost governance =="
   echo "Check docs/PLAN.md before non-trivial decisions; log divergences in DECISIONS.md via /diverge"
   echo
 

@@ -36,7 +36,7 @@ member (key decision 11). That is what makes "in sync" true rather than approxim
 
 ## Key classes
 
-All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless stated.
+All in `player/src/main/kotlin/dev/jellyboost/player/syncplay/` unless stated.
 
 | Class | Responsibility |
 |---|---|
@@ -50,7 +50,7 @@ All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless state
 | `SyncPlayCommandScheduler` | One pending-command slot; delays until the command's instant *in local time* and applies it on Main against `PlayerHandle`. Past-due unpause seeks to `position + (now − when)` first. A new command replaces the pending one; an **identical** one (same type, instant, position, slot) and one emitted **before** the last taken on are both dropped. |
 | `SyncPlayDriftMonitor` | 1 s tick while playing; a gap of more than 2 s between where the group's anchor says this player should be and where it is ⇒ corrective seek. The safety net under the scheduler. |
 | `SyncPlayStatusHolder` | Two facts anyone may read — `inGroup` and the minted play session id — so `PlaybackReporter` can consult SyncPlay without a DI cycle. |
-| `presence/SyncPlayPresenceCoordinator` | Started from `JellyfinNativeApplication`. Holds `SyncPlayPresenceService` while the group needs it, and hands `ProcessLifecycleOwner`'s `ON_START` to `SyncPlayController.onAppForegrounded()`. See [Surviving the background](#surviving-the-background). |
+| `presence/SyncPlayPresenceCoordinator` | Started from `JellyboostApplication`. Holds `SyncPlayPresenceService` while the group needs it, and hands `ProcessLifecycleOwner`'s `ON_START` to `SyncPlayController.onAppForegrounded()`. See [Surviving the background](#surviving-the-background). |
 | `presence/SyncPlayPresenceService` + `SyncPlayPresenceReceiver` + `syncPlayPresenceDemanded` | The `specialUse` foreground service a group without playback runs behind, its **Leave** action, and the pure start/stop rule. |
 | `SyncPlayLocalSession` | The server-visible session of a **downloaded** item watched with a group: mints its play session id, and closes it when the group ends. See "Local files in a group". |
 | `SyncPlayPlaybackHost` | What the controller needs of a player: `loadItem(itemId, startTicks)` (opens paused) and `snapshot()`. Implemented by `PlayerViewModel`. |
@@ -420,7 +420,7 @@ offline sessions do.
 
 ## Test coverage
 
-`player/src/test/kotlin/dev/jellyfinnative/player/syncplay/`, plus the player and reporter suites:
+`player/src/test/kotlin/dev/jellyboost/player/syncplay/`, plus the player and reporter suites:
 
 | File | What it pins |
 |---|---|

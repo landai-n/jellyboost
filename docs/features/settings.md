@@ -140,7 +140,7 @@ now reachable from all four top-level destinations rather than from Home alone.
 action the way `LibraryGridScreen` and `ItemDetailScreen` do, and the app bar hides while it is up.
 
 Sign-out moving here made `:app`'s whole `onSignOut` chain dead — `MainActivity` →
-`JellyfinNativeApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`, plus `MainViewModel.signOut()`
+`JellyboostApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`, plus `MainViewModel.signOut()`
 — and it was removed with the feature rather than left threaded through five composables that
 nothing calls. `MainViewModel` still injects `SessionRepository` for `restoreSession()` and
 `sessionState`.

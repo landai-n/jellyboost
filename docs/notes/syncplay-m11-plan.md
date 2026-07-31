@@ -2,7 +2,7 @@
 
 ## Context
 
-The user wants SyncPlay (Jellyfin's server-coordinated group watch) in jellyfin-native, **including when the item is a downloaded local file while the device is online** — play from disk, stay in lockstep with the group. Feasibility is confirmed:
+The user wants SyncPlay (Jellyfin's server-coordinated group watch) in Jellyboost, **including when the item is a downloaded local file while the device is online** — play from disk, stay in lockstep with the group. Feasibility is confirmed:
 
 - The pinned SDK (`org.jellyfin.sdk:jellyfin-core` **1.8.12** — no version bump needed) has the complete surface: `apiClient.syncPlayApi` (all 22 operations, incl. queue management), `apiClient.timeSyncApi.getUtcTime()`, and `apiClient.webSocket: SocketApi` with `subscribeSyncPlayCommands(...)` / `subscribe<SyncPlayGroupUpdateMessage>()`, reconnect + keep-alive built in.
 - The "online but playing a local file" state is already first-class plumbing (`PlayerViewModel.isOnline`/`localSource`/`forcedRemote`, connectivity-aware track picker).
@@ -19,7 +19,7 @@ User decisions (AskUserQuestion): **full feature** (incl. in-app group queue man
 
 ## Key design decisions
 
-1. **Placement**: new package `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` — no new module; `:player` already has `PlayerHandle`, resolvers, reporter, and depends on `:core:network`/`:data`.
+1. **Placement**: new package `player/src/main/kotlin/dev/jellyboost/player/syncplay/` — no new module; `:player` already has `PlayerHandle`, resolvers, reporter, and depends on `:core:network`/`:data`.
 2. **Cross-feature contract** `SyncPlaySession` in `:core:common` (activeGroup StateFlow, playForGroup, addToGroupQueue) so `:feature:detail`/`:feature:home` don't depend on `:player`.
 3. **WebSocket connected only while in a group**; the dedicated section's group list is REST + 10 s poll. Battery + simplicity; SDK handles reconnect.
 4. **`SyncPlayController` is a `@Singleton`** with its own supervisor scope driving `PlayerHandle` directly — commands apply while backgrounded; `PlayerViewModel` (886 lines already) gets only a thin bridge (~100 lines).

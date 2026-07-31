@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.android.library.compose)
-    alias(libs.plugins.jellyfinnative.android.hilt)
+    alias(libs.plugins.jellyboost.android.library.compose)
+    alias(libs.plugins.jellyboost.android.hilt)
 }
 
 android {
-    namespace = "dev.jellyfinnative.player"
+    namespace = "dev.jellyboost.player"
 }
 
 dependencies {

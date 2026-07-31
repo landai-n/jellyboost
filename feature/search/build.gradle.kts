@@ -1,9 +1,9 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.android.feature)
+    alias(libs.plugins.jellyboost.android.feature)
 }
 
 android {
-    namespace = "dev.jellyfinnative.feature.search"
+    namespace = "dev.jellyboost.feature.search"
 }
 
 dependencies {

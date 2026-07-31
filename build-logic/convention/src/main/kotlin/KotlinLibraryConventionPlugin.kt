@@ -1,6 +1,6 @@
-import dev.jellyfinnative.buildlogic.configureKotlinJvmTarget
-import dev.jellyfinnative.buildlogic.intVersion
-import dev.jellyfinnative.buildlogic.libs
+import dev.jellyboost.buildlogic.configureKotlinJvmTarget
+import dev.jellyboost.buildlogic.intVersion
+import dev.jellyboost.buildlogic.libs
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project

@@ -84,13 +84,13 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlintPlugin" }
 baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBenchmark" }
 
 # Convention plugins provided by the `build-logic` included build
-jellyfinnative-android-application = { id = "jellyfinnative.android.application" }
-jellyfinnative-android-library = { id = "jellyfinnative.android.library" }
-jellyfinnative-android-library-compose = { id = "jellyfinnative.android.library.compose" }
-jellyfinnative-android-feature = { id = "jellyfinnative.android.feature" }
-jellyfinnative-android-hilt = { id = "jellyfinnative.android.hilt" }
-jellyfinnative-android-room = { id = "jellyfinnative.android.room" }
-jellyfinnative-kotlin-library = { id = "jellyfinnative.kotlin.library" }
+jellyboost-android-application = { id = "jellyboost.android.application" }
+jellyboost-android-library = { id = "jellyboost.android.library" }
+jellyboost-android-library-compose = { id = "jellyboost.android.library.compose" }
+jellyboost-android-feature = { id = "jellyboost.android.feature" }
+jellyboost-android-hilt = { id = "jellyboost.android.hilt" }
+jellyboost-android-room = { id = "jellyboost.android.room" }
+jellyboost-kotlin-library = { id = "jellyboost.kotlin.library" }
 
 [libraries]
 # Gradle plugin artifacts (for build-logic convention plugins)

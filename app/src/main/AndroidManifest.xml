@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".JellyfinNativeApplication"
+        android:name=".JellyboostApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,7 +15,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.JellyfinNative.Starting">
+        android:theme="@style/Theme.Jellyboost.Starting">
 
         <activity
             android:name=".MainActivity"
@@ -24,14 +24,14 @@
             android:launchMode="singleTop"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
-            android:theme="@style/Theme.JellyfinNative.Starting">
+            android:theme="@style/Theme.Jellyboost.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- WorkManager is initialised on demand through Hilt (see JellyfinNativeApplication). -->
+        <!-- WorkManager is initialised on demand through Hilt (see JellyboostApplication). -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"

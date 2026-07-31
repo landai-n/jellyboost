@@ -1,13 +1,13 @@
-# Plan: jellyfin-native — fully native Android Jellyfin client
+# Plan: Jellyboost — fully native Android Jellyfin client
 
 ## Context
-The official jellyfin-android app is a WebView wrapper around jellyfin-web with some native pieces. We are building **jellyfin-native**: a brand-new, 100% native Android app (zero WebView) with a UI similar to jellyfin-web, whose differentiator is **seamless online/offline integration in one UI** — downloaded media visible and playable in the same home/library/detail screens, in-app download tracking (progress, queue), and downloaded-media management (list, storage used, delete, storage location). Designed for long autonomous development with enforced quality gates.
+The official jellyfin-android app is a WebView wrapper around jellyfin-web with some native pieces. We are building **Jellyboost**: a brand-new, 100% native Android app (zero WebView) with a UI similar to jellyfin-web, whose differentiator is **seamless online/offline integration in one UI** — downloaded media visible and playable in the same home/library/detail screens, in-app download tracking (progress, queue), and downloaded-media management (list, storage used, delete, storage location). Designed for long autonomous development with enforced quality gates.
 
 ## Confirmed decisions
 - **v1 scope:** Movies & TV shows only. Extras: Quick Connect login. NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI, transcoded downloads, Android TV.
-- **Location:** standalone Gradle project `.` (sibling of jellyfin-android), own git repo.
+- **Location:** standalone Gradle project `.` (sibling of jellyfin-android), own git repo — the on-disk directory keeps its original name; only the project/app identity is `Jellyboost` (see `DECISIONS.md`, 2026-07-31 rename).
 - **Stack:** Jetpack Compose + Material 3 (dark, jellyfin-web palette), Hilt, multi-module Findroid-style, Room, Media3/ExoPlayer + jellyfin ffmpeg decoder, jellyfin-sdk-kotlin **1.8.12** (pinned; 1.9.x = Jellyfin 12 renames, migrate later), Coil 3, WorkManager, OkHttp.
-- **App ID / root package:** `dev.jellyfinnative.app` / `dev.jellyfinnative`.
+- **App ID / root package:** `dev.jellyboost.app` / `dev.jellyboost`.
 - **Offline browse scope:** downloaded items only (cached parents of downloaded items still open, e.g. series page of a downloaded episode).
 - **User-data sync conflict:** most-recent-wins — compare `lastPlayedDate` before pushing; keep newer position.
 - **Navigation:** bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar.
@@ -17,7 +17,7 @@ The official jellyfin-android app is a WebView wrapper around jellyfin-web with 
 ## Governance: plan adherence & divergence log (HARD REQUIREMENT)
 Every agent working on implementation MUST check each non-trivial decision against this plan (copied into the repo as `docs/PLAN.md`) before acting. Any divergence MUST be recorded **before or with** the diverging change in `DECISIONS.md` at the repo root with: **date (YYYY-MM-DD), scope (files/feature), what the plan said, what was done instead, reason**. No silent divergence. Design choices already marked [D] below are pre-approved and seeded into DECISIONS.md at M0.
 
-## Quality infrastructure (built in M0, lives in the jellyfin-native repo)
+## Quality infrastructure (built in M0, lives in the Jellyboost repo)
 **Governance files:** `docs/PLAN.md` (this plan), `DECISIONS.md` (divergence log + template), `STATUS.md` (current milestone, done/next, known issues), `CLAUDE.md` (governance rules, pointers, build commands, skill expectations).
 
 **Hooks** (`.claude/settings.json` + `.claude/hooks/*.sh`; state markers in gitignored `.claude/state/`):
@@ -36,7 +36,7 @@ Every agent working on implementation MUST check each non-trivial decision again
 **Testing:** unit tests accompany every repository/ViewModel/mapper (JUnit5 + MockK + Turbine); densest coverage on download pipeline + offline sync. `testDebugUnitTest` runs in every /verify.
 
 ## Project skeleton
-Modules (Findroid-spirit; features never depend on each other; cross-feature nav via routes in `:core:common`). `build-logic/convention/` plugins (`jellyfinnative.android.application|library|library.compose|feature|hilt|room`, `.kotlin.library`, `.detekt`):
+Modules (Findroid-spirit; features never depend on each other; cross-feature nav via routes in `:core:common`). `build-logic/convention/` plugins (`jellyboost.android.application|library|library.compose|feature|hilt|room`, `.kotlin.library`, `.detekt`):
 
 | Module | Responsibility |
 |---|---|

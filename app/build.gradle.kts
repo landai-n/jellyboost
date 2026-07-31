@@ -1,8 +1,8 @@
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.jellyfinnative.android.application)
-    alias(libs.plugins.jellyfinnative.android.hilt)
+    alias(libs.plugins.jellyboost.android.application)
+    alias(libs.plugins.jellyboost.android.hilt)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.baselineprofile)
@@ -48,10 +48,10 @@ val releaseSigning: Map<String, String>? =
     }
 
 android {
-    namespace = "dev.jellyfinnative.app"
+    namespace = "dev.jellyboost.app"
 
     defaultConfig {
-        applicationId = "dev.jellyfinnative.app"
+        applicationId = "dev.jellyboost.app"
     }
 
     signingConfigs {
@@ -119,10 +119,10 @@ android {
  * here because `:app` applies the Compose plugin directly rather than through that convention — and
  * `:app` is where the screens the reports are wanted for actually live, so leaving it out would
  * have made the flag report on everything except the interesting half. Opt in with
- * `./gradlew assembleDebug -Pjellyfinnative.composeCompilerMetrics=true`; output lands under
+ * `./gradlew assembleDebug -Pjellyboost.composeCompilerMetrics=true`; output lands under
  * `app/build/compose-metrics` and `app/build/compose-reports`.
  */
-if (providers.gradleProperty("jellyfinnative.composeCompilerMetrics").getOrElse("false").toBoolean()) {
+if (providers.gradleProperty("jellyboost.composeCompilerMetrics").getOrElse("false").toBoolean()) {
     composeCompiler {
         metricsDestination.set(layout.buildDirectory.dir("compose-metrics"))
         reportsDestination.set(layout.buildDirectory.dir("compose-reports"))

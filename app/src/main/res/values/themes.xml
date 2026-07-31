@@ -5,7 +5,7 @@
         Compose owns all in-app colours; this theme only covers the window background
         and the pre-Compose splash frame.
     -->
-    <style name="Theme.JellyfinNative" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Jellyboost" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="android:colorBackground">@color/background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -13,10 +13,10 @@
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
-    <style name="Theme.JellyfinNative.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.Jellyboost.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="postSplashScreenTheme">@style/Theme.JellyfinNative</item>
+        <item name="postSplashScreenTheme">@style/Theme.Jellyboost</item>
         <!--
             Theme.SplashScreen's DayNight parent otherwise follows the SYSTEM's light/dark setting
             (android:Theme.DeviceDefault.DayNight), independently of the app's own always-dark theme.

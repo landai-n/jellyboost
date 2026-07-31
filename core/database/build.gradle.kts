@@ -1,12 +1,12 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.android.library)
-    alias(libs.plugins.jellyfinnative.android.hilt)
-    alias(libs.plugins.jellyfinnative.android.room)
+    alias(libs.plugins.jellyboost.android.library)
+    alias(libs.plugins.jellyboost.android.hilt)
+    alias(libs.plugins.jellyboost.android.room)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "dev.jellyfinnative.core.database"
+    namespace = "dev.jellyboost.core.database"
 }
 
 dependencies {

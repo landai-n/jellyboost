@@ -6,7 +6,7 @@ on screen before the network is involved at all, and it works identically with n
 
 ## The contract
 
-`UserDataRepository` (`:data`, `dev.jellyfinnative.data.userdata`) does the same four things for
+`UserDataRepository` (`:data`, `dev.jellyboost.data.userdata`) does the same four things for
 every operation, in this order (docs/PLAN.md, "Data layer"):
 
 1. **Upsert Room** — `UserDataEntity` with `toBeSynced = true` and a fresh `updatedAt`.
@@ -247,7 +247,7 @@ back on the retry.
 The last two are what deliver M8's definition of done: on an airplane-mode session there is no failed
 push to enqueue anything, and `NetworkType.CONNECTED` only re-runs work that was enqueued in the
 first place. `UserDataSyncTrigger` collects `ConnectionStateProvider.state` on the application scope
-— started from `JellyfinNativeApplication.onCreate`, so it works with no screen showing — and guards
+— started from `JellyboostApplication.onCreate`, so it works with no screen showing — and guards
 the enqueue on `countPendingSync() > 0`.
 
 `WorkManagerUserDataSyncScheduler` swallows and logs an enqueue failure: losing the scheduled retry

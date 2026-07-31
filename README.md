@@ -1,6 +1,6 @@
-# jellyfin-native
+# Jellyboost
 
-**jellyfin-native** is a 100% native Android client for [Jellyfin](https://jellyfin.org) — no
+**Jellyboost** is a 100% native Android client for [Jellyfin](https://jellyfin.org) — no
 WebView anywhere. It is built with Jetpack Compose and Material 3 on a Findroid-style multi-module
 architecture (Hilt, Room, Media3/ExoPlayer with the Jellyfin ffmpeg decoder, jellyfin-sdk-kotlin,
 WorkManager, OkHttp), and reproduces the look and information architecture of jellyfin-web's dark
@@ -28,7 +28,7 @@ source ../env.sh
 ./gradlew testDebugUnitTest      # unit tests (JUnit 5)
 ```
 
-The debug build uses the application id `dev.jellyfinnative.app.debug`, so it can be installed
+The debug build uses the application id `dev.jellyboost.app.debug`, so it can be installed
 alongside a release build.
 
 ## Module layout
@@ -47,5 +47,5 @@ alongside a release build.
 | `:feature:*` | `auth`, `home`, `library`, `detail`, `search`, `downloads`, `settings` screens |
 
 Build conventions are shared through the `build-logic` included build
-(`jellyfinnative.android.application`, `.android.library`, `.android.library.compose`,
+(`jellyboost.android.application`, `.android.library`, `.android.library.compose`,
 `.android.feature`, `.android.hilt`, `.android.room`, `.kotlin.library`).

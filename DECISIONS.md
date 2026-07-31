@@ -427,9 +427,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** Each is a case the plan's sentence does not decide and the device walk would hit. The comparison itself is deliberately `updatedAt` against the server's `lastPlayedDate` rather than the two `lastPlayedDate`s: a favourite toggle never touches `lastPlayedDate`, so comparing those would make every offline favourite lose to a film watched last week. Both sides go through `SdkDateTime`'s helpers, since the SDK's `LocalDateTime` is zone-aware in both directions.
 
 ## 2026-07-29 — M8: the sync drain is also triggered from app start and from reconnection
-- **Scope:** `:data` (`userdata/UserDataSyncTrigger`), `:app` (`JellyfinNativeApplication`)
+- **Scope:** `:data` (`userdata/UserDataSyncTrigger`), `:app` (`JellyboostApplication`)
 - **Plan said:** "`UserDataRepositoryImpl` — … else/on failure enqueue `UserDataSyncWorker` (unique work, NetworkType.CONNECTED, backoff)." The failed local push is the only enqueue the plan names.
-- **Done instead:** A `UserDataSyncTrigger` singleton collects `ConnectionStateProvider.state`, and on every transition into `ONLINE` — including the first emission, which is the app-start check — enqueues the worker **if** `countPendingSync() > 0`. `JellyfinNativeApplication.onCreate` starts it.
+- **Done instead:** A `UserDataSyncTrigger` singleton collects `ConnectionStateProvider.state`, and on every transition into `ONLINE` — including the first emission, which is the app-start check — enqueues the worker **if** `countPendingSync() > 0`. `JellyboostApplication.onCreate` starts it.
 - **Reason:** The plan's single trigger cannot deliver the milestone's own definition of done. The DoD is "airplane-mode playback to 50% → **reconnect** → server shows 50% resume", and on that path there is no failed push to enqueue anything: the app was offline, the positions were written locally without ever attempting the network, and by the time connectivity returns the process may have been killed. `NetworkType.CONNECTED` only re-runs work that was enqueued in the first place. The count query keeps a normal launch — nothing pending — at one indexed `COUNT(*)` and no scheduled work. It lives in `Application.onCreate` rather than in a ViewModel because a device coming back online with the app backgrounded is precisely the case that matters.
 
 ## 2026-07-29 — M8 fix: session gate hoisted to `:core:network` for the sync worker
@@ -556,7 +556,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** POLISH.md — a permanent full-width strip is a lot of screen for a fact the user usually already knows, and offline is not a transient state in this app: a user on a plane or off the LAN sees it for the whole session. An icon states it continuously in space the bar already occupies, and a tap still gets the full sentence and the fix. Deleting the component rather than leaving it unused keeps `:core:ui` a set of things the app actually draws.
 
 ## 2026-07-29 — M9: lazy media lists declare `contentType`, and grid cells size themselves
-- **Scope:** `:core:ui` (`MediaRow`, `MediaCardArtwork.cardWidth`, `PosterCard`, `ThumbCard`, `LibraryCard`), `:feature:home`, `:feature:search`, `:feature:library`, `:app` (`JellyfinNativeApplication`)
+- **Scope:** `:core:ui` (`MediaRow`, `MediaCardArtwork.cardWidth`, `PosterCard`, `ThumbCard`, `LibraryCard`), `:feature:home`, `:feature:search`, `:feature:library`, `:app` (`JellyboostApplication`)
 - **Plan said:** docs/PLAN.md's performance targets ("home first paint < 1s warm", "scrolling stays smooth") and M3's "a >500-item library scrolls clean"; nothing about how.
 - **Done instead:** three mechanical changes. (1) Every lazy list that draws media now declares a `contentType` — the home and search `LazyColumn`s per row, `MediaRow`'s `LazyRow` per card (new `contentType` parameter, defaulted so no caller is forced to change), and both grids per cell — so a lazy layout can reuse a scrolled-off node instead of composing a new one. (2) `PosterCard`/`ThumbCard`/`LibraryCard` accept `width = Dp.Unspecified` to fill the space they are given, and the two grids use it; this deletes the `BoxWithConstraints` that wrapped **every** cell, i.e. one subcomposition per visible poster on every scroll. (3) The app now configures the Coil `ImageLoader` it had been leaving on Coil 3's bare defaults: 25 % of the heap as memory cache, a 256 MB disk cache under `cacheDir/image_cache`, and a 150 ms crossfade. Coil 3 gives a hand-built loader no disk cache at all unless asked, so artwork that fell out of memory was being re-fetched from the server on every scroll back.
 - **Reason:** POLISH.md, "media list scrolling is not smooth". These are the standard, low-risk wins and none of them touch a ViewModel, a data flow or a fetch policy. Recorded here because the plan's `:core:ui` component contracts (a card takes a fixed `Dp` width) and its silence on image-loader configuration both changed.
@@ -617,9 +617,9 @@ Seeded from the approved plan; listed for traceability, no divergence:
 <!-- BEGIN downloaded-metadata sync -->
 
 ## 2026-07-29 — downloaded items' cached metadata is kept current by a standing sync, not only at enqueue time
-- **Scope:** `:data:downloads` (new `DownloadedMetadataRefresher` + `DownloadedMetadataRefresherTest`), `:app` (`JellyfinNativeApplication`), `docs/features/offline-read.md`, `docs/features/downloads.md`
+- **Scope:** `:data:downloads` (new `DownloadedMetadataRefresher` + `DownloadedMetadataRefresherTest`), `:app` (`JellyboostApplication`), `docs/features/offline-read.md`, `docs/features/downloads.md`
 - **Plan said:** nothing about a download's metadata after it is downloaded. docs/PLAN.md line 57 defines `ItemEntity` as structured columns plus the full `BaseItemDto` blob with `source: BROWSE_CACHE|DOWNLOAD` ("DOWNLOAD rows never evicted"); the download pipeline (lines 83–86) writes that row **once**, at enqueue, and the only lifecycle event it then specifies is the delete cascade. The plan's one refreshing write is the browse-cache path, which the M6 offline-read rule explicitly forbids from touching a download's row. Read literally, a download's metadata is written once and is correct forever.
-- **Done instead:** a new `@Singleton` `DownloadedMetadataRefresher` in `:data:downloads`, started from `JellyfinNativeApplication.onCreate` beside `UserDataSyncTrigger`. Once per stretch of connectivity it reads `DownloadDao.allItemIds()`, fetches the full `DOWNLOAD_FIELDS` DTOs via `DownloadApi.getFullItems` (chunked at 50), fetches the series/season parents of what came back, and upserts the lot straight to `ItemDao` with `source = DOWNLOAD` — the same write `DownloadEnqueuer` performs for a fresh download, and deliberately **not** through `BrowseCacheWriter`. It borrows `UserDataSyncTrigger`'s trigger shape exactly (collect `ConnectionStateProvider.state`, map to online-ness, `distinctUntilChanged`, act on every `true` **including** the initial value), so one code path serves both "started online" and "came back online". Every failure is swallowed and logged; the next offline → online edge retries.
+- **Done instead:** a new `@Singleton` `DownloadedMetadataRefresher` in `:data:downloads`, started from `JellyboostApplication.onCreate` beside `UserDataSyncTrigger`. Once per stretch of connectivity it reads `DownloadDao.allItemIds()`, fetches the full `DOWNLOAD_FIELDS` DTOs via `DownloadApi.getFullItems` (chunked at 50), fetches the series/season parents of what came back, and upserts the lot straight to `ItemDao` with `source = DOWNLOAD` — the same write `DownloadEnqueuer` performs for a fresh download, and deliberately **not** through `BrowseCacheWriter`. It borrows `UserDataSyncTrigger`'s trigger shape exactly (collect `ConnectionStateProvider.state`, map to online-ness, `distinctUntilChanged`, act on every `true` **including** the initial value), so one code path serves both "started online" and "came back online". Every failure is swallowed and logged; the next offline → online edge retries.
 - **Reason:** "written once and correct forever" is false the moment anyone edits the library. A retitled film, an identify/refresh pass that replaces the artwork tags, a corrected overview, a renumbered episode, a renamed show — none of it ever reaches a downloaded item, so the offline library drifts permanently away from the library it is a copy of. The plan simply does not cover the case; this fills the gap rather than contradicting it, and it costs one batched request per online stretch. The immediate trigger was the lean-write bug (an older build let a browse-list DTO replace the rich blob, leaving downloaded films with a blank offline detail page): `OnlineJellyfinRepository.getItem` with `full = true` already repairs such a row, but only the one the user happens to open, so a device that upgraded across the bug would need a manual visit per download. The first pass of this sync heals all of them at once — which is a **side effect**, not the purpose, and the KDoc and both feature docs say so in as many words so that a future reader who knows the bug is fixed does not delete the class as spent migration code.
 - **Two deliberate departures from `DownloadEnqueuer`, whose write this otherwise mirrors:**
   - `cachedAt` is **preserved** for a row that already exists, and stamped `now` only for a row this pass creates (a parent never cached). `cachedAt` is the offline "recently downloaded" ordering key, so re-stamping the whole table would reshuffle the offline home into refresh order on every sync. The enqueuer writes `now` because for a fresh download `now` genuinely is the download time.
@@ -1479,7 +1479,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `by lazy` so tests that never touch it need no stub); `contentType` on the two
   heterogeneous LazyColumns; player clock/scrubber `String.format` keyed on the
   displayed second + lambda `offset {}`; property-gated report-only Compose
-  compiler metrics (`-Pjellyfinnative.composeCompilerMetrics=true`); notification
+  compiler metrics (`-Pjellyboost.composeCompilerMetrics=true`); notification
   rebuild guard keyed on user-visible `NotificationProgress`; storage locations
   re-keyed on `downloadShape()`; trickplay Coil requests get token-stripped
   `diskCacheKey`/`memoryCacheKey`; download notification `VISIBILITY_PRIVATE` +
@@ -1614,7 +1614,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 ## 2026-07-30 — M11 SyncPlay milestone approved (beyond plan v1 scope)
 
 - **Scope:** new milestone M11 in `docs/PLAN.md`; future package
-  `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/`, a
+  `player/src/main/kotlin/dev/jellyboost/player/syncplay/`, a
   `SyncPlaySession` contract in `:core:common`, and a narrow exception in
   `player/.../report/PlaybackReporter.kt`. Full plan:
   `~/.claude/plans/would-it-be-possible-immutable-meadow.md` (M11 summary
@@ -1664,7 +1664,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 <!-- END -->
 
 ## 2026-07-30 — M11 Phase 1: SyncPlay protocol shapes follow the SDK, not the plan sketch
-- **Scope:** new package `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/`
+- **Scope:** new package `player/src/main/kotlin/dev/jellyboost/player/syncplay/`
   (`model/SyncPlayModels.kt`, `SyncPlayDtoMapping.kt`, `SyncPlayEnumMapping.kt`,
   `api/`, `socket/`, `time/SyncPlayTimeSync.kt`, `di/SyncPlayModule.kt`);
   `data/.../SdkDateTime.kt` `internal` → `public` (already in the plan, listed
@@ -1925,7 +1925,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
   closing a hole the plan's wording leaves open.
 
 ## 2026-07-30 — M11 Phase 5: the Groups action lives in `:app`'s combined bar, not `:feature:home`
-- **Scope:** `app/src/main/kotlin/dev/jellyfinnative/app/AppTopBar.kt`, `AppScaffold.kt`,
+- **Scope:** `app/src/main/kotlin/dev/jellyboost/app/AppTopBar.kt`, `AppScaffold.kt`,
   `JellyfinNavHost.kt`, new `SyncPlayBadgeViewModel.kt` and `SyncPlayLaunchViewModel.kt`;
   `core/common/.../Routes.kt` (`Routes.SyncPlay`); new
   `player/.../syncplay/ui/SyncPlayGroupsScreen.kt` and `SyncPlayGroupsViewModel.kt`.
@@ -2263,7 +2263,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Scope:** `player/src/main/AndroidManifest.xml`, `player/.../syncplay/presence/` (new package:
   `SyncPlayPresenceService`, `SyncPlayPresenceCoordinator`, `SyncPlayGroupPresence`,
   `SyncPlayPresenceNotificationReceiver`), `player/.../session/PlaybackServiceState.kt`,
-  `app/.../JellyfinNativeApplication.kt`, `gradle/libs.versions.toml`, `player/build.gradle.kts`
+  `app/.../JellyboostApplication.kt`, `gradle/libs.versions.toml`, `player/build.gradle.kts`
 - **Plan said:** `docs/PLAN.md` gives `:player` exactly one service — `PlaybackService`, the Media3
   `MediaSessionService` that keeps *playback* alive in the background. `docs/notes/syncplay-m11-plan.md`
   key decision 5 says membership outlives the player screen, but names no mechanism for keeping the
@@ -2315,7 +2315,7 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Seams:** `PlaybackServiceState` (a `@Singleton` `StateFlow<Boolean>` written by `PlaybackService`'s
   `onCreate`/`onDestroy`) is how the presence service learns that playback has taken over;
   `syncPlayPresenceDemanded(state, playbackRunning)` is a pure function so the whole start/stop rule is
-  unit-tested without the framework. The coordinator is started from `JellyfinNativeApplication.onCreate`,
+  unit-tested without the framework. The coordinator is started from `JellyboostApplication.onCreate`,
   the same seam `userDataSyncTrigger` and `downloadedMetadataRefresher` already use, because it has to run
   whether or not any screen is showing.
 
@@ -2778,3 +2778,33 @@ Seeded from the approved plan; listed for traceability, no divergence:
   observed), so two of them added ~11 minutes after the film itself had finished. Overlapping
   them with the much longer media transcode hides that time; capping the lane at one audio
   job keeps the server's CPU for the media encode.
+
+## 2026-07-31 — Project and app renamed to Jellyboost (`dev.jellyboost`)
+
+- **Scope:** whole repo — `settings.gradle.kts` (`rootProject.name`), all 18 module
+  `namespace`s and `app/build.gradle.kts` `applicationId`, the 34 `dev/jellyfinnative`
+  source directories, the `jellyboost.android.*` convention-plugin IDs, the Room schema
+  directory, `baseline-prof.txt`, every doc (`docs/PLAN.md`, `README.md`, `STATUS.md`,
+  `CLAUDE.md`, `.claude/skills`, CI/detekt configs) and the user-visible strings.
+- **Plan said:** the project is named **jellyfin-native**, `applicationId`
+  `dev.jellyfinnative.app` (docs/PLAN.md, throughout).
+- **Done instead:** the product is **Jellyboost**. `applicationId` /
+  namespace root `dev.jellyfinnative` → `dev.jellyboost`; `JellyfinNative*` types →
+  `Jellyboost*` (incl. `JellyboostApplication`, `JellyboostTheme`); Gradle project name
+  `jellyboost`; `app_name` and the auth-screen title now read "Jellyboost"; the
+  server-facing `CLIENT_NAME` / device-profile `PROFILE_NAME` (shown in Jellyfin
+  Dashboard→Devices) are "Jellyboost"; the Room file is `jellyboost.db`. The on-disk
+  repo directory stays `jellyfin-native` (user decision) — only the identity changed;
+  `docs/PLAN.md`'s Location line is annotated accordingly.
+  Names referring to **Jellyfin the server/protocol** are deliberately untouched:
+  `JellyfinRepository`, `JellyfinApiFacade`, `JellyfinItem`, `JellyfinDatabase`,
+  `JellyfinAuthInterceptor`, `JellyfinAsyncImage`, `JellyfinColors`/`Gradients`,
+  `JellyfinNavHost`, and the Quick Connect instruction string ("Open Jellyfin on a
+  device you are already signed in on…"), which names the other app on purpose.
+- **Consequence:** the new `applicationId` makes this a distinct install — an existing
+  debug/release build is not upgraded in place, and its downloads
+  (`Android/data/dev.jellyfinnative.app/files`) and database are not migrated. Any
+  device with the old build must be uninstalled or will simply co-exist. The captured
+  baseline profile was rewritten mechanically (class descriptors only), so it stays
+  valid without a re-capture.
+- **Reason:** user request — the product is being named Jellyboost.

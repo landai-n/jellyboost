@@ -305,7 +305,7 @@ because an offline session batches several into one pending row.
 `UserDataSyncTrigger` collects `ConnectionStateProvider.state`; the flow replays its current value, so
 the first collection *is* the app-start check and every later `false → true` edge is the reconnect
 one. A `countPendingSync()` guard keeps a normal launch at one indexed `COUNT(*)` and no scheduled
-work. `JellyfinNativeApplication.onCreate` starts it — from the `Application`, not a ViewModel,
+work. `JellyboostApplication.onCreate` starts it — from the `Application`, not a ViewModel,
 because a device coming back online with the app backgrounded is the case that matters.
 
 Scheduling itself is unchanged from M4: unique work named `user-data-sync`, `ExistingWorkPolicy.KEEP`

@@ -1,9 +1,9 @@
 plugins {
-    alias(libs.plugins.jellyfinnative.android.library.compose)
+    alias(libs.plugins.jellyboost.android.library.compose)
 }
 
 android {
-    namespace = "dev.jellyfinnative.core.ui"
+    namespace = "dev.jellyboost.core.ui"
 }
 
 dependencies {

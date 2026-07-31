@@ -276,8 +276,9 @@ fun ItemDetailContent(
                 DetailSections(
                     state = state,
                     detail = detail,
-                    isWide = maxWidth >= WIDE_BREAKPOINT,
+                    isWide = isWideLayout(maxWidth = maxWidth, maxHeight = maxHeight),
                     backdropHeight = backdropHeight(maxWidth = maxWidth, maxHeight = maxHeight),
+                    compact = maxWidth < COMPACT_MAX_WIDTH,
                     onItemClick = onItemClick,
                     onPlay = onPlay,
                     actions = actions,
@@ -294,6 +295,7 @@ private fun DetailSections(
     detail: JellyfinItem,
     isWide: Boolean,
     backdropHeight: Dp,
+    compact: Boolean,
     onItemClick: (JellyfinItem) -> Unit,
     onPlay: (JellyfinItem) -> Unit,
     actions: DetailActionHandlers,
@@ -376,6 +378,7 @@ private fun DetailSections(
                     onPlay = { onPlay(episode) },
                     onLongClick = { onSelection(SelectionIntent.Toggle(id)) },
                     selected = selected,
+                    compact = compact,
                 )
             }
         }
@@ -460,6 +463,20 @@ private const val SECTION_EPISODES = "section-episodes"
 private const val SECTION_SIMILAR = "section-similar"
 
 /**
+ * Whether the header lays out side by side (poster beside facts) rather than stacked.
+ *
+ * Width alone used to decide this, but a phone in landscape (e.g. 800×360dp) clears
+ * [WIDE_BREAKPOINT] on width while being far too short to afford a side-by-side header on top of
+ * a fixed-height banner — the pair together left the header crammed into ~30dp of remaining
+ * height. [WIDE_MIN_HEIGHT] rules that shape out: every tablet orientation clears it, phone
+ * landscape never does.
+ */
+internal fun isWideLayout(
+    maxWidth: Dp,
+    maxHeight: Dp,
+): Boolean = maxWidth >= WIDE_BREAKPOINT && maxHeight >= WIDE_MIN_HEIGHT
+
+/**
  * How tall the backdrop banner is for a viewport of [maxWidth] × [maxHeight].
  *
  * In **portrait** the banner is a share of the viewport *height* rather than a fixed number of dp:
@@ -469,28 +486,47 @@ private const val SECTION_SIMILAR = "section-similar"
  * fixed one — and [MAX_BACKDROP_HEIGHT] keeps it from pushing the facts and Play button off-screen
  * on a very tall device.
  *
- * In **landscape** vertical space is what is scarce, so the width-based height is used unchanged.
+ * In **landscape** vertical space is what is scarce, so the width-based height is used unchanged —
+ * *unless* the viewport is also short ([WIDE_MIN_HEIGHT]), which only phone landscape is: there the
+ * fixed [WIDE_BACKDROP_HEIGHT] would eat ~90% of the screen, so the banner instead takes a share of
+ * the (scarce) height, the same way the portrait branch does.
  */
-private fun backdropHeight(
+internal fun backdropHeight(
     maxWidth: Dp,
     maxHeight: Dp,
 ): Dp {
     val fixed = if (maxWidth >= WIDE_BREAKPOINT) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight
     val isPortrait = maxHeight > maxWidth
-    return if (isPortrait) {
-        (maxHeight * PORTRAIT_BACKDROP_FRACTION).coerceIn(fixed, MAX_BACKDROP_HEIGHT)
-    } else {
-        fixed
+    return when {
+        isPortrait -> (maxHeight * PORTRAIT_BACKDROP_FRACTION).coerceIn(fixed, MAX_BACKDROP_HEIGHT)
+        maxHeight < WIDE_MIN_HEIGHT -> maxHeight * COMPACT_LANDSCAPE_BACKDROP_FRACTION
+        else -> fixed
     }
 }
 
 /** Above this width the header lays out side by side — roughly a tablet in portrait. */
 private val WIDE_BREAKPOINT = 720.dp
 
+/**
+ * Below this viewport height, the side-by-side header and the fixed-height banner are both off the
+ * table regardless of width — phone landscape is ~330-410dp tall, and every tablet orientation
+ * clears it.
+ */
+private val WIDE_MIN_HEIGHT = 480.dp
+
 private val WIDE_BACKDROP_HEIGHT = 320.dp
 
 /** Share of the viewport height the banner claims in portrait. */
 private const val PORTRAIT_BACKDROP_FRACTION = 0.40f
 
+/** Share of the viewport height the banner claims in a short (phone) landscape. */
+private const val COMPACT_LANDSCAPE_BACKDROP_FRACTION = 0.5f
+
 /** Ceiling for the proportional portrait banner, so the header below it stays in view. */
 private val MAX_BACKDROP_HEIGHT = 560.dp
+
+/**
+ * Below this width, the episode row's 160dp thumb would leave text too little room to hold a
+ * title — [EpisodeRow] switches to its narrower `compact` thumb instead.
+ */
+private val COMPACT_MAX_WIDTH = 480.dp

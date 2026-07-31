@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Deskargatuta</string>
+    <string name="badge_download_queued">Deskargatzeko ilaran</string>
+    <string name="badge_download_paused">Deskarga pausatuta</string>
+    <string name="badge_download_failed">Deskargak huts egin du</string>
+    <string name="media_row_see_all">Ikusi guztiak</string>
+    <string name="media_card_watched">Ikusita</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d hautatuta</item>
+        <item quantity="other">%1$d hautatuta</item>
+    </plurals>
+    <string name="selection_close">Garbitu hautapena</string>
+    <string name="selection_select_all">Hautatu guztiak</string>
+    <string name="selection_mark_watched">Markatu ikusita gisa</string>
+    <string name="selection_mark_unwatched">Markatu ikusi gabe gisa</string>
+    <string name="selection_download">Deskargatu</string>
+    <string name="selection_item_selected">Hautatuta</string>
+    <string name="selection_item_not_selected">Hautatu gabe</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d ikusita gisa markatuta</item>
+        <item quantity="other">%1$d ikusita gisa markatuta</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d ikusita gisa markatuta, %2$d huts egin du</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Ezin izan da %1$d elementu ikusita gisa markatu</item>
+        <item quantity="other">Ezin izan dira %1$d elementu ikusita gisa markatu</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d ikusi gabe gisa markatuta</item>
+        <item quantity="other">%1$d ikusi gabe gisa markatuta</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d ikusi gabe gisa markatuta, %2$d huts egin du</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Ezin izan da %1$d elementu ikusi gabe gisa markatu</item>
+        <item quantity="other">Ezin izan dira %1$d elementu ikusi gabe gisa markatu</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d deskargetara gehituta</item>
+        <item quantity="other">%1$d deskargetara gehituta</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d deskargetara gehituta, %2$d huts egin du</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Ezin izan da %1$d elementu deskargetara gehitu</item>
+        <item quantity="other">Ezin izan dira %1$d elementu deskargetara gehitu</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d deskargetara gehituta — %2$d dagoeneko gailu honetan daude</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d elementu dagoeneko gailu honetan dago</item>
+        <item quantity="other">%1$d elementu dagoeneko gailu honetan daude</item>
+    </plurals>
+</resources>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Yükləndi</string>
+    <string name="badge_download_queued">Yükləmə növbəsində</string>
+    <string name="badge_download_paused">Yükləmə dayandırıldı</string>
+    <string name="badge_download_failed">Yükləmə uğursuz oldu</string>
+    <string name="media_row_see_all">Hamısına bax</string>
+    <string name="media_card_watched">İzlənilib</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d seçildi</item>
+        <item quantity="other">%1$d seçildi</item>
+    </plurals>
+    <string name="selection_close">Seçimi təmizlə</string>
+    <string name="selection_select_all">Hamısını seç</string>
+    <string name="selection_mark_watched">İzlənilib kimi qeyd et</string>
+    <string name="selection_mark_unwatched">İzlənilməyib kimi qeyd et</string>
+    <string name="selection_download">Yüklə</string>
+    <string name="selection_item_selected">Seçildi</string>
+    <string name="selection_item_not_selected">Seçilməyib</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d izlənilib kimi qeyd edildi</item>
+        <item quantity="other">%1$d izlənilib kimi qeyd edildi</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d izlənilib kimi qeyd edildi, %2$d uğursuz oldu</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d element izlənilib kimi qeyd edilə bilmədi</item>
+        <item quantity="other">%1$d element izlənilib kimi qeyd edilə bilmədi</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d izlənilməyib kimi qeyd edildi</item>
+        <item quantity="other">%1$d izlənilməyib kimi qeyd edildi</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d izlənilməyib kimi qeyd edildi, %2$d uğursuz oldu</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d element izlənilməyib kimi qeyd edilə bilmədi</item>
+        <item quantity="other">%1$d element izlənilməyib kimi qeyd edilə bilmədi</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d yükləmələrə əlavə edildi</item>
+        <item quantity="other">%1$d yükləmələrə əlavə edildi</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d yükləmələrə əlavə edildi, %2$d uğursuz oldu</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d element yükləmələrə əlavə edilə bilmədi</item>
+        <item quantity="other">%1$d element yükləmələrə əlavə edilə bilmədi</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d yükləmələrə əlavə edildi — %2$d artıq bu cihazdadır</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element artıq bu cihazdadır</item>
+        <item quantity="other">%1$d element artıq bu cihazdadır</item>
+    </plurals>
+</resources>

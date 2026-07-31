@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">ఇంకా చూడటానికి ఏమీ లేదు. సర్వర్‌లోని మీ లైబ్రరీలకు మీడియాను జోడించండి.</string>
+    <string name="home_empty_refresh">రిఫ్రెష్ చేయండి</string>
+
+    <string name="home_section_my_media">నా మీడియా</string>
+    <string name="home_section_continue_watching">చూడటం కొనసాగించండి</string>
+    <string name="home_section_next_up">తర్వాత రానున్నవి</string>
+    <string name="home_section_latest">తాజా %1$s</string>
+</resources>

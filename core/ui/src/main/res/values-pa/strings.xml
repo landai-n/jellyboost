@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ਡਾਊਨਲੋਡ ਹੋ ਗਿਆ</string>
+    <string name="badge_download_queued">ਡਾਊਨਲੋਡ ਲਈ ਕਤਾਰ ਵਿੱਚ</string>
+    <string name="badge_download_paused">ਡਾਊਨਲੋਡ ਰੋਕਿਆ ਗਿਆ</string>
+    <string name="badge_download_failed">ਡਾਊਨਲੋਡ ਅਸਫਲ ਰਿਹਾ</string>
+
+    <string name="media_row_see_all">ਸਾਰੇ ਦੇਖੋ</string>
+    <string name="media_card_watched">ਦੇਖਿਆ ਗਿਆ</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ਚੁਣਿਆ ਗਿਆ</item>
+        <item quantity="other">%1$d ਚੁਣੇ ਗਏ</item>
+    </plurals>
+    <string name="selection_close">ਚੋਣ ਸਾਫ਼ ਕਰੋ</string>
+    <string name="selection_select_all">ਸਾਰੇ ਚੁਣੋ</string>
+    <string name="selection_mark_watched">ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ</string>
+    <string name="selection_mark_unwatched">ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ</string>
+    <string name="selection_download">ਡਾਊਨਲੋਡ ਕਰੋ</string>
+
+    <string name="selection_item_selected">ਚੁਣਿਆ ਗਿਆ</string>
+    <string name="selection_item_not_selected">ਨਹੀਂ ਚੁਣਿਆ ਗਿਆ</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d ਨੂੰ ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ</item>
+        <item quantity="other">%1$d ਨੂੰ ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d ਨੂੰ ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ, %2$d ਅਸਫਲ ਰਹੇ</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d ਆਈਟਮ ਨੂੰ ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ ਨੂੰ ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਨਹੀਂ ਕੀਤੀਆਂ ਜਾ ਸਕੀਆਂ</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d ਨੂੰ ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ</item>
+        <item quantity="other">%1$d ਨੂੰ ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d ਨੂੰ ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕੀਤਾ ਗਿਆ, %2$d ਅਸਫਲ ਰਹੇ</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d ਆਈਟਮ ਨੂੰ ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ ਨੂੰ ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਨਹੀਂ ਕੀਤੀਆਂ ਜਾ ਸਕੀਆਂ</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ</item>
+        <item quantity="other">%1$d ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ, %2$d ਅਸਫਲ ਰਹੇ</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d ਆਈਟਮ ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਨਹੀਂ ਕੀਤੀਆਂ ਜਾ ਸਕੀਆਂ</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d ਨੂੰ ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ — %2$d ਪਹਿਲਾਂ ਹੀ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹਨ</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d ਆਈਟਮ ਪਹਿਲਾਂ ਹੀ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹੈ</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ ਪਹਿਲਾਂ ਹੀ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹਨ</item>
+    </plurals>
+</resources>

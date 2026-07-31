@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Empty state -->
+    <string name="home_empty_message">अभी देखने के लिए कुछ नहीं है। सर्वर पर अपनी लाइब्रेरी में मीडिया जोड़ें।</string>
+    <string name="home_empty_refresh">रीफ़्रेश करें</string>
+
+    <!-- Section titles -->
+    <string name="home_section_my_media">मेरा मीडिया</string>
+    <string name="home_section_continue_watching">देखना जारी रखें</string>
+    <string name="home_section_next_up">आगे देखें</string>
+    <string name="home_section_latest">नवीनतम %1$s</string>
+</resources>

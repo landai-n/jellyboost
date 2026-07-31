@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Shkarkuar</string>
+    <string name="badge_download_queued">Në pritje për shkarkim</string>
+    <string name="badge_download_paused">Shkarkimi u ndal përkohësisht</string>
+    <string name="badge_download_failed">Shkarkimi dështoi</string>
+
+    <string name="media_row_see_all">Shiko të gjitha</string>
+    <string name="media_card_watched">Shikuar</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d i përzgjedhur</item>
+        <item quantity="other">%1$d të përzgjedhur</item>
+    </plurals>
+    <string name="selection_close">Pastro përzgjedhjen</string>
+    <string name="selection_select_all">Përzgjidh të gjitha</string>
+    <string name="selection_mark_watched">Shëno si të shikuar</string>
+    <string name="selection_mark_unwatched">Shëno si të pashikuar</string>
+    <string name="selection_download">Shkarko</string>
+
+    <string name="selection_item_selected">Të përzgjedhur</string>
+    <string name="selection_item_not_selected">Jo të përzgjedhur</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">U shënua %1$d si i shikuar</item>
+        <item quantity="other">U shënuan %1$d si të shikuar</item>
+    </plurals>
+    <string name="selection_result_watched_partial">U shënuan %1$d si të shikuar, %2$d dështuan</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nuk u shënua dot %1$d artikull si i shikuar</item>
+        <item quantity="other">Nuk u shënuan dot %1$d artikuj si të shikuar</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">U shënua %1$d si i pashikuar</item>
+        <item quantity="other">U shënuan %1$d si të pashikuar</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">U shënuan %1$d si të pashikuar, %2$d dështuan</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nuk u shënua dot %1$d artikull si i pashikuar</item>
+        <item quantity="other">Nuk u shënuan dot %1$d artikuj si të pashikuar</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">U shtua %1$d te shkarkimet</item>
+        <item quantity="other">U shtuan %1$d te shkarkimet</item>
+    </plurals>
+    <string name="selection_result_download_partial">U shtuan %1$d te shkarkimet, %2$d dështuan</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nuk u shtua dot %1$d artikull te shkarkimet</item>
+        <item quantity="other">Nuk u shtuan dot %1$d artikuj te shkarkimet</item>
+    </plurals>
+    <string name="selection_result_download_skipped">U shtuan %1$d te shkarkimet — %2$d tashmë janë në këtë pajisje</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d artikull tashmë është në këtë pajisje</item>
+        <item quantity="other">%1$d artikuj tashmë janë në këtë pajisje</item>
+    </plurals>
+</resources>

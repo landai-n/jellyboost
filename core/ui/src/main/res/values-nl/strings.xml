@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Gedownload</string>
+    <string name="badge_download_queued">In wachtrij voor download</string>
+    <string name="badge_download_paused">Download gepauzeerd</string>
+    <string name="badge_download_failed">Download mislukt</string>
+
+    <string name="media_row_see_all">Alles bekijken</string>
+    <string name="media_card_watched">Bekeken</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d geselecteerd</item>
+        <item quantity="other">%1$d geselecteerd</item>
+    </plurals>
+    <string name="selection_close">Selectie wissen</string>
+    <string name="selection_select_all">Alles selecteren</string>
+    <string name="selection_mark_watched">Als bekeken markeren</string>
+    <string name="selection_mark_unwatched">Als onbekeken markeren</string>
+    <string name="selection_download">Downloaden</string>
+
+    <string name="selection_item_selected">Geselecteerd</string>
+    <string name="selection_item_not_selected">Niet geselecteerd</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d gemarkeerd als bekeken</item>
+        <item quantity="other">%1$d gemarkeerd als bekeken</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d gemarkeerd als bekeken, %2$d mislukt</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kon %1$d item niet als bekeken markeren</item>
+        <item quantity="other">Kon %1$d items niet als bekeken markeren</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d gemarkeerd als onbekeken</item>
+        <item quantity="other">%1$d gemarkeerd als onbekeken</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d gemarkeerd als onbekeken, %2$d mislukt</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kon %1$d item niet als onbekeken markeren</item>
+        <item quantity="other">Kon %1$d items niet als onbekeken markeren</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d toegevoegd aan downloads</item>
+        <item quantity="other">%1$d toegevoegd aan downloads</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d toegevoegd aan downloads, %2$d mislukt</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kon %1$d item niet toevoegen aan downloads</item>
+        <item quantity="other">Kon %1$d items niet toevoegen aan downloads</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d toegevoegd aan downloads – %2$d al op dit apparaat</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d item staat al op dit apparaat</item>
+        <item quantity="other">%1$d items staan al op dit apparaat</item>
+    </plurals>
+</resources>

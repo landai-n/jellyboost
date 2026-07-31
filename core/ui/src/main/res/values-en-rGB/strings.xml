@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Downloaded</string>
+    <string name="badge_download_queued">Queued for download</string>
+    <string name="badge_download_paused">Download paused</string>
+    <string name="badge_download_failed">Download failed</string>
+    <string name="media_row_see_all">See all</string>
+    <string name="media_card_watched">Watched</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selected</item>
+        <item quantity="other">%1$d selected</item>
+    </plurals>
+    <string name="selection_close">Clear selection</string>
+    <string name="selection_select_all">Select all</string>
+    <string name="selection_mark_watched">Mark watched</string>
+    <string name="selection_mark_unwatched">Mark unwatched</string>
+    <string name="selection_download">Download</string>
+    <string name="selection_item_selected">Selected</string>
+    <string name="selection_item_not_selected">Not selected</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">Marked %1$d watched</item>
+        <item quantity="other">Marked %1$d watched</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Marked %1$d watched, %2$d failed</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Couldn\'t mark %1$d item watched</item>
+        <item quantity="other">Couldn\'t mark %1$d items watched</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Marked %1$d unwatched</item>
+        <item quantity="other">Marked %1$d unwatched</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Marked %1$d unwatched, %2$d failed</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Couldn\'t mark %1$d item unwatched</item>
+        <item quantity="other">Couldn\'t mark %1$d items unwatched</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">Added %1$d to downloads</item>
+        <item quantity="other">Added %1$d to downloads</item>
+    </plurals>
+    <string name="selection_result_download_partial">Added %1$d to downloads, %2$d failed</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Couldn\'t add %1$d item to downloads</item>
+        <item quantity="other">Couldn\'t add %1$d items to downloads</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Added %1$d to downloads — %2$d already on this device</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d item is already on this device</item>
+        <item quantity="other">%1$d items are already on this device</item>
+    </plurals>
+</resources>

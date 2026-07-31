@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">تم التنزيل</string>
+    <string name="badge_download_queued">في قائمة انتظار التنزيل</string>
+    <string name="badge_download_paused">تم إيقاف التنزيل مؤقتًا</string>
+    <string name="badge_download_failed">فشل التنزيل</string>
+
+    <string name="media_row_see_all">عرض الكل</string>
+    <string name="media_card_watched">تمت مشاهدته</string>
+
+    <plurals name="selection_count">
+        <item quantity="zero">لم يتم تحديد أي عنصر</item>
+        <item quantity="one">تم تحديد عنصر واحد</item>
+        <item quantity="two">تم تحديد عنصرين</item>
+        <item quantity="few">تم تحديد %1$d عناصر</item>
+        <item quantity="many">تم تحديد %1$d عنصرًا</item>
+        <item quantity="other">تم تحديد %1$d عنصر</item>
+    </plurals>
+    <string name="selection_close">إلغاء التحديد</string>
+    <string name="selection_select_all">تحديد الكل</string>
+    <string name="selection_mark_watched">تعليم كمشاهَد</string>
+    <string name="selection_mark_unwatched">تعليم كغير مشاهَد</string>
+    <string name="selection_download">تنزيل</string>
+
+    <string name="selection_item_selected">محدد</string>
+    <string name="selection_item_not_selected">غير محدد</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="zero">لم يتم تعليم أي عنصر كمشاهَد</item>
+        <item quantity="one">تم تعليم عنصر واحد كمشاهَد</item>
+        <item quantity="two">تم تعليم عنصرين كمشاهَدين</item>
+        <item quantity="few">تم تعليم %1$d عناصر كمشاهَدة</item>
+        <item quantity="many">تم تعليم %1$d عنصرًا كمشاهَد</item>
+        <item quantity="other">تم تعليم %1$d عنصر كمشاهَد</item>
+    </plurals>
+    <string name="selection_result_watched_partial">تم تعليم %1$d كمشاهَد، وفشل %2$d</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="zero">تعذّر تعليم أي عنصر كمشاهَد</item>
+        <item quantity="one">تعذّر تعليم عنصر واحد كمشاهَد</item>
+        <item quantity="two">تعذّر تعليم عنصرين كمشاهَدين</item>
+        <item quantity="few">تعذّر تعليم %1$d عناصر كمشاهَدة</item>
+        <item quantity="many">تعذّر تعليم %1$d عنصرًا كمشاهَدًا</item>
+        <item quantity="other">تعذّر تعليم %1$d عنصر كمشاهَد</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="zero">لم يتم تعليم أي عنصر كغير مشاهَد</item>
+        <item quantity="one">تم تعليم عنصر واحد كغير مشاهَد</item>
+        <item quantity="two">تم تعليم عنصرين كغير مشاهَدين</item>
+        <item quantity="few">تم تعليم %1$d عناصر كغير مشاهَدة</item>
+        <item quantity="many">تم تعليم %1$d عنصرًا كغير مشاهَد</item>
+        <item quantity="other">تم تعليم %1$d عنصر كغير مشاهَد</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">تم تعليم %1$d كغير مشاهَد، وفشل %2$d</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="zero">تعذّر تعليم أي عنصر كغير مشاهَد</item>
+        <item quantity="one">تعذّر تعليم عنصر واحد كغير مشاهَد</item>
+        <item quantity="two">تعذّر تعليم عنصرين كغير مشاهَدين</item>
+        <item quantity="few">تعذّر تعليم %1$d عناصر كغير مشاهَدة</item>
+        <item quantity="many">تعذّر تعليم %1$d عنصرًا كغير مشاهَد</item>
+        <item quantity="other">تعذّر تعليم %1$d عنصر كغير مشاهَد</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="zero">لم تتم إضافة أي عنصر إلى التنزيلات</item>
+        <item quantity="one">تمت إضافة عنصر واحد إلى التنزيلات</item>
+        <item quantity="two">تمت إضافة عنصرين إلى التنزيلات</item>
+        <item quantity="few">تمت إضافة %1$d عناصر إلى التنزيلات</item>
+        <item quantity="many">تمت إضافة %1$d عنصرًا إلى التنزيلات</item>
+        <item quantity="other">تمت إضافة %1$d عنصر إلى التنزيلات</item>
+    </plurals>
+    <string name="selection_result_download_partial">تمت إضافة %1$d إلى التنزيلات، وفشل %2$d</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="zero">تعذّرت إضافة أي عنصر إلى التنزيلات</item>
+        <item quantity="one">تعذّرت إضافة عنصر واحد إلى التنزيلات</item>
+        <item quantity="two">تعذّرت إضافة عنصرين إلى التنزيلات</item>
+        <item quantity="few">تعذّرت إضافة %1$d عناصر إلى التنزيلات</item>
+        <item quantity="many">تعذّرت إضافة %1$d عنصرًا إلى التنزيلات</item>
+        <item quantity="other">تعذّرت إضافة %1$d عنصر إلى التنزيلات</item>
+    </plurals>
+    <string name="selection_result_download_skipped">تمت إضافة %1$d إلى التنزيلات — %2$d موجود بالفعل على هذا الجهاز</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="zero">لا يوجد أي عنصر على هذا الجهاز بالفعل</item>
+        <item quantity="one">يوجد عنصر واحد بالفعل على هذا الجهاز</item>
+        <item quantity="two">يوجد عنصران بالفعل على هذا الجهاز</item>
+        <item quantity="few">يوجد %1$d عناصر بالفعل على هذا الجهاز</item>
+        <item quantity="many">يوجد %1$d عنصرًا بالفعل على هذا الجهاز</item>
+        <item quantity="other">يوجد %1$d عنصر بالفعل على هذا الجهاز</item>
+    </plurals>
+</resources>

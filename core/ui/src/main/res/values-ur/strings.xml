@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">ڈاؤن لوڈ ہو گیا</string>
+    <string name="badge_download_queued">ڈاؤن لوڈ کی قطار میں</string>
+    <string name="badge_download_paused">ڈاؤن لوڈ موقوف ہے</string>
+    <string name="badge_download_failed">ڈاؤن لوڈ ناکام ہوگیا</string>
+
+    <string name="media_row_see_all">سب دیکھیں</string>
+    <string name="media_card_watched">دیکھا گیا</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d منتخب</item>
+        <item quantity="other">%1$d منتخب</item>
+    </plurals>
+    <string name="selection_close">انتخاب ختم کریں</string>
+    <string name="selection_select_all">سب منتخب کریں</string>
+    <string name="selection_mark_watched">دیکھا گیا نشان زد کریں</string>
+    <string name="selection_mark_unwatched">نہیں دیکھا گیا نشان زد کریں</string>
+    <string name="selection_download">ڈاؤن لوڈ</string>
+
+    <string name="selection_item_selected">منتخب</string>
+    <string name="selection_item_not_selected">غیر منتخب</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d کو دیکھا گیا نشان زد کیا گیا</item>
+        <item quantity="other">%1$d کو دیکھا گیا نشان زد کیا گیا</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d کو دیکھا گیا نشان زد کیا گیا، %2$d ناکام رہے</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d آئٹم کو دیکھا گیا نشان زد کرنا ممکن نہیں تھا</item>
+        <item quantity="other">%1$d آئٹمز کو دیکھا گیا نشان زد کرنا ممکن نہیں تھا</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d کو نہیں دیکھا گیا نشان زد کیا گیا</item>
+        <item quantity="other">%1$d کو نہیں دیکھا گیا نشان زد کیا گیا</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d کو نہیں دیکھا گیا نشان زد کیا گیا، %2$d ناکام رہے</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d آئٹم کو نہیں دیکھا گیا نشان زد کرنا ممکن نہیں تھا</item>
+        <item quantity="other">%1$d آئٹمز کو نہیں دیکھا گیا نشان زد کرنا ممکن نہیں تھا</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d ڈاؤن لوڈز میں شامل کیا گیا</item>
+        <item quantity="other">%1$d ڈاؤن لوڈز میں شامل کیے گئے</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d ڈاؤن لوڈز میں شامل کیے گئے، %2$d ناکام رہے</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d آئٹم کو ڈاؤن لوڈز میں شامل کرنا ممکن نہیں تھا</item>
+        <item quantity="other">%1$d آئٹمز کو ڈاؤن لوڈز میں شامل کرنا ممکن نہیں تھا</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d ڈاؤن لوڈز میں شامل کیے گئے — %2$d پہلے سے اس ڈیوائس پر موجود ہیں</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d آئٹم پہلے سے اس ڈیوائس پر موجود ہے</item>
+        <item quantity="other">%1$d آئٹمز پہلے سے اس ڈیوائس پر موجود ہیں</item>
+    </plurals>
+</resources>

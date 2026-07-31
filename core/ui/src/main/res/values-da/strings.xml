@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Downloadet</string>
+    <string name="badge_download_queued">I download-kø</string>
+    <string name="badge_download_paused">Download sat på pause</string>
+    <string name="badge_download_failed">Download mislykkedes</string>
+
+    <string name="media_row_see_all">Se alle</string>
+    <string name="media_card_watched">Set</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d valgt</item>
+        <item quantity="other">%1$d valgt</item>
+    </plurals>
+    <string name="selection_close">Ryd markering</string>
+    <string name="selection_select_all">Vælg alle</string>
+    <string name="selection_mark_watched">Markér som set</string>
+    <string name="selection_mark_unwatched">Markér som ikke set</string>
+    <string name="selection_download">Download</string>
+
+    <string name="selection_item_selected">Valgt</string>
+    <string name="selection_item_not_selected">Ikke valgt</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Markerede %1$d som set</item>
+        <item quantity="other">Markerede %1$d som set</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Markerede %1$d som set, %2$d mislykkedes</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kunne ikke markere %1$d element som set</item>
+        <item quantity="other">Kunne ikke markere %1$d elementer som set</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Markerede %1$d som ikke set</item>
+        <item quantity="other">Markerede %1$d som ikke set</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Markerede %1$d som ikke set, %2$d mislykkedes</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kunne ikke markere %1$d element som ikke set</item>
+        <item quantity="other">Kunne ikke markere %1$d elementer som ikke set</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Føjede %1$d til downloads</item>
+        <item quantity="other">Føjede %1$d til downloads</item>
+    </plurals>
+    <string name="selection_result_download_partial">Føjede %1$d til downloads, %2$d mislykkedes</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kunne ikke føje %1$d element til downloads</item>
+        <item quantity="other">Kunne ikke føje %1$d elementer til downloads</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Føjede %1$d til downloads – %2$d allerede på denne enhed</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element er allerede på denne enhed</item>
+        <item quantity="other">%1$d elementer er allerede på denne enhed</item>
+    </plurals>
+</resources>

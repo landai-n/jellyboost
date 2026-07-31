@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Пока нечего смотреть. Добавьте медиа в свои библиотеки на сервере.</string>
+    <string name="home_empty_refresh">Обновить</string>
+
+    <string name="home_section_my_media">Мои медиа</string>
+    <string name="home_section_continue_watching">Продолжить просмотр</string>
+    <string name="home_section_next_up">Далее</string>
+    <string name="home_section_latest">Новое: %1$s</string>
+</resources>

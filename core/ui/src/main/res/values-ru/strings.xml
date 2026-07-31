@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Загружено</string>
+    <string name="badge_download_queued">В очереди на загрузку</string>
+    <string name="badge_download_paused">Загрузка приостановлена</string>
+    <string name="badge_download_failed">Ошибка загрузки</string>
+
+    <string name="media_row_see_all">Смотреть всё</string>
+    <string name="media_card_watched">Просмотрено</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Выбран %1$d элемент</item>
+        <item quantity="few">Выбрано %1$d элемента</item>
+        <item quantity="many">Выбрано %1$d элементов</item>
+        <item quantity="other">Выбрано %1$d элемента</item>
+    </plurals>
+    <string name="selection_close">Снять выделение</string>
+    <string name="selection_select_all">Выбрать всё</string>
+    <string name="selection_mark_watched">Отметить просмотренным</string>
+    <string name="selection_mark_unwatched">Отметить непросмотренным</string>
+    <string name="selection_download">Скачать</string>
+
+    <string name="selection_item_selected">Выбрано</string>
+    <string name="selection_item_not_selected">Не выбрано</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Отмечен %1$d просмотренный</item>
+        <item quantity="few">Отмечено %1$d просмотренных</item>
+        <item quantity="many">Отмечено %1$d просмотренных</item>
+        <item quantity="other">Отмечено %1$d просмотренных</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Отмечено просмотренными: %1$d, не удалось: %2$d</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Не удалось отметить %1$d элемент просмотренным</item>
+        <item quantity="few">Не удалось отметить %1$d элемента просмотренными</item>
+        <item quantity="many">Не удалось отметить %1$d элементов просмотренными</item>
+        <item quantity="other">Не удалось отметить %1$d элементов просмотренными</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Отмечен %1$d непросмотренный</item>
+        <item quantity="few">Отмечено %1$d непросмотренных</item>
+        <item quantity="many">Отмечено %1$d непросмотренных</item>
+        <item quantity="other">Отмечено %1$d непросмотренных</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Отмечено непросмотренными: %1$d, не удалось: %2$d</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Не удалось отметить %1$d элемент непросмотренным</item>
+        <item quantity="few">Не удалось отметить %1$d элемента непросмотренными</item>
+        <item quantity="many">Не удалось отметить %1$d элементов непросмотренными</item>
+        <item quantity="other">Не удалось отметить %1$d элементов непросмотренными</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Добавлен %1$d элемент в загрузки</item>
+        <item quantity="few">Добавлено %1$d элемента в загрузки</item>
+        <item quantity="many">Добавлено %1$d элементов в загрузки</item>
+        <item quantity="other">Добавлено %1$d элементов в загрузки</item>
+    </plurals>
+    <string name="selection_result_download_partial">Добавлено в загрузки: %1$d, не удалось: %2$d</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Не удалось добавить %1$d элемент в загрузки</item>
+        <item quantity="few">Не удалось добавить %1$d элемента в загрузки</item>
+        <item quantity="many">Не удалось добавить %1$d элементов в загрузки</item>
+        <item quantity="other">Не удалось добавить %1$d элементов в загрузки</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Добавлено в загрузки: %1$d — уже на этом устройстве: %2$d</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d элемент уже на этом устройстве</item>
+        <item quantity="few">%1$d элемента уже на этом устройстве</item>
+        <item quantity="many">%1$d элементов уже на этом устройстве</item>
+        <item quantity="other">%1$d элементов уже на этом устройстве</item>
+    </plurals>
+</resources>

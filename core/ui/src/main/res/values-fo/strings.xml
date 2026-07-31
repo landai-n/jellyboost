@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Niðurhalað</string>
+    <string name="badge_download_queued">Í bíðirøð til niðurhal</string>
+    <string name="badge_download_paused">Niðurhal steðgað</string>
+    <string name="badge_download_failed">Niðurhal miseydnaðist</string>
+
+    <string name="media_row_see_all">Sí alt</string>
+    <string name="media_card_watched">Sætt</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d valt</item>
+        <item quantity="other">%1$d valdar</item>
+    </plurals>
+    <string name="selection_close">Strika val</string>
+    <string name="selection_select_all">Vel alt</string>
+    <string name="selection_mark_watched">Merk sum sætt</string>
+    <string name="selection_mark_unwatched">Merk sum ósætt</string>
+    <string name="selection_download">Hala niður</string>
+
+    <string name="selection_item_selected">Valt</string>
+    <string name="selection_item_not_selected">Ikki valt</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Merkti %1$d sum sætt</item>
+        <item quantity="other">Merkti %1$d sum sætt</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Merkti %1$d sum sætt, %2$d miseydnaðist</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kundi ikki merkja %1$d lut sum sætt</item>
+        <item quantity="other">Kundi ikki merkja %1$d lutir sum sætt</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Merkti %1$d sum ósætt</item>
+        <item quantity="other">Merkti %1$d sum ósætt</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Merkti %1$d sum ósætt, %2$d miseydnaðist</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kundi ikki merkja %1$d lut sum ósætt</item>
+        <item quantity="other">Kundi ikki merkja %1$d lutir sum ósætt</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Setti %1$d til niðurhal</item>
+        <item quantity="other">Setti %1$d til niðurhal</item>
+    </plurals>
+    <string name="selection_result_download_partial">Setti %1$d til niðurhal, %2$d miseydnaðist</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kundi ikki seta %1$d lut til niðurhal</item>
+        <item quantity="other">Kundi ikki seta %1$d lutir til niðurhal</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Setti %1$d til niðurhal — %2$d eru longu á hesum tólinum</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d lutur er longu á hesum tólinum</item>
+        <item quantity="other">%1$d lutir eru longu á hesum tólinum</item>
+    </plurals>
+</resources>

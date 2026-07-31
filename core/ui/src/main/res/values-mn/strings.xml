@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Татагдсан</string>
+    <string name="badge_download_queued">Татахаар дараалалд орсон</string>
+    <string name="badge_download_paused">Татаж авалт түр зогссон</string>
+    <string name="badge_download_failed">Татаж авалт амжилтгүй боллоо</string>
+
+    <string name="media_row_see_all">Бүгдийг харах</string>
+    <string name="media_card_watched">Үзсэн</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d зүйл сонгогдсон</item>
+        <item quantity="other">%1$d зүйл сонгогдсон</item>
+    </plurals>
+    <string name="selection_close">Сонголтыг цуцлах</string>
+    <string name="selection_select_all">Бүгдийг сонгох</string>
+    <string name="selection_mark_watched">Үзсэн гэж тэмдэглэх</string>
+    <string name="selection_mark_unwatched">Үзээгүй гэж тэмдэглэх</string>
+    <string name="selection_download">Татах</string>
+
+    <string name="selection_item_selected">Сонгогдсон</string>
+    <string name="selection_item_not_selected">Сонгогдоогүй</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d зүйлийг үзсэн гэж тэмдэглэлээ</item>
+        <item quantity="other">%1$d зүйлийг үзсэн гэж тэмдэглэлээ</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d зүйлийг үзсэн гэж тэмдэглэлээ, %2$d амжилтгүй боллоо</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d зүйлийг үзсэн гэж тэмдэглэж чадсангүй</item>
+        <item quantity="other">%1$d зүйлийг үзсэн гэж тэмдэглэж чадсангүй</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d зүйлийг үзээгүй гэж тэмдэглэлээ</item>
+        <item quantity="other">%1$d зүйлийг үзээгүй гэж тэмдэглэлээ</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d зүйлийг үзээгүй гэж тэмдэглэлээ, %2$d амжилтгүй боллоо</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d зүйлийг үзээгүй гэж тэмдэглэж чадсангүй</item>
+        <item quantity="other">%1$d зүйлийг үзээгүй гэж тэмдэглэж чадсангүй</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d зүйлийг татах жагсаалтад нэмлээ</item>
+        <item quantity="other">%1$d зүйлийг татах жагсаалтад нэмлээ</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d зүйлийг татах жагсаалтад нэмлээ, %2$d амжилтгүй боллоо</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d зүйлийг татах жагсаалтад нэмж чадсангүй</item>
+        <item quantity="other">%1$d зүйлийг татах жагсаалтад нэмж чадсангүй</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d зүйлийг татах жагсаалтад нэмлээ — %2$d нь энэ төхөөрөмж дээр аль хэдийн байгаа</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d зүйл аль хэдийн энэ төхөөрөмж дээр байна</item>
+        <item quantity="other">%1$d зүйл аль хэдийн энэ төхөөрөмж дээр байна</item>
+    </plurals>
+</resources>

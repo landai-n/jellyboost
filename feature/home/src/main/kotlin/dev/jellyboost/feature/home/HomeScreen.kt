@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -75,9 +76,9 @@ fun HomeContent(
 
         state.isEmpty ->
             EmptyState(
-                message = "Nothing to watch yet. Add media to your libraries on the server.",
+                message = stringResource(R.string.home_empty_message),
                 modifier = modifier,
-                actionLabel = "Refresh",
+                actionLabel = stringResource(R.string.home_empty_refresh),
                 onAction = onRetry,
             )
 
@@ -153,7 +154,7 @@ private fun LazyListScope.librariesRow(
     if (state.libraries.isEmpty()) return
     item(key = SECTION_MY_MEDIA, contentType = ROW_LIBRARIES) {
         MediaRow(
-            title = "My Media",
+            title = stringResource(R.string.home_section_my_media),
             items = state.libraries,
             key = LibraryView::id,
             contentType = CARD_LIBRARY,
@@ -171,7 +172,7 @@ private fun LazyListScope.resumeRow(
     if (state.resume.isEmpty()) return
     item(key = SECTION_RESUME, contentType = ROW_THUMBS) {
         MediaRow(
-            title = "Continue Watching",
+            title = stringResource(R.string.home_section_continue_watching),
             items = state.resume,
             key = JellyfinItem::id,
             contentType = CARD_THUMB,
@@ -189,7 +190,7 @@ private fun LazyListScope.nextUpRow(
     if (state.nextUp.isEmpty()) return
     item(key = SECTION_NEXT_UP, contentType = ROW_THUMBS) {
         MediaRow(
-            title = "Next Up",
+            title = stringResource(R.string.home_section_next_up),
             items = state.nextUp,
             key = JellyfinItem::id,
             contentType = CARD_THUMB,
@@ -210,7 +211,7 @@ private fun LazyListScope.latestRows(
         contentType = { ROW_POSTERS },
     ) { section ->
         MediaRow(
-            title = "Latest ${section.library.name}",
+            title = stringResource(R.string.home_section_latest, section.library.name),
             items = section.items,
             key = JellyfinItem::id,
             contentType = CARD_POSTER,

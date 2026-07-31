@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Belum ada yang bisa ditonton. Tambahkan media ke perpustakaan Anda di server.</string>
+    <string name="home_empty_refresh">Segarkan</string>
+    <string name="home_section_my_media">Media Saya</string>
+    <string name="home_section_continue_watching">Lanjutkan Menonton</string>
+    <string name="home_section_next_up">Berikutnya</string>
+    <string name="home_section_latest">%1$s Terbaru</string>
+</resources>

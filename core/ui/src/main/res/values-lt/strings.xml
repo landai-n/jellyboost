@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Atsisiųsta</string>
+    <string name="badge_download_queued">Eilėje atsisiuntimui</string>
+    <string name="badge_download_paused">Atsisiuntimas pristabdytas</string>
+    <string name="badge_download_failed">Atsisiuntimas nepavyko</string>
+
+    <string name="media_row_see_all">Žiūrėti viską</string>
+    <string name="media_card_watched">Žiūrėta</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Pasirinktas %1$d</item>
+        <item quantity="few">Pasirinkti %1$d</item>
+        <item quantity="many">Pasirinkta %1$d</item>
+        <item quantity="other">Pasirinkta %1$d</item>
+    </plurals>
+    <string name="selection_close">Išvalyti pasirinkimą</string>
+    <string name="selection_select_all">Pasirinkti viską</string>
+    <string name="selection_mark_watched">Žymėti kaip žiūrėtą</string>
+    <string name="selection_mark_unwatched">Žymėti kaip nežiūrėtą</string>
+    <string name="selection_download">Atsisiųsti</string>
+
+    <string name="selection_item_selected">Pasirinkta</string>
+    <string name="selection_item_not_selected">Nepasirinkta</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Pažymėtas %1$d kaip žiūrėtas</item>
+        <item quantity="few">Pažymėti %1$d kaip žiūrėti</item>
+        <item quantity="many">Pažymėta %1$d kaip žiūrėta</item>
+        <item quantity="other">Pažymėta %1$d kaip žiūrėta</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Pažymėta %1$d kaip žiūrėta, %2$d nepavyko</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nepavyko pažymėti %1$d elemento kaip žiūrėto</item>
+        <item quantity="few">Nepavyko pažymėti %1$d elementų kaip žiūrėtų</item>
+        <item quantity="many">Nepavyko pažymėti %1$d elementų kaip žiūrėtų</item>
+        <item quantity="other">Nepavyko pažymėti %1$d elementų kaip žiūrėtų</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Pažymėtas %1$d kaip nežiūrėtas</item>
+        <item quantity="few">Pažymėti %1$d kaip nežiūrėti</item>
+        <item quantity="many">Pažymėta %1$d kaip nežiūrėta</item>
+        <item quantity="other">Pažymėta %1$d kaip nežiūrėta</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Pažymėta %1$d kaip nežiūrėta, %2$d nepavyko</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nepavyko pažymėti %1$d elemento kaip nežiūrėto</item>
+        <item quantity="few">Nepavyko pažymėti %1$d elementų kaip nežiūrėtų</item>
+        <item quantity="many">Nepavyko pažymėti %1$d elementų kaip nežiūrėtų</item>
+        <item quantity="other">Nepavyko pažymėti %1$d elementų kaip nežiūrėtų</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d pridėtas prie atsisiuntimų</item>
+        <item quantity="few">%1$d pridėti prie atsisiuntimų</item>
+        <item quantity="many">%1$d pridėta prie atsisiuntimų</item>
+        <item quantity="other">%1$d pridėta prie atsisiuntimų</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d pridėta prie atsisiuntimų, %2$d nepavyko</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nepavyko pridėti %1$d elemento prie atsisiuntimų</item>
+        <item quantity="few">Nepavyko pridėti %1$d elementų prie atsisiuntimų</item>
+        <item quantity="many">Nepavyko pridėti %1$d elementų prie atsisiuntimų</item>
+        <item quantity="other">Nepavyko pridėti %1$d elementų prie atsisiuntimų</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d pridėta prie atsisiuntimų — %2$d jau yra šiame įrenginyje</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d elementas jau yra šiame įrenginyje</item>
+        <item quantity="few">%1$d elementai jau yra šiame įrenginyje</item>
+        <item quantity="many">%1$d elementų jau yra šiame įrenginyje</item>
+        <item quantity="other">%1$d elementų jau yra šiame įrenginyje</item>
+    </plurals>
+</resources>

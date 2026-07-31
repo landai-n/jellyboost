@@ -34,6 +34,24 @@ interface StreamUrlFactory {
     fun absoluteUrl(path: String): String
 
     /**
+     * The same URL with the access token on it, for a fetcher that is not this app.
+     *
+     * Every stream this app opens is authorised by `JellyfinAuthInterceptor`'s header. A Cast
+     * receiver has its own network stack and none of ours in it, so its URLs have to carry the token
+     * themselves — the same `ApiKey` query parameter the trickplay sheets already use for Coil.
+     *
+     * **Idempotent**, which is not a nicety: probed against the dev server (2026-07-31), a
+     * transcode's `TranscodingUrl` and every external-subtitle `DeliveryUrl` come back with `ApiKey`
+     * already on them, while a direct-play or direct-stream URL — built locally by the SDK — does
+     * not. Callers apply this to all of them and let the ones that need nothing keep what they have.
+     *
+     * Defaults to the identity: a factory with no credentials to add (a downloaded item's `file://`
+     * URIs, a test double) has nothing to do here, and the SDK-backed implementation is the only one
+     * that holds a token.
+     */
+    fun withApiKey(url: String): String = url
+
+    /**
      * `GET /Videos/{itemId}/Trickplay/{width}/{index}.jpg` — one scrubbing-thumbnail sprite sheet.
      *
      * Unlike every other URL on this interface the result is fetched by the *image* loader rather

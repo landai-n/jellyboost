@@ -100,7 +100,40 @@ from the activity's theme). Merged manifest gains only Cast's own components
 **Owed:** DoD walk 1 on a real Chromecast (icon appears, chooser opens,
 connect/disconnect; GMS-less device shows no icon and does not crash).
 
-Phases 2–5 (playback → parity → remote-control UI → hardening) awaiting
+**Phase 2 landed (cast playback core — profile, routing handle, coordinator).**
+New in `:player`: `CastDeviceProfile` (static, no probe — H.264 High L4.2 ≤1080p +
+AAC/MP3 in mp4, VP8/VP9 in webm, HLS-`ts` H.264+AAC transcode, **WebVTT-only**
+external subtitles so image subs burn in), `CastMediaSpec`/`CastSpecMapper` (pure:
+`api_key` on the media URL and every subtitle URL, `external:<index>` → numeric Cast
+track ids, content type per play method), `CastMediaItemConverter` (media3-cast's
+`DefaultMediaItemConverter` drops `subtitleConfigurations`; the spec travels as the
+`MediaItem`'s tag), `CastPlayerHandle` (over media3-cast 1.9.0 `CastPlayer`;
+`player` is permanently `null`, audio select always renegotiates, subtitle select goes
+through `RemoteMediaClient.setActiveMediaTracks` because `RemoteCastPlayer.
+setTrackSelectionParameters` is an empty method at 1.9.0), `RoutingPlayerHandle` (the
+new `PlayerHandle` binding; a pure pass-through with no cast session, `events` via
+`flatMapLatest`), `CastStatusHolder`, `CastSessionMonitor` (the GMS seam) and
+`CastSessionCoordinator` (session lifecycle → routing flip, detached progress ticker
+and final stop + `stopTranscoding` **only while no host is attached**).
+Modified: `PlaybackResolveRequest.castTarget` joins `forceRemote` in skipping the disk
+copy and selects the cast profile; `StreamUrlFactory.withApiKey` (idempotent, default
+= identity); `PlayerHandle` gained a `prepare(source, spec, …)` overload whose default
+drops the source; `PlayerViewModel` carries `castTarget` into every re-negotiation and
+skips the decoder-fallback ladder while casting. `JellyboostApplication` starts the
+coordinator. **Regression gate held: no existing test file was touched**, `:player`
+574 → 621 unit tests (whole suite 1892, 0 failures); full gate green in one run.
+Six DECISIONS entries (2026-07-31) cover the WebVTT-only profile and the live-server
+probe, the `prepare` overload and the spec carry, the application-started coordinator,
+the reused `PlaybackFailed` message, the defaulted `withApiKey`, and the media-session
+coexistence.
+**Owed:** DoD walk 2 on a real Chromecast — direct-play mp4 and forced-transcode mkv
+both play on the TV, dashboard shows the session, quality change kills the old ffmpeg,
+disconnect leaves no stray encoder, resume position correct in jellyfin-web. Until
+Phase 3 the ViewModel does not attach to the coordinator, so a cast session started
+mid-playback flips the routing handle but does **not** transfer what is playing, and
+nothing yet reports from the detached scope (no host ever detaches).
+
+Phases 3–5 (control parity + transfers → remote-control UI → hardening) awaiting
 implementation.
 
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)

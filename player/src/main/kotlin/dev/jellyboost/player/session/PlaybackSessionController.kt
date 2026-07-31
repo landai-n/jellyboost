@@ -58,7 +58,11 @@ class PlaybackSessionController
 
             val spec = mediaSourceFactory.create(resolved) ?: return SessionOpenResult.UnsupportedSource
 
+            // The source travels alongside the spec: a cast receiver has to be told more about the
+            // negotiation than its URL says, and this is the one place both are in hand
+            // (`PlayerHandle.prepare`, M12 Phase 2). Locally the overload drops it.
             playerHandle.prepare(
+                source = resolved,
                 spec = spec,
                 startPositionMs = resolved.startPositionTicks.ticksToMillis(),
                 playWhenReady = playWhenReady,

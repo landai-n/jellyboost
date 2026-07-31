@@ -13,6 +13,7 @@ import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
 import dev.jellyboost.data.downloads.DownloadedMetadataRefresher
 import dev.jellyboost.data.userdata.UserDataSyncTrigger
+import dev.jellyboost.player.cast.CastSessionCoordinator
 import dev.jellyboost.player.syncplay.presence.SyncPlayPresenceCoordinator
 import timber.log.Timber
 import javax.inject.Inject
@@ -64,6 +65,18 @@ class JellyboostApplication :
     @Inject
     lateinit var syncPlayPresenceCoordinator: SyncPlayPresenceCoordinator
 
+    /**
+     * Watches for a Cast session, and keeps reporting one after the player screen is gone (M12).
+     *
+     * Here for the same reason as the three above, and it is the sharper case: a cast session is
+     * started from the top bar, outlives whichever screen was open, and has to end with a stop
+     * report and an encoder kill whether or not anything is on screen when the receiver disconnects.
+     * The Cast *stack* is still brought up by `MainActivity` behind its Play-services guard — this
+     * only subscribes, and on a device with no Cast stack it waits for a signal that never comes.
+     */
+    @Inject
+    lateinit var castSessionCoordinator: CastSessionCoordinator
+
     override val workManagerConfiguration: Configuration
         get() =
             Configuration
@@ -109,6 +122,7 @@ class JellyboostApplication :
         userDataSyncTrigger.start()
         downloadedMetadataRefresher.start()
         syncPlayPresenceCoordinator.start()
+        castSessionCoordinator.start()
     }
 
     private companion object {

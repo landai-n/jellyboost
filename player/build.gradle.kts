@@ -23,7 +23,15 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.ui.compose)
+    implementation(libs.androidx.media3.cast)
     implementation(libs.jellyfin.media3.ffmpeg.decoder)
+
+    // M12 Chromecast. `media3-cast` brings the last three transitively; they are declared because
+    // this module names their types directly (CastContext/CastOptions, MediaRouteButton, and the
+    // AppCompat theme the MediaRouter dialogs need).
+    implementation(libs.play.services.cast.framework)
+    implementation(libs.androidx.mediarouter)
+    implementation(libs.androidx.appcompat)
 
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.core.ktx)

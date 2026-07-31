@@ -59,6 +59,7 @@ class ItemDetailSelectionTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns downloadStates
+            every { observeBytesOnDisk(any()) } returns MutableStateFlow<Long?>(null)
         }
 
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

@@ -44,6 +44,17 @@ interface DownloadDao {
     @Query("SELECT itemId, status, bytesDownloaded, bytesTotal FROM downloads")
     fun observeProgress(): Flow<List<DownloadProgress>>
 
+    /**
+     * One item's footprint on disk, or `null` when it has no file rows at all.
+     *
+     * A projection rather than [getWithFiles] or [observeAll]: the detail screen only wants a
+     * single number for one item, and dragging a `@Transaction` over the whole `DownloadWithFiles`
+     * shape through Room for that would be paying for rows nobody reads. The sum is the same figure
+     * the Downloads tab shows via `DownloadWithFiles.bytesOnDisk`.
+     */
+    @Query("SELECT SUM(bytesDownloaded) FROM download_files WHERE itemId = :itemId")
+    fun observeBytesOnDisk(itemId: UUID): Flow<Long?>
+
     /** One download row without its files. */
     @Query("SELECT * FROM downloads WHERE itemId = :itemId")
     suspend fun get(itemId: UUID): DownloadEntity?

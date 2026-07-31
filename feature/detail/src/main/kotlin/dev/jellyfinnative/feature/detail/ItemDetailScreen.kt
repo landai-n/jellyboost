@@ -320,6 +320,7 @@ private fun DetailSections(
                 isWide = isWide,
                 downloadState = state.downloadState,
                 actions = actions,
+                downloadedBytes = state.downloadedBytes,
             )
         }
 

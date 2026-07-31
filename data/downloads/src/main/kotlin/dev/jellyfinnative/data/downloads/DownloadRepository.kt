@@ -33,6 +33,9 @@ interface DownloadRepository {
     /** Storage used and free at the download root; re-read whenever [observeDownloads] changes. */
     fun observeStorage(): Flow<StorageUsage>
 
+    /** Bytes [itemId] occupies on disk, or `null` when nothing of it is downloaded. */
+    fun observeBytesOnDisk(itemId: String): Flow<Long?>
+
     /** The volumes downloads can be written to, and which one is in force — the Settings picker. */
     fun observeStorageLocations(): Flow<StorageLocations>
 

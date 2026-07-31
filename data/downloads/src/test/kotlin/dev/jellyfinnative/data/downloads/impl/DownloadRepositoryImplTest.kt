@@ -196,6 +196,28 @@ class DownloadRepositoryImplTest {
             verify(exactly = 1) { downloadDao.observeProgress() }
         }
 
+    // ---- one item's footprint on disk (detail screen "N on device") -------------------------------
+
+    @Test
+    fun `a valid id delegates straight to the DAO's projection`() =
+        runTest {
+            every { downloadDao.observeBytesOnDisk(uuid(1)) } returns flowOf(900L)
+
+            repository().observeBytesOnDisk(uuid(1).toString()).test {
+                awaitItem() shouldBe 900L
+                awaitComplete()
+            }
+        }
+
+    @Test
+    fun `an unparseable id reports no footprint rather than throwing`() =
+        runTest {
+            repository().observeBytesOnDisk("not-a-uuid").test {
+                awaitItem().shouldBeNull()
+                awaitComplete()
+            }
+        }
+
     // ---- the download list ----------------------------------------------------------------------
 
     @Test

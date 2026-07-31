@@ -176,26 +176,24 @@ internal class DownloadRepositoryImpl
                 }.distinctUntilChanged()
                 .flowOn(ioDispatcher)
 
+        /**
+         * Bytes [itemId] occupies on disk right now — what the detail screen shows instead of the
+         * server-reported size once the local copy is what the user actually has.
+         *
+         * An id that does not parse names nothing on disk either, so it answers `null` rather than
+         * failing the screen over it.
+         */
+        override fun observeBytesOnDisk(itemId: String): Flow<Long?> {
+            val id = itemId.toUuidOrNull() ?: return flowOf(null)
+            return downloadDao.observeBytesOnDisk(id)
+        }
+
         /** The download table reduced to what changes which files exist. */
         private fun downloadShape(): Flow<DownloadShape> =
             downloadDao
                 .observeProgress()
                 .map { rows -> DownloadShape(rows.mapTo(mutableSetOf()) { it.itemId to it.status }) }
                 .distinctUntilChanged()
-
-        /**
-         * A heartbeat for as long as a transfer is running, starting with the moment it starts.
-         *
-         * The first emission is immediate so a status change is reflected at once; everything after
-         * it exists only so the number creeps while the bytes do.
-         */
-        private fun walkTicks(): Flow<Unit> =
-            flow {
-                while (true) {
-                    emit(Unit)
-                    delay(STORAGE_WALK_INTERVAL)
-                }
-            }
 
         /**
          * `locations.resolve()` re-scans the mounted volumes, which is not free — and used to be
@@ -527,6 +525,25 @@ private data class DownloadShape(
     /** Whether some file is being written right now, and so is growing between two walks. */
     val transferring: Boolean get() = rows.any { (_, status) -> status == DownloadStatus.DOWNLOADING }
 }
+
+/**
+ * A heartbeat for as long as a transfer is running, starting with the moment it starts —
+ * [DownloadRepositoryImpl.observeStorage]'s slow re-walk of the downloads tree.
+ *
+ * The first emission is immediate so a status change is reflected at once; everything after it
+ * exists only so the number creeps while the bytes do.
+ *
+ * A top-level function rather than a method on the repository: [DownloadRepositoryImpl] is at
+ * detekt's function-count ceiling (`TooManyFunctions`, threshold 20), and this depends on nothing
+ * but the companion's own interval.
+ */
+private fun walkTicks(): Flow<Unit> =
+    flow {
+        while (true) {
+            emit(Unit)
+            delay(DownloadRepositoryImpl.STORAGE_WALK_INTERVAL)
+        }
+    }
 
 /**
  * A volume as the settings picker sees it.

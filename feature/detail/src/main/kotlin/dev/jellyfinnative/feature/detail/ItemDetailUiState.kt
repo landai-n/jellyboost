@@ -37,6 +37,16 @@ data class ItemDetailUiState(
      * because a season is downloaded by downloading its episodes ([aggregateDownloadState]).
      */
     val downloadState: DownloadState = DownloadState.NotDownloaded,
+    /**
+     * Bytes the downloaded copy of [item] occupies on disk, or `null` when nothing of it is on the
+     * device.
+     *
+     * Fed from `DownloadRepository.observeBytesOnDisk`, a different Room projection than
+     * [downloadState]: this is a footprint, not a status, and the header only reads it once it
+     * already knows the item is [DownloadState.Downloaded] — a partly-downloaded container's SUM
+     * would otherwise read as a (wrong) whole-item size.
+     */
+    val downloadedBytes: Long? = null,
     /** Set only when the item itself could not be loaded — a related row failing is silent. */
     val errorMessage: String? = null,
     /** A one-shot message for the snackbar; cleared by `ItemDetailViewModel.consumeMessage`. */

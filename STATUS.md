@@ -468,8 +468,12 @@ verification on the minified build.
   the estimate tops 24 h; new shared `formatDurationSeconds` in `:core:common`),
   and a `Transcoded` marker on queue + Downloaded rows (`quality.isTranscoded`).
   An extra-audio-sidecar stage indicator was speced, started, then **dropped at
-  the user's request** — fully reverted, nothing remains in the tree. In flight:
-  detail-page "on device" size when a local copy exists (worktree agent).
+  the user's request** — fully reverted, nothing remains in the tree. Also landed:
+  detail-page metadata line shows `"X on device"` instead of the server size when
+  the item's local copy is complete (`DownloadRepository.observeBytesOnDisk`, a
+  `SUM` projection over `download_files`; containers keep the server figure).
+  Detail download/container tests moved to `ItemDetailDownloadTest.kt` (LargeClass
+  headroom, same precedent as the group-actions/selection splits).
 
 ### Next
 1. ~~**Audit backlog Tier 2 + cleanup wave**~~ — DONE. All Tier 1 (11), all Tier 2

@@ -93,6 +93,35 @@ class SyncPlayControllerTest {
         }
 
     @Test
+    fun `the clock is measured before the join call, not after it`() =
+        runTest {
+            val fixture = fixture()
+
+            fixture.controller.joinGroup(group())
+            runCurrent()
+
+            // Order, not merely presence: `SyncPlayTimeSync.offset` is ZERO until a sample records
+            // one, the pinger only starts once the group has been entered, and the server can send
+            // the group's current command the moment the join returns — so a clock measured after
+            // the join is a first command converted to local time against an assumed offset.
+            fixture.api.calls.take(2) shouldBe
+                listOf(SyncPlayCall.SampleServerTime, SyncPlayCall.JoinGroup(group().id))
+        }
+
+    @Test
+    fun `a clock sample that fails does not stop the join`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.failNextSample = java.io.IOException("timeout")
+
+            fixture.controller.joinGroup(group())
+            runCurrent()
+
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+        }
+
+    @Test
     fun `a failed join leaves nothing running`() =
         runTest {
             val fixture = fixture()
@@ -306,6 +335,37 @@ class SyncPlayControllerTest {
         }
 
     @Test
+    fun `the group still reaches a player whose screen has gone away`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+
+            fixture.controller.detachHost(fixture.host)
+            runCurrent()
+
+            // Giving back the screen is not giving back the player: `PlaybackService` keeps the
+            // shared ExoPlayer running, so the phase must go on saying what the group is doing.
+            // Forcing it to `Paused` here is what used to take the drift monitor down with it.
+            (fixture.controller.state.value as SyncPlayState.InGroup)
+                .phase
+                .shouldBeInstanceOf<SyncPlayPhase.Playing>()
+
+            // And a command the group issues after the screen went must still land on that player,
+            // which a cancelled scheduler would have swallowed.
+            fixture.socket.emit(command(SyncPlayCommandType.Pause, now().plusMillis(500), positionMs = 30_000))
+            runCurrent()
+            fixture.player.pauseCount shouldBe 0
+
+            advanceTimeBy(500)
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+            fixture.player.seekedToMs shouldBe listOf(30_000L)
+            (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe SyncPlayPhase.Paused
+        }
+
+    @Test
     fun `a stale host cannot detach the player that replaced it`() =
         runTest {
             val fixture = fixture()
@@ -454,6 +514,43 @@ class SyncPlayControllerTest {
     // The handshake, and the loops it used to close (M11 fix batch) --------------------------------
 
     @Test
+    fun `buffering and ready reports say what the player is really doing`() =
+        runTest {
+            val fixture = fixture()
+            // The user was already watching this item, still running, when the group moved onto it.
+            fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
+
+            joinWithQueue(fixture)
+
+            // The server extrapolates a reported position over the round trip *only* when the member
+            // says it is playing (`WaitingGroupState`: `if (!request.IsPlaying) elapsedTime = Zero`),
+            // and schedules the group's unpause from the result — so a hardcoded `false` is a lie the
+            // whole group pays for. jellyfin-web sends its real state here.
+            fixture.api
+                .callsOf<SyncPlayCall.ReportReady>()
+                .single()
+                .isPlaying shouldBe true
+
+            fixture.api.clearCalls()
+            fixture.controller.onHostBuffering()
+            runCurrent()
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .single()
+                .isPlaying shouldBe true
+
+            // And a player that really has stopped still reports `false`.
+            fixture.host.snapshot = fixture.host.snapshot.copy(isPlaying = false)
+            fixture.api.clearCalls()
+            fixture.controller.onHostBuffering()
+            runCurrent()
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .single()
+                .isPlaying shouldBe false
+        }
+
+    @Test
     fun `applying the group's pause is not answered with a ready report`() =
         runTest {
             val fixture = fixture()
@@ -576,6 +673,38 @@ class SyncPlayControllerTest {
                 .shouldBeInstanceOf<SyncPlayPhase.Playing>()
             // Recovering must not re-open the handshake: another ready is what the storm is made of.
             fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
+    @Test
+    fun `a self-sync measures from the instant the group's position was true, not from now`() =
+        runTest {
+            val fixture = fixture()
+            // The group published "60 s" twenty seconds ago and has been playing ever since, so it
+            // is at 80 s now. Pairing that position with *this* moment is the browser-resume desync
+            // in the bug report: the member lands twenty seconds short and the drift monitor, handed
+            // the same anchor, then defends the short timeline instead of closing the gap.
+            val stale =
+                queue(startTicks = 60_000L.millisToTicks())
+                    .copy(lastUpdate = origin.minusMillis(GROUP_HEAD_START_MS))
+            joinWithQueue(fixture, queue = stale)
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.player.resetCalls()
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Playing, SyncPlayRequestKind.Ready),
+            )
+            runCurrent()
+            advanceTimeBy(SyncPlayController.SELF_SYNC_TIMEOUT_MS)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+            fixture.player.seekedToMs shouldBe
+                listOf(60_000L + GROUP_HEAD_START_MS + SyncPlayController.SELF_SYNC_TIMEOUT_MS)
+            // The anchor handed on to the drift monitor is the queue's own instant, so every later
+            // correction is measured against the group's real timeline.
+            (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe
+                SyncPlayPhase.Playing(SyncPlayAnchor(60_000L, stale.lastUpdate))
         }
 
     @Test
@@ -1637,6 +1766,15 @@ class SyncPlayControllerTest {
     private companion object {
         /** A blip well inside [SyncPlayController.CONNECTIVITY_GRACE_MS] — the device's own two seconds. */
         const val BLIP_MS = 2_000L
+
+        /**
+         * How long ago a group published the position it is measured from.
+         *
+         * Deliberately far larger than [SyncPlayDriftMonitor.MAX_DRIFT_MS]: the whole point of the
+         * honest anchor is that this interval belongs in the arithmetic, and a value the drift
+         * monitor would have absorbed anyway would prove nothing.
+         */
+        const val GROUP_HEAD_START_MS = 20_000L
     }
 
     private fun loggedIn() =

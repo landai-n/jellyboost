@@ -75,14 +75,14 @@ import javax.inject.Singleton
  * true rather than approximately true, and it is why every intent below is a one-line API call.
  *
  * ### Join handshake
- * Collect the websocket → join → the server sends the group and its queue → open the item paused
- * (or ask the app to open a player) → report `buffering` → report `ready` when the player is → the
- * server flips the group out of WAITING and schedules an unpause everyone applies at the same
- * instant.
+ * Collect the websocket → measure the clock → join → the server sends the group and its queue →
+ * open the item paused (or ask the app to open a player) → report `buffering` → report `ready` when
+ * the player is → the server flips the group out of WAITING and schedules an unpause everyone
+ * applies at the same instant.
  *
  * The websocket is collected *before* the join call, not after: collecting is what opens it (the SDK
  * has no `connect()`), and a group joined before the socket is up would never hear its own
- * `GroupJoined`/`PlayQueueUpdate`.
+ * `GroupJoined`/`PlayQueueUpdate`. The clock is measured before it too — see [warmClock].
  *
  * **A `ready` is reported only when one is owed.** Readiness is not news on its own: the server
  * answers a `ready` from a group that is not waiting by re-sending that group's current state
@@ -426,6 +426,18 @@ class SyncPlayController
          * a member with no player must never be the reason everyone else is stuck in WAITING. The
          * group survives, and a later `PlayQueueUpdate` re-launches a player via [launchRequests].
          *
+         * **The group keeps its reach.** Giving back the *screen* is not giving back the *player*:
+         * `PlaybackService` keeps the shared ExoPlayer alive and playing, so this used to leave a
+         * member that went on playing with the scheduler cancelled (the group's commands landing
+         * nowhere) and a phase forced to `Paused` (the drift monitor, which runs in `Playing` only,
+         * shut off with it) — the free-running background member of `syncplay-bugreport.md`. So
+         * neither happens here any more: commands go on being scheduled and applied, and the phase
+         * goes on saying what the group is doing. Only a full [teardown] or [standDown] cancels the
+         * scheduler, because only those end the timeline it is tracking.
+         *
+         * What still resets is what belongs to the *screen*: [loadedPlaylistItemId] (so a re-attach
+         * may adopt an item the host already holds, see [reconcile]) and [skippedSlots].
+         *
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the player that replaced it.
          */
@@ -434,9 +446,7 @@ class SyncPlayController
             this.host = null
             loadedPlaylistItemId = null
             skippedSlots.clear()
-            scheduler.cancel()
             if (_state.value !is SyncPlayState.InGroup) return
-            setPhase(SyncPlayPhase.Paused)
             scope.launch {
                 runCatching { api.setIgnoreWait(true) }
                     .onSuccess { ignoreWaitSent = true }
@@ -459,9 +469,15 @@ class SyncPlayController
             // no fallback, however long the re-negotiation takes.
             oweReady(entry, fallbackMillis = null)
             launchInSession {
-                val positionTicks = hostSnapshot()?.positionTicks ?: 0L
-                runCatching { api.reportBuffering(timeSync.serverNow(), positionTicks, false, entry.playlistItemId) }
-                    .onFailure { Timber.w(it, "Could not report SyncPlay buffering") }
+                val snapshot = hostSnapshot()
+                runCatching {
+                    api.reportBuffering(
+                        timeSync.serverNow(),
+                        snapshot?.positionTicks ?: 0L,
+                        reportedIsPlaying(snapshot),
+                        entry.playlistItemId,
+                    )
+                }.onFailure { Timber.w(it, "Could not report SyncPlay buffering") }
             }
         }
 
@@ -502,6 +518,7 @@ class SyncPlayController
             session.launch { collectStream("group updates") { socket.groupUpdates.collect(::onGroupUpdate) } }
             session.launch { collectStream("commands") { socket.commands.collect(::onCommand) } }
             awaitSocketReady()
+            warmClock()
 
             val joined =
                 runCatching {
@@ -516,6 +533,26 @@ class SyncPlayController
                 .onSuccess { enterGroup(it, session) }
                 .onFailure { Timber.w(it, "Could not join a SyncPlay group") }
                 .isSuccess
+        }
+
+        /**
+         * Measures the server clock once, before the handshake can produce a command to schedule.
+         *
+         * [SyncPlayTimeSync.offset] is `Duration.ZERO` until something records a sample, and the
+         * pinger only starts in [enterGroup] — so between the join call returning and its first
+         * sample landing, every `SendCommand` would be converted to local time with an *assumed*
+         * offset. On a device whose clock is off by a second that is a second of desync built into
+         * the very first unpause, invisible to everyone including this client.
+         *
+         * Inline rather than on the session scope, because "before the join returns" is the whole
+         * point; a clock exchange is one round trip and the socket is already up. A failure is
+         * logged by the pinger and changes nothing: joining with an unmeasured clock is exactly
+         * where this started, and the pinger corrects it a moment later.
+         */
+        private suspend fun warmClock() {
+            if (pinger.sampleClock() == null) {
+                Timber.w("Joining a SyncPlay group without a measured clock offset")
+            }
         }
 
         /**
@@ -1137,10 +1174,21 @@ class SyncPlayController
             setPhase(phase)
         }
 
-        /** Where the group is now, from its queue update alone — the only reading a wedge leaves. */
+        /**
+         * Where the group is now, from its queue update alone — the only reading a wedge leaves.
+         *
+         * **The instant is the queue's, not this moment's.** `startPositionTicks` is where the group
+         * was when it last published the queue, so pairing it with `serverNow()` claims the group has
+         * not moved since — and everything downstream then measures against a timeline that is behind
+         * the real one by however long ago the update was. That is the browser-resume desync in the
+         * bug report: [selfSyncToGroup] seeks to a position seconds short, and the drift monitor,
+         * handed the same anchor, defends the wrong timeline instead of closing the gap
+         * (`syncplay-bugreport.md`, "keeping a desynchronization of a few seconds initially, somehow
+         * growing from there"). `lastUpdate` is the instant the position was actually true at.
+         */
         private fun inferredGroupAnchor(): SyncPlayAnchor? {
             val queue = (_state.value as? SyncPlayState.InGroup)?.queue ?: return null
-            return SyncPlayAnchor(queue.startPositionTicks.ticksToMillis(), timeSync.serverNow())
+            return SyncPlayAnchor(queue.startPositionTicks.ticksToMillis(), queue.lastUpdate)
         }
 
         private suspend fun onQueueChanged(queue: SyncPlayGroupQueue) {
@@ -1190,7 +1238,7 @@ class SyncPlayController
             val snapshot = hostSnapshot()
             if (loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
                 onEntryOpened(entry)
-                reportReady(entry, snapshot.positionTicks)
+                reportReady(entry, snapshot.positionTicks, snapshot.isPlaying)
                 return
             }
 
@@ -1198,7 +1246,12 @@ class SyncPlayController
             setPhase(SyncPlayPhase.Buffering)
             oweReady(entry, fallbackMillis = null)
             runCatching {
-                api.reportBuffering(timeSync.serverNow(), queue.startPositionTicks, false, entry.playlistItemId)
+                api.reportBuffering(
+                    timeSync.serverNow(),
+                    queue.startPositionTicks,
+                    reportedIsPlaying(snapshot),
+                    entry.playlistItemId,
+                )
             }.onFailure { Timber.w(it, "Could not report SyncPlay buffering") }
 
             val loaded = runCatching { attached.loadItem(entry.itemId, queue.startPositionTicks) }.getOrElse { false }
@@ -1219,7 +1272,12 @@ class SyncPlayController
             queue: SyncPlayGroupQueue,
         ) {
             if (queue.reason !in READY_OWING_REASONS || host == null) return
-            reportReady(entry, hostSnapshot()?.positionTicks ?: queue.startPositionTicks)
+            val snapshot = hostSnapshot()
+            reportReady(
+                entry,
+                snapshot?.positionTicks ?: queue.startPositionTicks,
+                reportedIsPlaying(snapshot),
+            )
         }
 
         /** A slot is open on the host; whatever was skipped to get here is forgiven. */
@@ -1276,7 +1334,8 @@ class SyncPlayController
                 Timber.v("Player ready with no SyncPlay handshake outstanding; saying nothing")
                 return
             }
-            reportReady(entry, hostSnapshot()?.positionTicks ?: 0L)
+            val snapshot = hostSnapshot()
+            reportReady(entry, snapshot?.positionTicks ?: 0L, reportedIsPlaying(snapshot))
         }
 
         /**
@@ -1302,7 +1361,8 @@ class SyncPlayController
                         val current = currentEntry() ?: return@launchInSession
                         if (readyOwedFor != current.playlistItemId) return@launchInSession
                         Timber.d("Player never re-buffered; reporting SyncPlay ready from where it stands")
-                        reportReady(current, hostSnapshot()?.positionTicks ?: 0L)
+                        val snapshot = hostSnapshot()
+                        reportReady(current, snapshot?.positionTicks ?: 0L, reportedIsPlaying(snapshot))
                     }
                 }
         }
@@ -1417,9 +1477,11 @@ class SyncPlayController
         private suspend fun renegotiate() {
             val entry = currentEntry() ?: return
             setPhase(SyncPlayPhase.Buffering)
-            val positionTicks = hostSnapshot()?.positionTicks ?: 0L
+            val snapshot = hostSnapshot()
+            val positionTicks = snapshot?.positionTicks ?: 0L
+            val isPlaying = reportedIsPlaying(snapshot)
             oweReady(entry, fallbackMillis = SETTLED_READY_FALLBACK_MS)
-            runCatching { api.reportBuffering(timeSync.serverNow(), positionTicks, false, entry.playlistItemId) }
+            runCatching { api.reportBuffering(timeSync.serverNow(), positionTicks, isPlaying, entry.playlistItemId) }
                 .onFailure { error ->
                     Timber.w(error, "Could not report SyncPlay buffering")
                     if (error.isMembershipRefused()) onMembershipGone()
@@ -1445,15 +1507,22 @@ class SyncPlayController
          *
          * Clearing [readyOwedFor] *before* the call is what makes it once: the report is a round
          * trip, and a second readiness arriving inside it would otherwise send a second one.
+         *
+         * @param isPlaying whether this member's playback is actually running at [positionTicks] —
+         *   see [reportedIsPlaying]. `ReadyGroupRequest` on the server extrapolates the reported
+         *   position over the round trip *only* when this is true (`WaitingGroupState`:
+         *   `if (!request.IsPlaying) elapsedTime = TimeSpan.Zero`), and the delay it then schedules
+         *   the group's unpause with is computed from the result.
          */
         private suspend fun reportReady(
             entry: SyncPlayQueueEntry,
             positionTicks: Long,
+            isPlaying: Boolean,
         ) {
             readyOwedFor = null
             readyFallbackJob?.cancel()
             readyFallbackJob = null
-            runCatching { api.reportReady(timeSync.serverNow(), positionTicks, false, entry.playlistItemId) }
+            runCatching { api.reportReady(timeSync.serverNow(), positionTicks, isPlaying, entry.playlistItemId) }
                 .onFailure { Timber.w(it, "Could not report SyncPlay ready") }
             if ((_state.value as? SyncPlayState.InGroup)?.phase == SyncPlayPhase.Buffering) {
                 setPhase(SyncPlayPhase.Waiting)
@@ -1543,6 +1612,18 @@ class SyncPlayController
             val attached = host ?: return null
             return withContext(mainDispatcher) { attached.snapshot() }
         }
+
+        /**
+         * Whether this member is actually playing, for a `buffering`/`ready` report.
+         *
+         * Every one of those used to say `false` unconditionally, which is a lie the *server* acts
+         * on: it schedules the group's next unpause from what each member reported, and jellyfin-web
+         * sends its real state here. The host's own reading where one is attached, the shared player
+         * otherwise — a detached member goes on playing in the background (see [detachHost]), so
+         * `false` is only right when nothing is running at all.
+         */
+        private suspend fun reportedIsPlaying(snapshot: SyncPlayHostSnapshot?): Boolean =
+            snapshot?.isPlaying ?: isPlayerRunning()
 
         companion object {
             /** How long the join waits for the websocket before going ahead without it. */

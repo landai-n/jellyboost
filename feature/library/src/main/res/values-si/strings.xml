@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">තවම පුස්තකාල නැත. සේවාදායකයේ එකක් එක් කරන්න.</string>
+    <string name="library_back">ආපසු</string>
+    <string name="library_home">මුල් පිටුව</string>
+    <string name="library_sort">අනුපිළිවෙල</string>
+    <string name="library_filter">පෙරහන</string>
+    <string name="library_sort_title">අනුව අනුපිළිවෙල කරන්න</string>
+    <string name="library_sort_name">නම</string>
+    <string name="library_sort_date_added">එකතු කළ දිනය</string>
+    <string name="library_sort_premiere_date">නිකුත් කළ දිනය</string>
+    <string name="library_sort_community_rating">ප්‍රජා ශ්‍රේණිගත කිරීම</string>
+    <string name="library_sort_runtime">දිග</string>
+    <string name="library_sort_random">අහඹු</string>
+    <string name="library_sort_direction">දිශාව</string>
+    <string name="library_sort_ascending">ආරෝහණ</string>
+    <string name="library_sort_descending">අවරෝහණ</string>
+    <string name="library_filters_title">පෙරහන්</string>
+    <string name="library_filters_genres">ප්‍රභේද</string>
+    <string name="library_filters_years">වසර</string>
+    <string name="library_filters_played">නරඹන ලද</string>
+    <string name="library_filters_played_any">ඕනෑම</string>
+    <string name="library_filters_played_yes">නරඹන ලද</string>
+    <string name="library_filters_played_no">නොනරඹන ලද</string>
+    <string name="library_filters_clear">සියල්ල හිස් කරන්න</string>
+    <string name="library_filters_apply">ප්‍රතිඵල පෙන්වන්න</string>
+    <string name="library_filters_none">මෙම පුස්තකාලයේ පෙරීමට කිසිවක් නොතිබුණි.</string>
+    <string name="library_filters_loading">පෙරහන් පූරණය කරමින්…</string>
+    <string name="library_empty">මෙහි පෙන්වීමට කිසිවක් නැත.</string>
+    <string name="library_empty_filtered">මෙම පෙරහන්වලට ගැලපෙන අයිතමයක් නැත.</string>
+    <string name="library_empty_clear_filters">පෙරහන් හිස් කරන්න</string>
+    <string name="library_retry">යළි උත්සාහ කරන්න</string>
+    <string name="library_error_network">ඔබගේ සේවාදායකයට ළඟා විය නොහැක. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
+    <string name="library_error_unauthorized">ඔබගේ සැසිය කල් ඉකුත් විය. දිගටම කරගෙන යාමට නැවත පිවිසෙන්න.</string>
+    <string name="library_error_not_found">එම පුස්තකාලය තවදුරටත් සේවාදායකයේ නොමැත.</string>
+    <string name="library_error_server">සේවාදායකය දෝෂයක් ලබා දුන්නේය.</string>
+    <string name="library_error_server_with_code">සේවාදායකය දෝෂයක් (%1$d) ලබා දුන්නේය.</string>
+    <string name="library_error_storage">දේශීය දත්ත කියවිය නොහැකි විය.</string>
+    <string name="library_error_unknown">මෙම පුස්තකාලය පූරණය කිරීමේදී යම් දෙයක් වැරදුණි.</string>
+</resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Inga bibliotek än. Lägg till ett på servern.</string>
+
+    <string name="library_back">Tillbaka</string>
+    <string name="library_home">Hem</string>
+    <string name="library_sort">Sortera</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sortera efter</string>
+    <string name="library_sort_name">Namn</string>
+    <string name="library_sort_date_added">Tillagd datum</string>
+    <string name="library_sort_premiere_date">Utgivningsdatum</string>
+    <string name="library_sort_community_rating">Community-betyg</string>
+    <string name="library_sort_runtime">Speltid</string>
+    <string name="library_sort_random">Slumpmässig</string>
+    <string name="library_sort_direction">Riktning</string>
+    <string name="library_sort_ascending">Stigande</string>
+    <string name="library_sort_descending">Fallande</string>
+
+    <string name="library_filters_title">Filter</string>
+    <string name="library_filters_genres">Genrer</string>
+    <string name="library_filters_years">År</string>
+    <string name="library_filters_played">Sedd</string>
+    <string name="library_filters_played_any">Alla</string>
+    <string name="library_filters_played_yes">Sedd</string>
+    <string name="library_filters_played_no">Osedd</string>
+    <string name="library_filters_clear">Rensa allt</string>
+    <string name="library_filters_apply">Visa resultat</string>
+    <string name="library_filters_none">Det här biblioteket hade inget att filtrera på.</string>
+    <string name="library_filters_loading">Läser in filter…</string>
+
+    <string name="library_empty">Inget att visa här.</string>
+    <string name="library_empty_filtered">Inget objekt matchar dessa filter.</string>
+    <string name="library_empty_clear_filters">Rensa filter</string>
+    <string name="library_retry">Försök igen</string>
+
+    <string name="library_error_network">Kan inte nå din server. Kontrollera din anslutning och försök igen.</string>
+    <string name="library_error_unauthorized">Din session har gått ut. Logga in igen för att fortsätta.</string>
+    <string name="library_error_not_found">Det biblioteket finns inte längre på servern.</string>
+    <string name="library_error_server">Servern returnerade ett fel.</string>
+    <string name="library_error_server_with_code">Servern returnerade ett fel (%1$d).</string>
+    <string name="library_error_storage">Kunde inte läsa lokal data.</string>
+    <string name="library_error_unknown">Något gick fel när biblioteket lästes in.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">ดาวน์โหลด</string>
+    <string name="downloads_channel_description">ความคืบหน้าของการดาวน์โหลดสื่อลงในอุปกรณ์นี้</string>
+    <string name="downloads_notification_preparing">กำลังเตรียมดาวน์โหลด…</string>
+    <string name="downloads_notification_downloading">กำลังดาวน์โหลด…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">กำลังดาวน์โหลด…</string>
+    <string name="downloads_action_pause">หยุดชั่วคราว</string>
+    <string name="downloads_action_cancel">ยกเลิก</string>
+</resources>

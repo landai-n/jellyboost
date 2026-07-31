@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Параметрлер</string>
+    <string name="settings_back">Артқа</string>
+    <string name="settings_home">Басты бет</string>
+
+    <string name="settings_section_playback">Ойнату</string>
+    <string name="settings_skip_intro">Кіріспені өткізіп жіберу</string>
+    <string name="settings_skip_outro">Соңғы титрді өткізіп жіберу</string>
+    <string name="settings_skip_mode_off">Ештеңе істемеу</string>
+    <string name="settings_skip_mode_show_button">Өткізіп жіберу түймесін көрсету</string>
+    <string name="settings_skip_mode_auto">Автоматты түрде өткізіп жіберу</string>
+    <string name="settings_pip">Суреттегі сурет</string>
+    <string name="settings_pip_supporting">Қолданбадан шыққанда қалқымалы терезеде ойнатуды жалғастыру.</string>
+
+    <string name="settings_section_downloads">Жүктеулер</string>
+    <string name="settings_wifi_only">Тек Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Мобильді деректерде жүктеулерді кідірту.</string>
+    <string name="settings_quality">Жүктеу сапасы</string>
+    <string name="settings_quality_original">Түпнұсқа файл — дәл көшірме, жалғастыруға болады</string>
+    <string name="settings_quality_high">Жоғары — шамамен 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Орташа — шамамен 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Төмен — шамамен 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Түпнұсқа файлдан басқаның бәрін серверіңіз жіберу кезінде түрлендіреді, сондықтан жүктелу кезінде көрсетілетін өлшем — болжам, ал үзілген тасымалдау қайтадан басынан басталады.</string>
+    <string name="settings_storage_label">Жад</string>
+    <string name="settings_storage_summary">Осы құрылғыда %1$s қолданылды · %2$s бос</string>
+    <string name="settings_storage_location">Жүктеулер %1$s жерінде сақталады</string>
+    <string name="settings_storage_picker">Жад орны</string>
+    <string name="settings_storage_internal">Ішкі жад</string>
+    <string name="settings_storage_sd_card">SD карта</string>
+    <string name="settings_storage_volume_free">%1$s бос</string>
+    <string name="settings_storage_missing">Сіз таңдаған жад қазір қолжетімді емес, сондықтан жүктеулер төменде таңдалған орынға жіберіледі.</string>
+    <string name="settings_storage_switch_title">Жүктеулерді жылжыту керек пе?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Жүктеулерді орындар арасында жылжыту әлі мүмкін емес, сондықтан осы құрылғыдағысы жойылады. Оны жаңа орынға қайта жүктеп алуға болады.</item>
+        <item quantity="other">Жүктеулерді орындар арасында жылжыту әлі мүмкін емес, сондықтан осы құрылғыдағы %1$d жойылады. Оларды жаңа орынға қайта жүктеп алуға болады.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Жою және ауыстыру</string>
+
+    <string name="settings_section_connectivity">Байланыс</string>
+    <string name="settings_offline_mode">Желіден тыс режим</string>
+    <string name="settings_offline_mode_supporting">Тек осы құрылғыда бар медианы көрсету.</string>
+
+    <string name="settings_section_account">Есептік жазба</string>
+    <string name="settings_account_user">Кірген пайдаланушы</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Кірілмеген</string>
+    <string name="settings_sign_out">Шығу</string>
+    <string name="settings_sign_out_dialog_title">Шығу керек пе?</string>
+    <string name="settings_sign_out_dialog_message">Қайта кіру үшін сізге сервер мекенжайы мен құпия сөз қажет болады.</string>
+    <string name="settings_sign_out_delete_downloads">Осы құрылғыдағы жүктеулерді де жою</string>
+    <string name="settings_cancel">Бас тарту</string>
+</resources>

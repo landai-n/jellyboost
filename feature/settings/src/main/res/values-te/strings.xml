@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">సెట్టింగ్‌లు</string>
+    <string name="settings_back">వెనుకకు</string>
+    <string name="settings_home">హోమ్</string>
+
+    <string name="settings_section_playback">ప్లేబ్యాక్</string>
+    <string name="settings_skip_intro">ఇంట్రోను దాటవేయండి</string>
+    <string name="settings_skip_outro">అవుట్రోను దాటవేయండి</string>
+    <string name="settings_skip_mode_off">ఏమీ చేయవద్దు</string>
+    <string name="settings_skip_mode_show_button">దాటవేత బటన్‌ను చూపించు</string>
+    <string name="settings_skip_mode_auto">స్వయంచాలకంగా దాటవేయండి</string>
+    <string name="settings_pip">పిక్చర్‑ఇన్‑పిక్చర్</string>
+    <string name="settings_pip_supporting">మీరు యాప్‌ను వదిలినప్పుడు ఒక ఫ్లోటింగ్ విండోలో ప్లే చేస్తూ ఉంచండి.</string>
+
+    <string name="settings_section_downloads">డౌన్‌లోడ్‌లు</string>
+    <string name="settings_wifi_only">Wi‑Fi మాత్రమే</string>
+    <string name="settings_wifi_only_supporting">మొబైల్ డేటాలో డౌన్‌లోడ్‌లను పాజ్ చేయండి.</string>
+    <string name="settings_quality">డౌన్‌లోడ్ నాణ్యత</string>
+    <string name="settings_quality_original">ఒరిజినల్ ఫైల్ — ఖచ్చితమైన కాపీ, తిరిగి కొనసాగించదగినది</string>
+    <string name="settings_quality_high">అధిక — సుమారు 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">మధ్యస్థ — సుమారు 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">తక్కువ — సుమారు 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">ఒరిజినల్ ఫైల్ తప్ప మిగతావన్నీ మీ సర్వర్ పంపేటప్పుడు మార్చబడతాయి, కాబట్టి డౌన్‌లోడ్ అవుతున్నప్పుడు చూపించే పరిమాణం ఒక అంచనా మాత్రమే, మరియు అంతరాయం కలిగిన బదిలీ మళ్లీ మొదటి నుండి ప్రారంభమవుతుంది.</string>
+    <string name="settings_storage_label">నిల్వ</string>
+    <string name="settings_storage_summary">ఈ పరికరంలో %1$s ఉపయోగించబడింది · %2$s ఖాళీగా ఉంది</string>
+    <string name="settings_storage_location">డౌన్‌లోడ్‌లు %1$sలో ఉంచబడతాయి</string>
+    <string name="settings_storage_picker">నిల్వ స్థానం</string>
+    <string name="settings_storage_internal">అంతర్గత నిల్వ</string>
+    <string name="settings_storage_sd_card">SD కార్డ్</string>
+    <string name="settings_storage_volume_free">%1$s ఖాళీగా ఉంది</string>
+    <string name="settings_storage_missing">మీరు ఎంచుకున్న నిల్వ ప్రస్తుతం అందుబాటులో లేదు, కాబట్టి డౌన్‌లోడ్‌లు దిగువన ఎంచుకున్న స్థానానికి వెళ్తున్నాయి.</string>
+    <string name="settings_storage_switch_title">డౌన్‌లోడ్‌లను తరలించాలా?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">డౌన్‌లోడ్‌లను ఇంకా స్థానాల మధ్య తరలించలేము, కాబట్టి ఈ పరికరంలో ఇప్పటికే ఉన్నది తొలగించబడుతుంది. మీరు దీన్ని కొత్త స్థానానికి మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</item>
+        <item quantity="other">డౌన్‌లోడ్‌లను ఇంకా స్థానాల మధ్య తరలించలేము, కాబట్టి ఈ పరికరంలో ఇప్పటికే ఉన్న %1$d తొలగించబడతాయి. మీరు వాటిని కొత్త స్థానానికి మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">తొలగించి మార్చండి</string>
+
+    <string name="settings_section_connectivity">కనెక్టివిటీ</string>
+    <string name="settings_offline_mode">ఆఫ్‌లైన్ మోడ్</string>
+    <string name="settings_offline_mode_supporting">ఈ పరికరంలో ఇప్పటికే ఉన్న మీడియాను మాత్రమే చూపించు.</string>
+
+    <string name="settings_section_account">ఖాతా</string>
+    <string name="settings_account_user">సైన్ ఇన్ అయినవారు</string>
+    <string name="settings_account_server">సర్వర్</string>
+    <string name="settings_account_unknown">సైన్ ఇన్ కాలేదు</string>
+    <string name="settings_sign_out">సైన్ అవుట్</string>
+    <string name="settings_sign_out_dialog_title">సైన్ అవుట్ అవ్వాలా?</string>
+    <string name="settings_sign_out_dialog_message">తిరిగి సైన్ ఇన్ అవ్వడానికి మీకు మీ సర్వర్ చిరునామా మరియు పాస్‌వర్డ్ అవసరం అవుతుంది.</string>
+    <string name="settings_sign_out_delete_downloads">ఈ పరికరం నుండి డౌన్‌లోడ్‌లను కూడా తొలగించండి</string>
+    <string name="settings_cancel">రద్దు చేయండి</string>
+</resources>

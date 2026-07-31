@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Se connecter au serveur</string>
+    <string name="server_setup_discovered_title">Serveurs sur ce réseau</string>
+    <string name="server_setup_discovering">Recherche sur le réseau local…</string>
+    <string name="server_setup_no_servers_found">Aucun serveur ne s\'est annoncé. Saisissez une adresse ci-dessous.</string>
+    <string name="server_setup_manual_title">Adresse du serveur</string>
+    <string name="server_setup_address_label">Hôte ou URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ou 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Se connecter</string>
+    <string name="server_setup_connecting">Contact du serveur en cours…</string>
+    <string name="server_setup_session_lost">Votre session enregistrée n\'a pas pu être restaurée, vous avez donc été déconnecté. Veuillez vous reconnecter.</string>
+    <string name="login_title">Se connecter</string>
+    <string name="login_server_version">Version %1$s</string>
+    <string name="login_server_version_unknown">Version inconnue</string>
+    <string name="login_public_users_title">Qui regarde ?</string>
+    <string name="login_username_label">Nom d\'utilisateur</string>
+    <string name="login_password_label">Mot de passe</string>
+    <string name="login_show_password">Afficher le mot de passe</string>
+    <string name="login_hide_password">Masquer le mot de passe</string>
+    <string name="login_sign_in">Se connecter</string>
+    <string name="login_change_server">Utiliser un autre serveur</string>
+    <string name="login_loading">Chargement des informations du serveur…</string>
+    <string name="login_or">ou</string>
+    <string name="login_quick_connect">Utiliser la connexion rapide</string>
+    <string name="login_quick_connect_title">Connexion rapide</string>
+    <string name="login_quick_connect_instructions">Ouvrez Jellyfin sur un appareil où vous êtes déjà connecté, accédez à Connexion rapide et saisissez ce code.</string>
+    <string name="login_quick_connect_waiting">En attente de l\'approbation…</string>
+    <string name="login_quick_connect_cancel">Annuler</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d adresse candidate testée, sans succès.</item>
+        <item quantity="other">%d adresses candidates testées, sans succès.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Impossible de joindre le serveur</string>
+    <string name="auth_error_unsupported_version_or_product">Version ou produit non pris en charge</string>
+    <string name="auth_error_cannot_connect">La connexion n\'a pas pu être établie.\nVérifiez le nom d\'hôte et votre connexion réseau.</string>
+    <string name="auth_error_invalid_credentials">Nom d\'utilisateur ou mot de passe incorrect.</string>
+    <string name="auth_error_quick_connect_expired">Ce code a expiré. Demandez-en un nouveau et réessayez.</string>
+    <string name="auth_error_server">Le serveur a répondu avec une erreur. Réessayez.</string>
+    <string name="auth_error_server_with_code">Le serveur a répondu avec une erreur (%1$d). Réessayez.</string>
+</resources>

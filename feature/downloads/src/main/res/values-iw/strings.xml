@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">הורד</string>
+    <string name="downloads_tab_queue">תור</string>
+    <string name="downloads_wifi_only">Wi‑Fi בלבד</string>
+
+    <string name="downloads_group_movies">סרטים</string>
+
+    <string name="downloads_storage_summary">%1$s בשימוש · %2$s פנויים</string>
+
+    <string name="downloads_action_delete">מחיקת הורדה</string>
+    <string name="downloads_action_cancel">ביטול הורדה</string>
+    <string name="downloads_action_pause">השהיית הורדה</string>
+    <string name="downloads_action_resume">המשך הורדה</string>
+    <string name="downloads_action_move_up">הזזה למעלה בתור</string>
+    <string name="downloads_action_move_down">הזזה למטה בתור</string>
+
+    <string name="downloads_action_pause_all">השהיית הכול</string>
+    <string name="downloads_action_resume_all">המשך הכול</string>
+    <string name="downloads_action_cancel_all">ביטול הכול</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">לבטל את ההורדה הזאת?</item>
+        <item quantity="two">לבטל את שתי ההורדות?</item>
+        <item quantity="many">לבטל את כל %1$d ההורדות?</item>
+        <item quantity="other">לבטל את כל %1$d ההורדות?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">התור יתרוקן וכל הקבצים שהורדו חלקית יוסרו. הורדות שהושלמו לא יושפעו.</string>
+    <string name="downloads_cancel_all_dialog_confirm">ביטול הורדות</string>
+    <string name="downloads_cancel_all_dialog_dismiss">השארה</string>
+
+    <string name="downloads_delete_dialog_title">למחוק את %1$s?</string>
+    <string name="downloads_delete_dialog_message">הקבצים שהורדו יוסרו מהמכשיר הזה. תוכל להוריד אותם שוב מאוחר יותר.</string>
+    <string name="downloads_delete_dialog_confirm">מחיקה</string>
+    <string name="downloads_delete_dialog_cancel">ביטול</string>
+
+    <string name="downloads_progress_of">%1$s מתוך %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s מתוך ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s מתוך עד %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">עד %1$s</string>
+    <string name="downloads_speed">%1$s/שנ׳</string>
+    <string name="downloads_eta">%1$s נותרו</string>
+    <string name="downloads_eta_approx">~%1$s נותרו</string>
+    <string name="downloads_transcoded_marker">הומר קידוד</string>
+    <string name="downloads_status_queued">ממתין</string>
+    <string name="downloads_status_paused">מושהה</string>
+    <string name="downloads_status_failed">ההורדה נכשלה</string>
+    <string name="downloads_status_failed_reason">ההורדה נכשלה: %1$s</string>
+
+    <string name="downloads_empty_downloaded">עדיין לא הורד כלום. הקש על הורדה בסרט או בפרק כדי לשמור אותו במכשיר הזה.</string>
+    <string name="downloads_empty_queue">תור ההורדות ריק.</string>
+    <string name="downloads_load_failed">לא ניתן היה לקרוא את ההורדות שלך. פתח מחדש את המסך הזה כדי לנסות שוב.</string>
+    <string name="downloads_message_delete_failed">לא ניתן היה למחוק את ההורדה הזאת.</string>
+    <string name="downloads_message_action_failed">לא ניתן היה לעדכן את התור.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d הושהו — המרת קידוד אחת ממשיכה בהורדה (לא ניתן להשהות המרת קידוד).</item>
+        <item quantity="two">%1$d הושהו — שתי המרות קידוד ממשיכות בהורדה (לא ניתן להשהות המרת קידוד).</item>
+        <item quantity="many">%1$d הושהו — %2$d המרות קידוד ממשיכות בהורדה (לא ניתן להשהות המרת קידוד).</item>
+        <item quantity="other">%1$d הושהו — %2$d המרות קידוד ממשיכות בהורדה (לא ניתן להשהות המרת קידוד).</item>
+    </plurals>
+</resources>

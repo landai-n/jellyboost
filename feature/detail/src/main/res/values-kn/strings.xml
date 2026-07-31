@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">ಹಿಂದೆ</string>
+    <string name="detail_home">ಮುಖಪುಟ</string>
+    <string name="detail_play">ಪ್ಲೇ</string>
+    <string name="detail_resume">ಮುಂದುವರಿಸಿ</string>
+    <string name="detail_download">ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ</string>
+    <string name="detail_download_cancel">ರದ್ದುಮಾಡಿ</string>
+    <string name="detail_download_remove">ತೆಗೆದುಹಾಕಿ</string>
+    <string name="detail_download_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+    <string name="detail_play_episode">ಈ ಸಂಚಿಕೆ ಪ್ಲೇ ಮಾಡಿ</string>
+    <string name="detail_mark_watched">ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ</string>
+    <string name="detail_mark_unwatched">ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ</string>
+    <string name="detail_add_favorite">ಮೆಚ್ಚಿನವುಗಳಿಗೆ ಸೇರಿಸಿ</string>
+    <string name="detail_remove_favorite">ಮೆಚ್ಚಿನವುಗಳಿಂದ ತೆಗೆದುಹಾಕಿ</string>
+
+    <string name="detail_section_seasons">ಸೀಸನ್‌ಗಳು</string>
+    <string name="detail_section_next_up">ಮುಂದಿನದು</string>
+    <string name="detail_section_episodes">ಸಂಚಿಕೆಗಳು</string>
+    <string name="detail_section_similar">ಇದೇ ರೀತಿಯ ಇನ್ನಷ್ಟು</string>
+
+    <string name="detail_runtime_minutes">%1$d ನಿಮಿಷ</string>
+    <string name="detail_remaining_minutes">%1$d ನಿಮಿಷ ಬಾಕಿ</string>
+    <string name="detail_size_on_device">ಸಾಧನದಲ್ಲಿ %1$s</string>
+    <string name="detail_directed_by">%1$s ನಿರ್ದೇಶಿಸಿದ್ದಾರೆ</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d ಸೀಸನ್</item>
+        <item quantity="other">%1$d ಸೀಸನ್‌ಗಳು</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d ಸಂಚಿಕೆ</item>
+        <item quantity="other">%1$d ಸಂಚಿಕೆಗಳು</item>
+    </plurals>
+
+    <string name="detail_empty">ಈ ಐಟಂ ಇನ್ನು ಲಭ್ಯವಿಲ್ಲ.</string>
+    <string name="detail_message_download_queued">ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ.</string>
+    <string name="detail_message_download_failed">ಆ ಡೌನ್‌ಲೋಡ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="detail_message_download_deleted">ಈ ಸಾಧನದಿಂದ ತೆಗೆದುಹಾಕಲಾಗಿದೆ.</string>
+    <string name="detail_message_download_delete_failed">ಆ ಡೌನ್‌ಲೋಡ್ ಅನ್ನು ತೆಗೆದುಹಾಕಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">ಡೌನ್‌ಲೋಡ್ ರದ್ದಾಗಿದೆ — %1$d ಮುಗಿದ ಸಂಚಿಕೆ ಇರಿಸಲಾಗಿದೆ.</item>
+        <item quantity="other">ಡೌನ್‌ಲೋಡ್ ರದ್ದಾಗಿದೆ — %1$d ಮುಗಿದ ಸಂಚಿಕೆಗಳನ್ನು ಇರಿಸಲಾಗಿದೆ.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">ಅದನ್ನು ಉಳಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
+
+    <string name="detail_group_play">%1$s ಗಾಗಿ ಪ್ಲೇ ಮಾಡಿ</string>
+    <string name="detail_group_resume">%1$s ಗಾಗಿ ಮುಂದುವರಿಸಿ</string>
+    <string name="detail_group_play_next">ಮುಂದೆ ಪ್ಲೇ ಮಾಡಿ</string>
+    <string name="detail_group_add_to_queue">ಸರತಿಗೆ ಸೇರಿಸಿ</string>
+    <string name="detail_message_group_play">ಇದನ್ನು ಪ್ಲೇ ಮಾಡಲು ಗುಂಪಿಗೆ ಕೇಳಲಾಗಿದೆ.</string>
+    <string name="detail_message_group_play_next">ಗುಂಪಿಗಾಗಿ ಮುಂದಿನದಾಗಿ ಸರತಿಯಲ್ಲಿ ಇರಿಸಲಾಗಿದೆ.</string>
+    <string name="detail_message_group_queued">ಗುಂಪಿನ ಸರತಿಗೆ ಸೇರಿಸಲಾಗಿದೆ.</string>
+
+    <string name="detail_delete_download_dialog_title">ಡೌನ್‌ಲೋಡ್ ಅಳಿಸುವುದೇ?</string>
+    <string name="detail_delete_download_dialog_message">ಇದು ಈ ಸಾಧನದಿಂದ ಅದನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ. ನೀವು ಅದನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</string>
+    <string name="detail_delete_download_dialog_confirm">ಅಳಿಸಿ</string>
+    <string name="detail_delete_download_dialog_cancel">ರದ್ದುಮಾಡಿ</string>
+</resources>

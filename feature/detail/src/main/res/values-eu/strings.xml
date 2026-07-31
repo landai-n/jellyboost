@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Atzera</string>
+    <string name="detail_home">Hasiera</string>
+    <string name="detail_play">Erreproduzitu</string>
+    <string name="detail_resume">Jarraitu</string>
+    <string name="detail_download">Deskargatu</string>
+    <string name="detail_download_cancel">Utzi</string>
+    <string name="detail_download_remove">Kendu</string>
+    <string name="detail_download_retry">Berriz saiatu</string>
+    <string name="detail_play_episode">Erreproduzitu atal hau</string>
+    <string name="detail_mark_watched">Markatu ikusita gisa</string>
+    <string name="detail_mark_unwatched">Markatu ikusi gabe gisa</string>
+    <string name="detail_add_favorite">Gehitu gogokoetara</string>
+    <string name="detail_remove_favorite">Kendu gogokoetatik</string>
+    <string name="detail_section_seasons">Denboraldiak</string>
+    <string name="detail_section_next_up">Hurrengoa</string>
+    <string name="detail_section_episodes">Atalak</string>
+    <string name="detail_section_similar">Antzekoak</string>
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">%1$d min falta</string>
+    <string name="detail_size_on_device">%1$s gailuan</string>
+    <string name="detail_directed_by">Zuzendaria: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d denboraldi</item>
+        <item quantity="other">%1$d denboraldi</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d atal</item>
+        <item quantity="other">%1$d atal</item>
+    </plurals>
+    <string name="detail_empty">Elementu hau ez dago jada erabilgarri.</string>
+    <string name="detail_message_download_queued">Deskargetara gehituta.</string>
+    <string name="detail_message_download_failed">Ezin izan da deskarga hori hasi.</string>
+    <string name="detail_message_download_deleted">Gailu honetatik kenduta.</string>
+    <string name="detail_message_download_delete_failed">Ezin izan da deskarga hori kendu.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Deskarga bertan behera utzi da — amaitutako atal %1$d gorde da.</item>
+        <item quantity="other">Deskarga bertan behera utzi da — amaitutako %1$d atal gorde dira.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Ezin izan da hori gorde. Saiatu berriro.</string>
+    <string name="detail_group_play">Erreproduzitu %1$s(r)entzat</string>
+    <string name="detail_group_resume">Jarraitu %1$s(r)entzat</string>
+    <string name="detail_group_play_next">Erreproduzitu hurrena</string>
+    <string name="detail_group_add_to_queue">Gehitu ilarara</string>
+    <string name="detail_message_group_play">Taldeari hau erreproduzitzeko eskatu zaio.</string>
+    <string name="detail_message_group_play_next">Taldearentzat hurrengo gisa ilaratuta.</string>
+    <string name="detail_message_group_queued">Taldearen ilarara gehituta.</string>
+    <string name="detail_delete_download_dialog_title">Deskarga ezabatu?</string>
+    <string name="detail_delete_download_dialog_message">Honek gailu honetatik kentzen du. Nahi duzunean berriz deskarga dezakezu.</string>
+    <string name="detail_delete_download_dialog_confirm">Ezabatu</string>
+    <string name="detail_delete_download_dialog_cancel">Utzi</string>
+</resources>

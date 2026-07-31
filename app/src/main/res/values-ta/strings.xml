@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">மேலும் விருப்பங்கள்</string>
+    <string name="home_settings">அமைப்புகள்</string>
+    <string name="settings_offline_mode">ஆஃப்லைன் பயன்முறை</string>
+
+    <string name="state_on">இயக்கத்தில்</string>
+    <string name="state_off">முடக்கத்தில்</string>
+
+    <string name="nav_home">முகப்பு</string>
+    <string name="nav_libraries">நூலகங்கள்</string>
+    <string name="nav_search">தேடல்</string>
+    <string name="nav_downloads">பதிவிறக்கங்கள்</string>
+
+    <string name="offline_no_network">நெட்வொர்க் இல்லை — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
+    <string name="offline_server_unreachable">சேவையகத்தை அடைய முடியவில்லை — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
+    <string name="offline_forced">ஆஃப்லைன் பயன்முறை இயக்கத்தில் உள்ளது — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
+    <string name="offline_retry">மீண்டும் முயற்சிக்கவும்</string>
+    <string name="offline_go_online">ஆன்லைனுக்குச் செல்</string>
+
+    <string name="syncplay_groups_action">SyncPlay குழுக்கள்</string>
+    <string name="syncplay_groups_action_active">SyncPlay குழுக்கள் — நீங்கள் ஒரு குழுவில் உள்ளீர்கள்</string>
+</resources>

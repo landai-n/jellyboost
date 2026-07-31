@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Natrag</string>
+    <string name="detail_home">Početna</string>
+    <string name="detail_play">Reproduciraj</string>
+    <string name="detail_resume">Nastavi</string>
+    <string name="detail_download">Preuzmi</string>
+    <string name="detail_download_cancel">Otkaži</string>
+    <string name="detail_download_remove">Ukloni</string>
+    <string name="detail_download_retry">Pokušaj ponovno</string>
+    <string name="detail_play_episode">Reproduciraj ovu epizodu</string>
+    <string name="detail_mark_watched">Označi kao gledano</string>
+    <string name="detail_mark_unwatched">Označi kao negledano</string>
+    <string name="detail_add_favorite">Dodaj u favorite</string>
+    <string name="detail_remove_favorite">Ukloni iz favorita</string>
+
+    <string name="detail_section_seasons">Sezone</string>
+    <string name="detail_section_next_up">Sljedeće</string>
+    <string name="detail_section_episodes">Epizode</string>
+    <string name="detail_section_similar">Slično ovome</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Preostalo %1$d min</string>
+    <string name="detail_size_on_device">%1$s na uređaju</string>
+    <string name="detail_directed_by">Redatelj: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezona</item>
+        <item quantity="few">%1$d sezone</item>
+        <item quantity="other">%1$d sezona</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d epizoda</item>
+        <item quantity="few">%1$d epizode</item>
+        <item quantity="other">%1$d epizoda</item>
+    </plurals>
+
+    <string name="detail_empty">Ova stavka više nije dostupna.</string>
+    <string name="detail_message_download_queued">Dodano u preuzimanja.</string>
+    <string name="detail_message_download_failed">Preuzimanje se nije moglo pokrenuti.</string>
+    <string name="detail_message_download_deleted">Uklonjeno s ovog uređaja.</string>
+    <string name="detail_message_download_delete_failed">Preuzimanje se nije moglo ukloniti.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Preuzimanje otkazano — %1$d završena epizoda zadržana.</item>
+        <item quantity="few">Preuzimanje otkazano — %1$d završene epizode zadržane.</item>
+        <item quantity="other">Preuzimanje otkazano — %1$d završenih epizoda zadržano.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Nije moguće spremiti. Pokušajte ponovno.</string>
+
+    <string name="detail_group_play">Reproduciraj za %1$s</string>
+    <string name="detail_group_resume">Nastavi za %1$s</string>
+    <string name="detail_group_play_next">Reproduciraj sljedeće</string>
+    <string name="detail_group_add_to_queue">Dodaj u red čekanja</string>
+    <string name="detail_message_group_play">Zatraženo je od grupe da ovo reproducira.</string>
+    <string name="detail_message_group_play_next">Postavljeno kao sljedeće za grupu.</string>
+    <string name="detail_message_group_queued">Dodano u red čekanja grupe.</string>
+
+    <string name="detail_delete_download_dialog_title">Izbrisati preuzimanje?</string>
+    <string name="detail_delete_download_dialog_message">Ovo će ga ukloniti s ovog uređaja. Možete ga ponovno preuzeti bilo kada.</string>
+    <string name="detail_delete_download_dialog_confirm">Izbriši</string>
+    <string name="detail_delete_download_dialog_cancel">Otkaži</string>
+</resources>

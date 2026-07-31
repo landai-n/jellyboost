@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <string name="settings_back">ಹಿಂದೆ</string>
+    <string name="settings_home">ಮುಖಪುಟ</string>
+
+    <string name="settings_section_playback">ಪ್ಲೇಬ್ಯಾಕ್</string>
+    <string name="settings_skip_intro">ಇಂಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
+    <string name="settings_skip_outro">ಔಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
+    <string name="settings_skip_mode_off">ಏನೂ ಮಾಡಬೇಡಿ</string>
+    <string name="settings_skip_mode_show_button">ಸ್ಕಿಪ್ ಬಟನ್ ತೋರಿಸಿ</string>
+    <string name="settings_skip_mode_auto">ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಬಿಟ್ಟುಬಿಡಿ</string>
+    <string name="settings_pip">ಪಿಕ್ಚರ್-ಇನ್-ಪಿಕ್ಚರ್</string>
+    <string name="settings_pip_supporting">ನೀವು ಆ್ಯಪ್ ಬಿಟ್ಟಾಗ ತೇಲುವ ವಿಂಡೋದಲ್ಲಿ ಪ್ಲೇ ಮಾಡುವುದನ್ನು ಮುಂದುವರಿಸಿ.</string>
+
+    <string name="settings_section_downloads">ಡೌನ್‌ಲೋಡ್‌ಗಳು</string>
+    <string name="settings_wifi_only">ಕೇವಲ Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">ಮೊಬೈಲ್ ಡೇಟಾದಲ್ಲಿ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ವಿರಾಮಗೊಳಿಸಿ.</string>
+    <string name="settings_quality">ಡೌನ್‌ಲೋಡ್ ಗುಣಮಟ್ಟ</string>
+    <string name="settings_quality_original">ಮೂಲ ಫೈಲ್ — ನಿಖರ ಪ್ರತಿ, ಮುಂದುವರಿಸಬಹುದಾದ</string>
+    <string name="settings_quality_high">ಹೆಚ್ಚು — ಸುಮಾರು 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">ಮಧ್ಯಮ — ಸುಮಾರು 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">ಕಡಿಮೆ — ಸುಮಾರು 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">ಮೂಲ ಫೈಲ್ ಹೊರತುಪಡಿಸಿ ಬೇರೆ ಯಾವುದನ್ನಾದರೂ ನಿಮ್ಮ ಸರ್ವರ್ ಕಳುಹಿಸುವಾಗ ಪರಿವರ್ತಿಸುತ್ತದೆ, ಆದ್ದರಿಂದ ಅದು ಡೌನ್‌ಲೋಡ್ ಆಗುವಾಗ ತೋರಿಸುವ ಗಾತ್ರ ಒಂದು ಅಂದಾಜು ಆಗಿದೆ ಮತ್ತು ಅಡ್ಡಿಪಡಿಸಿದ ವರ್ಗಾವಣೆ ಮತ್ತೆ ಪ್ರಾರಂಭವಾಗುತ್ತದೆ.</string>
+    <string name="settings_storage_label">ಸಂಗ್ರಹಣೆ</string>
+    <string name="settings_storage_summary">ಈ ಸಾಧನದಲ್ಲಿ %1$s ಬಳಕೆಯಾಗಿದೆ · %2$s ಖಾಲಿ ಇದೆ</string>
+    <string name="settings_storage_location">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು %1$s ನಲ್ಲಿ ಇರಿಸಲಾಗಿದೆ</string>
+    <string name="settings_storage_picker">ಸಂಗ್ರಹಣೆ ಸ್ಥಳ</string>
+    <string name="settings_storage_internal">ಆಂತರಿಕ ಸಂಗ್ರಹಣೆ</string>
+    <string name="settings_storage_sd_card">SD ಕಾರ್ಡ್</string>
+    <string name="settings_storage_volume_free">%1$s ಖಾಲಿ ಇದೆ</string>
+    <string name="settings_storage_missing">ನೀವು ಆಯ್ಕೆ ಮಾಡಿದ ಸಂಗ್ರಹಣೆ ಈಗ ಲಭ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳು ಕೆಳಗೆ ಆಯ್ಕೆಮಾಡಿದ ಸ್ಥಳಕ್ಕೆ ಹೋಗುತ್ತಿವೆ.</string>
+    <string name="settings_storage_switch_title">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಸರಿಸುವುದೇ?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇನ್ನೂ ಸ್ಥಳಗಳ ನಡುವೆ ಸರಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಈ ಸಾಧನದಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವುದನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. ನೀವು ಅದನ್ನು ಹೊಸ ಸ್ಥಳಕ್ಕೆ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</item>
+        <item quantity="other">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇನ್ನೂ ಸ್ಥಳಗಳ ನಡುವೆ ಸರಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಈ ಸಾಧನದಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವ %1$d ಅನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. ನೀವು ಅವುಗಳನ್ನು ಹೊಸ ಸ್ಥಳಕ್ಕೆ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">ಅಳಿಸಿ ಮತ್ತು ಬದಲಿಸಿ</string>
+
+    <string name="settings_section_connectivity">ಸಂಪರ್ಕ</string>
+    <string name="settings_offline_mode">ಆಫ್‌ಲೈನ್ ಮೋಡ್</string>
+    <string name="settings_offline_mode_supporting">ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿರುವ ಮಾಧ್ಯಮವನ್ನು ಮಾತ್ರ ತೋರಿಸಿ.</string>
+
+    <string name="settings_section_account">ಖಾತೆ</string>
+    <string name="settings_account_user">ಇವರಾಗಿ ಸೈನ್ ಇನ್ ಆಗಿದ್ದೀರಿ</string>
+    <string name="settings_account_server">ಸರ್ವರ್</string>
+    <string name="settings_account_unknown">ಸೈನ್ ಇನ್ ಆಗಿಲ್ಲ</string>
+    <string name="settings_sign_out">ಸೈನ್ ಔಟ್</string>
+    <string name="settings_sign_out_dialog_title">ಸೈನ್ ಔಟ್ ಮಾಡುವುದೇ?</string>
+    <string name="settings_sign_out_dialog_message">ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಲು ನಿಮ್ಮ ಸರ್ವರ್ ವಿಳಾಸ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ.</string>
+    <string name="settings_sign_out_delete_downloads">ಈ ಸಾಧನದಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಸಹ ಅಳಿಸಿ</string>
+    <string name="settings_cancel">ರದ್ದುಮಾಡಿ</string>
+</resources>

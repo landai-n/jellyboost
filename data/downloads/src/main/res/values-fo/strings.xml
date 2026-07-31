@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Niðurhal</string>
+    <string name="downloads_channel_description">Framgongd av tilfari, sum verður niðurhalað til hetta tólið.</string>
+
+    <string name="downloads_notification_preparing">Fyrireikar niðurhal…</string>
+    <string name="downloads_notification_downloading">Niðurhalar…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Niðurhalar…</string>
+    <string name="downloads_action_pause">Steðga</string>
+    <string name="downloads_action_cancel">Avlýs</string>
+</resources>

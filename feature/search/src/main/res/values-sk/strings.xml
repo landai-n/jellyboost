@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Hľadať filmy, seriály a epizódy</string>
+    <string name="search_clear">Vymazať</string>
+
+    <string name="search_section_movies">Filmy</string>
+    <string name="search_section_series">Seriály</string>
+    <string name="search_section_episodes">Epizódy</string>
+
+    <string name="search_prompt">Napíšte niečo na vyhľadávanie vo vašich knižniciach.</string>
+    <string name="search_no_results">Nič sa nezhoduje s výrazom „%1$s“.</string>
+
+    <string name="search_error_network">Server nie je dostupný. Skontrolujte pripojenie a skúste to znova.</string>
+    <string name="search_error_unauthorized">Vaša relácia vypršala. Prihláste sa znova, aby ste mohli pokračovať.</string>
+    <string name="search_error_not_found">Táto položka sa už na serveri nenachádza.</string>
+    <string name="search_error_server">Server vrátil chybu.</string>
+    <string name="search_error_server_with_code">Server vrátil chybu (%1$d).</string>
+    <string name="search_error_storage">Nepodarilo sa načítať lokálne dáta.</string>
+    <string name="search_error_unknown">Pri vyhľadávaní sa niečo pokazilo.</string>
+</resources>

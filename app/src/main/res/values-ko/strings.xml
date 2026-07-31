@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">추가 옵션</string>
+    <string name="home_settings">설정</string>
+    <string name="settings_offline_mode">오프라인 모드</string>
+
+    <string name="state_on">켜짐</string>
+    <string name="state_off">꺼짐</string>
+
+    <string name="nav_home">홈</string>
+    <string name="nav_libraries">라이브러리</string>
+    <string name="nav_search">검색</string>
+    <string name="nav_downloads">다운로드</string>
+
+    <string name="offline_no_network">네트워크 없음 — 다운로드한 미디어를 표시합니다</string>
+    <string name="offline_server_unreachable">서버에 연결할 수 없음 — 다운로드한 미디어를 표시합니다</string>
+    <string name="offline_forced">오프라인 모드 켜짐 — 다운로드한 미디어를 표시합니다</string>
+    <string name="offline_retry">다시 시도</string>
+    <string name="offline_go_online">온라인으로 전환</string>
+
+    <string name="syncplay_groups_action">SyncPlay 그룹</string>
+    <string name="syncplay_groups_action_active">SyncPlay 그룹 — 그룹에 참여 중입니다</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Қосымша опциялар</string>
+    <string name="home_settings">Параметрлер</string>
+    <string name="settings_offline_mode">Желіден тыс режим</string>
+
+    <string name="state_on">Қосулы</string>
+    <string name="state_off">Өшірулі</string>
+
+    <string name="nav_home">Басты бет</string>
+    <string name="nav_libraries">Кітапханалар</string>
+    <string name="nav_search">Іздеу</string>
+    <string name="nav_downloads">Жүктеулер</string>
+
+    <string name="offline_no_network">Желі жоқ — жүктеп алынған медиа көрсетілуде</string>
+    <string name="offline_server_unreachable">Серверге қосыла алмады — жүктеп алынған медиа көрсетілуде</string>
+    <string name="offline_forced">Желіден тыс режим қосулы — жүктеп алынған медиа көрсетілуде</string>
+    <string name="offline_retry">Қайталау</string>
+    <string name="offline_go_online">Желіге қосылу</string>
+
+    <string name="syncplay_groups_action">SyncPlay топтары</string>
+    <string name="syncplay_groups_action_active">SyncPlay топтары — сіз топ ішіндесіз</string>
+</resources>

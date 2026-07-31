@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">अधिक विकल्प</string>
+    <string name="home_settings">सेटिंग्स</string>
+    <string name="settings_offline_mode">ऑफ़लाइन मोड</string>
+
+    <string name="state_on">चालू</string>
+    <string name="state_off">बंद</string>
+
+    <string name="nav_home">होम</string>
+    <string name="nav_libraries">लाइब्रेरी</string>
+    <string name="nav_search">खोज</string>
+    <string name="nav_downloads">डाउनलोड</string>
+
+    <string name="offline_no_network">नेटवर्क नहीं है — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
+    <string name="offline_server_unreachable">सर्वर तक नहीं पहुँचा जा सका — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
+    <string name="offline_forced">ऑफ़लाइन मोड चालू है — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
+    <string name="offline_retry">फिर से कोशिश करें</string>
+    <string name="offline_go_online">ऑनलाइन जाएँ</string>
+
+    <string name="syncplay_groups_action">SyncPlay समूह</string>
+    <string name="syncplay_groups_action_active">SyncPlay समूह — आप एक समूह में हैं</string>
+</resources>

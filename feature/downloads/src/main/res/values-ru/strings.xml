@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Загружено</string>
+    <string name="downloads_tab_queue">Очередь</string>
+    <string name="downloads_wifi_only">Только Wi-Fi</string>
+
+    <string name="downloads_group_movies">Фильмы</string>
+
+    <string name="downloads_storage_summary">Занято: %1$s · свободно: %2$s</string>
+
+    <string name="downloads_action_delete">Удалить загрузку</string>
+    <string name="downloads_action_cancel">Отменить загрузку</string>
+    <string name="downloads_action_pause">Приостановить загрузку</string>
+    <string name="downloads_action_resume">Возобновить загрузку</string>
+    <string name="downloads_action_move_up">Сдвинуть вверх в очереди</string>
+    <string name="downloads_action_move_down">Сдвинуть вниз в очереди</string>
+
+    <string name="downloads_action_pause_all">Приостановить все</string>
+    <string name="downloads_action_resume_all">Возобновить все</string>
+    <string name="downloads_action_cancel_all">Отменить все</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Отменить эту загрузку?</item>
+        <item quantity="few">Отменить все %1$d загрузки?</item>
+        <item quantity="many">Отменить все %1$d загрузок?</item>
+        <item quantity="other">Отменить все %1$d загрузки?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Очередь будет очищена, а все частично загруженные файлы удалены. Завершённые загрузки не затрагиваются.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Отменить загрузки</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Оставить</string>
+
+    <string name="downloads_delete_dialog_title">Удалить %1$s?</string>
+    <string name="downloads_delete_dialog_message">Загруженные файлы будут удалены с этого устройства. Вы можете загрузить их снова позже.</string>
+    <string name="downloads_delete_dialog_confirm">Удалить</string>
+    <string name="downloads_delete_dialog_cancel">Отмена</string>
+
+    <string name="downloads_progress_of">%1$s из %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s из ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s из максимум %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">до %1$s</string>
+    <string name="downloads_speed">%1$s/с</string>
+    <string name="downloads_eta">осталось %1$s</string>
+    <string name="downloads_eta_approx">осталось ~%1$s</string>
+    <string name="downloads_transcoded_marker">Перекодировано</string>
+    <string name="downloads_status_queued">Ожидание</string>
+    <string name="downloads_status_paused">Приостановлено</string>
+    <string name="downloads_status_failed">Ошибка загрузки</string>
+    <string name="downloads_status_failed_reason">Ошибка загрузки: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Пока ничего не загружено. Нажмите «Скачать» на фильме или эпизоде, чтобы сохранить его на устройстве.</string>
+    <string name="downloads_empty_queue">Очередь загрузок пуста.</string>
+    <string name="downloads_load_failed">Не удалось загрузить список ваших загрузок. Откройте этот экран снова, чтобы повторить попытку.</string>
+    <string name="downloads_message_delete_failed">Не удалось удалить эту загрузку.</string>
+    <string name="downloads_message_action_failed">Не удалось обновить очередь.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Приостановлено: %1$d — %2$d перекодирование продолжается (перекодирование нельзя приостановить).</item>
+        <item quantity="few">Приостановлено: %1$d — %2$d перекодирования продолжаются (перекодирование нельзя приостановить).</item>
+        <item quantity="many">Приостановлено: %1$d — %2$d перекодирований продолжаются (перекодирование нельзя приостановить).</item>
+        <item quantity="other">Приостановлено: %1$d — %2$d перекодирования продолжаются (перекодирование нельзя приостановить).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Sulge mängija</string>
+    <string name="player_play">Esita</string>
+    <string name="player_pause">Peata</string>
+    <string name="player_rewind">Keri 10 sekundit tagasi</string>
+    <string name="player_forward">Keri 30 sekundit edasi</string>
+
+    <string name="player_audio">Heli</string>
+    <string name="player_subtitles">Subtiitrid</string>
+    <string name="player_subtitles_off">Väljas</string>
+    <string name="player_quality">Kvaliteet</string>
+    <string name="player_speed">Kiirus</string>
+
+    <string name="player_skip_intro">Jäta intro vahele</string>
+    <string name="player_skip_outro">Jäta outro vahele</string>
+
+    <string name="player_quality_auto">Automaatne</string>
+    <string name="player_quality_high">Kõrge — 20 Mbps</string>
+    <string name="player_quality_medium">Keskmine — 8 Mbps</string>
+    <string name="player_quality_low">Madal — 3 Mbps</string>
+    <string name="player_quality_lowest">Madalaim — 720 kbps</string>
+
+    <string name="player_method_direct_play">Otseesitus</string>
+    <string name="player_method_direct_stream">Otsevoog</string>
+    <string name="player_method_transcode">Ümberkodeerimine</string>
+
+    <string name="player_message_transcode">Sinu seade ei suutnud seda faili dekodeerida, seega server kodeerib selle ümber.</string>
+    <string name="player_message_lower_quality">Voog jäi kinni – proovitakse uuesti madalama kvaliteediga.</string>
+    <string name="player_message_track_restart">Server pidi selle raja jaoks voo uuesti kodeerima.</string>
+    <string name="player_message_track_streaming">See rada pole allalaadimises – voogesitatakse seda sinu serverist.</string>
+    <string name="player_message_track_offline">See rada pole allalaaditud failis.</string>
+    <string name="player_message_failed">Esitamine ebaõnnestus.</string>
+
+    <string name="player_syncplay_group">Grupp</string>
+    <string name="player_syncplay_waiting">Ootan gruppi…</string>
+    <string name="player_syncplay_shuffle">Sega järjekord</string>
+    <string name="player_syncplay_repeat">Kordamine</string>
+    <string name="player_syncplay_repeat_none">Väljas</string>
+    <string name="player_syncplay_repeat_one">See üksus</string>
+    <string name="player_syncplay_repeat_all">Kogu järjekord</string>
+    <string name="player_syncplay_leave">Lahku grupist</string>
+    <string name="player_syncplay_leave_title">Kas lahkuda sellest grupist?</string>
+    <string name="player_syncplay_leave_body">Esitamine jätkub siin, iseseisvalt. Taasliitumine tähendab grupi uuesti valimist.</string>
+
+    <string name="player_syncplay_cancel">Tühista</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d inimene vaatab</item>
+        <item quantity="other">%d inimest vaatab</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d veel</string>
+
+    <string name="player_syncplay_queue">Järjekord</string>
+    <string name="player_syncplay_queue_empty">Grupp pole veel midagi järjekorda lisanud.</string>
+    <string name="player_syncplay_queue_item_loading">Laadimine…</string>
+    <string name="player_syncplay_queue_playing">Esitatakse praegu</string>
+    <string name="player_syncplay_queue_next">Järgmine üksus</string>
+    <string name="player_syncplay_queue_previous">Eelmine üksus</string>
+    <string name="player_syncplay_queue_move_up">Liiguta üles</string>
+    <string name="player_syncplay_queue_move_down">Liiguta alla</string>
+    <string name="player_syncplay_queue_remove">Eemalda järjekorrast</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d üksus järjekorras</item>
+        <item quantity="other">%d üksust järjekorras</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Lahkuti SyncPlay\'st – ühendus katkes</string>
+    <string name="player_message_syncplay_rejoined">Liituti uuesti SyncPlay grupiga</string>
+    <string name="player_message_syncplay_join_failed">Selle SyncPlay grupiga ei õnnestunud liituda.</string>
+    <string name="player_message_syncplay_group_ended">SyncPlay grupp on lõppenud.</string>
+    <string name="player_message_syncplay_removed">Sa pole enam SyncPlay grupis.</string>
+    <string name="player_message_syncplay_library_denied">Grupp vaatab midagi, millele sul pole juurdepääsu.</string>
+    <string name="player_message_syncplay_item_unavailable">Ei õnnestunud avada seda, mida grupp vaatab.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Tagasi</string>
+    <string name="player_syncplay_groups_home">Avaleht</string>
+    <string name="player_syncplay_groups_create">Loo grupp</string>
+    <string name="player_syncplay_groups_create_title">Nimeta oma grupp</string>
+    <string name="player_syncplay_groups_create_hint">Grupi nimi</string>
+    <string name="player_syncplay_groups_create_confirm">Loo</string>
+    <string name="player_syncplay_groups_joining">Liitumine…</string>
+    <string name="player_syncplay_groups_active_label">Oled selles grupis</string>
+    <string name="player_syncplay_groups_open_player">Ava mängija</string>
+    <string name="player_syncplay_groups_empty">Praegu ei vaata keegi teine koos.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay on sinu konto jaoks keelatud.</string>
+    <string name="player_syncplay_groups_error">SyncPlay gruppe ei õnnestunud laadida.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay grupp</string>
+    <string name="player_syncplay_presence_channel_description">Hoiab sinu koha koos vaatamise grupis, kuni rakendus on taustal.</string>
+    <string name="player_syncplay_presence_title">SyncPlay grupis</string>
+    <string name="player_syncplay_presence_text">Ootan gruppi</string>
+    <string name="player_syncplay_presence_leave">Lahku</string>
+
+    <string name="player_syncplay_state_idle">Jõude</string>
+    <string name="player_syncplay_state_waiting">Ootel</string>
+    <string name="player_syncplay_state_paused">Peatatud</string>
+    <string name="player_syncplay_state_playing">Esitab</string>
+
+    <string name="player_cast">Kanna üle teise seadmesse</string>
+
+    <string name="player_cast_device_unnamed">sinu telerisse</string>
+    <string name="player_message_cast_transferred">Nüüd esitatakse seadmes %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Lahkuti SyncPlay grupist, et kanda üle seadmesse %1$s.</string>
+    <string name="player_message_cast_failed">Ei õnnestunud esitada seda seadmes %1$s.</string>
+
+    <string name="player_casting_to">Kantakse üle seadmesse %1$s</string>
+</resources>

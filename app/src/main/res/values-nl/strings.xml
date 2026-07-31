@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Meer opties</string>
+    <string name="home_settings">Instellingen</string>
+    <string name="settings_offline_mode">Offlinemodus</string>
+
+    <string name="state_on">Aan</string>
+    <string name="state_off">Uit</string>
+
+    <string name="nav_home">Start</string>
+    <string name="nav_libraries">Bibliotheken</string>
+    <string name="nav_search">Zoeken</string>
+    <string name="nav_downloads">Downloads</string>
+
+    <string name="offline_no_network">Geen netwerk – toont gedownloade media</string>
+    <string name="offline_server_unreachable">Kan de server niet bereiken – toont gedownloade media</string>
+    <string name="offline_forced">Offlinemodus is ingeschakeld – toont gedownloade media</string>
+    <string name="offline_retry">Opnieuw proberen</string>
+    <string name="offline_go_online">Online gaan</string>
+
+    <string name="syncplay_groups_action">SyncPlay-groepen</string>
+    <string name="syncplay_groups_action_active">SyncPlay-groepen – je zit in een groep</string>
+</resources>

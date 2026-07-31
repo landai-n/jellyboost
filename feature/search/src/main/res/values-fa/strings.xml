@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">جستجوی فیلم‌ها، سریال‌ها و قسمت‌ها</string>
+    <string name="search_clear">پاک کردن</string>
+
+    <string name="search_section_movies">فیلم‌ها</string>
+    <string name="search_section_series">سریال‌ها</string>
+    <string name="search_section_episodes">قسمت‌ها</string>
+
+    <string name="search_prompt">برای جستجو در کتابخانه‌های خود تایپ کنید.</string>
+    <string name="search_no_results">چیزی با «%1$s» مطابقت نداشت.</string>
+
+    <string name="search_error_network">دسترسی به سرور شما ممکن نیست. اتصال خود را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="search_error_unauthorized">نشست شما منقضی شده است. برای ادامه دوباره وارد شوید.</string>
+    <string name="search_error_not_found">این مورد دیگر روی سرور نیست.</string>
+    <string name="search_error_server">سرور خطایی برگرداند.</string>
+    <string name="search_error_server_with_code">سرور خطایی برگرداند (%1$d).</string>
+    <string name="search_error_storage">خواندن داده‌های محلی ممکن نبود.</string>
+    <string name="search_error_unknown">هنگام جستجو مشکلی پیش آمد.</string>
+</resources>

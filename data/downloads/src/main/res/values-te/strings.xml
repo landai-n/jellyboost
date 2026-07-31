@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">డౌన్‌లోడ్‌లు</string>
+    <string name="downloads_channel_description">ఈ పరికరానికి మీడియా డౌన్‌లోడ్ అవుతున్న పురోగతి.</string>
+
+    <string name="downloads_notification_preparing">డౌన్‌లోడ్‌లను సిద్ధం చేస్తోంది…</string>
+    <string name="downloads_notification_downloading">డౌన్‌లోడ్ అవుతోంది…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">డౌన్‌లోడ్ అవుతోంది…</string>
+    <string name="downloads_action_pause">పాజ్</string>
+    <string name="downloads_action_cancel">రద్దు చేయండి</string>
+</resources>

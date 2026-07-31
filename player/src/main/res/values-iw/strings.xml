@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">סגירת הנגן</string>
+    <string name="player_play">הפעלה</string>
+    <string name="player_pause">השהיה</string>
+    <string name="player_rewind">10 שניות אחורה</string>
+    <string name="player_forward">30 שניות קדימה</string>
+
+    <string name="player_audio">שמע</string>
+    <string name="player_subtitles">כתוביות</string>
+    <string name="player_subtitles_off">כבוי</string>
+    <string name="player_quality">איכות</string>
+    <string name="player_speed">מהירות</string>
+
+    <string name="player_skip_intro">דילוג על הפתיח</string>
+    <string name="player_skip_outro">דילוג על הסיום</string>
+
+    <string name="player_quality_auto">אוטומטי</string>
+    <string name="player_quality_high">גבוהה — 20 Mbps</string>
+    <string name="player_quality_medium">בינונית — 8 Mbps</string>
+    <string name="player_quality_low">נמוכה — 3 Mbps</string>
+    <string name="player_quality_lowest">הנמוכה ביותר — 720 kbps</string>
+
+    <string name="player_method_direct_play">הפעלה ישירה</string>
+    <string name="player_method_direct_stream">הזרמה ישירה</string>
+    <string name="player_method_transcode">המרת קידוד</string>
+
+    <string name="player_message_transcode">המכשיר שלך לא הצליח לפענח את הקובץ הזה, ולכן השרת ממיר את הקידוד שלו.</string>
+    <string name="player_message_lower_quality">השידור נתקע — מנסה שוב באיכות נמוכה יותר.</string>
+    <string name="player_message_track_restart">השרת נאלץ לקודד מחדש את הזרם עבור הרצועה הזאת.</string>
+    <string name="player_message_track_streaming">הרצועה הזאת לא נמצאת בהורדה — משדר אותה מהשרת שלך.</string>
+    <string name="player_message_track_offline">הרצועה הזאת לא נמצאת בקובץ שהורד.</string>
+    <string name="player_message_failed">ההפעלה נכשלה.</string>
+
+    <string name="player_syncplay_group">קבוצה</string>
+    <string name="player_syncplay_waiting">ממתין לקבוצה…</string>
+    <string name="player_syncplay_shuffle">ערבוב התור</string>
+    <string name="player_syncplay_repeat">חזרה</string>
+    <string name="player_syncplay_repeat_none">כבוי</string>
+    <string name="player_syncplay_repeat_one">הפריט הזה</string>
+    <string name="player_syncplay_repeat_all">כל התור</string>
+    <string name="player_syncplay_leave">עזיבת הקבוצה</string>
+    <string name="player_syncplay_leave_title">לעזוב את הקבוצה הזאת?</string>
+    <string name="player_syncplay_leave_body">ההפעלה תימשך כאן, באופן עצמאי. הצטרפות מחדש פירושה בחירת הקבוצה מחדש.</string>
+
+    <string name="player_syncplay_cancel">ביטול</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">צופה אחד</item>
+        <item quantity="two">שני צופים</item>
+        <item quantity="many">%d צופים</item>
+        <item quantity="other">%d צופים</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s ‎+%2$d נוספים</string>
+
+    <string name="player_syncplay_queue">תור</string>
+    <string name="player_syncplay_queue_empty">הקבוצה עדיין לא הוסיפה כלום לתור.</string>
+    <string name="player_syncplay_queue_item_loading">טוען…</string>
+    <string name="player_syncplay_queue_playing">מתנגן כעת</string>
+    <string name="player_syncplay_queue_next">הפריט הבא</string>
+    <string name="player_syncplay_queue_previous">הפריט הקודם</string>
+    <string name="player_syncplay_queue_move_up">הזזה למעלה</string>
+    <string name="player_syncplay_queue_move_down">הזזה למטה</string>
+    <string name="player_syncplay_queue_remove">הסרה מהתור</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">פריט אחד בתור</item>
+        <item quantity="two">שני פריטים בתור</item>
+        <item quantity="many">%d פריטים בתור</item>
+        <item quantity="other">%d פריטים בתור</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">יצאת מ-SyncPlay — החיבור אבד</string>
+    <string name="player_message_syncplay_rejoined">הצטרפת מחדש לקבוצת SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">לא ניתן היה להצטרף לקבוצת SyncPlay הזאת.</string>
+    <string name="player_message_syncplay_group_ended">קבוצת SyncPlay הסתיימה.</string>
+    <string name="player_message_syncplay_removed">אינך נמצא יותר בקבוצת SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">הקבוצה צופה במשהו שאין לך גישה אליו.</string>
+    <string name="player_message_syncplay_item_unavailable">לא ניתן היה לפתוח את מה שהקבוצה צופה בו.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">חזרה</string>
+    <string name="player_syncplay_groups_home">בית</string>
+    <string name="player_syncplay_groups_create">יצירת קבוצה</string>
+    <string name="player_syncplay_groups_create_title">תן שם לקבוצה שלך</string>
+    <string name="player_syncplay_groups_create_hint">שם הקבוצה</string>
+    <string name="player_syncplay_groups_create_confirm">יצירה</string>
+    <string name="player_syncplay_groups_joining">מצטרף…</string>
+    <string name="player_syncplay_groups_active_label">אתה נמצא בקבוצה הזאת</string>
+    <string name="player_syncplay_groups_open_player">פתיחת הנגן</string>
+    <string name="player_syncplay_groups_empty">אף אחד אחר לא צופה יחד כרגע.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay מושבת עבור החשבון שלך.</string>
+    <string name="player_syncplay_groups_error">לא ניתן היה לטעון קבוצות SyncPlay.</string>
+
+    <string name="player_syncplay_presence_channel_name">קבוצת SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">שומר את מקומך בקבוצת צפייה משותפת בזמן שהאפליקציה ברקע.</string>
+    <string name="player_syncplay_presence_title">בקבוצת SyncPlay</string>
+    <string name="player_syncplay_presence_text">ממתין לקבוצה</string>
+    <string name="player_syncplay_presence_leave">עזיבה</string>
+
+    <string name="player_syncplay_state_idle">לא פעיל</string>
+    <string name="player_syncplay_state_waiting">ממתין</string>
+    <string name="player_syncplay_state_paused">מושהה</string>
+    <string name="player_syncplay_state_playing">מתנגן</string>
+
+    <string name="player_cast">העברה למכשיר</string>
+
+    <string name="player_cast_device_unnamed">הטלוויזיה שלך</string>
+    <string name="player_message_cast_transferred">מתנגן כעת ב-%1$s.</string>
+    <string name="player_message_cast_left_syncplay">עזבת את קבוצת SyncPlay כדי להעביר ל-%1$s.</string>
+    <string name="player_message_cast_failed">לא ניתן היה להפעיל את זה ב-%1$s.</string>
+
+    <string name="player_casting_to">מעביר אל %1$s</string>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Deskargatuta</string>
+    <string name="downloads_tab_queue">Ilara</string>
+    <string name="downloads_wifi_only">Wi‑Fi bidez soilik</string>
+    <string name="downloads_group_movies">Filmak</string>
+    <string name="downloads_storage_summary">%1$s erabilita · %2$s libre</string>
+    <string name="downloads_action_delete">Ezabatu deskarga</string>
+    <string name="downloads_action_cancel">Utzi deskarga</string>
+    <string name="downloads_action_pause">Pausatu deskarga</string>
+    <string name="downloads_action_resume">Jarraitu deskarga</string>
+    <string name="downloads_action_move_up">Igo ilaran</string>
+    <string name="downloads_action_move_down">Jaitsi ilaran</string>
+    <string name="downloads_action_pause_all">Pausatu guztiak</string>
+    <string name="downloads_action_resume_all">Jarraitu guztiak</string>
+    <string name="downloads_action_cancel_all">Utzi guztiak</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Deskarga hau utzi?</item>
+        <item quantity="other">%1$d deskargak utzi?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Ilara hustu egiten da eta partzialki deskargatutako fitxategiak kentzen dira. Amaitutako deskargei ez die eragiten.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Utzi deskargak</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Mantendu</string>
+    <string name="downloads_delete_dialog_title">%1$s ezabatu?</string>
+    <string name="downloads_delete_dialog_message">Deskargatutako fitxategiak gailu honetatik kentzen dira. Nahi duzunean berriz deskarga dezakezu.</string>
+    <string name="downloads_delete_dialog_confirm">Ezabatu</string>
+    <string name="downloads_delete_dialog_cancel">Utzi</string>
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / gehienez %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">gehienez %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s falta</string>
+    <string name="downloads_eta_approx">~%1$s falta</string>
+    <string name="downloads_transcoded_marker">Transkodifikatuta</string>
+    <string name="downloads_status_queued">Zain</string>
+    <string name="downloads_status_paused">Pausatuta</string>
+    <string name="downloads_status_failed">Deskargak huts egin du</string>
+    <string name="downloads_status_failed_reason">Deskargak huts egin du: %1$s</string>
+    <string name="downloads_empty_downloaded">Oraindik ez da ezer deskargatu. Sakatu Deskargatu film edo atal batean gailu honetan mantentzeko.</string>
+    <string name="downloads_empty_queue">Deskarga-ilara hutsik dago.</string>
+    <string name="downloads_load_failed">Ezin izan dira zure deskargak irakurri. Ireki berriro pantaila hau saiatzeko.</string>
+    <string name="downloads_message_delete_failed">Ezin izan da deskarga hori ezabatu.</string>
+    <string name="downloads_message_action_failed">Ezin izan da ilara eguneratu.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d pausatuta — transkodifikatze %2$d deskargatzen jarraitzen du (transkodifikatze bat ezin da pausatu).</item>
+        <item quantity="other">%1$d pausatuta — %2$d transkodifikatze deskargatzen jarraitzen dute (transkodifikatze bat ezin da pausatu).</item>
+    </plurals>
+</resources>

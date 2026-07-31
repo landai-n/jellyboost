@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Asetukset</string>
+    <string name="settings_back">Takaisin</string>
+    <string name="settings_home">Koti</string>
+
+    <string name="settings_section_playback">Toisto</string>
+    <string name="settings_skip_intro">Ohita intro</string>
+    <string name="settings_skip_outro">Ohita outro</string>
+    <string name="settings_skip_mode_off">Älä tee mitään</string>
+    <string name="settings_skip_mode_show_button">Näytä ohituspainike</string>
+    <string name="settings_skip_mode_auto">Ohita automaattisesti</string>
+    <string name="settings_pip">Kuva kuvassa</string>
+    <string name="settings_pip_supporting">Jatka toistoa kelluvassa ikkunassa, kun poistut sovelluksesta.</string>
+
+    <string name="settings_section_downloads">Lataukset</string>
+    <string name="settings_wifi_only">Vain Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Keskeytä lataukset mobiilidatalla.</string>
+    <string name="settings_quality">Latauslaatu</string>
+    <string name="settings_quality_original">Alkuperäinen tiedosto – tarkka kopio, jatkettavissa</string>
+    <string name="settings_quality_high">Korkea – noin 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Keskitaso – noin 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Matala – noin 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Palvelimesi muuntaa kaiken muun paitsi alkuperäisen tiedoston lähetyksen aikana, joten latauksen aikana näytetty koko on arvio ja keskeytynyt siirto alkaa alusta.</string>
+    <string name="settings_storage_label">Tallennustila</string>
+    <string name="settings_storage_summary">%1$s käytetty · %2$s vapaana tällä laitteella</string>
+    <string name="settings_storage_location">Lataukset säilytetään täällä: %1$s</string>
+    <string name="settings_storage_picker">Tallennussijainti</string>
+    <string name="settings_storage_internal">Sisäinen tallennustila</string>
+    <string name="settings_storage_sd_card">SD-kortti</string>
+    <string name="settings_storage_volume_free">%1$s vapaana</string>
+    <string name="settings_storage_missing">Valitsemasi tallennustila ei ole juuri nyt käytettävissä, joten lataukset menevät alla valittuun sijaintiin.</string>
+    <string name="settings_storage_switch_title">Siirretäänkö lataukset?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Latauksia ei voi vielä siirtää sijaintien välillä, joten tällä laitteella jo oleva lataus poistetaan. Voit ladata sen uudelleen uuteen sijaintiin.</item>
+        <item quantity="other">Latauksia ei voi vielä siirtää sijaintien välillä, joten tällä laitteella jo olevat %1$d ladattua poistetaan. Voit ladata ne uudelleen uuteen sijaintiin.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Poista ja vaihda</string>
+
+    <string name="settings_section_connectivity">Yhteys</string>
+    <string name="settings_offline_mode">Offline-tila</string>
+    <string name="settings_offline_mode_supporting">Näytä vain media, joka on jo tällä laitteella.</string>
+
+    <string name="settings_section_account">Tili</string>
+    <string name="settings_account_user">Kirjautuneena käyttäjänä</string>
+    <string name="settings_account_server">Palvelin</string>
+    <string name="settings_account_unknown">Ei kirjautunut sisään</string>
+    <string name="settings_sign_out">Kirjaudu ulos</string>
+    <string name="settings_sign_out_dialog_title">Kirjaudutaanko ulos?</string>
+    <string name="settings_sign_out_dialog_message">Tarvitset palvelimen osoitteen ja salasanan kirjautuaksesi takaisin sisään.</string>
+    <string name="settings_sign_out_delete_downloads">Poista myös lataukset tältä laitteelta</string>
+    <string name="settings_cancel">Peruuta</string>
+</resources>

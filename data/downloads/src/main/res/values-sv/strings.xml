@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Nedladdningar</string>
+    <string name="downloads_channel_description">Förlopp för innehåll som laddas ner till den här enheten.</string>
+
+    <string name="downloads_notification_preparing">Förbereder nedladdningar…</string>
+    <string name="downloads_notification_downloading">Laddar ner…</string>
+    <string name="downloads_notification_percent">%1$d %%</string>
+    <string name="downloads_notification_generic_title">Laddar ner…</string>
+    <string name="downloads_action_pause">Pausa</string>
+    <string name="downloads_action_cancel">Avbryt</string>
+</resources>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">プレーヤーを閉じる</string>
+    <string name="player_play">再生</string>
+    <string name="player_pause">一時停止</string>
+    <string name="player_rewind">10秒戻す</string>
+    <string name="player_forward">30秒進める</string>
+
+    <string name="player_audio">音声</string>
+    <string name="player_subtitles">字幕</string>
+    <string name="player_subtitles_off">オフ</string>
+    <string name="player_quality">画質</string>
+    <string name="player_speed">速度</string>
+
+    <string name="player_skip_intro">オープニングをスキップ</string>
+    <string name="player_skip_outro">エンディングをスキップ</string>
+
+    <string name="player_quality_auto">自動</string>
+    <string name="player_quality_high">高 — 20Mbps</string>
+    <string name="player_quality_medium">中 — 8Mbps</string>
+    <string name="player_quality_low">低 — 3Mbps</string>
+    <string name="player_quality_lowest">最低 — 720kbps</string>
+
+    <string name="player_method_direct_play">ダイレクト再生</string>
+    <string name="player_method_direct_stream">ダイレクトストリーム</string>
+    <string name="player_method_transcode">トランスコード</string>
+
+    <string name="player_message_transcode">お使いの端末ではこのファイルをデコードできないため、サーバーでトランスコードしています。</string>
+    <string name="player_message_lower_quality">ストリームが停止しました — 画質を下げて再試行しています。</string>
+    <string name="player_message_track_restart">そのトラックのためにサーバーがストリームを再エンコードする必要がありました。</string>
+    <string name="player_message_track_streaming">そのトラックはダウンロードに含まれていないため、サーバーからストリーミングしています。</string>
+    <string name="player_message_track_offline">そのトラックはダウンロード済みファイルに含まれていません。</string>
+    <string name="player_message_failed">再生に失敗しました。</string>
+
+    <string name="player_syncplay_group">グループ</string>
+    <string name="player_syncplay_waiting">グループを待っています…</string>
+    <string name="player_syncplay_shuffle">キューをシャッフル</string>
+    <string name="player_syncplay_repeat">リピート</string>
+    <string name="player_syncplay_repeat_none">オフ</string>
+    <string name="player_syncplay_repeat_one">このアイテム</string>
+    <string name="player_syncplay_repeat_all">キュー全体</string>
+    <string name="player_syncplay_leave">グループを離れる</string>
+    <string name="player_syncplay_leave_title">このグループを離れますか？</string>
+    <string name="player_syncplay_leave_body">再生はそのままここで単独で続きます。再度参加するにはグループを選び直す必要があります。</string>
+
+    <string name="player_syncplay_cancel">キャンセル</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="other">%d 人が視聴中</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s 他%2$d人</string>
+
+    <string name="player_syncplay_queue">キュー</string>
+    <string name="player_syncplay_queue_empty">グループはまだ何もキューに入れていません。</string>
+    <string name="player_syncplay_queue_item_loading">読み込み中…</string>
+    <string name="player_syncplay_queue_playing">再生中</string>
+    <string name="player_syncplay_queue_next">次のアイテム</string>
+    <string name="player_syncplay_queue_previous">前のアイテム</string>
+    <string name="player_syncplay_queue_move_up">上へ移動</string>
+    <string name="player_syncplay_queue_move_down">下へ移動</string>
+    <string name="player_syncplay_queue_remove">キューから削除</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="other">%d 件がキューに入っています</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlayを退出しました — 接続が切断されました</string>
+    <string name="player_message_syncplay_rejoined">SyncPlayグループに再参加しました</string>
+    <string name="player_message_syncplay_join_failed">そのSyncPlayグループに参加できませんでした。</string>
+    <string name="player_message_syncplay_group_ended">SyncPlayグループは終了しました。</string>
+    <string name="player_message_syncplay_removed">あなたはもうSyncPlayグループにいません。</string>
+    <string name="player_message_syncplay_library_denied">グループはあなたがアクセス権を持っていないものを視聴しています。</string>
+    <string name="player_message_syncplay_item_unavailable">グループが視聴しているものを開けませんでした。</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">戻る</string>
+    <string name="player_syncplay_groups_home">ホーム</string>
+    <string name="player_syncplay_groups_create">グループを作成</string>
+    <string name="player_syncplay_groups_create_title">グループに名前を付ける</string>
+    <string name="player_syncplay_groups_create_hint">グループ名</string>
+    <string name="player_syncplay_groups_create_confirm">作成</string>
+    <string name="player_syncplay_groups_joining">参加中…</string>
+    <string name="player_syncplay_groups_active_label">このグループに参加中です</string>
+    <string name="player_syncplay_groups_open_player">プレーヤーを開く</string>
+    <string name="player_syncplay_groups_empty">現在、他に一緒に視聴している人はいません。</string>
+    <string name="player_syncplay_groups_disabled">お使いのアカウントではSyncPlayが無効になっています。</string>
+    <string name="player_syncplay_groups_error">SyncPlayグループを読み込めませんでした。</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlayグループ</string>
+    <string name="player_syncplay_presence_channel_description">アプリがバックグラウンドにある間も、一緒に視聴するグループでの位置を保持します。</string>
+    <string name="player_syncplay_presence_title">SyncPlayグループに参加中</string>
+    <string name="player_syncplay_presence_text">グループを待っています</string>
+    <string name="player_syncplay_presence_leave">退出</string>
+
+    <string name="player_syncplay_state_idle">アイドル</string>
+    <string name="player_syncplay_state_waiting">待機中</string>
+    <string name="player_syncplay_state_paused">一時停止中</string>
+    <string name="player_syncplay_state_playing">再生中</string>
+
+    <string name="player_cast">デバイスにキャスト</string>
+
+    <string name="player_cast_device_unnamed">お使いのテレビ</string>
+    <string name="player_message_cast_transferred">%1$s で再生中です。</string>
+    <string name="player_message_cast_left_syncplay">SyncPlayグループを退出して%1$sにキャストしました。</string>
+    <string name="player_message_cast_failed">%1$sでの再生に失敗しました。</string>
+
+    <string name="player_casting_to">%1$s にキャスト中</string>
+</resources>

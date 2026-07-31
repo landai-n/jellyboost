@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Aftur</string>
+    <string name="detail_home">Heim</string>
+    <string name="detail_play">Spæl</string>
+    <string name="detail_resume">Halda áfram</string>
+    <string name="detail_download">Hala niður</string>
+    <string name="detail_download_cancel">Avlýs</string>
+    <string name="detail_download_remove">Tak burtur</string>
+    <string name="detail_download_retry">Royn aftur</string>
+    <string name="detail_play_episode">Spæl hendan partin</string>
+    <string name="detail_mark_watched">Merk sum sætt</string>
+    <string name="detail_mark_unwatched">Merk sum ósætt</string>
+    <string name="detail_add_favorite">Legg til uppáhald</string>
+    <string name="detail_remove_favorite">Tak burtur úr uppáhaldi</string>
+
+    <string name="detail_section_seasons">Sesongir</string>
+    <string name="detail_section_next_up">Næsta</string>
+    <string name="detail_section_episodes">Partar</string>
+    <string name="detail_section_similar">Meira sum hetta</string>
+
+    <string name="detail_runtime_minutes">%1$d mín.</string>
+    <string name="detail_remaining_minutes">%1$d mín. eftir</string>
+    <string name="detail_size_on_device">%1$s á tólinum</string>
+    <string name="detail_directed_by">Leiðstjórnað av %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sesong</item>
+        <item quantity="other">%1$d sesongir</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d partur</item>
+        <item quantity="other">%1$d partar</item>
+    </plurals>
+
+    <string name="detail_empty">Hesin luturin er ikki longur tøkur.</string>
+    <string name="detail_message_download_queued">Sett til niðurhal.</string>
+    <string name="detail_message_download_failed">Kundi ikki byrja hetta niðurhalið.</string>
+    <string name="detail_message_download_deleted">Tikið burtur frá hesum tólinum.</string>
+    <string name="detail_message_download_delete_failed">Kundi ikki taka hetta niðurhalið burtur.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Niðurhal avlýst — %1$d liðugur partur goymdur.</item>
+        <item quantity="other">Niðurhal avlýst — %1$d liðugir partar goymdir.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Kundi ikki goyma hetta. Royn aftur.</string>
+
+    <string name="detail_group_play">Spæl fyri %1$s</string>
+    <string name="detail_group_resume">Halda áfram fyri %1$s</string>
+    <string name="detail_group_play_next">Spæl næst</string>
+    <string name="detail_group_add_to_queue">Legg til bíðirøð</string>
+    <string name="detail_message_group_play">Bað bólkin um at spæla hetta.</string>
+    <string name="detail_message_group_play_next">Sett sum næst í bíðirøð fyri bólkin.</string>
+    <string name="detail_message_group_queued">Lagt til í bólksins bíðirøð.</string>
+
+    <string name="detail_delete_download_dialog_title">Strika niðurhal?</string>
+    <string name="detail_delete_download_dialog_message">Hetta tekur tað burtur frá hesum tólinum. Tú kanst hala tað niður aftur, tá ið tú vilt.</string>
+    <string name="detail_delete_download_dialog_confirm">Strika</string>
+    <string name="detail_delete_download_dialog_cancel">Avlýs</string>
+</resources>

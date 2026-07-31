@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">更多選項</string>
+    <string name="home_settings">設定</string>
+    <string name="settings_offline_mode">離線模式</string>
+
+    <string name="state_on">開</string>
+    <string name="state_off">關</string>
+
+    <string name="nav_home">首頁</string>
+    <string name="nav_libraries">媒體庫</string>
+    <string name="nav_search">搜尋</string>
+    <string name="nav_downloads">下載</string>
+
+    <string name="offline_no_network">沒有網路連線——正在顯示已下載的媒體</string>
+    <string name="offline_server_unreachable">無法連線伺服器——正在顯示已下載的媒體</string>
+    <string name="offline_forced">離線模式已開啟——正在顯示已下載的媒體</string>
+    <string name="offline_retry">重試</string>
+    <string name="offline_go_online">恢復連線</string>
+
+    <string name="syncplay_groups_action">SyncPlay 群組</string>
+    <string name="syncplay_groups_action_active">SyncPlay 群組——你已加入一個群組</string>
+</resources>

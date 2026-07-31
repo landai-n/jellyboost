@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Innstillinger</string>
+    <string name="settings_back">Tilbake</string>
+    <string name="settings_home">Hjem</string>
+
+    <string name="settings_section_playback">Avspilling</string>
+    <string name="settings_skip_intro">Hopp over intro</string>
+    <string name="settings_skip_outro">Hopp over avslutning</string>
+    <string name="settings_skip_mode_off">Ikke gjør noe</string>
+    <string name="settings_skip_mode_show_button">Vis en hopp over-knapp</string>
+    <string name="settings_skip_mode_auto">Hopp over automatisk</string>
+    <string name="settings_pip">Bilde‑i‑bilde</string>
+    <string name="settings_pip_supporting">Fortsett avspillingen i et flytende vindu når du forlater appen.</string>
+
+    <string name="settings_section_downloads">Nedlastinger</string>
+    <string name="settings_wifi_only">Bare Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Sett nedlastinger på pause ved mobildata.</string>
+    <string name="settings_quality">Nedlastingskvalitet</string>
+    <string name="settings_quality_original">Original fil – eksakt kopi, kan gjenopptas</string>
+    <string name="settings_quality_high">Høy – ca. 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Middels – ca. 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Lav – ca. 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alt annet enn originalfilen konverteres av serveren din mens den sendes, så størrelsen som vises under nedlastingen er et anslag, og en avbrutt overføring starter på nytt.</string>
+    <string name="settings_storage_label">Lagring</string>
+    <string name="settings_storage_summary">%1$s brukt · %2$s ledig på denne enheten</string>
+    <string name="settings_storage_location">Nedlastinger lagres i %1$s</string>
+    <string name="settings_storage_picker">Lagringssted</string>
+    <string name="settings_storage_internal">Internt lager</string>
+    <string name="settings_storage_sd_card">SD-kort</string>
+    <string name="settings_storage_volume_free">%1$s ledig</string>
+    <string name="settings_storage_missing">Lagringen du valgte er ikke tilgjengelig akkurat nå, så nedlastinger går til stedet valgt under.</string>
+    <string name="settings_storage_switch_title">Flytte nedlastinger?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Nedlastinger kan ikke flyttes mellom steder ennå, så den ene som allerede er på denne enheten, vil bli slettet. Du kan laste den ned igjen til det nye stedet.</item>
+        <item quantity="other">Nedlastinger kan ikke flyttes mellom steder ennå, så de %1$d som allerede er på denne enheten, vil bli slettet. Du kan laste dem ned igjen til det nye stedet.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Slett og bytt</string>
+
+    <string name="settings_section_connectivity">Tilkobling</string>
+    <string name="settings_offline_mode">Offline-modus</string>
+    <string name="settings_offline_mode_supporting">Vis bare innhold som allerede er på denne enheten.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Logget inn som</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Ikke logget inn</string>
+    <string name="settings_sign_out">Logg ut</string>
+    <string name="settings_sign_out_dialog_title">Logge ut?</string>
+    <string name="settings_sign_out_dialog_message">Du trenger serveradressen og passordet ditt for å logge inn igjen.</string>
+    <string name="settings_sign_out_delete_downloads">Slett også nedlastinger fra denne enheten</string>
+    <string name="settings_cancel">Avbryt</string>
+</resources>

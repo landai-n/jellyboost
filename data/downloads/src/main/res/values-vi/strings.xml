@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Tải xuống</string>
+    <string name="downloads_channel_description">Tiến trình tải media xuống thiết bị này.</string>
+    <string name="downloads_notification_preparing">Đang chuẩn bị tải xuống…</string>
+    <string name="downloads_notification_downloading">Đang tải xuống…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Đang tải xuống…</string>
+    <string name="downloads_action_pause">Tạm dừng</string>
+    <string name="downloads_action_cancel">Hủy</string>
+</resources>

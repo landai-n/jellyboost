@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Povezava s strežnikom</string>
+    <string name="server_setup_discovered_title">Strežniki v tem omrežju</string>
+    <string name="server_setup_discovering">Iskanje po lokalnem omrežju…</string>
+    <string name="server_setup_no_servers_found">Noben strežnik se ni javil. Spodaj vnesite naslov.</string>
+    <string name="server_setup_manual_title">Naslov strežnika</string>
+    <string name="server_setup_address_label">Gostitelj ali URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ali 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Poveži se</string>
+    <string name="server_setup_connecting">Vzpostavljanje stika s strežnikom…</string>
+    <string name="server_setup_session_lost">Shranjene prijave ni bilo mogoče obnoviti, zato ste bili odjavljeni. Prosimo, znova se prijavite.</string>
+
+    <string name="login_title">Prijava</string>
+    <string name="login_server_version">Različica %1$s</string>
+    <string name="login_server_version_unknown">Različica neznana</string>
+    <string name="login_public_users_title">Kdo gleda?</string>
+    <string name="login_username_label">Uporabniško ime</string>
+    <string name="login_password_label">Geslo</string>
+    <string name="login_show_password">Pokaži geslo</string>
+    <string name="login_hide_password">Skrij geslo</string>
+    <string name="login_sign_in">Prijava</string>
+    <string name="login_change_server">Uporabi drug strežnik</string>
+    <string name="login_loading">Nalaganje podrobnosti strežnika…</string>
+    <string name="login_or">ali</string>
+
+    <string name="login_quick_connect">Uporabi Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Odprite Jellyfin v napravi, kjer ste že prijavljeni, pojdite na Quick Connect in vnesite to kodo.</string>
+    <string name="login_quick_connect_waiting">Čakanje na potrditev…</string>
+    <string name="login_quick_connect_cancel">Prekliči</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Preizkušen je bil %d naslov, brez uspeha.</item>
+        <item quantity="two">Preizkušena sta bila %d naslova, brez uspeha.</item>
+        <item quantity="few">Preizkušeni so bili %d naslovi, brez uspeha.</item>
+        <item quantity="other">Preizkušenih je bilo %d naslovov, brez uspeha.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Strežnika ni mogoče doseči</string>
+    <string name="auth_error_unsupported_version_or_product">Nepodprta različica ali izdelek</string>
+    <string name="auth_error_cannot_connect">Povezave ni mogoče vzpostaviti.\nPreverite ime gostitelja in omrežno povezavo.</string>
+    <string name="auth_error_invalid_credentials">Napačno uporabniško ime ali geslo.</string>
+    <string name="auth_error_quick_connect_expired">Ta koda je potekla. Zahtevajte novo in poskusite znova.</string>
+    <string name="auth_error_server">Strežnik je odgovoril z napako. Poskusite znova.</string>
+    <string name="auth_error_server_with_code">Strežnik je odgovoril z napako (%1$d). Poskusite znova.</string>
+</resources>

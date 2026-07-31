@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Sätted</string>
+    <string name="settings_back">Tagasi</string>
+    <string name="settings_home">Avaleht</string>
+
+    <string name="settings_section_playback">Taasesitus</string>
+    <string name="settings_skip_intro">Jäta intro vahele</string>
+    <string name="settings_skip_outro">Jäta outro vahele</string>
+    <string name="settings_skip_mode_off">Ära tee midagi</string>
+    <string name="settings_skip_mode_show_button">Näita vahelejätmise nuppu</string>
+    <string name="settings_skip_mode_auto">Jäta automaatselt vahele</string>
+    <string name="settings_pip">Pilt pildis</string>
+    <string name="settings_pip_supporting">Jätka esitamist hõljuvas aknas, kui lahkud rakendusest.</string>
+
+    <string name="settings_section_downloads">Allalaadimised</string>
+    <string name="settings_wifi_only">Ainult Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Peata allalaadimised mobiilse andmeside korral.</string>
+    <string name="settings_quality">Allalaadimise kvaliteet</string>
+    <string name="settings_quality_original">Originaalfail – täpne koopia, jätkatav</string>
+    <string name="settings_quality_high">Kõrge – umbes 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Keskmine – umbes 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Madal – umbes 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Kõik peale originaalfaili teisendab su server saatmise ajal, seega allalaadimise ajal kuvatav suurus on hinnanguline ja katkenud ülekanne algab uuesti.</string>
+    <string name="settings_storage_label">Salvestusruum</string>
+    <string name="settings_storage_summary">%1$s kasutatud · %2$s vaba selles seadmes</string>
+    <string name="settings_storage_location">Allalaadimised hoitakse siin: %1$s</string>
+    <string name="settings_storage_picker">Salvestuskoht</string>
+    <string name="settings_storage_internal">Seadmesisene mälu</string>
+    <string name="settings_storage_sd_card">SD-kaart</string>
+    <string name="settings_storage_volume_free">%1$s vaba</string>
+    <string name="settings_storage_missing">Valitud salvestusruum pole praegu saadaval, seega lähevad allalaadimised allpool valitud kohta.</string>
+    <string name="settings_storage_switch_title">Kas liigutada allalaadimised?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Allalaadimisi ei saa veel asukohtade vahel liigutada, seega selles seadmes juba olev allalaadimine kustutatakse. Saad selle uude asukohta uuesti alla laadida.</item>
+        <item quantity="other">Allalaadimisi ei saa veel asukohtade vahel liigutada, seega selles seadmes juba olevad %1$d allalaadimist kustutatakse. Saad need uude asukohta uuesti alla laadida.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Kustuta ja vaheta</string>
+
+    <string name="settings_section_connectivity">Ühenduvus</string>
+    <string name="settings_offline_mode">Võrguühenduseta režiim</string>
+    <string name="settings_offline_mode_supporting">Näita ainult meediat, mis on juba selles seadmes.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Sisse logitud kui</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Pole sisse logitud</string>
+    <string name="settings_sign_out">Logi välja</string>
+    <string name="settings_sign_out_dialog_title">Kas logida välja?</string>
+    <string name="settings_sign_out_dialog_message">Tagasi sisse logimiseks vajad oma serveri aadressi ja parooli.</string>
+    <string name="settings_sign_out_delete_downloads">Kustuta ka allalaadimised sellest seadmest</string>
+    <string name="settings_cancel">Tühista</string>
+</resources>

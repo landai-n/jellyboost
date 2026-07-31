@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Fler alternativ</string>
+    <string name="home_settings">Inställningar</string>
+    <string name="settings_offline_mode">Offlineläge</string>
+
+    <string name="state_on">På</string>
+    <string name="state_off">Av</string>
+
+    <string name="nav_home">Hem</string>
+    <string name="nav_libraries">Bibliotek</string>
+    <string name="nav_search">Sök</string>
+    <string name="nav_downloads">Nedladdningar</string>
+
+    <string name="offline_no_network">Inget nätverk – visar nedladdat innehåll</string>
+    <string name="offline_server_unreachable">Kan inte nå servern – visar nedladdat innehåll</string>
+    <string name="offline_forced">Offlineläge är på – visar nedladdat innehåll</string>
+    <string name="offline_retry">Försök igen</string>
+    <string name="offline_go_online">Gå online</string>
+
+    <string name="syncplay_groups_action">SyncPlay-grupper</string>
+    <string name="syncplay_groups_action_active">SyncPlay-grupper – du är med i en grupp</string>
+</resources>

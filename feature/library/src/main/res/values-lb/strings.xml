@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Nach keng Bibliothéiken. Setz eng um Server dobäi.</string>
+
+    <string name="library_back">Zréck</string>
+    <string name="library_home">Start</string>
+    <string name="library_sort">Sortéieren</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sortéieren no</string>
+    <string name="library_sort_name">Numm</string>
+    <string name="library_sort_date_added">Dobäigesat den</string>
+    <string name="library_sort_premiere_date">Verëffentlechungsdatum</string>
+    <string name="library_sort_community_rating">Community-Bewäertung</string>
+    <string name="library_sort_runtime">Dauer</string>
+    <string name="library_sort_random">Zoufälleg</string>
+    <string name="library_sort_direction">Richtung</string>
+    <string name="library_sort_ascending">Opsteigend</string>
+    <string name="library_sort_descending">Ofsteigend</string>
+
+    <string name="library_filters_title">Filteren</string>
+    <string name="library_filters_genres">Genren</string>
+    <string name="library_filters_years">Joren</string>
+    <string name="library_filters_played">Gekuckt</string>
+    <string name="library_filters_played_any">All</string>
+    <string name="library_filters_played_yes">Gekuckt</string>
+    <string name="library_filters_played_no">Net gekuckt</string>
+    <string name="library_filters_clear">Alles läschen</string>
+    <string name="library_filters_apply">Resultater weisen</string>
+    <string name="library_filters_none">Dës Bibliothéik huet näischt ugebueden, fir ze filteren.</string>
+    <string name="library_filters_loading">Filteren ginn gelueden…</string>
+
+    <string name="library_empty">Hei gëtt et näischt ze weisen.</string>
+    <string name="library_empty_filtered">Kee Element entsprécht dëse Filteren.</string>
+    <string name="library_empty_clear_filters">Filteren zrécksetzen</string>
+    <string name="library_retry">Nach eng Kéier probéieren</string>
+
+    <string name="library_error_network">Däi Server ass net erreechbar. Iwwerpréif deng Verbindung a probéier nach eng Kéier.</string>
+    <string name="library_error_unauthorized">Deng Sessioun ass ofgelaf. Mell dech nach eng Kéier un, fir weiderzefueren.</string>
+    <string name="library_error_not_found">Dës Bibliothéik ass net méi um Server.</string>
+    <string name="library_error_server">De Server huet e Feeler zréckginn.</string>
+    <string name="library_error_server_with_code">De Server huet e Feeler zréckginn (%1$d).</string>
+    <string name="library_error_storage">Lokal Donnéeën konnten net gelies ginn.</string>
+    <string name="library_error_unknown">Beim Lueden vun dëser Bibliothéik ass eppes schif gelaf.</string>
+</resources>

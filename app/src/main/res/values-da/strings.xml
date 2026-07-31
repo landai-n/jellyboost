@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Flere valgmuligheder</string>
+    <string name="home_settings">Indstillinger</string>
+    <string name="settings_offline_mode">Offlinetilstand</string>
+
+    <string name="state_on">Til</string>
+    <string name="state_off">Fra</string>
+
+    <string name="nav_home">Hjem</string>
+    <string name="nav_libraries">Biblioteker</string>
+    <string name="nav_search">Søg</string>
+    <string name="nav_downloads">Downloads</string>
+
+    <string name="offline_no_network">Intet netværk – viser downloadet indhold</string>
+    <string name="offline_server_unreachable">Kan ikke få forbindelse til serveren – viser downloadet indhold</string>
+    <string name="offline_forced">Offlinetilstand er slået til – viser downloadet indhold</string>
+    <string name="offline_retry">Prøv igen</string>
+    <string name="offline_go_online">Gå online</string>
+
+    <string name="syncplay_groups_action">SyncPlay-grupper</string>
+    <string name="syncplay_groups_action_active">SyncPlay-grupper – du er i en gruppe</string>
+</resources>

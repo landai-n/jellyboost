@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">搜索电影、剧集和集数</string>
+    <string name="search_clear">清除</string>
+
+    <string name="search_section_movies">电影</string>
+    <string name="search_section_series">剧集</string>
+    <string name="search_section_episodes">集数</string>
+
+    <string name="search_prompt">输入内容以搜索你的媒体库。</string>
+    <string name="search_no_results">没有匹配“%1$s”的内容。</string>
+
+    <string name="search_error_network">无法连接到你的服务器。请检查网络连接后重试。</string>
+    <string name="search_error_unauthorized">你的会话已过期。请重新登录以继续。</string>
+    <string name="search_error_not_found">该内容已不在服务器上。</string>
+    <string name="search_error_server">服务器返回了一个错误。</string>
+    <string name="search_error_server_with_code">服务器返回了一个错误 (%1$d)。</string>
+    <string name="search_error_storage">无法读取本地数据。</string>
+    <string name="search_error_unknown">搜索时出现问题。</string>
+</resources>

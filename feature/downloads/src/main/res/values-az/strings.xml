@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Yükləndi</string>
+    <string name="downloads_tab_queue">Növbə</string>
+    <string name="downloads_wifi_only">Yalnız Wi‑Fi</string>
+    <string name="downloads_group_movies">Filmlər</string>
+    <string name="downloads_storage_summary">%1$s istifadə olunub · %2$s boşdur</string>
+    <string name="downloads_action_delete">Yükləməni sil</string>
+    <string name="downloads_action_cancel">Yükləməni ləğv et</string>
+    <string name="downloads_action_pause">Yükləməni fasilə ver</string>
+    <string name="downloads_action_resume">Yükləməyə davam et</string>
+    <string name="downloads_action_move_up">Növbədə yuxarı köçür</string>
+    <string name="downloads_action_move_down">Növbədə aşağı köçür</string>
+    <string name="downloads_action_pause_all">Hamısına fasilə ver</string>
+    <string name="downloads_action_resume_all">Hamısına davam et</string>
+    <string name="downloads_action_cancel_all">Hamısını ləğv et</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Bu yükləmə ləğv edilsin?</item>
+        <item quantity="other">Bütün %1$d yükləmə ləğv edilsin?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Növbə boşaldılır və qismən yüklənmiş fayllar silinir. Tamamlanmış yükləmələr təsirlənmir.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Yükləmələri ləğv et</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Saxla</string>
+    <string name="downloads_delete_dialog_title">%1$s silinsin?</string>
+    <string name="downloads_delete_dialog_message">Yüklənmiş fayllar bu cihazdan silinir. Daha sonra yenidən yükləyə bilərsiniz.</string>
+    <string name="downloads_delete_dialog_confirm">Sil</string>
+    <string name="downloads_delete_dialog_cancel">Ləğv et</string>
+    <string name="downloads_progress_of">%1$s / %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s / maksimum %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">maksimum %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s qalıb</string>
+    <string name="downloads_eta_approx">~%1$s qalıb</string>
+    <string name="downloads_transcoded_marker">Transkodlaşdırılıb</string>
+    <string name="downloads_status_queued">Gözləyir</string>
+    <string name="downloads_status_paused">Dayandırılıb</string>
+    <string name="downloads_status_failed">Yükləmə uğursuz oldu</string>
+    <string name="downloads_status_failed_reason">Yükləmə uğursuz oldu: %1$s</string>
+    <string name="downloads_empty_downloaded">Hələ heç nə yüklənməyib. Bu cihazda saxlamaq üçün film və ya epizodda Yüklə düyməsinə toxunun.</string>
+    <string name="downloads_empty_queue">Yükləmə növbəsi boşdur.</string>
+    <string name="downloads_load_failed">Yükləmələriniz oxuna bilmədi. Yenidən cəhd etmək üçün bu ekranı yenidən açın.</string>
+    <string name="downloads_message_delete_failed">Bu yükləmə silinə bilmədi.</string>
+    <string name="downloads_message_action_failed">Növbə yenilənə bilmədi.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d dayandırıldı — %2$d transkod yüklənməyə davam edir (transkod dayandırıla bilməz).</item>
+        <item quantity="other">%1$d dayandırıldı — %2$d transkod yüklənməyə davam edir (transkod dayandırıla bilməz).</item>
+    </plurals>
+</resources>

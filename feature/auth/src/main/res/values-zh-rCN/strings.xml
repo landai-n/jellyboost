@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">连接到服务器</string>
+    <string name="server_setup_discovered_title">此网络上的服务器</string>
+    <string name="server_setup_discovering">正在搜索本地网络…</string>
+    <string name="server_setup_no_servers_found">没有服务器进行了通告。请在下方输入地址。</string>
+    <string name="server_setup_manual_title">服务器地址</string>
+    <string name="server_setup_address_label">主机或网址</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org 或 192.168.1.10:8096</string>
+    <string name="server_setup_connect">连接</string>
+    <string name="server_setup_connecting">正在联系服务器…</string>
+    <string name="server_setup_session_lost">无法恢复已保存的登录信息，你已被登出。请重新登录。</string>
+
+    <string name="login_title">登录</string>
+    <string name="login_server_version">版本 %1$s</string>
+    <string name="login_server_version_unknown">版本未知</string>
+    <string name="login_public_users_title">谁在观看？</string>
+    <string name="login_username_label">用户名</string>
+    <string name="login_password_label">密码</string>
+    <string name="login_show_password">显示密码</string>
+    <string name="login_hide_password">隐藏密码</string>
+    <string name="login_sign_in">登录</string>
+    <string name="login_change_server">使用其他服务器</string>
+    <string name="login_loading">正在加载服务器信息…</string>
+    <string name="login_or">或</string>
+
+    <string name="login_quick_connect">使用快速连接</string>
+    <string name="login_quick_connect_title">快速连接</string>
+    <string name="login_quick_connect_instructions">在已登录的设备上打开 Jellyfin，进入快速连接并输入此代码。</string>
+    <string name="login_quick_connect_waiting">正在等待批准…</string>
+    <string name="login_quick_connect_cancel">取消</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="other">已尝试 %d 个候选地址，均未成功。</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">无法连接服务器</string>
+    <string name="auth_error_unsupported_version_or_product">不受支持的版本或产品</string>
+    <string name="auth_error_cannot_connect">无法建立连接。\n请检查主机名和网络连接。</string>
+    <string name="auth_error_invalid_credentials">用户名或密码错误。</string>
+    <string name="auth_error_quick_connect_expired">该代码已过期。请重新申请后再试。</string>
+    <string name="auth_error_server">服务器返回了一个错误。请重试。</string>
+    <string name="auth_error_server_with_code">服务器返回了一个错误 (%1$d)。请重试。</string>
+</resources>

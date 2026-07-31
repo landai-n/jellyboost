@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Назад</string>
+    <string name="detail_home">Начало</string>
+    <string name="detail_play">Пусни</string>
+    <string name="detail_resume">Продължи</string>
+    <string name="detail_download">Изтегли</string>
+    <string name="detail_download_cancel">Отказ</string>
+    <string name="detail_download_remove">Премахни</string>
+    <string name="detail_download_retry">Опитай отново</string>
+    <string name="detail_play_episode">Пусни този епизод</string>
+    <string name="detail_mark_watched">Маркирай като гледано</string>
+    <string name="detail_mark_unwatched">Маркирай като негледано</string>
+    <string name="detail_add_favorite">Добави в любими</string>
+    <string name="detail_remove_favorite">Премахни от любими</string>
+
+    <string name="detail_section_seasons">Сезони</string>
+    <string name="detail_section_next_up">Следващо</string>
+    <string name="detail_section_episodes">Епизоди</string>
+    <string name="detail_section_similar">Подобни на това</string>
+
+    <string name="detail_runtime_minutes">%1$d мин</string>
+    <string name="detail_remaining_minutes">Остават %1$d мин</string>
+    <string name="detail_size_on_device">%1$s на устройството</string>
+    <string name="detail_directed_by">Режисьор: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d сезон</item>
+        <item quantity="other">%1$d сезона</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d епизод</item>
+        <item quantity="other">%1$d епизода</item>
+    </plurals>
+
+    <string name="detail_empty">Този елемент вече не е наличен.</string>
+    <string name="detail_message_download_queued">Добавено към изтеглянията.</string>
+    <string name="detail_message_download_failed">Изтеглянето не можа да започне.</string>
+    <string name="detail_message_download_deleted">Премахнато от това устройство.</string>
+    <string name="detail_message_download_delete_failed">Изтеглянето не можа да бъде премахнато.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">Изтеглянето е отменено — %1$d завършен епизод е запазен.</item>
+        <item quantity="other">Изтеглянето е отменено — %1$d завършени епизода са запазени.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Не можа да се запази. Опитайте пак.</string>
+
+    <string name="detail_group_play">Пусни за %1$s</string>
+    <string name="detail_group_resume">Продължи за %1$s</string>
+    <string name="detail_group_play_next">Пусни следващото</string>
+    <string name="detail_group_add_to_queue">Добави в опашката</string>
+    <string name="detail_message_group_play">Групата беше помолена да пусне това.</string>
+    <string name="detail_message_group_play_next">Поставено да е следващо за групата.</string>
+    <string name="detail_message_group_queued">Добавено в опашката на групата.</string>
+
+    <string name="detail_delete_download_dialog_title">Да се изтрие ли изтеглянето?</string>
+    <string name="detail_delete_download_dialog_message">Това го премахва от устройството. Можете да го изтеглите отново по всяко време.</string>
+    <string name="detail_delete_download_dialog_confirm">Изтрий</string>
+    <string name="detail_delete_download_dialog_cancel">Отказ</string>
+</resources>

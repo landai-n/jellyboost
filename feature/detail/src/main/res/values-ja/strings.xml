@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">戻る</string>
+    <string name="detail_home">ホーム</string>
+    <string name="detail_play">再生</string>
+    <string name="detail_resume">再開</string>
+    <string name="detail_download">ダウンロード</string>
+    <string name="detail_download_cancel">キャンセル</string>
+    <string name="detail_download_remove">削除</string>
+    <string name="detail_download_retry">再試行</string>
+    <string name="detail_play_episode">このエピソードを再生</string>
+    <string name="detail_mark_watched">視聴済みにする</string>
+    <string name="detail_mark_unwatched">未視聴にする</string>
+    <string name="detail_add_favorite">お気に入りに追加</string>
+    <string name="detail_remove_favorite">お気に入りから削除</string>
+
+    <string name="detail_section_seasons">シーズン</string>
+    <string name="detail_section_next_up">次のエピソード</string>
+    <string name="detail_section_episodes">エピソード</string>
+    <string name="detail_section_similar">関連作品</string>
+
+    <string name="detail_runtime_minutes">%1$d分</string>
+    <string name="detail_remaining_minutes">残り %1$d分</string>
+    <string name="detail_size_on_device">端末上のサイズ %1$s</string>
+    <string name="detail_directed_by">監督: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="other">%1$d シーズン</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="other">%1$d 話</item>
+    </plurals>
+
+    <string name="detail_empty">このアイテムは利用できなくなりました。</string>
+    <string name="detail_message_download_queued">ダウンロードに追加しました。</string>
+    <string name="detail_message_download_failed">そのダウンロードを開始できませんでした。</string>
+    <string name="detail_message_download_deleted">この端末から削除しました。</string>
+    <string name="detail_message_download_delete_failed">そのダウンロードを削除できませんでした。</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="other">ダウンロードをキャンセルしました — 完了済みの %1$d 話は保持されます。</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">保存できませんでした。もう一度お試しください。</string>
+
+    <string name="detail_group_play">%1$s で再生</string>
+    <string name="detail_group_resume">%1$s で再開</string>
+    <string name="detail_group_play_next">次に再生</string>
+    <string name="detail_group_add_to_queue">キューに追加</string>
+    <string name="detail_message_group_play">グループにこれの再生をリクエストしました。</string>
+    <string name="detail_message_group_play_next">グループの次の再生としてキューに追加しました。</string>
+    <string name="detail_message_group_queued">グループのキューに追加しました。</string>
+
+    <string name="detail_delete_download_dialog_title">ダウンロードを削除しますか？</string>
+    <string name="detail_delete_download_dialog_message">この端末から削除されます。いつでも再度ダウンロードできます。</string>
+    <string name="detail_delete_download_dialog_confirm">削除</string>
+    <string name="detail_delete_download_dialog_cancel">キャンセル</string>
+</resources>

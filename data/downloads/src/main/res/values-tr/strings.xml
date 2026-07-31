@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">İndirilenler</string>
+    <string name="downloads_channel_description">Bu cihaza indirilen medyanın ilerleme durumu.</string>
+    <string name="downloads_notification_preparing">İndirmeler hazırlanıyor…</string>
+    <string name="downloads_notification_downloading">İndiriliyor…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">İndiriliyor…</string>
+    <string name="downloads_action_pause">Duraklat</string>
+    <string name="downloads_action_cancel">İptal</string>
+</resources>

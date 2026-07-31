@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Agordoj</string>
+    <string name="settings_back">Reen</string>
+    <string name="settings_home">Hejmo</string>
+    <string name="settings_section_playback">Ludado</string>
+    <string name="settings_skip_intro">Preterlasi la enkondukon</string>
+    <string name="settings_skip_outro">Preterlasi la finaĵon</string>
+    <string name="settings_skip_mode_off">Fari nenion</string>
+    <string name="settings_skip_mode_show_button">Montri preterlasan butonon</string>
+    <string name="settings_skip_mode_auto">Preterlasi aŭtomate</string>
+    <string name="settings_pip">Bildo-en-bildo</string>
+    <string name="settings_pip_supporting">Daŭrigi ludadon en glitanta fenestro kiam vi forlasas la aplikaĵon.</string>
+    <string name="settings_section_downloads">Elŝutoj</string>
+    <string name="settings_wifi_only">Nur Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Paŭzigi elŝutojn kiam vi uzas poŝtelefonan datumtrafikon.</string>
+    <string name="settings_quality">Elŝuta kvalito</string>
+    <string name="settings_quality_original">Originala dosiero — preciza kopio, rekomenceblas</string>
+    <string name="settings_quality_high">Alta — proksimume 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Meza — proksimume 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Malalta — proksimume 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Ĉio krom la originala dosiero estas konvertata de via servilo dum sendado, do la montrata grando dum elŝutado estas nur takso, kaj interrompita transigo rekomenciĝas de la komenco.</string>
+    <string name="settings_storage_label">Konservejo</string>
+    <string name="settings_storage_summary">%1$s uzataj · %2$s liberaj sur ĉi tiu aparato</string>
+    <string name="settings_storage_location">Elŝutoj estas konservataj en %1$s</string>
+    <string name="settings_storage_picker">Konserva loko</string>
+    <string name="settings_storage_internal">Interna konservejo</string>
+    <string name="settings_storage_sd_card">SD-karto</string>
+    <string name="settings_storage_volume_free">%1$s liberaj</string>
+    <string name="settings_storage_missing">La elektita konservejo ne disponeblas nun, do elŝutoj iros al la loko elektita malsupre.</string>
+    <string name="settings_storage_switch_title">Ĉu movi la elŝutojn?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Elŝutoj ankoraŭ ne moveblas inter lokoj, do tiu jam sur ĉi tiu aparato estos forigita. Vi povas denove elŝuti ĝin al la nova loko.</item>
+        <item quantity="other">Elŝutoj ankoraŭ ne moveblas inter lokoj, do la %1$d jam sur ĉi tiu aparato estos forigitaj. Vi povas denove elŝuti ilin al la nova loko.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Forigi kaj ŝanĝi</string>
+    <string name="settings_section_connectivity">Konekteco</string>
+    <string name="settings_offline_mode">Malreta reĝimo</string>
+    <string name="settings_offline_mode_supporting">Montri nur enhavon jam sur ĉi tiu aparato.</string>
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Ensalutinta kiel</string>
+    <string name="settings_account_server">Servilo</string>
+    <string name="settings_account_unknown">Ne ensalutinta</string>
+    <string name="settings_sign_out">Adiaŭi</string>
+    <string name="settings_sign_out_dialog_title">Ĉu adiaŭi?</string>
+    <string name="settings_sign_out_dialog_message">Vi bezonos vian servil-adreson kaj pasvorton por reensaluti.</string>
+    <string name="settings_sign_out_delete_downloads">Ankaŭ forigi elŝutojn de ĉi tiu aparato</string>
+    <string name="settings_cancel">Nuligi</string>
+</resources>

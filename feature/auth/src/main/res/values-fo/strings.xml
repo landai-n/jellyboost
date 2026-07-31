@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Knýt saman við ambætara</string>
+    <string name="server_setup_discovered_title">Ambætarar á hesum netverki</string>
+    <string name="server_setup_discovering">Leitar á staðbundna netverkinum…</string>
+    <string name="server_setup_no_servers_found">Ongir ambætarar gjørdu vart við seg. Skriva eina adressu niðanfyri.</string>
+    <string name="server_setup_manual_title">Ambætaraadressa</string>
+    <string name="server_setup_address_label">Vertur ella URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ella 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Knýt saman</string>
+    <string name="server_setup_connecting">Kann samband við ambætaran…</string>
+    <string name="server_setup_session_lost">Tín goymda innritan kundi ikki verða endurstovnað, so tú ert nú útritað(ur). Innrita teg aftur.</string>
+
+    <string name="login_title">Innrita</string>
+    <string name="login_server_version">Útgáva %1$s</string>
+    <string name="login_server_version_unknown">Útgáva ókend</string>
+    <string name="login_public_users_title">Hvør sær?</string>
+    <string name="login_username_label">Brúkaranavn</string>
+    <string name="login_password_label">Loyniorð</string>
+    <string name="login_show_password">Sýn loyniorð</string>
+    <string name="login_hide_password">Fjal loyniorð</string>
+    <string name="login_sign_in">Innrita</string>
+    <string name="login_change_server">Brúka ein annan ambætara</string>
+    <string name="login_loading">Heintar ambætaraupplýsingar…</string>
+    <string name="login_or">ella</string>
+
+    <string name="login_quick_connect">Brúka Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Opna Jellyfin á einum tóli, har tú longu ert innritað(ur), far til Quick Connect og skriva hesa kotuna.</string>
+    <string name="login_quick_connect_waiting">Bíðar eftir góðkenning…</string>
+    <string name="login_quick_connect_cancel">Avlýs</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Roynti %d møguligu adressu, uttan úrslit.</item>
+        <item quantity="other">Roynti %d møguligar adressur, uttan úrslit.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Fær ikki samband við ambætaran</string>
+    <string name="auth_error_unsupported_version_or_product">Ikki stuðlað útgáva ella eyðkenni</string>
+    <string name="auth_error_cannot_connect">Sambandið kundi ikki verða knýtt.\nKanna vertsnavnið og netsambandið.</string>
+    <string name="auth_error_invalid_credentials">Skeivt brúkaranavn ella loyniorð.</string>
+    <string name="auth_error_quick_connect_expired">Henda kotan er útrunnin. Bið um eina nýggja og royn aftur.</string>
+    <string name="auth_error_server">Ambætarin svaraði við eini villu. Royn aftur.</string>
+    <string name="auth_error_server_with_code">Ambætarin svaraði við eini villu (%1$d). Royn aftur.</string>
+</resources>

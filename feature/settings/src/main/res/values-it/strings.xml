@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_back">Indietro</string>
+    <string name="settings_home">Home</string>
+    <string name="settings_section_playback">Riproduzione</string>
+    <string name="settings_skip_intro">Salta la sigla iniziale</string>
+    <string name="settings_skip_outro">Salta la sigla finale</string>
+    <string name="settings_skip_mode_off">Non fare nulla</string>
+    <string name="settings_skip_mode_show_button">Mostra un pulsante per saltare</string>
+    <string name="settings_skip_mode_auto">Salta automaticamente</string>
+    <string name="settings_pip">Picture-in-picture</string>
+    <string name="settings_pip_supporting">Continua la riproduzione in una finestra mobile quando esci dall\'app.</string>
+    <string name="settings_section_downloads">Download</string>
+    <string name="settings_wifi_only">Solo Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Metti in pausa i download con la rete mobile.</string>
+    <string name="settings_quality">Qualità di download</string>
+    <string name="settings_quality_original">File originale — copia esatta, riprendibile</string>
+    <string name="settings_quality_high">Alta — circa 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Media — circa 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Bassa — circa 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Tutto tranne il file originale viene convertito dal tuo server durante l\'invio, quindi la dimensione mostrata durante il download è una stima e un trasferimento interrotto ricomincia da capo.</string>
+    <string name="settings_storage_label">Archiviazione</string>
+    <string name="settings_storage_summary">%1$s usati · %2$s liberi su questo dispositivo</string>
+    <string name="settings_storage_location">I download sono conservati in %1$s</string>
+    <string name="settings_storage_picker">Posizione di archiviazione</string>
+    <string name="settings_storage_internal">Archiviazione interna</string>
+    <string name="settings_storage_sd_card">Scheda SD</string>
+    <string name="settings_storage_volume_free">%1$s liberi</string>
+    <string name="settings_storage_missing">L\'archiviazione scelta non è disponibile al momento, quindi i download andranno nella posizione selezionata di seguito.</string>
+    <string name="settings_storage_switch_title">Spostare i download?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">I download non possono ancora essere spostati tra posizioni, quindi quello già presente su questo dispositivo verrà eliminato. Potrai scaricarlo di nuovo nella nuova posizione.</item>
+        <item quantity="other">I download non possono ancora essere spostati tra posizioni, quindi i %1$d già presenti su questo dispositivo verranno eliminati. Potrai scaricarli di nuovo nella nuova posizione.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Elimina e cambia</string>
+    <string name="settings_section_connectivity">Connettività</string>
+    <string name="settings_offline_mode">Modalità offline</string>
+    <string name="settings_offline_mode_supporting">Mostra solo i contenuti già presenti su questo dispositivo.</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_user">Accesso eseguito come</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Accesso non eseguito</string>
+    <string name="settings_sign_out">Disconnetti</string>
+    <string name="settings_sign_out_dialog_title">Disconnettersi?</string>
+    <string name="settings_sign_out_dialog_message">Ti serviranno l\'indirizzo del server e la password per accedere di nuovo.</string>
+    <string name="settings_sign_out_delete_downloads">Elimina anche i download da questo dispositivo</string>
+    <string name="settings_cancel">Annulla</string>
+</resources>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Postavke</string>
+    <string name="settings_back">Natrag</string>
+    <string name="settings_home">Početna</string>
+
+    <string name="settings_section_playback">Reprodukcija</string>
+    <string name="settings_skip_intro">Preskoči uvod</string>
+    <string name="settings_skip_outro">Preskoči odjavnu špicu</string>
+    <string name="settings_skip_mode_off">Ne čini ništa</string>
+    <string name="settings_skip_mode_show_button">Prikaži gumb za preskakanje</string>
+    <string name="settings_skip_mode_auto">Preskoči automatski</string>
+    <string name="settings_pip">Slika u slici</string>
+    <string name="settings_pip_supporting">Nastavi reprodukciju u plutajućem prozoru kada napustite aplikaciju.</string>
+
+    <string name="settings_section_downloads">Preuzimanja</string>
+    <string name="settings_wifi_only">Samo Wi-Fi</string>
+    <string name="settings_wifi_only_supporting">Pauziraj preuzimanja na mobilnim podacima.</string>
+    <string name="settings_quality">Kvaliteta preuzimanja</string>
+    <string name="settings_quality_original">Izvorna datoteka — točna kopija, moguć nastavak</string>
+    <string name="settings_quality_high">Visoka — oko 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Srednja — oko 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Niska — oko 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Sve osim izvorne datoteke pretvara vaš poslužitelj tijekom slanja, pa je prikazana veličina tijekom preuzimanja procjena, a prekinuti prijenos počinje iznova.</string>
+    <string name="settings_storage_label">Pohrana</string>
+    <string name="settings_storage_summary">%1$s iskorišteno · %2$s slobodno na ovom uređaju</string>
+    <string name="settings_storage_location">Preuzimanja se čuvaju u %1$s</string>
+    <string name="settings_storage_picker">Lokacija pohrane</string>
+    <string name="settings_storage_internal">Interna pohrana</string>
+    <string name="settings_storage_sd_card">SD kartica</string>
+    <string name="settings_storage_volume_free">%1$s slobodno</string>
+    <string name="settings_storage_missing">Odabrana pohrana trenutno nije dostupna, pa se preuzimanja spremaju na lokaciju odabranu ispod.</string>
+    <string name="settings_storage_switch_title">Premjestiti preuzimanja?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Preuzimanja se još ne mogu premjestiti između lokacija, pa će stavka koja je već na ovom uređaju biti izbrisana. Možete je ponovno preuzeti na novu lokaciju.</item>
+        <item quantity="few">Preuzimanja se još ne mogu premjestiti između lokacija, pa će %1$d stavke koje su već na ovom uređaju biti izbrisane. Možete ih ponovno preuzeti na novu lokaciju.</item>
+        <item quantity="other">Preuzimanja se još ne mogu premjestiti između lokacija, pa će %1$d stavki koje su već na ovom uređaju biti izbrisano. Možete ih ponovno preuzeti na novu lokaciju.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Izbriši i promijeni</string>
+
+    <string name="settings_section_connectivity">Povezivost</string>
+    <string name="settings_offline_mode">Izvanmrežni način</string>
+    <string name="settings_offline_mode_supporting">Prikaži samo sadržaj koji je već na ovom uređaju.</string>
+
+    <string name="settings_section_account">Račun</string>
+    <string name="settings_account_user">Prijavljeni kao</string>
+    <string name="settings_account_server">Poslužitelj</string>
+    <string name="settings_account_unknown">Niste prijavljeni</string>
+    <string name="settings_sign_out">Odjava</string>
+    <string name="settings_sign_out_dialog_title">Odjaviti se?</string>
+    <string name="settings_sign_out_dialog_message">Za ponovnu prijavu trebat će vam adresa poslužitelja i lozinka.</string>
+    <string name="settings_sign_out_delete_downloads">Također izbriši preuzimanja s ovog uređaja</string>
+    <string name="settings_cancel">Otkaži</string>
+</resources>

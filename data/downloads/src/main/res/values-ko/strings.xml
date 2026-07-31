@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">다운로드</string>
+    <string name="downloads_channel_description">이 기기로 미디어를 다운로드하는 진행 상황입니다.</string>
+
+    <string name="downloads_notification_preparing">다운로드 준비 중…</string>
+    <string name="downloads_notification_downloading">다운로드 중…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">다운로드 중…</string>
+    <string name="downloads_action_pause">일시정지</string>
+    <string name="downloads_action_cancel">취소</string>
+</resources>

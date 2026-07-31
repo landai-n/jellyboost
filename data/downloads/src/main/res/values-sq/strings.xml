@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Shkarkimet</string>
+    <string name="downloads_channel_description">Progresi i shkarkimit të medias në këtë pajisje.</string>
+
+    <string name="downloads_notification_preparing">Duke përgatitur shkarkimet…</string>
+    <string name="downloads_notification_downloading">Duke shkarkuar…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Duke shkarkuar…</string>
+    <string name="downloads_action_pause">Ndalo përkohësisht</string>
+    <string name="downloads_action_cancel">Anulo</string>
+</resources>

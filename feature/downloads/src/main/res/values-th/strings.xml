@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">ดาวน์โหลดแล้ว</string>
+    <string name="downloads_tab_queue">คิว</string>
+    <string name="downloads_wifi_only">Wi‑Fi เท่านั้น</string>
+    <string name="downloads_group_movies">ภาพยนตร์</string>
+    <string name="downloads_storage_summary">ใช้ไป %1$s · เหลือ %2$s</string>
+    <string name="downloads_action_delete">ลบดาวน์โหลด</string>
+    <string name="downloads_action_cancel">ยกเลิกดาวน์โหลด</string>
+    <string name="downloads_action_pause">หยุดดาวน์โหลดชั่วคราว</string>
+    <string name="downloads_action_resume">ดาวน์โหลดต่อ</string>
+    <string name="downloads_action_move_up">เลื่อนขึ้นในคิว</string>
+    <string name="downloads_action_move_down">เลื่อนลงในคิว</string>
+    <string name="downloads_action_pause_all">หยุดทั้งหมดชั่วคราว</string>
+    <string name="downloads_action_resume_all">ดาวน์โหลดต่อทั้งหมด</string>
+    <string name="downloads_action_cancel_all">ยกเลิกทั้งหมด</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">ยกเลิกดาวน์โหลดทั้งหมด %1$d รายการหรือไม่?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">คิวจะถูกล้างและไฟล์ที่ดาวน์โหลดค้างไว้จะถูกลบ ดาวน์โหลดที่เสร็จสมบูรณ์แล้วจะไม่ได้รับผลกระทบ</string>
+    <string name="downloads_cancel_all_dialog_confirm">ยกเลิกดาวน์โหลด</string>
+    <string name="downloads_cancel_all_dialog_dismiss">เก็บไว้</string>
+    <string name="downloads_delete_dialog_title">ลบ %1$s หรือไม่?</string>
+    <string name="downloads_delete_dialog_message">ไฟล์ที่ดาวน์โหลดไว้จะถูกลบออกจากอุปกรณ์นี้ คุณสามารถดาวน์โหลดใหม่ได้ในภายหลัง</string>
+    <string name="downloads_delete_dialog_confirm">ลบ</string>
+    <string name="downloads_delete_dialog_cancel">ยกเลิก</string>
+    <string name="downloads_progress_of">%1$s จาก %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s จาก ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s จากสูงสุด %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">สูงสุด %1$s</string>
+    <string name="downloads_speed">%1$s/วินาที</string>
+    <string name="downloads_eta">เหลืออีก %1$s</string>
+    <string name="downloads_eta_approx">เหลืออีกประมาณ %1$s</string>
+    <string name="downloads_transcoded_marker">ผ่านการทรานสโค้ด</string>
+    <string name="downloads_status_queued">กำลังรอ</string>
+    <string name="downloads_status_paused">หยุดชั่วคราว</string>
+    <string name="downloads_status_failed">ดาวน์โหลดล้มเหลว</string>
+    <string name="downloads_status_failed_reason">ดาวน์โหลดล้มเหลว: %1$s</string>
+    <string name="downloads_empty_downloaded">ยังไม่มีอะไรถูกดาวน์โหลด แตะดาวน์โหลดที่ภาพยนตร์หรือตอนใดก็ได้เพื่อเก็บไว้ในอุปกรณ์นี้</string>
+    <string name="downloads_empty_queue">คิวดาวน์โหลดว่างเปล่า</string>
+    <string name="downloads_load_failed">ไม่สามารถอ่านรายการดาวน์โหลดของคุณได้ เปิดหน้าจอนี้ใหม่เพื่อลองอีกครั้ง</string>
+    <string name="downloads_message_delete_failed">ไม่สามารถลบดาวน์โหลดนั้นได้</string>
+    <string name="downloads_message_action_failed">ไม่สามารถอัปเดตคิวได้</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">หยุดชั่วคราว %1$d รายการ — %2$d รายการที่ทรานสโค้ดยังคงดาวน์โหลดต่อ (ไม่สามารถหยุดการทรานสโค้ดชั่วคราวได้)</item>
+    </plurals>
+</resources>

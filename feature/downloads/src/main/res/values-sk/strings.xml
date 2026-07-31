@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Stiahnuté</string>
+    <string name="downloads_tab_queue">Front</string>
+    <string name="downloads_wifi_only">Len Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmy</string>
+
+    <string name="downloads_storage_summary">%1$s využité · %2$s voľné</string>
+
+    <string name="downloads_action_delete">Odstrániť stiahnutie</string>
+    <string name="downloads_action_cancel">Zrušiť stiahnutie</string>
+    <string name="downloads_action_pause">Pozastaviť stiahnutie</string>
+    <string name="downloads_action_resume">Pokračovať v stiahnutí</string>
+    <string name="downloads_action_move_up">Posunúť vyššie vo fronte</string>
+    <string name="downloads_action_move_down">Posunúť nižšie vo fronte</string>
+
+    <string name="downloads_action_pause_all">Pozastaviť všetko</string>
+    <string name="downloads_action_resume_all">Pokračovať vo všetkom</string>
+    <string name="downloads_action_cancel_all">Zrušiť všetko</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Zrušiť toto stiahnutie?</item>
+        <item quantity="few">Zrušiť všetky %1$d stiahnutia?</item>
+        <item quantity="many">Zrušiť všetkých %1$d stiahnutí?</item>
+        <item quantity="other">Zrušiť všetkých %1$d stiahnutí?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Front sa vyprázdni a čiastočne stiahnuté súbory sa odstránia. Dokončené stiahnutia nie sú ovplyvnené.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Zrušiť stiahnutia</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Ponechať</string>
+
+    <string name="downloads_delete_dialog_title">Odstrániť %1$s?</string>
+    <string name="downloads_delete_dialog_message">Stiahnuté súbory sa odstránia z tohto zariadenia. Neskôr si ich môžete stiahnuť znova.</string>
+    <string name="downloads_delete_dialog_confirm">Odstrániť</string>
+    <string name="downloads_delete_dialog_cancel">Zrušiť</string>
+
+    <string name="downloads_progress_of">%1$s z %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s z ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s z max. %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">max. %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Zostáva %1$s</string>
+    <string name="downloads_eta_approx">Zostáva ~%1$s</string>
+    <string name="downloads_transcoded_marker">Prekódované</string>
+    <string name="downloads_status_queued">Čaká</string>
+    <string name="downloads_status_paused">Pozastavené</string>
+    <string name="downloads_status_failed">Stiahnutie zlyhalo</string>
+    <string name="downloads_status_failed_reason">Stiahnutie zlyhalo: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Zatiaľ nič nie je stiahnuté. Klepnutím na Stiahnuť pri filme alebo epizóde ho uložíte do tohto zariadenia.</string>
+    <string name="downloads_empty_queue">Front stiahnutí je prázdny.</string>
+    <string name="downloads_load_failed">Nepodarilo sa načítať vaše stiahnutia. Znova otvorte túto obrazovku a skúste to ešte raz.</string>
+    <string name="downloads_message_delete_failed">Nepodarilo sa odstrániť toto stiahnutie.</string>
+    <string name="downloads_message_action_failed">Nepodarilo sa aktualizovať front.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Pozastavených %1$d — %2$d prekódovanie sa sťahuje ďalej (prekódovanie sa nedá pozastaviť).</item>
+        <item quantity="few">Pozastavených %1$d — %2$d prekódovania sa sťahujú ďalej (prekódovanie sa nedá pozastaviť).</item>
+        <item quantity="many">Pozastavených %1$d — %2$d prekódovaní sa sťahuje ďalej (prekódovanie sa nedá pozastaviť).</item>
+        <item quantity="other">Pozastavených %1$d — %2$d prekódovaní sa sťahuje ďalej (prekódovanie sa nedá pozastaviť).</item>
+    </plurals>
+</resources>

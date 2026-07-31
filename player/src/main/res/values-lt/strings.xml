@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Uždaryti leistuvą</string>
+    <string name="player_play">Leisti</string>
+    <string name="player_pause">Pristabdyti</string>
+    <string name="player_rewind">Grįžti 10 sekundžių atgal</string>
+    <string name="player_forward">Peršokti 30 sekundžių į priekį</string>
+
+    <string name="player_audio">Garsas</string>
+    <string name="player_subtitles">Subtitrai</string>
+    <string name="player_subtitles_off">Išjungta</string>
+    <string name="player_quality">Kokybė</string>
+    <string name="player_speed">Greitis</string>
+
+    <string name="player_skip_intro">Praleisti įžangą</string>
+    <string name="player_skip_outro">Praleisti pabaigą</string>
+
+    <string name="player_quality_auto">Automatinis</string>
+    <string name="player_quality_high">Aukšta — 20 Mbps</string>
+    <string name="player_quality_medium">Vidutinė — 8 Mbps</string>
+    <string name="player_quality_low">Žema — 3 Mbps</string>
+    <string name="player_quality_lowest">Žemiausia — 720 kbps</string>
+
+    <string name="player_method_direct_play">Tiesioginis leidimas</string>
+    <string name="player_method_direct_stream">Tiesioginis srautas</string>
+    <string name="player_method_transcode">Perkodavimas</string>
+
+    <string name="player_message_transcode">Jūsų įrenginys negalėjo dekoduoti šio failo, todėl serveris jį perkoduoja.</string>
+    <string name="player_message_lower_quality">Srautas strigo – bandoma iš naujo žemesne kokybe.</string>
+    <string name="player_message_track_restart">Serveriui teko iš naujo koduoti srautą šiam takeliui.</string>
+    <string name="player_message_track_streaming">Šio takelio nėra atsisiuntime – jis transliuojamas iš jūsų serverio.</string>
+    <string name="player_message_track_offline">Šio takelio nėra atsisiųstame faile.</string>
+    <string name="player_message_failed">Leidimas nepavyko.</string>
+
+    <string name="player_syncplay_group">Grupė</string>
+    <string name="player_syncplay_waiting">Laukiama grupės…</string>
+    <string name="player_syncplay_shuffle">Maišyti eilę</string>
+    <string name="player_syncplay_repeat">Kartoti</string>
+    <string name="player_syncplay_repeat_none">Išjungta</string>
+    <string name="player_syncplay_repeat_one">Šis elementas</string>
+    <string name="player_syncplay_repeat_all">Visa eilė</string>
+    <string name="player_syncplay_leave">Palikti grupę</string>
+    <string name="player_syncplay_leave_title">Palikti šią grupę?</string>
+    <string name="player_syncplay_leave_body">Leidimas čia tęsiasi savarankiškai. Prisijungimas iš naujo reiškia grupės pasirinkimą vėl.</string>
+
+    <string name="player_syncplay_cancel">Atšaukti</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d žmogus žiūri</item>
+        <item quantity="few">%d žmonės žiūri</item>
+        <item quantity="many">%d žmonių žiūri</item>
+        <item quantity="other">%d žmonių žiūri</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d daugiau</string>
+
+    <string name="player_syncplay_queue">Eilė</string>
+    <string name="player_syncplay_queue_empty">Grupė dar nieko neįtraukė į eilę.</string>
+    <string name="player_syncplay_queue_item_loading">Įkeliama…</string>
+    <string name="player_syncplay_queue_playing">Leidžiama dabar</string>
+    <string name="player_syncplay_queue_next">Kitas elementas</string>
+    <string name="player_syncplay_queue_previous">Ankstesnis elementas</string>
+    <string name="player_syncplay_queue_move_up">Perkelti aukštyn</string>
+    <string name="player_syncplay_queue_move_down">Perkelti žemyn</string>
+    <string name="player_syncplay_queue_remove">Pašalinti iš eilės</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d elementas eilėje</item>
+        <item quantity="few">%d elementai eilėje</item>
+        <item quantity="many">%d elementų eilėje</item>
+        <item quantity="other">%d elementų eilėje</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Palikta „SyncPlay“ – prarastas ryšys</string>
+    <string name="player_message_syncplay_rejoined">Vėl prisijungta prie „SyncPlay“ grupės</string>
+    <string name="player_message_syncplay_join_failed">Nepavyko prisijungti prie tos „SyncPlay“ grupės.</string>
+    <string name="player_message_syncplay_group_ended">„SyncPlay“ grupė baigė veiklą.</string>
+    <string name="player_message_syncplay_removed">Jūs nebesate „SyncPlay“ grupėje.</string>
+    <string name="player_message_syncplay_library_denied">Grupė žiūri kažką, prie ko neturite prieigos.</string>
+    <string name="player_message_syncplay_item_unavailable">Nepavyko atidaryti to, ką žiūri grupė.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Atgal</string>
+    <string name="player_syncplay_groups_home">Pradžia</string>
+    <string name="player_syncplay_groups_create">Sukurti grupę</string>
+    <string name="player_syncplay_groups_create_title">Pavadinkite savo grupę</string>
+    <string name="player_syncplay_groups_create_hint">Grupės pavadinimas</string>
+    <string name="player_syncplay_groups_create_confirm">Sukurti</string>
+    <string name="player_syncplay_groups_joining">Jungiamasi…</string>
+    <string name="player_syncplay_groups_active_label">Esate šioje grupėje</string>
+    <string name="player_syncplay_groups_open_player">Atidaryti leistuvą</string>
+    <string name="player_syncplay_groups_empty">Šiuo metu niekas kitas kartu nežiūri.</string>
+    <string name="player_syncplay_groups_disabled">„SyncPlay“ jūsų paskyrai išjungta.</string>
+    <string name="player_syncplay_groups_error">Nepavyko įkelti „SyncPlay“ grupių.</string>
+
+    <string name="player_syncplay_presence_channel_name">„SyncPlay“ grupė</string>
+    <string name="player_syncplay_presence_channel_description">Išlaiko jūsų vietą bendro žiūrėjimo grupėje, kol programėlė veikia fone.</string>
+    <string name="player_syncplay_presence_title">„SyncPlay“ grupėje</string>
+    <string name="player_syncplay_presence_text">Laukiama grupės</string>
+    <string name="player_syncplay_presence_leave">Palikti</string>
+
+    <string name="player_syncplay_state_idle">Neveikianti</string>
+    <string name="player_syncplay_state_waiting">Laukiama</string>
+    <string name="player_syncplay_state_paused">Pristabdyta</string>
+    <string name="player_syncplay_state_playing">Leidžiama</string>
+
+    <string name="player_cast">Transliuoti į įrenginį</string>
+
+    <string name="player_cast_device_unnamed">jūsų TV</string>
+    <string name="player_message_cast_transferred">Dabar leidžiama įrenginyje %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Palikote „SyncPlay“ grupę, kad transliuotumėte į %1$s.</string>
+    <string name="player_message_cast_failed">Nepavyko to paleisti įrenginyje %1$s.</string>
+
+    <string name="player_casting_to">Transliuojama į %1$s</string>
+</resources>

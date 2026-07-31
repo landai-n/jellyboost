@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Nedladdat</string>
+    <string name="downloads_tab_queue">Kö</string>
+    <string name="downloads_wifi_only">Endast Wi-Fi</string>
+
+    <string name="downloads_group_movies">Filmer</string>
+
+    <string name="downloads_storage_summary">%1$s använt · %2$s ledigt</string>
+
+    <string name="downloads_action_delete">Ta bort nedladdning</string>
+    <string name="downloads_action_cancel">Avbryt nedladdning</string>
+    <string name="downloads_action_pause">Pausa nedladdning</string>
+    <string name="downloads_action_resume">Återuppta nedladdning</string>
+    <string name="downloads_action_move_up">Flytta upp i kön</string>
+    <string name="downloads_action_move_down">Flytta ner i kön</string>
+
+    <string name="downloads_action_pause_all">Pausa alla</string>
+    <string name="downloads_action_resume_all">Återuppta alla</string>
+    <string name="downloads_action_cancel_all">Avbryt alla</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Avbryta den här nedladdningen?</item>
+        <item quantity="other">Avbryta alla %1$d nedladdningar?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Kön töms och delvis nedladdade filer tas bort. Färdiga nedladdningar påverkas inte.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Avbryt nedladdningar</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behåll</string>
+
+    <string name="downloads_delete_dialog_title">Ta bort %1$s?</string>
+    <string name="downloads_delete_dialog_message">De nedladdade filerna tas bort från den här enheten. Du kan ladda ner den igen senare.</string>
+    <string name="downloads_delete_dialog_confirm">Ta bort</string>
+    <string name="downloads_delete_dialog_cancel">Avbryt</string>
+
+    <string name="downloads_progress_of">%1$s av %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s av ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s av upp till %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">upp till %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s kvar</string>
+    <string name="downloads_eta_approx">~%1$s kvar</string>
+    <string name="downloads_transcoded_marker">Omkodad</string>
+    <string name="downloads_status_queued">Väntar</string>
+    <string name="downloads_status_paused">Pausad</string>
+    <string name="downloads_status_failed">Nedladdning misslyckades</string>
+    <string name="downloads_status_failed_reason">Nedladdning misslyckades: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Inget nedladdat än. Tryck på Ladda ner på en film eller ett avsnitt för att behålla den på den här enheten.</string>
+    <string name="downloads_empty_queue">Nedladdningskön är tom.</string>
+    <string name="downloads_load_failed">Kunde inte läsa dina nedladdningar. Öppna den här skärmen igen för att försöka igen.</string>
+    <string name="downloads_message_delete_failed">Kunde inte ta bort den nedladdningen.</string>
+    <string name="downloads_message_action_failed">Kunde inte uppdatera kön.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">Pausade %1$d – %2$d omkodning fortsätter att laddas ner (en omkodning kan inte pausas).</item>
+        <item quantity="other">Pausade %1$d – %2$d omkodningar fortsätter att laddas ner (en omkodning kan inte pausas).</item>
+    </plurals>
+</resources>

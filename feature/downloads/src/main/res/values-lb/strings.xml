@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Erofgeluede</string>
+    <string name="downloads_tab_queue">Warteschlaang</string>
+    <string name="downloads_wifi_only">Nëmmen WLAN</string>
+
+    <string name="downloads_group_movies">Filmer</string>
+
+    <string name="downloads_storage_summary">%1$s benotzt · %2$s fräi</string>
+
+    <string name="downloads_action_delete">Download läschen</string>
+    <string name="downloads_action_cancel">Download ofbriechen</string>
+    <string name="downloads_action_pause">Download pauséieren</string>
+    <string name="downloads_action_resume">Download weiderféieren</string>
+    <string name="downloads_action_move_up">An der Warteschlaang no uewen</string>
+    <string name="downloads_action_move_down">An der Warteschlaang no ënnen</string>
+
+    <string name="downloads_action_pause_all">All pauséieren</string>
+    <string name="downloads_action_resume_all">All weiderféieren</string>
+    <string name="downloads_action_cancel_all">All ofbriechen</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Dëse Download ofbriechen?</item>
+        <item quantity="other">All %1$d Downloads ofbriechen?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">D\'Warteschlaang gëtt eidel gemaach a Fichieren, déi deelweis erofgeluede goufen, ginn ewechgeholl. Fäerdeg Downloads sinn net betraff.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Downloads ofbriechen</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Behalen</string>
+
+    <string name="downloads_delete_dialog_title">%1$s läschen?</string>
+    <string name="downloads_delete_dialog_message">D\'erofgeluede Fichieren ginn vun dësem Apparat ewechgeholl. Du kanns se méi spéit nach eng Kéier eroflueden.</string>
+    <string name="downloads_delete_dialog_confirm">Läschen</string>
+    <string name="downloads_delete_dialog_cancel">Ofbriechen</string>
+
+    <string name="downloads_progress_of">%1$s vun %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s vun ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s vu bis zu %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">bis zu %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Nach %1$s</string>
+    <string name="downloads_eta_approx">Nach ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transkodéiert</string>
+    <string name="downloads_status_queued">Waart</string>
+    <string name="downloads_status_paused">Pauséiert</string>
+    <string name="downloads_status_failed">Download feelgeschloen</string>
+    <string name="downloads_status_failed_reason">Download feelgeschloen: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Nach näischt erofgeluede. Klick bei engem Film oder enger Episod op „Eroflueden“, fir en op dësem Apparat ze behalen.</string>
+    <string name="downloads_empty_queue">D\'Downloadwarteschlaang ass eidel.</string>
+    <string name="downloads_load_failed">Deng Downloads konnten net gelies ginn. Maach dëse Bildschierm nach eng Kéier op, fir et nach eng Kéier ze probéieren.</string>
+    <string name="downloads_message_delete_failed">Den Download konnt net geläscht ginn.</string>
+    <string name="downloads_message_action_failed">D\'Warteschlaang konnt net aktualiséiert ginn.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d pauséiert – %2$d Transkodéierung gëtt weider erofgeluede (eng Transkodéierung kann net pauséiert ginn).</item>
+        <item quantity="other">%1$d pauséiert – %2$d Transkodéierungen ginn weider erofgeluede (eng Transkodéierung kann net pauséiert ginn).</item>
+    </plurals>
+</resources>

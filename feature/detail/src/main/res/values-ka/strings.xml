@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">უკან</string>
+    <string name="detail_home">მთავარი</string>
+    <string name="detail_play">დაკვრა</string>
+    <string name="detail_resume">გაგრძელება</string>
+    <string name="detail_download">გადმოწერა</string>
+    <string name="detail_download_cancel">გაუქმება</string>
+    <string name="detail_download_remove">წაშლა</string>
+    <string name="detail_download_retry">ხელახლა ცდა</string>
+    <string name="detail_play_episode">ამ ეპიზოდის დაკვრა</string>
+    <string name="detail_mark_watched">ნანახად მონიშვნა</string>
+    <string name="detail_mark_unwatched">უნახავად მონიშვნა</string>
+    <string name="detail_add_favorite">რჩეულებში დამატება</string>
+    <string name="detail_remove_favorite">რჩეულებიდან წაშლა</string>
+    <string name="detail_section_seasons">სეზონები</string>
+    <string name="detail_section_next_up">შემდეგი</string>
+    <string name="detail_section_episodes">ეპიზოდები</string>
+    <string name="detail_section_similar">მსგავსი კონტენტი</string>
+    <string name="detail_runtime_minutes">%1$d წთ</string>
+    <string name="detail_remaining_minutes">დარჩენილია %1$d წთ</string>
+    <string name="detail_size_on_device">%1$s მოწყობილობაზე</string>
+    <string name="detail_directed_by">რეჟისორი: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d სეზონი</item>
+        <item quantity="other">%1$d სეზონი</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d ეპიზოდი</item>
+        <item quantity="other">%1$d ეპიზოდი</item>
+    </plurals>
+    <string name="detail_empty">ეს ერთეული აღარ არის ხელმისაწვდომი.</string>
+    <string name="detail_message_download_queued">დაემატა გადმოწერებში.</string>
+    <string name="detail_message_download_failed">ამ გადმოწერის დაწყება ვერ მოხერხდა.</string>
+    <string name="detail_message_download_deleted">წაშლილია ამ მოწყობილობიდან.</string>
+    <string name="detail_message_download_delete_failed">ამ გადმოწერის წაშლა ვერ მოხერხდა.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">გადმოწერა გაუქმდა — %1$d დასრულებული ეპიზოდი შენარჩუნებულია.</item>
+        <item quantity="other">გადმოწერა გაუქმდა — %1$d დასრულებული ეპიზოდი შენარჩუნებულია.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">ვერ შეინახა. სცადეთ ხელახლა.</string>
+    <string name="detail_group_play">დაკვრა %1$s-ისთვის</string>
+    <string name="detail_group_resume">გაგრძელება %1$s-ისთვის</string>
+    <string name="detail_group_play_next">შემდეგის დაკვრა</string>
+    <string name="detail_group_add_to_queue">რიგში დამატება</string>
+    <string name="detail_message_group_play">ჯგუფს სთხოვეთ ამის დაკვრა.</string>
+    <string name="detail_message_group_play_next">ჯგუფისთვის რიგში დამატებულია, როგორც შემდეგი.</string>
+    <string name="detail_message_group_queued">დაემატა ჯგუფის რიგში.</string>
+    <string name="detail_delete_download_dialog_title">წავშალოთ გადმოწერილი ფაილი?</string>
+    <string name="detail_delete_download_dialog_message">ეს წაშლის მას ამ მოწყობილობიდან. შეგიძლიათ ისევ გადმოწეროთ ნებისმიერ დროს.</string>
+    <string name="detail_delete_download_dialog_confirm">წაშლა</string>
+    <string name="detail_delete_download_dialog_cancel">გაუქმება</string>
+</resources>

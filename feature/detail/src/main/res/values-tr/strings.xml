@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Geri</string>
+    <string name="detail_home">Ana Sayfa</string>
+    <string name="detail_play">Oynat</string>
+    <string name="detail_resume">Devam et</string>
+    <string name="detail_download">İndir</string>
+    <string name="detail_download_cancel">İptal</string>
+    <string name="detail_download_remove">Kaldır</string>
+    <string name="detail_download_retry">Tekrar dene</string>
+    <string name="detail_play_episode">Bu bölümü oynat</string>
+    <string name="detail_mark_watched">İzlendi olarak işaretle</string>
+    <string name="detail_mark_unwatched">İzlenmedi olarak işaretle</string>
+    <string name="detail_add_favorite">Favorilere ekle</string>
+    <string name="detail_remove_favorite">Favorilerden kaldır</string>
+    <string name="detail_section_seasons">Sezonlar</string>
+    <string name="detail_section_next_up">Sırada</string>
+    <string name="detail_section_episodes">Bölümler</string>
+    <string name="detail_section_similar">Buna benzer diğerleri</string>
+    <string name="detail_runtime_minutes">%1$d dk</string>
+    <string name="detail_remaining_minutes">%1$d dk kaldı</string>
+    <string name="detail_size_on_device">Cihazda %1$s</string>
+    <string name="detail_directed_by">Yönetmen: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="one">%1$d sezon</item>
+        <item quantity="other">%1$d sezon</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="one">%1$d bölüm</item>
+        <item quantity="other">%1$d bölüm</item>
+    </plurals>
+    <string name="detail_empty">Bu öğe artık kullanılamıyor.</string>
+    <string name="detail_message_download_queued">İndirilenlere eklendi.</string>
+    <string name="detail_message_download_failed">O indirme başlatılamadı.</string>
+    <string name="detail_message_download_deleted">Bu cihazdan kaldırıldı.</string>
+    <string name="detail_message_download_delete_failed">O indirme kaldırılamadı.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="one">İndirme iptal edildi — %1$d tamamlanmış bölüm saklandı.</item>
+        <item quantity="other">İndirme iptal edildi — %1$d tamamlanmış bölüm saklandı.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Bu kaydedilemedi. Tekrar deneyin.</string>
+    <string name="detail_group_play">%1$s için oynat</string>
+    <string name="detail_group_resume">%1$s için devam et</string>
+    <string name="detail_group_play_next">Sonra oynat</string>
+    <string name="detail_group_add_to_queue">Kuyruğa ekle</string>
+    <string name="detail_message_group_play">Gruptan bunu oynatması istendi.</string>
+    <string name="detail_message_group_play_next">Grup için sıradaki olarak kuyruğa eklendi.</string>
+    <string name="detail_message_group_queued">Grubun kuyruğuna eklendi.</string>
+    <string name="detail_delete_download_dialog_title">İndirme silinsin mi?</string>
+    <string name="detail_delete_download_dialog_message">Bu, onu bu cihazdan kaldırır. İstediğiniz zaman tekrar indirebilirsiniz.</string>
+    <string name="detail_delete_download_dialog_confirm">Sil</string>
+    <string name="detail_delete_download_dialog_cancel">İptal</string>
+</resources>

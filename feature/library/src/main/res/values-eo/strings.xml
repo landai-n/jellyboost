@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Neniu biblioteko ankoraŭ. Aldonu unu sur la servilo.</string>
+    <string name="library_back">Reen</string>
+    <string name="library_home">Hejmo</string>
+    <string name="library_sort">Ordigi</string>
+    <string name="library_filter">Filtri</string>
+    <string name="library_sort_title">Ordigi laŭ</string>
+    <string name="library_sort_name">Nomo</string>
+    <string name="library_sort_date_added">Dato de aldono</string>
+    <string name="library_sort_premiere_date">Eldona dato</string>
+    <string name="library_sort_community_rating">Komunuma taksado</string>
+    <string name="library_sort_runtime">Daŭro</string>
+    <string name="library_sort_random">Hazarda</string>
+    <string name="library_sort_direction">Direkto</string>
+    <string name="library_sort_ascending">Kreskanta</string>
+    <string name="library_sort_descending">Malkreskanta</string>
+    <string name="library_filters_title">Filtriloj</string>
+    <string name="library_filters_genres">Ĝenroj</string>
+    <string name="library_filters_years">Jaroj</string>
+    <string name="library_filters_played">Spektita</string>
+    <string name="library_filters_played_any">Ĉiuj</string>
+    <string name="library_filters_played_yes">Spektita</string>
+    <string name="library_filters_played_no">Nespektita</string>
+    <string name="library_filters_clear">Forigi ĉiujn</string>
+    <string name="library_filters_apply">Montri rezultojn</string>
+    <string name="library_filters_none">Ĉi tiu biblioteko ne proponis ion por filtri.</string>
+    <string name="library_filters_loading">Ŝargante filtrilojn…</string>
+    <string name="library_empty">Nenio por montri ĉi tie.</string>
+    <string name="library_empty_filtered">Neniu ero kongruas kun ĉi tiuj filtriloj.</string>
+    <string name="library_empty_clear_filters">Forigi filtrilojn</string>
+    <string name="library_retry">Reprovi</string>
+    <string name="library_error_network">Ne eblas atingi vian servilon. Kontrolu vian konekton kaj reprovu.</string>
+    <string name="library_error_unauthorized">Via seanco eksvalidiĝis. Ensalutu denove por daŭrigi.</string>
+    <string name="library_error_not_found">Tiu biblioteko ne plu estas sur la servilo.</string>
+    <string name="library_error_server">La servilo redonis eraron.</string>
+    <string name="library_error_server_with_code">La servilo redonis eraron (%1$d).</string>
+    <string name="library_error_storage">Ne eblis legi lokajn datumojn.</string>
+    <string name="library_error_unknown">Io misfunkciis dum ŝargado de ĉi tiu biblioteko.</string>
+</resources>

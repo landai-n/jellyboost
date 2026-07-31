@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Daugiau parinkčių</string>
+    <string name="home_settings">Nustatymai</string>
+    <string name="settings_offline_mode">Neprisijungimo režimas</string>
+
+    <string name="state_on">Įjungta</string>
+    <string name="state_off">Išjungta</string>
+
+    <string name="nav_home">Pradžia</string>
+    <string name="nav_libraries">Bibliotekos</string>
+    <string name="nav_search">Paieška</string>
+    <string name="nav_downloads">Atsisiuntimai</string>
+
+    <string name="offline_no_network">Nėra tinklo – rodomas atsisiųstas turinys</string>
+    <string name="offline_server_unreachable">Nepavyksta pasiekti serverio – rodomas atsisiųstas turinys</string>
+    <string name="offline_forced">Įjungtas neprisijungimo režimas – rodomas atsisiųstas turinys</string>
+    <string name="offline_retry">Bandyti dar kartą</string>
+    <string name="offline_go_online">Prisijungti prie tinklo</string>
+
+    <string name="syncplay_groups_action">„SyncPlay“ grupės</string>
+    <string name="syncplay_groups_action_active">„SyncPlay“ grupės – esate grupėje</string>
+</resources>

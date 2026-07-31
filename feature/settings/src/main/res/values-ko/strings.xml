@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">설정</string>
+    <string name="settings_back">뒤로</string>
+    <string name="settings_home">홈</string>
+
+    <string name="settings_section_playback">재생</string>
+    <string name="settings_skip_intro">인트로 건너뛰기</string>
+    <string name="settings_skip_outro">아웃트로 건너뛰기</string>
+    <string name="settings_skip_mode_off">아무 작업 안 함</string>
+    <string name="settings_skip_mode_show_button">건너뛰기 버튼 표시</string>
+    <string name="settings_skip_mode_auto">자동으로 건너뛰기</string>
+    <string name="settings_pip">픽처 인 픽처</string>
+    <string name="settings_pip_supporting">앱을 나가도 플로팅 창에서 계속 재생합니다.</string>
+
+    <string name="settings_section_downloads">다운로드</string>
+    <string name="settings_wifi_only">Wi‑Fi에서만</string>
+    <string name="settings_wifi_only_supporting">모바일 데이터 사용 시 다운로드를 일시정지합니다.</string>
+    <string name="settings_quality">다운로드 화질</string>
+    <string name="settings_quality_original">원본 파일 — 완전한 복사본, 이어받기 가능</string>
+    <string name="settings_quality_high">고화질 — 약 20Mbps, 1080p</string>
+    <string name="settings_quality_medium">중화질 — 약 8Mbps, 1080p</string>
+    <string name="settings_quality_low">저화질 — 약 3Mbps, 720p</string>
+    <string name="settings_quality_supporting">원본 파일이 아닌 경우 서버에서 전송하며 변환하므로 다운로드 중 표시되는 용량은 추정치이며, 중단된 전송은 처음부터 다시 시작됩니다.</string>
+    <string name="settings_storage_label">저장공간</string>
+    <string name="settings_storage_summary">이 기기 사용 %1$s · 여유 공간 %2$s</string>
+    <string name="settings_storage_location">다운로드는 %1$s에 저장됩니다</string>
+    <string name="settings_storage_picker">저장 위치</string>
+    <string name="settings_storage_internal">내부 저장공간</string>
+    <string name="settings_storage_sd_card">SD 카드</string>
+    <string name="settings_storage_volume_free">여유 공간 %1$s</string>
+    <string name="settings_storage_missing">선택한 저장 위치를 지금 사용할 수 없어 다운로드가 아래에서 선택한 위치에 저장됩니다.</string>
+    <string name="settings_storage_switch_title">다운로드를 이동할까요?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="other">다운로드는 아직 위치 간 이동을 지원하지 않아 이 기기에 있는 %1$d개가 삭제됩니다. 새 위치로 다시 다운로드할 수 있습니다.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">삭제하고 전환</string>
+
+    <string name="settings_section_connectivity">연결</string>
+    <string name="settings_offline_mode">오프라인 모드</string>
+    <string name="settings_offline_mode_supporting">이 기기에 이미 있는 미디어만 표시합니다.</string>
+
+    <string name="settings_section_account">계정</string>
+    <string name="settings_account_user">로그인 계정</string>
+    <string name="settings_account_server">서버</string>
+    <string name="settings_account_unknown">로그인하지 않음</string>
+    <string name="settings_sign_out">로그아웃</string>
+    <string name="settings_sign_out_dialog_title">로그아웃할까요?</string>
+    <string name="settings_sign_out_dialog_message">다시 로그인하려면 서버 주소와 비밀번호가 필요합니다.</string>
+    <string name="settings_sign_out_delete_downloads">이 기기의 다운로드도 함께 삭제</string>
+    <string name="settings_cancel">취소</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Nedlastinger</string>
+    <string name="downloads_channel_description">Fremdrift for nedlasting av medier til denne enheten.</string>
+
+    <string name="downloads_notification_preparing">Forbereder nedlastinger…</string>
+    <string name="downloads_notification_downloading">Laster ned…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Laster ned…</string>
+    <string name="downloads_action_pause">Pause</string>
+    <string name="downloads_action_cancel">Avbryt</string>
+</resources>

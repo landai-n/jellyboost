@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Iestatījumi</string>
+    <string name="settings_back">Atpakaļ</string>
+    <string name="settings_home">Sākums</string>
+
+    <string name="settings_section_playback">Atskaņošana</string>
+    <string name="settings_skip_intro">Izlaist ievadu</string>
+    <string name="settings_skip_outro">Izlaist nobeigumu</string>
+    <string name="settings_skip_mode_off">Nedarīt neko</string>
+    <string name="settings_skip_mode_show_button">Rādīt izlaišanas pogu</string>
+    <string name="settings_skip_mode_auto">Izlaist automātiski</string>
+    <string name="settings_pip">Attēls attēlā</string>
+    <string name="settings_pip_supporting">Turpināt atskaņošanu peldošā logā, kad pametat lietotni.</string>
+
+    <string name="settings_section_downloads">Lejupielādes</string>
+    <string name="settings_wifi_only">Tikai Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Pauzēt lejupielādes mobilajos datos.</string>
+    <string name="settings_quality">Lejupielādes kvalitāte</string>
+    <string name="settings_quality_original">Oriģinālais fails — precīza kopija, atsākama</string>
+    <string name="settings_quality_high">Augsta — apm. 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Vidēja — apm. 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Zema — apm. 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Visu, izņemot oriģinālo failu, jūsu serveris konvertē tā sūtīšanas laikā, tāpēc lejupielādes laikā redzamais izmērs ir aptuvens, un pārtraukta pārsūtīšana sākas no jauna.</string>
+    <string name="settings_storage_label">Krātuve</string>
+    <string name="settings_storage_summary">Izmantots %1$s · brīvs %2$s šajā ierīcē</string>
+    <string name="settings_storage_location">Lejupielādes tiek glabātas šeit: %1$s</string>
+    <string name="settings_storage_picker">Krātuves vieta</string>
+    <string name="settings_storage_internal">Iekšējā krātuve</string>
+    <string name="settings_storage_sd_card">SD karte</string>
+    <string name="settings_storage_volume_free">Brīvs %1$s</string>
+    <string name="settings_storage_missing">Izvēlētā krātuve pašlaik nav pieejama, tāpēc lejupielādes tiek saglabātas zemāk norādītajā vietā.</string>
+    <string name="settings_storage_switch_title">Pārvietot lejupielādes?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="zero">Lejupielādes vēl nevar pārvietot starp vietām, tāpēc %1$d šajā ierīcē jau esošās tiks dzēstas. Varat tās lejupielādēt vēlreiz jaunajā vietā.</item>
+        <item quantity="one">Lejupielādes vēl nevar pārvietot starp vietām, tāpēc tā, kas jau ir šajā ierīcē, tiks dzēsta. Varat to lejupielādēt vēlreiz jaunajā vietā.</item>
+        <item quantity="other">Lejupielādes vēl nevar pārvietot starp vietām, tāpēc %1$d šajā ierīcē jau esošās tiks dzēstas. Varat tās lejupielādēt vēlreiz jaunajā vietā.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Dzēst un pārslēgt</string>
+
+    <string name="settings_section_connectivity">Savienojamība</string>
+    <string name="settings_offline_mode">Bezsaistes režīms</string>
+    <string name="settings_offline_mode_supporting">Rādīt tikai to saturu, kas jau ir šajā ierīcē.</string>
+
+    <string name="settings_section_account">Konts</string>
+    <string name="settings_account_user">Pieteicies kā</string>
+    <string name="settings_account_server">Serveris</string>
+    <string name="settings_account_unknown">Nav pieteicies</string>
+    <string name="settings_sign_out">Izrakstīties</string>
+    <string name="settings_sign_out_dialog_title">Izrakstīties?</string>
+    <string name="settings_sign_out_dialog_message">Lai atkal pieteiktos, jums būs nepieciešama servera adrese un parole.</string>
+    <string name="settings_sign_out_delete_downloads">Dzēst arī lejupielādes no šīs ierīces</string>
+    <string name="settings_cancel">Atcelt</string>
+</resources>

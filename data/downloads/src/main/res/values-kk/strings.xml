@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Жүктеулер</string>
+    <string name="downloads_channel_description">Осы құрылғыға медиа жүктелу барысы.</string>
+
+    <string name="downloads_notification_preparing">Жүктеулер дайындалуда…</string>
+    <string name="downloads_notification_downloading">Жүктелуде…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Жүктелуде…</string>
+    <string name="downloads_action_pause">Кідірту</string>
+    <string name="downloads_action_cancel">Бас тарту</string>
+</resources>

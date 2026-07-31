@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back">Atpakaļ</string>
+    <string name="detail_home">Sākums</string>
+    <string name="detail_play">Atskaņot</string>
+    <string name="detail_resume">Turpināt</string>
+    <string name="detail_download">Lejupielādēt</string>
+    <string name="detail_download_cancel">Atcelt</string>
+    <string name="detail_download_remove">Noņemt</string>
+    <string name="detail_download_retry">Mēģināt vēlreiz</string>
+    <string name="detail_play_episode">Atskaņot šo sēriju</string>
+    <string name="detail_mark_watched">Atzīmēt kā skatītu</string>
+    <string name="detail_mark_unwatched">Atzīmēt kā neskatītu</string>
+    <string name="detail_add_favorite">Pievienot izlasei</string>
+    <string name="detail_remove_favorite">Noņemt no izlases</string>
+
+    <string name="detail_section_seasons">Sezonas</string>
+    <string name="detail_section_next_up">Nākamais</string>
+    <string name="detail_section_episodes">Sērijas</string>
+    <string name="detail_section_similar">Līdzīgi</string>
+
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_remaining_minutes">Atlikušas %1$d min</string>
+    <string name="detail_size_on_device">%1$s ierīcē</string>
+    <string name="detail_directed_by">Režisors: %1$s</string>
+    <plurals name="detail_season_count">
+        <item quantity="zero">%1$d sezonu</item>
+        <item quantity="one">%1$d sezona</item>
+        <item quantity="other">%1$d sezonas</item>
+    </plurals>
+    <plurals name="detail_episode_count">
+        <item quantity="zero">%1$d sēriju</item>
+        <item quantity="one">%1$d sērija</item>
+        <item quantity="other">%1$d sērijas</item>
+    </plurals>
+
+    <string name="detail_empty">Šis vienums vairs nav pieejams.</string>
+    <string name="detail_message_download_queued">Pievienots lejupielādēm.</string>
+    <string name="detail_message_download_failed">Neizdevās sākt šo lejupielādi.</string>
+    <string name="detail_message_download_deleted">Noņemts no šīs ierīces.</string>
+    <string name="detail_message_download_delete_failed">Neizdevās noņemt šo lejupielādi.</string>
+    <plurals name="detail_message_download_cancelled_kept">
+        <item quantity="zero">Lejupielāde atcelta — saglabātas %1$d pabeigtas sērijas.</item>
+        <item quantity="one">Lejupielāde atcelta — saglabāta %1$d pabeigta sērija.</item>
+        <item quantity="other">Lejupielāde atcelta — saglabātas %1$d pabeigtas sērijas.</item>
+    </plurals>
+    <string name="detail_message_user_data_failed">Neizdevās to saglabāt. Mēģiniet vēlreiz.</string>
+
+    <string name="detail_group_play">Atskaņot grupai: %1$s</string>
+    <string name="detail_group_resume">Turpināt grupai: %1$s</string>
+    <string name="detail_group_play_next">Atskaņot nākamo</string>
+    <string name="detail_group_add_to_queue">Pievienot rindai</string>
+    <string name="detail_message_group_play">Grupai lūgts to atskaņot.</string>
+    <string name="detail_message_group_play_next">Pievienots grupas rindai kā nākamais.</string>
+    <string name="detail_message_group_queued">Pievienots grupas rindai.</string>
+
+    <string name="detail_delete_download_dialog_title">Dzēst lejupielādi?</string>
+    <string name="detail_delete_download_dialog_message">Tas noņems to no šīs ierīces. Varat to lejupielādēt vēlreiz jebkurā laikā.</string>
+    <string name="detail_delete_download_dialog_confirm">Dzēst</string>
+    <string name="detail_delete_download_dialog_cancel">Atcelt</string>
+</resources>

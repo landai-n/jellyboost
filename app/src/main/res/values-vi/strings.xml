@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Tùy chọn khác</string>
+    <string name="home_settings">Cài đặt</string>
+    <string name="settings_offline_mode">Chế độ ngoại tuyến</string>
+    <string name="state_on">Bật</string>
+    <string name="state_off">Tắt</string>
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_libraries">Thư viện</string>
+    <string name="nav_search">Tìm kiếm</string>
+    <string name="nav_downloads">Tải xuống</string>
+    <string name="offline_no_network">Không có mạng — đang hiển thị media đã tải xuống</string>
+    <string name="offline_server_unreachable">Không thể kết nối máy chủ — đang hiển thị media đã tải xuống</string>
+    <string name="offline_forced">Chế độ ngoại tuyến đang bật — đang hiển thị media đã tải xuống</string>
+    <string name="offline_retry">Thử lại</string>
+    <string name="offline_go_online">Chuyển sang trực tuyến</string>
+    <string name="syncplay_groups_action">Nhóm SyncPlay</string>
+    <string name="syncplay_groups_action_active">Nhóm SyncPlay — bạn đang ở trong một nhóm</string>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Chưa có thư viện nào. Thêm một thư viện trên máy chủ.</string>
+    <string name="library_back">Quay lại</string>
+    <string name="library_home">Trang chủ</string>
+    <string name="library_sort">Sắp xếp</string>
+    <string name="library_filter">Lọc</string>
+    <string name="library_sort_title">Sắp xếp theo</string>
+    <string name="library_sort_name">Tên</string>
+    <string name="library_sort_date_added">Ngày thêm</string>
+    <string name="library_sort_premiere_date">Ngày phát hành</string>
+    <string name="library_sort_community_rating">Đánh giá cộng đồng</string>
+    <string name="library_sort_runtime">Thời lượng</string>
+    <string name="library_sort_random">Ngẫu nhiên</string>
+    <string name="library_sort_direction">Thứ tự</string>
+    <string name="library_sort_ascending">Tăng dần</string>
+    <string name="library_sort_descending">Giảm dần</string>
+    <string name="library_filters_title">Bộ lọc</string>
+    <string name="library_filters_genres">Thể loại</string>
+    <string name="library_filters_years">Năm</string>
+    <string name="library_filters_played">Đã xem</string>
+    <string name="library_filters_played_any">Tất cả</string>
+    <string name="library_filters_played_yes">Đã xem</string>
+    <string name="library_filters_played_no">Chưa xem</string>
+    <string name="library_filters_clear">Xóa tất cả</string>
+    <string name="library_filters_apply">Hiện kết quả</string>
+    <string name="library_filters_none">Thư viện này không có bộ lọc nào.</string>
+    <string name="library_filters_loading">Đang tải bộ lọc…</string>
+    <string name="library_empty">Không có gì để hiển thị ở đây.</string>
+    <string name="library_empty_filtered">Không có mục nào khớp với các bộ lọc này.</string>
+    <string name="library_empty_clear_filters">Xóa bộ lọc</string>
+    <string name="library_retry">Thử lại</string>
+    <string name="library_error_network">Không thể kết nối máy chủ của bạn. Kiểm tra kết nối và thử lại.</string>
+    <string name="library_error_unauthorized">Phiên đăng nhập của bạn đã hết hạn. Đăng nhập lại để tiếp tục.</string>
+    <string name="library_error_not_found">Thư viện đó không còn trên máy chủ.</string>
+    <string name="library_error_server">Máy chủ đã trả về lỗi.</string>
+    <string name="library_error_server_with_code">Máy chủ đã trả về lỗi (%1$d).</string>
+    <string name="library_error_storage">Không thể đọc dữ liệu cục bộ.</string>
+    <string name="library_error_unknown">Đã xảy ra lỗi khi tải thư viện này.</string>
+</resources>

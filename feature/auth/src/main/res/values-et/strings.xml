@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Ühenda serveriga</string>
+    <string name="server_setup_discovered_title">Serverid selles võrgus</string>
+    <string name="server_setup_discovering">Kohaliku võrgu otsimine…</string>
+    <string name="server_setup_no_servers_found">Ühtegi serverit ei leitud. Sisesta aadress allpool.</string>
+    <string name="server_setup_manual_title">Serveri aadress</string>
+    <string name="server_setup_address_label">Host või URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org või 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Ühenda</string>
+    <string name="server_setup_connecting">Serveriga ühenduse loomine…</string>
+    <string name="server_setup_session_lost">Salvestatud sisselogimist ei õnnestunud taastada, seega oled välja logitud. Logi uuesti sisse.</string>
+
+    <string name="login_title">Logi sisse</string>
+    <string name="login_server_version">Versioon %1$s</string>
+    <string name="login_server_version_unknown">Versioon teadmata</string>
+    <string name="login_public_users_title">Kes vaatab?</string>
+    <string name="login_username_label">Kasutajanimi</string>
+    <string name="login_password_label">Parool</string>
+    <string name="login_show_password">Näita parooli</string>
+    <string name="login_hide_password">Peida parool</string>
+    <string name="login_sign_in">Logi sisse</string>
+    <string name="login_change_server">Kasuta teist serverit</string>
+    <string name="login_loading">Serveri andmete laadimine…</string>
+    <string name="login_or">või</string>
+
+    <string name="login_quick_connect">Kasuta Quick Connecti</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Ava Jellyfin seadmes, kuhu oled juba sisse logitud, mine Quick Connecti juurde ja sisesta see kood.</string>
+    <string name="login_quick_connect_waiting">Ootan kinnitust…</string>
+    <string name="login_quick_connect_cancel">Tühista</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Prooviti %d kandidaataadressi, tulemuseta.</item>
+        <item quantity="other">Prooviti %d kandidaataadressi, tulemuseta.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Serveriga ei saa ühendust</string>
+    <string name="auth_error_unsupported_version_or_product">Toetamata versioon või toode</string>
+    <string name="auth_error_cannot_connect">Ühendust ei õnnestunud luua.\nKontrolli hosti nime ja oma võrguühendust.</string>
+    <string name="auth_error_invalid_credentials">Vale kasutajanimi või parool.</string>
+    <string name="auth_error_quick_connect_expired">Kood aegus. Küsi uus ja proovi uuesti.</string>
+    <string name="auth_error_server">Server vastas veaga. Proovi uuesti.</string>
+    <string name="auth_error_server_with_code">Server vastas veaga (%1$d). Proovi uuesti.</string>
+</resources>

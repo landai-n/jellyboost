@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Diunduh</string>
+    <string name="downloads_tab_queue">Antrean</string>
+    <string name="downloads_wifi_only">Hanya Wi‑Fi</string>
+    <string name="downloads_group_movies">Film</string>
+    <string name="downloads_storage_summary">%1$s digunakan · %2$s tersisa</string>
+    <string name="downloads_action_delete">Hapus unduhan</string>
+    <string name="downloads_action_cancel">Batalkan unduhan</string>
+    <string name="downloads_action_pause">Jeda unduhan</string>
+    <string name="downloads_action_resume">Lanjutkan unduhan</string>
+    <string name="downloads_action_move_up">Naikkan dalam antrean</string>
+    <string name="downloads_action_move_down">Turunkan dalam antrean</string>
+    <string name="downloads_action_pause_all">Jeda semua</string>
+    <string name="downloads_action_resume_all">Lanjutkan semua</string>
+    <string name="downloads_action_cancel_all">Batalkan semua</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="other">Batalkan semua %1$d unduhan?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Antrean akan dikosongkan dan file yang sebagian terunduh akan dihapus. Unduhan yang sudah selesai tidak akan terpengaruh.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Batalkan unduhan</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Simpan</string>
+    <string name="downloads_delete_dialog_title">Hapus %1$s?</string>
+    <string name="downloads_delete_dialog_message">File yang diunduh akan dihapus dari perangkat ini. Anda dapat mengunduhnya lagi nanti.</string>
+    <string name="downloads_delete_dialog_confirm">Hapus</string>
+    <string name="downloads_delete_dialog_cancel">Batal</string>
+    <string name="downloads_progress_of">%1$s dari %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s dari ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s dari maksimal %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">maksimal %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s tersisa</string>
+    <string name="downloads_eta_approx">~%1$s tersisa</string>
+    <string name="downloads_transcoded_marker">Ditranskode</string>
+    <string name="downloads_status_queued">Menunggu</string>
+    <string name="downloads_status_paused">Dijeda</string>
+    <string name="downloads_status_failed">Unduhan gagal</string>
+    <string name="downloads_status_failed_reason">Unduhan gagal: %1$s</string>
+    <string name="downloads_empty_downloaded">Belum ada yang diunduh. Ketuk Unduh pada film atau episode untuk menyimpannya di perangkat ini.</string>
+    <string name="downloads_empty_queue">Antrean unduhan kosong.</string>
+    <string name="downloads_load_failed">Tidak dapat membaca unduhan Anda. Buka lagi layar ini untuk mencoba lagi.</string>
+    <string name="downloads_message_delete_failed">Tidak dapat menghapus unduhan itu.</string>
+    <string name="downloads_message_action_failed">Tidak dapat memperbarui antrean.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="other">Menjeda %1$d — %2$d transcode tetap mengunduh (transcode tidak dapat dijeda).</item>
+    </plurals>
+</resources>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Zapri predvajalnik</string>
+    <string name="player_play">Predvajaj</string>
+    <string name="player_pause">Premor</string>
+    <string name="player_rewind">Preskoči 10 sekund nazaj</string>
+    <string name="player_forward">Preskoči 30 sekund naprej</string>
+
+    <string name="player_audio">Zvok</string>
+    <string name="player_subtitles">Podnapisi</string>
+    <string name="player_subtitles_off">Izklopljeno</string>
+    <string name="player_quality">Kakovost</string>
+    <string name="player_speed">Hitrost</string>
+
+    <string name="player_skip_intro">Preskoči uvod</string>
+    <string name="player_skip_outro">Preskoči zaključek</string>
+
+    <string name="player_quality_auto">Samodejno</string>
+    <string name="player_quality_high">Visoka — 20 Mbps</string>
+    <string name="player_quality_medium">Srednja — 8 Mbps</string>
+    <string name="player_quality_low">Nizka — 3 Mbps</string>
+    <string name="player_quality_lowest">Najnižja — 720 kbps</string>
+
+    <string name="player_method_direct_play">Direct play</string>
+    <string name="player_method_direct_stream">Direct stream</string>
+    <string name="player_method_transcode">Prekodiranje</string>
+
+    <string name="player_message_transcode">Vaša naprava ne more dekodirati te datoteke, zato jo strežnik prekodira.</string>
+    <string name="player_message_lower_quality">Pretakanje se je zataknilo — poskus nadaljevanja z nižjo kakovostjo.</string>
+    <string name="player_message_track_restart">Strežnik je moral ponovno kodirati pretok za to sled.</string>
+    <string name="player_message_track_streaming">Te sledi ni v prenosu — pretaka se s strežnika.</string>
+    <string name="player_message_track_offline">Te sledi ni v preneseni datoteki.</string>
+    <string name="player_message_failed">Predvajanje ni uspelo.</string>
+
+    <string name="player_syncplay_group">Skupina</string>
+    <string name="player_syncplay_waiting">Čakanje na skupino…</string>
+    <string name="player_syncplay_shuffle">Premešaj čakalno vrsto</string>
+    <string name="player_syncplay_repeat">Ponavljanje</string>
+    <string name="player_syncplay_repeat_none">Izklopljeno</string>
+    <string name="player_syncplay_repeat_one">Ta predmet</string>
+    <string name="player_syncplay_repeat_all">Celotna čakalna vrsta</string>
+    <string name="player_syncplay_leave">Zapusti skupino</string>
+    <string name="player_syncplay_leave_title">Zapusti to skupino?</string>
+    <string name="player_syncplay_leave_body">Predvajanje se tukaj nadaljuje samostojno. Za ponovno pridružitev boste morali skupino znova izbrati.</string>
+
+    <string name="player_syncplay_cancel">Prekliči</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d oseba gleda</item>
+        <item quantity="two">%d osebi gledata</item>
+        <item quantity="few">%d osebe gledajo</item>
+        <item quantity="other">%d oseb gleda</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d več</string>
+
+    <string name="player_syncplay_queue">Čakalna vrsta</string>
+    <string name="player_syncplay_queue_empty">Skupina še ni dodala ničesar v čakalno vrsto.</string>
+    <string name="player_syncplay_queue_item_loading">Nalaganje…</string>
+    <string name="player_syncplay_queue_playing">Trenutno predvajano</string>
+    <string name="player_syncplay_queue_next">Naslednji predmet</string>
+    <string name="player_syncplay_queue_previous">Prejšnji predmet</string>
+    <string name="player_syncplay_queue_move_up">Pomakni navzgor</string>
+    <string name="player_syncplay_queue_move_down">Pomakni navzdol</string>
+    <string name="player_syncplay_queue_remove">Odstrani iz čakalne vrste</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d predmet v čakalni vrsti</item>
+        <item quantity="two">%d predmeta v čakalni vrsti</item>
+        <item quantity="few">%d predmeti v čakalni vrsti</item>
+        <item quantity="other">%d predmetov v čakalni vrsti</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">Zapuščena skupina SyncPlay — povezava izgubljena</string>
+    <string name="player_message_syncplay_rejoined">Ponovna pridružitev skupini SyncPlay</string>
+    <string name="player_message_syncplay_join_failed">Pridružitev tej skupini SyncPlay ni uspela.</string>
+    <string name="player_message_syncplay_group_ended">Skupina SyncPlay se je zaključila.</string>
+    <string name="player_message_syncplay_removed">Niste več v skupini SyncPlay.</string>
+    <string name="player_message_syncplay_library_denied">Skupina gleda nekaj, do česar nimate dostopa.</string>
+    <string name="player_message_syncplay_item_unavailable">Ni bilo mogoče odpreti tega, kar gleda skupina.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Nazaj</string>
+    <string name="player_syncplay_groups_home">Domov</string>
+    <string name="player_syncplay_groups_create">Ustvari skupino</string>
+    <string name="player_syncplay_groups_create_title">Poimenujte svojo skupino</string>
+    <string name="player_syncplay_groups_create_hint">Ime skupine</string>
+    <string name="player_syncplay_groups_create_confirm">Ustvari</string>
+    <string name="player_syncplay_groups_joining">Pridruževanje…</string>
+    <string name="player_syncplay_groups_active_label">V tej skupini ste</string>
+    <string name="player_syncplay_groups_open_player">Odpri predvajalnik</string>
+    <string name="player_syncplay_groups_empty">Trenutno nihče drug ne gleda skupaj.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay je za vaš račun onemogočen.</string>
+    <string name="player_syncplay_groups_error">Skupin SyncPlay ni bilo mogoče naložiti.</string>
+
+    <string name="player_syncplay_presence_channel_name">Skupina SyncPlay</string>
+    <string name="player_syncplay_presence_channel_description">Ohranja vaše mesto v skupini za skupen ogled, ko je aplikacija v ozadju.</string>
+    <string name="player_syncplay_presence_title">V skupini SyncPlay</string>
+    <string name="player_syncplay_presence_text">Čakanje na skupino</string>
+    <string name="player_syncplay_presence_leave">Zapusti</string>
+
+    <string name="player_syncplay_state_idle">Nedejavno</string>
+    <string name="player_syncplay_state_waiting">Čakanje</string>
+    <string name="player_syncplay_state_paused">V premoru</string>
+    <string name="player_syncplay_state_playing">Predvajanje</string>
+
+    <string name="player_cast">Predvajaj na drugi napravi</string>
+
+    <string name="player_cast_device_unnamed">vaš TV</string>
+    <string name="player_message_cast_transferred">Trenutno predvajano na %1$s.</string>
+    <string name="player_message_cast_left_syncplay">Zapustili ste skupino SyncPlay za predvajanje na %1$s.</string>
+    <string name="player_message_cast_failed">Predvajanje na %1$s ni uspelo.</string>
+
+    <string name="player_casting_to">Predvajanje na %1$s</string>
+</resources>

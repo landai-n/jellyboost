@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">ابھی تک کوئی لائبریری نہیں ہے۔ سرور پر ایک شامل کریں۔</string>
+
+    <string name="library_back">واپس</string>
+    <string name="library_home">ہوم</string>
+    <string name="library_sort">ترتیب دیں</string>
+    <string name="library_filter">فلٹر</string>
+
+    <string name="library_sort_title">اس کے مطابق ترتیب دیں</string>
+    <string name="library_sort_name">نام</string>
+    <string name="library_sort_date_added">تاریخ شمولیت</string>
+    <string name="library_sort_premiere_date">ریلیز کی تاریخ</string>
+    <string name="library_sort_community_rating">کمیونٹی ریٹنگ</string>
+    <string name="library_sort_runtime">دورانیہ</string>
+    <string name="library_sort_random">بے ترتیب</string>
+    <string name="library_sort_direction">سمت</string>
+    <string name="library_sort_ascending">صعودی</string>
+    <string name="library_sort_descending">نزولی</string>
+
+    <string name="library_filters_title">فلٹرز</string>
+    <string name="library_filters_genres">انواع</string>
+    <string name="library_filters_years">سال</string>
+    <string name="library_filters_played">دیکھا گیا</string>
+    <string name="library_filters_played_any">کوئی بھی</string>
+    <string name="library_filters_played_yes">دیکھا گیا</string>
+    <string name="library_filters_played_no">نہیں دیکھا گیا</string>
+    <string name="library_filters_clear">سب صاف کریں</string>
+    <string name="library_filters_apply">نتائج دکھائیں</string>
+    <string name="library_filters_none">اس لائبریری نے فلٹر کرنے کے لیے کچھ پیش نہیں کیا۔</string>
+    <string name="library_filters_loading">فلٹرز لوڈ ہو رہے ہیں…</string>
+
+    <string name="library_empty">یہاں دکھانے کے لیے کچھ نہیں ہے۔</string>
+    <string name="library_empty_filtered">کوئی آئٹم ان فلٹرز سے مطابقت نہیں رکھتا۔</string>
+    <string name="library_empty_clear_filters">فلٹرز صاف کریں</string>
+    <string name="library_retry">دوبارہ کوشش کریں</string>
+
+    <string name="library_error_network">آپ کے سرور تک رسائی ممکن نہیں۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="library_error_unauthorized">آپ کا سیشن ختم ہوگیا۔ جاری رکھنے کے لیے دوبارہ سائن ان کریں۔</string>
+    <string name="library_error_not_found">وہ لائبریری اب سرور پر موجود نہیں ہے۔</string>
+    <string name="library_error_server">سرور نے ایک خرابی واپس بھیجی۔</string>
+    <string name="library_error_server_with_code">سرور نے ایک خرابی (%1$d) واپس بھیجی۔</string>
+    <string name="library_error_storage">مقامی ڈیٹا پڑھنا ممکن نہیں تھا۔</string>
+    <string name="library_error_unknown">اس لائبریری کو لوڈ کرتے وقت کچھ غلط ہو گیا۔</string>
+</resources>

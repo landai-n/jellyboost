@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Изтегляния</string>
+    <string name="downloads_channel_description">Напредък на изтеглянето на медия на това устройство.</string>
+
+    <string name="downloads_notification_preparing">Подготвяне на изтеглянията…</string>
+    <string name="downloads_notification_downloading">Изтегляне…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Изтегляне…</string>
+    <string name="downloads_action_pause">Пауза</string>
+    <string name="downloads_action_cancel">Отказ</string>
+</resources>

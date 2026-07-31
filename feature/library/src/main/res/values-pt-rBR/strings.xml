@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Ainda não há bibliotecas. Adicione uma no servidor.</string>
+    <string name="library_back">Voltar</string>
+    <string name="library_home">Início</string>
+    <string name="library_sort">Ordenar</string>
+    <string name="library_filter">Filtrar</string>
+    <string name="library_sort_title">Ordenar por</string>
+    <string name="library_sort_name">Nome</string>
+    <string name="library_sort_date_added">Data de adição</string>
+    <string name="library_sort_premiere_date">Data de lançamento</string>
+    <string name="library_sort_community_rating">Avaliação da comunidade</string>
+    <string name="library_sort_runtime">Duração</string>
+    <string name="library_sort_random">Aleatório</string>
+    <string name="library_sort_direction">Direção</string>
+    <string name="library_sort_ascending">Crescente</string>
+    <string name="library_sort_descending">Decrescente</string>
+    <string name="library_filters_title">Filtros</string>
+    <string name="library_filters_genres">Gêneros</string>
+    <string name="library_filters_years">Anos</string>
+    <string name="library_filters_played">Assistido</string>
+    <string name="library_filters_played_any">Qualquer</string>
+    <string name="library_filters_played_yes">Assistido</string>
+    <string name="library_filters_played_no">Não assistido</string>
+    <string name="library_filters_clear">Limpar tudo</string>
+    <string name="library_filters_apply">Mostrar resultados</string>
+    <string name="library_filters_none">Esta biblioteca não ofereceu nada para filtrar.</string>
+    <string name="library_filters_loading">Carregando filtros…</string>
+    <string name="library_empty">Nada para mostrar aqui.</string>
+    <string name="library_empty_filtered">Nenhum item corresponde a esses filtros.</string>
+    <string name="library_empty_clear_filters">Limpar filtros</string>
+    <string name="library_retry">Tentar novamente</string>
+    <string name="library_error_network">Não foi possível conectar ao seu servidor. Verifique sua conexão e tente novamente.</string>
+    <string name="library_error_unauthorized">Sua sessão expirou. Faça login novamente para continuar.</string>
+    <string name="library_error_not_found">Essa biblioteca não está mais no servidor.</string>
+    <string name="library_error_server">O servidor retornou um erro.</string>
+    <string name="library_error_server_with_code">O servidor retornou um erro (%1$d).</string>
+    <string name="library_error_storage">Não foi possível ler os dados locais.</string>
+    <string name="library_error_unknown">Algo deu errado ao carregar esta biblioteca.</string>
+</resources>

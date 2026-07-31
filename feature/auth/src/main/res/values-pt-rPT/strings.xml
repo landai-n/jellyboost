@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Ligar ao servidor</string>
+    <string name="server_setup_discovered_title">Servidores nesta rede</string>
+    <string name="server_setup_discovering">A procurar na rede local…</string>
+    <string name="server_setup_no_servers_found">Nenhum servidor se anunciou. Introduza um endereço abaixo.</string>
+    <string name="server_setup_manual_title">Endereço do servidor</string>
+    <string name="server_setup_address_label">Anfitrião ou URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org ou 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Ligar</string>
+    <string name="server_setup_connecting">A contactar o servidor…</string>
+    <string name="server_setup_session_lost">Não foi possível restaurar a sessão guardada, pelo que a sua sessão foi terminada. Inicie sessão novamente.</string>
+    <string name="login_title">Iniciar sessão</string>
+    <string name="login_server_version">Versão %1$s</string>
+    <string name="login_server_version_unknown">Versão desconhecida</string>
+    <string name="login_public_users_title">Quem está a ver?</string>
+    <string name="login_username_label">Nome de utilizador</string>
+    <string name="login_password_label">Palavra-passe</string>
+    <string name="login_show_password">Mostrar palavra-passe</string>
+    <string name="login_hide_password">Ocultar palavra-passe</string>
+    <string name="login_sign_in">Iniciar sessão</string>
+    <string name="login_change_server">Usar outro servidor</string>
+    <string name="login_loading">A carregar detalhes do servidor…</string>
+    <string name="login_or">ou</string>
+    <string name="login_quick_connect">Usar Ligação Rápida</string>
+    <string name="login_quick_connect_title">Ligação Rápida</string>
+    <string name="login_quick_connect_instructions">Abra o Jellyfin num dispositivo onde já tem sessão iniciada, aceda a Ligação Rápida e introduza este código.</string>
+    <string name="login_quick_connect_waiting">A aguardar aprovação…</string>
+    <string name="login_quick_connect_cancel">Cancelar</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Tentado %d endereço candidato, sem sucesso.</item>
+        <item quantity="other">Tentados %d endereços candidatos, sem sucesso.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Não foi possível contactar o servidor</string>
+    <string name="auth_error_unsupported_version_or_product">Versão ou produto não suportado</string>
+    <string name="auth_error_cannot_connect">Não é possível estabelecer a ligação.\nVerifique o nome do anfitrião e a sua ligação à rede.</string>
+    <string name="auth_error_invalid_credentials">Nome de utilizador ou palavra-passe incorretos.</string>
+    <string name="auth_error_quick_connect_expired">Esse código expirou. Peça um novo e tente novamente.</string>
+    <string name="auth_error_server">O servidor respondeu com um erro. Tente novamente.</string>
+    <string name="auth_error_server_with_code">O servidor respondeu com um erro (%1$d). Tente novamente.</string>
+</resources>

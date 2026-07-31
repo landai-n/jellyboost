@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Descărcate</string>
+    <string name="downloads_tab_queue">Coadă</string>
+    <string name="downloads_wifi_only">Doar Wi‑Fi</string>
+    <string name="downloads_group_movies">Filme</string>
+    <string name="downloads_storage_summary">%1$s utilizați · %2$s liberi</string>
+    <string name="downloads_action_delete">Șterge descărcarea</string>
+    <string name="downloads_action_cancel">Anulează descărcarea</string>
+    <string name="downloads_action_pause">Pune descărcarea pe pauză</string>
+    <string name="downloads_action_resume">Reia descărcarea</string>
+    <string name="downloads_action_move_up">Mută mai sus în coadă</string>
+    <string name="downloads_action_move_down">Mută mai jos în coadă</string>
+    <string name="downloads_action_pause_all">Pune toate pe pauză</string>
+    <string name="downloads_action_resume_all">Reia toate</string>
+    <string name="downloads_action_cancel_all">Anulează toate</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Anulați această descărcare?</item>
+        <item quantity="few">Anulați toate cele %1$d descărcări?</item>
+        <item quantity="other">Anulați toate cele %1$d de descărcări?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Coada este golită, iar fișierele parțial descărcate sunt eliminate. Descărcările finalizate nu sunt afectate.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Anulează descărcările</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Păstrează</string>
+    <string name="downloads_delete_dialog_title">Ștergeți %1$s?</string>
+    <string name="downloads_delete_dialog_message">Fișierele descărcate sunt eliminate de pe acest dispozitiv. Îl puteți descărca din nou mai târziu.</string>
+    <string name="downloads_delete_dialog_confirm">Șterge</string>
+    <string name="downloads_delete_dialog_cancel">Anulează</string>
+    <string name="downloads_progress_of">%1$s din %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s din ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s din maximum %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">până la %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s rămas</string>
+    <string name="downloads_eta_approx">~%1$s rămas</string>
+    <string name="downloads_transcoded_marker">Transcodat</string>
+    <string name="downloads_status_queued">În așteptare</string>
+    <string name="downloads_status_paused">În pauză</string>
+    <string name="downloads_status_failed">Descărcare eșuată</string>
+    <string name="downloads_status_failed_reason">Descărcare eșuată: %1$s</string>
+    <string name="downloads_empty_downloaded">Nimic descărcat încă. Atingeți Descarcă pe un film sau episod pentru a-l păstra pe acest dispozitiv.</string>
+    <string name="downloads_empty_queue">Coada de descărcări este goală.</string>
+    <string name="downloads_load_failed">Descărcările nu au putut fi citite. Redeschideți acest ecran pentru a încerca din nou.</string>
+    <string name="downloads_message_delete_failed">Descărcarea nu a putut fi ștearsă.</string>
+    <string name="downloads_message_action_failed">Coada nu a putut fi actualizată.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d pusă pe pauză — %2$d transcodare continuă să se descarce (o transcodare nu poate fi pusă pe pauză).</item>
+        <item quantity="few">%1$d puse pe pauză — %2$d transcodări continuă să se descarce (o transcodare nu poate fi pusă pe pauză).</item>
+        <item quantity="other">%1$d puse pe pauză — %2$d de transcodări continuă să se descarce (o transcodare nu poate fi pusă pe pauză).</item>
+    </plurals>
+</resources>

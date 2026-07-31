@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Baixat</string>
+    <string name="downloads_tab_queue">Cua</string>
+    <string name="downloads_wifi_only">Només Wi‑Fi</string>
+    <string name="downloads_group_movies">Pel·lícules</string>
+    <string name="downloads_storage_summary">%1$s utilitzats · %2$s lliures</string>
+    <string name="downloads_action_delete">Elimina la baixada</string>
+    <string name="downloads_action_cancel">Cancel·la la baixada</string>
+    <string name="downloads_action_pause">Posa en pausa la baixada</string>
+    <string name="downloads_action_resume">Reprèn la baixada</string>
+    <string name="downloads_action_move_up">Puja a la cua</string>
+    <string name="downloads_action_move_down">Baixa a la cua</string>
+    <string name="downloads_action_pause_all">Posa-ho tot en pausa</string>
+    <string name="downloads_action_resume_all">Reprèn-ho tot</string>
+    <string name="downloads_action_cancel_all">Cancel·la-ho tot</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Vols cancel·lar aquesta baixada?</item>
+        <item quantity="other">Vols cancel·lar les %1$d baixades?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">La cua es buida i s\'eliminen els fitxers baixats parcialment. Les baixades acabades no es veuen afectades.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Cancel·la les baixades</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Mantén</string>
+    <string name="downloads_delete_dialog_title">Vols eliminar %1$s?</string>
+    <string name="downloads_delete_dialog_message">Els fitxers baixats s\'eliminen d\'aquest dispositiu. El pots tornar a baixar més endavant.</string>
+    <string name="downloads_delete_dialog_confirm">Elimina</string>
+    <string name="downloads_delete_dialog_cancel">Cancel·la</string>
+    <string name="downloads_progress_of">%1$s de %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s de fins a %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">fins a %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s restant</string>
+    <string name="downloads_eta_approx">~%1$s restant</string>
+    <string name="downloads_transcoded_marker">Transcodificat</string>
+    <string name="downloads_status_queued">Esperant</string>
+    <string name="downloads_status_paused">En pausa</string>
+    <string name="downloads_status_failed">Baixada fallida</string>
+    <string name="downloads_status_failed_reason">Baixada fallida: %1$s</string>
+    <string name="downloads_empty_downloaded">Encara no hi ha res baixat. Toca Baixa en una pel·lícula o episodi per guardar-lo en aquest dispositiu.</string>
+    <string name="downloads_empty_queue">La cua de baixades és buida.</string>
+    <string name="downloads_load_failed">No s\'han pogut llegir les teves baixades. Torna a obrir aquesta pantalla per tornar-ho a provar.</string>
+    <string name="downloads_message_delete_failed">No s\'ha pogut eliminar aquesta baixada.</string>
+    <string name="downloads_message_action_failed">No s\'ha pogut actualitzar la cua.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">S\'ha posat en pausa %1$d — %2$d transcodificació continua baixant-se (una transcodificació no es pot posar en pausa).</item>
+        <item quantity="other">S\'han posat en pausa %1$d — %2$d transcodificacions continuen baixant-se (una transcodificació no es pot posar en pausa).</item>
+    </plurals>
+</resources>

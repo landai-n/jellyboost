@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Elŝutoj</string>
+    <string name="downloads_channel_description">Progreso de elŝutado de aŭdvidaĵoj al ĉi tiu aparato.</string>
+    <string name="downloads_notification_preparing">Preparante elŝutojn…</string>
+    <string name="downloads_notification_downloading">Elŝutante…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Elŝutante…</string>
+    <string name="downloads_action_pause">Paŭzigi</string>
+    <string name="downloads_action_cancel">Nuligi</string>
+</resources>

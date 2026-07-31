@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">ডাউনলোড</string>
+    <string name="downloads_channel_description">এই ডিভাইসে মিডিয়া ডাউনলোডের অগ্রগতি।</string>
+    <string name="downloads_notification_preparing">ডাউনলোড প্রস্তুত করা হচ্ছে…</string>
+    <string name="downloads_notification_downloading">ডাউনলোড হচ্ছে…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">ডাউনলোড হচ্ছে…</string>
+    <string name="downloads_action_pause">থামান</string>
+    <string name="downloads_action_cancel">বাতিল করুন</string>
+</resources>

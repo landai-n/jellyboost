@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_channel_name">Letöltések</string>
+    <string name="downloads_channel_description">Az eszközre letöltött tartalmak folyamatjelzője.</string>
+
+    <string name="downloads_notification_preparing">Letöltések előkészítése…</string>
+    <string name="downloads_notification_downloading">Letöltés…</string>
+    <string name="downloads_notification_percent">%1$d%%</string>
+    <string name="downloads_notification_generic_title">Letöltés…</string>
+    <string name="downloads_action_pause">Szüneteltetés</string>
+    <string name="downloads_action_cancel">Mégse</string>
+</resources>

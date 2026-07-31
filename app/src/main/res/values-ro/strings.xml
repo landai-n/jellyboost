@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Mai multe opțiuni</string>
+    <string name="home_settings">Setări</string>
+    <string name="settings_offline_mode">Mod offline</string>
+    <string name="state_on">Activat</string>
+    <string name="state_off">Dezactivat</string>
+    <string name="nav_home">Acasă</string>
+    <string name="nav_libraries">Biblioteci</string>
+    <string name="nav_search">Căutare</string>
+    <string name="nav_downloads">Descărcări</string>
+    <string name="offline_no_network">Fără rețea — se afișează conținutul descărcat</string>
+    <string name="offline_server_unreachable">Serverul nu poate fi contactat — se afișează conținutul descărcat</string>
+    <string name="offline_forced">Modul offline este activat — se afișează conținutul descărcat</string>
+    <string name="offline_retry">Reîncearcă</string>
+    <string name="offline_go_online">Revino online</string>
+    <string name="syncplay_groups_action">Grupuri SyncPlay</string>
+    <string name="syncplay_groups_action_active">Grupuri SyncPlay — ești într-un grup</string>
+</resources>

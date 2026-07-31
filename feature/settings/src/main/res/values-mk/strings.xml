@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Поставки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_home">Почетна</string>
+
+    <string name="settings_section_playback">Репродукција</string>
+    <string name="settings_skip_intro">Прескокни го уводот</string>
+    <string name="settings_skip_outro">Прескокни го крајот</string>
+    <string name="settings_skip_mode_off">Не прави ништо</string>
+    <string name="settings_skip_mode_show_button">Прикажи копче за прескокнување</string>
+    <string name="settings_skip_mode_auto">Прескокнувај автоматски</string>
+    <string name="settings_pip">Слика во слика</string>
+    <string name="settings_pip_supporting">Продолжи со репродукција во лебдечки прозорец кога ќе ја напуштите апликацијата.</string>
+
+    <string name="settings_section_downloads">Преземања</string>
+    <string name="settings_wifi_only">Само Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">Паузирај ги преземањата на мобилен интернет.</string>
+    <string name="settings_quality">Квалитет на преземање</string>
+    <string name="settings_quality_original">Оригинална датотека — точна копија, продолжлива</string>
+    <string name="settings_quality_high">Висок — околу 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Среден — околу 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Низок — околу 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Сè освен оригиналната датотека се конвертира од вашиот сервер додека ја испраќа, па прикажаната големина за време на преземањето е проценка, а прекинатиот пренос почнува одново.</string>
+    <string name="settings_storage_label">Складиште</string>
+    <string name="settings_storage_summary">%1$s искористено · %2$s слободно на овој уред</string>
+    <string name="settings_storage_location">Преземањата се чуваат во %1$s</string>
+    <string name="settings_storage_picker">Локација за складирање</string>
+    <string name="settings_storage_internal">Внатрешно складиште</string>
+    <string name="settings_storage_sd_card">SD картичка</string>
+    <string name="settings_storage_volume_free">%1$s слободно</string>
+    <string name="settings_storage_missing">Складиштето што го избравте моментално не е достапно, па преземањата одат на локацијата избрана подолу.</string>
+    <string name="settings_storage_switch_title">Да се преместат преземањата?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Преземањата сè уште не можат да се преместуваат меѓу локации, па она што веќе е на овој уред ќе биде избришано. Можете повторно да го преземете на новата локација.</item>
+        <item quantity="other">Преземањата сè уште не можат да се преместуваат меѓу локации, па %1$d што веќе се на овој уред ќе бидат избришани. Можете повторно да ги преземете на новата локација.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Избриши и премести</string>
+
+    <string name="settings_section_connectivity">Поврзување</string>
+    <string name="settings_offline_mode">Офлајн режим</string>
+    <string name="settings_offline_mode_supporting">Прикажувај само медиуми кои веќе се на овој уред.</string>
+
+    <string name="settings_section_account">Сметка</string>
+    <string name="settings_account_user">Најавени како</string>
+    <string name="settings_account_server">Сервер</string>
+    <string name="settings_account_unknown">Не сте најавени</string>
+    <string name="settings_sign_out">Одјави се</string>
+    <string name="settings_sign_out_dialog_title">Да се одјавите?</string>
+    <string name="settings_sign_out_dialog_message">Ќе ви требаат адресата на серверот и лозинката за повторно да се најавите.</string>
+    <string name="settings_sign_out_delete_downloads">Исто така избриши ги преземањата од овој уред</string>
+    <string name="settings_cancel">Откажи</string>
+</resources>

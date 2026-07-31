@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">ಇನ್ನೂ ಯಾವುದೇ ಲೈಬ್ರರಿಗಳಿಲ್ಲ. ಸರ್ವರ್‌ನಲ್ಲಿ ಒಂದನ್ನು ಸೇರಿಸಿ.</string>
+
+    <string name="library_back">ಹಿಂದೆ</string>
+    <string name="library_home">ಮುಖಪುಟ</string>
+    <string name="library_sort">ವಿಂಗಡಿಸಿ</string>
+    <string name="library_filter">ಫಿಲ್ಟರ್</string>
+
+    <string name="library_sort_title">ಇದರ ಪ್ರಕಾರ ವಿಂಗಡಿಸಿ</string>
+    <string name="library_sort_name">ಹೆಸರು</string>
+    <string name="library_sort_date_added">ಸೇರಿಸಿದ ದಿನಾಂಕ</string>
+    <string name="library_sort_premiere_date">ಬಿಡುಗಡೆ ದಿನಾಂಕ</string>
+    <string name="library_sort_community_rating">ಸಮುದಾಯ ರೇಟಿಂಗ್</string>
+    <string name="library_sort_runtime">ಅವಧಿ</string>
+    <string name="library_sort_random">ಯಾದೃಚ್ಛಿಕ</string>
+    <string name="library_sort_direction">ದಿಕ್ಕು</string>
+    <string name="library_sort_ascending">ಆರೋಹಣ</string>
+    <string name="library_sort_descending">ಅವರೋಹಣ</string>
+
+    <string name="library_filters_title">ಫಿಲ್ಟರ್‌ಗಳು</string>
+    <string name="library_filters_genres">ಪ್ರಕಾರಗಳು</string>
+    <string name="library_filters_years">ವರ್ಷಗಳು</string>
+    <string name="library_filters_played">ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
+    <string name="library_filters_played_any">ಯಾವುದಾದರೂ</string>
+    <string name="library_filters_played_yes">ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
+    <string name="library_filters_played_no">ವೀಕ್ಷಿಸದಿರುವುದು</string>
+    <string name="library_filters_clear">ಎಲ್ಲವನ್ನೂ ತೆರವುಗೊಳಿಸಿ</string>
+    <string name="library_filters_apply">ಫಲಿತಾಂಶಗಳನ್ನು ತೋರಿಸಿ</string>
+    <string name="library_filters_none">ಈ ಲೈಬ್ರರಿಯಲ್ಲಿ ಫಿಲ್ಟರ್ ಮಾಡಲು ಏನೂ ಇರಲಿಲ್ಲ.</string>
+    <string name="library_filters_loading">ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…</string>
+
+    <string name="library_empty">ಇಲ್ಲಿ ತೋರಿಸಲು ಏನೂ ಇಲ್ಲ.</string>
+    <string name="library_empty_filtered">ಈ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಯಾವುದೇ ಐಟಂ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ.</string>
+    <string name="library_empty_clear_filters">ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
+    <string name="library_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+
+    <string name="library_error_network">ನಿಮ್ಮ ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
+    <string name="library_error_unauthorized">ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ಮುಂದುವರಿಸಲು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
+    <string name="library_error_not_found">ಆ ಲೈಬ್ರರಿ ಇನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿಲ್ಲ.</string>
+    <string name="library_error_server">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು.</string>
+    <string name="library_error_server_with_code">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು (%1$d).</string>
+    <string name="library_error_storage">ಸ್ಥಳೀಯ ಡೇಟಾ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="library_error_unknown">ಈ ಲೈಬ್ರರಿಯನ್ನು ಲೋಡ್ ಮಾಡುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
+</resources>

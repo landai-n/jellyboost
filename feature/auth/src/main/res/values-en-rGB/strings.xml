@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+    <string name="server_setup_title">Connect to server</string>
+    <string name="server_setup_discovered_title">Servers on this network</string>
+    <string name="server_setup_discovering">Searching the local network…</string>
+    <string name="server_setup_no_servers_found">No servers announced themselves. Enter an address below.</string>
+    <string name="server_setup_manual_title">Server address</string>
+    <string name="server_setup_address_label">Host or URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org or 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Connect</string>
+    <string name="server_setup_connecting">Contacting the server…</string>
+    <string name="server_setup_session_lost">Your saved sign-in could not be restored, so you have been signed out. Please sign in again.</string>
+    <string name="login_title">Sign in</string>
+    <string name="login_server_version">Version %1$s</string>
+    <string name="login_server_version_unknown">Version unknown</string>
+    <string name="login_public_users_title">Who is watching?</string>
+    <string name="login_username_label">Username</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_sign_in">Sign in</string>
+    <string name="login_change_server">Use a different server</string>
+    <string name="login_loading">Loading server details…</string>
+    <string name="login_or">or</string>
+    <string name="login_quick_connect">Use Quick Connect</string>
+    <string name="login_quick_connect_title">Quick Connect</string>
+    <string name="login_quick_connect_instructions">Open Jellyfin on a device you are already signed in on, go to Quick Connect and enter this code.</string>
+    <string name="login_quick_connect_waiting">Waiting for approval…</string>
+    <string name="login_quick_connect_cancel">Cancel</string>
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">Tried %d candidate address, without success.</item>
+        <item quantity="other">Tried %d candidate addresses, without success.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Unable to reach server</string>
+    <string name="auth_error_unsupported_version_or_product">Unsupported version or product</string>
+    <string name="auth_error_cannot_connect">Connection cannot be established.\nCheck the hostname and your network connection.</string>
+    <string name="auth_error_invalid_credentials">Wrong username or password.</string>
+    <string name="auth_error_quick_connect_expired">That code expired. Request a new one and try again.</string>
+    <string name="auth_error_server">The server answered with an error. Try again.</string>
+    <string name="auth_error_server_with_code">The server answered with an error (%1$d). Try again.</string>
+</resources>

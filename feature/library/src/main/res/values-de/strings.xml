@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="libraries_empty">Noch keine Bibliotheken. Füge eine auf dem Server hinzu.</string>
+
+    <string name="library_back">Zurück</string>
+    <string name="library_home">Start</string>
+    <string name="library_sort">Sortieren</string>
+    <string name="library_filter">Filter</string>
+
+    <string name="library_sort_title">Sortieren nach</string>
+    <string name="library_sort_name">Name</string>
+    <string name="library_sort_date_added">Hinzugefügt am</string>
+    <string name="library_sort_premiere_date">Erscheinungsdatum</string>
+    <string name="library_sort_community_rating">Community-Bewertung</string>
+    <string name="library_sort_runtime">Laufzeit</string>
+    <string name="library_sort_random">Zufällig</string>
+    <string name="library_sort_direction">Reihenfolge</string>
+    <string name="library_sort_ascending">Aufsteigend</string>
+    <string name="library_sort_descending">Absteigend</string>
+
+    <string name="library_filters_title">Filter</string>
+    <string name="library_filters_genres">Genres</string>
+    <string name="library_filters_years">Jahre</string>
+    <string name="library_filters_played">Gesehen</string>
+    <string name="library_filters_played_any">Alle</string>
+    <string name="library_filters_played_yes">Gesehen</string>
+    <string name="library_filters_played_no">Ungesehen</string>
+    <string name="library_filters_clear">Alle löschen</string>
+    <string name="library_filters_apply">Ergebnisse anzeigen</string>
+    <string name="library_filters_none">Diese Bibliothek bietet keine Filtermöglichkeiten.</string>
+    <string name="library_filters_loading">Filter werden geladen …</string>
+
+    <string name="library_empty">Hier gibt es nichts anzuzeigen.</string>
+    <string name="library_empty_filtered">Kein Titel entspricht diesen Filtern.</string>
+    <string name="library_empty_clear_filters">Filter zurücksetzen</string>
+    <string name="library_retry">Erneut versuchen</string>
+
+    <string name="library_error_network">Dein Server ist nicht erreichbar. Überprüfe deine Verbindung und versuche es erneut.</string>
+    <string name="library_error_unauthorized">Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.</string>
+    <string name="library_error_not_found">Diese Bibliothek ist nicht mehr auf dem Server vorhanden.</string>
+    <string name="library_error_server">Der Server hat einen Fehler zurückgegeben.</string>
+    <string name="library_error_server_with_code">Der Server hat einen Fehler zurückgegeben (%1$d).</string>
+    <string name="library_error_storage">Lokale Daten konnten nicht gelesen werden.</string>
+    <string name="library_error_unknown">Beim Laden dieser Bibliothek ist etwas schiefgegangen.</string>
+</resources>

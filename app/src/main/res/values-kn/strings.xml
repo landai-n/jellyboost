@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">ಹೆಚ್ಚಿನ ಆಯ್ಕೆಗಳು</string>
+    <string name="home_settings">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <string name="settings_offline_mode">ಆಫ್‌ಲೈನ್ ಮೋಡ್</string>
+
+    <string name="state_on">ಆನ್</string>
+    <string name="state_off">ಆಫ್</string>
+
+    <string name="nav_home">ಮುಖಪುಟ</string>
+    <string name="nav_libraries">ಲೈಬ್ರರಿಗಳು</string>
+    <string name="nav_search">ಹುಡುಕಿ</string>
+    <string name="nav_downloads">ಡೌನ್‌ಲೋಡ್‌ಗಳು</string>
+
+    <string name="offline_no_network">ನೆಟ್‌ವರ್ಕ್ ಇಲ್ಲ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
+    <string name="offline_server_unreachable">ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
+    <string name="offline_forced">ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಆನ್ ಆಗಿದೆ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
+    <string name="offline_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+    <string name="offline_go_online">ಆನ್‌ಲೈನ್‌ಗೆ ಹೋಗಿ</string>
+
+    <string name="syncplay_groups_action">SyncPlay ಗುಂಪುಗಳು</string>
+    <string name="syncplay_groups_action_active">SyncPlay ಗುಂಪುಗಳು — ನೀವು ಒಂದು ಗುಂಪಿನಲ್ಲಿದ್ದೀರಿ</string>
+</resources>

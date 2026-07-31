@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_back">Zurück</string>
+    <string name="settings_home">Start</string>
+
+    <string name="settings_section_playback">Wiedergabe</string>
+    <string name="settings_skip_intro">Intro überspringen</string>
+    <string name="settings_skip_outro">Outro überspringen</string>
+    <string name="settings_skip_mode_off">Nichts tun</string>
+    <string name="settings_skip_mode_show_button">Überspringen-Schaltfläche anzeigen</string>
+    <string name="settings_skip_mode_auto">Automatisch überspringen</string>
+    <string name="settings_pip">Bild‑in‑Bild</string>
+    <string name="settings_pip_supporting">Wiedergabe in einem schwebenden Fenster fortsetzen, wenn du die App verlässt.</string>
+
+    <string name="settings_section_downloads">Downloads</string>
+    <string name="settings_wifi_only">Nur WLAN</string>
+    <string name="settings_wifi_only_supporting">Downloads bei mobilen Daten pausieren.</string>
+    <string name="settings_quality">Downloadqualität</string>
+    <string name="settings_quality_original">Originaldatei – exakte Kopie, fortsetzbar</string>
+    <string name="settings_quality_high">Hoch – etwa 20 Mbps, 1080p</string>
+    <string name="settings_quality_medium">Mittel – etwa 8 Mbps, 1080p</string>
+    <string name="settings_quality_low">Niedrig – etwa 3 Mbps, 720p</string>
+    <string name="settings_quality_supporting">Alles außer der Originaldatei wird von deinem Server beim Senden umgewandelt. Die während des Downloads angezeigte Größe ist daher eine Schätzung, und eine unterbrochene Übertragung beginnt von vorn.</string>
+    <string name="settings_storage_label">Speicher</string>
+    <string name="settings_storage_summary">%1$s belegt · %2$s frei auf diesem Gerät</string>
+    <string name="settings_storage_location">Downloads werden in %1$s gespeichert</string>
+    <string name="settings_storage_picker">Speicherort</string>
+    <string name="settings_storage_internal">Interner Speicher</string>
+    <string name="settings_storage_sd_card">SD-Karte</string>
+    <string name="settings_storage_volume_free">%1$s frei</string>
+    <string name="settings_storage_missing">Der von dir gewählte Speicher ist gerade nicht verfügbar, daher werden Downloads am unten ausgewählten Ort gespeichert.</string>
+    <string name="settings_storage_switch_title">Downloads verschieben?</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">Downloads können noch nicht zwischen Speicherorten verschoben werden, daher wird der bereits auf diesem Gerät vorhandene gelöscht. Du kannst ihn erneut an den neuen Ort herunterladen.</item>
+        <item quantity="other">Downloads können noch nicht zwischen Speicherorten verschoben werden, daher werden die %1$d bereits auf diesem Gerät vorhandenen gelöscht. Du kannst sie erneut an den neuen Ort herunterladen.</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">Löschen und wechseln</string>
+
+    <string name="settings_section_connectivity">Konnektivität</string>
+    <string name="settings_offline_mode">Offlinemodus</string>
+    <string name="settings_offline_mode_supporting">Nur Medien anzeigen, die bereits auf diesem Gerät sind.</string>
+
+    <string name="settings_section_account">Konto</string>
+    <string name="settings_account_user">Angemeldet als</string>
+    <string name="settings_account_server">Server</string>
+    <string name="settings_account_unknown">Nicht angemeldet</string>
+    <string name="settings_sign_out">Abmelden</string>
+    <string name="settings_sign_out_dialog_title">Abmelden?</string>
+    <string name="settings_sign_out_dialog_message">Du benötigst deine Serveradresse und dein Passwort, um dich wieder anzumelden.</string>
+    <string name="settings_sign_out_delete_downloads">Auch Downloads von diesem Gerät löschen</string>
+    <string name="settings_cancel">Abbrechen</string>
+</resources>

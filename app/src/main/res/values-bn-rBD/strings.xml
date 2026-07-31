@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">আরও অপশন</string>
+    <string name="home_settings">সেটিংস</string>
+    <string name="settings_offline_mode">অফলাইন মোড</string>
+    <string name="state_on">চালু</string>
+    <string name="state_off">বন্ধ</string>
+    <string name="nav_home">হোম</string>
+    <string name="nav_libraries">লাইব্রেরি</string>
+    <string name="nav_search">সার্চ</string>
+    <string name="nav_downloads">ডাউনলোড</string>
+    <string name="offline_no_network">কোনো নেটওয়ার্ক নেই — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
+    <string name="offline_server_unreachable">সার্ভারে পৌঁছানো যাচ্ছে না — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
+    <string name="offline_forced">অফলাইন মোড চালু আছে — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
+    <string name="offline_retry">আবার চেষ্টা করুন</string>
+    <string name="offline_go_online">অনলাইনে যান</string>
+    <string name="syncplay_groups_action">SyncPlay গ্রুপ</string>
+    <string name="syncplay_groups_action_active">SyncPlay গ্রুপ — আপনি একটি গ্রুপে আছেন</string>
+</resources>

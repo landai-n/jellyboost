@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Transferidos</string>
+    <string name="downloads_tab_queue">Fila</string>
+    <string name="downloads_wifi_only">Apenas Wi‑Fi</string>
+    <string name="downloads_group_movies">Filmes</string>
+    <string name="downloads_storage_summary">%1$s usados · %2$s livres</string>
+    <string name="downloads_action_delete">Eliminar transferência</string>
+    <string name="downloads_action_cancel">Cancelar transferência</string>
+    <string name="downloads_action_pause">Pausar transferência</string>
+    <string name="downloads_action_resume">Retomar transferência</string>
+    <string name="downloads_action_move_up">Subir na fila</string>
+    <string name="downloads_action_move_down">Descer na fila</string>
+    <string name="downloads_action_pause_all">Pausar tudo</string>
+    <string name="downloads_action_resume_all">Retomar tudo</string>
+    <string name="downloads_action_cancel_all">Cancelar tudo</string>
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Cancelar esta transferência?</item>
+        <item quantity="other">Cancelar todas as %1$d transferências?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">A fila é esvaziada e os ficheiros parcialmente transferidos são removidos. As transferências concluídas não são afetadas.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Cancelar transferências</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Manter</string>
+    <string name="downloads_delete_dialog_title">Eliminar %1$s?</string>
+    <string name="downloads_delete_dialog_message">Os ficheiros transferidos são removidos deste dispositivo. Pode transferi-los novamente mais tarde.</string>
+    <string name="downloads_delete_dialog_confirm">Eliminar</string>
+    <string name="downloads_delete_dialog_cancel">Cancelar</string>
+    <string name="downloads_progress_of">%1$s de %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s de até %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">até %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">Faltam %1$s</string>
+    <string name="downloads_eta_approx">Faltam ~%1$s</string>
+    <string name="downloads_transcoded_marker">Transcodificado</string>
+    <string name="downloads_status_queued">Em espera</string>
+    <string name="downloads_status_paused">Em pausa</string>
+    <string name="downloads_status_failed">Falha na transferência</string>
+    <string name="downloads_status_failed_reason">Falha na transferência: %1$s</string>
+    <string name="downloads_empty_downloaded">Ainda não há nada transferido. Toque em Transferir num filme ou episódio para o manter neste dispositivo.</string>
+    <string name="downloads_empty_queue">A fila de transferências está vazia.</string>
+    <string name="downloads_load_failed">Não foi possível ler as suas transferências. Reabra este ecrã para tentar novamente.</string>
+    <string name="downloads_message_delete_failed">Não foi possível eliminar essa transferência.</string>
+    <string name="downloads_message_action_failed">Não foi possível atualizar a fila.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d em pausa — %2$d transcodificação continua a transferir (uma transcodificação não pode ser pausada).</item>
+        <item quantity="other">%1$d em pausa — %2$d transcodificações continuam a transferir (uma transcodificação não pode ser pausada).</item>
+    </plurals>
+</resources>

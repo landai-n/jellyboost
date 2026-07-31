@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Αναζήτηση ταινιών, σειρών και επεισοδίων</string>
+    <string name="search_clear">Απαλοιφή</string>
+
+    <string name="search_section_movies">Ταινίες</string>
+    <string name="search_section_series">Σειρές</string>
+    <string name="search_section_episodes">Επεισόδια</string>
+
+    <string name="search_prompt">Πληκτρολογήστε για αναζήτηση στις βιβλιοθήκες σας.</string>
+    <string name="search_no_results">Δεν βρέθηκαν αποτελέσματα για «%1$s».</string>
+
+    <string name="search_error_network">Δεν είναι δυνατή η πρόσβαση στον διακομιστή σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
+    <string name="search_error_unauthorized">Η περίοδος σύνδεσής σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε.</string>
+    <string name="search_error_not_found">Αυτό το στοιχείο δεν είναι πλέον στον διακομιστή.</string>
+    <string name="search_error_server">Ο διακομιστής επέστρεψε σφάλμα.</string>
+    <string name="search_error_server_with_code">Ο διακομιστής επέστρεψε σφάλμα (%1$d).</string>
+    <string name="search_error_storage">Δεν ήταν δυνατή η ανάγνωση των τοπικών δεδομένων.</string>
+    <string name="search_error_unknown">Κάτι πήγε στραβά κατά την αναζήτηση.</string>
+</resources>

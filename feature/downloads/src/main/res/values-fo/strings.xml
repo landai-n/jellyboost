@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_tab_downloaded">Niðurhalað</string>
+    <string name="downloads_tab_queue">Bíðirøð</string>
+    <string name="downloads_wifi_only">Bert Wi‑Fi</string>
+
+    <string name="downloads_group_movies">Filmar</string>
+
+    <string name="downloads_storage_summary">%1$s brúkt · %2$s frítt</string>
+
+    <string name="downloads_action_delete">Strika niðurhal</string>
+    <string name="downloads_action_cancel">Avlýs niðurhal</string>
+    <string name="downloads_action_pause">Steðga niðurhali</string>
+    <string name="downloads_action_resume">Halda niðurhali áfram</string>
+    <string name="downloads_action_move_up">Flyt upp í bíðirøðini</string>
+    <string name="downloads_action_move_down">Flyt niður í bíðirøðini</string>
+
+    <string name="downloads_action_pause_all">Steðga øllum</string>
+    <string name="downloads_action_resume_all">Halda øllum áfram</string>
+    <string name="downloads_action_cancel_all">Avlýs alt</string>
+
+    <plurals name="downloads_cancel_all_dialog_title">
+        <item quantity="one">Avlýsa hetta niðurhalið?</item>
+        <item quantity="other">Avlýsa øll %1$d niðurhal?</item>
+    </plurals>
+    <string name="downloads_cancel_all_dialog_message">Bíðirøðin verður tømd, og partliga niðurhalaðar fílur verða strikaðar. Liðug niðurhal verða ikki ávirkað.</string>
+    <string name="downloads_cancel_all_dialog_confirm">Avlýs niðurhal</string>
+    <string name="downloads_cancel_all_dialog_dismiss">Goym</string>
+
+    <string name="downloads_delete_dialog_title">Strika %1$s?</string>
+    <string name="downloads_delete_dialog_message">Niðurhalaðu fílurnar verða strikaðar frá hesum tólinum. Tú kanst hala tað niður aftur seinni.</string>
+    <string name="downloads_delete_dialog_confirm">Strika</string>
+    <string name="downloads_delete_dialog_cancel">Avlýs</string>
+
+    <string name="downloads_progress_of">%1$s av %2$s</string>
+    <string name="downloads_progress_of_approx">%1$s av ~%2$s</string>
+    <string name="downloads_progress_of_capped">%1$s av upp til %2$s</string>
+    <string name="downloads_size_approx">~%1$s</string>
+    <string name="downloads_size_capped">upp til %1$s</string>
+    <string name="downloads_speed">%1$s/s</string>
+    <string name="downloads_eta">%1$s eftir</string>
+    <string name="downloads_eta_approx">~%1$s eftir</string>
+    <string name="downloads_transcoded_marker">Transkodað</string>
+    <string name="downloads_status_queued">Bíðar</string>
+    <string name="downloads_status_paused">Steðgað</string>
+    <string name="downloads_status_failed">Niðurhal miseydnaðist</string>
+    <string name="downloads_status_failed_reason">Niðurhal miseydnaðist: %1$s</string>
+
+    <string name="downloads_empty_downloaded">Einki niðurhalað enn. Trýst á Hala niður á einum filmi ella parti fyri at goyma tað á hesum tólinum.</string>
+    <string name="downloads_empty_queue">Niðurhals-bíðirøðin er tóm.</string>
+    <string name="downloads_load_failed">Kundi ikki lesa tíni niðurhal. Opna hesa síðuna aftur fyri at royna aftur.</string>
+    <string name="downloads_message_delete_failed">Kundi ikki strika hetta niðurhalið.</string>
+    <string name="downloads_message_action_failed">Kundi ikki dagføra bíðirøðina.</string>
+    <plurals name="downloads_message_paused_keeping_transcodes">
+        <item quantity="one">%1$d steðgað — %2$d transkodering heldur fram at niðurhala (ein transkodering kann ikki steðgast).</item>
+        <item quantity="other">%1$d steðgað — %2$d transkoderingar halda fram at niðurhala (ein transkodering kann ikki steðgast).</item>
+    </plurals>
+</resources>

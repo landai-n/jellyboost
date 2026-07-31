@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_app_name">Jellyboost</string>
+
+    <string name="server_setup_title">Серверге қосылу</string>
+    <string name="server_setup_discovered_title">Осы желідегі серверлер</string>
+    <string name="server_setup_discovering">Жергілікті желі қаралуда…</string>
+    <string name="server_setup_no_servers_found">Ешбір сервер табылмады. Төменде мекенжайды енгізіңіз.</string>
+    <string name="server_setup_manual_title">Сервер мекенжайы</string>
+    <string name="server_setup_address_label">Хост немесе URL</string>
+    <string name="server_setup_address_placeholder">demo.jellyfin.org немесе 192.168.1.10:8096</string>
+    <string name="server_setup_connect">Қосылу</string>
+    <string name="server_setup_connecting">Серверге хабарласуда…</string>
+    <string name="server_setup_session_lost">Сақталған кіру деректерін қалпына келтіру мүмкін болмады, сондықтан жүйеден шықтыңыз. Қайта кіріңіз.</string>
+
+    <string name="login_title">Кіру</string>
+    <string name="login_server_version">Нұсқа %1$s</string>
+    <string name="login_server_version_unknown">Нұсқасы белгісіз</string>
+    <string name="login_public_users_title">Кім көріп отыр?</string>
+    <string name="login_username_label">Пайдаланушы аты</string>
+    <string name="login_password_label">Құпия сөз</string>
+    <string name="login_show_password">Құпия сөзді көрсету</string>
+    <string name="login_hide_password">Құпия сөзді жасыру</string>
+    <string name="login_sign_in">Кіру</string>
+    <string name="login_change_server">Басқа серверді пайдалану</string>
+    <string name="login_loading">Сервер мәліметтері жүктелуде…</string>
+    <string name="login_or">немесе</string>
+
+    <string name="login_quick_connect">Жылдам қосылуды пайдалану</string>
+    <string name="login_quick_connect_title">Жылдам қосылу</string>
+    <string name="login_quick_connect_instructions">Бұрын кірген құрылғыда Jellyfin қолданбасын ашып, Жылдам қосылу бөліміне өтіп, осы кодты енгізіңіз.</string>
+    <string name="login_quick_connect_waiting">Растау күтілуде…</string>
+    <string name="login_quick_connect_cancel">Бас тарту</string>
+
+    <plurals name="auth_error_candidates_tried">
+        <item quantity="one">%d мекенжай сынап көрілді, нәтиже болмады.</item>
+        <item quantity="other">%d мекенжай сынап көрілді, нәтиже болмады.</item>
+    </plurals>
+    <string name="auth_error_unable_to_reach_server">Серверге қосыла алмады</string>
+    <string name="auth_error_unsupported_version_or_product">Қолдау көрсетілмейтін нұсқа немесе өнім</string>
+    <string name="auth_error_cannot_connect">Қосылым орнату мүмкін болмады.\nХост атауын және желі қосылымын тексеріңіз.</string>
+    <string name="auth_error_invalid_credentials">Пайдаланушы аты немесе құпия сөз қате.</string>
+    <string name="auth_error_quick_connect_expired">Бұл кодтың мерзімі өтті. Жаңасын сұрап, қайта көріңіз.</string>
+    <string name="auth_error_server">Сервер қатемен жауап берді. Қайта көріңіз.</string>
+    <string name="auth_error_server_with_code">Сервер қатемен жауап берді (%1$d). Қайта көріңіз.</string>
+</resources>

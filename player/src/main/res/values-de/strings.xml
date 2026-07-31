@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_back">Player schließen</string>
+    <string name="player_play">Abspielen</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_rewind">10 Sekunden zurückspringen</string>
+    <string name="player_forward">30 Sekunden vorspringen</string>
+
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Untertitel</string>
+    <string name="player_subtitles_off">Aus</string>
+    <string name="player_quality">Qualität</string>
+    <string name="player_speed">Geschwindigkeit</string>
+
+    <string name="player_skip_intro">Intro überspringen</string>
+    <string name="player_skip_outro">Outro überspringen</string>
+
+    <string name="player_quality_auto">Automatisch</string>
+    <string name="player_quality_high">Hoch – 20 Mbps</string>
+    <string name="player_quality_medium">Mittel – 8 Mbps</string>
+    <string name="player_quality_low">Niedrig – 3 Mbps</string>
+    <string name="player_quality_lowest">Niedrigste – 720 kbps</string>
+
+    <string name="player_method_direct_play">Direktwiedergabe</string>
+    <string name="player_method_direct_stream">Direktübertragung</string>
+    <string name="player_method_transcode">Transkodierung</string>
+
+    <string name="player_message_transcode">Dein Gerät konnte diese Datei nicht dekodieren, daher transkodiert der Server sie.</string>
+    <string name="player_message_lower_quality">Der Stream ist stecken geblieben – wird mit niedrigerer Qualität erneut versucht.</string>
+    <string name="player_message_track_restart">Der Server musste den Stream für diese Spur neu kodieren.</string>
+    <string name="player_message_track_streaming">Diese Spur ist nicht im Download enthalten – sie wird von deinem Server gestreamt.</string>
+    <string name="player_message_track_offline">Diese Spur ist nicht in der heruntergeladenen Datei enthalten.</string>
+    <string name="player_message_failed">Wiedergabe fehlgeschlagen.</string>
+
+    <string name="player_syncplay_group">Gruppe</string>
+    <string name="player_syncplay_waiting">Warten auf Gruppe …</string>
+    <string name="player_syncplay_shuffle">Warteschlange mischen</string>
+    <string name="player_syncplay_repeat">Wiederholen</string>
+    <string name="player_syncplay_repeat_none">Aus</string>
+    <string name="player_syncplay_repeat_one">Diesen Titel</string>
+    <string name="player_syncplay_repeat_all">Gesamte Warteschlange</string>
+    <string name="player_syncplay_leave">Gruppe verlassen</string>
+    <string name="player_syncplay_leave_title">Diese Gruppe verlassen?</string>
+    <string name="player_syncplay_leave_body">Die Wiedergabe läuft hier eigenständig weiter. Um wieder beizutreten, musst du die Gruppe erneut auswählen.</string>
+
+    <string name="player_syncplay_cancel">Abbrechen</string>
+
+    <plurals name="player_syncplay_participants">
+        <item quantity="one">%d Person schaut zu</item>
+        <item quantity="other">%d Personen schauen zu</item>
+    </plurals>
+
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d weitere</string>
+
+    <string name="player_syncplay_queue">Warteschlange</string>
+    <string name="player_syncplay_queue_empty">Die Gruppe hat noch nichts in die Warteschlange gestellt.</string>
+    <string name="player_syncplay_queue_item_loading">Wird geladen …</string>
+    <string name="player_syncplay_queue_playing">Spielt gerade</string>
+    <string name="player_syncplay_queue_next">Nächster Titel</string>
+    <string name="player_syncplay_queue_previous">Vorheriger Titel</string>
+    <string name="player_syncplay_queue_move_up">Nach oben</string>
+    <string name="player_syncplay_queue_move_down">Nach unten</string>
+    <string name="player_syncplay_queue_remove">Aus Warteschlange entfernen</string>
+
+    <plurals name="player_syncplay_queue_count">
+        <item quantity="one">%d Titel in der Warteschlange</item>
+        <item quantity="other">%d Titel in der Warteschlange</item>
+    </plurals>
+
+    <string name="player_message_syncplay_connection_lost">SyncPlay verlassen – Verbindung verloren</string>
+    <string name="player_message_syncplay_rejoined">SyncPlay-Gruppe erneut beigetreten</string>
+    <string name="player_message_syncplay_join_failed">Der SyncPlay-Gruppe konnte nicht beigetreten werden.</string>
+    <string name="player_message_syncplay_group_ended">Die SyncPlay-Gruppe wurde beendet.</string>
+    <string name="player_message_syncplay_removed">Du bist nicht mehr in der SyncPlay-Gruppe.</string>
+    <string name="player_message_syncplay_library_denied">Die Gruppe schaut etwas, auf das du keinen Zugriff hast.</string>
+    <string name="player_message_syncplay_item_unavailable">Konnte nicht öffnen, was die Gruppe gerade schaut.</string>
+
+    <string name="player_syncplay_groups_title">SyncPlay</string>
+    <string name="player_syncplay_groups_back">Zurück</string>
+    <string name="player_syncplay_groups_home">Start</string>
+    <string name="player_syncplay_groups_create">Gruppe erstellen</string>
+    <string name="player_syncplay_groups_create_title">Benenne deine Gruppe</string>
+    <string name="player_syncplay_groups_create_hint">Gruppenname</string>
+    <string name="player_syncplay_groups_create_confirm">Erstellen</string>
+    <string name="player_syncplay_groups_joining">Wird beigetreten …</string>
+    <string name="player_syncplay_groups_active_label">Du bist in dieser Gruppe</string>
+    <string name="player_syncplay_groups_open_player">Player öffnen</string>
+    <string name="player_syncplay_groups_empty">Gerade schaut niemand anderes gemeinsam.</string>
+    <string name="player_syncplay_groups_disabled">SyncPlay ist für dein Konto deaktiviert.</string>
+    <string name="player_syncplay_groups_error">SyncPlay-Gruppen konnten nicht geladen werden.</string>
+
+    <string name="player_syncplay_presence_channel_name">SyncPlay-Gruppe</string>
+    <string name="player_syncplay_presence_channel_description">Hält deinen Platz in einer gemeinsamen Gruppe, während die App im Hintergrund ist.</string>
+    <string name="player_syncplay_presence_title">In einer SyncPlay-Gruppe</string>
+    <string name="player_syncplay_presence_text">Warten auf die Gruppe</string>
+    <string name="player_syncplay_presence_leave">Verlassen</string>
+
+    <string name="player_syncplay_state_idle">Inaktiv</string>
+    <string name="player_syncplay_state_waiting">Wartet</string>
+    <string name="player_syncplay_state_paused">Pausiert</string>
+    <string name="player_syncplay_state_playing">Wird wiedergegeben</string>
+
+    <string name="player_cast">Auf ein Gerät übertragen</string>
+
+    <string name="player_cast_device_unnamed">deinem Fernseher</string>
+    <string name="player_message_cast_transferred">Wird jetzt auf %1$s wiedergegeben.</string>
+    <string name="player_message_cast_left_syncplay">Die SyncPlay-Gruppe verlassen, um auf %1$s zu übertragen.</string>
+    <string name="player_message_cast_failed">Wiedergabe auf %1$s fehlgeschlagen.</string>
+
+    <string name="player_casting_to">Wird auf %1$s übertragen</string>
+</resources>

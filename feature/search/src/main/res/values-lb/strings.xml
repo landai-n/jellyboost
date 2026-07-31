@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Filmer, Serien an Episoden duerchsichen</string>
+    <string name="search_clear">Läschen</string>
+
+    <string name="search_section_movies">Filmer</string>
+    <string name="search_section_series">Serien</string>
+    <string name="search_section_episodes">Episoden</string>
+
+    <string name="search_prompt">Gëff eppes an, fir deng Bibliothéiken ze duerchsichen.</string>
+    <string name="search_no_results">Näischt entsprécht „%1$s“.</string>
+
+    <string name="search_error_network">Däi Server ass net erreechbar. Iwwerpréif deng Verbindung a probéier nach eng Kéier.</string>
+    <string name="search_error_unauthorized">Deng Sessioun ass ofgelaf. Mell dech nach eng Kéier un, fir weiderzefueren.</string>
+    <string name="search_error_not_found">Dëst Element ass net méi um Server.</string>
+    <string name="search_error_server">De Server huet e Feeler zréckginn.</string>
+    <string name="search_error_server_with_code">De Server huet e Feeler zréckginn (%1$d).</string>
+    <string name="search_error_storage">Lokal Donnéeën konnten net gelies ginn.</string>
+    <string name="search_error_unknown">Bei der Sich ass eppes schif gelaf.</string>
+</resources>

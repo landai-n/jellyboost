@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_field_label">Tìm phim, chương trình và tập phim</string>
+    <string name="search_clear">Xóa</string>
+    <string name="search_section_movies">Phim</string>
+    <string name="search_section_series">Chương trình</string>
+    <string name="search_section_episodes">Tập phim</string>
+    <string name="search_prompt">Nhập để tìm kiếm trong thư viện của bạn.</string>
+    <string name="search_no_results">Không có kết quả nào khớp với “%1$s”.</string>
+    <string name="search_error_network">Không thể kết nối máy chủ của bạn. Kiểm tra kết nối và thử lại.</string>
+    <string name="search_error_unauthorized">Phiên đăng nhập của bạn đã hết hạn. Đăng nhập lại để tiếp tục.</string>
+    <string name="search_error_not_found">Mục đó không còn trên máy chủ.</string>
+    <string name="search_error_server">Máy chủ đã trả về lỗi.</string>
+    <string name="search_error_server_with_code">Máy chủ đã trả về lỗi (%1$d).</string>
+    <string name="search_error_storage">Không thể đọc dữ liệu cục bộ.</string>
+    <string name="search_error_unknown">Đã xảy ra lỗi khi tìm kiếm.</string>
+</resources>

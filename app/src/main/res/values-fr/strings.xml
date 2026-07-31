@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_more_options">Plus d\'options</string>
+    <string name="home_settings">Paramètres</string>
+    <string name="settings_offline_mode">Mode hors ligne</string>
+    <string name="state_on">Activé</string>
+    <string name="state_off">Désactivé</string>
+    <string name="nav_home">Accueil</string>
+    <string name="nav_libraries">Bibliothèques</string>
+    <string name="nav_search">Recherche</string>
+    <string name="nav_downloads">Téléchargements</string>
+    <string name="offline_no_network">Aucun réseau — affichage des contenus téléchargés</string>
+    <string name="offline_server_unreachable">Impossible de joindre le serveur — affichage des contenus téléchargés</string>
+    <string name="offline_forced">Le mode hors ligne est activé — affichage des contenus téléchargés</string>
+    <string name="offline_retry">Réessayer</string>
+    <string name="offline_go_online">Se reconnecter</string>
+    <string name="syncplay_groups_action">Groupes SyncPlay</string>
+    <string name="syncplay_groups_action_active">Groupes SyncPlay — vous êtes dans un groupe</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">ترتیبات</string>
+    <string name="settings_back">واپس</string>
+    <string name="settings_home">ہوم</string>
+
+    <string name="settings_section_playback">پلے بیک</string>
+    <string name="settings_skip_intro">انٹرو نظر انداز کریں</string>
+    <string name="settings_skip_outro">آؤٹرو نظر انداز کریں</string>
+    <string name="settings_skip_mode_off">کچھ نہ کریں</string>
+    <string name="settings_skip_mode_show_button">نظر انداز کرنے کا بٹن دکھائیں</string>
+    <string name="settings_skip_mode_auto">خودکار طور پر نظر انداز کریں</string>
+    <string name="settings_pip">پکچر ان پکچر</string>
+    <string name="settings_pip_supporting">ایپ سے نکلنے پر فلوٹنگ ونڈو میں چلاتے رہیں۔</string>
+
+    <string name="settings_section_downloads">ڈاؤن لوڈز</string>
+    <string name="settings_wifi_only">صرف Wi‑Fi</string>
+    <string name="settings_wifi_only_supporting">موبائل ڈیٹا پر ڈاؤن لوڈز موقوف کریں۔</string>
+    <string name="settings_quality">ڈاؤن لوڈ کوالٹی</string>
+    <string name="settings_quality_original">اصل فائل — عین نقل، دوبارہ شروع کی جا سکتی ہے</string>
+    <string name="settings_quality_high">زیادہ — تقریباً 20 Mbps، 1080p</string>
+    <string name="settings_quality_medium">درمیانہ — تقریباً 8 Mbps، 1080p</string>
+    <string name="settings_quality_low">کم — تقریباً 3 Mbps، 720p</string>
+    <string name="settings_quality_supporting">اصل فائل کے علاوہ ہر چیز آپ کے سرور کی طرف سے بھیجتے وقت تبدیل کی جاتی ہے، اس لیے ڈاؤن لوڈ کے دوران دکھایا گیا سائز ایک تخمینہ ہے، اور رکاوٹ کا شکار منتقلی دوبارہ شروع ہوتی ہے۔</string>
+    <string name="settings_storage_label">اسٹوریج</string>
+    <string name="settings_storage_summary">%1$s استعمال شدہ · %2$s اس ڈیوائس پر خالی</string>
+    <string name="settings_storage_location">ڈاؤن لوڈز %1$s میں رکھے جاتے ہیں</string>
+    <string name="settings_storage_picker">اسٹوریج کا مقام</string>
+    <string name="settings_storage_internal">اندرونی اسٹوریج</string>
+    <string name="settings_storage_sd_card">SD کارڈ</string>
+    <string name="settings_storage_volume_free">%1$s خالی</string>
+    <string name="settings_storage_missing">جو اسٹوریج آپ نے منتخب کیا وہ ابھی دستیاب نہیں ہے، اس لیے ڈاؤن لوڈز نیچے منتخب کردہ مقام پر جا رہے ہیں۔</string>
+    <string name="settings_storage_switch_title">ڈاؤن لوڈز منتقل کریں؟</string>
+    <plurals name="settings_storage_switch_message">
+        <item quantity="one">ڈاؤن لوڈز ابھی مقامات کے درمیان منتقل نہیں کیے جا سکتے، اس لیے اس ڈیوائس پر موجود ڈاؤن لوڈ حذف کر دیا جائے گا۔ آپ اسے نئے مقام پر دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</item>
+        <item quantity="other">ڈاؤن لوڈز ابھی مقامات کے درمیان منتقل نہیں کیے جا سکتے، اس لیے اس ڈیوائس پر موجود %1$d ڈاؤن لوڈز حذف کر دیے جائیں گے۔ آپ انہیں نئے مقام پر دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</item>
+    </plurals>
+    <string name="settings_storage_switch_confirm">حذف کریں اور تبدیل کریں</string>
+
+    <string name="settings_section_connectivity">کنیکٹیویٹی</string>
+    <string name="settings_offline_mode">آف لائن موڈ</string>
+    <string name="settings_offline_mode_supporting">صرف وہ میڈیا دکھائیں جو پہلے سے اس ڈیوائس پر موجود ہے۔</string>
+
+    <string name="settings_section_account">اکاؤنٹ</string>
+    <string name="settings_account_user">بطور سائن ان</string>
+    <string name="settings_account_server">سرور</string>
+    <string name="settings_account_unknown">سائن ان نہیں ہے</string>
+    <string name="settings_sign_out">سائن آؤٹ</string>
+    <string name="settings_sign_out_dialog_title">سائن آؤٹ کریں؟</string>
+    <string name="settings_sign_out_dialog_message">دوبارہ سائن ان کرنے کے لیے آپ کو اپنے سرور کا پتہ اور پاس ورڈ درکار ہوگا۔</string>
+    <string name="settings_sign_out_delete_downloads">اس ڈیوائس سے ڈاؤن لوڈز بھی حذف کریں</string>
+    <string name="settings_cancel">منسوخ کریں</string>
+</resources>

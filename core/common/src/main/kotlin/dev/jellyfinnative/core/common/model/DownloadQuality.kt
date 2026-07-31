@@ -83,6 +83,51 @@ enum class DownloadQuality(
         /** Audio codec for a transcode. */
         const val AUDIO_CODEC = "aac"
 
+        /**
+         * The extension of a finished audio sidecar (`DownloadFileType.AUDIO`).
+         *
+         * **`m4a`, and safely, unlike [CONTAINER].** [CONTAINER] cannot be `mp4` because a *server*
+         * muxing one on the fly cannot know where `mdat` ends until it has written it, so it appends
+         * a `moov` Media3 never finds. An audio sidecar's `.m4a` is produced the opposite way: fetched
+         * as [AUDIO_FETCH_CONTAINER] first, then transmuxed *locally*, after the fetch has finished
+         * and every byte is already on disk — a Media3 `Transformer` writes the `moov` up front because
+         * it knows the whole file it is about to emit. Same box format either way; only which side
+         * assembles it — a live server or an idle local file — decides whether the `moov` lands.
+         */
+        const val AUDIO_SIDECAR_CONTAINER = "m4a"
+
+        /**
+         * The container an extra audio track is fetched in — see the group KDoc below for why a
+         * video-shaped request is needed at all.
+         */
+        const val AUDIO_FETCH_CONTAINER = "mkv"
+
+        /**
+         * Bits per second for the junk video track of an audio-sidecar fetch.
+         *
+         * ### Why a video track is requested at all
+         * The obvious route — `/Audio/{id}/stream.{container}?audioStreamIndex=N` — does not honor
+         * `audioStreamIndex` on server 10.11: `EncodingHelper.AttachMediaSourceInfo` hard-codes it to
+         * `null` for a non-video request, so every audio-only fetch silently returns the source's
+         * *default* track regardless of which index was asked for (verified empirically; DECISIONS.md,
+         * 2026-07-31, "Offline multi-track Phase 2"). `/Videos/{id}/stream.{container}` does honor it,
+         * so the extra track is fetched through the video endpoint with a video stream present only
+         * because the endpoint requires one — [AUDIO_FETCH_VIDEO_BITRATE] through [AUDIO_FETCH_MAX_WIDTH]
+         * shape that stream to be as cheap as the server will produce, and it is discarded by a local
+         * strip to [AUDIO_SIDECAR_CONTAINER] once the fetch lands. Measured on the dev server: ~54×
+         * realtime, ~45 MB of junk video for a 2-hour film at these settings.
+         */
+        const val AUDIO_FETCH_VIDEO_BITRATE = 50_000
+
+        /** Junk video needs no frame rate to speak of; this is a floor, not a target. */
+        const val AUDIO_FETCH_MAX_FRAMERATE = 4f
+
+        /** Junk video ceiling — [AUDIO_FETCH_VIDEO_BITRATE] already makes anything larger pointless. */
+        const val AUDIO_FETCH_MAX_HEIGHT = 144
+
+        /** Junk video ceiling, paired with [AUDIO_FETCH_MAX_HEIGHT]. */
+        const val AUDIO_FETCH_MAX_WIDTH = 256
+
         /** The stored entry matching [name], or [ORIGINAL] for anything unrecognised. */
         fun fromNameOrDefault(name: String?): DownloadQuality = entries.firstOrNull { it.name == name } ?: ORIGINAL
     }

@@ -318,4 +318,10 @@ private object FakeUrls : DownloadUrlFactory {
         width: Int,
         tileIndex: Int,
     ) = "trickplay://$itemId/$tileIndex"
+
+    override fun audioStreamUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+        streamIndex: Int,
+    ) = "audio://$itemId/$streamIndex"
 }

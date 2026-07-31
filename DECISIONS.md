@@ -2716,3 +2716,48 @@ Seeded from the approved plan; listed for traceability, no divergence:
   exactly there; the queue's reading goes stale the moment a pause/resume happens without a queue
   update. Device run 3: a seek to 6:03 + a lost resume command turned into a fallback seek to 23:17,
   computed off a seventeen-minute-old queue.
+
+## 2026-07-31 — Offline multi-track Phase 2: all audio tracks, via /Videos fetch + local strip
+
+- **Scope:** `:data:downloads` (planner, url factory, queue, new Transformer strip stage,
+  offline surface), `:player` (LocalPlaybackResolver, PlaybackMediaItemSpec, ExoPlayerHandle,
+  TrackSelectionController), `:core:common` (`DownloadFileType.AUDIO`); design study
+  `docs/notes/offline-multitrack-design.md` Phase 2.
+- **Plan said:** `docs/PLAN.md:7` scopes v1 without transcoded downloads (already diverged —
+  see the download-quality entries); the Phase 2 design study specified fetching each extra
+  track as `/Audio/{itemId}/stream.mka?audioStreamIndex=N…` and flagged that endpoint as its
+  one load-bearing unverified assumption. STATUS.md carried Phase 2 as "awaiting user design
+  decision".
+- **Done instead:** Phase 2 is implemented (user decision 2026-07-31), with an amended fetch:
+  1. **`/Audio` is unusable** — on 10.11 the server hard-codes the stream index to null for
+     non-video requests (`EncodingHelper.AttachMediaSourceInfo`, release-10.11.z: video branch
+     uses `videoRequest.AudioStreamIndex`, else `GetMediaStream(mediaStreams, null, Audio,
+     true)`). Verified empirically on the dev server (item `e1a3302888b0d5fa1dfcc68a09a0208b`,
+     requested idx 3 = eng, got the default French: decoded-audio cross-correlation 0.977 vs
+     the original French track, 0.756 vs English; language tag `fre`).
+  2. **Fetch via `/Videos/{id}/stream.mkv`** — which honors `audioStreamIndex` (verified:
+     English, corr 0.983) — with minimal junk video (`videoCodec=h264&videoBitRate=50000&`
+     `maxFramerate=4&maxHeight=144`, measured ~54× realtime server-side), then **strip the
+     video locally** with a Media3 Transformer transmux (`setRemoveVideo(true)`, no re-encode)
+     into the final `audio.<index>.<lang>.m4a` sidecar; the fetch mkv is deleted. The m4a has
+     a complete moov, so sidecars need no Matroska seek repair; a failed strip fails only that
+     non-essential file row.
+  3. **MediaSource assembly moves into `ExoPlayerHandle`** — `MediaItem` has no audio analogue
+     of `SubtitleConfiguration`, so the sidecar merge (`MergingMediaSource(adjustPeriodTimeOffsets
+     = false, clipDurations = true, primary, audio…)`) can only be built where a
+     `MediaSourceFactory` lives. Everything decidable stays in the pure spec (`audioSidecars`
+     list; its order IS the merge-child order, ascending streamIndex); the handle performs only
+     mechanical assembly, and the child-order↔Jellyfin-index mapping is pinned by
+     `TrackSelectionControllerTest`.
+  4. **Always on, no setting** (user decision) — every transcoded download fetches every audio
+     language (~165 MB per extra 2-hour track, AAC stereo 192 kbps).
+  5. **New downloads only** (user decision) — no retroactive audio top-up of finished rows; the
+     existing `SubtitleSidecarTopUp` `type == SUBTITLE` filter is left as-is and pinned by test.
+  6. **Sidecars + merge, not a local remux into one mkv** — Android has no Matroska muxer
+     (Media3/MediaMuxer cannot; ffmpeg-kit retired Jan 2025); an ffmpeg-based remux remains a
+     possible later optimization on the same fetch side.
+- **Reason:** a transcoded download currently keeps exactly one audio language (the server maps
+  one `audioStreamIndex` per transcode — the design study's "hard ceiling"), losing every other
+  dub/VO offline. The user asked for all tracks; the amended fetch is the only track-accurate
+  route the server offers, and the local strip keeps the on-disk and playback shape identical
+  to the originally designed audio-only sidecar.

@@ -94,6 +94,28 @@ interface DownloadUrlFactory {
         width: Int,
         tileIndex: Int,
     ): String
+
+    /**
+     * One extra audio language of a transcoded download, fetched as a video+audio
+     * [DownloadQuality.AUDIO_FETCH_CONTAINER] and stripped locally to
+     * [DownloadQuality.AUDIO_SIDECAR_CONTAINER].
+     *
+     * The video track is not wanted, but the request cannot leave it out: server 10.11 hard-codes
+     * `audioStreamIndex` to `null` on the audio-only endpoint (`EncodingHelper.AttachMediaSourceInfo`),
+     * so asking for a *specific* extra track only works through `/Videos`, which does honor it. The
+     * video that comes back is deliberately as cheap as the server will make it
+     * ([DownloadQuality.AUDIO_FETCH_VIDEO_BITRATE] and friends) and is thrown away by a local
+     * Transformer strip once the fetch lands — see [DownloadQuality.AUDIO_SIDECAR_CONTAINER]'s KDoc
+     * for why that strip is what finally gives the sidecar a complete `moov`.
+     *
+     * @param streamIndex the absolute `MediaStream.index` of the audio track to fetch — never the
+     *   track a sibling [transcodedVideoUrl] call already baked into the media file.
+     */
+    fun audioStreamUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+        streamIndex: Int,
+    ): String
 }
 
 /** [DownloadUrlFactory] on the SDK's own URL builders. */
@@ -190,5 +212,39 @@ internal class SdkDownloadUrlFactory
                 itemId = itemId,
                 width = width,
                 index = tileIndex,
+            )
+
+        override fun audioStreamUrl(
+            itemId: UUID,
+            mediaSourceId: String?,
+            streamIndex: Int,
+        ): String =
+            apiClient.videosApi.getVideoStreamByContainerUrl(
+                itemId = itemId,
+                // `/Videos`, not `/Audio`: the audio-only endpoint ignores audioStreamIndex on 10.11
+                // (see the interface KDoc), so a specific extra track can only be named here.
+                container = DownloadQuality.AUDIO_FETCH_CONTAINER,
+                static = false,
+                mediaSourceId = mediaSourceId,
+                deviceId = apiClient.deviceInfo.id,
+                // A fresh id per URL, same reasoning as transcodedVideoUrl's.
+                playSessionId = UUID.randomUUID().toString(),
+                audioCodec = DownloadQuality.AUDIO_CODEC,
+                // The one track this sidecar is for — the whole point of routing through /Videos.
+                audioStreamIndex = streamIndex,
+                audioBitRate = DownloadQuality.AUDIO_BITRATE,
+                maxAudioChannels = DownloadQuality.AUDIO_CHANNELS,
+                // Junk video, as cheap as the server will make it — stripped locally once fetched.
+                videoCodec = DownloadQuality.VIDEO_CODEC,
+                videoBitRate = DownloadQuality.AUDIO_FETCH_VIDEO_BITRATE,
+                maxFramerate = DownloadQuality.AUDIO_FETCH_MAX_FRAMERATE,
+                maxHeight = DownloadQuality.AUDIO_FETCH_MAX_HEIGHT,
+                maxWidth = DownloadQuality.AUDIO_FETCH_MAX_WIDTH,
+                // Neither track may be copied: a copy could carry every other audio track along with
+                // it, and the video must actually shrink to the junk shape above rather than pass the
+                // source through.
+                allowVideoStreamCopy = false,
+                allowAudioStreamCopy = false,
+                context = EncodingContext.STATIC,
             )
     }

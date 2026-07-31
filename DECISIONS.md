@@ -2761,3 +2761,20 @@ Seeded from the approved plan; listed for traceability, no divergence:
   dub/VO offline. The user asked for all tracks; the amended fetch is the only track-accurate
   route the server offers, and the local strip keeps the on-disk and playback shape identical
   to the originally designed audio-only sidecar.
+
+## 2026-07-31 — Audio sidecars fetch concurrently with the media file
+
+- **Scope:** `data/downloads/.../engine/DownloadQueue.kt` transfer loop (+ tests).
+- **Plan said:** the queue transfers one file at a time, in plan order — the property the
+  drain loop was built around (and the multi-track Phase 2 entry above inherited it: sidecars
+  landed after the media file, sequentially).
+- **Done instead:** the AUDIO rows of an item are drained by a second, concurrent lane —
+  sequential among themselves — while the ordinary lane handles everything else, so an item's
+  wall time is max(media, sidecars) instead of their sum. A media (essential) failure cancels
+  the audio lane; an audio failure still costs only its row. At most two live server
+  transcodes per item, by construction.
+- **Reason:** user request, from the first device walk (2026-07-31): a sidecar fetch is a
+  live transcode whose wire rate is its tiny stream bitrate times encode speed (~500 KB/s
+  observed), so two of them added ~11 minutes after the film itself had finished. Overlapping
+  them with the much longer media transcode hides that time; capping the lane at one audio
+  job keeps the server's CPU for the media encode.

@@ -20,11 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.selectableCardClick
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinTheme
 
 /**
  * One episode in a season's list: the 16:9 [ThumbCard] artwork (with its played tick, progress bar
@@ -43,6 +46,10 @@ import dev.jellyboost.core.ui.theme.Dimens
  * @param selected `null` outside selection mode. Selected rows get a `secondaryContainer` wash
  *   rather than the artwork scrim a poster gets — a list row's identity is its text, and dimming
  *   the thumbnail alone would not read at a glance down a column of forty.
+ * @param compact narrows the thumbnail to [EPISODE_THUMB_WIDTH_COMPACT] on a phone-width viewport
+ *   (`ItemDetailScreen`'s `COMPACT_MAX_WIDTH`) — at 360dp the full-width thumb otherwise leaves the
+ *   text column under ~130dp, truncating a title after two words. Defaults to `false` so existing
+ *   call sites and previews keep the wider, tablet-friendly thumb.
  */
 @Composable
 internal fun EpisodeRow(
@@ -52,6 +59,7 @@ internal fun EpisodeRow(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     selected: Boolean? = null,
+    compact: Boolean = false,
 ) {
     Row(
         modifier =
@@ -75,7 +83,7 @@ internal fun EpisodeRow(
         ThumbCard(
             item = episode,
             onClick = onClick,
-            modifier = Modifier.width(EPISODE_THUMB_WIDTH),
+            modifier = Modifier.width(if (compact) EPISODE_THUMB_WIDTH_COMPACT else EPISODE_THUMB_WIDTH),
             showTitle = false,
             onLongClick = onLongClick,
             selected = selected,
@@ -135,4 +143,40 @@ internal fun EpisodeRow(
 /** Slightly narrower than a home row's card — the synopsis needs the width more than the art does. */
 private val EPISODE_THUMB_WIDTH = 160.dp
 
+/**
+ * The [compact] thumb width — narrow enough that at a 360dp viewport (16dp screen padding either
+ * side, [Dimens.SpaceMedium] between thumb and text) the text column still keeps a usable ~130dp+.
+ * `ThumbCard`'s `aspectRatio` modifier derives the 16:9 height from this width automatically.
+ */
+private val EPISODE_THUMB_WIDTH_COMPACT = 128.dp
+
 private const val OVERVIEW_LINES = 3
+
+@Preview(name = "EpisodeRow", showBackground = true, widthDp = 420)
+@Composable
+private fun EpisodeRowPreview() {
+    JellyfinTheme {
+        EpisodeRow(episode = previewEpisode, onClick = {}, onPlay = {})
+    }
+}
+
+@Preview(name = "EpisodeRow — compact", showBackground = true, widthDp = 360)
+@Composable
+private fun EpisodeRowCompactPreview() {
+    JellyfinTheme {
+        EpisodeRow(episode = previewEpisode, onClick = {}, onPlay = {}, compact = true)
+    }
+}
+
+private val previewEpisode =
+    JellyfinItem(
+        id = "2",
+        name = "The Bicameral Mind",
+        type = ItemType.EPISODE,
+        overview =
+            "Dolores and Maeve approach full consciousness as the board moves against Ford, and the " +
+                "season's threads converge on the maze.",
+        indexNumber = 10,
+        parentIndexNumber = 1,
+        runTimeTicks = 54_000_000_000L,
+    )

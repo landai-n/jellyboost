@@ -64,6 +64,7 @@ internal fun DetailHeader(
     downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
+    downloadedBytes: Long? = null,
 ) {
     if (isWide) {
         Row(
@@ -75,6 +76,7 @@ internal fun DetailHeader(
                 item = item,
                 downloadState = downloadState,
                 actions = actions,
+                downloadedBytes = downloadedBytes,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -83,6 +85,7 @@ internal fun DetailHeader(
             item = item,
             downloadState = downloadState,
             actions = actions,
+            downloadedBytes = downloadedBytes,
             modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
         )
     }
@@ -140,6 +143,7 @@ private fun DetailFacts(
     downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
+    downloadedBytes: Long? = null,
 ) {
     Column(
         modifier = modifier,
@@ -159,7 +163,7 @@ private fun DetailFacts(
             )
         }
 
-        MetadataLine(item = item)
+        MetadataLine(item = item, downloadState = downloadState, downloadedBytes = downloadedBytes)
 
         item.playbackProgress?.let { progress ->
             LinearProgressIndicator(
@@ -210,17 +214,31 @@ private fun DetailFacts(
     }
 }
 
-/** `2016 · 116 min · PG-13 · 8.4 · 4 seasons`, skipping whatever the server does not know. */
+/**
+ * `2016 · 116 min · PG-13 · 8.4 · 4 seasons`, skipping whatever the server does not know.
+ *
+ * The size entry reads from the device rather than the server once a local copy is what the user
+ * actually has: [downloadedBytes] is only trusted while [downloadState] itself is
+ * [DownloadState.Downloaded], so a season mid-download (whose aggregate state is not yet
+ * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
+ * container — which has no download row, and so no bytes, of its own — falls back to it too.
+ */
 @Composable
 private fun MetadataLine(
     item: JellyfinItem,
+    downloadState: DownloadState,
     modifier: Modifier = Modifier,
+    downloadedBytes: Long? = null,
 ) {
     val parts =
         buildList {
             item.productionYear?.let { add(it.toString()) }
             item.runtimeMinutes?.let { add(stringResource(R.string.detail_runtime_minutes, it)) }
-            item.sizeBytes?.let { add(formatBytes(it)) }
+            if (downloadState is DownloadState.Downloaded && downloadedBytes != null && downloadedBytes > 0) {
+                add(stringResource(R.string.detail_size_on_device, formatBytes(downloadedBytes)))
+            } else {
+                item.sizeBytes?.let { add(formatBytes(it)) }
+            }
             item.officialRating?.let(::add)
             item.communityRating?.let { add(String.format(Locale.US, "%.1f", it)) }
             item.childCountLabel()?.let(::add)

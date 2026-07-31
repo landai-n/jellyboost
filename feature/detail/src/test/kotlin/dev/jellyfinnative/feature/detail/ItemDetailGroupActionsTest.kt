@@ -60,6 +60,7 @@ class ItemDetailGroupActionsTest {
     private val downloads =
         mockk<DownloadRepository> {
             every { observeStates() } returns MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+            every { observeBytesOnDisk(any()) } returns MutableStateFlow<Long?>(null)
         }
     private val connectivityRefresher =
         mockk<ConnectivityRefresher> {

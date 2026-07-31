@@ -119,6 +119,26 @@ class ItemDetailViewModel
             observeUserDataChanges()
             observeDownloadState()
             observeConnectivityChanges()
+
+            // Keeps the metadata line's *N on device* figure in step with the download files
+            // actually written, so a finished transfer's real footprint replaces the server's
+            // reported size (`ItemDetailHeader.MetadataLine`). A separate Room projection from
+            // `observeDownloadState` on purpose: this is a byte count, not a status, and the
+            // container case (`DownloadState.Downloaded` aggregated from episodes) has no row of
+            // its own to sum — that is what makes its bytes come back `null` and the header fall
+            // back to the server size for a fully-downloaded series. Inlined here rather than
+            // given its own function — this class already sits on detekt's function-count ceiling
+            // (`TooManyFunctions`, threshold 20).
+            viewModelScope.launch {
+                downloads
+                    .observeBytesOnDisk(itemId)
+                    .catch { error ->
+                        Timber.w(error, "The bytes-on-disk flow failed; falling back to the server size")
+                        emit(null)
+                    }.collect { bytes ->
+                        _uiState.update { it.copy(downloadedBytes = bytes) }
+                    }
+            }
         }
 
         /**

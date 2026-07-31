@@ -39,7 +39,12 @@ row draws a synopsis.
   season), metadata line (`2016 · 116 min · 552.4 MB · PG-13 · 8.4 · 4 seasons · 32 min left`),
   resume progress bar, action buttons, tagline, overview, credit line, genre chips. The size fact
   only appears for items with a media source of their own (movies, episodes) — series and seasons
-  omit it.
+  omit it. Once a local copy is what the user actually has (`downloadState is Downloaded`), the
+  size fact switches to the on-device footprint — `"620 MB on device"`, from
+  `DownloadRepository.observeBytesOnDisk` (a `SUM(bytesDownloaded)` projection over the item's
+  `download_files` rows, the same figure the Downloads tab shows) — since a transcoded download
+  can weigh half the server file. A fully-downloaded container aggregates to `Downloaded` but has
+  no download row of its own, so its SUM is `null` and the server figure stays.
 - **Rows**: *Next up* → *Seasons* → *Episodes* → *More like this*.
 
 On a viewport wider than 720.dp the poster moves beside the text instead of above it — the same

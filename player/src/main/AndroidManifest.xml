@@ -9,6 +9,13 @@
     -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!--
+      Group membership survives the app being backgrounded *without* playback, which needs the
+      process's network to stay up — see SyncPlayPresenceService and DECISIONS.md 2026-07-31.
+      `specialUse` rather than `mediaPlayback` (nothing is playing), `connectedDevice` (no device)
+      or the deprecated, time-capped `dataSync`.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -21,5 +28,20 @@
                 <action android:name="androidx.media3.session.MediaSessionService" />
             </intent-filter>
         </service>
+
+        <service
+            android:name=".syncplay.presence.SyncPlayPresenceService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <!-- Required of API 34+ for `specialUse`: what the special use actually is. -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps a real-time SyncPlay watch-together group session alive while the app is in the background and nothing is playing. Leaving the group, or playback starting, releases it." />
+        </service>
+
+        <!-- Backs the Leave action on the SyncPlay group notification. -->
+        <receiver
+            android:name=".syncplay.presence.SyncPlayPresenceReceiver"
+            android:exported="false" />
     </application>
 </manifest>

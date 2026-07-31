@@ -2,9 +2,10 @@ package dev.jellyfinnative.player.syncplay.time
 
 import dev.jellyfinnative.player.syncplay.api.SyncPlayApi
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,26 @@ class SyncPlayPinger
         private val api: SyncPlayApi,
         private val timeSync: SyncPlayTimeSync,
     ) {
+        /** Wakes the cadence delay early; conflated because two pokes are worth one sample. */
+        private val wake = Channel<Unit>(Channel.CONFLATED)
+
+        /**
+         * Asks the loop to take its next sample now instead of at the end of the current wait.
+         *
+         * What it is for: the app coming back to the foreground after the platform quietly cut its
+         * network (DECISIONS.md 2026-07-31). The connection may have been dead for minutes and
+         * nothing here knows it, so the useful thing is to find out at once rather than up to
+         * [STEADY_INTERVAL_MS] later — the three-failure streak that confirms a loss then starts
+         * immediately.
+         *
+         * Conflated and safe to call at any time: a poke with no loop running is kept for the next
+         * one, and [run] drops whatever it finds so a stale poke from a previous group cannot make
+         * the new one's first cadence wrong.
+         */
+        fun sampleNow() {
+            wake.trySend(Unit)
+        }
+
         /**
          * Samples the server clock until cancelled.
          *
@@ -41,11 +62,13 @@ class SyncPlayPinger
          *   is online (STATUS.md, DoD session #1, B8).
          */
         suspend fun run(onOutcome: (Boolean) -> Unit = {}) {
+            while (wake.tryReceive().isSuccess) Unit
             var taken = 0
             while (currentCoroutineContext().isActive) {
                 onOutcome(sampleOnce())
                 taken++
-                delay(if (taken < FAST_SAMPLES) FAST_INTERVAL_MS else STEADY_INTERVAL_MS)
+                val wait = if (taken < FAST_SAMPLES) FAST_INTERVAL_MS else STEADY_INTERVAL_MS
+                withTimeoutOrNull(wait) { wake.receive() }
             }
         }
 

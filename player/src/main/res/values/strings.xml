@@ -103,6 +103,13 @@
     <string name="player_syncplay_groups_disabled">SyncPlay is disabled for your account.</string>
     <string name="player_syncplay_groups_error">Couldn\'t load SyncPlay groups.</string>
 
+    <!-- The ongoing notification a group without playback runs behind (SyncPlayPresenceService). -->
+    <string name="player_syncplay_presence_channel_name">SyncPlay group</string>
+    <string name="player_syncplay_presence_channel_description">Keeps your place in a watch-together group while the app is in the background.</string>
+    <string name="player_syncplay_presence_title">In a SyncPlay group</string>
+    <string name="player_syncplay_presence_text">Waiting for the group</string>
+    <string name="player_syncplay_presence_leave">Leave</string>
+
     <string name="player_syncplay_state_idle">Idle</string>
     <string name="player_syncplay_state_waiting">Waiting</string>
     <string name="player_syncplay_state_paused">Paused</string>

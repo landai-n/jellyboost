@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jellyfinnative.core.common.formatBytes
+import dev.jellyfinnative.core.common.formatDurationSeconds
 import dev.jellyfinnative.core.common.model.DownloadStatus
 import dev.jellyfinnative.core.ui.component.JellyfinAsyncImage
 import dev.jellyfinnative.core.ui.theme.Dimens
@@ -77,7 +78,7 @@ internal fun DownloadedRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = formatBytes(item.bytesOnDisk),
+                text = listOfNotNull(formatBytes(item.bytesOnDisk), item.transcodedMarker()).joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -253,6 +254,8 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                 speedBytesPerSecond
                     ?.takeIf { it > 0L }
                     ?.let { stringResource(R.string.downloads_speed, formatBytes(it)) },
+                etaSeconds(speedBytesPerSecond)?.let { etaText(it) },
+                transcodedMarker(),
             ).joinToString(" · ")
 
         DownloadStatus.QUEUED ->
@@ -263,6 +266,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                 // projection, so a row waiting its turn can show whichever of the two it has —
                 // same rule the in-progress line above follows.
                 displayTotalBytes.takeIf { it > 0L }?.let { expectedSizeText(it) },
+                transcodedMarker(),
             ).joinToString(" · ")
 
         DownloadStatus.PAUSED -> stringResource(R.string.downloads_status_paused)
@@ -270,8 +274,53 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
             errorMessage?.let { stringResource(R.string.downloads_status_failed_reason, it) }
                 ?: stringResource(R.string.downloads_status_failed)
 
-        DownloadStatus.DOWNLOADED, DownloadStatus.CANCELLED -> formatBytes(bytesOnDisk)
+        DownloadStatus.DOWNLOADED, DownloadStatus.CANCELLED ->
+            listOfNotNull(formatBytes(bytesOnDisk), transcodedMarker()).joinToString(" · ")
     }
+
+/**
+ * Whole seconds left at [speedBytesPerSecond], or `null` when there is nothing trustworthy to show.
+ *
+ * `null` covers: no speed yet (the tracker has not seen enough samples), a stalled transfer (speed
+ * `<= 0`), a row already at or past its own total (`remaining <= 0` — the progress write and the
+ * projection write can interleave, per [DownloadItem.displayTotalBytes]'s own doc), and an estimate
+ * beyond [ETA_GUARD_SECONDS]: a very low instantaneous speed against a large remainder produces a
+ * number in the days, which reads as broken rather than as an honest estimate and is better left
+ * blank than shown.
+ */
+internal fun DownloadItem.etaSeconds(speedBytesPerSecond: Long?): Long? {
+    val speed = speedBytesPerSecond?.takeIf { it > 0L } ?: return null
+    val total = displayTotalBytes.takeIf { it > 0L } ?: return null
+    val remaining = total - bytesDownloaded
+    if (remaining <= 0L) return null
+
+    val eta = (remaining + speed - 1) / speed
+    return eta.takeIf { it <= ETA_GUARD_SECONDS }
+}
+
+/** Above this, an ETA is guesswork rather than an estimate — see [DownloadItem.etaSeconds]. */
+private const val ETA_GUARD_SECONDS = 86_400L
+
+/**
+ * [etaSecondsValue] worded to match how well the total behind it is known — the same hedge
+ * [expectedSizeText] applies to the size itself, since an ETA derived from a [SizeCertainty.CEILING]
+ * total is exactly as approximate as that total is.
+ */
+@Composable
+private fun DownloadItem.etaText(etaSecondsValue: Long): String =
+    stringResource(
+        if (sizeCertainty == SizeCertainty.CEILING) R.string.downloads_eta_approx else R.string.downloads_eta,
+        formatDurationSeconds(etaSecondsValue),
+    )
+
+/**
+ * `"Transcoded"` for a row that was re-encoded rather than downloaded as the original file, `null`
+ * for one that was not — see `DownloadQuality.isTranscoded`. Appended as the last segment of every
+ * status line that has one, so it never displaces the size, speed or ETA text ahead of it.
+ */
+@Composable
+private fun DownloadItem.transcodedMarker(): String? =
+    if (quality.isTranscoded) stringResource(R.string.downloads_transcoded_marker) else null
 
 /**
  * [bytes] worded to match how well it is actually known — see [DownloadItem.sizeCertainty].

@@ -111,6 +111,77 @@ class DownloadRowsTest {
         item.sizeCertainty shouldBe SizeCertainty.EXACT
     }
 
+    // ---- time remaining (ETA), derived from speed + displayTotalBytes ----------------------------
+
+    @Test
+    fun `no speed sample yet means no ETA`() {
+        val item = film(bytesDownloaded = 100L, bytesTotal = 552L)
+
+        item.etaSeconds(null) shouldBe null
+    }
+
+    @Test
+    fun `a stalled transfer shows no ETA rather than a division by zero`() {
+        val item = film(bytesDownloaded = 100L, bytesTotal = 552L)
+
+        item.etaSeconds(0L) shouldBe null
+    }
+
+    @Test
+    fun `an unknown total means no ETA, since there is nothing to count down to`() {
+        val item = film(bytesDownloaded = 0L, bytesTotal = 0L)
+
+        item.etaSeconds(10L) shouldBe null
+    }
+
+    @Test
+    fun `a row already at its own total shows no ETA`() {
+        val item = film(bytesDownloaded = 552L, bytesTotal = 552L)
+
+        item.etaSeconds(10L) shouldBe null
+    }
+
+    @Test
+    fun `a projection clamped up to bytes already on disk leaves nothing remaining`() {
+        // displayTotalBytes clamps the projection into [bytesDownloaded, ceiling] (see its own doc),
+        // so a row where the projection undershot what has already landed reports zero remaining —
+        // the same clamp that stops the progress bar running past its own end also has to stop the
+        // ETA going negative.
+        val item = film(bytesDownloaded = 400L, bytesTotal = 552L, projected = 301L, quality = DownloadQuality.LOW)
+
+        item.etaSeconds(10L) shouldBe null
+    }
+
+    @Test
+    fun `an exact division gives a whole number of seconds`() {
+        val item = film(bytesDownloaded = 452L, bytesTotal = 552L) // 100 remaining
+
+        item.etaSeconds(10L) shouldBe 10L
+    }
+
+    @Test
+    fun `a division with a remainder rounds up, never short`() {
+        val item = film(bytesDownloaded = 451L, bytesTotal = 552L) // 101 remaining
+
+        // 101 / 10 = 10.1 s, which must read as 11 s, not 10 s: an ETA that undershoots is the one
+        // shape of wrong a "time remaining" figure cannot afford.
+        item.etaSeconds(10L) shouldBe 11L
+    }
+
+    @Test
+    fun `an estimate exactly at the 24-hour guard is still shown`() {
+        val item = film(bytesDownloaded = 0L, bytesTotal = 86_400L)
+
+        item.etaSeconds(1L) shouldBe 86_400L
+    }
+
+    @Test
+    fun `an estimate beyond 24 hours is guarded out as guesswork, not shown`() {
+        val item = film(bytesDownloaded = 0L, bytesTotal = 86_401L)
+
+        item.etaSeconds(1L) shouldBe null
+    }
+
     // ---- whether the row offers Pause -------------------------------------------------------------
 
     @Test

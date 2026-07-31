@@ -148,6 +148,9 @@ class FakeSyncPlayApi(
     /** Thrown by the next [sampleServerTime] and then cleared — one failed exchange. */
     var failNextSample: Throwable? = null
 
+    /** Thrown by every [sampleServerTime] while set — the REST API having stopped answering. */
+    var failEverySample: Throwable? = null
+
     fun clearCalls() = calls.clear()
 
     /** Every call of type [T], oldest first. */
@@ -267,6 +270,7 @@ class FakeSyncPlayApi(
 
     override suspend fun sampleServerTime(): TimeSyncSample {
         calls += SyncPlayCall.SampleServerTime
+        failEverySample?.let { throw it }
         failNextSample?.let {
             failNextSample = null
             throw it

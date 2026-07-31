@@ -12,6 +12,7 @@ import org.jellyfin.sdk.api.sockets.SocketApiState
 import org.jellyfin.sdk.api.sockets.subscribe
 import org.jellyfin.sdk.model.api.SyncPlayCommandMessage
 import org.jellyfin.sdk.model.api.SyncPlayGroupUpdateMessage
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,8 +44,14 @@ internal class SdkSyncPlaySocket
                 apiClient.webSocket
                     .subscribe<SyncPlayCommandMessage>()
                     // `SyncPlayCommandMessage.data` is nullable in the SDK's schema; a command with
-                    // no payload carries nothing to schedule, so it is dropped rather than guessed at.
-                    .mapNotNull { it.data?.toDomain() }
+                    // no payload carries nothing to schedule, so it is dropped rather than guessed
+                    // at — but loudly. A command that arrives and vanishes here is indistinguishable
+                    // from one the server never sent, and that difference is the whole of a member
+                    // silently failing to start (STATUS.md, DoD session #1, B3).
+                    .mapNotNull { message ->
+                        message.data?.toDomain()
+                            ?: null.also { Timber.w("A SyncPlay command message arrived with no payload") }
+                    }
 
         override val connectionState: Flow<SyncPlaySocketState>
             get() = apiClient.webSocket.state.map { it.toDomain() }

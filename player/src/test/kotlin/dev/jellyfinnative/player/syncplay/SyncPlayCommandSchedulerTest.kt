@@ -193,16 +193,107 @@ class SyncPlayCommandSchedulerTest {
             applied.single().anchor shouldBe null
         }
 
+    // Applied exactly once (M11 fix batch, B1/B2) ---------------------------------------------------
+
+    @Test
+    fun `the same command sent again is applied once`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Pause, atMillis = 500, positionMs = 60_000))
+            advanceTimeBy(500)
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+
+            // The server's own "client got lost, sending current state" re-send: same instant, same
+            // position, same slot, only a fresh emission stamp.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 500, positionMs = 60_000, emittedAtMillis = 1_000),
+            )
+            advanceTimeBy(1_000)
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+            fixture.player.seekedToMs shouldBe listOf(60_000L)
+        }
+
+    @Test
+    fun `a past-due unpause is applied once however often it is re-sent`() =
+        runTest {
+            val fixture = fixture()
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000)
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = -4_000, positionMs = 60_000))
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+
+            // What the device saw: the same past-due instant coming back about once a second, each
+            // arrival seeking further forward than the last.
+            repeat(REPEATS) { index ->
+                fixture.scheduler.schedule(
+                    command(
+                        SyncPlayCommandType.Unpause,
+                        atMillis = -4_000,
+                        positionMs = 60_000,
+                        emittedAtMillis = (index + 1) * 1_000L,
+                    ),
+                )
+                advanceTimeBy(1_000)
+                runCurrent()
+            }
+
+            fixture.player.playCount shouldBe 1
+            fixture.player.seekedToMs shouldBe listOf(64_000L)
+        }
+
+    @Test
+    fun `a command emitted before the one already applied is ignored`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 0, positionMs = 30_000, emittedAtMillis = 2_000),
+            )
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+
+            // A straggler from before it — a socket reconnect replaying what it had queued. The
+            // group's timeline only ever moves forwards.
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Unpause, atMillis = 0, positionMs = 10_000, emittedAtMillis = 1_000),
+            )
+            advanceTimeBy(1_000)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 0
+            fixture.player.seekedToMs shouldBe listOf(30_000L)
+        }
+
+    @Test
+    fun `cancelling forgets what was applied, so a re-attached player can be told again`() =
+        runTest {
+            val fixture = fixture()
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Pause, atMillis = 0, positionMs = 60_000))
+            runCurrent()
+            fixture.scheduler.cancel()
+
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Pause, atMillis = 0, positionMs = 60_000))
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 2
+        }
+
     private fun command(
         type: SyncPlayCommandType,
         atMillis: Long,
         positionMs: Long?,
+        emittedAtMillis: Long = 0L,
     ) = SyncPlayCommand(
         type = type,
         whenInstant = origin.plusMillis(atMillis),
         positionTicks = positionMs?.millisToTicks(),
         playlistItemId = playlistItemId,
-        emittedAt = origin,
+        emittedAt = origin.plusMillis(emittedAtMillis),
     )
 
     private class Fixture(
@@ -229,5 +320,10 @@ class SyncPlayCommandSchedulerTest {
             ),
             player,
         )
+    }
+
+    private companion object {
+        /** Re-sends of one past-due command; enough to show the count does not move with them. */
+        const val REPEATS = 5
     }
 }

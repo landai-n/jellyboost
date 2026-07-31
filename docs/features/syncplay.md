@@ -47,7 +47,7 @@ All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless state
 | `SyncPlayDtoMapping.kt`, `SyncPlayEnumMapping.kt` | SDK DTO → `SyncPlayGroupEvent` / `SyncPlayCommand`, and the enum round-trips. Pure functions, densely tested. |
 | `time/SyncPlayTimeSync` | NTP-style rolling estimator: a window of 8 samples, RTT outliers (> max(1 s, 3 × median)) dropped, `offset = avg((t1−t0) + (t2−t3)) / 2`. Injects the app's `java.time.Clock`. |
 | `time/SyncPlayPinger` | While in a group: 3 fast samples 1 s apart, then one every 5 s → estimator → `syncPlayPing(rtt/2)`. |
-| `SyncPlayCommandScheduler` | One pending-command slot; delays until the command's instant *in local time* and applies it on Main against `PlayerHandle`. Past-due unpause seeks to `position + (now − when)` first. A new command replaces the pending one. |
+| `SyncPlayCommandScheduler` | One pending-command slot; delays until the command's instant *in local time* and applies it on Main against `PlayerHandle`. Past-due unpause seeks to `position + (now − when)` first. A new command replaces the pending one; an **identical** one (same type, instant, position, slot) and one emitted **before** the last taken on are both dropped. |
 | `SyncPlayDriftMonitor` | 1 s tick while playing; a gap of more than 2 s between where the group's anchor says this player should be and where it is ⇒ corrective seek. The safety net under the scheduler. |
 | `SyncPlayStatusHolder` | Two facts anyone may read — `inGroup` and the minted play session id — so `PlaybackReporter` can consult SyncPlay without a DI cycle. |
 | `SyncPlayLocalSession` | The server-visible session of a **downloaded** item watched with a group: mints its play session id, and closes it when the group ends. See "Local files in a group". |
@@ -73,19 +73,64 @@ Re-negotiations (track change, quality change, decoder fallback) re-enter the sa
 automatically, because the bridge reports buffering on every reopen and the controller watches
 `PlayerHandle.events`.
 
+### `ready` is reported only when one is owed
+
+Readiness is not news on its own. The server answers a `ready` from a group that is *not* waiting by
+re-sending that group's current state command to the reporting session alone — "Client got lost,
+sending current state", in `PausedGroupState` and `PlayingGroupState`. Applying that command seeks
+the player, ExoPlayer emits another `STATE_READY`, and a client that reported every readiness would
+report again: a closed loop, measured on device at ~13 requests a second until the group unpaused
+(DECISIONS.md 2026-07-31).
+
+So the controller keeps `readyOwedFor` — the slot the group is actually waiting on. It is set at
+exactly the moments the server calls `SetAllBuffering`/`SetBuffering(session, true)`:
+
+| moment | fallback if the player never re-buffers |
+|---|---|
+| an item is loaded or adopted for a queue slot | none — the player's own readiness is the answer |
+| the host reports a re-negotiation (`onHostBuffering`) | none |
+| a group `Seek` is applied | 1.5 s |
+| a queue update whose reason is `NewPlaylist` / `SetCurrentItem` / `NextItem` / `PreviousItem` | reported immediately; the player is already prepared |
+| connectivity returned inside the grace window | 1.5 s |
+
+A `PlayerEvent.Ready` with nothing owed is silence.
+
+### When the group says go and nothing comes
+
+After every `ready`, and whenever the group reports itself `Playing`, a 3 s timer is armed
+(`SELF_SYNC_TIMEOUT_MS`). If it fires while the group is playing, this member is not, and a player is
+attached, the controller seeks to the group's inferred position and starts playback itself, then
+hands over to the drift monitor. Any applied command disarms it, and the path reports nothing.
+
+It exists for one observed failure: after an automatic queue advance the handshake completed, the
+group's state update said `Playing`, and no unpause ever arrived — leaving the member at 0:00 under
+the WAITING overlay, unrecoverable by a group `Unpause` because the group already *was* playing. It
+is a deliberate, bounded exception to key decision 11.
+
 Leaving the player screen does **not** leave the group: the controller sends
 `syncPlaySetIgnoreWait(true)` on host detach (jellyfin-web's own mechanism) so a member without a
 player never gates everyone else, and a later `PlayQueueUpdate` re-launches the player.
 
 ## Losing the connection
 
-A confirmed loss — the socket collection ending, or `ConnectionStateProvider` going offline —
-**pauses the player, leaves the group, and says so** ("Left SyncPlay — connection lost"). Nothing
-resumes automatically: playing on would mean drifting from the group invisibly, so the state change
-is made honest and the user resumes with one tap, solo (from disk if the item is downloaded).
-Rejoining is manual, through the Groups screen. A momentary socket flap the SDK reconnects through
-is not a loss and does nothing. (Key decision 10, as amended on 2026-07-30 from the original "keep
-playing solo".)
+A confirmed loss **pauses the player, leaves the group, and says so** ("Left SyncPlay — connection
+lost"). Nothing resumes automatically: playing on would mean drifting from the group invisibly, so
+the state change is made honest and the user resumes with one tap, solo (from disk if the item is
+downloaded). Rejoining is manual, through the Groups screen. (Key decision 10, as amended on
+2026-07-30 from the original "keep playing solo".)
+
+Three signals confirm one, through a single `confirmLoss()`:
+
+| signal | why it is confirmation | when |
+|---|---|---|
+| the socket collection ending | the SDK reconnects on its own, so a stream that *finishes* is it giving up | immediately |
+| `PING_FAILURE_STREAK` (3) failed ping cycles | the REST API has stopped answering whatever the OS believes — the case where the platform cuts a backgrounded app's network and the server disposes the group | ≈ 15 s |
+| connectivity offline for `CONNECTIVITY_GRACE_MS` (5 s) | the radio is genuinely gone rather than switching | 5 s |
+
+A momentary socket flap the SDK reconnects through is not a loss and does nothing. Neither is a
+short connectivity blip: going offline **freezes** playback (paused, group kept) and opens the grace
+window, and connectivity returning inside it re-enters the buffering/ready handshake so the server
+re-syncs this member. Freezing rather than playing on is deliberate — see DECISIONS.md 2026-07-31.
 
 Signing out tears the membership down the same way.
 
@@ -129,7 +174,9 @@ Resolution itself needs nothing new: the controller issues an ordinary `Playback
 - Play / pause / seek / skip / skip-intro become group requests (`PlayerSyncPlayBridge`).
 - The **speed picker is disabled** and **segment auto-skip is suppressed** — both would silently
   desynchronise this member.
-- A WAITING overlay is shown while the group waits on someone (including this device buffering).
+- A WAITING overlay is shown while the group waits on someone (including this device buffering), and
+  the group entering WAITING from playing **pauses** this player — an overlay over playback that
+  carries on is a member drifting ahead of a stalled group, which is what it looked like on device.
 - The group icon in the controls opens `SyncPlayGroupSheet`; the queue sheet is reachable from it.
 - An item ending asks the server for the next entry rather than popping the screen, so the player
   the group is about to fill is not closed a second before it is needed.
@@ -169,8 +216,8 @@ offline sessions do.
 
 | File | What it pins |
 |---|---|
-| `SyncPlayControllerTest` | Join handshake, WAITING, intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. |
-| `SyncPlayCommandSchedulerTest` | Future / past-due / replacement commands, seek epsilon. |
+| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net, sign-out teardown, ignoreWait on detach, queue reconciliation, unopenable slots skipped once. |
+| `SyncPlayCommandSchedulerTest` | Future / past-due / replacement commands, seek epsilon, applied-once (identical re-send, repeated past-due, stale `emittedAt`). |
 | `SyncPlayDriftMonitorTest` | Threshold either side of 2 s, no correction while paused. |
 | `time/SyncPlayTimeSyncTest` | Server ahead/behind, asymmetric RTT, outlier rejection, rolling window. |
 | `time/SyncPlayPingerTest` | Fast-then-steady cadence. |

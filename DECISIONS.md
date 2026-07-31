@@ -2808,3 +2808,71 @@ Seeded from the approved plan; listed for traceability, no divergence:
   baseline profile was rewritten mechanically (class descriptors only), so it stays
   valid without a re-capture.
 - **Reason:** user request — the product is being named Jellyboost.
+
+## 2026-07-31 — Phone-size verification and polish pass (outside M9's tablet-only scope)
+- **Scope:** UI polish across `:app` (AppTopBar), `feature/library` (LibrariesScreen),
+  `feature/detail` (ItemDetailScreen/EpisodeRow), `:player` (PlayerControls, PlayerScreen,
+  SyncPlay sheets) + phone-width `@Preview` variants, sizing unit tests, docs.
+- **Plan said:** "**M9 Polish:** trickplay scrubber, segment skip, PiP, gestures,
+  speed/quality, full settings, tablet/landscape." (docs/PLAN.md:108) — no phone/compact
+  form factor appears anywhere in the plan; all verification history is test tablet only.
+- **Done instead:** a standalone phone-size (compact-width/compact-height) sweep and
+  polish pass during M11, user-requested: simulate a 360×800dp / 800×360dp phone viewport
+  on the test tablet via `adb shell wm size`/`wm density`, screenshot-audit every screen,
+  fix compact-viewport layout defects in the existing hand-rolled `BoxWithConstraints`
+  idiom (no WindowSizeClass/material3-adaptive migration), and leave 360dp previews +
+  JVM sizing tests as regression guardrails. Individual fixes that amend prior
+  DECISIONS entries get their own entries below.
+- **Reason:** user request ("test the app on smaller screen (smartphone size) and ensure
+  it always looks good"); the app was only ever verified on one tablet, and several
+  tablet-calibrated constants provably misbehave at phone sizes.
+- **Note (screenshot frameworks rejected):** Roborazzi/Paparazzi sit on
+  layoutlib/Robolectric builds pinned to stable SDKs — compileSdk 37.1 is a preview, so
+  neither can be adopted now; an emulator for connected screenshot tests is ruled out by
+  disk (~12 GiB free). Guardrails are previews + Dp-math unit tests instead.
+
+## 2026-07-31 — M12 Chromecast milestone approved (beyond plan v1 scope)
+- **Scope:** new milestone M12 in `docs/PLAN.md`; future package
+  `player/src/main/kotlin/dev/jellyboost/player/cast/`, a `RoutingPlayerHandle` in
+  `player/.../session/`, a `CastDeviceProfile` in `player/.../deviceprofile/`, and the
+  project's first Google Play Services dependency. Detailed phase plan:
+  `docs/notes/chromecast-m12-plan.md` (M12 summary appended to `docs/PLAN.md`).
+- **Plan said:** "**v1 scope:** Movies & TV shows only. Extras: Quick Connect login.
+  NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI, transcoded
+  downloads, Android TV." Chromecast was explicitly deferred with a don't-preclude note;
+  no milestone owned it.
+- **Done instead:** user-approved (AskUserQuestion, 2026-07-31) addition of
+  **M12 — Chromecast (Google Cast)** as a post-M11 milestone: cast button (home top bar +
+  player), direct-play/transcode casting, full control parity where feasible
+  (play/pause/seek, audio/subtitle selection, quality, resume, progress reporting),
+  local↔cast transfer. Only this governance entry + PLAN/STATUS/plan-note docs land now.
+- **Reason:** user request. The official jellyfin-android app offers no native reference
+  (its cast support is a Cordova-plugin JS bridge driven entirely by jellyfin-web), so
+  Jellyboost builds casting natively on `media3-cast`.
+- **Key pre-logged design decisions** (recorded now so implementation divergences are
+  measurable against them):
+  1. *Phone-orchestrated architecture, NOT the Jellyfin web receiver* — media3-cast
+     `CastPlayer` + Google's default media receiver. The phone negotiates PlaybackInfo
+     with a Cast-specific device profile, hands stream URLs to the receiver, and reports
+     progress itself. The Jellyfin Cast receiver's custom-namespace JSON protocol is
+     undocumented, version-coupled to the server, and lives only in jellyfin-web —
+     rejected. Styled-receiver branding deferred (one-line app-id swap later).
+  2. *First GMS dependency, taken directly — no product flavors* (user decision). The
+     reference app's libre/proprietary split doubles build variants forever; Jellyboost
+     is not distributed via F-Droid. All GMS types are confined to the `cast/` package
+     behind a `GoogleApiAvailability` guard so GMS-less devices never class-load them.
+  3. *Conservative static cast profile, 4K/HEVC detection deferred* — H.264 High L4.2
+     ≤1080p + AAC/MP3 direct, HLS-ts transcode otherwise, VTT external subs, image subs
+     burn in. `CastDevice` capability APIs don't reliably expose 4K/HEVC support and a
+     wrong guess is a black TV screen; the quality picker already gives user control.
+  4. *Cast and SyncPlay are mutually exclusive* — the cast button hides while in a
+     group; a session connected via system UI leaves the group with a message.
+  5. *Decoder fallback ladder bypassed while casting* — `DecoderFallbackHandler`'s
+     errorCode ladder diagnoses local decoders; a receiver error surfaces as one
+     `CastPlaybackFailed` message and stops.
+  6. *App killed mid-cast: receiver keeps playing, reporting stops* — the server session
+     goes stale until its own timeout. Accepted for v1; reattaching to a live cast
+     session after process death is an explicit M12-phase-2 candidate.
+  7. *Casting always streams from the server* — a downloaded item is re-resolved
+     remotely (`castTarget` joins `forceRemote`); serving the on-disk copy to the
+     receiver via a local HTTP server is explicitly out of scope.

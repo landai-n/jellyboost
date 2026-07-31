@@ -70,6 +70,19 @@ All implementation phases committed same-day, each `/verify`-green
    verified (50 SyncPlay SDK classes + serializers kept, zero new keep
    rules; REST polling exercised on-device minified, clean logcat).
 
+## Planned milestone: M12 — Chromecast (approved 2026-07-31, gated on M11 closing)
+
+User-approved scope extension (DECISIONS 2026-07-31): phone-orchestrated Google
+Cast via media3-cast `CastPlayer` + Google's default receiver (NOT the Jellyfin
+web receiver's undocumented protocol). Full plan: `docs/notes/chromecast-m12-plan.md`;
+M12 summary in `docs/PLAN.md`. Key shape: `CastPlayerHandle` + `RoutingPlayerHandle`
+behind the existing `PlayerHandle` binding, static conservative `CastDeviceProfile`
+(1080p H.264/AAC, HLS-ts), `castTarget` joins `forceRemote`, `api_key` on every
+receiver-fetched URL, `CastSessionCoordinator` keeps reporting alive off-screen.
+First GMS dependency, taken directly (no flavors), confined to `cast/`.
+Phase 0 (governance docs) landed; Phases 1–5 (button → playback → parity →
+remote-control UI → hardening) awaiting implementation.
+
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)
 
 User-reported, reproduced and root-caused on the tablet, fixed and device-re-verified

@@ -2,6 +2,7 @@ package dev.jellyfinnative.player.resolve
 
 import androidx.media3.common.MimeTypes
 import dev.jellyfinnative.core.common.model.DownloadQuality
+import dev.jellyfinnative.data.downloads.offline.DownloadedAudio
 import dev.jellyfinnative.data.downloads.offline.DownloadedMediaProvider
 import dev.jellyfinnative.data.downloads.offline.DownloadedSubtitle
 import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
@@ -248,6 +249,7 @@ class LocalPlaybackResolverTest {
         defaultSubtitleStreamIndex: Int? = null,
         bakedAudioStreamIndex: Int? = null,
         sidecars: List<Int> = listOf(0, 1),
+        audioSidecars: List<Int> = emptyList(),
     ) = downloaded(
         mediaSource =
             PlayerFixtures.mediaSourceInfo(
@@ -258,6 +260,7 @@ class LocalPlaybackResolverTest {
         quality = DownloadQuality.MEDIUM,
         bakedAudioStreamIndex = bakedAudioStreamIndex,
         subtitles = sidecars.map { DownloadedSubtitle(streamIndex = it, uri = "file:///downloads/s.$it.srt") },
+        audio = audioSidecars.map { DownloadedAudio(streamIndex = it, uri = "file:///downloads/audio.$it.m4a") },
     )
 
     @Test
@@ -434,6 +437,117 @@ class LocalPlaybackResolverTest {
             source.subtitleTracks.map { it.index } shouldContainExactly listOf(0, 6, 7)
         }
 
+    // ---- audio tracks that came back as sidecars (phase 2) ---------------------------------------
+
+    @Test
+    fun `a transcoded download offers every audio language its sidecars restored`() =
+        runTest {
+            // Élémentaire again: the encode baked in the French VFF and the download fetched the
+            // other two as their own `.m4a` files.
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // The baked track is first, and stays the default — it is merge child 0.
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
+            source.audioTracks.map { it.label } shouldContainExactly
+                listOf("French VFF", "French VFQ", "English VO")
+            source.audioTracks.single { it.isDefault }.index shouldBe 3
+            source.selectedAudioIndex shouldBe 3
+        }
+
+    @Test
+    fun `a sidecar-backed audio track is marked side-loaded and the baked one is not`() =
+        runTest {
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // What routes selection through the merge-child order rather than a position among the
+            // container's own audio groups, of which a transcode has exactly one.
+            source.audioTracks.single { it.index == 3 }.isExternal shouldBe false
+            source.audioTracks.filter { it.isExternal }.map { it.index } shouldContainExactly listOf(4, 5)
+        }
+
+    @Test
+    fun `carries the audio sidecars in the order they become merge children`() =
+        runTest {
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // Element i is merge child i+1; re-ordering this list plays the wrong language.
+            source.externalAudio.map { it.index } shouldContainExactly listOf(4, 5)
+            source.externalAudio.map { it.uri } shouldContainExactly
+                listOf("file:///downloads/audio.4.m4a", "file:///downloads/audio.5.m4a")
+        }
+
+    @Test
+    fun `skips an audio sidecar that duplicates the baked track`() =
+        runTest {
+            // The pin says 3 and a row claims a sidecar for 3 too. Offering it would list French VFF
+            // twice and push every later child one position out of step with its track.
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(3, 5))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 5)
+            source.externalAudio.map { it.index } shouldContainExactly listOf(5)
+        }
+
+    @Test
+    fun `skips an audio sidecar for a stream the cached blob no longer describes`() =
+        runTest {
+            // The server renumbered its streams; there is nothing to label the picker entry with.
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(5, 99))
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 5)
+            source.externalAudio.map { it.index } shouldContainExactly listOf(5)
+        }
+
+    @Test
+    fun `restores a selection naming a sidecar audio track`() =
+        runTest {
+            transcodedFilm(bakedAudioStreamIndex = 3, audioSidecars = listOf(4, 5))
+
+            // A previous session left the English VO selected; it is now a track this file plays,
+            // so it must survive rather than fall back to the baked default.
+            val source = resolver.resolve(request.copy(audioStreamIndex = 5)).shouldNotBeNull()
+
+            source.selectedAudioIndex shouldBe 5
+        }
+
+    @Test
+    fun `an original download has no audio sidecars, whatever rows it carries`() =
+        runTest {
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(mediaStreams = transcodedFilmStreams(), defaultAudioStreamIndex = 3),
+                quality = DownloadQuality.ORIGINAL,
+                audio = listOf(DownloadedAudio(streamIndex = 5, uri = "file:///downloads/audio.5.m4a")),
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            // Every track is already in the file; merging a sidecar in would offer one of them twice.
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4, 5)
+            source.audioTracks.none { it.isExternal } shouldBe true
+            source.externalAudio.shouldBeEmpty()
+        }
+
+    @Test
+    fun `a transcoded download with no audio sidecars is untouched`() =
+        runTest {
+            transcodedFilm(bakedAudioStreamIndex = 5)
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(5)
+            source.externalAudio.shouldBeEmpty()
+        }
+
     // ---- the source's own lists, for the connectivity-aware picker -------------------------------
 
     @Test
@@ -591,6 +705,7 @@ class LocalPlaybackResolverTest {
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
         bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
+        audio: List<DownloadedAudio> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ) {
         coEvery { downloads.get(PlayerFixtures.ITEM_ID) } returns
@@ -600,6 +715,7 @@ class LocalPlaybackResolverTest {
                 quality = quality,
                 bakedAudioStreamIndex = bakedAudioStreamIndex,
                 subtitles = subtitles,
+                audio = audio,
                 trickplay = trickplay,
             )
     }

@@ -1,9 +1,11 @@
 package dev.jellyfinnative.player
 
 import dev.jellyfinnative.core.common.model.DownloadQuality
+import dev.jellyfinnative.data.downloads.offline.DownloadedAudio
 import dev.jellyfinnative.data.downloads.offline.DownloadedMedia
 import dev.jellyfinnative.data.downloads.offline.DownloadedSubtitle
 import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
+import dev.jellyfinnative.player.model.ExternalAudio
 import dev.jellyfinnative.player.model.ExternalSubtitle
 import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
 import dev.jellyfinnative.player.model.LocalTrickplay
@@ -176,6 +178,7 @@ internal object PlayerFixtures {
         audioTracks: List<PlaybackTrack> = emptyList(),
         subtitleTracks: List<PlaybackTrack> = emptyList(),
         externalSubtitles: List<ExternalSubtitle> = emptyList(),
+        externalAudio: List<ExternalAudio> = emptyList(),
         allAudioTracks: List<PlaybackTrack> = audioTracks,
         allSubtitleTracks: List<PlaybackTrack> = subtitleTracks,
         selectedAudioIndex: Int? = null,
@@ -191,6 +194,7 @@ internal object PlayerFixtures {
             audioTracks = audioTracks,
             subtitleTracks = subtitleTracks,
             externalSubtitles = externalSubtitles,
+            externalAudio = externalAudio,
             allAudioTracks = allAudioTracks,
             allSubtitleTracks = allSubtitleTracks,
             selectedAudioIndex = selectedAudioIndex,
@@ -256,6 +260,7 @@ internal object PlayerFixtures {
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
         bakedAudioStreamIndex: Int? = null,
         subtitles: List<DownloadedSubtitle> = emptyList(),
+        audio: List<DownloadedAudio> = emptyList(),
         trickplay: DownloadedTrickplay? = null,
     ): DownloadedMedia =
         DownloadedMedia(
@@ -267,6 +272,7 @@ internal object PlayerFixtures {
             quality = quality,
             bakedAudioStreamIndex = bakedAudioStreamIndex,
             subtitles = subtitles,
+            audio = audio,
             trickplay = trickplay,
         )
 

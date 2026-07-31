@@ -1,12 +1,15 @@
 package dev.jellyfinnative.player.resolve
 
+import dev.jellyfinnative.data.downloads.offline.DownloadedAudio
 import dev.jellyfinnative.data.downloads.offline.DownloadedMedia
 import dev.jellyfinnative.data.downloads.offline.DownloadedMediaProvider
 import dev.jellyfinnative.data.downloads.offline.DownloadedTrickplay
 import dev.jellyfinnative.player.deviceprofile.CodecHelpers
+import dev.jellyfinnative.player.model.ExternalAudio
 import dev.jellyfinnative.player.model.ExternalSubtitle
 import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
 import dev.jellyfinnative.player.model.LocalTrickplay
+import dev.jellyfinnative.player.model.PlaybackTrack
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
 import timber.log.Timber
@@ -44,7 +47,15 @@ import javax.inject.Singleton
  * *source*, so taking its stream list at face value offers tracks that are not in the file:
  * selecting one cannot be satisfied, and offline there is no server to re-ask.
  * [DownloadedMedia.isTranscoded] is therefore consulted before anything embedded is offered, and
- * [DownloadedMedia.bakedAudioStreamIndex] names the one audio track that did survive.
+ * [DownloadedMedia.bakedAudioStreamIndex] names the one audio track that did survive *in the file*.
+ *
+ * The other languages are back since phase 2: a transcoded download fetches each of them as its own
+ * audio-only `.m4a`, exactly as it does for subtitles, and [DownloadedMedia.audio] lists them. They
+ * become audio tracks here — flagged side-loaded, because that is how they reach ExoPlayer — and
+ * [LocalPlaybackMediaSource.externalAudio] carries the files themselves for
+ * `ExoPlayerHandle.prepare` to merge in. The baked track stays first in both lists; everything after
+ * it is in the pipeline's own ascending-index order, which is the merge-child order the whole
+ * mapping back to Jellyfin stream indices rests on (DECISIONS.md 2026-07-31).
  *
  * ### …and what is offered anyway, when there is a server
  * The withheld tracks are not discarded, they are set aside:
@@ -74,7 +85,10 @@ class LocalPlaybackResolver
             val sidecars = downloaded.subtitles.associateBy { it.streamIndex }
             val transcoded = downloaded.isTranscoded
 
-            val audio = streams.audioTracksInFile(downloaded)
+            val bakedAudio = streams.bakedAudioStream(downloaded)
+            val audioSidecars = downloaded.audioSidecarsOnDisk(streams, bakedAudio)
+            val audioSidecarIndices = audioSidecars.mapTo(mutableSetOf()) { it.streamIndex }
+            val audio = streams.audioTracksInFile(downloaded, bakedAudio, audioSidecarIndices)
             val subtitles =
                 streams.filter { stream ->
                     stream.type == MediaStreamType.SUBTITLE &&
@@ -101,13 +115,17 @@ class LocalPlaybackResolver
                 mediaUri = downloaded.mediaUri,
                 runTimeTicks = downloaded.runTimeTicks,
                 startPositionTicks = request.startPositionTicks,
-                audioTracks = audio.map { it.toTrack(defaultAudioIndex) },
+                audioTracks = audio.toAudioTracks(defaultAudioIndex, audioSidecarIndices),
                 // A track backed by a sidecar is side-loaded whatever the stream said it was, and
                 // that flag is what routes selection through the exact `external:<index>` id
                 // instead of counting positions among container groups a transcode does not have.
                 subtitleTracks =
                     subtitles.map { it.toTrack(defaultSubtitleIndex, sideLoaded = it.index in sidecars) },
                 externalSubtitles = downloaded.toExternalSubtitles(streams),
+                // Order preserved from the provider's ascending-index list: it is the order
+                // `ExoPlayerHandle` builds its merge children in, and the only handle selection has
+                // on which ExoPlayer audio group is which Jellyfin stream.
+                externalAudio = audioSidecars.map { ExternalAudio(index = it.streamIndex, uri = it.uri) },
                 // The source's own lists, for the picker to draw while there is a server to ask.
                 // Labelled off the source's defaults rather than the file's, because that is what
                 // they describe — the item, not the copy of it on this device.
@@ -139,13 +157,49 @@ class LocalPlaybackResolver
         }
 
         /**
-         * The audio streams the file on disk actually contains.
+         * The audio streams this device can play, in the order the player will see them.
          *
-         * For an original download that is every audio stream of the source. For a transcoded one it
-         * is exactly one, because the endpoint takes exactly one `audioStreamIndex`. Which one is
-         * read off the row: [DownloadedMedia.bakedAudioStreamIndex] is what the download *asked
-         * for*, so the picker entry is labelled from the source stream that was actually encoded —
-         * the right language and the right mix, even though the bytes are now stereo AAC.
+         * For an original download that is every audio stream of the source, straight out of the
+         * container. For a transcoded one it is the **baked** track — the one the encode put in the
+         * video file — followed by one track per audio sidecar on disk, each its own `.m4a`
+         * (docs/notes/offline-multitrack-design.md, phase 2).
+         *
+         * The baked track stays first, and that placement is load-bearing twice over: it is what
+         * `defaultAudioIndex` reads, and it is merge child 0, the primary source
+         * `ExoPlayerHandle.prepare` builds everything else around.
+         */
+        private fun List<MediaStream>.audioTracksInFile(
+            downloaded: DownloadedMedia,
+            bakedAudio: MediaStream?,
+            sidecarIndices: Set<Int>,
+        ): List<MediaStream> {
+            val audio = filter { it.type == MediaStreamType.AUDIO }
+            if (!downloaded.isTranscoded) return audio
+            return listOfNotNull(bakedAudio) + audio.filter { it.index in sidecarIndices }
+        }
+
+        /**
+         * The playable audio streams as picker entries.
+         *
+         * Same rule as the subtitles: a track one of the item's own files backs is **side-loaded**
+         * whatever the stream claimed to be, because that is how it reaches ExoPlayer — and
+         * `TrackSelectionController` counts anything not flagged among the container's own audio
+         * groups, of which a transcode has exactly one.
+         */
+        private fun List<MediaStream>.toAudioTracks(
+            defaultIndex: Int?,
+            sidecarIndices: Set<Int>,
+        ): List<PlaybackTrack> =
+            map { it.toTrack(defaultIndex, sideLoaded = it.index in sidecarIndices || it.isExternal) }
+
+        /**
+         * The one audio stream a transcode encoded into the video file, or `null` for an original
+         * download — which needs no such choice, since it holds them all.
+         *
+         * Which one is read off the row: [DownloadedMedia.bakedAudioStreamIndex] is what the
+         * download *asked for*, so the picker entry is labelled from the source stream that was
+         * actually encoded — the right language and the right mix, even though the bytes are now
+         * stereo AAC.
          *
          * Two fallbacks behind it, in order, and each is a real case rather than defensiveness:
          * - a row written before schema v8 recorded no index, and the download it describes named
@@ -153,17 +207,40 @@ class LocalPlaybackResolver
          *   that is exactly right for those rows and wrong for nothing;
          * - failing both, the first audio stream, which is what an item declaring no default gets.
          */
-        private fun List<MediaStream>.audioTracksInFile(downloaded: DownloadedMedia): List<MediaStream> {
+        private fun List<MediaStream>.bakedAudioStream(downloaded: DownloadedMedia): MediaStream? {
+            if (!downloaded.isTranscoded) return null
             val audio = filter { it.type == MediaStreamType.AUDIO }
-            if (!downloaded.isTranscoded) return audio
-
             val baked = downloaded.bakedAudioStreamIndex
             val legacyDefault = downloaded.mediaSource?.defaultAudioStreamIndex
-            return listOfNotNull(
-                audio.firstOrNull { it.index == baked }
-                    ?: audio.firstOrNull { it.index == legacyDefault }
-                    ?: audio.firstOrNull(),
-            )
+            return audio.firstOrNull { it.index == baked }
+                ?: audio.firstOrNull { it.index == legacyDefault }
+                ?: audio.firstOrNull()
+        }
+
+        /**
+         * The audio sidecars that are worth offering, in the order the download pipeline listed them.
+         *
+         * That order — ascending Jellyfin stream index — is passed through untouched, because it
+         * becomes the merge-child order and so the whole of the mapping back from an ExoPlayer track
+         * group to a Jellyfin stream (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2").
+         *
+         * Three are dropped. An original download has none by construction — every track is already
+         * in the file, and a sidecar row on such an item would only duplicate one. A sidecar for a
+         * stream the cached blob no longer describes has nothing to label a picker entry with. And a
+         * sidecar naming the **baked** index would offer the same language twice and shift every
+         * later child by one — the planner does not fetch one, but the baked index is derived rather
+         * than stored on the file, so a row whose pin disagrees with what was downloaded must not
+         * corrupt the mapping.
+         */
+        private fun DownloadedMedia.audioSidecarsOnDisk(
+            streams: List<MediaStream>,
+            bakedAudio: MediaStream?,
+        ): List<DownloadedAudio> {
+            if (!isTranscoded) return emptyList()
+            return audio.filter { sidecar ->
+                sidecar.streamIndex != bakedAudio?.index &&
+                    streams.any { it.index == sidecar.streamIndex && it.type == MediaStreamType.AUDIO }
+            }
         }
 
         /**

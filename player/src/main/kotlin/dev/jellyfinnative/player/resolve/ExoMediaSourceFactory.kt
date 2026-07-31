@@ -3,6 +3,7 @@ package dev.jellyfinnative.player.resolve
 import androidx.media3.common.MimeTypes
 import dev.jellyfinnative.player.PlayMethod
 import dev.jellyfinnative.player.api.StreamUrlFactory
+import dev.jellyfinnative.player.model.AudioSidecarSpec
 import dev.jellyfinnative.player.model.LocalPlaybackMediaSource
 import dev.jellyfinnative.player.model.PlaybackMediaItemSpec
 import dev.jellyfinnative.player.model.PlaybackMediaSource
@@ -65,6 +66,12 @@ class ExoMediaSourceFactory
          * download pipeline copied off the server's own filename. Sidecar subtitles are already
          * `file://` URIs and must **not** be run through [StreamUrlFactory.absoluteUrl], which would
          * prefix them with the server's base address.
+         *
+         * Audio sidecars are copied across in order and nothing more is decided about them here:
+         * their positions *are* the merge-child indices `ExoPlayerHandle` builds and
+         * `TrackSelectionController` reads back, so re-sorting them would silently play the wrong
+         * language (DECISIONS.md 2026-07-31, "Offline multi-track Phase 2"). A remote source never
+         * has any — the server merges what it sends.
          */
         private fun LocalPlaybackMediaSource.toSpec(): PlaybackMediaItemSpec =
             PlaybackMediaItemSpec(
@@ -80,6 +87,10 @@ class ExoMediaSourceFactory
                             label = subtitle.label,
                             language = subtitle.language,
                         )
+                    },
+                audioSidecars =
+                    externalAudio.map { audio ->
+                        AudioSidecarSpec(streamIndex = audio.index, uri = audio.uri)
                     },
             )
 

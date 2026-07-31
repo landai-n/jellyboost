@@ -263,6 +263,11 @@ nobody asked for is not worth keeping and the fetch cannot be resumed anyway. A 
 costs only that one non-essential row; the item is still `DOWNLOADED` without it, the same as a
 failed subtitle.
 
+**The sidecars are fetched concurrently with the media transcode** — `DownloadQueue.transfer` drains
+them on a lane of their own, sequential among themselves, so an item costs `max(media, sidecars)`
+instead of their sum and the server is never asked for more than two live encodes at once
+(DECISIONS.md, 2026-07-31, "Audio sidecars fetch concurrently with the media file").
+
 **No retroactive top-up.** A row already on disk before this landed does not grow its extra
 languages — that would mean re-fetching and re-stripping the whole set for every finished transcoded
 download, silently, on a background pass. `SubtitleSidecarTopUp` — the mechanism that *does* silently

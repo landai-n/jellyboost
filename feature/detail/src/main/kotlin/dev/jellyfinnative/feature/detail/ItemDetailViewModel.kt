@@ -23,11 +23,14 @@ import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -97,6 +100,19 @@ class ItemDetailViewModel
          * modules never see `:player`.
          */
         val activeGroup: StateFlow<SyncPlayGroupHandle?> get() = syncPlaySession.activeGroup
+
+        private val playRequestChannel = Channel<PlayRequest>(Channel.BUFFERED)
+
+        /**
+         * Solo play navigations — "open the player on this item, here, now".
+         *
+         * One-shot events collected by [ItemDetailScreen] (the pattern `:feature:auth`'s
+         * `LoginViewModel` uses), because a play tap resolves to *either* a navigation or a request
+         * to the group ([onPlay]) and only the ViewModel can tell which. In a group nothing is
+         * emitted here at all: the player is opened by the server's answer, through
+         * `SyncPlayController.launchRequests`.
+         */
+        val playRequests: Flow<PlayRequest> = playRequestChannel.receiveAsFlow()
 
         init {
             load(isRefresh = false)
@@ -331,7 +347,45 @@ class ItemDetailViewModel
         }
 
         /**
-         * Sends one group action for whatever this page's Play button resolves to (M11 Phase 4).
+         * Play / Resume — **for the group when there is one**, for this device otherwise.
+         *
+         * The one entry point for every play affordance on this page: the header button (which
+         * resolves a series or season to an episode through `ItemDetailUiState.playTarget`) and each
+         * episode row's own play button. They share it because the decision it makes is the same one
+         * either way, and it is a decision only this class can make — the screen can see neither the
+         * group nor the series listing an episode has to be expanded against.
+         *
+         * **In a group, a play is the group's play** (DECISIONS.md, 2026-07-31, superseding the
+         * "the group buttons join Play rather than replace it" rule of M11 Phase 4). It is sent as a
+         * `SetNewQueue` carrying the same series-tail expansion and the same resume position the old
+         * *Play for group* button used, and this screen deliberately **does not navigate**: nothing
+         * plays anywhere until the server broadcasts the resulting queue (key decision 11), and the
+         * player is then opened by `SyncPlayController.launchRequests` → `JellyfinNavHost`. Before
+         * the fix, this path opened a local player that the group knew nothing about, which sat under
+         * a "Waiting for group" overlay for ever (`syncplay-bugreport.md`).
+         *
+         * Solo — and in a group for anything a group cannot play (`ItemType.isPlayable`, the same
+         * narrowing `ItemDetailUiState.groupTarget` makes) — it is the navigation it has always
+         * been, emitted on [playRequests].
+         */
+        fun onPlay(target: JellyfinItem) {
+            val startPositionTicks = playbackStartTicks(target)
+            if (syncPlaySession.activeGroup.value == null || !target.type.isPlayable) {
+                playRequestChannel.trySend(PlayRequest(target.id, startPositionTicks))
+                return
+            }
+
+            viewModelScope.launch {
+                syncPlaySession.playForGroup(
+                    itemIds = groupPlayQueue(target, repository),
+                    startPositionTicks = startPositionTicks,
+                )
+                _uiState.update { it.copy(userMessage = UserMessage.GroupPlayRequested) }
+            }
+        }
+
+        /**
+         * Sends one *queue* action for whatever this page's Play button resolves to (M11 Phase 4).
          *
          * One entry point rather than a method per action, exactly as [onSelection] is — and for the
          * same reason as `runSelectionBatch` below, the dispatch itself is a top-level function: this
@@ -350,7 +404,7 @@ class ItemDetailViewModel
             if (syncPlaySession.activeGroup.value == null) return
 
             viewModelScope.launch {
-                sendGroupAction(action, target, syncPlaySession, repository)
+                sendGroupAction(action, target, syncPlaySession)
                 _uiState.update { it.copy(userMessage = UserMessage.GroupActionSent(action)) }
             }
         }
@@ -407,7 +461,7 @@ class ItemDetailViewModel
         }
 
         private suspend fun emitDetail(item: JellyfinItem) {
-            val related = fetchRelated(item)
+            val related = fetchRelated(item, repository)
             // A reload here is a background refresh — a connectivity edge, not a user action — so an
             // open selection is kept rather than dropped. Episodes the server no longer returns fall
             // out of it, because a batch must never act on a row that is not on the screen.
@@ -427,59 +481,66 @@ class ItemDetailViewModel
             }
         }
 
-        /**
-         * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its
-         * slowest request rather than by the sum of three.
-         */
-        private suspend fun fetchRelated(item: JellyfinItem): Related =
-            coroutineScope {
-                val isSeries = item.type == ItemType.SERIES
-                val seasonId = item.id.takeIf { item.type == ItemType.SEASON }
-                val seriesId = item.seriesId
-
-                val seasons =
-                    if (isSeries) async { repository.getSeasons(item.id).getOrNull().orEmpty() } else null
-                val nextUp =
-                    if (isSeries) async { repository.getNextUpForSeries(item.id).getOrNull() } else null
-                val episodes =
-                    if (seasonId != null && seriesId != null) {
-                        async { repository.getEpisodes(seriesId, seasonId).getOrNull().orEmpty() }
-                    } else {
-                        null
-                    }
-                val similar =
-                    if (item.type in SIMILAR_TYPES) {
-                        async { repository.getSimilarItems(item.id).getOrNull().orEmpty() }
-                    } else {
-                        null
-                    }
-
-                Related(
-                    seasons = seasons?.await().orEmpty(),
-                    episodes = episodes?.await().orEmpty(),
-                    nextUp = nextUp?.await(),
-                    similar = similar?.await().orEmpty(),
-                )
-            }
-
-        private data class Related(
-            val seasons: List<JellyfinItem>,
-            val episodes: List<JellyfinItem>,
-            val nextUp: JellyfinItem?,
-            val similar: List<JellyfinItem>,
-        )
-
         companion object {
             /** Key the navigation library stores `Routes.ItemDetail.itemId` under. */
             const val ARG_ITEM_ID = "itemId"
-
-            /**
-             * Types the server has meaningful recommendations for. A season is browsed through its
-             * series, so "more like this season" would be noise.
-             */
-            private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
         }
     }
+
+/**
+ * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its slowest
+ * request rather than by the sum of three.
+ *
+ * A top-level function for the same reason `runSelectionBatch` and `sendGroupAction` are ones:
+ * `ItemDetailViewModel` is at detekt's function-count ceiling (`TooManyFunctions`, threshold 20),
+ * and this depends on nothing but its arguments.
+ */
+private suspend fun fetchRelated(
+    item: JellyfinItem,
+    repository: JellyfinRepository,
+): Related =
+    coroutineScope {
+        val isSeries = item.type == ItemType.SERIES
+        val seasonId = item.id.takeIf { item.type == ItemType.SEASON }
+        val seriesId = item.seriesId
+
+        val seasons =
+            if (isSeries) async { repository.getSeasons(item.id).getOrNull().orEmpty() } else null
+        val nextUp =
+            if (isSeries) async { repository.getNextUpForSeries(item.id).getOrNull() } else null
+        val episodes =
+            if (seasonId != null && seriesId != null) {
+                async { repository.getEpisodes(seriesId, seasonId).getOrNull().orEmpty() }
+            } else {
+                null
+            }
+        val similar =
+            if (item.type in SIMILAR_TYPES) {
+                async { repository.getSimilarItems(item.id).getOrNull().orEmpty() }
+            } else {
+                null
+            }
+
+        Related(
+            seasons = seasons?.await().orEmpty(),
+            episodes = episodes?.await().orEmpty(),
+            nextUp = nextUp?.await(),
+            similar = similar?.await().orEmpty(),
+        )
+    }
+
+private data class Related(
+    val seasons: List<JellyfinItem>,
+    val episodes: List<JellyfinItem>,
+    val nextUp: JellyfinItem?,
+    val similar: List<JellyfinItem>,
+)
+
+/**
+ * Types the server has meaningful recommendations for. A season is browsed through its series, so
+ * "more like this season" would be noise.
+ */
+private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
 
 /**
  * Runs one batch action over [ids] and reports how it went.
@@ -518,44 +579,39 @@ private suspend fun runSelectionBatch(
  * A top-level function for the same reason `runSelectionBatch` is one: `ItemDetailViewModel` is at
  * detekt's function-count ceiling, and this dispatch depends on nothing but its arguments.
  *
- * *Play for group* deliberately carries the resume position, so watching something together starts
- * where the person who chose it had got to — the same rule the ordinary Play button follows. The two
- * queue actions do not: an item added to the back of a queue is not a resume, and the group would
- * be surprised to find it starting in the middle.
- *
- * It also expands an episode into the rest of its series before sending, which looks like a UI
- * decision and is really an interop one. jellyfin-web's `translateItemsForPlayback` intercepts a
- * group queue holding exactly one episode and — with `EnableNextEpisodeAutoPlay`, the default —
- * replaces it locally with that episode plus every following one across seasons; `QueueCore` then
- * walks the server's playlist by the *expanded* length to copy the playlist-item ids over, reads
- * past the end of our one-entry playlist, throws, and drops the update, so nobody's playback ever
- * starts. Web never trips this on itself because it expands *before* it calls `SetNewQueue`. Sending
- * the same expansion makes the two lengths agree. Movies are untouched: web leaves a single one
- * alone, and a single-item movie queue is verified good.
- *
- * A failed lookup, or an episode the series listing does not contain, falls back to the lone id:
- * a group queue that web may reject beats no request at all, and the caller's snackbar is about the
- * ask going out either way.
+ * Neither queue action carries a resume position, deliberately: an item added to a queue is not a
+ * resume, and the group would be surprised to find it starting in the middle. Playing something
+ * *now* does carry one, and that is [ItemDetailViewModel.onPlay]'s business.
  */
 private suspend fun sendGroupAction(
     action: GroupAction,
     target: JellyfinItem,
     session: SyncPlaySession,
-    repository: JellyfinRepository,
 ) {
     when (action) {
-        GroupAction.PLAY_FOR_GROUP ->
-            session.playForGroup(
-                itemIds = groupPlayQueue(target, repository),
-                startPositionTicks = playbackStartTicks(target),
-            )
-
         GroupAction.PLAY_NEXT -> session.addToGroupQueue(target.id, next = true)
         GroupAction.ADD_TO_QUEUE -> session.addToGroupQueue(target.id, next = false)
     }
 }
 
-/** [target] and, when it is an episode, everything the series runs after it — see [sendGroupAction]. */
+/**
+ * [target] and, when it is an episode, everything the series runs after it — the queue a group play
+ * is sent as ([ItemDetailViewModel.onPlay]).
+ *
+ * This looks like a UI decision and is really an interop one. jellyfin-web's
+ * `translateItemsForPlayback` intercepts a group queue holding exactly one episode and — with
+ * `EnableNextEpisodeAutoPlay`, the default — replaces it locally with that episode plus every
+ * following one across seasons; `QueueCore` then walks the server's playlist by the *expanded*
+ * length to copy the playlist-item ids over, reads past the end of our one-entry playlist, throws,
+ * and drops the update, so nobody's playback ever starts. Web never trips this on itself because it
+ * expands *before* it calls `SetNewQueue`. Sending the same expansion makes the two lengths agree.
+ * Movies are untouched: web leaves a single one alone, and a single-item movie queue is verified
+ * good.
+ *
+ * A failed lookup, or an episode the series listing does not contain, falls back to the lone id:
+ * a group queue that web may reject beats no request at all, and the caller's snackbar is about the
+ * ask going out either way.
+ */
 private suspend fun groupPlayQueue(
     target: JellyfinItem,
     repository: JellyfinRepository,

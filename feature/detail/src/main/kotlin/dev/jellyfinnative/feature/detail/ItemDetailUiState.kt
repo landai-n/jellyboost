@@ -74,12 +74,15 @@ data class ItemDetailUiState(
      * What a *group* action on this page acts on, or `null` when there is nothing to offer.
      *
      * The same resolution as [playTarget] — a series plays its next-up episode — narrowed to the
-     * types this app plays at all (docs/notes/syncplay-m11-plan.md: "Movies & episodes only"). The
-     * narrowing lives here rather than in `SyncPlaySession` because the contract speaks item ids and
-     * has no idea what type one is; this screen does (DECISIONS.md, 2026-07-30).
+     * types this app plays at all (`ItemType.isPlayable`: movies and episodes,
+     * docs/notes/syncplay-m11-plan.md). The narrowing is applied here rather than in
+     * `SyncPlaySession` because the contract speaks item ids and has no idea what type one is; this
+     * screen does (DECISIONS.md, 2026-07-30). Non-null is also what tells the header that a tap on
+     * Play will be a *group* play, which is why the button names the group when it is set
+     * (DECISIONS.md, 2026-07-31).
      */
     val groupTarget: JellyfinItem?
-        get() = playTarget?.takeIf { it.type == ItemType.MOVIE || it.type == ItemType.EPISODE }
+        get() = playTarget?.takeIf { it.type.isPlayable }
 
     /**
      * `true` when Download on this page means "download the episodes under this".
@@ -143,23 +146,34 @@ private val DownloadState.fraction: Float
         }
 
 /**
- * What this page can ask a SyncPlay group to do with the item on it (M11 Phase 4).
+ * What this page can ask a SyncPlay group to do with the item on it, *beyond* playing it.
+ *
+ * Playing it is no longer one of these: in a group the ordinary Play / Resume button **is** the
+ * group play (DECISIONS.md, 2026-07-31), so the only group actions left are the two additive queue
+ * operations, which have no solo counterpart and so cannot be confused with one.
  *
  * Offered only while `SyncPlaySession.activeGroup` is non-null and [ItemDetailUiState.groupTarget]
- * resolves — so the ordinary Play button is never replaced, only joined. Each one is a request to
- * the server: nothing plays or queues on this device until the group's own update comes back
- * (docs/notes/syncplay-m11-plan.md, key decision 11).
+ * resolves. Each one is a request to the server: nothing queues on this device until the group's own
+ * update comes back (docs/notes/syncplay-m11-plan.md, key decision 11).
  */
 enum class GroupAction {
-    /** Replace the group's queue with this item and start everyone on it. */
-    PLAY_FOR_GROUP,
-
     /** Put it directly after whatever the group is watching now. */
     PLAY_NEXT,
 
     /** Append it to the end of the group's queue. */
     ADD_TO_QUEUE,
 }
+
+/**
+ * Where playback should start, and for whom — what [ItemDetailViewModel.onPlay] resolves a tap to.
+ *
+ * A one-shot event rather than a field on [ItemDetailUiState]: navigation happens once, and a state
+ * flag saying "navigate" would fire again on every recomposition that re-read it.
+ */
+data class PlayRequest(
+    val itemId: String,
+    val startPositionTicks: Long,
+)
 
 /** Where playback should start for [item]: its resume position, or the beginning. */
 fun playbackStartTicks(item: JellyfinItem): Long =
@@ -209,6 +223,16 @@ sealed interface UserMessage {
     data class GroupActionSent(
         val action: GroupAction,
     ) : UserMessage
+
+    /**
+     * Play was tapped in a group, so the *group* was asked to play it (DECISIONS.md, 2026-07-31).
+     *
+     * The most important of these messages, because this is the one tap whose old behaviour was to
+     * open a player immediately: the screen deliberately stays where it is, and the player opens a
+     * moment later when the server's `PlayQueueUpdate` comes back through
+     * `SyncPlayController.launchRequests`. Without a word, that gap reads as a dead button.
+     */
+    data object GroupPlayRequested : UserMessage
 
     /**
      * A batch action over the selected episodes finished (docs/features/batch-selection.md).

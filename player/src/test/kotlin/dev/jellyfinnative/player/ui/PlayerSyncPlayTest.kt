@@ -228,6 +228,36 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             playerHandle.hadNoTransportCalls shouldBe true
         }
 
+    // ---- opening into a group ----------------------------------------------------------------------
+
+    @Test
+    fun `a session opened while in a group starts paused, whoever opened it`() =
+        runTest(dispatcher) {
+            // The route a group play takes now that the detail page sends the group a queue rather
+            // than navigating (DECISIONS.md, 2026-07-31): the server's `PlayQueueUpdate` becomes a
+            // launch request and the NavHost opens this screen with the ordinary player arguments,
+            // which say "play". The group decides when playback starts, so this must not.
+            syncPlayState.value = inGroup()
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.syncPlay.inGroup shouldBe true
+            playerHandle.prepared.single().playWhenReady shouldBe false
+            playerHandle.playCount shouldBe 0
+        }
+
+    @Test
+    fun `solo, a session opened from a Play tap still starts playing`() =
+        runTest(dispatcher) {
+            // The control for the above: with no group, opening the player from Play means play.
+            val model = viewModel()
+            advanceUntilIdle()
+
+            model.uiState.value.syncPlay.inGroup shouldBe false
+            playerHandle.prepared.single().playWhenReady shouldBe true
+        }
+
     // ---- the host the coordinator drives ----------------------------------------------------------
 
     @Test

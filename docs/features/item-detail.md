@@ -54,7 +54,7 @@ badge are byte-identical to the ones the home rows show.
 
 | Button | Behaviour |
 |---|---|
-| Play / Resume | Live from M5 — navigates to `Routes.Player`; see docs/features/playback.md |
+| Play / Resume | Live from M5 — navigates to `Routes.Player`; see docs/features/playback.md. **In a SyncPlay group it plays for the group instead**: `ItemDetailViewModel.onPlay` sends `SetNewQueue` and does not navigate, and the button reads "Play/Resume for &lt;group&gt;" (docs/features/syncplay.md, DECISIONS.md 2026-07-31). Every play entry point on the page — the header button and each episode row's play button — goes through it |
 | Download | Snackbar: "Downloads arrive in M7." |
 | Mark watched | Live — `UserDataRepository.setPlayed` |
 | Favourite | Live — `UserDataRepository.setFavorite` |

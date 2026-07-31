@@ -1207,9 +1207,10 @@ class SyncPlayController
          *
          * Four outcomes: nothing to do (the slot is already open — which is every reorder, removal,
          * shuffle and repeat change that leaves the playing item alone), ask the app to open a
-         * player (nothing attached), adopt what the host has (the user opened this very item, so
-         * reloading it would restart playback for nothing), or run the buffering/ready handshake
-         * around [SyncPlayPlaybackHost.loadItem].
+         * player (nothing attached), adopt what the host has (this very item is already open, so
+         * reloading it would restart playback for nothing — [adoptOpenItem] still runs the
+         * handshake around it), or run that same buffering/ready handshake around
+         * [SyncPlayPlaybackHost.loadItem].
          *
          * The slot, not the item, is the identity: the same episode queued twice is two slots, and a
          * group jumping from one to the other has to start it again rather than carry on where the
@@ -1238,7 +1239,7 @@ class SyncPlayController
             val snapshot = hostSnapshot()
             if (loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
                 onEntryOpened(entry)
-                reportReady(entry, snapshot.positionTicks, snapshot.isPlaying)
+                adoptOpenItem(entry, snapshot)
                 return
             }
 
@@ -1256,6 +1257,41 @@ class SyncPlayController
 
             val loaded = runCatching { attached.loadItem(entry.itemId, queue.startPositionTicks) }.getOrElse { false }
             if (loaded) onEntryOpened(entry) else onEntryUnplayable(entry)
+        }
+
+        /**
+         * The host already holds the item the group is on — run the handshake around it rather than
+         * reloading it.
+         *
+         * The same three steps [reconcile]'s load branch takes, minus the load: phase to
+         * `Buffering`, owe the `ready`, tell the group this member is buffering. It used to report
+         * `ready` on the spot, which is a claim about a player that has very often only just been
+         * handed the item — the launch-request route (the group's `PlayQueueUpdate` opens a player
+         * through `launchRequests`) adopts within a moment of `prepare`, before any readiness. A
+         * `ready` for a player that is not is what left this member under the WAITING overlay while
+         * the group moved on (`syncplay-bugreport.md`, DECISIONS.md 2026-07-31); reporting
+         * `buffering` first is also what puts the group back to waiting on us, which is what earns
+         * the unpause that clears the overlay.
+         *
+         * The fallback is [SETTLED_READY_FALLBACK_MS] rather than `null`, unlike the load branch,
+         * precisely because the player is already prepared: it may have passed its readiness before
+         * the host was attached and would then never announce itself again, wedging the whole group
+         * on a `ready` that could not come.
+         */
+        private suspend fun adoptOpenItem(
+            entry: SyncPlayQueueEntry,
+            snapshot: SyncPlayHostSnapshot,
+        ) {
+            setPhase(SyncPlayPhase.Buffering)
+            oweReady(entry, fallbackMillis = SETTLED_READY_FALLBACK_MS)
+            runCatching {
+                api.reportBuffering(
+                    timeSync.serverNow(),
+                    snapshot.positionTicks,
+                    snapshot.isPlaying,
+                    entry.playlistItemId,
+                )
+            }.onFailure { Timber.w(it, "Could not report SyncPlay buffering") }
         }
 
         /**

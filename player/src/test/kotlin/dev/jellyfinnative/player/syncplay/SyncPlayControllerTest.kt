@@ -21,6 +21,7 @@ import dev.jellyfinnative.player.syncplay.model.SyncPlayRequestKind
 import dev.jellyfinnative.player.syncplay.model.SyncPlayShuffleMode
 import dev.jellyfinnative.player.syncplay.socket.SyncPlaySocketState
 import dev.jellyfinnative.player.syncplay.time.SyncPlayPinger
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
@@ -217,15 +218,49 @@ class SyncPlayControllerTest {
         }
 
     @Test
-    fun `an item the host already has open is adopted rather than reloaded`() =
+    fun `an item the host already has open is adopted rather than reloaded, and still owes a ready`() =
         runTest {
             val fixture = fixture()
-            // The user opened this item themselves and then the group moved onto it.
+            // The user opened this item themselves and then the group moved onto it — or the group's
+            // own `PlayQueueUpdate` opened it through a launch request, which is the same shape.
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
 
             joinWithQueue(fixture)
 
             fixture.host.loaded shouldBe emptyList()
+            // Buffering *first*: an adopted player has very often only just been handed the item, so
+            // an immediate `ready` claims a readiness nobody has (DECISIONS.md, 2026-07-31). It is
+            // also what puts the group back to waiting on this member, which is what earns the
+            // unpause that clears the WAITING overlay.
+            val buffering = fixture.api.callsOf<SyncPlayCall.ReportBuffering>().single()
+            buffering.playlistItemId shouldBe playlistItemId
+            buffering.positionTicks shouldBe 30_000L.millisToTicks()
+            buffering.isPlaying shouldBe true
+            fixture.api.callsOf<SyncPlayCall.ReportReady>().shouldBeEmpty()
+            (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe SyncPlayPhase.Buffering
+
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+
+            val ready = fixture.api.callsOf<SyncPlayCall.ReportReady>().single()
+            ready.playlistItemId shouldBe playlistItemId
+            ready.positionTicks shouldBe 30_000L.millisToTicks()
+            ready.isPlaying shouldBe true
+        }
+
+    @Test
+    fun `an adopted player that never announces itself still answers the group`() =
+        runTest {
+            val fixture = fixture()
+            fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = false)
+
+            joinWithQueue(fixture)
+            // No `PlayerEvent.Ready`: the player was already prepared before the host was attached,
+            // so its readiness has been and gone. Without the fallback the group would wait on a
+            // member for an event that cannot happen again.
+            advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
+            runCurrent()
+
             fixture.api
                 .callsOf<SyncPlayCall.ReportReady>()
                 .single()
@@ -521,6 +556,15 @@ class SyncPlayControllerTest {
             fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
 
             joinWithQueue(fixture)
+
+            // The adoption handshake's own report says it too, before any readiness is claimed.
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .single()
+                .isPlaying shouldBe true
+
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
 
             // The server extrapolates a reported position over the round trip *only* when the member
             // says it is playing (`WaitingGroupState`: `if (!request.IsPlaying) elapsedTime = Zero`),
@@ -1190,6 +1234,16 @@ class SyncPlayControllerTest {
             runCurrent()
 
             fixture.host.loaded.size shouldBe 1
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .last()
+                .playlistItemId shouldBe playlistItemId
+
+            // The adopted player is prepared already and may never re-buffer, so the owed `ready` is
+            // the fallback's (DECISIONS.md, 2026-07-31) — but it is still owed and still sent.
+            advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
+            runCurrent()
+
             fixture.api
                 .callsOf<SyncPlayCall.ReportReady>()
                 .last()

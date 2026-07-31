@@ -485,7 +485,7 @@ cannot; `PlayerViewModel` gets a thin `PlayerSyncPlayBridge` and none of the pro
 
 | mechanism | where | why it is shaped that way |
 |---|---|---|
-| `SyncPlaySession` + `SyncPlayGroupHandle` | `:core:common` `syncplay/` | The cross-feature contract. `:feature:detail` offers "Play for group" / "Add to group queue" and `:app` draws the active-group badge without either depending on `:player`; `ControllerSyncPlaySession` binds it in `:player`. It speaks `String` ids and a participant count — no `:player` model escapes. (`:core:common` promotes `kotlinx-coroutines-core` to `api` for the `StateFlow`.) |
+| `SyncPlaySession` + `SyncPlayGroupHandle` | `:core:common` `syncplay/` | The cross-feature contract. `:feature:detail` plays for the group (its Play button, in a group) and queues for it, and `:app` draws the active-group badge, without either depending on `:player`; `ControllerSyncPlaySession` binds it in `:player`. It speaks `String` ids and a participant count — no `:player` model escapes. (`:core:common` promotes `kotlinx-coroutines-core` to `api` for the `StateFlow`.) |
 | `SyncPlayStatusHolder` | `:player/syncplay` | Breaks a would-be DI cycle. `PlaybackReporter` must know whether this session is in a group; the controller must be able to drive playback, which reaches the reporter's world. Both depend on this two-field holder instead. |
 | `launchRequests` → NavHost | `:app` `SyncPlayLaunchViewModel` | "The group moved on and no player is open." The app collects it at the NavHost and navigates to `Routes.Player`, which is what lets a member back out of the player and still be pulled back in when the group starts the next episode. `:app` also owns `Routes.SyncPlay` and the Groups action on `AppTopBar` (DECISIONS.md 2026-07-30). |
 

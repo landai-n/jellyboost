@@ -2458,3 +2458,61 @@ Seeded from the approved plan; listed for traceability, no divergence:
   self-sync net (3 s, `SELF_SYNC_TIMEOUT_MS`) is the floor under it if it ever is not.
 
 <!-- END -->
+
+## 2026-07-31 — in a group, the ordinary Play button plays *for the group*; the separate "Play for group" button is gone (user decision)
+- **Scope:** `feature/detail/.../ItemDetailViewModel.kt`, `.../ItemDetailUiState.kt`,
+  `.../ItemDetailScreen.kt`, `.../ItemDetailHeader.kt`, `feature/detail/.../res/values/strings.xml`,
+  `ItemDetailGroupActionsTest`; `player/.../ui/PlayerViewModel.kt` (session open);
+  `player/.../syncplay/SyncPlayController.kt` (`reconcile`, the adoption branch),
+  `PlayerSyncPlayTest`, `SyncPlayControllerTest`; `docs/features/syncplay.md`,
+  `docs/features/item-detail.md`.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, Phase 4 — *"`feature/detail` 'Play for
+  group'/'Add to group queue'/'Play next' when a group is active"* — implemented (DECISIONS.md
+  2026-07-30, M11 Phase 4) as three buttons *beside* an unchanged Play button, with the rationale
+  recorded in `ItemDetailHeader.GroupActionButtons`: *"They join the Play button rather than replace
+  it: being in a group does not stop someone watching something on their own, and a Play button that
+  silently changed meaning would be the worst of both."* That solo escape hatch is what is
+  superseded here.
+- **Done instead:** three changes, one rule — **in a group, everything this page does is done as a
+  group.**
+  1. **Every play entry point on the detail page routes through the group when there is one.** The
+     header Play/Resume button and each episode row's play button now call
+     `ItemDetailViewModel.onPlay(target)`, which — while `SyncPlaySession.activeGroup` is non-null
+     and the target is a movie or an episode — calls `playForGroup` with the same series-tail
+     expansion and the same resume `startPositionTicks` the old *Play for group* button used
+     (DECISIONS.md 2026-07-31, "*Play for group* sends an episode with the rest of its series"), and
+     **does not navigate**: the server's `PlayQueueUpdate` comes back through
+     `SyncPlayController.launchRequests` and `JellyfinNavHost` opens the player. Solo, and for
+     anything a group cannot play, it emits the same navigation it always did (a one-shot
+     `playRequests` channel, the `:feature:auth` `LoginViewModel` pattern). The button labels itself
+     *Play for &lt;group&gt;* / *Resume for &lt;group&gt;* so the changed meaning is on screen rather
+     than implied, and the snackbar still says the ask went out.
+  2. **`GroupAction.PLAY_FOR_GROUP` and its button are removed.** *Play next* and *Add to queue*
+     stay: they are additive queue operations with no solo counterpart, so nothing about them is
+     ambiguous once Play means "play for the group".
+  3. **A session that opens into a group opens paused, and an adopted item owes a `ready`.**
+     `PlayerViewModel`'s initial open is now `playWhenReady = sessionStore.playWhenReady &&
+     !syncPlay.isInGroup`, and `SyncPlayController.reconcile`'s adoption branch (a fresh join, or a
+     launch request, finding the host already on the right item) reports `buffering` and owes the
+     `ready` through the existing `oweReady`/`SETTLED_READY_FALLBACK_MS` machinery instead of
+     reporting `ready` immediately.
+- **Reason:** `syncplay-bugreport.md`, app-initiated scenario: *"Press resume on a media in app: app
+  starts playing, showing overlay 'Waiting for group'. Browser never react."* The normal Play path
+  navigated straight to `Routes.Player`, and nothing on it ever sent the group a queue — only the
+  separate *Play for group* button called `SetNewQueue` — so the group had no idea, and the member
+  sat under the WAITING overlay for a handshake that could not complete. The user's decision on the
+  fix (recorded verbatim): *"It should play for the group, we don't need the separate button — if we
+  are in a group, we do everything as a group."* Two buttons that both say "play" and mean different
+  things is the ambiguity the original rationale accepted in exchange for a solo escape hatch; in
+  practice the escape hatch is *leave the group*, which is one tap away in the player and on the
+  Groups screen, and the ambiguity cost the group every time.
+  - (3) is what makes the launch-request route work end to end. Opening with `playWhenReady = true`
+    started this member before the group had said anything — the very desync the documented
+    open-paused → buffering → ready → server-unpause handshake exists to prevent (key decision 11) —
+    and the adoption branch's immediate `ready` claimed a readiness for a player that was, at that
+    exact moment, still preparing the item it had just been handed. Reporting `buffering` first is
+    also what puts the group back into WAITING on our behalf, which is what earns the unpause that
+    clears the overlay. The fallback is `SETTLED_READY_FALLBACK_MS` rather than `null` (the
+    `loadItem` branch's choice) precisely because the player is *already* prepared here: it may have
+    passed its readiness before the host was attached and would then never announce itself again,
+    which would wedge the whole group.

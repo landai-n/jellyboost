@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
@@ -96,20 +95,23 @@ data class DetailActionHandlers(
     val onToggleWatched: () -> Unit,
     val onToggleFavorite: () -> Unit,
     /**
-     * What this page can ask a SyncPlay group to do, or `null` when there is no group to ask —
-     * which is the ordinary case, and why the field is nullable rather than a flag beside a lambda
-     * (M11 Phase 4). Carried in this bundle so no composable between here and the buttons grows a
-     * parameter for a feature it does not otherwise know about.
+     * The SyncPlay group this page is acting for, or `null` when there is no group — which is the
+     * ordinary case, and why the field is nullable rather than a flag beside a lambda (M11 Phase 4).
+     * Carried in this bundle so no composable between here and the buttons grows a parameter for a
+     * feature it does not otherwise know about.
+     *
+     * Non-null also changes what [onPlay] *means*: in a group a play is the group's play
+     * (DECISIONS.md, 2026-07-31), which is why the Play button reads its label from here.
      */
     val group: DetailGroupActions? = null,
 )
 
 /**
- * The active group, and the one callback its three buttons share.
+ * The active group, and the one callback its queue buttons share.
  *
  * [groupName] is here because the buttons name the group they act on: "Play for Film night" says
- * what a tap does in a way "Play for group" cannot, and on a detail page a user may well have
- * forgotten which group they joined.
+ * what a tap does in a way "Play" cannot, and on a detail page a user may well have forgotten which
+ * group they joined — which matters more now that Play itself is the group's play.
  */
 data class DetailGroupActions(
     val groupName: String,
@@ -246,16 +248,7 @@ private fun DetailActions(
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
-        Button(onClick = actions.onPlay) {
-            Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null)
-            Text(
-                text =
-                    stringResource(
-                        if (item.userData.isResumable) R.string.detail_resume else R.string.detail_play,
-                    ),
-                modifier = Modifier.padding(start = Dimens.SpaceSmall),
-            )
-        }
+        PlayButton(item = item, group = actions.group, onClick = actions.onPlay)
 
         val watched = item.userData.played
         OutlinedButton(onClick = actions.onToggleWatched) {
@@ -292,24 +285,58 @@ private fun DetailActions(
 }
 
 /**
- * The three group actions, drawn only while a SyncPlay group is active (M11 Phase 4).
+ * The page's primary action, which says who it plays *for*.
  *
- * They *join* the Play button rather than replace it: being in a group does not stop someone
- * watching something on their own, and a Play button that silently changed meaning would be the
- * worst of both. *Play for group* is filled-tonal so it reads as the second primary action on the
- * page, the two queue actions stay outlined beside it, and the whole set sits in the same
- * `FlowRow`, so on a phone in portrait it simply wraps onto its own line.
+ * In a group there is one Play button and it plays for the group — there is no second "Play for
+ * group" button beside it any more, and no solo escape hatch on this page (DECISIONS.md,
+ * 2026-07-31, superseding M11 Phase 4's "the group buttons join Play rather than replace it").
+ * The rule the user set is that a group is a group: while one is joined, everything this page starts
+ * is started for everyone in it, and the way out of that is to leave the group, which is one tap
+ * away in the player and on the Groups screen.
+ *
+ * What must *not* happen is the meaning changing silently, so the label carries the group's name —
+ * "Play for Film night" — and the group icon replaces the play triangle. [group] is non-null exactly
+ * when a tap will reach the group (`ItemDetailUiState.groupTarget` resolved), so the label can never
+ * promise a group play this page will not make.
+ *
+ * The resume position travels either way: watching something together starts where the person who
+ * chose it had got to.
  */
 @Composable
-private fun GroupActionButtons(group: DetailGroupActions) {
-    FilledTonalButton(onClick = { group.onAction(GroupAction.PLAY_FOR_GROUP) }) {
-        Icon(imageVector = Icons.Outlined.Groups, contentDescription = null)
+private fun PlayButton(
+    item: JellyfinItem,
+    group: DetailGroupActions?,
+    onClick: () -> Unit,
+) {
+    val resume = item.userData.isResumable
+    Button(onClick = onClick) {
+        Icon(
+            imageVector = if (group == null) Icons.Filled.PlayArrow else Icons.Outlined.Groups,
+            contentDescription = null,
+        )
         Text(
-            text = stringResource(R.string.detail_group_play, group.groupName),
+            text =
+                when {
+                    group == null && resume -> stringResource(R.string.detail_resume)
+                    group == null -> stringResource(R.string.detail_play)
+                    resume -> stringResource(R.string.detail_group_resume, group.groupName)
+                    else -> stringResource(R.string.detail_group_play, group.groupName)
+                },
             modifier = Modifier.padding(start = Dimens.SpaceSmall),
         )
     }
+}
 
+/**
+ * The two group *queue* actions, drawn only while a SyncPlay group is active (M11 Phase 4).
+ *
+ * They join the Play button — which is itself the group's play, see [PlayButton] — because they are
+ * the two things playing has no way to say: put this after what we are watching, or at the end. Both
+ * stay outlined so the page keeps one primary action, and they sit in the same `FlowRow` as the
+ * rest, so on a phone in portrait they simply wrap onto their own line.
+ */
+@Composable
+private fun GroupActionButtons(group: DetailGroupActions) {
     OutlinedButton(onClick = { group.onAction(GroupAction.PLAY_NEXT) }) {
         Icon(imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay, contentDescription = null)
         Text(

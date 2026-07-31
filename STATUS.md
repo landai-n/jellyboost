@@ -58,6 +58,22 @@ All implementation phases committed same-day, each `/verify`-green
    verified (50 SyncPlay SDK classes + serializers kept, zero new keep
    rules; REST polling exercised on-device minified, clean logcat).
 
+### Interleaved fix — cold start showed the offline home while online (2026-07-31)
+
+User-reported, reproduced and root-caused on the tablet, fixed and device-re-verified
+same day. Two structural holes in the M6/M9 connectivity design (DECISIONS.md
+2026-07-31, "two recovery signals"): the launch probe raced session restore and
+demoted the optimistic state ("No server address to probe" → `OFFLINE_SERVER_UNREACHABLE`
+exactly as Home first loaded), and a screen that fell back to Room while the state
+read `ONLINE` had no signal that would ever refresh it (the state never changed, so
+`connectivityChanged` never fired — hence the user's "toggle offline and back"
+workaround). Fixes in `ConnectionStateProvider` + `ConnectivityRefresher`: probe
+requests before session restore are dropped (optimism kept; the session-change probe
+re-asks immediately), a `serverReconfirmed` tick refreshes screens whose fallback's
+probe found the server fine, and a wrong "unreachable" verdict now self-heals via a
+15 s re-probe. Device-verified: cold start goes straight to the online home
+(~1 s, no offline flash); suite now 1620 unit tests.
+
 ### Device DoD session #1 — 2026-07-31 (app + jellyfin-web in the tablet's Chrome)
 
 **Core PASSES:** group create/web join + badge; play-for-group of a downloaded

@@ -2124,4 +2124,31 @@ Seeded from the approved plan; listed for traceability, no divergence:
   the alternative is a member stuck at 0:00 until the user taps play — which then jumps to the
   anchor anyway, so the exception only moves who does it and when.
 
+## 2026-07-31 — Connectivity: two recovery signals beyond the plan's enumerated triggers
+- **Scope:** `core/network/.../connectivity/ConnectionStateProvider.kt`,
+  `data/.../ConnectivityRefresher.kt` (+ their tests). Fixes the launch bug "app opened online
+  shows the offline home until offline mode is toggled off and on".
+- **Plan said:** "`ServerReachabilityProbe` (3s `getPublicSystemInfo` on network change/app
+  resume/reported failure; rotates `ServerAddressEntity` candidates)", and screens refresh only on
+  the online-ness *edges* of `ConnectionState` (M9 / `onlineStateChanges`' both-edges-never-initial
+  contract).
+- **Done instead:** two additional signals. (1) While the state is
+  `OFFLINE_SERVER_UNREACHABLE` with a usable network, the provider re-probes every 15 s — a wrong
+  "unreachable" verdict is otherwise permanent inside a foreground session, because an offline
+  state routes every repository call straight to Room, so the "reported failure" trigger can never
+  fire again. (2) A probe that answers "reachable" *without changing the state*, after a
+  transport failure was reported, emits a "server reconfirmed" tick that
+  `ConnectivityRefresher.connectivityChanged` merges in — a call that fell back to offline data
+  while the state read `ONLINE` otherwise leaves the screen on downloads-only data with no edge
+  ever coming to refresh it. Also fixed (not a divergence): a probe requested before session
+  restore has answered no longer demotes the launch optimism — probing with no session used to
+  report "unreachable" and put every cold start on the offline home for at least the 2 s debounce.
+- **Reason:** reported 2026-07-31 and reproduced on the test tablet: the cold-start probe ran
+  before `SessionRepository.restoreSession()` ("No server address to probe" at launch), so Home
+  loaded from Room while the state wrongly said the server was unreachable; whether the screen
+  ever recovered depended on timing races the user loses often enough that "toggle offline and
+  back" had become their workaround. The two new signals close the two no-recovery holes; both
+  are cheap (one unauthenticated `getPublicSystemInfo` per tick, refresh only when a fallback
+  actually happened).
+
 <!-- END -->

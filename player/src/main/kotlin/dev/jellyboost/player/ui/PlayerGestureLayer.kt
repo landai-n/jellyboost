@@ -56,12 +56,18 @@ import kotlin.math.roundToInt
  * the platform plumbing that cannot be: `AudioManager` for volume, the window's `screenBrightness`
  * attribute for brightness (a per-window override, so it dies with the player rather than changing
  * the device setting), and a transient indicator.
+ *
+ * @param swipesEnabled whether the vertical swipes are offered at all. `false` while casting: both
+ *   of them act on *this* device — its media volume, its backlight — and neither means anything
+ *   while the film is being decoded in a television, whose volume rides the hardware keys through
+ *   the Cast framework. The taps are unconditional, because they are how the controls come back.
  */
 @Composable
 internal fun PlayerGestureLayer(
     onToggleControls: () -> Unit,
     onSeekBy: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    swipesEnabled: Boolean = true,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -88,6 +94,53 @@ internal fun PlayerGestureLayer(
         }
     }
 
+    // Built as its own modifier rather than branched inside the drag handler: a swipe that is not
+    // offered should not be *detected* either, so that the pointer never leaves the parent — which
+    // is what lets the system's own edge gestures work normally while casting.
+    val swipes =
+        if (!swipesEnabled) {
+            Modifier
+        } else {
+            Modifier.pointerInput(controller, audioManager) {
+                var target: SwipeTarget? = null
+                var value = 0f
+
+                detectVerticalDragGestures(
+                    onDragStart = { offset ->
+                        target =
+                            controller.swipeTargetFor(
+                                xPx = offset.x,
+                                yPx = offset.y,
+                                widthPx = size.width.toFloat(),
+                                heightPx = size.height.toFloat(),
+                            )
+                        value =
+                            when (target) {
+                                SwipeTarget.VOLUME -> audioManager.volumeFraction()
+                                SwipeTarget.BRIGHTNESS -> activity.brightnessFraction()
+                                null -> 0f
+                            }
+                    },
+                    onDragEnd = { target = null },
+                    onDragCancel = { target = null },
+                    onVerticalDrag = { change, dragAmount ->
+                        val current = target
+                        if (current != null) {
+                            change.consume()
+                            value =
+                                (value + controller.deltaFor(dragAmount, size.height.toFloat()))
+                                    .coerceIn(0f, 1f)
+                            when (current) {
+                                SwipeTarget.VOLUME -> audioManager.setVolumeFraction(value)
+                                SwipeTarget.BRIGHTNESS -> activity.setBrightnessFraction(value)
+                            }
+                            indicator = GestureIndicator(current, value)
+                        }
+                    },
+                )
+            }
+        }
+
     Box(
         modifier =
             modifier
@@ -102,44 +155,7 @@ internal fun PlayerGestureLayer(
                             controller.doubleTapSeekMs(offset.x, size.width.toFloat())?.let(onSeekBy)
                         },
                     )
-                }.pointerInput(controller, audioManager) {
-                    var target: SwipeTarget? = null
-                    var value = 0f
-
-                    detectVerticalDragGestures(
-                        onDragStart = { offset ->
-                            target =
-                                controller.swipeTargetFor(
-                                    xPx = offset.x,
-                                    yPx = offset.y,
-                                    widthPx = size.width.toFloat(),
-                                    heightPx = size.height.toFloat(),
-                                )
-                            value =
-                                when (target) {
-                                    SwipeTarget.VOLUME -> audioManager.volumeFraction()
-                                    SwipeTarget.BRIGHTNESS -> activity.brightnessFraction()
-                                    null -> 0f
-                                }
-                        },
-                        onDragEnd = { target = null },
-                        onDragCancel = { target = null },
-                        onVerticalDrag = { change, dragAmount ->
-                            val current = target
-                            if (current != null) {
-                                change.consume()
-                                value =
-                                    (value + controller.deltaFor(dragAmount, size.height.toFloat()))
-                                        .coerceIn(0f, 1f)
-                                when (current) {
-                                    SwipeTarget.VOLUME -> audioManager.setVolumeFraction(value)
-                                    SwipeTarget.BRIGHTNESS -> activity.setBrightnessFraction(value)
-                                }
-                                indicator = GestureIndicator(current, value)
-                            }
-                        },
-                    )
-                },
+                }.then(swipes),
     ) {
         indicator?.let { GestureIndicatorOverlay(it, Modifier.align(Alignment.Center)) }
     }

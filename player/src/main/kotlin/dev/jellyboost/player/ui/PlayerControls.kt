@@ -147,6 +147,13 @@ private fun TopBar(
                 modifier = Modifier.padding(end = Dimens.SpaceMedium),
             )
         }
+        // Casting and SyncPlay are mutually exclusive (docs/notes/chromecast-m12-plan.md, decision
+        // 6), so in a group the button is not drawn at all rather than drawn and refused. Composed
+        // out rather than given a hidden state: a group is a deliberate, long-lived thing, unlike
+        // the receivers appearing and disappearing that the button animates through on its own.
+        if (!state.syncPlay.inGroup) {
+            CastRouteButton()
+        }
     }
 }
 
@@ -244,8 +251,10 @@ private fun BottomBar(
                 }
                 // No per-member playback rate exists in SyncPlay: playing faster than the group is
                 // drifting from it, so the control is not offered rather than offered and refused
-                // (docs/notes/syncplay-m11-plan.md, key decision 11).
-                if (!state.syncPlay.inGroup) {
+                // (docs/notes/syncplay-m11-plan.md, key decision 11). The same rule, for the same
+                // reason, when the player in charge has no rate at all — which while casting is the
+                // receiver's answer rather than ours (see [PlayerUiState.canSetSpeed]).
+                if (!state.syncPlay.inGroup && state.canSetSpeed) {
                     SheetButton(
                         // The current rate replaces the word once it is not 1×, so the control says what
                         // it is doing without needing a second badge next to it.

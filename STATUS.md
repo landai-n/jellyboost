@@ -171,9 +171,30 @@ disconnect (phone paused at the TV position, resumes locally), audio/subtitle/qu
 changes on the receiver, in-group connect leaves the group, back out of the player while
 casting (TV plays on, dashboard advances, one stop report when the session ends).
 
-Phases 4–5 (remote-control UI → hardening) awaiting implementation. Phase 4 has what it
-needs on `PlayerUiState.cast`: `isCasting` for the poster/gesture/PiP branches and
-`deviceName` for "Casting to <device>".
+**Phase 4 landed (the player screen is the remote control).** While `state.cast.isCasting`
+the `PlayerView` is replaced by `CastingBackdrop` — the item's artwork (`JellyfinAsyncImage`,
+fitted, dimmed) with a "Casting to {device}" chip offset above centre so it clears the
+transport row and the bottom bar on both viewport shapes — the vertical swipes are not
+composed at all (volume and brightness belong to this device; the receiver's volume rides
+the hardware keys), and picture-in-picture is disarmed, since there is no surface to float.
+`PlayerControls` gained the `CastRouteButton` in its top bar, hidden in a SyncPlay group
+(decision 6), and the speed picker now hides when the player in charge has no rate:
+`PlayerHandle.supportsPlaybackSpeed` (defaulted `true`, overridden by `CastPlayerHandle`'s
+`COMMAND_SET_SPEED_AND_PITCH` check, delegated by `RoutingPlayerHandle`) reaches the bar as
+`PlayerUiState.canSetSpeed`, re-read when a receiver arrives or leaves and again at
+`PlayerEvent.Ready`. New state: `artworkUrl` (fetched with the title, backdrop → thumb →
+primary) and `canSetSpeed`; new string `player_casting_to`. **Regression gate held: no
+existing test was modified** (`FakePlayerHandle` gained one defaulted knob), `:player`
+644 → 650 unit tests, 0 failures; full gate green in one run. Three DECISIONS entries
+(2026-07-31) cover the handle-answered speed capability, the artwork's fetch point and the
+label's placement, and swipes-not-taps.
+**Owed:** DoD walk 4 — poster + device name appear on connect, every control and sheet still
+works from the poster screen, no speed picker on a receiver without a rate, leaving the app
+while casting does **not** enter PiP (TV plays on), and the top-bar cast button is absent in
+a SyncPlay group. Tablet *and* phone-size layout check of the casting screen.
+
+Phase 5 (hardening, docs, close) awaiting implementation: minified-build cast smoke,
+`docs/features/chromecast.md` + `docs/ARCHITECTURE.md`, full DoD walk, tag `m12`.
 
 ### Interleaved fix — cold start showed the offline home while online (2026-07-31)
 

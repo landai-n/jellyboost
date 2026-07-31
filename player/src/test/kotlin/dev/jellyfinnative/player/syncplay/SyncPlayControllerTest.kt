@@ -245,7 +245,10 @@ class SyncPlayControllerTest {
             val ready = fixture.api.callsOf<SyncPlayCall.ReportReady>().single()
             ready.playlistItemId shouldBe playlistItemId
             ready.positionTicks shouldBe 30_000L.millisToTicks()
-            ready.isPlaying shouldBe true
+            // The adopted player was running, so answering the group's wait parks it first — a
+            // `ready` that claims to be playing is answered `AllExceptCurrentSession` and this
+            // member is sent nothing (`WaitingGroupState.cs`:484-498, DECISIONS.md 2026-07-31).
+            ready.isPlaying shouldBe false
         }
 
     @Test
@@ -549,7 +552,7 @@ class SyncPlayControllerTest {
     // The handshake, and the loops it used to close (M11 fix batch) --------------------------------
 
     @Test
-    fun `buffering and ready reports say what the player is really doing`() =
+    fun `buffering reports say what the player is really doing`() =
         runTest {
             val fixture = fixture()
             // The user was already watching this item, still running, when the group moved onto it.
@@ -557,21 +560,10 @@ class SyncPlayControllerTest {
 
             joinWithQueue(fixture)
 
-            // The adoption handshake's own report says it too, before any readiness is claimed.
+            // The adoption handshake's own report says it, before any readiness is claimed. The
+            // server tracks what each member reported here, and jellyfin-web sends its real state.
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
-                .single()
-                .isPlaying shouldBe true
-
-            fixture.player.emit(PlayerEvent.Ready)
-            runCurrent()
-
-            // The server extrapolates a reported position over the round trip *only* when the member
-            // says it is playing (`WaitingGroupState`: `if (!request.IsPlaying) elapsedTime = Zero`),
-            // and schedules the group's unpause from the result — so a hardcoded `false` is a lie the
-            // whole group pays for. jellyfin-web sends its real state here.
-            fixture.api
-                .callsOf<SyncPlayCall.ReportReady>()
                 .single()
                 .isPlaying shouldBe true
 
@@ -590,6 +582,54 @@ class SyncPlayControllerTest {
             runCurrent()
             fixture.api
                 .callsOf<SyncPlayCall.ReportBuffering>()
+                .single()
+                .isPlaying shouldBe false
+        }
+
+    @Test
+    fun `a ready report parks a running player, and is reported from a stopped one`() =
+        runTest {
+            val fixture = fixture()
+            // The player really is running when the group's wait has to be answered: the post-seek
+            // settle, the adopt path and the re-negotiation after a blip all reach this state.
+            fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = true)
+
+            joinWithQueue(fixture)
+            fixture.player.resetCalls()
+
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+
+            // `WaitingGroupState.cs`:484-498 — a `ready` whose `IsPlaying` is true from a session
+            // more than `2 × highestPing` behind is answered `AllExceptCurrentSession`: everyone
+            // else is told to resume and *this* member is sent nothing, on the assumption that a
+            // client already playing will catch up by itself. It does not: it sits under "Waiting
+            // for group" until somebody moves the group. So the player is parked first, and the
+            // report is then true as well as safe.
+            fixture.player.pauseCount shouldBe 1
+            val ready = fixture.api.callsOf<SyncPlayCall.ReportReady>().single()
+            ready.isPlaying shouldBe false
+            // Parked where it stood, not rewound: the server's unpause resumes from here.
+            ready.positionTicks shouldBe 30_000L.millisToTicks()
+        }
+
+    @Test
+    fun `a ready report from an already stopped player touches nothing`() =
+        runTest {
+            val fixture = fixture()
+            fixture.host.snapshot = SyncPlayHostSnapshot(itemId, 30_000L.millisToTicks(), isPlaying = false)
+
+            joinWithQueue(fixture)
+            fixture.player.resetCalls()
+
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+
+            // Parking is idempotent — it has to be, because the pause net and the WAITING hold both
+            // pause the same player and neither may be turned into a second transport call.
+            fixture.player.hadNoTransportCalls shouldBe true
+            fixture.api
+                .callsOf<SyncPlayCall.ReportReady>()
                 .single()
                 .isPlaying shouldBe false
         }

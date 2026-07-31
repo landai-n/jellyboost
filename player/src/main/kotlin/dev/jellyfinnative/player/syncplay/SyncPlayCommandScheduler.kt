@@ -175,7 +175,15 @@ class SyncPlayCommandScheduler
             command: SyncPlayCommand,
             localWhen: Instant,
         ): SyncPlayAppliedCommand {
-            Timber.d("Applying SyncPlay %s scheduled for %s", command.type, command.whenInstant)
+            // The lateness, not just the schedule: a command that lands hundreds of milliseconds
+            // after the instant it named is a desync nobody can see from the schedule alone, and it
+            // is the one reading that tells a mis-measured clock apart from a slow dispatch.
+            Timber.d(
+                "Applying SyncPlay %s scheduled for %s, %d ms after its local instant",
+                command.type,
+                command.whenInstant,
+                Duration.between(localWhen, clock.instant()).toMillis(),
+            )
             return when (command.type) {
                 // Seek first, then pause: the server pairs a pause with the position it wants
                 // everyone parked at, and pausing first would leave a visible jump afterwards.

@@ -76,9 +76,11 @@ import javax.inject.Singleton
  *
  * ### Join handshake
  * Collect the websocket → measure the clock → join → the server sends the group and its queue →
- * open the item paused (or ask the app to open a player) → report `buffering` → report `ready` when
- * the player is → the server flips the group out of WAITING and schedules an unpause everyone
- * applies at the same instant.
+ * open the item paused (or ask the app to open a player) → report `buffering` → park the player and
+ * report `ready` when it is → the server flips the group out of WAITING and schedules an unpause
+ * everyone applies at the same instant. **A member reporting `ready` is stopped** — the server's own
+ * `WaitingGroupState` answers a `ready` that claims to be playing by resuming everyone *else*
+ * ([reportReady]).
  *
  * The websocket is collected *before* the join call, not after: collecting is what opens it (the SDK
  * has no `connect()`), and a group joined before the socket is up would never hear its own
@@ -1308,12 +1310,7 @@ class SyncPlayController
             queue: SyncPlayGroupQueue,
         ) {
             if (queue.reason !in READY_OWING_REASONS || host == null) return
-            val snapshot = hostSnapshot()
-            reportReady(
-                entry,
-                snapshot?.positionTicks ?: queue.startPositionTicks,
-                reportedIsPlaying(snapshot),
-            )
+            reportReady(entry, fallbackPositionTicks = queue.startPositionTicks)
         }
 
         /** A slot is open on the host; whatever was skipped to get here is forgiven. */
@@ -1370,8 +1367,7 @@ class SyncPlayController
                 Timber.v("Player ready with no SyncPlay handshake outstanding; saying nothing")
                 return
             }
-            val snapshot = hostSnapshot()
-            reportReady(entry, snapshot?.positionTicks ?: 0L, reportedIsPlaying(snapshot))
+            reportReady(entry)
         }
 
         /**
@@ -1397,8 +1393,7 @@ class SyncPlayController
                         val current = currentEntry() ?: return@launchInSession
                         if (readyOwedFor != current.playlistItemId) return@launchInSession
                         Timber.d("Player never re-buffered; reporting SyncPlay ready from where it stands")
-                        val snapshot = hostSnapshot()
-                        reportReady(current, snapshot?.positionTicks ?: 0L, reportedIsPlaying(snapshot))
+                        reportReady(current)
                     }
                 }
         }
@@ -1539,32 +1534,78 @@ class SyncPlayController
         }
 
         /**
-         * Answers the group's wait, once.
+         * Answers the group's wait, once — from a player that has been **parked** for it.
          *
          * Clearing [readyOwedFor] *before* the call is what makes it once: the report is a round
          * trip, and a second readiness arriving inside it would otherwise send a second one.
          *
-         * @param isPlaying whether this member's playback is actually running at [positionTicks] —
-         *   see [reportedIsPlaying]. `ReadyGroupRequest` on the server extrapolates the reported
-         *   position over the round trip *only* when this is true (`WaitingGroupState`:
-         *   `if (!request.IsPlaying) elapsedTime = TimeSpan.Zero`), and the delay it then schedules
-         *   the group's unpause with is computed from the result.
+         * **A member reporting `ready` is stopped, and says so.** The handshake the design is built
+         * on is open-paused → buffering → `ready` → *the server's unpause starts playback*
+         * (docs/notes/syncplay-m11-plan.md), and `WaitingGroupState` enforces it: a
+         * `ReadyGroupRequest` from a resuming group whose reporter is more than `2 × highestPing`
+         * behind is answered `AllExceptCurrentSession` **when `request.IsPlaying` is true** — the
+         * group is told to resume and the reporter is deliberately sent nothing, on the assumption
+         * that a client already playing will catch up by playing (`WaitingGroupState.cs`:484-498).
+         * Several of our paths report while the player really is running — the post-seek settle, the
+         * adopt path, the re-negotiation after a blip — and each of them stranded this member under
+         * the WAITING overlay until somebody else moved the group (DECISIONS.md 2026-07-31,
+         * amending the "honest reports" entry). So [parkForReady] stops the player first and the
+         * report then carries `isPlaying = false`, which is both what jellyfin-web does and, now,
+         * the truth. Parking is idempotent: a player already stopped is not touched.
+         *
+         * @param fallbackPositionTicks where to say the player is when no host is attached to ask.
          */
         private suspend fun reportReady(
             entry: SyncPlayQueueEntry,
-            positionTicks: Long,
-            isPlaying: Boolean,
+            fallbackPositionTicks: Long = 0L,
         ) {
             readyOwedFor = null
             readyFallbackJob?.cancel()
             readyFallbackJob = null
-            runCatching { api.reportReady(timeSync.serverNow(), positionTicks, isPlaying, entry.playlistItemId) }
-                .onFailure { Timber.w(it, "Could not report SyncPlay ready") }
+            val parked = parkForReady(fallbackPositionTicks)
+            Timber.d(
+                "Reporting SyncPlay ready at %d ticks (parked the player: %b)",
+                parked.positionTicks,
+                parked.parked,
+            )
+            runCatching {
+                api.reportReady(timeSync.serverNow(), parked.positionTicks, false, entry.playlistItemId)
+            }.onFailure { Timber.w(it, "Could not report SyncPlay ready") }
             if ((_state.value as? SyncPlayState.InGroup)?.phase == SyncPlayPhase.Buffering) {
                 setPhase(SyncPlayPhase.Waiting)
             }
             armSelfSync()
         }
+
+        /**
+         * Stops the player where it stands, so the `ready` about to go out is true — see [reportReady].
+         *
+         * On the main dispatcher and in one pass, deliberately: the position reported has to be the
+         * position the player is parked at, and reading it from a second snapshot taken after the
+         * pause would only add the jitter of a dispatch. The host's own reading where one is
+         * attached, the shared player's otherwise — a detached member goes on playing in the
+         * background (see [detachHost]), and it is exactly as unwelcome a `ready` from a running
+         * player as an attached one.
+         *
+         * Nothing else changes: [armSelfSync] still runs after the report, so a member the group
+         * never answers is still recovered three seconds later by the self-sync net.
+         */
+        private suspend fun parkForReady(fallbackPositionTicks: Long): ParkedForReady =
+            withContext(mainDispatcher) {
+                val snapshot = host?.snapshot()
+                val running = snapshot?.isPlaying ?: playerHandle.snapshot().isPlaying
+                if (running) {
+                    Timber.i("Parking the player to report ready")
+                    playerHandle.pause()
+                }
+                ParkedForReady(snapshot?.positionTicks ?: fallbackPositionTicks, running)
+            }
+
+        /** What [parkForReady] found: where the player stands, and whether it had to be stopped. */
+        private data class ParkedForReady(
+            val positionTicks: Long,
+            val parked: Boolean,
+        )
 
         private fun onCommand(command: SyncPlayCommand) {
             // Logged on arrival as well as on application: "the command never came" and "the command
@@ -1650,13 +1691,16 @@ class SyncPlayController
         }
 
         /**
-         * Whether this member is actually playing, for a `buffering`/`ready` report.
+         * Whether this member is actually playing, for a `buffering` report.
          *
-         * Every one of those used to say `false` unconditionally, which is a lie the *server* acts
-         * on: it schedules the group's next unpause from what each member reported, and jellyfin-web
-         * sends its real state here. The host's own reading where one is attached, the shared player
-         * otherwise — a detached member goes on playing in the background (see [detachHost]), so
-         * `false` is only right when nothing is running at all.
+         * Those used to say `false` unconditionally, which is a lie the *server* acts on: it tracks
+         * what each member reported and jellyfin-web sends its real state here. The host's own
+         * reading where one is attached, the shared player otherwise — a detached member goes on
+         * playing in the background (see [detachHost]), so `false` is only right when nothing is
+         * running at all.
+         *
+         * **Buffering only.** A `ready` is reported from a player [parkForReady] has just stopped,
+         * so its answer is `false` by construction rather than by measurement — see [reportReady].
          */
         private suspend fun reportedIsPlaying(snapshot: SyncPlayHostSnapshot?): Boolean =
             snapshot?.isPlaying ?: isPlayerRunning()

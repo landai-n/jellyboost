@@ -2456,6 +2456,47 @@ Seeded from the approved plan; listed for traceability, no divergence:
   and we are deliberately sent nothing, because a client that is already playing will get there by
   playing. That is the protocol working as designed for a member that really is running, and the
   self-sync net (3 s, `SELF_SYNC_TIMEOUT_MS`) is the floor under it if it ever is not.
+- **Amended 2026-07-31, same day — (2) is withdrawn for the `ready` report: a member reporting
+  `ready` is *parked* first, and reports `isPlaying = false`.** The "known consequence" above turned
+  out to be the bug, not a footnote. `WaitingGroupState.cs`:484-498 (server 10.11), resuming a group:
+  when the reporting session's computed delay exceeds `2 × highestPing` **and `request.IsPlaying` is
+  true**, the unpause goes out as `SyncPlayBroadcastType.AllExceptCurrentSession` — the reporter is
+  sent nothing at all. Only `IsPlaying == false` widens the filter to `AllGroup`. jellyfin-web never
+  meets this because it pauses before reporting ready, so the honest-reports change put us on a path
+  no other client takes. Several of ours report `ready` from a genuinely running player — the
+  post-seek rebuffer settle, the adopt path, the connectivity re-negotiation — and on device (second
+  DoD run, 2026-07-31) that was an app-initiated seek leaving this member stuck under "Waiting for
+  group" until somebody else resumed, and an app-initiated resume desyncing further and further
+  (the self-sync net fired on the coarse inferred anchor, because the real unpause never arrived).
+  - **Done instead:** `SyncPlayController.reportReady` — the single choke point every ready report
+    already went through — now calls `parkForReady()` on the main dispatcher before the call: it
+    reads the host's snapshot (the shared player's when detached), and if the player is running it
+    logs *"Parking the player to report ready"* and pauses it. The report then carries
+    `isPlaying = false`, which is both what the design says a ready member is
+    (docs/notes/syncplay-m11-plan.md:49 — open-paused → buffering → ready → *the server's unpause
+    starts playback*) and, now, the truth. The position reported is unchanged: where the player is
+    parked. `reportedIsPlaying` survives for the **buffering** reports only, which keep the honest
+    value from (2) — the server's buffering handling uses it benignly.
+  - **Idempotent by construction:** the park is a no-op on a player that is already stopped, which
+    is what lets it coexist with the two other things that pause this member — the pause net
+    (`pauseToGroup`, itself gated on `snapshot().isPlaying`) and the WAITING hold (gated on
+    `isPlayerRunning()`). After a park both simply find nothing to do.
+  - **The self-sync net is unchanged and still the floor.** `reportReady` arms it exactly as before,
+    after the park; a group that answers the ready with an unpause disarms it, and a group that
+    answers with nothing has this member seek to the group anchor and play 3 s later. Parking makes
+    that net *reachable* — the stranded case above is precisely where the member was left playing,
+    which is the one state `selfSyncToGroup` refuses to correct.
+  - **Tests:** `SyncPlayControllerTest` gains *a ready report parks a running player, and is
+    reported from a stopped one* and *a ready report from an already stopped player touches
+    nothing*. The two assertions from (2) that pinned a `ready` carrying `isPlaying = true` are
+    rewritten to the new contract (the adoption test now asserts `false`, and *buffering and ready
+    reports say what the player is really doing* is narrowed to *buffering reports say what the
+    player is really doing*) — a deliberate semantic change recorded here, not a weakened test: the
+    buffering half it pinned is untouched and still asserted in both directions.
+- **Also 2026-07-31 — diagnostics, no behaviour change:** `SyncPlayTimeSync.record` logs every clock
+  sample (`offset ms / rtt ms → estimate ms`), and `SyncPlayCommandScheduler.apply` logs how many ms
+  after its local instant a command actually ran. Between them, "whose clock was wrong" and "the
+  command was late" stop being questions a device log cannot answer.
 
 <!-- END -->
 

@@ -31,11 +31,19 @@ class SyncPlayPinger
         private val api: SyncPlayApi,
         private val timeSync: SyncPlayTimeSync,
     ) {
-        /** Samples the server clock until cancelled. */
-        suspend fun run() {
+        /**
+         * Samples the server clock until cancelled.
+         *
+         * @param onOutcome called with `true` for every completed exchange and `false` for every
+         *   failed one. This loop is the only thing that talks to the server on a fixed cadence, so
+         *   it is also the only honest signal for "the REST API has stopped answering" — which is
+         *   how the controller notices a connection that is gone while the OS still says the device
+         *   is online (STATUS.md, DoD session #1, B8).
+         */
+        suspend fun run(onOutcome: (Boolean) -> Unit = {}) {
             var taken = 0
             while (currentCoroutineContext().isActive) {
-                sampleOnce()
+                onOutcome(sampleOnce())
                 taken++
                 delay(if (taken < FAST_SAMPLES) FAST_INTERVAL_MS else STEADY_INTERVAL_MS)
             }
@@ -48,20 +56,23 @@ class SyncPlayPinger
          * offset current, and letting one timed-out request end it would leave the client scheduling
          * every later command against a stale clock — silently, and for the rest of the group
          * session.
+         *
+         * @return `true` when the exchange completed.
          */
-        private suspend fun sampleOnce() {
+        private suspend fun sampleOnce(): Boolean =
             try {
                 val sample = api.sampleServerTime()
                 timeSync.record(sample)
                 api.reportPing(sample.roundTrip.toMillis() / 2)
+                true
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Throwable,
             ) {
                 Timber.w(error, "A SyncPlay time sample failed; keeping the current offset")
+                false
             }
-        }
 
         companion object {
             /** Samples taken at [FAST_INTERVAL_MS] right after joining, before settling down. */

@@ -447,6 +447,177 @@ class SyncPlayControllerTest {
             fixture.host.loaded shouldBe listOf(itemId to 0L, itemId to 0L)
         }
 
+    // The handshake, and the loops it used to close (M11 fix batch) --------------------------------
+
+    @Test
+    fun `applying the group's pause is not answered with a ready report`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.api.clearCalls()
+
+            fixture.socket.emit(command(SyncPlayCommandType.Pause, now(), positionMs = 30_000))
+            runCurrent()
+            // Seeking to the position the group parked at makes the player ready again. Reporting
+            // that is what the server answers with the very pause that caused it — the storm.
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
+    @Test
+    fun `the same pause sent again moves nothing, so the loop has nothing to feed on`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.socket.emit(command(SyncPlayCommandType.Pause, now(), positionMs = 30_000))
+            runCurrent()
+            fixture.player.resetCalls()
+            fixture.api.clearCalls()
+
+            // "Client got lost, sending current state" — the same instruction, freshly stamped.
+            fixture.socket.emit(
+                command(SyncPlayCommandType.Pause, now(), positionMs = 30_000, emittedAt = now().plusMillis(1)),
+            )
+            fixture.player.emit(PlayerEvent.Ready)
+            advanceTimeBy(10_000)
+            runCurrent()
+
+            fixture.player.hadNoTransportCalls shouldBe true
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
+    @Test
+    fun `a group seek is answered with a ready even when the player never re-buffers`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.api.clearCalls()
+
+            // A seek resets every member to buffering server-side; the group waits for each `ready`.
+            fixture.socket.emit(command(SyncPlayCommandType.Seek, now(), positionMs = 90_000))
+            runCurrent()
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+
+            advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS)
+            runCurrent()
+
+            fixture.api
+                .callsOf<SyncPlayCall.ReportReady>()
+                .single()
+                .playlistItemId shouldBe playlistItemId
+        }
+
+    @Test
+    fun `the group going to waiting from playing pauses this member, and says nothing`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+            fixture.api.clearCalls()
+
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Waiting, SyncPlayRequestKind.Buffer),
+            )
+            runCurrent()
+
+            fixture.player.pauseCount shouldBe 1
+            (fixture.controller.state.value as SyncPlayState.InGroup).phase shouldBe SyncPlayPhase.Waiting
+
+            // Being told to wait is not a handshake: the pause makes the player ready again and that
+            // must not turn into a report.
+            fixture.player.emit(PlayerEvent.Ready)
+            advanceTimeBy(10_000)
+            runCurrent()
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+            fixture.player.seekedToMs shouldBe emptyList()
+        }
+
+    @Test
+    fun `a handshake into a playing group syncs itself when the group sends no command`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture, queue = twoItemQueue(playingIndex = 0))
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.socket.emit(command(SyncPlayCommandType.Unpause, now(), positionMs = 0))
+            runCurrent()
+
+            // The item ends, the group advances and reports itself playing — and then goes quiet.
+            fixture.player.emit(PlayerEvent.Ended)
+            runCurrent()
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(
+                    twoItemQueue(playingIndex = 1, reason = SyncPlayQueueUpdateReason.NextItem),
+                ),
+            )
+            runCurrent()
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.socket.emit(
+                SyncPlayGroupEvent.StateChanged(SyncPlayGroupState.Playing, SyncPlayRequestKind.Ready),
+            )
+            runCurrent()
+            fixture.player.resetCalls()
+            fixture.api.clearCalls()
+
+            advanceTimeBy(SyncPlayController.SELF_SYNC_TIMEOUT_MS)
+            runCurrent()
+
+            fixture.player.playCount shouldBe 1
+            fixture.player.seekedToMs shouldBe listOf(SyncPlayController.SELF_SYNC_TIMEOUT_MS)
+            (fixture.controller.state.value as SyncPlayState.InGroup)
+                .phase
+                .shouldBeInstanceOf<SyncPlayPhase.Playing>()
+            // Recovering must not re-open the handshake: another ready is what the storm is made of.
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
+    @Test
+    fun `an unpause arriving in time stands the safety net down`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+
+            advanceTimeBy(SyncPlayController.SELF_SYNC_TIMEOUT_MS * 2)
+            runCurrent()
+
+            // The net is what would call `play` again; the drift monitor's corrective seeks (which
+            // this fake player earns by never advancing) are not it.
+            fixture.player.playCount shouldBe 0
+        }
+
+    @Test
+    fun `a queue update that puts everyone back to buffering is answered, slot unchanged or not`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture)
+            fixture.player.emit(PlayerEvent.Ready)
+            runCurrent()
+            fixture.api.clearCalls()
+
+            // The group restarted the item it is already on (`Unpause` out of Idle, server-side):
+            // same slot, nothing to load, and `SetAllBuffering(true)` waiting on a ready all the same.
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue()))
+            runCurrent()
+
+            fixture.host.loaded.size shouldBe 1
+            fixture.api
+                .callsOf<SyncPlayCall.ReportReady>()
+                .single()
+                .playlistItemId shouldBe playlistItemId
+
+            // A reorder is not one of those, and stays silent.
+            fixture.api.clearCalls()
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(queue().copy(reason = SyncPlayQueueUpdateReason.MoveItem)),
+            )
+            runCurrent()
+            fixture.api.callsOf<SyncPlayCall.ReportReady>() shouldBe emptyList()
+        }
+
     // Losing the group ------------------------------------------------------------------------------
 
     @Test
@@ -473,16 +644,79 @@ class SyncPlayControllerTest {
         }
 
     @Test
-    fun `going offline while in a group is a confirmed loss too`() =
+    fun `going offline freezes at once, and is a confirmed loss once the grace window is out`() =
         runTest {
             val fixture = fixture()
             joinPlaying(fixture)
+            fixture.player.resetCalls()
 
             fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
             runCurrent()
 
+            // Frozen immediately, so a hard Wi-Fi kill still stops within the window rather than at
+            // the end of it — but the group is not given up on yet.
             fixture.player.pauseCount shouldBe 1
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+            fixture.messages shouldBe emptyList()
+
+            advanceTimeBy(SyncPlayController.CONNECTIVITY_GRACE_MS + 1)
+            runCurrent()
+
             fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
+        }
+
+    @Test
+    fun `a connectivity blip shorter than the grace window keeps the group and re-negotiates`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+            fixture.api.clearCalls()
+
+            fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
+            runCurrent()
+            advanceTimeBy(BLIP_MS)
+            fixture.connection.value = ConnectionState.ONLINE
+            runCurrent()
+
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+            fixture.messages shouldBe emptyList()
+            // Held for the blip rather than run on into a drift the group cannot see...
+            fixture.player.pauseCount shouldBe 1
+            // ...and the group is asked to put this member back in step rather than told nothing.
+            fixture.api.callsOf<SyncPlayCall.ReportBuffering>().size shouldBe 1
+
+            // The window that was opened must not fire behind it.
+            advanceTimeBy(SyncPlayController.CONNECTIVITY_GRACE_MS * 2)
+            runCurrent()
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+            fixture.messages shouldBe emptyList()
+        }
+
+    @Test
+    fun `a streak of failed ping cycles is a confirmed loss, once`() =
+        runTest {
+            val fixture = fixture()
+            // The device case: the OS still says "online" while the platform has cut this app's
+            // network, so every REST call times out and the socket never comes back.
+            fixture.api.failEverySample = java.io.IOException("timeout")
+            joinPlaying(fixture)
+            fixture.player.resetCalls()
+
+            advanceTimeBy(SyncPlayPinger.FAST_INTERVAL_MS * SyncPlayController.PING_FAILURE_STREAK)
+            runCurrent()
+
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.player.pauseCount shouldBe 1
+            fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
+
+            advanceTimeBy(60_000)
+            runCurrent()
+            fixture.player.pauseCount shouldBe 1
             fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
         }
 
@@ -638,12 +872,13 @@ class SyncPlayControllerTest {
         type: SyncPlayCommandType,
         whenInstant: Instant,
         positionMs: Long?,
+        emittedAt: Instant = whenInstant,
     ) = SyncPlayCommand(
         type = type,
         whenInstant = whenInstant,
         positionTicks = positionMs?.millisToTicks(),
         playlistItemId = playlistItemId,
-        emittedAt = whenInstant,
+        emittedAt = emittedAt,
     )
 
     private fun queue(startTicks: Long = 0L) =
@@ -750,6 +985,11 @@ class SyncPlayControllerTest {
             messages,
             launchRequests,
         )
+    }
+
+    private companion object {
+        /** A blip well inside [SyncPlayController.CONNECTIVITY_GRACE_MS] — the device's own two seconds. */
+        const val BLIP_MS = 2_000L
     }
 
     private fun loggedIn() =

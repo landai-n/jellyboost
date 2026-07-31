@@ -2004,4 +2004,124 @@ Seeded from the approved plan; listed for traceability, no divergence:
   timeouts and a log full of warnings for an offline session); anything narrower would leave a group
   member invisible on the dashboard, which is what the plan's decision 9 exists to prevent.
 
+## 2026-07-31 — M11 fix batch: `ready` is reported only when the group is waiting for one
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (handshake, `readyOwedFor`),
+  `player/.../syncplay/SyncPlayCommandScheduler.kt` (applied-once), `SyncPlayControllerTest`,
+  `SyncPlayCommandSchedulerTest`, `SyncPlayTestDoubles`.
+- **Plan said:** `docs/notes/syncplay-m11-plan.md`, join flow: *"on `PlayerEvent.Ready` send
+  `syncPlayReady`"*, and `docs/features/syncplay.md`: *"Every readiness, not only the first"* —
+  i.e. every `PlayerEvent.Ready` reports readiness to the server.
+- **Done instead:** a `ready` goes out only when one is **owed**: when this member has loaded or
+  adopted a queue slot, has told the group it is buffering, has been handed a group `Seek`, or has
+  been sent a queue update whose reason resets every member to buffering (`NewPlaylist`,
+  `SetCurrentItem`, `NextItem`, `PreviousItem`). A readiness with nothing owed is silence. In
+  addition the scheduler applies a command **once**: a re-send with the same type, instant,
+  position and slot is a no-op, and a command emitted before the one already taken on is dropped.
+- **Reason:** the plan's rule is a closed loop against the real server, confirmed against
+  jellyfin 10.11.x sources. `PausedGroupState.HandleRequest(ReadyGroupRequest)` and
+  `PlayingGroupState`'s equivalent both answer a `ready` from a group that is *not* waiting by
+  re-sending that group's current state command to the reporting session alone ("Client got lost,
+  sending current state"). Applying that command seeks the player, which makes ExoPlayer emit
+  another `STATE_READY`, which under the old rule reported readiness again: on device this ran at
+  ~13 requests/second, 306 `POST /SyncPlay/Ready` in 24 s, stopping only on unpause (STATUS.md DoD
+  session #1, B1) and re-applying one past-due `Unpause` about once a second for minutes (B2, and
+  the ~28 s forward jump it caused). Owing is also strictly more faithful to the protocol than
+  "every readiness" was: the server's `SetAllBuffering(true)` is precisely the set of moments a
+  `ready` is expected, and it is now the set of moments one is sent.
+- **Tests updated to the new specification:** none removed. `the join handshake buffers, opens the
+  item paused, then reports ready` and the rest of the handshake suite are unchanged and green,
+  because the join *is* an owed handshake; new tests pin the silence
+  (`applying the group's pause is not answered with a ready report`,
+  `the same pause sent again moves nothing, so the loop has nothing to feed on`,
+  `the group going to waiting from playing pauses this member, and says nothing`) and the two
+  places where owing is not driven by a player event (`a group seek is answered with a ready even
+  when the player never re-buffers`, `a queue update that puts everyone back to buffering is
+  answered, slot unchanged or not`).
+
+## 2026-07-31 — M11 fix batch: WAITING pauses this member
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (`onGroupStateChanged`).
+- **Plan said:** `docs/notes/syncplay-m11-plan.md` Phase 2 lists "WAITING pauses" as a pinned
+  behaviour, but the implementation only mapped the group's `Waiting` onto this member's *phase* —
+  which draws an overlay and nothing else.
+- **Done instead:** the group entering `Waiting` from a state where this member was `Playing` also
+  pauses the player, holding the position for the resume the server will schedule. It is a
+  command-like application: nothing is reported, so it cannot feed the loop above.
+- **Reason:** the overlay was cosmetic on device — the member played on behind it, 755 s -> 762 s
+  over eight seconds, ending up ahead of a group that was stalled on somebody else (B5).
+  jellyfin-web pauses here. (The server does send a `Pause` to non-buffering members in this case;
+  what undid it was B2's re-applied past-due `Unpause`, whose catch-up seek put this member
+  *further* ahead each time. Both ends are now fixed, and the explicit pause is the one that does
+  not depend on the server choosing to send anything.)
+
+## 2026-07-31 — M11 fix batch: one loss mechanism, with a grace window and a freeze
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (`confirmLoss`, `watchConnectivity`,
+  `onPingOutcome`), `player/.../syncplay/time/SyncPlayPinger.kt` (`run(onOutcome)`),
+  `SyncPlayControllerTest`.
+- **Plan said:** key decision 10 as amended (2026-07-30): a confirmed connection loss pauses the
+  player, leaves the group and says so; *"a momentary socket flap the SDK reconnects through is not
+  a loss"*. The implementation confirmed a loss from two signals — the socket collection ending, and
+  `ConnectionStateProvider` reporting offline — the second of them instantly.
+- **Done instead:** three signals through one `confirmLoss()`:
+  1. the socket collection ending (unchanged, immediate);
+  2. `PING_FAILURE_STREAK` = 3 consecutive failed ping cycles (~15 s at the 5 s cadence), which is
+     new;
+  3. connectivity offline for `CONNECTIVITY_GRACE_MS` = 5 s, which was instant before.
+  During the grace window playback is **frozen** — paused, group kept — and connectivity returning
+  inside it re-enters the buffering/ready handshake so the server re-syncs this member. All three
+  constants are `public const` so they can be tuned without touching the logic.
+- **Reason:** two device findings that are really one design question. `svc wifi disable; sleep 2;
+  svc wifi enable` ejected the group on the transition edge (B9) — the plan's "never on a transient
+  blip" was unmet because the *connectivity* signal, unlike the socket one, has no recovery of its
+  own to ride out. Meanwhile the opposite failure also existed: with the app backgrounded and the OEM ROM
+  cutting its network while the OS still reported "online", every REST call timed out for three
+  minutes and the server disposed the group, with nothing here noticing until a foreground
+  `NotInGroup` (B8). The ping loop is the only fixed-cadence conversation with the server, so its
+  failures are the honest signal for the second, and a window is the honest answer to the first.
+  **Freezing rather than playing on during the window** is the choice the brief left open: five
+  seconds of playback with no way to hear a pause is five seconds of invisible drift, and a member
+  that stops for a moment and resumes in step is easier to understand than one that quietly ends up
+  ahead. It also keeps the M11 DoD's Wi-Fi-kill PASS intact — the player pauses immediately on the
+  offline edge, and the "Left SyncPlay — connection lost" message follows 5 s later (measured on
+  device 2026-07-31: freeze at t+0.00 s, teardown at t+5.03 s).
+  **What the grace cannot buy back:** on jellyfin 10.11.x the websocket closing ends the *server's*
+  session (`SessionManager.SessionEnded` -> `SyncPlayManager.OnSessionEnded` -> `LeaveGroup`), so a
+  real two-second Wi-Fi drop removes this member from the group server-side whatever the client
+  does — observed as `403` on the first SyncPlay REST call (all of them are
+  `[Authorize(Policies.SyncPlayIsInGroup)]`) followed by a `NotInGroup` update. The change is
+  therefore that the client no longer *causes* the ejection and reports the accurate reason when the
+  server does; a blip that the server rides out now keeps the group.
+- **Test updated to the new specification:** `going offline while in a group is a confirmed loss
+  too` became `going offline freezes at once, and is a confirmed loss once the grace window is out`
+  — same guarantee, now with the window in it. Two new tests pin the blip (`a connectivity blip
+  shorter than the grace window keeps the group and re-negotiates`) and the streak (`a streak of
+  failed ping cycles is a confirmed loss, once`).
+
+## 2026-07-31 — M11 fix batch: a completed handshake that hears nothing syncs itself
+- **Scope:** `player/.../syncplay/SyncPlayController.kt` (`armSelfSync`, `selfSyncToGroup`,
+  `groupPlayingAnchor`), `player/.../syncplay/socket/SdkSyncPlaySocket.kt` (a warning where a
+  command used to vanish silently), `SyncPlayControllerTest`.
+- **Plan said:** nothing. The plan's model is that the player moves only when the server
+  rebroadcasts a command (key decision 11), with the drift monitor as the only safety net and only
+  *after* playback has started.
+- **Done instead:** after every `ready`, and whenever the group reports itself `Playing`, a
+  `SELF_SYNC_TIMEOUT_MS` = 3 s timer is armed. If it fires while the group is known to be playing,
+  this member is not, and a player is attached, the controller seeks to the group's inferred
+  position and starts playback itself — then hands over to the drift monitor. Any applied command
+  disarms it. The path deliberately reports nothing (another `ready` is what the storm above is made
+  of).
+- **Reason:** device B3, reproduced again on 2026-07-31 *after* the storm was fixed, so it is not
+  merely a symptom of it. The handshake completes, the server's own state update says
+  `StateChanged(Playing, reason=Ready)` — which it can only send from the branch that has already
+  broadcast an `Unpause` — and no `SendCommand` ever reaches this client. Ruled out as causes: the
+  broadcast filter (`WaitingGroupState.HandleRequest(ReadyGroupRequest)` uses `AllGroup`, not
+  `AllExceptCurrentSession`, whenever the reporting client says `IsPlaying = false`, which this
+  client always does) and the contents of our `ready` (right playlist item, position 0,
+  `isPlaying = false`, inside the server's 2 s `TimeSyncOffset`). What is left is the one websocket
+  frame not arriving or not being decoded; the new warning in `SdkSyncPlaySocket` will say so if it
+  is a null payload. A group `Unpause` request cannot recover it either, because the group already
+  *is* playing and the request no-ops. This is a bounded, deliberate exception to key decision 11:
+  it only fires when the group says it is playing and has said nothing else for three seconds, and
+  the alternative is a member stuck at 0:00 until the user taps play — which then jumps to the
+  anchor anyway, so the exception only moves who does it and when.
+
 <!-- END -->

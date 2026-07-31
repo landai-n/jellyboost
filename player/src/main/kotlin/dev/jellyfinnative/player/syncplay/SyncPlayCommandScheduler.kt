@@ -21,6 +21,7 @@ import timber.log.Timber
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
@@ -43,6 +44,16 @@ import kotlin.math.abs
  * the join handshake took a moment — is not dropped. An unpause catches up by seeking to
  * `position + (now − when)`, because the group has been playing for that long without us. That is
  * the difference between rejoining in sync and rejoining permanently behind.
+ *
+ * ### Applied exactly once
+ * The server re-sends the group's *current* state command to a single session whenever it thinks
+ * that session got lost — `PausedGroupState.HandleRequest(ReadyGroupRequest)` and
+ * `PlayingGroupState`'s equivalent both do it, verbatim ("Client got lost, sending current state").
+ * Those repeats carry the same `when` and the same position as the command already applied, so
+ * acting on them again is at best wasted work and at worst a re-seek that re-buffers, emits another
+ * readiness, and earns another repeat — the feedback storm found on device (STATUS.md, DoD session
+ * #1, B1/B2). So a command identical to the last one scheduled is a no-op, and a command *emitted*
+ * before it is stale and dropped: the group's timeline only ever moves forwards.
  */
 @Singleton
 class SyncPlayCommandScheduler
@@ -71,8 +82,28 @@ class SyncPlayCommandScheduler
 
         private var pending: Job? = null
 
-        /** Schedules [command], replacing whatever was pending. */
+        /** What was last taken on, so an identical repeat and a stale straggler can be told apart. */
+        private var lastTaken: TakenCommand? = null
+
+        /**
+         * Schedules [command], replacing whatever was pending.
+         *
+         * Ignored when it is the same command as the one already taken on (same type, instant,
+         * position and slot), or when it was emitted before it — see the class docs.
+         */
         fun schedule(command: SyncPlayCommand) {
+            val taken = TakenCommand(command.identity(), command.emittedAt)
+            lastTaken?.let { previous ->
+                if (previous.identity == taken.identity) {
+                    Timber.d("Ignoring a repeated SyncPlay %s for %s", command.type, command.whenInstant)
+                    return
+                }
+                if (command.emittedAt.isBefore(previous.emittedAt)) {
+                    Timber.d("Ignoring a stale SyncPlay %s emitted at %s", command.type, command.emittedAt)
+                    return
+                }
+            }
+            lastTaken = taken
             pending?.cancel()
             pending =
                 scope.launch {
@@ -83,13 +114,21 @@ class SyncPlayCommandScheduler
                         val result = apply(command, localWhen)
                         _applied.tryEmit(result)
                     }
+                    pending = null
                 }
         }
 
-        /** Drops the pending command — on leaving a group, and when the player screen detaches. */
+        /**
+         * Drops the pending command and forgets what was taken on — on leaving a group, and when the
+         * player screen detaches.
+         *
+         * The memory goes with it deliberately: a player that re-attaches has to be told the group's
+         * current state again, and that repeat is the only thing that will say it.
+         */
         fun cancel() {
             pending?.cancel()
             pending = null
+            lastTaken = null
         }
 
         private fun apply(
@@ -141,6 +180,26 @@ class SyncPlayCommandScheduler
         }
 
         private fun SyncPlayCommand.positionMillis(): Long? = positionTicks?.ticksToMillis()
+
+        private fun SyncPlayCommand.identity() = CommandIdentity(type, whenInstant, positionTicks, playlistItemId)
+
+        /**
+         * What makes two `SendCommand`s the same instruction.
+         *
+         * `emittedAt` is deliberately not part of it: the server stamps every send with
+         * `DateTime.UtcNow`, so a re-send of the identical group state differs in that field alone.
+         */
+        private data class CommandIdentity(
+            val type: SyncPlayCommandType,
+            val whenInstant: Instant,
+            val positionTicks: Long?,
+            val playlistItemId: UUID,
+        )
+
+        private data class TakenCommand(
+            val identity: CommandIdentity,
+            val emittedAt: Instant,
+        )
 
         companion object {
             /**

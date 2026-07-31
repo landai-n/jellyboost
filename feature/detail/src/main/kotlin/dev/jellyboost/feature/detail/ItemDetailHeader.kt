@@ -1,5 +1,7 @@
 package dev.jellyboost.feature.detail
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -34,12 +36,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.common.formatBytes
@@ -193,12 +201,16 @@ private fun DetailFacts(
         }
 
         item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
-            Text(
-                text = overview,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.widthIn(max = TEXT_MAX_WIDTH),
-            )
+            if (compact) {
+                ExpandableOverview(text = overview)
+            } else {
+                Text(
+                    text = overview,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.widthIn(max = TEXT_MAX_WIDTH),
+                )
+            }
         }
 
         item.creditLine()?.let { credits ->
@@ -263,10 +275,11 @@ private fun MetadataLine(
 
 /**
  * On a compact (phone) width the buttons move from a wrapping [FlowRow] — which left ragged,
- * left-aligned rows once four buttons plus labels stopped fitting one line — to a two-row grid
- * where every button either fills its half of the row or sits at its icon's intrinsic size, so the
- * rows line up edge to edge (user: "buttons feel misaligned"). Wide layouts are untouched: the
- * `false` default keeps every existing call site on the original `FlowRow` path byte-for-byte.
+ * left-aligned rows once four buttons plus labels stopped fitting one line — to a single
+ * edge-to-edge row where Play keeps the only label and stretches, and the watched/favorite/
+ * download controls are icon-only (user: "buttons feel misaligned", then "reduce the text
+ * usage"). Wide layouts are untouched: the `false` default keeps every existing call site on
+ * the original `FlowRow` path byte-for-byte.
  */
 @Composable
 private fun DetailActions(
@@ -284,6 +297,10 @@ private fun DetailActions(
             modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         ) {
+            // One row, one worded button: Play keeps its label and stretches; the three secondary
+            // controls are icon-only circles (the heart already was — the other two now match it,
+            // labels moving to contentDescription). A 360dp screen fits all four with ~136dp of
+            // Play, where any second labelled button forced two-line wraps or a second row.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
                 verticalAlignment = Alignment.CenterVertically,
@@ -294,21 +311,16 @@ private fun DetailActions(
                     onClick = actions.onPlay,
                     modifier = Modifier.weight(1f),
                 )
-                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
-            }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
                 MarkWatchedButton(
                     watched = watched,
                     onClick = actions.onToggleWatched,
-                    modifier = Modifier.weight(1f),
+                    iconOnly = true,
                 )
+                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
                 DownloadButton(
                     state = downloadState,
                     onClick = actions.onDownload,
-                    modifier = Modifier.weight(1f),
+                    iconOnly = true,
                 )
             }
             actions.group?.let { group ->
@@ -332,23 +344,64 @@ private fun DetailActions(
     }
 }
 
-/** The "mark watched/unwatched" toggle, shared between the wide [FlowRow] and the compact grid. */
+/**
+ * The overview clamped to [COMPACT_OVERVIEW_MAX_LINES] on a phone, expanding (and collapsing
+ * again) on tap. A paragraph that already fits is not made tappable — a ripple on inert text
+ * would promise interaction it doesn't have. `rememberSaveable` keeps an expanded paragraph
+ * expanded across rotation and process death, matching how scroll position survives.
+ */
+@Composable
+private fun ExpandableOverview(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var overflowing by remember { mutableStateOf(false) }
+    val toggleable = overflowing || expanded
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onBackground,
+        maxLines = if (expanded) Int.MAX_VALUE else COMPACT_OVERVIEW_MAX_LINES,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { if (!expanded) overflowing = it.hasVisualOverflow },
+        modifier =
+            modifier
+                .widthIn(max = TEXT_MAX_WIDTH)
+                .animateContentSize()
+                .then(
+                    if (toggleable) Modifier.clickable { expanded = !expanded } else Modifier,
+                ),
+    )
+}
+
+/** Lines a compact overview shows before asking for a tap — about a third of a 360×800 screen. */
+private const val COMPACT_OVERVIEW_MAX_LINES = 5
+
+/**
+ * The "mark watched/unwatched" toggle, shared between the wide [FlowRow] and the compact row.
+ *
+ * @param iconOnly drop the label and let the icon (accent-tinted when watched, like the favorite
+ *   heart) carry the state — the compact row keeps Play as its only worded button. The label moves
+ *   to the icon's `contentDescription`, so TalkBack reads the same either way.
+ */
 @Composable
 private fun MarkWatchedButton(
     watched: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    iconOnly: Boolean = false,
 ) {
+    val label = stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched)
     OutlinedButton(onClick = onClick, modifier = modifier) {
         Icon(
             imageVector = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
-            contentDescription = null,
+            contentDescription = if (iconOnly) label else null,
             tint = accent(watched),
         )
-        Text(
-            text = stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched),
-            modifier = Modifier.padding(start = Dimens.SpaceSmall),
-        )
+        if (!iconOnly) {
+            Text(text = label, modifier = Modifier.padding(start = Dimens.SpaceSmall))
+        }
     }
 }
 
@@ -457,7 +510,10 @@ private fun DownloadButton(
     state: DownloadState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    iconOnly: Boolean = false,
 ) {
+    // Icon-only still says what it is: the icon is already state-distinct (download / spinner /
+    // done / error), and the label survives as the icon's contentDescription for TalkBack.
     OutlinedButton(onClick = onClick, modifier = modifier) {
         when (state) {
             is DownloadState.Downloading ->
@@ -471,7 +527,7 @@ private fun DownloadButton(
             else ->
                 Icon(
                     imageVector = state.icon(),
-                    contentDescription = null,
+                    contentDescription = if (iconOnly) stringResource(state.labelRes()) else null,
                     tint =
                         if (state is DownloadState.Downloaded) {
                             MaterialTheme.colorScheme.primary
@@ -480,10 +536,12 @@ private fun DownloadButton(
                         },
                 )
         }
-        Text(
-            text = stringResource(state.labelRes()),
-            modifier = Modifier.padding(start = Dimens.SpaceSmall),
-        )
+        if (!iconOnly) {
+            Text(
+                text = stringResource(state.labelRes()),
+                modifier = Modifier.padding(start = Dimens.SpaceSmall),
+            )
+        }
     }
 }
 

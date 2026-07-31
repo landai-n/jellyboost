@@ -323,6 +323,7 @@ private fun DetailSections(
                 downloadState = state.downloadState,
                 actions = actions,
                 downloadedBytes = state.downloadedBytes,
+                compact = compact,
             )
         }
 
@@ -490,6 +491,11 @@ internal fun isWideLayout(
  * *unless* the viewport is also short ([WIDE_MIN_HEIGHT]), which only phone landscape is: there the
  * fixed [WIDE_BACKDROP_HEIGHT] would eat ~90% of the screen, so the banner instead takes a share of
  * the (scarce) height, the same way the portrait branch does.
+ *
+ * Portrait itself further splits on width: below [COMPACT_MAX_WIDTH] the share is
+ * [COMPACT_PORTRAIT_BACKDROP_FRACTION] rather than [PORTRAIT_BACKDROP_FRACTION] — see that
+ * constant's doc for why. This function keeps its (maxWidth, maxHeight) signature; the split lives
+ * entirely inside it.
  */
 internal fun backdropHeight(
     maxWidth: Dp,
@@ -497,8 +503,10 @@ internal fun backdropHeight(
 ): Dp {
     val fixed = if (maxWidth >= WIDE_BREAKPOINT) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight
     val isPortrait = maxHeight > maxWidth
+    val portraitFraction =
+        if (maxWidth < COMPACT_MAX_WIDTH) COMPACT_PORTRAIT_BACKDROP_FRACTION else PORTRAIT_BACKDROP_FRACTION
     return when {
-        isPortrait -> (maxHeight * PORTRAIT_BACKDROP_FRACTION).coerceIn(fixed, MAX_BACKDROP_HEIGHT)
+        isPortrait -> (maxHeight * portraitFraction).coerceIn(fixed, MAX_BACKDROP_HEIGHT)
         maxHeight < WIDE_MIN_HEIGHT -> maxHeight * COMPACT_LANDSCAPE_BACKDROP_FRACTION
         else -> fixed
     }
@@ -518,6 +526,15 @@ private val WIDE_BACKDROP_HEIGHT = 320.dp
 
 /** Share of the viewport height the banner claims in portrait. */
 private const val PORTRAIT_BACKDROP_FRACTION = 0.40f
+
+/**
+ * Share of the viewport height the banner claims in portrait on a compact-width ([COMPACT_MAX_WIDTH])
+ * phone screen, instead of [PORTRAIT_BACKDROP_FRACTION].
+ *
+ * A 0.40 banner is 320dp of art on a 360×800 phone — tablet-tuned dead space; 0.32 ≈ 256dp keeps the
+ * art dominant but returns a paragraph of screen to the facts.
+ */
+private const val COMPACT_PORTRAIT_BACKDROP_FRACTION = 0.32f
 
 /** Share of the viewport height the banner claims in a short (phone) landscape. */
 private const val COMPACT_LANDSCAPE_BACKDROP_FRACTION = 0.5f

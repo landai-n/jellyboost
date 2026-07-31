@@ -34,11 +34,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadState
@@ -47,6 +49,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.PersonKind
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
 import java.util.Locale
 
@@ -65,6 +68,7 @@ internal fun DetailHeader(
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
+    compact: Boolean = false,
 ) {
     if (isWide) {
         Row(
@@ -77,6 +81,7 @@ internal fun DetailHeader(
                 downloadState = downloadState,
                 actions = actions,
                 downloadedBytes = downloadedBytes,
+                compact = compact,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -86,6 +91,7 @@ internal fun DetailHeader(
             downloadState = downloadState,
             actions = actions,
             downloadedBytes = downloadedBytes,
+            compact = compact,
             modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
         )
     }
@@ -144,6 +150,7 @@ private fun DetailFacts(
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
+    compact: Boolean = false,
 ) {
     Column(
         modifier = modifier,
@@ -174,7 +181,7 @@ private fun DetailFacts(
             )
         }
 
-        DetailActions(item = item, downloadState = downloadState, actions = actions)
+        DetailActions(item = item, downloadState = downloadState, actions = actions, compact = compact)
 
         item.taglines.firstOrNull()?.let { tagline ->
             Text(
@@ -254,51 +261,116 @@ private fun MetadataLine(
     )
 }
 
+/**
+ * On a compact (phone) width the buttons move from a wrapping [FlowRow] — which left ragged,
+ * left-aligned rows once four buttons plus labels stopped fitting one line — to a two-row grid
+ * where every button either fills its half of the row or sits at its icon's intrinsic size, so the
+ * rows line up edge to edge (user: "buttons feel misaligned"). Wide layouts are untouched: the
+ * `false` default keeps every existing call site on the original `FlowRow` path byte-for-byte.
+ */
 @Composable
 private fun DetailActions(
     item: JellyfinItem,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-    ) {
-        PlayButton(item = item, group = actions.group, onClick = actions.onPlay)
+    val watched = item.userData.played
+    val favorite = item.userData.isFavorite
 
-        val watched = item.userData.played
-        OutlinedButton(onClick = actions.onToggleWatched) {
-            Icon(
-                imageVector = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
-                contentDescription = null,
-                tint = accent(watched),
-            )
-            Text(
-                text =
-                    stringResource(
-                        if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched,
-                    ),
-                modifier = Modifier.padding(start = Dimens.SpaceSmall),
-            )
+    if (compact) {
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PlayButton(
+                    item = item,
+                    group = actions.group,
+                    onClick = actions.onPlay,
+                    modifier = Modifier.weight(1f),
+                )
+                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MarkWatchedButton(
+                    watched = watched,
+                    onClick = actions.onToggleWatched,
+                    modifier = Modifier.weight(1f),
+                )
+                DownloadButton(
+                    state = downloadState,
+                    onClick = actions.onDownload,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            actions.group?.let { group ->
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+                    GroupActionButtons(group = group)
+                }
+            }
         }
-
-        val favorite = item.userData.isFavorite
-        OutlinedButton(onClick = actions.onToggleFavorite) {
-            Icon(
-                imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription =
-                    stringResource(
-                        if (favorite) R.string.detail_remove_favorite else R.string.detail_add_favorite,
-                    ),
-                tint = accent(favorite),
-            )
+    } else {
+        FlowRow(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        ) {
+            PlayButton(item = item, group = actions.group, onClick = actions.onPlay)
+            MarkWatchedButton(watched = watched, onClick = actions.onToggleWatched)
+            FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
+            DownloadButton(state = downloadState, onClick = actions.onDownload)
+            actions.group?.let { group -> GroupActionButtons(group = group) }
         }
+    }
+}
 
-        DownloadButton(state = downloadState, onClick = actions.onDownload)
+/** The "mark watched/unwatched" toggle, shared between the wide [FlowRow] and the compact grid. */
+@Composable
+private fun MarkWatchedButton(
+    watched: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(onClick = onClick, modifier = modifier) {
+        Icon(
+            imageVector = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
+            contentDescription = null,
+            tint = accent(watched),
+        )
+        Text(
+            text = stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched),
+            modifier = Modifier.padding(start = Dimens.SpaceSmall),
+        )
+    }
+}
 
-        actions.group?.let { group -> GroupActionButtons(group = group) }
+/**
+ * The favorite toggle — icon-only, so its content sets the button's intrinsic size rather than a
+ * [Modifier.weight] the way the text buttons beside it do.
+ */
+@Composable
+private fun FavoriteButton(
+    favorite: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(onClick = onClick, modifier = modifier) {
+        Icon(
+            imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription =
+                stringResource(
+                    if (favorite) R.string.detail_remove_favorite else R.string.detail_add_favorite,
+                ),
+            tint = accent(favorite),
+        )
     }
 }
 
@@ -325,9 +397,10 @@ private fun PlayButton(
     item: JellyfinItem,
     group: DetailGroupActions?,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val resume = item.userData.isResumable
-    Button(onClick = onClick) {
+    Button(onClick = onClick, modifier = modifier) {
         Icon(
             imageVector = if (group == null) Icons.Filled.PlayArrow else Icons.Outlined.Groups,
             contentDescription = null,
@@ -487,3 +560,43 @@ private val WIDE_POSTER_WIDTH = 200.dp
 
 /** Long-form text stops growing here; a full-width paragraph on a tablet is unreadable. */
 private val TEXT_MAX_WIDTH = 680.dp
+
+@Preview(name = "DetailActions", showBackground = true, widthDp = 420)
+@Composable
+private fun DetailActionsPreview() {
+    JellyfinTheme {
+        DetailActions(
+            item = previewActionsItem,
+            downloadState = DownloadState.NotDownloaded,
+            actions = previewActionHandlers,
+        )
+    }
+}
+
+@Preview(name = "DetailActions — compact", showBackground = true, widthDp = 360)
+@Composable
+private fun DetailActionsCompactPreview() {
+    JellyfinTheme {
+        DetailActions(
+            item = previewActionsItem,
+            downloadState = DownloadState.NotDownloaded,
+            actions = previewActionHandlers,
+            compact = true,
+        )
+    }
+}
+
+private val previewActionsItem =
+    JellyfinItem(
+        id = "1",
+        name = "Westworld",
+        type = ItemType.MOVIE,
+    )
+
+private val previewActionHandlers =
+    DetailActionHandlers(
+        onPlay = {},
+        onDownload = {},
+        onToggleWatched = {},
+        onToggleFavorite = {},
+    )

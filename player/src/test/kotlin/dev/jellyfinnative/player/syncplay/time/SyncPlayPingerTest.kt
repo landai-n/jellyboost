@@ -72,6 +72,48 @@ class SyncPlayPingerTest {
         }
 
     @Test
+    fun `a poke takes the next sample at once instead of at the end of the wait`() =
+        runTest {
+            val clock = VirtualClock(testScheduler, origin)
+            val api = FakeSyncPlayApi(clock)
+            val pinger = SyncPlayPinger(api, SyncPlayTimeSync(clock))
+
+            backgroundScope.launch { pinger.run() }
+            runCurrent()
+            // Past the burst, so the loop is sitting on the five-second wait the poke exists to cut.
+            advanceTimeBy(2_001)
+            runCurrent()
+            val taken = api.callsOf<SyncPlayCall.ReportPing>().size
+
+            pinger.sampleNow()
+            runCurrent()
+            api.callsOf<SyncPlayCall.ReportPing>().size shouldBe taken + 1
+
+            // And the cadence carries on from there rather than firing twice.
+            advanceTimeBy(4_999)
+            runCurrent()
+            api.callsOf<SyncPlayCall.ReportPing>().size shouldBe taken + 1
+        }
+
+    @Test
+    fun `a poke with no loop running does not make the next group's first cadence wrong`() =
+        runTest {
+            val clock = VirtualClock(testScheduler, origin)
+            val api = FakeSyncPlayApi(clock)
+            val pinger = SyncPlayPinger(api, SyncPlayTimeSync(clock))
+
+            pinger.sampleNow()
+            backgroundScope.launch { pinger.run() }
+            runCurrent()
+
+            // The stale poke was dropped: one sample for the start of the loop, not two.
+            api.callsOf<SyncPlayCall.ReportPing>().size shouldBe 1
+            advanceTimeBy(999)
+            runCurrent()
+            api.callsOf<SyncPlayCall.ReportPing>().size shouldBe 1
+        }
+
+    @Test
     fun `a failed exchange costs its own sample and nothing more`() =
         runTest {
             val clock = VirtualClock(testScheduler, origin)

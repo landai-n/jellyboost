@@ -41,10 +41,18 @@ class PlaybackService :
     @Inject
     internal lateinit var playerHandle: ExoPlayerHandle
 
+    /**
+     * Published so the SyncPlay presence service knows to stand aside while this one is up — one
+     * foreground service holding the process's network is enough (DECISIONS.md 2026-07-31).
+     */
+    @Inject
+    internal lateinit var serviceState: PlaybackServiceState
+
     private var mediaSession: MediaSession? = null
 
     override fun onCreate() {
         super.onCreate()
+        serviceState.setRunning(true)
         val session =
             MediaSession
                 .Builder(this, playerHandle.requirePlayer())
@@ -137,6 +145,7 @@ class PlaybackService :
         }
         mediaSession = null
         playerHandle.release()
+        serviceState.setRunning(false)
         super.onDestroy()
     }
 }

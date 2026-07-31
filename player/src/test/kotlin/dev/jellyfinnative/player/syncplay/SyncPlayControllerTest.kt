@@ -1092,7 +1092,197 @@ class SyncPlayControllerTest {
             fixture.api.callsOf<SyncPlayCall.GetGroups>() shouldBe emptyList()
         }
 
+    // Coming back to the app ------------------------------------------------------------------------
+
+    @Test
+    fun `a membership the background cost us is asked for again when the app comes back`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            val lost = backgroundedUntilLost(fixture)
+
+            // The network is back long before the user is, and nothing is running to notice it.
+            fixture.connection.value = ConnectionState.ONLINE
+            runCurrent()
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe 1
+            fixture.api
+                .callsOf<SyncPlayCall.JoinGroup>()
+                .single()
+                .groupId shouldBe group().id
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+            fixture.status.inGroup.value shouldBe true
+            fixture.messages shouldBe lost + SyncPlayMessage.Rejoined
+        }
+
+    @Test
+    fun `the group having gone in the meantime is forgotten without a word`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            val lost = backgroundedUntilLost(fixture)
+
+            // Everyone else left too, so the server disposed of it.
+            fixture.api.groups = emptyList()
+            fixture.connection.value = ConnectionState.ONLINE
+            runCurrent()
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe 1
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            // Silent: a re-check that finds nothing must not announce itself on every foreground.
+            fixture.messages shouldBe lost
+
+            // And forgotten, so the next foreground spends nothing on it.
+            fixture.api.clearCalls()
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+            fixture.api.calls shouldBe emptyList()
+        }
+
+    @Test
+    fun `a foreground re-check that fails is silent, does not loop, and may be tried again`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            val lost = backgroundedUntilLost(fixture)
+
+            // Online as far as the OS is concerned, but the server is still not answering — the
+            // device's own failure mode (B8), and the reason a re-check cannot assume it will work.
+            fixture.connection.value = ConnectionState.ONLINE
+            fixture.api.getGroupsError = java.io.IOException("no route to host")
+            runCurrent()
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+            advanceTimeBy(SyncPlayController.REJOIN_RETRY_DELAY_MS * SyncPlayController.REJOIN_MAX_ATTEMPTS)
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.GetGroups>().size shouldBe SyncPlayController.REJOIN_MAX_ATTEMPTS
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.messages shouldBe lost
+
+            // Nothing keeps trying in the background...
+            fixture.api.clearCalls()
+            advanceTimeBy(60_000)
+            runCurrent()
+            fixture.api.calls shouldBe emptyList()
+
+            // ...and the memory survived the failure, so the next foreground gets it back.
+            fixture.api.getGroupsError = null
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+        }
+
+    @Test
+    fun `a loss older than the foreground window is dropped rather than acted on`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            val lost = backgroundedUntilLost(fixture)
+            fixture.connection.value = ConnectionState.ONLINE
+            runCurrent()
+            fixture.api.clearCalls()
+
+            advanceTimeBy(SyncPlayController.FOREGROUND_REJOIN_WINDOW_MS + 1)
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            fixture.api.calls shouldBe emptyList()
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.messages shouldBe lost
+        }
+
+    @Test
+    fun `a group left on purpose is never taken back, however soon the app comes back`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            joinPlaying(fixture)
+
+            fixture.controller.leaveGroup()
+            runCurrent()
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            fixture.api.calls shouldBe emptyList()
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+        }
+
+    @Test
+    fun `signing out forgets a group that was lost, so the next account never sees it`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            backgroundedUntilLost(fixture)
+            fixture.connection.value = ConnectionState.ONLINE
+            runCurrent()
+
+            fixture.session.value = SessionState.LoggedOut
+            runCurrent()
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            fixture.api.calls shouldBe emptyList()
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+        }
+
+    @Test
+    fun `coming back while still in a group pings at once rather than waiting for the cadence`() =
+        runTest {
+            val fixture = fixture()
+            joinPlaying(fixture)
+            // Past the pinger's opening burst, so the loop is sitting on its five-second wait.
+            advanceTimeBy(SyncPlayPinger.FAST_INTERVAL_MS * SyncPlayPinger.FAST_SAMPLES)
+            runCurrent()
+            fixture.api.clearCalls()
+
+            fixture.controller.onAppForegrounded()
+            runCurrent()
+
+            // A connection that died off screen starts its failure streak now, not five seconds on.
+            fixture.api.callsOf<SyncPlayCall.SampleServerTime>().size shouldBe 1
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.InGroup>()
+        }
+
     // Fixture ---------------------------------------------------------------------------------------
+
+    /**
+     * The device failure in full: the app is backgrounded, the platform quietly cuts its network,
+     * and the group is gone by the time anything can be done about it.
+     *
+     * @return the messages emitted by the loss, so a test can assert that the foreground re-check
+     *   added nothing to them.
+     */
+    private suspend fun TestScope.backgroundedUntilLost(fixture: Fixture): List<SyncPlayMessage> {
+        joinPlaying(fixture)
+        fixture.connection.value = ConnectionState.OFFLINE_NO_NETWORK
+        runCurrent()
+        advanceTimeBy(SyncPlayController.CONNECTIVITY_GRACE_MS + 1)
+        runCurrent()
+        advanceTimeBy(SyncPlayController.REJOIN_RETRY_DELAY_MS * SyncPlayController.REJOIN_MAX_ATTEMPTS * 2)
+        runCurrent()
+        fixture.controller.state.value shouldBe SyncPlayState.Idle
+        fixture.messages shouldBe listOf(SyncPlayMessage.ConnectionLost)
+        return fixture.messages.toList()
+    }
 
     /** A Wi-Fi blip the grace window rides out — and the trouble that explains a later removal. */
     private fun TestScope.blip(fixture: Fixture) {
@@ -1255,6 +1445,7 @@ class SyncPlayControllerTest {
                 playerHandle = player,
                 connectionState = connectionProvider,
                 sessionStateHolder = sessionHolder,
+                clock = clock,
                 scope = backgroundScope,
                 mainDispatcher = main,
             )

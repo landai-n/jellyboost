@@ -51,6 +51,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import timber.log.Timber
 import java.net.HttpURLConnection.HTTP_FORBIDDEN
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
@@ -133,6 +134,17 @@ import javax.inject.Singleton
  * - a group that is no longer listed has dissolved (we were its last member), and exhausted attempts
  *   are the old ending: [teardown] to [SyncPlayState.Idle] with a message. There is no background
  *   retry loop after that — once out, we stay out until the user acts.
+ *
+ * ### Coming back to the app
+ * Returning to the foreground **is** the user acting, and it is the one moment a membership lost to a
+ * backgrounded process having its network cut can be taken back (DECISIONS.md 2026-07-31). So
+ * [onAppForegrounded]:
+ *
+ * - in a group, fires an immediate ping cycle, because a connection that died off screen is
+ *   otherwise not even suspected until the next five-second cadence;
+ * - at [SyncPlayState.Idle] with a [lostMembership] still inside [FOREGROUND_REJOIN_WINDOW_MS], runs
+ *   the same rejoin attempts, once and **silently** — a re-check that fails or finds the group gone
+ *   must not put a message on screen every time the app is opened.
  */
 @Singleton
 @Suppress(
@@ -155,6 +167,9 @@ class SyncPlayController
         private val playerHandle: PlayerHandle,
         private val connectionState: ConnectionStateProvider,
         private val sessionStateHolder: SessionStateHolder,
+        // The *device* clock, deliberately, and only for [lostMembership]: `timeSync.serverNow()`
+        // is reset by the very teardown that memory has to outlive.
+        private val clock: Clock,
         @SyncPlayScope private val scope: CoroutineScope,
         @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     ) {
@@ -252,6 +267,23 @@ class SyncPlayController
         private var rejoinJob: Job? = null
 
         /**
+         * The group this client was thrown out of against its will, and when — the one thing that
+         * survives [teardown].
+         *
+         * Everything else about a group session is forgotten when the session ends, deliberately.
+         * This is not, because the ending it records is the one nobody chose: the platform cut the
+         * app's network while it was backgrounded, the rejoin attempts all failed for the same
+         * reason, and the group is very probably still there with the user watching it somewhere
+         * else. Without a memory the controller sits at [SyncPlayState.Idle] for ever knowing
+         * nothing; with one, [onAppForegrounded] can ask for the group back at the one moment the
+         * ask can succeed.
+         *
+         * Bounded by [FOREGROUND_REJOIN_WINDOW_MS] and cleared by every deliberate exit — see
+         * [rememberLoss] and [forgetLoss].
+         */
+        private var lostMembership: LostMembership? = null
+
+        /**
          * When the connection last misbehaved, on the server clock.
          *
          * What tells "the server dropped us because the connection went" apart from "the server
@@ -292,9 +324,35 @@ class SyncPlayController
             // Before the launch, not inside it: this is the one signal that the exit is deliberate,
             // and a rejoin attempt racing the coroutine must not read a target that is still set.
             rejoinTarget = null
+            forgetLoss()
             scope.launch {
                 leaveOnServer()
                 teardown(message = null, pausePlayer = false)
+            }
+        }
+
+        /**
+         * The app is back in front of the user (`ProcessLifecycleOwner`, `ON_START`).
+         *
+         * Two jobs, and which one runs depends on whether the group survived the background:
+         *
+         * - **still in it** — take a ping sample immediately. Between the last one and now the
+         *   platform may have cut this process's network without telling anyone, and the ordinary
+         *   cadence would leave that undiscovered for up to five seconds before the failure streak
+         *   even starts.
+         * - **out of it** — if the membership was lost involuntarily and recently
+         *   ([FOREGROUND_REJOIN_WINDOW_MS]), ask for it back, once. This is the net under the
+         *   presence service: an OEM that kills the service anyway costs the group until the user
+         *   comes back, not for the rest of the evening.
+         *
+         * Anything else — [SyncPlayState.Joining], [SyncPlayState.Rejoining] — is already in the
+         * middle of the conversation this would start.
+         */
+        fun onAppForegrounded() {
+            when (_state.value) {
+                is SyncPlayState.InGroup -> pinger.sampleNow()
+                SyncPlayState.Idle -> resumeLostMembership()
+                else -> Unit
             }
         }
 
@@ -479,6 +537,8 @@ class SyncPlayController
             pendingGroup = null
             rejoinTarget = group
             troubledAt = null
+            // Whatever was lost has been recovered, or replaced by a group the user chose.
+            forgetLoss()
             statusHolder.setInGroup(true)
 
             session.launch { pinger.run(::onPingOutcome) }
@@ -732,7 +792,11 @@ class SyncPlayController
         /** Signing out ends any membership, in any state, and forgets it for good. */
         private suspend fun watchSignOut() {
             sessionStateHolder.state.collect { session ->
-                if (session !is SessionState.LoggedOut || _state.value is SyncPlayState.Idle) return@collect
+                if (session !is SessionState.LoggedOut) return@collect
+                // The memory is cleared even from Idle: a signed-out account must not have a group
+                // taken back for it when somebody signs in and opens the app.
+                forgetLoss()
+                if (_state.value is SyncPlayState.Idle) return@collect
                 rejoinTarget = null
                 leaveOnServer()
                 teardown(message = null, pausePlayer = false)
@@ -766,9 +830,10 @@ class SyncPlayController
             onMembershipGone()
         }
 
-        /** Gives up the group deliberately: no rejoin will follow. */
+        /** Gives up the group deliberately: no rejoin will follow, and none on the next foreground. */
         private fun forgetAndTearDown(message: SyncPlayMessage) {
             rejoinTarget = null
+            forgetLoss()
             tearDownAsync(message)
         }
 
@@ -809,7 +874,21 @@ class SyncPlayController
                     true
                 }
             if (!standing) return
+            runRejoinAttempts(target, quiet = false)
+        }
 
+        /**
+         * The attempt loop itself, shared by the loss path and by the foreground re-check.
+         *
+         * @param quiet suppresses the two *endings* — "connection lost" and "the group has ended" —
+         *   without changing anything the protocol does. The re-check runs on every foreground, and
+         *   a group that is genuinely gone would otherwise announce itself every time the user
+         *   opened the app. A success is still announced: that one is news.
+         */
+        private suspend fun runRejoinAttempts(
+            target: SyncPlayGroupSummary,
+            quiet: Boolean,
+        ) {
             for (attempt in 1..REJOIN_MAX_ATTEMPTS) {
                 if (attempt > 1) delay(REJOIN_RETRY_DELAY_MS)
                 if (!awaitOnline()) {
@@ -827,7 +906,8 @@ class SyncPlayController
                     // Listed groups came back without ours: we were its last member and it is gone.
                     RejoinOutcome.Dissolved -> {
                         Timber.w("The SyncPlay group %s no longer exists; staying out", target.id)
-                        endRejoin(SyncPlayMessage.GroupEnded)
+                        forgetLoss()
+                        endRejoin(SyncPlayMessage.GroupEnded.takeUnless { quiet })
                         return
                     }
 
@@ -838,7 +918,10 @@ class SyncPlayController
                 }
             }
             Timber.w("Could not rejoin the SyncPlay group after %d attempts", REJOIN_MAX_ATTEMPTS)
-            endRejoin(SyncPlayMessage.ConnectionLost)
+            // Remembered on the way out, so returning to the app can ask once more. A re-check that
+            // fails keeps the memory it already had, original instant and all.
+            rememberLoss(target)
+            endRejoin(SyncPlayMessage.ConnectionLost.takeUnless { quiet })
         }
 
         /**
@@ -906,11 +989,86 @@ class SyncPlayController
             withContext(mainDispatcher) { playerHandle.pause() }
         }
 
-        /** The rejoin gave up; hand over to the ordinary teardown without cancelling this coroutine. */
-        private suspend fun endRejoin(message: SyncPlayMessage) {
+        /**
+         * The rejoin gave up; hand over to the ordinary teardown without cancelling this coroutine.
+         *
+         * @param message `null` for the foreground re-check, which ends silently — see
+         *   [runRejoinAttempts].
+         */
+        private suspend fun endRejoin(message: SyncPlayMessage?) {
             rejoinJob = null
             teardown(message, pausePlayer = false)
         }
+
+        // The foreground safety net -------------------------------------------------------------------
+
+        /**
+         * Asks for a recently, involuntarily lost group back — the [onAppForegrounded] half.
+         *
+         * Deliberately not a loop and not a retry schedule: it runs at most once per foreground, and
+         * a failure leaves the memory alone so the *next* foreground may try again inside the
+         * window. A memory that has expired is dropped here rather than left to rot, which is what
+         * makes "the user came back much later, to something else entirely" cost nothing.
+         */
+        private fun resumeLostMembership() {
+            val lost = lostMembership ?: return
+            val age = Duration.between(lost.at, clock.instant()).toMillis()
+            if (age !in 0..FOREGROUND_REJOIN_WINDOW_MS) {
+                Timber.i("The lost SyncPlay group %s is too old to take back; forgetting it", lost.group.name)
+                lostMembership = null
+                return
+            }
+            if (rejoinJob?.isActive == true) return
+            rejoinJob = scope.launch { rejoinFromIdle(lost.group) }
+        }
+
+        /**
+         * A rejoin that starts from [SyncPlayState.Idle] rather than from a session being stood down.
+         *
+         * Everything a group session needs was already released by the [teardown] that got here, so
+         * there is nothing to tear down and nothing to pause — only the state to set, so that
+         * [attemptRejoin] and [enterGroup] behave exactly as they do on every other rejoin.
+         *
+         * The one thing restored by hand is the ignore-wait: with no player attached this member
+         * must not be why the whole group sits in WAITING (key decision 5), and [enterGroup] sends it
+         * only when it believes one was owed.
+         */
+        private suspend fun rejoinFromIdle(target: SyncPlayGroupSummary) {
+            val standing =
+                sessionMutex.withLock {
+                    if (_state.value !is SyncPlayState.Idle) return@withLock false
+                    Timber.i("Back in the foreground; asking for the SyncPlay group %s back", target.name)
+                    _state.value = SyncPlayState.Rejoining(target, attempt = 1)
+                    ignoreWaitSent = host == null
+                    true
+                }
+            if (!standing) return
+            runRejoinAttempts(target, quiet = true)
+        }
+
+        /**
+         * Records that [group] was lost without anyone choosing it.
+         *
+         * The instant is **not** refreshed for a group already remembered: the window is counted
+         * from the loss, and a failed re-check on every foreground would otherwise walk the deadline
+         * forward for as long as the user kept opening the app.
+         */
+        private fun rememberLoss(group: SyncPlayGroupSummary) {
+            if (lostMembership?.group?.id == group.id) return
+            lostMembership = LostMembership(group, clock.instant())
+            Timber.i("Remembering the lost SyncPlay group %s for %d ms", group.name, FOREGROUND_REJOIN_WINDOW_MS)
+        }
+
+        /** Drops the memory: this exit was chosen, or the group has been recovered. */
+        private fun forgetLoss() {
+            lostMembership = null
+        }
+
+        /** A group that was lost involuntarily, and the device instant it was lost at. */
+        private data class LostMembership(
+            val group: SyncPlayGroupSummary,
+            val at: Instant,
+        )
 
         /** What one [attemptRejoin] came to. */
         private enum class RejoinOutcome {
@@ -1349,6 +1507,17 @@ class SyncPlayController
              * obeyed.
              */
             const val REJOIN_TROUBLE_WINDOW_MS = 30_000L
+
+            /**
+             * How long an involuntarily lost membership is still worth taking back, in milliseconds.
+             *
+             * Ten minutes is a judgement about what the user meant, not about the protocol: the case
+             * this exists for is the app being backgrounded while the same tablet drives the group
+             * from jellyfin-web, where coming back within a few minutes means "I never left". Much
+             * longer and the app starts re-joining groups the user has genuinely finished with;
+             * much shorter and an evening's browsing in another app costs the group anyway.
+             */
+            const val FOREGROUND_REJOIN_WINDOW_MS = 600_000L
 
             /**
              * How long a completed handshake waits for the group's command before syncing itself.

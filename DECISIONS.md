@@ -2259,4 +2259,105 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Note on the seam:** `playForGroup` deliberately has no `startIndex` — callers pass a list that already begins at
   the item the group should play, so the playing position is always 0.
 
+## 2026-07-31 — a group with no playback holds a `specialUse` foreground service
+- **Scope:** `player/src/main/AndroidManifest.xml`, `player/.../syncplay/presence/` (new package:
+  `SyncPlayPresenceService`, `SyncPlayPresenceCoordinator`, `SyncPlayGroupPresence`,
+  `SyncPlayPresenceNotificationReceiver`), `player/.../session/PlaybackServiceState.kt`,
+  `app/.../JellyfinNativeApplication.kt`, `gradle/libs.versions.toml`, `player/build.gradle.kts`
+- **Plan said:** `docs/PLAN.md` gives `:player` exactly one service — `PlaybackService`, the Media3
+  `MediaSessionService` that keeps *playback* alive in the background. `docs/notes/syncplay-m11-plan.md`
+  key decision 5 says membership outlives the player screen, but names no mechanism for keeping the
+  process's network alive when there is no player at all.
+- **Done instead:** while `SyncPlayController` is in `Joining`/`InGroup`/`Rejoining` **and**
+  `PlaybackService` is not running, the app holds a second, lightweight foreground service —
+  `SyncPlayPresenceService`, `android:foregroundServiceType="specialUse"` — showing an ongoing
+  notification ("In a SyncPlay group / Waiting for the group") with a **Leave** action. It is released
+  the moment playback takes over, the state returns to `Idle`, or the user signs out.
+- **Reason:** the confirmed device failure. On the test tablet (the OEM ROM, Android 16) backgrounding
+  the app *without* playback cuts its network within ~40 s: the ping loop starts failing, three failures
+  confirm a loss, the rejoin cannot reach the server either, the client gives up — and because the app
+  was the group's only member the **server disposes the group**. The user's primary usage is this app and
+  jellyfin-web side by side on the same tablet, so the app is backgrounded exactly when the group matters
+  most. A foreground service is the only thing Android offers that keeps a process's network up while it
+  is not on screen; `PlaybackService` already proves the mechanism works here, it just does not run when
+  nothing is playing.
+- **Why `specialUse` and not the alternatives** (targetSdk 36):
+  - **`mediaPlayback`** — the tempting one, since `:player` already holds the permission and Media3 uses it.
+    Rejected as dishonest: this service exists *because* nothing is playing. The platform would accept it,
+    but the type is defined as "continuing playback when the app is in the background", and a media FGS
+    with no `MediaSession` and no audio is exactly the misuse Play policy names. It would also collide
+    conceptually with the real media FGS the two states hand over between.
+  - **`connectedDevice`** — from API 34 the platform *requires* one of a fixed permission set
+    (`BLUETOOTH_CONNECT`, `NFC`, `CHANGE_NETWORK_STATE`, `UWB_RANGING`, …) that this app neither holds nor
+    wants, and there is no external device involved: the peer is a server over the ordinary network.
+  - **`dataSync`** — deprecated in Android 15 and capped at 6 hours per 24 on targetSdk 35+, after which
+    the system stops the service. A watch-party evening can outrun that, and the whole point of the change
+    is durability, so it fails the "durable" half of the test. (`:data:downloads` still uses `dataSync`
+    legitimately — a transfer *is* a data sync, and it is short.)
+  - **`specialUse`** — the honest description: keeping a real-time group-membership session alive is not
+    any of the enumerated categories. It carries no runtime timeout, and the cost is a declaration —
+    `FOREGROUND_SERVICE_SPECIAL_USE` plus the `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` `<property>` the platform
+    asks of API 34+ — which is a statement of intent rather than a workaround. The Play Console
+    justification that would accompany it does not apply: this client is built and installed directly.
+  - Network access is identical whichever type is chosen — the exemption comes from being a foreground
+    service at all — so the choice is purely one of honesty and longevity.
+- **Device finding, folded in:** the service promotes itself in `onCreate`, not in `onStartCommand`, and the
+  coordinator only acts on a demand that has held for `DEMAND_SETTLE_MS` (400 ms). The first device run
+  crashed the process with `ForegroundServiceDidNotStartInTimeException`: a foreground re-check raised the
+  demand, found its group dissolved 250 ms later, and the `stopService` beat the service's own
+  `startForeground` — which the platform treats as a missed deadline and kills the app for. Promoting in
+  `onCreate` closes the deadline however fast the demand is withdrawn; the debounce stops the notification
+  flashing up for a quarter of a second in the first place.
+- **Residual risk, accepted:** the OEM ROM's own aggressive process management may still kill the service; the
+  foreground-resume re-check below is the net for that, and for process death (which loses the singleton
+  and its memory entirely — out of scope, and the service is `START_NOT_STICKY` so the system does not
+  resurrect a notification with nothing behind it).
+- **Seams:** `PlaybackServiceState` (a `@Singleton` `StateFlow<Boolean>` written by `PlaybackService`'s
+  `onCreate`/`onDestroy`) is how the presence service learns that playback has taken over;
+  `syncPlayPresenceDemanded(state, playbackRunning)` is a pure function so the whole start/stop rule is
+  unit-tested without the framework. The coordinator is started from `JellyfinNativeApplication.onCreate`,
+  the same seam `userDataSyncTrigger` and `downloadedMetadataRefresher` already use, because it has to run
+  whether or not any screen is showing.
+
+## 2026-07-31 — an involuntarily lost membership is remembered past `Idle`, and retried on foreground
+- **Scope:** `player/.../syncplay/SyncPlayController.kt`, `player/.../syncplay/time/SyncPlayPinger.kt`,
+  `player/.../syncplay/presence/SyncPlayPresenceCoordinator.kt`
+- **Plan said:** the auto-rejoin entry above ("2026-07-31 — a membership the server drops is taken back")
+  scopes the memory to "for as long as membership is not given up deliberately", and ends the story at
+  `teardown` to `Idle` after `REJOIN_MAX_ATTEMPTS`: *"There is no background retry loop after that — once
+  out, we stay out until the user acts."*
+- **Done instead:** the group identity now **survives** that teardown, in a new `lostMembership` memory
+  that `teardown` deliberately does not clear, bounded by `FOREGROUND_REJOIN_WINDOW_MS` (10 minutes) from
+  the moment of the loss. Returning the app to the foreground (`ProcessLifecycleOwner`, `ON_START`) with
+  the controller at `Idle` and a memory still inside the window runs the ordinary rejoin flow once —
+  list, join, handshake, and the `pendingQueue`-derived launch request that opens a player if the group
+  has moved on. The memory is cleared by every intentional exit (`leaveGroup`, sign-out,
+  `GroupGone`/`RemovedFromGroup`/`LibraryAccessDenied`), by entering any group, and by the window expiring.
+- **Reason:** the same device failure seen from the other end. Once the background kick has happened, the
+  controller sits at `Idle` for ever while the group is still there and the user is still watching it in
+  web — the app *knew* which group it was and threw that away at the moment it could no longer act on it.
+  "Once out, we stay out until the user acts" is kept in spirit: returning to the app **is** the user
+  acting, it is the only moment a rejoin can succeed after an OEM network cut, and it happens exactly once
+  per foreground rather than as a background loop.
+- **Deltas worth naming:**
+  1. **The foreground attempt is silent.** `runRejoinAttempts(quiet = true)` emits no `ConnectionLost` and
+     no `GroupEnded` — a failed or dissolved re-check must not put a message on screen every time the user
+     opens the app. A *successful* one still says `Rejoined`, because that is news. A dissolved group
+     clears the memory; a failed attempt keeps it, so the next foreground may retry inside the window.
+  2. **The window is measured on the device clock** (`Clock`, newly injected into the controller) rather
+     than `SyncPlayTimeSync.serverNow()`, because `teardown` calls `timeSync.reset()` between the write and
+     the read and a discarded offset would move the deadline.
+  3. **The loss instant is not refreshed** by a failed foreground retry (`rememberLoss` keeps the first
+     one for the same group id), so the 10 minutes are counted from the loss and cannot be walked forward
+     indefinitely by repeated foregrounding.
+  4. **`SyncPlayPinger.sampleNow()`** (a conflated wake channel that short-circuits the cadence delay) is
+     fired on foreground while `InGroup`, so a connection that died unnoticed in the background starts its
+     three-failure streak immediately instead of up to five seconds later.
+- **Why `ProcessLifecycleOwner` and not a Compose `ON_RESUME` hook in `AppScaffold`:** the controller is a
+  `@Singleton` that deliberately outlives every screen, and the state it is recovering exists while no
+  scaffold is composed at all (backgrounded, player closed, group lost). A process-level observer is the
+  same altitude as the thing it drives; a composable hook would also fire on rotation and on every
+  navigation-driven recomposition of the scaffold. It costs one new dependency,
+  `androidx.lifecycle:lifecycle-process`, added to the version catalog.
+
 <!-- END -->

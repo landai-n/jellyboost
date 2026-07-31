@@ -13,6 +13,7 @@ import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
 import dev.jellyfinnative.data.downloads.DownloadedMetadataRefresher
 import dev.jellyfinnative.data.userdata.UserDataSyncTrigger
+import dev.jellyfinnative.player.syncplay.presence.SyncPlayPresenceCoordinator
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -51,6 +52,17 @@ class JellyfinNativeApplication :
      */
     @Inject
     lateinit var downloadedMetadataRefresher: DownloadedMetadataRefresher
+
+    /**
+     * Keeps a SyncPlay group alive while the app is off screen, and takes one back on return
+     * (DECISIONS.md 2026-07-31).
+     *
+     * Here for the same reason as the two above, and more sharply: the whole failure it fixes
+     * happens while no screen exists — the platform cuts a backgrounded app's network, the group is
+     * lost, and the user is looking at jellyfin-web on the other half of the same tablet.
+     */
+    @Inject
+    lateinit var syncPlayPresenceCoordinator: SyncPlayPresenceCoordinator
 
     override val workManagerConfiguration: Configuration
         get() =
@@ -96,6 +108,7 @@ class JellyfinNativeApplication :
         }
         userDataSyncTrigger.start()
         downloadedMetadataRefresher.start()
+        syncPlayPresenceCoordinator.start()
     }
 
     private companion object {

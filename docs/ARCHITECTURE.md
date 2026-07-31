@@ -81,7 +81,9 @@ depends on `:player` except `:app`, which owns the `Routes.Player` NavHost entry
  ├── report/        PlaybackReporter
  ├── fallback/      DecoderFallbackHandler
  ├── session/       PlayerHandle + ExoPlayerHandle, TrackSelectionController, PlaybackService,
- │                  JellyfinAuthInterceptor
+ │                  PlaybackServiceState, JellyfinAuthInterceptor
+ ├── syncplay/      SyncPlayController + the group protocol; presence/ holds the foreground
+ │                  service a group without playback runs behind (docs/features/syncplay.md)
  ├── ui/            PlayerViewModel, PlayerScreen, PlayerControls, PlayerSheets
  └── di/            PlayerModule (bindings), DetachedPlayerScope
 ```
@@ -103,6 +105,14 @@ background playback and the media notification; the UI drives the instance direc
 through a `MediaController` (DECISIONS.md, 2026-07-28). The service is declared in `:player`'s own
 `AndroidManifest.xml`, together with the foreground-service permissions, so `:app`'s manifest stays
 untouched.
+
+**A second foreground service, for a group with nothing playing.** `SyncPlayPresenceService`
+(`syncplay/presence/`, `specialUse`) exists only to keep a backgrounded process's network alive while
+a SyncPlay group is held and no playback is running — the OEM behaviour that used to cost the user
+their group (DECISIONS.md, 2026-07-31). The two never run together: `PlaybackServiceState` publishes
+`PlaybackService`'s own lifecycle and `syncPlayPresenceDemanded` releases the presence service the
+moment playback takes over. Its coordinator is also where `ProcessLifecycleOwner` is observed, which
+is why `:player` depends on `androidx.lifecycle:lifecycle-process`.
 
 **Network.** Media requests use a `:player`-local `OkHttpClient` — media transfers are long-lived
 and share nothing with a JSON API call's timeouts — with `JellyfinAuthInterceptor` adding the

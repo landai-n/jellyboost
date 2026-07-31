@@ -231,10 +231,17 @@ class PlayerViewModel
          *
          * Fire and forget, and deliberately not on the path to playback: a title is cosmetic and
          * must never delay the first frame.
+         *
+         * @param itemId the item this label is *for* — the navigation argument on the ordinary open,
+         *   but whatever the group just moved to on [loadItem] (B4). `withSource` refreshes every
+         *   other item-bound field off the resolved [PlaybackMediaSource] already; the title is the
+         *   one piece of item-bound state this class fetches for itself rather than receiving from
+         *   the resolve, so it is the one call site that has to be told which item it is for rather
+         *   than assuming the session's original one.
          */
-        private fun loadTitle() {
+        private fun loadTitle(itemId: String = sessionStore.itemId) {
             viewModelScope.launch {
-                val item = repository.getItem(sessionStore.itemId).getOrNull() ?: return@launch
+                val item = repository.getItem(itemId).getOrNull() ?: return@launch
                 val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
                 _uiState.update { it.copy(title = label) }
             }
@@ -325,6 +332,11 @@ class PlayerViewModel
             withContext(viewModelScope.coroutineContext) {
                 endCurrentSource()
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                // The queue advanced to a different item in the same open session (B4): every other
+                // item-bound field on `PlayerUiState` comes off the resolved `PlaybackMediaSource`
+                // below and refreshes on its own, but the title is fetched separately and was still
+                // asking for the item this screen was *opened* with.
+                loadTitle(itemId.toString())
                 val result =
                     sessionController.open(
                         PlaybackResolveRequest(itemId = itemId, startPositionTicks = startPositionTicks),

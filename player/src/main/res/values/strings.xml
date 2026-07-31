@@ -44,10 +44,25 @@
     <string name="player_syncplay_leave_title">Leave this group?</string>
     <string name="player_syncplay_leave_body">Playback carries on here, on its own. Rejoining means picking the group again.</string>
 
+    <!--
+      Every dialog button is an app string rather than `android.R.string.cancel` (B10): the system
+      string follows the device locale, and this app is English-only today, so a French device
+      showed "Annuler" next to an English "Create" in the same dialog. One string shared by every
+      SyncPlay dialog's dismiss button so the two can never drift apart again.
+    -->
+    <string name="player_syncplay_cancel">Cancel</string>
+
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person watching</item>
         <item quantity="other">%d people watching</item>
     </plurals>
+
+    <!--
+      B6: the groups screen used to show only this count. `player_syncplay_groups_participants_more`
+      is what a row falls back to once the joined names stop fitting — `%1$s` is the names shown,
+      `%2$d` how many more there are.
+    -->
+    <string name="player_syncplay_groups_participants_more">%1$s +%2$d more</string>
 
     <!-- M11 Phase 4: the group queue. -->
     <string name="player_syncplay_queue">Queue</string>

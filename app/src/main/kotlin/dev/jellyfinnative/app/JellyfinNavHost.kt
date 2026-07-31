@@ -1,5 +1,8 @@
 package dev.jellyfinnative.app
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +32,16 @@ import dev.jellyfinnative.player.ui.PlayerScreen
 import timber.log.Timber
 
 /**
+ * How long a screen change takes, chrome included.
+ *
+ * One constant for the whole frame on purpose: [AppScaffold] animates the combined app bar and the
+ * bottom inset over exactly this span, so a page that fades in while the bar expands stays in step
+ * with it. It also replaces `NavHost`'s ~700ms default fade, which was slow enough that the app felt
+ * unresponsive to a tab tap.
+ */
+internal const val NAV_TRANSITION_MILLIS = 300
+
+/**
  * The app's navigation graph.
  *
  * `:app` resolves every `@HiltViewModel` via `hiltViewModel()` here and hands it to the feature
@@ -40,7 +53,8 @@ import timber.log.Timber
  *   flow (the Settings screen's sign-out today, a 401-driven logout later) pushes the user back to
  *   server setup.
  * @param modifier applied to the [NavHost] itself — [AppScaffold] uses it to reserve space for the
- *   combined app bar and the system navigation bar on the four top-level destinations.
+ *   combined app bar and the system navigation bar on the four top-level destinations, animating
+ *   both over [NAV_TRANSITION_MILLIS] so the frame moves with the transitions below.
  */
 @Composable
 internal fun JellyfinNavHost(
@@ -56,6 +70,13 @@ internal fun JellyfinNavHost(
         navController = navController,
         startDestination = if (startsSignedIn) Routes.Home else Routes.ServerSetup,
         modifier = modifier,
+        // A plain cross-fade, but on the frame's clock rather than the default's — see
+        // [NAV_TRANSITION_MILLIS]. Push and pop look the same because the chrome they animate
+        // alongside has no direction either.
+        enterTransition = { fadeIn(tween(NAV_TRANSITION_MILLIS)) },
+        exitTransition = { fadeOut(tween(NAV_TRANSITION_MILLIS)) },
+        popEnterTransition = { fadeIn(tween(NAV_TRANSITION_MILLIS)) },
+        popExitTransition = { fadeOut(tween(NAV_TRANSITION_MILLIS)) },
     ) {
         composable<Routes.ServerSetup> {
             ServerSetupScreen(

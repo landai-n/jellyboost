@@ -74,6 +74,21 @@ probe found the server fine, and a wrong "unreachable" verdict now self-heals vi
 15 s re-probe. Device-verified: cold start goes straight to the online home
 (~1 s, no offline flash); suite now 1620 unit tests.
 
+### Interleaved fix — app chrome popped during page transitions (2026-07-31)
+
+User-reported: navigating between a top-level page (combined app bar) and a pushed
+page (no bar) showed a layout shift — the bar and the page never appeared or
+disappeared together. Cause: `isTopLevel` reads the back stack, which flips the
+instant `navigate()` is called, so the `Scaffold`'s `topBar` slot and the
+navigation-bar bottom padding snapped a good half-second before the NavHost's
+default ~700 ms cross-fade finished. Fix (`AppScaffold.kt` + `JellyfinNavHost.kt`):
+one shared 300 ms clock (`NAV_TRANSITION_MILLIS`) drives explicit NavHost fades,
+an `AnimatedVisibility` (expand/shrink + fade) on the bar so `innerPadding`
+animates instead of snapping, an `animateDpAsState` bottom inset, and the bar is
+fed the last *top-level* destination so the selected-tab pill doesn't blink off
+mid-exit. Inset contract unchanged. Verify-green; visual check on device owed
+with the next M11 walk.
+
 ### Device DoD session #1 — 2026-07-31 (app + jellyfin-web in the tablet's Chrome)
 
 **Core PASSES:** group create/web join + badge; play-for-group of a downloaded

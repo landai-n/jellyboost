@@ -184,6 +184,42 @@ previous / shuffle / repeat buttons; "Left SyncPlay" snackbar text on
 screen; true frame-level skew measurement; drift-monitor corrective seek
 never observed in 40 min (2 s threshold untested in practice).
 
+### Bug-report audit & fix wave — 2026-07-31 (user DoD re-walk owed)
+
+`syncplay-bugreport.md` (two-client session, browser + app) showed pause/resume
+echo misses in both directions, two-press transport, a stuck "Waiting for
+group" overlay on ordinary Play, and growing desync after resume. Full audit
+(inbound + outbound path maps) → six fix commits, each `/verify`-green:
+
+1. `87312aa` scheduler forgets never-applied commands — the server's
+   "client got lost" re-send lands again (applied-repeat storm guard kept).
+2. `cb85ec0` group-state truth (`InGroup.groupState`) + **pause net** (3 s
+   mirror of the B3 self-sync net; WAITING hold now consults the real
+   player, not the phase; divergence from key decision 11 logged).
+3. `07d867f` MediaSession gate (`SyncPlayAwareForwardingPlayer`) —
+   notification/headset/media-button transport becomes group requests; PiP
+   rides the same session (no custom actions).
+4. `fb0a46f` play/pause tap + icon read `groupState`, not local `isPlaying`
+   (kills the two-press bug).
+5. `6232e91` hygiene: anchor uses `queue.lastUpdate`; reports carry real
+   `isPlaying` (server schedules the group's unpause from it — behavior
+   change to watch on device); detach keeps scheduler + phase alive for
+   background playback; one clock sample before the join call.
+6. (next commit) unified group play — in a group the ordinary Play/Resume
+   plays for the group (SetNewQueue, series-tail expansion kept), the
+   separate button is gone (user decision, DECISIONS.md); launch route
+   opens paused → buffering → owed ready; adopt path reports
+   buffering-then-ready instead of instant ready.
+
+Suite: 1620 → 1663 unit tests. **Owed: user re-walk of both bug-report
+scenarios** (single-press pause/resume both directions/origins, no overlay
+hang, ordinary Play drives the second client, drift < 2 s over 10 min,
+notification/headset pause routes through the group) with logcat capture —
+if a pause still lands net-late (~3 s), the log tells whether the
+SendCommand ever arrived ("SyncPlay command …" line) or was dropped at a
+gate ("Ignoring …" lines); "never arrived" would point at socket delivery,
+the one cause static analysis could not settle.
+
 ### Original DoD checklist (reference)
 - **Full DoD walk** (PLAN.md M11): lockstep play/pause/seek <~1 s both
   directions; downloaded item plays from disk in-group — dashboard shows both

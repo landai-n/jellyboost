@@ -14,6 +14,7 @@ import dev.jellyfinnative.data.JellyfinRepository
 import dev.jellyfinnative.data.downloads.DownloadRepository
 import dev.jellyfinnative.data.userdata.UserDataChange
 import dev.jellyfinnative.data.userdata.UserDataRepository
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -25,7 +26,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -40,9 +43,12 @@ import org.junit.jupiter.api.Test
  * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
  * ceiling — the same split [ItemDetailSelectionTest] already makes for batch selection.
  *
- * The claim underneath every test here is that a group action is a **request**: the session is asked,
- * nothing on this page changes, and the snackbar says only that the ask went out. The control is the
- * whole of the rest of this package, which runs with no group and must be untouched by any of it.
+ * The claim underneath every test here is that in a group **everything this page starts is started
+ * for the group** (DECISIONS.md, 2026-07-31): Play is a `SetNewQueue` and not a navigation, the two
+ * queue actions are requests, nothing on this page changes locally, and the snackbar says only that
+ * the ask went out. The control is the whole of the rest of this package, which runs with no group
+ * and must be untouched by any of it — plus the solo tests below, which pin that a play with no
+ * group is still the navigation it always was.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ItemDetailGroupActionsTest {
@@ -88,19 +94,22 @@ class ItemDetailGroupActionsTest {
     }
 
     @Test
-    fun `with no group there is nothing for a group to play`() =
+    fun `with no group a play is a navigation and the session hears nothing`() =
         runTest(dispatcher) {
-            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
+            val resumable = movie.copy(userData = UserData(playbackPositionTicks = RESUME_TICKS, played = false))
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(resumable)
             val model = viewModel()
             advanceUntilIdle()
 
-            // The target exists — a movie is playable by a group — but the actions are drawn only
-            // when `activeGroup` is non-null, and asking anyway must reach nothing.
-            model.activeGroup.value.shouldBeNull()
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
-            advanceUntilIdle()
+            withNavigations(model) { navigations ->
+                model.activeGroup.value.shouldBeNull()
+                model.onPlay(model.uiState.value.playTarget!!)
+                advanceUntilIdle()
 
-            coVerify(exactly = 0) { syncPlaySession.playForGroup(any(), any()) }
+                // The resume position travels with it, exactly as the header button used to send it.
+                navigations shouldBe listOf(PlayRequest(ITEM_ID, RESUME_TICKS))
+                coVerify(exactly = 0) { syncPlaySession.playForGroup(any(), any()) }
+            }
         }
 
     @Test
@@ -116,7 +125,7 @@ class ItemDetailGroupActionsTest {
         }
 
     @Test
-    fun `playing a movie for the group replaces its queue at the resume position`() =
+    fun `playing a movie in a group replaces the group's queue at the resume position`() =
         runTest(dispatcher) {
             val resumable = movie.copy(userData = UserData(playbackPositionTicks = RESUME_TICKS, played = false))
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(resumable)
@@ -124,14 +133,20 @@ class ItemDetailGroupActionsTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
-            advanceUntilIdle()
+            withNavigations(model) { navigations ->
+                model.onPlay(model.uiState.value.playTarget!!)
+                advanceUntilIdle()
 
-            // Exactly one id, and no series lookup: web accepts a one-item movie queue as it is, and
-            // the episode expansion below must not leak into anything that is not an episode.
-            coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(ITEM_ID), RESUME_TICKS) }
-            coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
-            model.uiState.value.userMessage shouldBe UserMessage.GroupActionSent(GroupAction.PLAY_FOR_GROUP)
+                // Exactly one id, and no series lookup: web accepts a one-item movie queue as it is,
+                // and the episode expansion below must not leak into anything that is not an episode.
+                coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(ITEM_ID), RESUME_TICKS) }
+                coVerify(exactly = 0) { repository.getSeriesEpisodes(any()) }
+                // The bug this fixes, in one assertion: navigating here opens a local player the
+                // group knows nothing about, which is what sat under "Waiting for group" for ever.
+                // The player is opened by the server's own `PlayQueueUpdate` instead.
+                navigations.shouldBeEmpty()
+                model.uiState.value.userMessage shouldBe UserMessage.GroupPlayRequested
+            }
         }
 
     @Test
@@ -148,10 +163,11 @@ class ItemDetailGroupActionsTest {
 
             coVerify(exactly = 1) { syncPlaySession.addToGroupQueue(ITEM_ID, next = true) }
             coVerify(exactly = 1) { syncPlaySession.addToGroupQueue(ITEM_ID, next = false) }
+            model.uiState.value.userMessage shouldBe UserMessage.GroupActionSent(GroupAction.ADD_TO_QUEUE)
         }
 
     @Test
-    fun `a series sends the episode its Play button resolves to, not the series`() =
+    fun `a series page plays the episode its Play button resolves to, not the series`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(series)
             coEvery { repository.getNextUpForSeries(ITEM_ID) } returns
@@ -162,7 +178,7 @@ class ItemDetailGroupActionsTest {
 
             model.uiState.value.groupTarget
                 ?.id shouldBe EPISODE_2
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            model.onPlay(model.uiState.value.playTarget!!)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
@@ -180,13 +196,38 @@ class ItemDetailGroupActionsTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            model.onPlay(model.uiState.value.playTarget!!)
             advanceUntilIdle()
 
             // From the chosen episode to the end of the series, in server order, and nothing before
             // it: that is the list web rebuilds locally and then indexes the server's playlist by.
             coVerify(exactly = 1) {
                 syncPlaySession.playForGroup(listOf(EPISODE_2, EPISODE_3, EPISODE_4), RESUME_TICKS)
+            }
+        }
+
+    @Test
+    fun `an episode row's own play button goes to the group, expanded and from its own position`() =
+        runTest {
+            // A season page: the row a user taps is not what the header would have resolved to, and
+            // it is the second entry point that used to navigate straight past the group.
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
+            coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
+                AppResult.Success(listOf(episode(EPISODE_1), episode(EPISODE_2)))
+            coEvery { repository.getSeriesEpisodes(SERIES_ID) } returns
+                AppResult.Success(listOf(episode(EPISODE_1), episode(EPISODE_2), episode(EPISODE_3)))
+            inAGroup()
+            val model = viewModel()
+            advanceUntilIdle()
+
+            withNavigations(model) { navigations ->
+                model.onPlay(episode(EPISODE_2, RESUME_TICKS))
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) {
+                    syncPlaySession.playForGroup(listOf(EPISODE_2, EPISODE_3), RESUME_TICKS)
+                }
+                navigations.shouldBeEmpty()
             }
         }
 
@@ -201,7 +242,7 @@ class ItemDetailGroupActionsTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            model.onPlay(model.uiState.value.playTarget!!)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
@@ -217,7 +258,7 @@ class ItemDetailGroupActionsTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.onGroupAction(GroupAction.PLAY_FOR_GROUP)
+            model.onPlay(model.uiState.value.playTarget!!)
             advanceUntilIdle()
 
             coVerify(exactly = 1) { syncPlaySession.playForGroup(listOf(EPISODE_2), 0L) }
@@ -241,6 +282,27 @@ class ItemDetailGroupActionsTest {
             coVerify(exactly = 0) { syncPlaySession.addToGroupQueue(any(), any()) }
         }
 
+    @Test
+    fun `in a group, something the group cannot play still opens here rather than nowhere`() =
+        runTest(dispatcher) {
+            // A folder page resolves its Play button to the folder itself, which no group queue can
+            // hold. Sending it would be refused server-side and swallow the tap; playing it locally
+            // is what the user asked for and costs the group nothing.
+            val folder = JellyfinItem(id = ITEM_ID, name = "Extras", type = ItemType.FOLDER)
+            coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(folder)
+            inAGroup()
+            val model = viewModel()
+            advanceUntilIdle()
+
+            withNavigations(model) { navigations ->
+                model.onPlay(model.uiState.value.playTarget!!)
+                advanceUntilIdle()
+
+                navigations shouldBe listOf(PlayRequest(ITEM_ID, 0L))
+                coVerify(exactly = 0) { syncPlaySession.playForGroup(any(), any()) }
+            }
+        }
+
     /** An episode of [SERIES_ID] — the type and the series link are what drive the expansion. */
     private fun episode(
         id: String,
@@ -253,8 +315,32 @@ class ItemDetailGroupActionsTest {
         userData = UserData(playbackPositionTicks = positionTicks, played = false),
     )
 
+    private val season =
+        JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
+
     private fun inAGroup() {
         activeGroup.value = SyncPlayGroupHandle(id = "group-1", name = "Film night", participantCount = 2)
+    }
+
+    /**
+     * Runs [block] with every solo play this page resolves, oldest first — the list that must stay
+     * **empty** in a group.
+     *
+     * A plain list rather than Turbine because most of these tests are about the *absence* of an
+     * event, and "nothing was emitted by the time everything else had run" is exactly what an empty
+     * list after `advanceUntilIdle()` states. The collector is a foreground coroutine, cancelled
+     * when the block ends: `advanceUntilIdle()` runs the test's own work and not `backgroundScope`'s,
+     * so a collector launched there would never be resumed and every assertion here would read an
+     * empty list whatever the ViewModel did.
+     */
+    private suspend fun TestScope.withNavigations(
+        model: ItemDetailViewModel,
+        block: suspend (List<PlayRequest>) -> Unit,
+    ) {
+        val seen = mutableListOf<PlayRequest>()
+        val collector = launch { model.playRequests.collect(seen::add) }
+        block(seen)
+        collector.cancel()
     }
 
     private fun viewModel() =

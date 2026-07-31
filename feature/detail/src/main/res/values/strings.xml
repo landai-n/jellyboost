@@ -46,8 +46,10 @@
     </plurals>
     <string name="detail_message_user_data_failed">Couldn\'t save that. Try again.</string>
 
-    <!-- M11 SyncPlay: what this page can ask the active group to do. -->
+    <!-- M11 SyncPlay: what this page can ask the active group to do. In a group the Play / Resume
+         button is the group's play, so it takes the first two labels. -->
     <string name="detail_group_play">Play for %1$s</string>
+    <string name="detail_group_resume">Resume for %1$s</string>
     <string name="detail_group_play_next">Play next</string>
     <string name="detail_group_add_to_queue">Add to queue</string>
     <string name="detail_message_group_play">Asked the group to play this.</string>

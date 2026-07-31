@@ -32,6 +32,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -61,10 +62,12 @@ import dev.jellyfinnative.core.ui.theme.Dimens
  *
  * @param onItemClick a season, episode or related item was tapped — the caller pushes another
  *   `Routes.ItemDetail` for it.
- * @param onPlay play was requested for an item, at the given position in Jellyfin ticks — the
- *   caller pushes `Routes.Player`. Resolving *which* item a Play tap means (a series plays its
- *   next-up episode) happens here rather than in the caller, because only this screen knows the
- *   rows it loaded.
+ * @param onPlay a **solo** play was resolved for an item, at the given position in Jellyfin ticks —
+ *   the caller pushes `Routes.Player`. Which item a Play tap means (a series plays its next-up
+ *   episode) is resolved on this side, because only this screen knows the rows it loaded; *whether*
+ *   it is a solo play at all is resolved by `ItemDetailViewModel.onPlay`, since in a SyncPlay group
+ *   a play is sent to the group and the player is opened by the group's answer instead
+ *   (DECISIONS.md, 2026-07-31).
  * @param onBack pops one entry — the plain back affordance.
  * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
  *   `AppScaffold.navigateHome`.
@@ -97,6 +100,16 @@ fun ItemDetailScreen(
         }
     }
 
+    // A play tap resolves to a navigation only when it is a *solo* play; in a group the ViewModel
+    // sends the group a queue instead and the player is opened by the group's answer, through
+    // `SyncPlayController.launchRequests` (DECISIONS.md, 2026-07-31).
+    val currentOnPlay by rememberUpdatedState(onPlay)
+    LaunchedEffect(viewModel) {
+        viewModel.playRequests.collect { request ->
+            currentOnPlay(request.itemId, request.startPositionTicks)
+        }
+    }
+
     // Enabled only while the mode is on, so Back keeps popping this destination — and the overlaid
     // Back / Home buttons keep working — at every other moment.
     BackHandler(enabled = isSelecting) { viewModel.onSelection(SelectionIntent.Clear) }
@@ -106,16 +119,17 @@ fun ItemDetailScreen(
             state = state,
             onRetry = viewModel::refresh,
             onItemClick = onItemClick,
-            onPlay = onPlay,
+            onPlay = viewModel::onPlay,
             actions =
                 DetailActionHandlers(
-                    onPlay = { state.playTarget?.let { target -> onPlay(target.id, playbackStartTicks(target)) } },
+                    onPlay = { state.playTarget?.let(viewModel::onPlay) },
                     onDownload = viewModel::onDownloadClick,
                     onToggleWatched = viewModel::toggleWatched,
                     onToggleFavorite = viewModel::toggleFavorite,
-                    // Offered only when there is a group *and* something a group can play: a
-                    // series page resolves to its next-up episode, a library folder to nothing
-                    // (`ItemDetailUiState.groupTarget`).
+                    // Set only when there is a group *and* something a group can play: a series
+                    // page resolves to its next-up episode, a library folder to nothing
+                    // (`ItemDetailUiState.groupTarget`). Non-null is therefore also exactly when a
+                    // tap on Play is a group play, which is what the header labels itself from.
                     group =
                         activeGroup
                             ?.takeIf { state.groupTarget != null }
@@ -231,13 +245,17 @@ private fun DeleteDownloadDialog(
 
 /**
  * Stateless detail rendering — a pure function of [state], so it previews without a ViewModel.
+ *
+ * @param onPlay an episode row's play button was tapped. It hands over the *item*, not an id and a
+ *   position: what a play means depends on whether there is a group, and that is the ViewModel's
+ *   answer to give (DECISIONS.md, 2026-07-31).
  */
 @Composable
 fun ItemDetailContent(
     state: ItemDetailUiState,
     onRetry: () -> Unit,
     onItemClick: (JellyfinItem) -> Unit,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (JellyfinItem) -> Unit,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
     selection: State<ItemSelection> = remember { mutableStateOf(ItemSelection()) },
@@ -277,7 +295,7 @@ private fun DetailSections(
     isWide: Boolean,
     backdropHeight: Dp,
     onItemClick: (JellyfinItem) -> Unit,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (JellyfinItem) -> Unit,
     actions: DetailActionHandlers,
     selection: State<ItemSelection>,
     onSelection: (SelectionIntent) -> Unit,
@@ -354,7 +372,7 @@ private fun DetailSections(
                             onItemClick(episode)
                         }
                     },
-                    onPlay = { onPlay(episode.id, playbackStartTicks(episode)) },
+                    onPlay = { onPlay(episode) },
                     onLongClick = { onSelection(SelectionIntent.Toggle(id)) },
                     selected = selected,
                 )
@@ -422,10 +440,11 @@ private fun userMessageText(message: UserMessage): String =
 
         is UserMessage.BatchFinished -> batchOutcomeText(message.report.action, message.report.outcome)
 
+        UserMessage.GroupPlayRequested -> stringResource(R.string.detail_message_group_play)
+
         is UserMessage.GroupActionSent ->
             stringResource(
                 when (message.action) {
-                    GroupAction.PLAY_FOR_GROUP -> R.string.detail_message_group_play
                     GroupAction.PLAY_NEXT -> R.string.detail_message_group_play_next
                     GroupAction.ADD_TO_QUEUE -> R.string.detail_message_group_queued
                 },

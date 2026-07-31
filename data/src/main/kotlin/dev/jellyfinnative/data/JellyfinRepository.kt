@@ -83,7 +83,7 @@ interface JellyfinRepository {
      * Every episode of a series, in server order, spanning seasons — unlike the season-scoped
      * [getEpisodes].
      *
-     * It exists for SyncPlay's *Play for group*, which has to send the server the same expanded
+     * It exists for a SyncPlay group play, which has to send the server the same expanded
      * queue jellyfin-web would have built for itself. Handed a group queue holding a single episode,
      * web's `translateItemsForPlayback` silently replaces it with that episode plus every following
      * one of the series (the `EnableNextEpisodeAutoPlay` default), then indexes the server's

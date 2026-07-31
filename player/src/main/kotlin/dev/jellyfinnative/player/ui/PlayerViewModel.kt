@@ -222,7 +222,14 @@ class PlayerViewModel
                     mediaSourceId = sessionStore.mediaSourceId,
                     startPositionTicks = sessionStore.startPositionTicks,
                 ),
-                playWhenReady = sessionStore.playWhenReady,
+                // In a group, **paused** — for the same reason `loadItem` opens paused: the group
+                // decides when playback starts, and a member that started on its own would be out of
+                // sync from the first frame. This is the route a group play actually takes now that
+                // the detail page sends the group a queue rather than navigating (DECISIONS.md,
+                // 2026-07-31): the server's `PlayQueueUpdate` becomes a launch request, the NavHost
+                // opens this screen, and the open-paused → buffering → ready → server-unpause
+                // handshake is what puts this member in step.
+                playWhenReady = sessionStore.playWhenReady && !syncPlay.isInGroup,
             )
         }
 

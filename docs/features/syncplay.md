@@ -55,7 +55,7 @@ All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless state
 | `SyncPlayLocalSession` | The server-visible session of a **downloaded** item watched with a group: mints its play session id, and closes it when the group ends. See "Local files in a group". |
 | `SyncPlayPlaybackHost` | What the controller needs of a player: `loadItem(itemId, startTicks)` (opens paused) and `snapshot()`. Implemented by `PlayerViewModel`. |
 | `ui/PlayerSyncPlayBridge` (in `player/ui/`) | The player's half: group state → `PlayerSyncPlayState`, transport → requests, membership changes → reporting reconciliation. Keeps the group out of `PlayerViewModel`'s branches. |
-| `ControllerSyncPlaySession` | Binds `:core:common`'s `SyncPlaySession` to the controller, so `:feature:detail` can offer "Play for group" / "Add to queue" without depending on `:player`. |
+| `ControllerSyncPlaySession` | Binds `:core:common`'s `SyncPlaySession` to the controller, so `:feature:detail` can play for the group and queue for it without depending on `:player`. |
 | `ui/SyncPlayGroupsScreen` + `ui/SyncPlayGroupsViewModel` | The dedicated section (`Routes.SyncPlay`): list groups on a 10 s poll, create, join, leave; a 403 degrades to "SyncPlay is disabled for your account". |
 | `ui/SyncPlayGroupSheet`, `ui/SyncPlayQueueSheet` + `ui/SyncPlayQueueViewModel` | In-player panels: participants, shuffle/repeat, leave; and the group queue with reorder/remove/play-from-here. |
 | `:app` `SyncPlayLaunchViewModel`, `SyncPlayBadgeViewModel` | The NavHost's collector for `launchRequests` (the group moved on and no player is open ⇒ navigate to the player), and the badge on `AppTopBar`'s Groups action. |
@@ -70,8 +70,12 @@ All in `player/src/main/kotlin/dev/jellyfinnative/player/syncplay/` unless state
    instant the join returns — would be converted to local time against an assumed offset. A failed
    sample is logged and the join carries on.
 2. `GroupJoined` + the first `PlayQueueUpdate` arrive; the controller resolves the playing entry.
-3. If a player is attached, `SyncPlayPlaybackHost.loadItem` opens the item **paused**; if not, a
-   `SyncPlayLaunchRequest` is emitted and `:app` opens one.
+3. If a player is attached, `SyncPlayPlaybackHost.loadItem` opens the item **paused** — or, when
+   the host is already on that very item, `adoptOpenItem` keeps it and runs the handshake around it
+   rather than reloading. If no player is attached, a `SyncPlayLaunchRequest` is emitted and `:app`
+   opens one; that session opens **paused** too (`PlayerViewModel`'s init reads
+   `sessionStore.playWhenReady && !syncPlay.isInGroup`), because the group decides when playback
+   starts.
 4. While preparing, `syncPlayBuffering`; on `PlayerEvent.Ready`, `syncPlayReady`. Both carry the
    player's **real** `isPlaying` (the host's snapshot where one is attached, the shared player
    otherwise): `WaitingGroupState` extrapolates the reported position over the round trip only when
@@ -97,7 +101,8 @@ exactly the moments the server calls `SetAllBuffering`/`SetBuffering(session, tr
 
 | moment | fallback if the player never re-buffers |
 |---|---|
-| an item is loaded or adopted for a queue slot | none — the player's own readiness is the answer |
+| an item is **loaded** for a queue slot | none — the player really is being rebuilt, so its own readiness is the answer |
+| an item already open is **adopted** for a queue slot | 1.5 s — it is already prepared and may have passed its readiness before the host was attached (DECISIONS.md 2026-07-31) |
 | the host reports a re-negotiation (`onHostBuffering`) | none |
 | a group `Seek` is applied | 1.5 s |
 | a queue update whose reason is `NewPlaylist` / `SetCurrentItem` / `NextItem` / `PreviousItem` | reported immediately; the player is already prepared |
@@ -307,6 +312,27 @@ So `PlaybackReporter` reports a `LocalPlaybackMediaSource` when — and only whe
 Resolution itself needs nothing new: the controller issues an ordinary `PlaybackResolveRequest`, and
 `PlaybackSourceResolver` already prefers a completed download over a stream — per queue item.
 
+## Starting something with the group
+
+**In a group, the browse surfaces do everything as a group** (DECISIONS.md 2026-07-31, user
+decision). On the detail page that means:
+
+| affordance | in a group |
+|---|---|
+| Play / Resume (header) and each episode row's play button | `ItemDetailViewModel.onPlay` sends `SetNewQueue` with the resume position and **does not navigate**. The player opens a moment later, when the server's `PlayQueueUpdate` comes back as a `SyncPlayLaunchRequest`. The header button reads "Play for &lt;group&gt;" / "Resume for &lt;group&gt;", so the changed meaning is on screen |
+| *Play next* / *Add to queue* | unchanged — `syncPlayQueue` with `QueueNext` / `Queue`. They are additive and have no solo counterpart |
+| anything a group cannot play (`ItemType.isPlayable` is false) | plays here, solo, exactly as it does outside a group |
+
+There is no longer a separate *Play for group* button. Two buttons that both said "play" and meant
+different things is what left a member watching alone under a "Waiting for group" overlay while the
+group never heard about it (`syncplay-bugreport.md`); the way to watch something on your own is to
+leave the group, which is one tap away in the player and on the Groups screen.
+
+An episode is always sent as **the run from it to the end of its series**, because jellyfin-web
+expands a single-episode group queue locally and then indexes the server's playlist by the expanded
+length — a one-entry queue makes it read past the end, throw, and drop the update, so nobody's
+playback starts (DECISIONS.md 2026-07-31).
+
 ## What changes in the player while in a group
 
 - Play / pause / seek / skip / skip-intro become group requests (`PlayerSyncPlayBridge`).
@@ -330,7 +356,7 @@ Resolution itself needs nothing new: the controller issues an ordinary `Playback
 | `syncPlayApi.syncPlaySetIgnoreWait` | Player detached / re-attached. |
 | `syncPlayApi.syncPlayPause` / `syncPlayUnpause` / `syncPlaySeek` / `syncPlayStop` | User transport, in a group. |
 | `syncPlayApi.syncPlayNextItem` / `syncPlayPreviousItem` / `syncPlaySetPlaylistItem` | Queue navigation. |
-| `syncPlayApi.syncPlaySetNewQueue` / `syncPlayQueue` / `syncPlayMovePlaylistItem` / `syncPlayRemoveFromPlaylist` | Queue administration ("Play for group", "Add to queue", reorder, remove). |
+| `syncPlayApi.syncPlaySetNewQueue` / `syncPlayQueue` / `syncPlayMovePlaylistItem` / `syncPlayRemoveFromPlaylist` | Queue administration (a Play tap in a group, "Play next", "Add to queue", reorder, remove). |
 | `syncPlayApi.syncPlaySetShuffleMode` / `syncPlaySetRepeatMode` | The group's shuffle/repeat. |
 | `timeSyncApi.getUtcTime` | Every time-sync sample. |
 | websocket `SyncPlayGroupUpdateMessage`, `SyncPlayCommandMessage` | Group state, queue, and every command, while in a group. |
@@ -357,7 +383,7 @@ offline sessions do.
 
 | File | What it pins |
 |---|---|
-| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net and the pause net (a paused group with no command pauses this member, the group's own pause standing the net down, no second pause on a player already stopped, a paused group at join, a WAITING hold over a phase that lies, and a self-sync cancelled when the group stops playing), sign-out teardown, ignoreWait on detach, a detached player the group still reaches (phase stays `Playing`, a later command still applies), a self-sync measured from the queue's `lastUpdate` rather than from now, buffering/ready reports carrying the player's real `isPlaying`, the clock sampled before the join call (and a failed sample not blocking it), queue reconciliation, unopenable slots skipped once. Auto-rejoin: a blip-then-`NotInGroup` and a `403` both taken back (join re-run, handshake re-entered, player never started, one "Rejoined" message), membership falling and rising for the local-session re-mint, a dissolved group asked after exactly once, exhaustion at exactly 3 attempts 2 s apart then one message and silence, aborts mid-rejoin from leave and sign-out, the four exits that must never rejoin, and a confirmed loss the connection comes back from (no call spent while offline, rejoined when it returns). Foreground re-check: a membership the background cost us asked for again and got back, a group gone in the meantime forgotten without a word, a failed re-check that is silent, does not loop and is retried on the *next* foreground, a loss older than the 10-minute window dropped rather than acted on, a deliberate leave and a sign-out never taken back, and an immediate ping while still in a group. |
+| `SyncPlayControllerTest` | Join handshake, WAITING (overlay *and* pause), intents → API calls with **zero** local playback calls, `NotInGroup` / `GroupGone` / `AccessDenied` → Idle, connection loss → paused + message, no pause on a transient flap, connectivity blip vs. sustained offline, ping-failure streak, ready owed vs. silence, the self-sync net and the pause net (a paused group with no command pauses this member, the group's own pause standing the net down, no second pause on a player already stopped, a paused group at join, a WAITING hold over a phase that lies, and a self-sync cancelled when the group stops playing), sign-out teardown, ignoreWait on detach, a detached player the group still reaches (phase stays `Playing`, a later command still applies), a self-sync measured from the queue's `lastUpdate` rather than from now, buffering/ready reports carrying the player's real `isPlaying`, the clock sampled before the join call (and a failed sample not blocking it), queue reconciliation, an adopted item that reports buffering and owes its `ready` (answered by the player, or by the 1.5 s fallback when it never re-buffers), unopenable slots skipped once. Auto-rejoin: a blip-then-`NotInGroup` and a `403` both taken back (join re-run, handshake re-entered, player never started, one "Rejoined" message), membership falling and rising for the local-session re-mint, a dissolved group asked after exactly once, exhaustion at exactly 3 attempts 2 s apart then one message and silence, aborts mid-rejoin from leave and sign-out, the four exits that must never rejoin, and a confirmed loss the connection comes back from (no call spent while offline, rejoined when it returns). Foreground re-check: a membership the background cost us asked for again and got back, a group gone in the meantime forgotten without a word, a failed re-check that is silent, does not loop and is retried on the *next* foreground, a loss older than the 10-minute window dropped rather than acted on, a deliberate leave and a sign-out never taken back, and an immediate ping while still in a group. |
 | `SyncPlayCommandSchedulerTest` | Future / past-due / replacement commands, seek epsilon, applied-once (identical re-send, repeated past-due, stale `emittedAt`). |
 | `SyncPlayDriftMonitorTest` | Threshold either side of 2 s, no correction while paused. |
 | `time/SyncPlayTimeSyncTest` | Server ahead/behind, asymmetric RTT, outlier rejection, rolling window. |
@@ -367,9 +393,10 @@ offline sessions do.
 | `api/SdkSyncPlayApiTest`, `socket/SdkSyncPlaySocketTest` | The facade's DTOs and the socket's mapping. |
 | `SyncPlayLocalSessionTest` | Mint once per in-group local item, mint on join-mid-playback, failure ⇒ null, closing stop on leave (once), no closing stop when the *item* changed, forgetting on screen close. |
 | `ControllerSyncPlaySessionTest` | The `:core:common` contract's mapping. |
+| `feature/detail/.../ItemDetailGroupActionsTest` | The browse surface: in a group a Play tap is `playForGroup` with the series tail and the resume position and emits **no** navigation, an episode row's play button goes the same way, solo plays still navigate, something a group cannot play still opens locally, and *Play next* / *Add to queue* reach the two queue modes. |
 | `ui/SyncPlayGroupsViewModelTest`, `ui/SyncPlayQueueViewModelTest` | Polling, join/create/leave, 403 copy; queue titles, reorder/remove. |
 | `player/.../report/PlaybackReporterSyncPlayTest` | The reporting exception in all three terms, plus "never `stopTranscoding` for a local source" and the group-exit stop. |
-| `player/.../ui/PlayerSyncPlayTest`, `PlayerSyncPlayReportingTest` | In-group transport never touches `PlayerHandle`; speed and auto-skip suppressed; reconcile-before-start ordering and the three moments it runs. |
+| `player/.../ui/PlayerSyncPlayTest`, `PlayerSyncPlayReportingTest` | In-group transport never touches `PlayerHandle`; speed and auto-skip suppressed; a session opened while in a group opens **paused** (and solo still opens playing); reconcile-before-start ordering and the three moments it runs. |
 
 `PlaybackReporterTest` and the solo `PlayerViewModelTest` / `PlayerTrackPickerTest` are unchanged and
 green — they are the regression tests that group support altered nothing about watching alone.

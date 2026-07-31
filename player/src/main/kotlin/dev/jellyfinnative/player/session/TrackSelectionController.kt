@@ -33,6 +33,28 @@ internal class TrackSelectionController(
     private val player: Player,
 ) {
     /**
+     * Returns the process-wide player's selection parameters to a clean slate for a new media item.
+     *
+     * `TrackSelectionParameters` belong to the [Player], not to the item it is playing, and the
+     * player here is a singleton shared with `PlaybackService` — so an override left by the last
+     * item, or the disabled text renderer that "subtitles off" leaves behind, silently governs
+     * whatever is prepared next. One film watched without subtitles would keep every later one from
+     * ever showing any, and an audio override would name a track group the new stream does not have.
+     *
+     * Called from `PlayerHandle.prepare`, before the item is set. What *this* session wants is
+     * applied afterwards, once the player reports the tracks it actually got.
+     */
+    fun reset() {
+        player.trackSelectionParameters =
+            player.trackSelectionParameters
+                .buildUpon()
+                .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+                .clearOverridesOfType(C.TRACK_TYPE_TEXT)
+                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                .build()
+    }
+
+    /**
      * @return `false` when the requested audio stream is not in the current ExoPlayer track list,
      *   meaning the caller has to ask the server for it instead.
      */

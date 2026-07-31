@@ -112,6 +112,49 @@ request carries `forceRemote` and the item switches to streaming for the track i
 pickers themselves show the source's full track list online and only the file's own tracks offline.
 The whole rule lives in docs/features/offline-playback.md, *"…and which tracks are shown"*.
 
+### The selection an open starts with
+
+The server picks a track for the session before the user touches anything — the item's
+`DefaultAudioStreamIndex` / `DefaultSubtitleStreamIndex`, or whatever the previous session asked
+for — and that choice has to reach ExoPlayer as deliberately as a tap on the picker does.
+
+```
+resolve  →  PlaybackMediaSource.selected{Audio,Subtitle}Index   (drawn in the pickers at once)
+   │
+   ▼
+publish  →  armed as pending                     (prepare has run; currentTracks is still empty)
+   │
+   ▼
+PlayerEvent.TracksChanged  →  PlayerViewModel.applyPendingTrackSelections()
+```
+
+The wait is not an optimisation: at the moment the session opens the player has been prepared but
+has parsed nothing, so `Player.currentTracks` is empty and there is nothing to select against.
+Tracks then arrive in **stages** — a side-loaded subtitle's group lands after the container's — so
+the apply is retried on every `TracksChanged` until it lands, and each half clears itself the moment
+it does. A user choice made in between wins: `selectAudioTrack` / `selectSubtitleTrack` spend the
+pending one first.
+
+Two consequences worth stating:
+
+- **"Subtitles off" is applied, not assumed.** `null` is a choice like any other. The reset below
+  re-enables the text renderer, and ExoPlayer's selector will pick up a default-flagged text track
+  on its own if nobody says otherwise.
+- **A refused apply never re-resolves.** The stream *is* the one the server built for this
+  selection, so the only way it can lack the track is that the server burned it in — a subtitle
+  already on screen, with no text group to select. Asking again would restart playback in a loop for
+  something the user can already see. That is the one place this path deliberately differs from the
+  user-driven one.
+
+### The parameter reset in `prepare`
+
+`TrackSelectionParameters` belong to the **player**, not to the item, and this app has exactly one
+`ExoPlayer` for the whole process (shared with `PlaybackService`). Left alone, an override — or the
+disabled text renderer that "subtitles off" leaves behind — governs whatever is prepared next: one
+film watched without subtitles would keep every later one from ever showing any. So
+`ExoPlayerHandle.prepare` calls `TrackSelectionController.reset()` before `setMediaItem`, clearing
+both types' overrides and re-enabling text; the session's own choice is applied afterwards, above.
+
 ## Decoder fallback
 
 The device profile is built from what `MediaCodecList` *claims*; some decoders accept a format and

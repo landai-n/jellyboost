@@ -163,6 +163,25 @@ class PlayerViewModel
         private var source: PlaybackMediaSource? = null
 
         /**
+         * The audio stream this open resolved, until the player has been told about it.
+         *
+         * `null` means there is nothing left to apply. It cannot be applied where it is resolved:
+         * `prepare` has only just been called there and `Player.currentTracks` is still empty, so the
+         * selection waits for the player to report some ([applyPendingTrackSelections]).
+         */
+        private var pendingAudioIndex: Int? = null
+
+        /**
+         * `true` while this open's subtitle choice still has to reach the player.
+         *
+         * A flag rather than a nullable index because here `null` *is* a choice — subtitles off — and
+         * it has to be stated as explicitly as any other: `prepare` re-enables the text renderer for
+         * the new item, and ExoPlayer's selector will otherwise pick up a default-flagged text track
+         * on its own.
+         */
+        private var pendingSubtitleApply = false
+
+        /**
          * The downloaded copy of this item, once one has been resolved.
          *
          * Kept for the whole session rather than read off [source], because a forced-remote track
@@ -418,6 +437,9 @@ class PlayerViewModel
          * in-stream switch that happens to succeed would strand it there.
          */
         fun selectAudioTrack(jellyfinIndex: Int) {
+            // A tap that beats the first `TracksChanged` outranks the open's own choice, which would
+            // otherwise be applied over the top of it a moment later.
+            pendingAudioIndex = null
             val current = source ?: return
             val home = goesHome(current, audioIndex = jellyfinIndex, subtitleIndex = current.selectedSubtitleIndex)
             if (!home && playerHandle.selectAudioTrack(current, jellyfinIndex)) {
@@ -435,6 +457,9 @@ class PlayerViewModel
 
         /** Switches subtitle track; [jellyfinIndex] `null` turns subtitles off. */
         fun selectSubtitleTrack(jellyfinIndex: Int?) {
+            // As in [selectAudioTrack]: the user has now said what they want, so the open's pending
+            // choice is spent whether this call is satisfied locally or by a re-resolve.
+            pendingSubtitleApply = false
             val current = source ?: return
             val home = goesHome(current, audioIndex = current.selectedAudioIndex, subtitleIndex = jellyfinIndex)
             if (!home && playerHandle.selectSubtitleTrack(current, jellyfinIndex)) {
@@ -784,6 +809,10 @@ class PlayerViewModel
                 is SessionOpenResult.Opened -> {
                     val resolved = result.source
                     source = resolved
+                    // The stream was negotiated *for* these two, but the player has only just been
+                    // prepared and has no tracks yet, so both wait for the first `TracksChanged`.
+                    pendingAudioIndex = resolved.selectedAudioIndex
+                    pendingSubtitleApply = true
                     (resolved as? LocalPlaybackMediaSource)?.let { localSource = it }
                     stopReported = false
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed the user
@@ -867,7 +896,7 @@ class PlayerViewModel
                     publishPipState()
                 }
 
-                is PlayerEvent.TracksChanged -> Unit
+                is PlayerEvent.TracksChanged -> applyPendingTrackSelections()
 
                 is PlayerEvent.VideoSizeChanged -> {
                     _uiState.update { it.copy(videoWidth = event.width, videoHeight = event.height) }
@@ -877,6 +906,35 @@ class PlayerViewModel
                 is PlayerEvent.Ended -> onEnded()
 
                 is PlayerEvent.Error -> onError(event)
+            }
+        }
+
+        /**
+         * Hands this open's own track choices to the player, now that there are tracks to choose from.
+         *
+         * The server resolved them — the item's `DefaultAudioStreamIndex` and
+         * `DefaultSubtitleStreamIndex`, or whatever the last session asked for — and [PlayerUiState]
+         * has been drawing them since the open; until this ran, nothing had actually told ExoPlayer,
+         * and a preselected subtitle stayed invisible until the user toggled it off and on again.
+         *
+         * Best effort, and retried on every `TracksChanged` because tracks arrive in stages: a
+         * side-loaded subtitle's group appears after the container's, so the first event need not
+         * hold the group the selection needs. Each half clears itself the moment it lands, which
+         * makes the whole thing one-shot per open — a later event cannot undo a choice the user has
+         * made in the meantime.
+         *
+         * Unlike the user-driven path, a failure here never re-resolves. This stream *is* the one the
+         * server built for this selection, so the only way it can lack the track is that the server
+         * burned it in — a subtitle already on screen, with no text group to select — and asking for
+         * it again would restart playback, in a loop, for something that is already showing.
+         */
+        private fun applyPendingTrackSelections() {
+            val current = source ?: return
+            pendingAudioIndex?.let { index ->
+                if (playerHandle.selectAudioTrack(current, index)) pendingAudioIndex = null
+            }
+            if (pendingSubtitleApply && playerHandle.selectSubtitleTrack(current, current.selectedSubtitleIndex)) {
+                pendingSubtitleApply = false
             }
         }
 

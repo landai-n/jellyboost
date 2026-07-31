@@ -89,6 +89,25 @@ fed the last *top-level* destination so the selected-tab pill doesn't blink off
 mid-exit. Inset contract unchanged. Verify-green; visual check on device owed
 with the next M11 walk.
 
+### Interleaved fix — preselected subtitles invisible until toggled (2026-07-31)
+
+User-reported: starting playback with a subtitle preselected (server default or
+user-chosen), nothing rendered until subtitles were switched off and on again.
+Root cause: the resolved `selectedSubtitleIndex` reached `PlayerUiState` (picker
+showed the tick) but nothing ever applied it to ExoPlayer — only the picker's
+own path did. Two aggravators: at open time `currentTracks` is still empty
+(selection must wait for `TracksChanged`, which was dropped), and the singleton
+player's `trackSelectionParameters` leaked between items (one "subtitles Off"
+stuck for every later playback). Fix: `TrackSelectionController.reset()` in
+`prepare()` (clean slate per item), and the open's resolved audio + subtitle
+choices are armed in `publish()` and applied on `TracksChanged` — best-effort,
+retried until the group exists, one-shot per open, never re-resolves (burned-in
+subs are already on screen), user choice always outranks it. Covers audio
+preselection and reopen flows (quality/track change, SyncPlay `loadItem`) too.
++8 unit tests (suite 1710); docs/features/playback.md updated. Device check
+owed with the next walk: default-subtitle item renders from first frame, and
+the sticky-"Off" regression (item A off → item B default renders).
+
 ### Device DoD session #1 — 2026-07-31 (app + jellyfin-web in the tablet's Chrome)
 
 **Core PASSES:** group create/web join + badge; play-for-group of a downloaded

@@ -2,6 +2,7 @@ package dev.jellyboost.feature.downloads
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -47,6 +48,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
@@ -313,34 +315,56 @@ private fun QueueTab(
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        QueueActionsBar(state = state, bulk = bulk)
+    // One subcomposition for the whole tab, not one per row (the codebase's rule against per-cell
+    // `BoxWithConstraints` — see `LibraryGridScreen.kt`, `ItemDetailScreen.kt`): `compact` is
+    // decided here, once, and handed down to every `QueueRow`.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val compact = queueRowCompact(maxWidth)
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
-        ) {
-            items(items = state.queue, key = { it.itemId }) { item ->
-                QueueRow(
-                    item = item,
-                    // The ratcheted fraction, falling back to the row's own only for an item the
-                    // ratchet has not seen yet (the very first frame after an enqueue).
-                    progress = state.progress[item.itemId] ?: item.progress,
-                    speedBytesPerSecond = state.speeds[item.itemId],
-                    actions = actions,
-                )
+        Column(modifier = Modifier.fillMaxSize()) {
+            QueueActionsBar(state = state, bulk = bulk)
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
+            ) {
+                items(items = state.queue, key = { it.itemId }) { item ->
+                    QueueRow(
+                        item = item,
+                        // The ratcheted fraction, falling back to the row's own only for an item the
+                        // ratchet has not seen yet (the very first frame after an enqueue).
+                        progress = state.progress[item.itemId] ?: item.progress,
+                        speedBytesPerSecond = state.speeds[item.itemId],
+                        actions = actions,
+                        compact = compact,
+                    )
+                }
             }
         }
-    }
 
-    if (state.showCancelAllConfirmation) {
-        CancelAllDialog(
-            count = state.queue.size,
-            onDismiss = bulk.onDismissCancelAll,
-            onConfirm = bulk.onConfirmCancelAll,
-        )
+        if (state.showCancelAllConfirmation) {
+            CancelAllDialog(
+                count = state.queue.size,
+                onDismiss = bulk.onDismissCancelAll,
+                onConfirm = bulk.onConfirmCancelAll,
+            )
+        }
     }
 }
+
+/**
+ * Below this width, [QueueRow]'s single-row layout — a 48dp thumbnail, a weighted text column, and
+ * up to four 48dp `QueueRowActions` buttons (≈192dp) inside `Dimens.ScreenPadding` — leaves the
+ * title under ~90dp: a device-verified defect that crushed a queue row's title to ~4 characters
+ * ("Hous…") on a 360dp phone. `QueueRow(compact = true)` moves the actions to their own row below
+ * the title/progress instead, so every action keeps its full 48dp touch target rather than
+ * shrinking to fit. Tablet widths (≥600dp) are always well above this, so their layout is
+ * unaffected.
+ */
+private val COMPACT_MAX_WIDTH = 480.dp
+
+/** Extracted so the breakpoint is unit-testable without a Compose test harness. */
+internal fun queueRowCompact(maxWidth: Dp): Boolean = maxWidth < COMPACT_MAX_WIDTH
 
 /**
  * The queue-wide actions, above the list.
@@ -581,11 +605,38 @@ private fun downloadsMessageText(message: DownloadsMessage): String =
 @Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010)
 @Composable
 private fun DownloadsPreview() {
+    QueuePreview()
+}
+
+/**
+ * The compact two-tier layout ([queueRowCompact]) at the exact width the device walk found it
+ * broken on. `widthDp = 360` puts this right at a common phone's shortest dimension — below
+ * `COMPACT_MAX_WIDTH`, so [QueueRow] renders its compact variant here.
+ */
+@Preview(
+    name = "Downloads — queue (compact, 360dp)",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 360,
+    heightDp = 800,
+)
+@Composable
+private fun DownloadsPreviewCompact() {
+    QueuePreview()
+}
+
+/**
+ * Shared by both queue previews above. The title is long enough to visibly truncate at 360dp
+ * before the compact fix, and to show it fixed after — a short one like the tab bar's own
+ * "Chestnut" example would not exercise the defect either way.
+ */
+@Composable
+private fun QueuePreview() {
     val queued =
         DownloadItem(
             itemId = "1",
-            title = "Chestnut",
-            seriesName = "Westworld",
+            title = "The Bicameral Mind",
+            seriesName = "Westworld: Season One",
             status = DownloadStatus.DOWNLOADING,
             bytesDownloaded = 640_000_000L,
             bytesTotal = 2_100_000_000L,

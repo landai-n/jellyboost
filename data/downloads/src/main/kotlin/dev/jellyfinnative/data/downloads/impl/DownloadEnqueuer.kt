@@ -397,6 +397,11 @@ internal class DownloadEnqueuer
          *    at 232 MB). When the source bitrate is missing or zero, the cap is the only number
          *    left.
          *
+         * Answers 2 and 3 then carry [extraAudioBytes] on top, because a transcoded download is no
+         * longer one file: every audio language the transcode did not bake in is fetched as its own
+         * sidecar (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2"), and the figure this
+         * returns is what the whole item is promised to weigh.
+         *
          * @return `bytes = null` when there is nothing at all to go on — a transcode of an item
          *   with no runtime. Reporting the *source's* size there would promise a number for a file
          *   the user is not going to receive.
@@ -408,12 +413,38 @@ internal class DownloadEnqueuer
 
             val ticks = runTimeTicks?.takeIf { it > 0L } ?: return SizeEstimate(null, exact = false)
             val seconds = ticks.toDouble() / TICKS_PER_SECOND
+            val sidecars = extraAudioBytes(seconds)
 
-            remuxBytes(quality, seconds)?.let { return SizeEstimate(it, exact = true) }
+            remuxBytes(quality, seconds)?.let {
+                // Exact only while the item is single-language: a sidecar is itself a transcode, so
+                // the moment there is one the total is a ceiling again.
+                return SizeEstimate(it + sidecars, exact = sidecars == 0L)
+            }
 
             val sourceBitRate = mediaSources?.firstOrNull()?.bitrate?.takeIf { it > 0 }
             val bitRate = if (sourceBitRate != null) minOf(cap, sourceBitRate) else cap
-            return SizeEstimate((seconds * bitRate / Byte.SIZE_BITS).toLong(), exact = false)
+            return SizeEstimate((seconds * bitRate / Byte.SIZE_BITS).toLong() + sidecars, exact = false)
+        }
+
+        /**
+         * What this item's **audio sidecars** are expected to weigh together, or `0` when it has at
+         * most one audio track.
+         *
+         * One track is baked into the transcode itself and is already counted in the figure above;
+         * every other one is a separate AAC download at [DownloadQuality.AUDIO_BITRATE], which is
+         * around 165 MB for a two-hour film — far too much to leave out of the number the user is
+         * shown before they agree to it, and far too much for the queue's floor to be missing while
+         * the transfer runs.
+         *
+         * The junk video the sidecar is *fetched* through does not appear here on purpose: it is
+         * deleted by the strip stage, so it is bandwidth rather than bytes on disk, and this figure
+         * is the one the storage bar and the Downloaded tab are held to.
+         */
+        private fun BaseItemDto.extraAudioBytes(runtimeSeconds: Double): Long {
+            val streams = mediaSources?.firstOrNull()?.mediaStreams.orEmpty()
+            val extras = (streams.count { it.type == MediaStreamType.AUDIO } - 1).coerceAtLeast(0)
+            if (extras == 0) return 0L
+            return (extras * runtimeSeconds * DownloadQuality.AUDIO_BITRATE / Byte.SIZE_BITS).toLong()
         }
 
         /**
@@ -425,6 +456,13 @@ internal class DownloadEnqueuer
          * arithmetic rather than a guess: the source's own video bytes, plus the one AAC track we
          * always ask for at [DownloadQuality.AUDIO_BITRATE] (`allowAudioStreamCopy=false`, so audio
          * is re-encoded whatever the source was). Matroska's own overhead is well under a percent.
+         *
+         * That exactness is this **file's**, and it survives only as far as the item has one audio
+         * language. A second language is a second download the server has to re-encode, whose size
+         * is a ceiling like any transcode's — so [sizeEstimate] adds [extraAudioBytes] to what this
+         * returns and stops calling the result exact (DECISIONS.md, 2026-07-31, "Offline
+         * multi-track Phase 2"). The arithmetic below is unchanged: it still describes precisely the
+         * one file the server is about to stream-copy.
          *
          * Naming an `audioStreamIndex` (schema v8) does not disturb this: the request still yields
          * exactly one AAC track at the same bitrate, and the index it names is the one the server

@@ -349,6 +349,8 @@ class SeasonSeedingScenarioTest {
             planner = DownloadFilePlanner(urls),
             storage = storage,
             downloader = downloader,
+            // These episodes carry no audio streams, so nothing here plans a sidecar to strip.
+            extractor = mockk(relaxed = true),
             seeder = seeder(),
             sweeper = sweeper,
             sessionGate = sessionGate,

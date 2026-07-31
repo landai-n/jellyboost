@@ -21,6 +21,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
 import timber.log.Timber
+import java.io.File
 import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
@@ -129,6 +130,7 @@ internal class DownloadQueue
         private val planner: DownloadFilePlanner,
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
+        private val extractor: AudioSidecarExtractor,
         private val seeder: SiblingSeeder,
         private val sweeper: OrphanSweeper,
         private val sessionGate: SessionGate,
@@ -378,6 +380,9 @@ internal class DownloadQueue
 
                 // Only the media file is Matroska, and only it is worth projecting: everything else
                 // in the plan is artwork and subtitles whose sizes the server does declare.
+                // An audio sidecar is a transcode too and declares no length either, but its share
+                // of the item is a term of the enqueue-time ceiling (`DownloadEnqueuer.sizeEstimate`)
+                // rather than something to project: one projector per item measures the media file.
                 val fileProjector = projector.takeIf { file.type == DownloadFileType.MEDIA }
                 if (file.type.essential) {
                     downloadEssential(download, dto, file, progress, fileProjector, listener)
@@ -509,6 +514,21 @@ internal class DownloadQueue
             }
         }
 
+        /**
+         * Fetches one file of the plan, and — for an audio sidecar — strips it into the shape the
+         * row names.
+         *
+         * ### The audio sidecar's two files
+         * An extra audio language is *fetched* as a video+audio mkv, because that is the only shape
+         * the server will hand a named `audioStreamIndex` over in, and *stored* as an audio-only
+         * m4a. The fetch therefore lands beside the sidecar as `<name>.part.mkv` and is stripped
+         * into place by [AudioSidecarExtractor] before the row is completed
+         * (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2").
+         *
+         * The row's bytes are then the **m4a's**, not the mkv's: the Downloaded tab sums file rows,
+         * and a row still claiming the junk video's size would overstate the item by the larger of
+         * the two numbers for as long as it exists on disk.
+         */
         private suspend fun downloadOne(
             download: DownloadEntity,
             file: DownloadFileEntity,
@@ -517,16 +537,34 @@ internal class DownloadQueue
             listener: DownloadQueueListener,
         ) {
             val target = storage.resolve(download.directoryName, file.fileName)
+            val audio = file.type == DownloadFileType.AUDIO
+            if (audio && isWholeSidecar(file, target)) {
+                // Already stripped by an earlier run. Re-fetching it would spend the whole track
+                // again for nothing, since a sidecar's fetch cannot be resumed either.
+                progress.update(file.id, target.length(), target.length())
+                publish(download, progress, listener)
+                return
+            }
+
+            // A sidecar whose strip never happened — the process died between the two — restarts its
+            // fetch, and the stale part file is truncated by `FileDownloader` rather than appended
+            // to, because the fetch is flagged un-resumable below.
+            val fetchTarget = if (audio) File(target.absolutePath + PART_SUFFIX) else target
             downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADING)
             val throttle = ProgressThrottle()
             val sink = projector?.let { MediaChunkSink(it::consume) }
-            // Only the media file of a transcoded row is the live encode; its sidecars and images
-            // are ordinary files the server already holds, and they resume like any other.
-            val transcoded = download.quality.isTranscoded && file.type == DownloadFileType.MEDIA
+            // The live encodes: the media file of a transcoded row, and every audio sidecar of one
+            // (which is a `/Videos` transcode of its own). The server ignores `Range` on both, so
+            // neither may be resumed — a second encode's bytes appended to a first one's prefix is
+            // a file that opens and is wrong. Images and subtitles are ordinary files the server
+            // already holds, and they resume like any other.
+            val transcoded =
+                download.quality.isTranscoded &&
+                    (file.type == DownloadFileType.MEDIA || file.type == DownloadFileType.AUDIO)
 
             try {
-                val written =
-                    downloader.download(file.url, target, ioDispatcher, sink, transcoded) { bytes, total ->
+                val fetched =
+                    downloader.download(file.url, fetchTarget, ioDispatcher, sink, transcoded) { bytes, total ->
                         progress.update(file.id, bytes, total)
                         val now = clock.millis()
                         if (throttle.shouldWrite(bytes, total, now)) {
@@ -539,6 +577,8 @@ internal class DownloadQueue
                             publish(download, progress, listener)
                         }
                     }
+
+                val written = if (audio) strip(fetchTarget, target) else fetched
 
                 progress.update(file.id, written, written)
                 // The file is whole, so its size is no longer a question: drop the projection and
@@ -554,9 +594,54 @@ internal class DownloadQueue
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
             ) {
+                // A failed sidecar keeps nothing: the fetch file is a video nobody asked for, and
+                // the next attempt could not resume it anyway. (A failed *strip* has already
+                // removed both; this is the fetch's own half of the same rule.)
+                if (audio) fetchTarget.delete()
                 downloadDao.setFileStatus(file.id, DownloadStatus.ERROR)
                 throw error
             }
+        }
+
+        /**
+         * `true` when this audio row's sidecar is already on disk and finished.
+         *
+         * The row's status alone is not enough (the file may have been swept, or the volume
+         * remounted empty) and the file alone is not either: a strip interrupted halfway leaves an
+         * m4a that exists and is not a sidecar. Both, and the row is left where it is.
+         */
+        private fun isWholeSidecar(
+            file: DownloadFileEntity,
+            target: File,
+        ): Boolean = file.status == DownloadStatus.DOWNLOADED && target.isFile && target.length() > 0L
+
+        /**
+         * Strips the fetched mkv into the sidecar the row names, and returns the sidecar's size.
+         *
+         * A failure takes **both** files with it. The mkv is a video the user never asked for
+         * wrapped around a track that can simply be fetched again, and a part-written m4a is worse
+         * than none at all: the guard above would read it as a finished sidecar, and
+         * `DownloadedMediaProvider` would offer a truncated audio track to the player. The exception
+         * then travels the ordinary optional-file route — file row `ERROR`, item still
+         * `DOWNLOADED` — exactly as a failed subtitle does.
+         */
+        private suspend fun strip(
+            part: File,
+            target: File,
+        ): Long {
+            try {
+                extractor.extract(part, target)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (
+                @Suppress("TooGenericExceptionCaught") error: Exception,
+            ) {
+                part.delete()
+                target.delete()
+                throw error
+            }
+            part.delete()
+            return target.length()
         }
 
         private suspend fun publish(
@@ -590,6 +675,15 @@ internal class DownloadQueue
 
         internal companion object {
             const val HTTP_FORBIDDEN = 403
+
+            /**
+             * What an audio sidecar's *fetch* is written to, next to the sidecar itself.
+             *
+             * Inside the item directory on purpose: the delete cascade unlinks the whole directory
+             * and `OrphanSweeper` collects any directory no row claims, so a part file left by a
+             * process death is swept with everything else and never needs a rule of its own.
+             */
+            const val PART_SUFFIX = ".part.mkv"
 
             /** A `runTimeTicks` tick is 100 ns, so there are ten thousand of them in a millisecond. */
             const val TICKS_PER_MILLI = 10_000L

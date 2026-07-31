@@ -285,6 +285,9 @@ class DownloadQueueRetryTest {
             planner = DownloadFilePlanner(urls),
             storage = storage,
             downloader = downloader,
+            // No transcoded row here reaches an audio sidecar; the strip stage is exercised in
+            // [DownloadQueueTest].
+            extractor = mockk(relaxed = true),
             seeder = seeder,
             sweeper = sweeper,
             sessionGate = sessionGate,

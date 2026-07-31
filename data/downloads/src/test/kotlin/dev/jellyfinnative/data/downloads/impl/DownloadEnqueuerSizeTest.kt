@@ -311,6 +311,62 @@ class DownloadEnqueuerSizeTest {
             row.sizeIsExact shouldBe true
         }
 
+    // ---- the audio sidecars of a transcode (offline multi-track, phase 2) ------------------------
+
+    @Test
+    fun `a re-encoded multi-language item is sized with the sidecars it will also fetch`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        movie(
+                            sourceBitRate = SOURCE_BITRATE,
+                            sizeBytes = SOURCE_BYTES_PER_HOUR,
+                            runTimeTicks = HOUR_TICKS,
+                            streams =
+                                listOf(videoStream(codec = "hevc")) +
+                                    (1..3).map { DownloadFixtures.audioStream(index = it) },
+                        ),
+                    ),
+                )
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // One language is baked into the transcode; the other two are separate AAC downloads,
+            // and leaving them out understated a three-language film by ~330 MB.
+            row.bytesTotal shouldBe HOUR_SECONDS * DownloadQuality.LOW.totalBitRate!! / 8 + TWO_SIDECARS
+            row.sizeIsExact shouldBe false
+        }
+
+    @Test
+    fun `a stream copy stops being exact as soon as there is a second language`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.HIGH
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(multiLanguageRemuxSource(languages = 3)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            // The *file* the server stream-copies is still arithmetic; the sidecars beside it are
+            // transcodes of their own, so the item's figure is a ceiling again.
+            row.bytesTotal shouldBe REMUX_BYTES + TWO_SIDECARS
+            row.sizeIsExact shouldBe false
+        }
+
+    @Test
+    fun `a single-language stream copy is still exact, and still just the file`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.HIGH
+            coEvery { api.getFullItems(any()) } returns
+                AppResult.Success(listOf(multiLanguageRemuxSource(languages = 1)))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.bytesTotal shouldBe REMUX_BYTES
+            row.sizeIsExact shouldBe true
+        }
+
     // ---- a transcode that would not save space is downloaded as the original ---------------------
 
     @Test
@@ -661,6 +717,24 @@ class DownloadEnqueuerSizeTest {
             AppResult.Success(listOf(series(), season()))
     }
 
+    /**
+     * An hour of 6 Mbps H.264 the server will stream-copy at `HIGH`, carrying [languages] audio
+     * tracks — the source shape both halves of the sidecar-exactness rule are asked about.
+     *
+     * Its file size is the pile of lossless audio the original holds, which is what keeps the row
+     * transcoded: dropping those tracks is the whole saving, so the fall-back-to-original rule
+     * never fires on it.
+     */
+    private fun multiLanguageRemuxSource(languages: Int) =
+        movie(
+            sourceBitRate = 13_500_000,
+            sizeBytes = 6_075_000_000L,
+            runTimeTicks = HOUR_TICKS,
+            streams =
+                listOf(videoStream(bitRate = REMUX_VIDEO_BITRATE, height = 1080)) +
+                    (1..languages).map { DownloadFixtures.audioStream(index = it) },
+        )
+
     /** The season `uuid(11)` of *Westworld*, as the server answers for it, with these episodes. */
     private fun givenSeasonOf(vararg episodes: BaseItemDto) {
         coEvery { api.getFullItems(listOf(uuid(11))) } returns AppResult.Success(listOf(season()))
@@ -733,6 +807,18 @@ class DownloadEnqueuerSizeTest {
 
         /** One hour in `runTimeTicks` (100 ns each). */
         const val HOUR_TICKS = 36_000_000_000L
+
+        /** The same hour in seconds — the unit every estimate below is arithmetic in. */
+        const val HOUR_SECONDS = 3_600L
+
+        /** The video bitrate of the source `multiLanguageRemuxSource` builds. */
+        const val REMUX_VIDEO_BITRATE = 6_000_000
+
+        /** What that source's stream copy weighs: its video track plus the one baked-in AAC track. */
+        const val REMUX_BYTES = HOUR_SECONDS * (REMUX_VIDEO_BITRATE + DownloadQuality.AUDIO_BITRATE) / 8
+
+        /** Two extra languages at [DownloadQuality.AUDIO_BITRATE], for an hour. */
+        const val TWO_SIDECARS = 2 * HOUR_SECONDS * DownloadQuality.AUDIO_BITRATE / 8
 
         /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
         const val TICKS_PER_SECOND = 10_000_000L

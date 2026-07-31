@@ -27,6 +27,11 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.documentfile)
+    // Transmuxing only: an extra audio track has to be fetched through the video endpoint (the one
+    // that honors `audioStreamIndex`), so the junk video is stripped locally before the sidecar is
+    // stored. `media3-effect` and `media3-muxer` arrive transitively; nothing here decodes or
+    // re-encodes, so no codec dependency of the player's is needed.
+    implementation(libs.androidx.media3.transformer)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.timber)

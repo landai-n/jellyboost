@@ -2876,3 +2876,53 @@ Seeded from the approved plan; listed for traceability, no divergence:
   7. *Casting always streams from the server* — a downloaded item is re-resolved
      remotely (`castTarget` joins `forceRemote`); serving the on-disk copy to the
      receiver via a local HTTP server is explicitly out of scope.
+
+## 2026-07-31 — Libraries grid: compact-width column floor (amends 210dp decision)
+- **Scope:** feature/library/.../libraries/LibrariesScreen.kt
+- **Plan said:** nothing for this screen (only `LibraryGrid` has a spec); the 210dp floor was
+  a screen-local decision ("Libraries tiles anchored to ThumbWidth", DECISIONS 2026-07-30,
+  calibrated on the test tablet: 3 portrait / 5 landscape columns).
+- **Done instead:** the floor now branches on viewport width: below 600dp the adaptive floor
+  is 150dp (→ 2 columns of ~160dp on a 360dp phone), at 600dp and above it stays
+  `Dimens.ThumbWidth` (210dp) exactly — tablet rendering unchanged.
+- **Reason:** phone-size sweep (simulated 360×800dp viewport, 2026-07-31): `Adaptive(210.dp)`
+  yields ONE ~328dp column on a phone — a full-width tile per row reads as a banner list,
+  not a grid. The tablet rationale in the earlier entry still holds where it was measured;
+  it simply never considered sub-600dp widths.
+
+## 2026-07-31 — Item detail: height guard on the wide layout and landscape backdrop
+- **Scope:** feature/detail/.../ItemDetailScreen.kt (isWide predicate, backdropHeight)
+- **Plan said:** docs/PLAN.md:75 gives the detail screen "backdrop header, poster, metadata…"
+  with no size rules; the 720dp `WIDE_BREAKPOINT` and fixed landscape banner heights were
+  M9 polish decisions verified on the tablet only (DECISIONS 2026-07-30, portrait-banner fix).
+- **Done instead:** the wide (side-by-side) header now additionally requires
+  `maxHeight >= 480.dp`, and on landscape viewports shorter than 480dp the banner is
+  `0.5 × maxHeight` instead of the fixed 220/320dp. Viewports at least 480dp tall (every
+  tablet orientation) keep byte-identical behavior — guarded, not coerced.
+- **Reason:** phone-size sweep (800×360dp): the 320dp wide banner filled ~90% of the
+  viewport and the 200dp poster landed on a ~330dp-tall screen. Width alone cannot
+  identify a tablet; phone landscape crosses 720dp wide while being 3× shorter.
+
+## 2026-07-31 — Player bottom bar: icon-only sheet buttons below 840dp (changes tablet portrait)
+- **Scope:** player/.../ui/PlayerControls.kt (SheetButton, BottomBar)
+- **Plan said:** M9 "speed/quality" controls with no layout spec; the labelled TextButton row
+  dates from M9 and was verified on the tablet.
+- **Done instead:** below an 840dp bar width the sheet buttons (audio/subtitles/speed/group/
+  queue/quality) render as icon-only `IconButton`s (contentDescription keeps the label for
+  a11y). Tablet landscape (bar capped at 1000dp) keeps labels; **tablet portrait (711dp)
+  intentionally becomes icon-only too** — the five-button worst case (in-group + queue +
+  streaming) was already crowding the clock there.
+- **Reason:** phone-size sweep (800×360dp): the fullest bar fits at 800dp with zero slack;
+  common narrower phone-landscape widths (640–780dp) would squeeze the weight(1f) clock
+  toward nothing. One width threshold handles both form factors.
+
+## 2026-07-31 — Downloads queue rows: two-tier layout under 480dp
+- **Scope:** feature/downloads/.../DownloadRows.kt, DownloadsScreen.kt
+- **Plan said:** M7 "Downloads (full pipeline + UI …)" with no row-layout spec; the
+  single-row [thumb|text|4 actions] layout was designed and verified on the tablet.
+- **Done instead:** below 480dp viewport width a queue row stacks in two tiers — artwork +
+  title/progress/status full-width, the four action buttons end-aligned underneath — so
+  touch targets stay 48dp and the title keeps the row's width. At 480dp+ the original
+  single-row layout is untouched. (`DownloadedRow` is fine at phone width — unchanged.)
+- **Reason:** phone-size sweep (360×800dp): the four 48dp actions left ~64dp for the title,
+  which rendered as "Hous…" — unusable for distinguishing four queued episodes of one show.

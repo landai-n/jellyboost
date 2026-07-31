@@ -15,7 +15,7 @@ offline-capable; sign-out returns to ServerSetup.
 
 ## Key classes
 
-- `:core:network` (`core/network/src/main/kotlin/dev/jellyfinnative/core/network/`)
+- `:core:network` (`core/network/src/main/kotlin/dev/jellyboost/core/network/`)
   - `ApiClientProvider` — owns the SDK `Jellyfin` instance + the single mutable `ApiClient`
     (`useServer` / `useSession` / `clearSession`); exposes `deviceId`, supplied explicitly
     from `DeviceIdProvider` rather than left to the SDK default (see below).
@@ -48,7 +48,7 @@ offline-capable; sign-out returns to ServerSetup.
 A Jellyfin server keys **one access token per (user, device id)**: a sign-in with a device id
 that is already registered revokes the token previously issued for it. The SDK's default device
 id is `Settings.Secure.ANDROID_ID`, which Android scopes per *signing key*, not per package —
-so the `.debug` install and the locally debug-signed `dev.jellyfinnative.app` release variant
+so the `.debug` install and the locally debug-signed `dev.jellyboost.app` release variant
 used for profiling presented the *same* device id and silently revoked each other's session on
 every sign-in (every authenticated call then 401s). The app therefore supplies its own device
 id: a random UUID, generated on first run and persisted per installation, stable across
@@ -56,7 +56,7 @@ restarts and sign-outs. Changing the id makes the server treat the app as a new 
 one-time upgrade past this change requires signing in again.
 - `:core:database` — `ServerEntity`, `ServerAddressEntity` (multi-URL per server),
   `UserEntity` (no token column by design), `ServerDao`, `UserDao`.
-- `:feature:auth` (`feature/auth/src/main/kotlin/dev/jellyfinnative/feature/auth/`)
+- `:feature:auth` (`feature/auth/src/main/kotlin/dev/jellyboost/feature/auth/`)
   - `ServerSetupScreen`/`ServerSetupViewModel`, `LoginScreen`/`LoginViewModel`,
     `PendingServerStore` (feature-internal `@Singleton` handing the `ResolvedServer` from
     ServerSetup to Login; `Routes.Login` stays parameterless), `AuthErrorMessage`

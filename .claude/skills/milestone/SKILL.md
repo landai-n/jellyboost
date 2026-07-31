@@ -1,6 +1,6 @@
 ---
 name: milestone
-description: Start or finish a jellyfin-native milestone (M0-M10) from docs/PLAN.md. Use when asked to start work on a milestone, or to close one out with full device verification, docs, commit, and tag. Args - "start Mn" or "finish Mn".
+description: Start or finish a Jellyboost milestone (M0-M10) from docs/PLAN.md. Use when asked to start work on a milestone, or to close one out with full device verification, docs, commit, and tag. Args - "start Mn" or "finish Mn".
 ---
 
 # /milestone

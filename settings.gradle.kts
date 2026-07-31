@@ -23,7 +23,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "jellyfin-native"
+rootProject.name = "jellyboost"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 

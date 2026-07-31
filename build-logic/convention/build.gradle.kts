@@ -5,7 +5,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "dev.jellyfinnative.buildlogic"
+group = "dev.jellyboost.buildlogic"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -29,31 +29,31 @@ dependencies {
 gradlePlugin {
     plugins {
         register("androidApplication") {
-            id = "jellyfinnative.android.application"
+            id = "jellyboost.android.application"
             implementationClass = "AndroidApplicationConventionPlugin"
         }
         register("androidLibrary") {
-            id = "jellyfinnative.android.library"
+            id = "jellyboost.android.library"
             implementationClass = "AndroidLibraryConventionPlugin"
         }
         register("androidLibraryCompose") {
-            id = "jellyfinnative.android.library.compose"
+            id = "jellyboost.android.library.compose"
             implementationClass = "AndroidLibraryComposeConventionPlugin"
         }
         register("androidFeature") {
-            id = "jellyfinnative.android.feature"
+            id = "jellyboost.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"
         }
         register("androidHilt") {
-            id = "jellyfinnative.android.hilt"
+            id = "jellyboost.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
         register("androidRoom") {
-            id = "jellyfinnative.android.room"
+            id = "jellyboost.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
         }
         register("kotlinLibrary") {
-            id = "jellyfinnative.kotlin.library"
+            id = "jellyboost.kotlin.library"
             implementationClass = "KotlinLibraryConventionPlugin"
         }
     }

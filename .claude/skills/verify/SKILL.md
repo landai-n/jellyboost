@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run the full quality gate (ktlint, detekt, unit tests, debug assemble) for jellyfin-native, fix any failures, and mark the tree as freshly verified. Use before every commit, or whenever asked to "verify", "check the build", or confirm the code is green.
+description: Run the full quality gate (ktlint, detekt, unit tests, debug assemble) for Jellyboost, fix any failures, and mark the tree as freshly verified. Use before every commit, or whenever asked to "verify", "check the build", or confirm the code is green.
 ---
 
 # /verify

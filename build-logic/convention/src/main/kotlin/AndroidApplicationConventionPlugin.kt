@@ -1,7 +1,7 @@
 import com.android.build.api.dsl.ApplicationExtension
-import dev.jellyfinnative.buildlogic.configureKotlinAndroid
-import dev.jellyfinnative.buildlogic.intVersion
-import dev.jellyfinnative.buildlogic.libs
+import dev.jellyboost.buildlogic.configureKotlinAndroid
+import dev.jellyboost.buildlogic.intVersion
+import dev.jellyboost.buildlogic.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure

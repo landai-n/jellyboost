@@ -1,4 +1,4 @@
-# jellyfin-native — agent instructions
+# Jellyboost — agent instructions
 
 100% native Android Jellyfin client (Kotlin, Jetpack Compose/M3, Hilt, Room, Media3).
 The approved plan is **`docs/PLAN.md`** — it is the source of truth for architecture,

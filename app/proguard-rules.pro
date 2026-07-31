@@ -21,7 +21,7 @@
 #     generated as `when` blocks over string literals, so enum constant names are compile-time
 #     constants and survive obfuscation with no rule.
 #   * Hilt / Dagger — hilt-android keeps @EntryPoint-annotated types for its reflective cast;
-#     everything else Hilt generates is statically referenced. Hilt_JellyfinNativeApplication and
+#     everything else Hilt generates is statically referenced. Hilt_JellyboostApplication and
 #     the activities/services are kept by the AAPT-generated rules for manifest-declared components.
 #   * WorkManager — work-runtime ships `-keepnames class * extends androidx.work.ListenableWorker`
 #     plus a constructor keep, and hilt-work adds `-keepnames @HiltWorker class * extends
@@ -52,7 +52,7 @@
 # ---------------------------------------------------------------------------
 # Coil 3 — ServiceLoader-discovered network fetcher
 # ---------------------------------------------------------------------------
-# JellyfinNativeApplication builds its ImageLoader without registering a network fetcher
+# JellyboostApplication builds its ImageLoader without registering a network fetcher
 # explicitly, so every remote poster is fetched through the OkHttp fetcher that coil-network-okhttp
 # publishes via META-INF/services/coil3.util.FetcherServiceLoaderTarget
 # (coil3.network.okhttp.internal.OkHttpNetworkFetcherServiceLoaderTarget). Nothing references that

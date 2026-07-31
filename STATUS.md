@@ -1,5 +1,17 @@
 # STATUS
 
+## Project identity: **Jellyboost** (renamed 2026-07-31)
+
+The project, app label and package are `Jellyboost` / `dev.jellyboost` (was
+`jellyfin-native` / `dev.jellyfinnative`); see the `DECISIONS.md` entry of the same date.
+The on-disk repo directory is still `jellyfin-native` — that is deliberate, not a leftover.
+Names for **Jellyfin the server** (`JellyfinRepository`, `JellyfinApiFacade`, `JellyfinItem`,
+`JellyfinDatabase`, …) are unchanged. Because `applicationId` changed, an old build on a
+device is a *separate* install: uninstall `dev.jellyfinnative.app(.debug)` before the next
+device walk, and expect its downloads and database not to carry over. Full gate re-run after
+the rename: ktlint + detekt + unit tests + `assembleDebug` + `assembleRelease` all green,
+baseline profile still compiles into the release APK (`assets/dexopt/baseline.prof`).
+
 ## Current milestone: M10 — Release hardening (**COMPLETE**, 2026-07-30, tag `m10`)
 
 **DoD walk (all five items verified on the test tablet):**
@@ -411,7 +423,7 @@ verification on the minified build.
 
 - **Minified-build (R8 full mode) verification DONE, 2026-07-30 — M10 DoD.**
   `app-release.apk` (10.3 MiB, debug-signed fallback) installed as
-  `dev.jellyfinnative.app`, logged in via Quick Connect. **All 12 checks pass;
+  `dev.jellyboost.app`, logged in via Quick Connect. **All 12 checks pass;
   zero `ClassNotFoundException`/`NoClassDefFoundError`/`NoSuchMethodError`/
   `Cannot find implementation`/serialization errors across the whole session.**
   M5: direct play (badge + position advancing), forced transcode via the
@@ -1079,7 +1091,7 @@ which is what Dashboard renders):
   (`Restored session for 'Alex' on 'test-server'`), no network.
 - Sign-out: credential entries wiped (only keyset metadata remains), app returns to
   ServerSetup; server/user Room rows kept per DECISIONS.md.
-- Dashboard→Devices: user confirmed "jellyfin-native 0.1.0" session in web UI.
+- Dashboard→Devices: user confirmed "Jellyboost 0.1.0" session in web UI.
 - Server version 10.11.11 (upgraded from 10.10.7 during M1); download policy
   `enableContentDownloading=true` — risk #4 cleared, download pipeline (M7) unblocked.
 
@@ -1093,7 +1105,7 @@ which is what Dashboard renders):
   compiling with real stub sources; `:app` = Hilt Application + dark-themed MainActivity.
 - Quality gate green (verified independently by orchestrator, not just the build agent):
   `assembleDebug detekt ktlintCheck testDebugUnitTest`. Debug APK 34.8 MB,
-  `dev.jellyfinnative.app.debug`.
+  `dev.jellyboost.app.debug`.
 - Hooks (.claude/hooks: session-start, post-edit, pre-commit-gate, stop-gate) and skills
   (/verify /checkpoint /diverge /milestone /document-feature) created and smoke-tested,
   incl. deny paths and stop_hook_active loop guard.
@@ -1300,7 +1312,7 @@ honoured; delete frees bytes.
   adopt + emit on the event bus; `null`/absent server data → push; transport failure →
   keep the flag + `Result.retry()`; 404 → abandon the row. `UserDataSyncWorker` is no
   longer a stub.
-- `:data` `UserDataSyncTrigger` + `JellyfinNativeApplication.onCreate` — enqueues the
+- `:data` `UserDataSyncTrigger` + `JellyboostApplication.onCreate` — enqueues the
   drain at app start and on every return to `ONLINE`, guarded on `countPendingSync()`.
   Without it the DoD path has nothing to enqueue the worker.
 - Offline trickplay tile URIs + geometry reachable on the local source
@@ -1315,7 +1327,7 @@ honoured; delete frees bytes.
 
 **Next — device DoD walk (orchestrator)**
 1. `./gradlew installDebug`, launch, confirm the four downloads are still `DOWNLOADED`
-   (`adb shell run-as dev.jellyfinnative.app.debug sqlite3 databases/jellyfin.db 'SELECT itemName,status FROM downloads;'`).
+   (`adb shell run-as dev.jellyboost.app.debug sqlite3 databases/jellyfin.db 'SELECT itemName,status FROM downloads;'`).
 2. Note the server's current position for the test film
    (`/Users/{userId}/Items/{itemId}` → `UserData.PlaybackPositionTicks`).
 3. `adb shell cmd connectivity airplane-mode enable`; confirm the offline banner.
@@ -1331,7 +1343,7 @@ honoured; delete frees bytes.
 7. `adb shell cmd connectivity airplane-mode disable`. Watch for
    `… user-data row(s) pending and the server is reachable; scheduling a sync` then
    `Reconciling N pending user-data row(s)` and `Pushed the local user data for <itemId> (it was newer)`.
-   (the OEM ROM can delay WorkManager; `adb shell cmd jobscheduler run -f dev.jellyfinnative.app.debug <id>`
+   (the OEM ROM can delay WorkManager; `adb shell cmd jobscheduler run -f dev.jellyboost.app.debug <id>`
    forces it.)
 8. Re-read the server item — `PlaybackPositionTicks` should now match step 6, and the
    detail screen in jellyfin-web should show the ~50 % progress bar. Re-query `user_data`:
@@ -1413,13 +1425,13 @@ nothing in `:feature:settings`.
 3. **Segments:** open an episode of a series with an intro-detection plugin. Expect a *Skip intro*
    button while inside the intro; tapping it jumps to its end. Turn the intro preference to
    `AUTO_SKIP` (until the settings screen lands:
-   `adb shell run-as dev.jellyfinnative.app.debug` … or simply verify `SHOW_BUTTON`) and watch for
+   `adb shell run-as dev.jellyboost.app.debug` … or simply verify `SHOW_BUTTON`) and watch for
    `Auto-skipping INTRO to <ms> ms`, then seek back into the intro and confirm it is **not** skipped
    again — a button appears instead. On a server without the plugin expect
    `No media segments available for <itemId>` and no button at all.
 4. **Background playback (the M5 known issue):** start playback, press Home. Audio must continue and
    a media notification with play/pause must appear. `adb shell dumpsys media_session | grep -A3
-   jellyfinnative` shows the session; `adb shell dumpsys activity services PlaybackService` should
+   jellyboost` shows the session; `adb shell dumpsys activity services PlaybackService` should
    show `isForeground=true`. Tap the notification → back in the player at the live position.
    Pull the headphones/disconnect Bluetooth → playback pauses.
 5. **PiP:** while playing, press Home (or swipe up). The video should shrink into a floating window
@@ -1477,7 +1489,7 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
   the temporary M8 *Sign out* entry there (DECISIONS.md, two entries: storage picker deferred to ship
   with SAF support; Settings behind the existing overflow icon, not a new avatar).
 - **Dead sign-out plumbing removed.** `onSignOut` no longer threads through `MainActivity` →
-  `JellyfinNativeApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`; `MainViewModel.signOut()` is
+  `JellyboostApp` → `AppScaffold` → `JellyfinNavHost` → `HomeRoute`; `MainViewModel.signOut()` is
   gone along with its test. `MainViewModel` still restores/exposes the session.
 - **Hit-target fix.** `feature/downloads/DownloadsScreen.kt`'s Wi-Fi-only top-bar row now toggles on
   the whole row (`Modifier.toggleable(role = Role.Switch)`, `Switch.onCheckedChange = null`), closing
@@ -1587,7 +1599,7 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
 1. `./gradlew installDebug`, launch signed in.
 2. **Settings screen:** tap the home top-bar overflow (⋮) → *Settings* (no more *Sign out* there).
    Confirm all four sections render; toggle each switch and each three-way skip choice, relaunch the
-   app, confirm every choice persisted (`adb shell run-as dev.jellyfinnative.app.debug` +
+   app, confirm every choice persisted (`adb shell run-as dev.jellyboost.app.debug` +
    `DataStore` prefs, or just observe the UI survives the relaunch). Rotate to landscape on the
    tablet — content should stay capped and centred, not stretch edge-to-edge.
 3. **Sign out:** tap *Sign out* → confirm dialog appears with the "Also delete downloads" checkbox
@@ -1615,7 +1627,7 @@ not touch `:player` and reads the preferences that branch defined (`introSkipMod
    `contentIsMalformed=true` and silently fell back to streaming). Pause it mid-transfer and resume:
    the transfer restarts from zero (expected — the endpoint ignores `Range`) and the finished file
    is still playable. Confirm changing the setting while something is downloading does **not** touch
-   the running item (`adb shell run-as … sqlite3 databases/jellyfin-native.db
+   the running item (`adb shell run-as … sqlite3 databases/jellyboost.db
    'SELECT itemName, quality FROM downloads;'`). Upgrade check: install over an existing build and
    confirm the queue survives (schema v4 → v5 auto-migration) with every old row reading `ORIGINAL`.
 7. **Offline push silence:** airplane mode on, start local playback of a download, let it run

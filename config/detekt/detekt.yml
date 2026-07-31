@@ -1,4 +1,4 @@
-# detekt configuration for jellyfin-native.
+# detekt configuration for Jellyboost.
 # `buildUponDefaultConfig = true`, so this file only holds deviations from the defaults.
 # Formatting is owned by ktlint (see .editorconfig); detekt covers correctness/complexity smells.
 

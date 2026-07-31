@@ -35,7 +35,7 @@ val catalogTargetSdk: Int = Integer.parseInt(libs.versions.androidTargetSdk.get(
 val kotlinJvmTarget: String = libs.versions.jvmTarget.get()
 
 android {
-    namespace = "dev.jellyfinnative.baselineprofile"
+    namespace = "dev.jellyboost.baselineprofile"
     compileSdk = catalogCompileSdk
     compileSdkMinor = catalogCompileSdkMinor
 

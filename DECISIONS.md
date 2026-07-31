@@ -3179,3 +3179,60 @@ Seeded from the approved plan; listed for traceability, no divergence:
   "Casting to <device>", so the message reads it from the same place at the moment it is drawn, which
   is also the moment it is correct.
 
+## 2026-07-31 — M12 Phase 4: whether a rate exists is the *handle's* answer, not the screen's guess
+- **Scope:** `player/.../session/PlayerHandle.kt`, `player/.../session/RoutingPlayerHandle.kt`,
+  `player/.../cast/CastPlayerHandle.kt`, `player/.../ui/PlayerUiState.kt`,
+  `player/.../ui/PlayerViewModel.kt`, `player/.../ui/PlayerControls.kt`
+- **Plan said:** `docs/notes/chromecast-m12-plan.md`, Phase 4 — "hide speed when unsupported";
+  decision 7 — "Speed only behind `COMMAND_SET_SPEED_AND_PITCH`". Neither says who is asked.
+- **Done instead:** `PlayerHandle` gained `val supportsPlaybackSpeed: Boolean get() = true` — a
+  defaulted member, so `ExoPlayerHandle` and every test double are untouched — overridden by
+  `CastPlayerHandle` with the same `isCommandAvailable(COMMAND_SET_SPEED_AND_PITCH)` check its
+  `setPlaybackSpeed` already makes, and delegated by `RoutingPlayerHandle`.
+  `PlayerUiState.canSetSpeed` carries it to the bar, republished at the two moments the answer can
+  change: a receiver arriving or leaving, and `PlayerEvent.Ready`.
+- **Reason:** the alternative was to hide the picker whenever `cast.isCasting`, which is a guess in
+  both directions — it takes the control away from the many receivers that *do* have a rate, and it
+  would still have been a guess on the ones that do not. The property is the only honest source, and
+  putting it on the seam rather than reaching into the cast package keeps `PlayerViewModel` free of
+  `com.google.android.gms` exactly as `CastStatusHolder` does for `isCasting`. The `Ready` refresh is
+  not optional: a `CastPlayer` only learns its receiver's commands once something is loaded, so the
+  reading taken when the session connects is pessimistic by construction, and a control that never
+  came back would be worse than one that appears a second late.
+
+## 2026-07-31 — M12 Phase 4: the casting artwork is fetched with the title, and its label sits above centre
+- **Scope:** `player/.../ui/PlayerUiState.kt`, `player/.../ui/PlayerViewModel.kt`,
+  `player/.../ui/PlayerScreen.kt`, `player/src/main/res/values/strings.xml`
+- **Plan said:** decision 10 — "poster/backdrop + 'Casting to <device>' replaces the surface".
+  Nothing about where the image comes from or where the words go.
+- **Done instead:** `PlayerUiState.artworkUrl` is populated by the ViewModel's existing title fetch
+  (renamed `loadTitleAndArtwork`), preferring `backdropImageUrl`, then `thumbImageUrl`, then
+  `primaryImageUrl`; `CastingBackdrop` draws it through `JellyfinAsyncImage` with `ContentScale.Fit`
+  and no placeholder icon, under a 0.45 scrim, with the label in a chip offset **88 dp above
+  centre**.
+- **Reason:** three separate judgements, each with a cheaper-looking alternative that is wrong.
+  *Fetched with the title*, not when a receiver connects: the image is needed at the instant the
+  surface goes, and a round trip started then leaves the screen black at exactly the moment the user
+  is looking for confirmation that something happened — meanwhile the fetch costs nothing on the
+  ordinary path, since a film playing here covers every pixel of it. *Fitted, not cropped*: the
+  fallback chain can end at a 2:3 poster, and cropping one to a landscape screen shows a hand-span of
+  somebody's chin. *Above centre*: the transport row owns the middle of this screen — a 64 dp play
+  button — and the bottom bar owns the last hundred dip, so the only clear band is between them;
+  measuring from the centre rather than from the top edge is what keeps the chip clear of the top bar
+  on a phone in landscape (~360 dp of height) and still attached to the artwork on the tablet.
+
+## 2026-07-31 — M12 Phase 4: casting disables the *swipes*, not the gesture layer
+- **Scope:** `player/.../ui/PlayerGestureLayer.kt`, `player/.../ui/PlayerScreen.kt`
+- **Plan said:** decision 10 and the Phase 4 brief — "disable brightness/volume gesture layer (cast
+  device volume rides hardware keys via `CastContext`)".
+- **Done instead:** `PlayerGestureLayer` takes `swipesEnabled` (default `true`) and, when it is
+  `false`, is composed without its vertical-drag `pointerInput` at all. The tap and double-tap
+  handler is unconditional.
+- **Reason:** the layer is two gestures, and only one of them is about this device's hardware. The
+  swipes are: one moves this phone's media volume, which is inaudible while a television is playing,
+  and the other dims a still image. The taps are the *controls'* — a single tap is the only way to
+  bring them back once they auto-hide, and a double tap seeks, which a receiver honours as readily as
+  ExoPlayer does. Disabling the whole layer would have produced a remote control with no buttons the
+  moment its controls timed out. It is left out of the modifier chain rather than branched inside the
+  drag handler so that an unoffered swipe is never *detected*, leaving those touches to the system.
+

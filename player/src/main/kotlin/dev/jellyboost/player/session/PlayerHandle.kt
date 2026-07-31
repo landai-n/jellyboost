@@ -100,6 +100,20 @@ interface PlayerHandle {
      */
     fun setPlaybackSpeed(speed: Float)
 
+    /**
+     * Whether [setPlaybackSpeed] would do anything on this player.
+     *
+     * `true` for anything decoding on this device — ExoPlayer always has a rate — which is why the
+     * default is the answer every implementation but one wants. A Cast receiver is the exception:
+     * the rate is a *receiver* capability, published per session, and the player screen hides the
+     * speed picker rather than offering rows that are silently dropped
+     * (docs/notes/chromecast-m12-plan.md, decision 7).
+     *
+     * Read rather than remembered: while casting the answer belongs to whatever is on the other end
+     * of the network, and it is only knowable once that receiver has something loaded.
+     */
+    val supportsPlaybackSpeed: Boolean get() = true
+
     /** Stops playback and clears the queued media, leaving the player reusable. */
     fun stop()
 

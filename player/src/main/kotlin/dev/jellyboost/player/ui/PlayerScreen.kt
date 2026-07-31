@@ -9,11 +9,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.outlined.Cast
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -31,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,6 +50,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.player.R
@@ -142,7 +148,13 @@ fun PlayerScreen(
     }
 
     Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
-        VideoSurface(player = player, modifier = Modifier.fillMaxSize())
+        // The one branch that decides what this screen *is*: a video player, or the remote control
+        // for one three metres away (docs/notes/chromecast-m12-plan.md, decision 10).
+        if (state.cast.isCasting) {
+            CastingBackdrop(state = state, modifier = Modifier.fillMaxSize())
+        } else {
+            VideoSurface(player = player, modifier = Modifier.fillMaxSize())
+        }
 
         // Bare video in the floating window; the notification carries the transport controls.
         if (inPictureInPicture) return@Box
@@ -150,6 +162,13 @@ fun PlayerScreen(
         PlayerGestureLayer(
             onToggleControls = { controlsVisible = !controlsVisible },
             onSeekBy = actions.onSeekBy,
+            // Both vertical swipes act on this device: one moves its media volume, the other its
+            // backlight. While a television has the film the first is inaudible and the second dims
+            // a still image — the receiver's volume is the hardware keys' job, which the Cast
+            // framework routes for as long as the session lasts. Taps and double-tap seeks stay:
+            // they are the controls' own, and a screen that could not bring them back would be a
+            // remote control with no buttons.
+            swipesEnabled = !state.cast.isCasting,
         )
 
         when {
@@ -328,6 +347,71 @@ private fun SkipSegmentButton(
 }
 
 /**
+ * What the player draws instead of video while a television has the film (M12 Phase 4).
+ *
+ * There is nothing to render here — `CastPlayerHandle.player` is permanently `null` — so the
+ * surface is replaced rather than left attached to nothing: the item's own artwork, dimmed, with
+ * the receiver's name over it. Every control around it keeps working, because none of them ever
+ * touched the surface; this screen is the remote control now (decision 10).
+ *
+ * Two consequences of *removing* [VideoSurface] rather than hiding it, both wanted: the phone's
+ * screen may sleep again (`keepScreenOn` belonged to the `PlayerView`), and picture-in-picture has
+ * nothing to float — which is why `PlayerViewModel.publishPipState` disarms it in the same breath.
+ *
+ * The label is offset above centre rather than centred: the transport row owns the middle of this
+ * screen and the bottom bar owns the last hundred dip of it, so a caption at either would be read
+ * through a 64 dp play button or through the scrubber. Measuring *from* the centre rather than from
+ * the top edge is what keeps it clear of the top bar on a phone in landscape (roughly 360 dp of
+ * height) and still visually attached to the artwork on a tablet.
+ */
+@Composable
+private fun CastingBackdrop(
+    state: PlayerUiState,
+    modifier: Modifier = Modifier,
+) {
+    val device = state.cast.deviceName ?: stringResource(R.string.player_cast_device_unnamed)
+
+    Box(modifier = modifier) {
+        // Fitted, not cropped, and with no placeholder icon: the artwork may be a wide backdrop or
+        // a 2:3 poster depending on what the server has for this item, and cropping the second to a
+        // landscape screen shows a hand-span of somebody's chin. An item with no artwork at all
+        // simply leaves the black behind the label.
+        JellyfinAsyncImage(
+            url = state.artworkUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit,
+            placeholderIcon = null,
+        )
+        // Says "this is not playing here" at a glance, and buys the controls their contrast back.
+        Box(modifier = Modifier.fillMaxSize().background(BACKDROP_SCRIM))
+
+        Row(
+            modifier =
+                Modifier
+                    .align(Alignment.Center)
+                    .offset(y = -CAST_LABEL_OFFSET)
+                    .background(OVERLAY_SCRIM, RoundedCornerShape(Dimens.CardCornerRadius))
+                    .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Cast,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(CAST_LABEL_ICON),
+            )
+            Text(
+                text = stringResource(R.string.player_casting_to, device),
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+            )
+        }
+    }
+}
+
+/**
  * The video output.
  *
  * `useController = false`: the transport controls are Compose, and Media3's own would fight them
@@ -427,6 +511,14 @@ private fun PlayerMessage.textRes(): Int =
 
 /** Enough contrast for white text over a bright frame, without blacking the video out. */
 private val OVERLAY_SCRIM = Color.Black.copy(alpha = 0.6f)
+
+/** Dims the casting artwork so it reads as a still, not as a paused frame. */
+private val BACKDROP_SCRIM = Color.Black.copy(alpha = 0.45f)
+
+/** Clears the transport row's 64 dp play button, whatever the viewport's height. */
+private val CAST_LABEL_OFFSET = 88.dp
+
+private val CAST_LABEL_ICON = 20.dp
 
 private const val DIM_ALPHA = 0.7f
 

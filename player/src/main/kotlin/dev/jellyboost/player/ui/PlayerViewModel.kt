@@ -276,7 +276,7 @@ class PlayerViewModel
             observeConnectivity()
             observeSyncPlay()
             observeCast()
-            loadTitle()
+            loadTitleAndArtwork()
             openSession(
                 playbackResolveRequest(
                     itemId = sessionStore.itemId,
@@ -295,10 +295,17 @@ class PlayerViewModel
         }
 
         /**
-         * Fetches the item's name for the top bar.
+         * Fetches the item's name for the top bar, and the artwork behind the casting label.
          *
-         * Fire and forget, and deliberately not on the path to playback: a title is cosmetic and
-         * must never delay the first frame.
+         * Fire and forget, and deliberately not on the path to playback: both are cosmetic and must
+         * never delay the first frame. The artwork rides along with the title rather than being
+         * fetched when a receiver connects, because that is the moment it is *needed* — a poster
+         * that arrives a network round trip after the video surface has gone leaves the screen
+         * black exactly when the user is looking for reassurance that anything happened.
+         *
+         * The backdrop first: the player is a landscape screen and the label sits over a wide image.
+         * Episodes usually have neither a backdrop nor a thumb of their own, and their primary image
+         * *is* a still from the episode, so the fallbacks end somewhere sensible for every type.
          *
          * @param itemId the item this label is *for* — the navigation argument on the ordinary open,
          *   but whatever the group just moved to on [loadItem] (B4). `withSource` refreshes every
@@ -307,11 +314,12 @@ class PlayerViewModel
          *   the resolve, so it is the one call site that has to be told which item it is for rather
          *   than assuming the session's original one.
          */
-        private fun loadTitle(itemId: String = sessionStore.itemId) {
+        private fun loadTitleAndArtwork(itemId: String = sessionStore.itemId) {
             viewModelScope.launch {
                 val item = repository.getItem(itemId).getOrNull() ?: return@launch
                 val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
-                _uiState.update { it.copy(title = label) }
+                val artwork = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl
+                _uiState.update { it.copy(title = label, artworkUrl = artwork) }
             }
         }
 
@@ -386,10 +394,20 @@ class PlayerViewModel
          * session starting, a session ending — do not arrive here. They are pushed in through
          * [PlayerCastBridge]'s host callbacks, because each carries a position that can only be read
          * at the instant playback is routed, and a collector by definition runs after it.
+         *
+         * Two things follow the receiver in and out and are republished here rather than derived by
+         * the screen: picture-in-picture, which must be disarmed while there is no surface to float
+         * ([publishPipState]), and whether a playback rate exists at all ([publishSpeedSupport]) —
+         * the handle that answers both questions is the routing one, and it has only just changed
+         * which player it points at.
          */
         private fun observeCast() {
             viewModelScope.launch {
-                cast.states.collect { receiver -> _uiState.update { it.copy(cast = receiver) } }
+                cast.states.collect { receiver ->
+                    _uiState.update { it.copy(cast = receiver) }
+                    publishPipState()
+                    publishSpeedSupport()
+                }
             }
         }
 
@@ -477,7 +495,7 @@ class PlayerViewModel
                 // item-bound field on `PlayerUiState` comes off the resolved `PlaybackMediaSource`
                 // below and refreshes on its own, but the title is fetched separately and was still
                 // asking for the item this screen was *opened* with.
-                loadTitle(itemId.toString())
+                loadTitleAndArtwork(itemId.toString())
                 val result =
                     sessionController.open(
                         PlaybackResolveRequest(
@@ -849,17 +867,35 @@ class PlayerViewModel
         /**
          * Tells [PipController] whether leaving the app right now should float the video.
          *
-         * All three conditions are decided here — the player screen is up, something is playing, and
-         * the preference is on — so `MainActivity`, which hosts every other screen too, only has to
-         * read one boolean.
+         * All four conditions are decided here — the player screen is up, something is playing, the
+         * preference is on, and the film is on *this* device — so `MainActivity`, which hosts every
+         * other screen too, only has to read one boolean.
+         *
+         * The last of them is M12's: while casting there is no video surface to shrink
+         * (`CastPlayerHandle.player` is permanently `null`), so leaving the app would ask the system
+         * for a floating window over nothing while the television carries on playing. Backgrounding
+         * a cast session is the ordinary way to use one, and it must simply leave the screen.
          */
         private fun publishPipState() {
             val state = _uiState.value
             pipController.setPlayerState(
-                active = pipEnabled && screenPresent && state.isPlaying && state.isReady,
+                active = pipEnabled && screenPresent && state.isPlaying && state.isReady && !state.cast.isCasting,
                 videoWidth = state.videoWidth,
                 videoHeight = state.videoHeight,
             )
+        }
+
+        /**
+         * Republishes whether the player in charge has a playback rate at all.
+         *
+         * Asked at the three moments the answer can change: a receiver arriving or leaving
+         * ([observeCast]), and a session becoming ready — a `CastPlayer` only learns which commands
+         * its receiver supports once one has actually loaded something, so the reading taken when the
+         * session opened is the pessimistic one and this is the true one.
+         */
+        private fun publishSpeedSupport() {
+            val supported = playerHandle.supportsPlaybackSpeed
+            _uiState.update { it.copy(canSetSpeed = supported) }
         }
 
         /** Clears the one-shot message once the snackbar has shown it. */
@@ -1034,6 +1070,9 @@ class PlayerViewModel
                 is PlayerEvent.Ready -> {
                     fallback.onPlaybackStarted()
                     _uiState.update { it.copy(isLoading = false, isBuffering = false) }
+                    // A receiver publishes its commands once it has something loaded, so this is the
+                    // first moment the speed picker's answer is the receiver's rather than a guess.
+                    publishSpeedSupport()
                 }
 
                 is PlayerEvent.IsPlayingChanged -> {

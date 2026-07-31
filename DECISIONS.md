@@ -2935,3 +2935,31 @@ Seeded from the approved plan; listed for traceability, no divergence:
   1. `MediaRouteButton.showDialogForType()` calls `getFragmentManager()`, which returns `null` unless the host activity is a `FragmentActivity`, and then **throws** `IllegalStateException("The activity must be a subclass of FragmentActivity")`. Under a plain `ComponentActivity` the first tap on the cast button crashes the app — not a styling problem. `FragmentActivity` is the minimal fix; `AppCompatActivity` would also satisfy it, but drags `AppCompatDelegate` into every lifecycle callback of a Compose-only activity for no further gain.
   2. The chooser and controller dialogs are `DialogFragment`s hosted by the *activity*, so they are themed from the *activity's* theme: `MediaRouterThemeHelper.createThemedDialogContext` copies it and applies `Theme.MediaRouter` — a `ThemeOverlay.AppCompat.Dark` — on top. An overlay over a `Theme.Material` base does not define the `AppCompatTheme` attributes `AppCompatDialog` demands, and our `ContextThemeWrapper` cannot reach them: it themes the *button*, never the dialog. An AppCompat window theme is what the ecosystem assumes, and it costs nothing here — `Theme.Jellyboost` exists only for the window background and the pre-Compose splash frame (all in-app colour is Compose), and `Theme.AppCompat.NoActionBar` is dark, matching the app's dark-only design. Deliberately **not** `DayNight`, for the reason already recorded for the splash theme.
 - **Not done:** no `mediaRouteTheme` attribute on the app theme. With an AppCompat window theme the dialogs fall back to `Theme.MediaRouter` by themselves, which is the standard and best-tested path; custom dialog styling can be added later without touching `:app` again.
+
+## 2026-07-31 — Phone polish round 2: compact Home cards (amends ThumbWidth anchoring)
+- **Scope:** feature/home/.../HomeScreen.kt (thumb/library card width in rows)
+- **Plan said:** docs/PLAN.md M2 gives Home its rows but no card sizes; 210dp
+  (`Dimens.ThumbWidth`) became the anchor on the tablet, and the Libraries entry
+  (2026-07-30) reasons from "Home's *My Media* row draws … at a fixed 210dp".
+- **Done instead:** below 600dp viewport width the thumb-shaped home cards (My Media,
+  Continue Watching, Next Up) draw at 160dp; poster rows keep 120dp. 600dp+ keeps 210dp
+  exactly, so the tablet render and the Libraries entry's anchor are untouched there.
+- **Reason:** user feedback on the phone-size sweep — at 360dp a 210dp card leaves ~1.6
+  cards per row and the home screen reads as zoomed-in rather than browsable; 160dp gives
+  two full cards plus a peek of the third (16+160+12+160 = 348 ≤ 360).
+
+## 2026-07-31 — Phone polish round 2: aligned detail action grid + smaller compact banner
+- **Scope:** feature/detail/.../ItemDetailHeader.kt (DetailActions), ItemDetailScreen.kt
+  (backdropHeight portrait fraction)
+- **Plan said:** docs/PLAN.md:75 lists the detail actions with no layout spec; the
+  FlowRow wrap and the 0.40 portrait banner fraction were M9 decisions verified on the
+  tablet (portrait-banner entry, 2026-07-30).
+- **Done instead:** below 480dp width the actions render as an aligned two-row grid —
+  [Play (weighted) | favorite] over [Mark watched (weighted) | Download (weighted)] —
+  every row spanning the full content width; 480dp+ keeps the FlowRow byte-identically.
+  The compact-width portrait banner fraction is 0.32 (≈256dp at 800dp tall) instead of
+  0.40; tablet portrait (711dp wide) keeps 0.40. The existing phone-portrait sizing test
+  is updated to the new expected value alongside the change (behavior change, not a
+  weakened assertion).
+- **Reason:** user feedback — the FlowRow wraps into ragged left-aligned rows ("buttons
+  feel misaligned") and a 320dp banner is tablet-tuned dead art on a 360dp phone.

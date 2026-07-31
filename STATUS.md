@@ -448,10 +448,20 @@ verification on the minified build.
   note's `/Audio` assumption, produced the amended fetch above; chunk 1
   (governance) DONE; chunk 2 (plan layer: `DownloadFileType.AUDIO`, fetch
   constants, `DownloadUrlFactory.audioStreamUrl`, planner sidecar rows +
-  tests) DONE. Next: chunk 3 engine (transfer semantics, Transformer strip
-  stage, size estimate), chunk 4 offline surface, chunks 5–6 player
-  (resolver/spec + `MergingMediaSource` assembly and track mapping),
-  chunk 8 docs + user-run device walk.
+  tests) DONE (`55429dd`).
+- Chunk 3 (engine: transfer semantics, `AudioSidecarExtractor` Transformer
+  strip stage, `part.mkv` un-resumable fetch, the `extraAudioBytes` size-estimate
+  term and its knock-on into `planQuality`) DONE (`b3da5fa`). Chunk 4 (offline
+  surface: `DownloadedMedia.audio` / `DownloadedAudio`, existence-gated like
+  subtitles) DONE (`9eb1c66`). Chunk 5 (player, pure half: `LocalPlaybackResolver`
+  offering every on-disk sidecar, `PlaybackMediaItemSpec.audioSidecars`,
+  `withoutMergePrefixes` for the doubly-merged id) DONE (`853d62c`). Chunk 6
+  (player, mechanical half: `ExoPlayerHandle.prepare`'s `MergingMediaSource`
+  assembly, `TrackSelectionController`'s merge-child-index mapping) DONE
+  (`67d9bb3`). All five commits green on `ktlintCheck detekt testDebugUnitTest`.
+  Only chunk 8's **device walk is outstanding** (user-run): a transcoded
+  multi-language download offline, picking each language, seeking each one,
+  confirming the offline audio picker lists them all.
 
 ### Next
 1. ~~**Audit backlog Tier 2 + cleanup wave**~~ — DONE. All Tier 1 (11), all Tier 2

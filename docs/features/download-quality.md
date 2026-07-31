@@ -156,6 +156,15 @@ step's cap estimates at roughly its own size and is therefore downloaded as the 
 precisely the intent — "the source is already at or below the quality you asked for" is exactly when
 a transcode has nothing to do.
 
+**A deliberate knock-on of the audio sidecars above.** `sizeEstimate` now adds every extra language's
+own weight to the transcoded figure (see *"Every other audio language"* below), so the comparison
+this section runs sees the *true* transcoded total — video plus every audio track that will actually
+land on disk, not just the one file the server streams back. A multi-language item that used to clear
+the 0.9 threshold on the strength of the video track alone can now fail it once its other languages
+are counted, and downgrades to `ORIGINAL` where a single-language source at the same bitrate would
+not. Nothing about the threshold or the comparison itself changed; only what one side of it is now
+honest about.
+
 ---
 
 ## The transcode URL
@@ -220,6 +229,46 @@ it at — which would make a two-hour film take two hours to download. `STATIC` 
 produce the file as fast as it can, which is what a download (nobody watching it arrive) actually
 wants.
 
+### Every other audio language, as its own file (Phase 2)
+
+One `audioStreamIndex` is baked into the transcode itself; every *other* audio stream of the source
+becomes its own file instead — `DownloadFilePlanner.audioSidecars()`
+(DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2"). The rule is narrower than the subtitle
+one above: only for a transcoded row (an `ORIGINAL` download already holds every track in the one
+file, exactly as for an embedded subtitle) and only when the row has an audio track to bake in at
+all — an item with no audio streams gets no sidecars either. What survives is every
+`MediaStreamType.AUDIO` stream of the first media source except the one already baked in, one
+`PlannedFile(AUDIO)` row each, named `audio.<index>.<lang>.m4a`. **Always on** — there is no
+setting and no language-preference UI gates it, a user decision (2026-07-31): a transcoded download
+of a two-language film fetches both.
+
+**The fetch does not go where the name would suggest.** `/Audio/{id}/stream` looks like the obvious
+route and is unusable: on server 10.11 `EncodingHelper.AttachMediaSourceInfo` hard-codes
+`audioStreamIndex` to `null` for any non-video request, so an audio-only fetch silently returns the
+source's *default* track whatever index was asked for — verified both in server source and
+empirically against the dev server (requested track 3/eng, received the default fre; decoded-audio
+cross-correlation 0.977 against the real French track, 0.756 against English). `/Videos/{id}/stream.mkv`
+*does* honour the index, so `DownloadUrlFactory.audioStreamUrl` fetches through the video endpoint
+instead, with a junk video track present only because the endpoint requires one — h264, 50 kbps,
+4 fps, 144p, measured ~54× realtime server-side, ~45 MB of throwaway video for a 2-hour film.
+
+**The strip happens on the device, once the whole file is down.** The fetch lands beside the sidecar
+as `<name>.part.mkv` — an un-resumable live encode, exactly like the media file of a transcoded row,
+so the server ignoring `Range` cannot corrupt it — and `AudioSidecarExtractor`
+(`data/downloads/.../engine/AudioSidecarExtractor.kt`, a Media3 `Transformer` with
+`setRemoveVideo(true)` and no re-encode: the AAC frames the server already produced are copied byte
+for byte into the mp4 box structure) transmuxes it into the `audio.<index>.<lang>.m4a` the row names.
+The mkv is deleted either way — on success because its job is done, on a failed strip because a video
+nobody asked for is not worth keeping and the fetch cannot be resumed anyway. A failed fetch or strip
+costs only that one non-essential row; the item is still `DOWNLOADED` without it, the same as a
+failed subtitle.
+
+**No retroactive top-up.** A row already on disk before this landed does not grow its extra
+languages — that would mean re-fetching and re-stripping the whole set for every finished transcoded
+download, silently, on a background pass. `SubtitleSidecarTopUp` — the mechanism that *does* silently
+backfill missing subtitles into finished rows — stays filtered to `type == SUBTITLE`, pinned by test:
+a deliberate user decision, not an oversight.
+
 ---
 
 ## Why the container is mkv and not mp4
@@ -280,7 +329,13 @@ signal.
 `mediaSources[0].size`, the exact figure the server already knows; for a transcoded step it estimates
 `runTimeTicks × (min(cap, source bitrate) + 192 kbps) / 8` — the item's duration times the bitrate
 that will actually bind, since a transcode can never need more bits per second than the source
-already carries (DECISIONS.md, 2026-07-29). `DownloadQueue`'s private `ItemProgress` class then uses
+already carries (DECISIONS.md, 2026-07-29) — **plus `extraAudioBytes`**, one more `runtime × 192 kbps`
+term per audio language the transcode does not bake in (DECISIONS.md, 2026-07-31, "Offline
+multi-track Phase 2"; the junk video an audio sidecar is *fetched* through is deliberately excluded,
+since the strip stage deletes it and this figure is the one the storage bar and the Downloaded tab
+are held to). A single-language item adds nothing and the arithmetic is unchanged; a multi-language
+one is no longer describable by video-plus-one-track alone. `DownloadQueue`'s private `ItemProgress`
+class then uses
 that estimate as a **floor** for as long as *any* file belonging to the item still has an unknown
 real size, which for a transcode is the whole transfer. It stops using the floor — and the exact sum
 of real sizes wins
@@ -377,10 +432,13 @@ enqueue step promised. The row that is *already downloading* when a sibling land
 figure for the rest of that transfer: the DB is re-seeded under it, but its `ItemProgress` was built
 at the start, and its own scanner is about to produce something better than a seed anyway.
 
-**Remux detection turns some transcodes into an exact figure instead of an estimate at all.** The
-transcode URL always sends `allowVideoStreamCopy=true`, so whenever the server can pass the source's
-video track straight through instead of re-encoding it, the output size is arithmetic:
-`runtime × (videoStream.bitRate + 192 kbps) / 8`. `DownloadEnqueuer.remuxBytes` claims this only when
+**Remux detection turns some transcodes into an exact figure instead of an estimate at all — but only
+while the item is single-language.** The transcode URL always sends `allowVideoStreamCopy=true`, so
+whenever the server can pass the source's video track straight through instead of re-encoding it, the
+output size is arithmetic: `runtime × (videoStream.bitRate + 192 kbps) / 8`. The moment the item has a
+second audio language, `extraAudioBytes` (above) is added to that figure and `exact` drops back to
+`false`: a sidecar is itself a transcode, so the total is a ceiling again the instant there is one to
+account for. `DownloadEnqueuer.remuxBytes` claims the underlying arithmetic figure only when
 all four of the following hold: the source's video codec is `h264`, matched case-insensitively and
 exactly; the source stream reports a `height` at or under the quality step's `maxHeight`; the source
 stream reports a `bitRate` greater than zero and at or under the step's `videoBitRate`; and the source

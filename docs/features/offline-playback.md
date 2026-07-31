@@ -63,6 +63,16 @@ this is the only path that also reaches downloads made before the fix — see
 docs/features/download-quality.md, *"No seek index — until the client writes one"*. It is idempotent,
 costs two twelve-byte reads for a file that is already indexed, and never changes a file's length.
 
+**Audio sidecars need none of this.** `MatroskaSeekIndexRepair` only ever runs against the `MEDIA`
+file — an `audio.<index>.<lang>.m4a` sidecar is not Matroska at all and is not passed through it. It
+does not need to be: the sidecar is produced *locally*, by a Media3 `Transformer` that writes the
+whole file's `moov` up front because it already has every byte of the fetched mkv on disk before it
+starts (unlike the server's own live encode, which streams before it can know where `mdat` ends). A
+sidecar is therefore natively seekable from the moment the strip finishes, with no repair gate of any
+kind standing between it and playback — the gate that exists for a sidecar is the strip itself
+(`docs/features/download-quality.md`, *"Every other audio language"*): fail there and the row simply
+has no sidecar, rather than an unseekable one.
+
 ### What it builds
 
 `LocalPlaybackResolver` turns that into a `LocalPlaybackMediaSource` — the second variant of the
@@ -86,11 +96,16 @@ is filtered rather than trusted:
 | Track | Offered when |
 |---|---|
 | Audio, `ORIGINAL` download | always — the file is the source file |
-| Audio, transcoded download | exactly one: the stream `DownloadEntity.bakedAudioStreamIndex` names, since `/Videos/{id}/stream.mkv` encodes exactly one `audioStreamIndex` and drops the rest |
+| Audio, transcoded download | the stream `DownloadEntity.bakedAudioStreamIndex` names, **plus one more for every audio sidecar on disk** (`DownloadedMedia.audio`) — every language the transcode did not bake in still got its own `.m4a`, offline multi-track Phase 2 (DECISIONS.md, 2026-07-31) |
 | Subtitle, any quality | **its sidecar is on disk** — whatever the stream's own `isExternal` says |
 | Subtitle, embedded, no sidecar | only in a download the server did not re-encode |
 
-Two consequences worth stating outright:
+A transcoded download's audio picker is therefore no longer capped at one entry: a two-language film
+lists both languages offline, exactly as it would streaming. A track the transcode never fetched at
+all — because the strip failed, or because the row predates Phase 2 — is genuinely not on disk and
+follows the ordinary rule below: not offered offline, streamed from the server when there is one.
+
+Three consequences worth stating outright:
 
 - **An embedded subtitle can be offered from a sidecar.** Since the phase-0 planner change, a
   transcoded download fetches an extracted `.srt` for every embedded text subtitle the server will
@@ -103,6 +118,37 @@ Two consequences worth stating outright:
   `NULL`; those downloads named no `audioStreamIndex` either, so the server used the source's
   `defaultAudioStreamIndex` and the resolver falls back to exactly that — then to the first audio
   stream. See `docs/features/download-quality.md`, *"One audio track, and which one"*.
+- **An extra audio language is offered from a sidecar, the same way.** `LocalPlaybackResolver` lists
+  the baked track first, then one entry per `DownloadedAudio` on disk in ascending `streamIndex`
+  order (`DownloadedMedia.audio`, itself sorted that way) — **this order is the contract**: it is
+  exactly the order `ExoPlayerHandle.prepare` builds its `MergingMediaSource` children in, and the
+  only thing that lets a later selection find its way back to the right one (below).
+
+### Merged playback and the child-order contract
+
+A transcoded download with any audio sidecars is not opened with `setMediaItem` — `ExoPlayerHandle
+.prepare` wraps the primary source and every sidecar in a `MergingMediaSource`
+(`adjustPeriodTimeOffsets = false`, `clipDurations = true`, which absorbs the few milliseconds of
+drift between a re-encoded video and its separately transcoded audio). `MediaItem` has no audio
+analogue of `SubtitleConfiguration`, so unlike a subtitle a sidecar cannot simply ride along on the
+item; this is the one place `:player` assembles a `MediaSource` by hand rather than through
+`ExoMediaSourceFactory`'s ordinary decision table (DECISIONS.md, 2026-07-31).
+
+**Element `i` of `PlaybackMediaItemSpec.audioSidecars` becomes merge child `i + 1`** — child `0` is
+always the primary source — and `TrackSelectionController.selectAudio` reads that position back:
+the *k*-th external audio track maps to the ExoPlayer group whose track-group id carries merge-child
+prefix `k + 1`, and container (non-sidecar) tracks are counted only among the groups that carry no
+sidecar prefix at all. With no sidecars both paths collapse to the same positional match the picker
+always used.
+
+**A merge can double-prefix an id.** `MergingMediaPeriod` re-ids every child's track groups as
+`"<childIndex>:<originalId>"`. A downloaded item with both audio sidecars and embedded-subtitle
+sidecars is merged *twice* — `DefaultMediaSourceFactory` already wraps the main item in its own merge
+for the subtitle `SubtitleConfiguration`s, and `ExoPlayerHandle` merges that whole thing again for the
+audio files — so a subtitle id such as `external:2` can come back as `0:1:external:2` rather than the
+single-prefixed `1:external:2` phase 1 pinned. `withoutMergePrefixes()` strips a leading *run* of
+numeric `<digits>:` prefixes rather than just one, which is what keeps `jellyfinIndexOfTrackId` correct
+whichever of the two merges — or both — is in play.
 
 A default subtitle index that is not in the offered set is dropped rather than selected, and a
 requested audio or subtitle index the file cannot supply falls back to the default rather than
@@ -282,8 +328,11 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 | `LocalPlaybackResolver` | `:player` | Builds a `LocalPlaybackMediaSource` from what is on disk |
 | `LocalPlaybackMediaSource` / `LocalTrickplay` | `:player` | The offline half of the sealed source type |
 | `ExoMediaSourceFactory` | `:player` | Now handles both variants; local URIs pass through untouched |
+| `ExoPlayerHandle.prepare` / `toMergedSource` | `:player` | Builds the `MergingMediaSource` over the primary source and every audio sidecar, when the spec has any |
+| `TrackSelectionController` | `:player` | Maps a merge child back to a Jellyfin stream index (`mergeChildIndex`), for both audio and subtitle sidecars |
 | `PlaybackReporter` | `:player` | Skips the server triad offline; always writes locally |
-| `DownloadedMediaProvider` / `DownloadedMedia` | `:data:downloads` | "What is on disk for this item", Room + filesystem |
+| `DownloadedMediaProvider` / `DownloadedMedia` / `DownloadedAudio` | `:data:downloads` | "What is on disk for this item", Room + filesystem; `DownloadedMedia.audio` lists the on-disk sidecars in merge-child order |
+| `AudioSidecarExtractor` | `:data:downloads` | Transmuxes a fetched mkv into the m4a a sidecar row names (Media3 `Transformer`, no re-encode) |
 | `DownloadDao.getWithFiles` | `:core:database` | One download with its file rows |
 | `UserDataSyncer` / `SyncOutcome` | `:data` | Most-recent-wins, per pending row |
 | `UserDataSyncWorker` | `:data` | Maps a drain onto a WorkManager result |
@@ -293,13 +342,15 @@ come from `JellyfinItem.userData` — which offline is the *local* row, overlaid
 
 | Class | Tests | Covers |
 |---|---|---|
-| `DownloadedMediaProviderTest` | 19 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, the baked audio index carried through (and absent on a pre-v8 row), and the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway |
-| `LocalPlaybackResolverTest` | 31 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing; the baked audio index driving the transcoded picker (with the legacy-`NULL` and unknown-index fallbacks); an embedded subtitle offered from its sidecar and flagged side-loaded, one without a sidecar still withheld; the source's full lists carried alongside the playable ones and labelled from the source's own defaults |
+| `DownloadedMediaProviderTest` | 23 | The playable/not-playable gate against **real temp files**, `file://` encoding, dash-insensitive media-source matching, sidecar and tile filtering, the baked audio index carried through (and absent on a pre-v8 row), the seek-index repair being asked for the media file in milliseconds — but never for an item that is not playable anyway — and `DownloadedMedia.audio` listing each on-disk `AUDIO` row ascending by stream index, existence-gated exactly like subtitles |
+| `LocalPlaybackResolverTest` | 39 | Track lists, withheld external subtitles, MIME-type fallback, explicit track choices, trickplay addressing; the baked audio index driving the transcoded picker (with the legacy-`NULL` and unknown-index fallbacks); an embedded subtitle offered from its sidecar and flagged side-loaded, one without a sidecar still withheld; the source's full lists carried alongside the playable ones and labelled from the source's own defaults; every downloaded audio sidecar offered after the baked track, in ascending stream-index order, and excluded when its stream is missing from the source or duplicates the baked one |
 | `PlaybackSourceResolverTest` | 12 | The full selection matrix incl. the forced-transcode exception, `forceRemote` skipping the local resolver, and the immediate offline failure |
 | `PlaybackReporterTest` | +7 | Local and offline sessions report nothing and still write every position |
 | `UserDataSyncerTest` | 17 | The whole most-recent-wins matrix, push ordering, the timezone round trip, partial batch failure |
 | `UserDataSyncTriggerTest` | 7 | App start, reconnection edges, the pending guard, idempotent `start()` |
-| `ExoMediaSourceFactoryTest` | +2 | Local URIs and sidecars pass through unprefixed |
+| `ExoMediaSourceFactoryTest` | 16 | Local URIs and sidecars pass through unprefixed; a spec with audio sidecars building sources for the primary item plus each sidecar |
+| `PlaybackMediaItemSpecTest` | 7 | `audioSidecars` carried on the spec; `jellyfinIndexOfTrackId` stripping one merge-child prefix, stripping *two* for a doubly-merged (audio + subtitle) id, and leaving a container track's own numeric id alone |
+| `TrackSelectionControllerTest` | 17 | With no sidecars, audio and subtitle selection are byte-for-byte the old positional match; with sidecars, the *k*-th external audio track maps to the group whose id carries merge-child prefix `k + 1`, and container tracks are counted only among the non-sidecar groups |
 | `PlayerViewModelTest` | +3 | `isLocalPlayback`, the inert quality picker, the detached stop |
 | `PlayerTrackPickerTest` | 13 | The whole picker rule: full list online / playable list offline, the live connectivity flip, a missing track streamed with `forceRemote` at the current position, a track the file holds going back to the download, the flag surviving a quality change, the offline refusals, and the fallback when the server turns out not to be there |
 | `ItemDetailViewModelTest` | +1 | An offline position turns the button into *Resume* with no refetch |

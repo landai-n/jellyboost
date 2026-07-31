@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Nedladdad</string>
+    <string name="badge_download_queued">I kö för nedladdning</string>
+    <string name="badge_download_paused">Nedladdning pausad</string>
+    <string name="badge_download_failed">Nedladdning misslyckades</string>
+
+    <string name="media_row_see_all">Se alla</string>
+    <string name="media_card_watched">Sedd</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d markerad</item>
+        <item quantity="other">%1$d markerade</item>
+    </plurals>
+    <string name="selection_close">Rensa markering</string>
+    <string name="selection_select_all">Markera alla</string>
+    <string name="selection_mark_watched">Markera som sedd</string>
+    <string name="selection_mark_unwatched">Markera som osedd</string>
+    <string name="selection_download">Ladda ner</string>
+
+    <string name="selection_item_selected">Markerad</string>
+    <string name="selection_item_not_selected">Inte markerad</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Markerade %1$d som sedd</item>
+        <item quantity="other">Markerade %1$d som sedda</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Markerade %1$d som sedda, %2$d misslyckades</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kunde inte markera %1$d objekt som sett</item>
+        <item quantity="other">Kunde inte markera %1$d objekt som sedda</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Markerade %1$d som osedd</item>
+        <item quantity="other">Markerade %1$d som osedda</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Markerade %1$d som osedda, %2$d misslyckades</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kunde inte markera %1$d objekt som osett</item>
+        <item quantity="other">Kunde inte markera %1$d objekt som osedda</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Lade till %1$d i nedladdningar</item>
+        <item quantity="other">Lade till %1$d i nedladdningar</item>
+    </plurals>
+    <string name="selection_result_download_partial">Lade till %1$d i nedladdningar, %2$d misslyckades</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kunde inte lägga till %1$d objekt i nedladdningar</item>
+        <item quantity="other">Kunde inte lägga till %1$d objekt i nedladdningar</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Lade till %1$d i nedladdningar – %2$d finns redan på den här enheten</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d objekt finns redan på den här enheten</item>
+        <item quantity="other">%1$d objekt finns redan på den här enheten</item>
+    </plurals>
+</resources>

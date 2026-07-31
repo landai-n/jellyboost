@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Preneseno</string>
+    <string name="badge_download_queued">V vrsti za prenos</string>
+    <string name="badge_download_paused">Prenos v premoru</string>
+    <string name="badge_download_failed">Prenos ni uspel</string>
+
+    <string name="media_row_see_all">Prikaži vse</string>
+    <string name="media_card_watched">Ogledano</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Izbran %1$d element</item>
+        <item quantity="two">Izbrana %1$d elementa</item>
+        <item quantity="few">Izbrani %1$d elementi</item>
+        <item quantity="other">Izbranih %1$d elementov</item>
+    </plurals>
+    <string name="selection_close">Počisti izbor</string>
+    <string name="selection_select_all">Izberi vse</string>
+    <string name="selection_mark_watched">Označi kot ogledano</string>
+    <string name="selection_mark_unwatched">Označi kot neogledano</string>
+    <string name="selection_download">Prenesi</string>
+
+    <string name="selection_item_selected">Izbrano</string>
+    <string name="selection_item_not_selected">Ni izbrano</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d element je bil označen kot ogledano</item>
+        <item quantity="two">%1$d elementa sta bila označena kot ogledano</item>
+        <item quantity="few">%1$d elementi so bili označeni kot ogledano</item>
+        <item quantity="other">%1$d elementov je bilo označenih kot ogledano</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Označenih kot ogledano: %1$d, neuspešno: %2$d</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d element ni bil označen kot ogledano</item>
+        <item quantity="two">%1$d elementa nista bila označena kot ogledano</item>
+        <item quantity="few">%1$d elementi niso bili označeni kot ogledano</item>
+        <item quantity="other">%1$d elementov ni bilo označenih kot ogledano</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d element je bil označen kot neogledano</item>
+        <item quantity="two">%1$d elementa sta bila označena kot neogledano</item>
+        <item quantity="few">%1$d elementi so bili označeni kot neogledano</item>
+        <item quantity="other">%1$d elementov je bilo označenih kot neogledano</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Označenih kot neogledano: %1$d, neuspešno: %2$d</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d element ni bil označen kot neogledano</item>
+        <item quantity="two">%1$d elementa nista bila označena kot neogledano</item>
+        <item quantity="few">%1$d elementi niso bili označeni kot neogledano</item>
+        <item quantity="other">%1$d elementov ni bilo označenih kot neogledano</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d element je bil dodan med prenose</item>
+        <item quantity="two">%1$d elementa sta bila dodana med prenose</item>
+        <item quantity="few">%1$d elementi so bili dodani med prenose</item>
+        <item quantity="other">%1$d elementov je bilo dodanih med prenose</item>
+    </plurals>
+    <string name="selection_result_download_partial">Med prenose dodanih: %1$d, neuspešno: %2$d</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d element ni bil dodan med prenose</item>
+        <item quantity="two">%1$d elementa nista bila dodana med prenose</item>
+        <item quantity="few">%1$d elementi niso bili dodani med prenose</item>
+        <item quantity="other">%1$d elementov ni bilo dodanih med prenose</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Med prenose dodanih: %1$d — %2$d je že na tej napravi</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d element je že na tej napravi</item>
+        <item quantity="two">%1$d elementa sta že na tej napravi</item>
+        <item quantity="few">%1$d elementi so že na tej napravi</item>
+        <item quantity="other">%1$d elementov je že na tej napravi</item>
+    </plurals>
+</resources>

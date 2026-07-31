@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Intet at se endnu. Tilføj indhold til dine biblioteker på serveren.</string>
+    <string name="home_empty_refresh">Opdater</string>
+
+    <string name="home_section_my_media">Mit indhold</string>
+    <string name="home_section_continue_watching">Fortsæt visning</string>
+    <string name="home_section_next_up">Op næste</string>
+    <string name="home_section_latest">Nyeste %1$s</string>
+</resources>

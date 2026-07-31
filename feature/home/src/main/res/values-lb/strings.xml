@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Nach näischt fir ze kucken. Setz Medien zu dengen Bibliothéiken um Server dobäi.</string>
+    <string name="home_empty_refresh">Aktualiséieren</string>
+
+    <string name="home_section_my_media">Meng Medien</string>
+    <string name="home_section_continue_watching">Weiderkucken</string>
+    <string name="home_section_next_up">Als Nächst</string>
+    <string name="home_section_latest">Nei an %1$s</string>
+</resources>

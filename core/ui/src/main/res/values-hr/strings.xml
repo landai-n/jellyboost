@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Preuzeto</string>
+    <string name="badge_download_queued">U redu za preuzimanje</string>
+    <string name="badge_download_paused">Preuzimanje pauzirano</string>
+    <string name="badge_download_failed">Preuzimanje neuspješno</string>
+
+    <string name="media_row_see_all">Prikaži sve</string>
+    <string name="media_card_watched">Gledano</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Odabrano: %1$d</item>
+        <item quantity="few">Odabrano: %1$d</item>
+        <item quantity="other">Odabrano: %1$d</item>
+    </plurals>
+    <string name="selection_close">Poništi odabir</string>
+    <string name="selection_select_all">Odaberi sve</string>
+    <string name="selection_mark_watched">Označi kao gledano</string>
+    <string name="selection_mark_unwatched">Označi kao negledano</string>
+    <string name="selection_download">Preuzmi</string>
+
+    <string name="selection_item_selected">Odabrano</string>
+    <string name="selection_item_not_selected">Nije odabrano</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d stavka označena kao gledana</item>
+        <item quantity="few">%1$d stavke označene kao gledane</item>
+        <item quantity="other">%1$d stavki označeno kao gledano</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Označeno %1$d kao gledano, %2$d nije uspjelo</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Nije moguće označiti %1$d stavku kao gledanu</item>
+        <item quantity="few">Nije moguće označiti %1$d stavke kao gledane</item>
+        <item quantity="other">Nije moguće označiti %1$d stavki kao gledano</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d stavka označena kao negledana</item>
+        <item quantity="few">%1$d stavke označene kao negledane</item>
+        <item quantity="other">%1$d stavki označeno kao negledano</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Označeno %1$d kao negledano, %2$d nije uspjelo</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Nije moguće označiti %1$d stavku kao negledanu</item>
+        <item quantity="few">Nije moguće označiti %1$d stavke kao negledane</item>
+        <item quantity="other">Nije moguće označiti %1$d stavki kao negledano</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Dodana %1$d stavka u preuzimanja</item>
+        <item quantity="few">Dodane %1$d stavke u preuzimanja</item>
+        <item quantity="other">Dodano %1$d stavki u preuzimanja</item>
+    </plurals>
+    <string name="selection_result_download_partial">Dodano %1$d u preuzimanja, %2$d nije uspjelo</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Nije moguće dodati %1$d stavku u preuzimanja</item>
+        <item quantity="few">Nije moguće dodati %1$d stavke u preuzimanja</item>
+        <item quantity="other">Nije moguće dodati %1$d stavki u preuzimanja</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Dodano %1$d u preuzimanja — %2$d već na ovom uređaju</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d stavka je već na ovom uređaju</item>
+        <item quantity="few">%1$d stavke su već na ovom uređaju</item>
+        <item quantity="other">%1$d stavki je već na ovom uređaju</item>
+    </plurals>
+</resources>

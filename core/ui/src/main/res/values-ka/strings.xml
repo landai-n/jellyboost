@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">გადმოწერილია</string>
+    <string name="badge_download_queued">გადმოწერის რიგშია</string>
+    <string name="badge_download_paused">გადმოწერა შეჩერებულია</string>
+    <string name="badge_download_failed">გადმოწერა ვერ მოხერხდა</string>
+    <string name="media_row_see_all">ყველას ნახვა</string>
+    <string name="media_card_watched">ნანახია</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d მონიშნულია</item>
+        <item quantity="other">%1$d მონიშნულია</item>
+    </plurals>
+    <string name="selection_close">მონიშვნის გასუფთავება</string>
+    <string name="selection_select_all">ყველას მონიშვნა</string>
+    <string name="selection_mark_watched">ნანახად მონიშვნა</string>
+    <string name="selection_mark_unwatched">უნახავად მონიშვნა</string>
+    <string name="selection_download">გადმოწერა</string>
+    <string name="selection_item_selected">მონიშნულია</string>
+    <string name="selection_item_not_selected">არ არის მონიშნული</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d მონიშნულია ნანახად</item>
+        <item quantity="other">%1$d მონიშნულია ნანახად</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d მონიშნულია ნანახად, %2$d ვერ მოხერხდა</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d ერთეულის ნანახად მონიშვნა ვერ მოხერხდა</item>
+        <item quantity="other">%1$d ერთეულის ნანახად მონიშვნა ვერ მოხერხდა</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d მონიშნულია უნახავად</item>
+        <item quantity="other">%1$d მონიშნულია უნახავად</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d მონიშნულია უნახავად, %2$d ვერ მოხერხდა</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d ერთეულის უნახავად მონიშვნა ვერ მოხერხდა</item>
+        <item quantity="other">%1$d ერთეულის უნახავად მონიშვნა ვერ მოხერხდა</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d დაემატა გადმოწერებში</item>
+        <item quantity="other">%1$d დაემატა გადმოწერებში</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d დაემატა გადმოწერებში, %2$d ვერ მოხერხდა</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d ერთეულის გადმოწერებში დამატება ვერ მოხერხდა</item>
+        <item quantity="other">%1$d ერთეულის გადმოწერებში დამატება ვერ მოხერხდა</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d დაემატა გადმოწერებში — %2$d უკვე ამ მოწყობილობაზეა</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d ერთეული უკვე ამ მოწყობილობაზეა</item>
+        <item quantity="other">%1$d ერთეული უკვე ამ მოწყობილობაზეა</item>
+    </plurals>
+</resources>

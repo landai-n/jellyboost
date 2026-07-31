@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">డౌన్‌లోడ్ చేయబడింది</string>
+    <string name="badge_download_queued">డౌన్‌లోడ్ కోసం క్యూలో ఉంది</string>
+    <string name="badge_download_paused">డౌన్‌లోడ్ పాజ్ చేయబడింది</string>
+    <string name="badge_download_failed">డౌన్‌లోడ్ విఫలమైంది</string>
+
+    <string name="media_row_see_all">అన్నీ చూడండి</string>
+    <string name="media_card_watched">చూసినది</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d ఎంపిక చేయబడింది</item>
+        <item quantity="other">%1$d ఎంపిక చేయబడ్డాయి</item>
+    </plurals>
+    <string name="selection_close">ఎంపికను తీసివేయండి</string>
+    <string name="selection_select_all">అన్నీ ఎంపిక చేయండి</string>
+    <string name="selection_mark_watched">చూసినట్లు గుర్తించండి</string>
+    <string name="selection_mark_unwatched">చూడనట్లు గుర్తించండి</string>
+    <string name="selection_download">డౌన్‌లోడ్ చేయండి</string>
+
+    <string name="selection_item_selected">ఎంపిక చేయబడింది</string>
+    <string name="selection_item_not_selected">ఎంపిక చేయబడలేదు</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d అంశాన్ని చూసినట్లు గుర్తించారు</item>
+        <item quantity="other">%1$d అంశాలను చూసినట్లు గుర్తించారు</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d చూసినట్లు గుర్తించారు, %2$d విఫలమయ్యాయి</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">%1$d అంశాన్ని చూసినట్లు గుర్తించలేకపోయాం</item>
+        <item quantity="other">%1$d అంశాలను చూసినట్లు గుర్తించలేకపోయాం</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d అంశాన్ని చూడనట్లు గుర్తించారు</item>
+        <item quantity="other">%1$d అంశాలను చూడనట్లు గుర్తించారు</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d చూడనట్లు గుర్తించారు, %2$d విఫలమయ్యాయి</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">%1$d అంశాన్ని చూడనట్లు గుర్తించలేకపోయాం</item>
+        <item quantity="other">%1$d అంశాలను చూడనట్లు గుర్తించలేకపోయాం</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d అంశాన్ని డౌన్‌లోడ్‌లకు జోడించారు</item>
+        <item quantity="other">%1$d అంశాలను డౌన్‌లోడ్‌లకు జోడించారు</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d డౌన్‌లోడ్‌లకు జోడించారు, %2$d విఫలమయ్యాయి</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">%1$d అంశాన్ని డౌన్‌లోడ్‌లకు జోడించలేకపోయాం</item>
+        <item quantity="other">%1$d అంశాలను డౌన్‌లోడ్‌లకు జోడించలేకపోయాం</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d డౌన్‌లోడ్‌లకు జోడించారు — %2$d ఇప్పటికే ఈ పరికరంలో ఉన్నాయి</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d అంశం ఇప్పటికే ఈ పరికరంలో ఉంది</item>
+        <item quantity="other">%1$d అంశాలు ఇప్పటికే ఈ పరికరంలో ఉన్నాయి</item>
+    </plurals>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Пакуль няма чаго глядзець. Дадайце медыя ў бібліятэкі на серверы.</string>
+    <string name="home_empty_refresh">Абнавіць</string>
+
+    <string name="home_section_my_media">Мае медыя</string>
+    <string name="home_section_continue_watching">Працягнуць прагляд</string>
+    <string name="home_section_next_up">Далей</string>
+    <string name="home_section_latest">Апошнія %1$s</string>
+</resources>

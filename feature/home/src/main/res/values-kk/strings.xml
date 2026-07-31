@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Әзірге көретін ештеңе жоқ. Серверде кітапханаларыңызға медиа қосыңыз.</string>
+    <string name="home_empty_refresh">Жаңарту</string>
+
+    <string name="home_section_my_media">Менің медиам</string>
+    <string name="home_section_continue_watching">Қарауды жалғастыру</string>
+    <string name="home_section_next_up">Келесі</string>
+    <string name="home_section_latest">Соңғы %1$s</string>
+</resources>

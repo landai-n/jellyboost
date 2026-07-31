@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Nothing to watch yet. Add media to your libraries on the server.</string>
+    <string name="home_empty_refresh">Refresh</string>
+    <string name="home_section_my_media">My Media</string>
+    <string name="home_section_continue_watching">Continue Watching</string>
+    <string name="home_section_next_up">Next Up</string>
+    <string name="home_section_latest">Latest %1$s</string>
+</resources>

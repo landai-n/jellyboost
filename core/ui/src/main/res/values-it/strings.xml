@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Scaricato</string>
+    <string name="badge_download_queued">In coda per il download</string>
+    <string name="badge_download_paused">Download in pausa</string>
+    <string name="badge_download_failed">Download non riuscito</string>
+    <string name="media_row_see_all">Vedi tutti</string>
+    <string name="media_card_watched">Visto</string>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selezionato</item>
+        <item quantity="other">%1$d selezionati</item>
+    </plurals>
+    <string name="selection_close">Annulla selezione</string>
+    <string name="selection_select_all">Seleziona tutti</string>
+    <string name="selection_mark_watched">Segna come visto</string>
+    <string name="selection_mark_unwatched">Segna come non visto</string>
+    <string name="selection_download">Scarica</string>
+    <string name="selection_item_selected">Selezionato</string>
+    <string name="selection_item_not_selected">Non selezionato</string>
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d segnato come visto</item>
+        <item quantity="other">%1$d segnati come visti</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d segnati come visti, %2$d non riusciti</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Impossibile segnare %1$d elemento come visto</item>
+        <item quantity="other">Impossibile segnare %1$d elementi come visti</item>
+    </plurals>
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d segnato come non visto</item>
+        <item quantity="other">%1$d segnati come non visti</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d segnati come non visti, %2$d non riusciti</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Impossibile segnare %1$d elemento come non visto</item>
+        <item quantity="other">Impossibile segnare %1$d elementi come non visti</item>
+    </plurals>
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d aggiunto ai download</item>
+        <item quantity="other">%1$d aggiunti ai download</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d aggiunti ai download, %2$d non riusciti</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Impossibile aggiungere %1$d elemento ai download</item>
+        <item quantity="other">Impossibile aggiungere %1$d elementi ai download</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d aggiunti ai download — %2$d già presenti su questo dispositivo</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d elemento è già su questo dispositivo</item>
+        <item quantity="other">%1$d elementi sono già su questo dispositivo</item>
+    </plurals>
+</resources>

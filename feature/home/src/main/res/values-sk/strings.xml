@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Zatiaľ nie je čo sledovať. Pridajte médiá do svojich knižníc na serveri.</string>
+    <string name="home_empty_refresh">Obnoviť</string>
+
+    <string name="home_section_my_media">Moje médiá</string>
+    <string name="home_section_continue_watching">Pokračovať v sledovaní</string>
+    <string name="home_section_next_up">Ďalej</string>
+    <string name="home_section_latest">Najnovšie %1$s</string>
+</resources>

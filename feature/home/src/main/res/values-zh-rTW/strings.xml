@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">目前沒有可觀看的內容。請在伺服器的媒體庫中新增媒體。</string>
+    <string name="home_empty_refresh">重新整理</string>
+
+    <string name="home_section_my_media">我的媒體</string>
+    <string name="home_section_continue_watching">繼續觀看</string>
+    <string name="home_section_next_up">接下來</string>
+    <string name="home_section_latest">最新%1$s</string>
+</resources>

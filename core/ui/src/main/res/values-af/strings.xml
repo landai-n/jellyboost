@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Afgelaai</string>
+    <string name="badge_download_queued">In wagry vir aflaai</string>
+    <string name="badge_download_paused">Aflaai gepouseer</string>
+    <string name="badge_download_failed">Aflaai het misluk</string>
+
+    <string name="media_row_see_all">Sien almal</string>
+    <string name="media_card_watched">Gekyk</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">%1$d gekies</item>
+        <item quantity="other">%1$d gekies</item>
+    </plurals>
+    <string name="selection_close">Maak seleksie skoon</string>
+    <string name="selection_select_all">Kies almal</string>
+    <string name="selection_mark_watched">Merk as gekyk</string>
+    <string name="selection_mark_unwatched">Merk as ongekyk</string>
+    <string name="selection_download">Laai af</string>
+
+    <string name="selection_item_selected">Gekies</string>
+    <string name="selection_item_not_selected">Nie gekies nie</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">%1$d gemerk as gekyk</item>
+        <item quantity="other">%1$d gemerk as gekyk</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d gemerk as gekyk, %2$d het misluk</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Kon nie %1$d item as gekyk merk nie</item>
+        <item quantity="other">Kon nie %1$d items as gekyk merk nie</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">%1$d gemerk as ongekyk</item>
+        <item quantity="other">%1$d gemerk as ongekyk</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d gemerk as ongekyk, %2$d het misluk</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Kon nie %1$d item as ongekyk merk nie</item>
+        <item quantity="other">Kon nie %1$d items as ongekyk merk nie</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">%1$d by aflaaie gevoeg</item>
+        <item quantity="other">%1$d by aflaaie gevoeg</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d by aflaaie gevoeg, %2$d het misluk</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Kon nie %1$d item by aflaaie voeg nie</item>
+        <item quantity="other">Kon nie %1$d items by aflaaie voeg nie</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d by aflaaie gevoeg — %2$d reeds op hierdie toestel</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d item is reeds op hierdie toestel</item>
+        <item quantity="other">%1$d items is reeds op hierdie toestel</item>
+    </plurals>
+</resources>

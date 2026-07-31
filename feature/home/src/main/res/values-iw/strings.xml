@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">עדיין אין מה לצפות בו. הוסף מדיה לספריות שלך בשרת.</string>
+    <string name="home_empty_refresh">רענון</string>
+
+    <string name="home_section_my_media">המדיה שלי</string>
+    <string name="home_section_continue_watching">המשך צפייה</string>
+    <string name="home_section_next_up">הבא בתור</string>
+    <string name="home_section_latest">%1$s אחרונים</string>
+</resources>

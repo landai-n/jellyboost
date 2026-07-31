@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Wala pang mapapanood. Magdagdag ng media sa mga aklatan mo sa server.</string>
+    <string name="home_empty_refresh">I-refresh</string>
+    <string name="home_section_my_media">Aking Media</string>
+    <string name="home_section_continue_watching">Ipagpatuloy ang Panonood</string>
+    <string name="home_section_next_up">Susunod</string>
+    <string name="home_section_latest">Pinakabagong %1$s</string>
+</resources>

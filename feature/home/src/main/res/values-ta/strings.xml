@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">இதுவரை பார்க்க எதுவும் இல்லை. சேவையகத்தில் உள்ள உங்கள் நூலகங்களில் மீடியாவைச் சேர்க்கவும்.</string>
+    <string name="home_empty_refresh">புதுப்பி</string>
+
+    <string name="home_section_my_media">எனது மீடியா</string>
+    <string name="home_section_continue_watching">தொடர்ந்து பார்க்க</string>
+    <string name="home_section_next_up">அடுத்தது</string>
+    <string name="home_section_latest">சமீபத்திய %1$s</string>
+</resources>

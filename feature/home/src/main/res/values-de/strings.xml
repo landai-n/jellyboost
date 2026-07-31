@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Noch nichts zum Anschauen. Füge deinen Bibliotheken auf dem Server Medien hinzu.</string>
+    <string name="home_empty_refresh">Aktualisieren</string>
+
+    <string name="home_section_my_media">Meine Medien</string>
+    <string name="home_section_continue_watching">Weiterschauen</string>
+    <string name="home_section_next_up">Als Nächstes</string>
+    <string name="home_section_latest">Neu in %1$s</string>
+</resources>

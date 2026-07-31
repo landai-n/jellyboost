@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Ende s\'ka gjë për të shikuar. Shto media te bibliotekat e tua në server.</string>
+    <string name="home_empty_refresh">Rifresko</string>
+
+    <string name="home_section_my_media">Media ime</string>
+    <string name="home_section_continue_watching">Vazhdo shikimin</string>
+    <string name="home_section_next_up">Në vijim</string>
+    <string name="home_section_latest">Më të fundit: %1$s</string>
+</resources>

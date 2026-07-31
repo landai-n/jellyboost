@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">다운로드됨</string>
+    <string name="badge_download_queued">다운로드 대기 중</string>
+    <string name="badge_download_paused">다운로드 일시정지됨</string>
+    <string name="badge_download_failed">다운로드 실패</string>
+
+    <string name="media_row_see_all">전체 보기</string>
+    <string name="media_card_watched">시청함</string>
+
+    <plurals name="selection_count">
+        <item quantity="other">%1$d개 선택됨</item>
+    </plurals>
+    <string name="selection_close">선택 해제</string>
+    <string name="selection_select_all">전체 선택</string>
+    <string name="selection_mark_watched">시청함으로 표시</string>
+    <string name="selection_mark_unwatched">시청 안 함으로 표시</string>
+    <string name="selection_download">다운로드</string>
+
+    <string name="selection_item_selected">선택됨</string>
+    <string name="selection_item_not_selected">선택 안 됨</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="other">%1$d개를 시청함으로 표시했습니다</item>
+    </plurals>
+    <string name="selection_result_watched_partial">%1$d개를 시청함으로 표시했습니다. %2$d개 실패</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="other">%1$d개를 시청함으로 표시하지 못했습니다</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="other">%1$d개를 시청 안 함으로 표시했습니다</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">%1$d개를 시청 안 함으로 표시했습니다. %2$d개 실패</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="other">%1$d개를 시청 안 함으로 표시하지 못했습니다</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="other">%1$d개를 다운로드에 추가했습니다</item>
+    </plurals>
+    <string name="selection_result_download_partial">%1$d개를 다운로드에 추가했습니다. %2$d개 실패</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="other">%1$d개를 다운로드에 추가하지 못했습니다</item>
+    </plurals>
+    <string name="selection_result_download_skipped">%1$d개를 다운로드에 추가했습니다 — %2$d개는 이미 이 기기에 있습니다</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="other">%1$d개는 이미 이 기기에 있습니다</item>
+    </plurals>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Inget att titta på än. Lägg till innehåll i dina bibliotek på servern.</string>
+    <string name="home_empty_refresh">Uppdatera</string>
+
+    <string name="home_section_my_media">Mitt innehåll</string>
+    <string name="home_section_continue_watching">Fortsätt titta</string>
+    <string name="home_section_next_up">Näst på tur</string>
+    <string name="home_section_latest">Senaste %1$s</string>
+</resources>

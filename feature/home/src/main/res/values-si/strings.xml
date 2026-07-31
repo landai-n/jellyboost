@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">නරඹීමට තවම කිසිවක් නැත. සේවාදායකයේ ඔබගේ පුස්තකාලවලට මාධ්‍ය එක් කරන්න.</string>
+    <string name="home_empty_refresh">නැවුම් කරන්න</string>
+    <string name="home_section_my_media">මගේ මාධ්‍ය</string>
+    <string name="home_section_continue_watching">නැරඹීම දිගටම කරගෙන යන්න</string>
+    <string name="home_section_next_up">ඊළඟට</string>
+    <string name="home_section_latest">නවතම %1$s</string>
+</resources>

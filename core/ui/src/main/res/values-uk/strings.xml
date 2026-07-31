@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="badge_downloaded">Завантажено</string>
+    <string name="badge_download_queued">У черзі на завантаження</string>
+    <string name="badge_download_paused">Завантаження призупинено</string>
+    <string name="badge_download_failed">Помилка завантаження</string>
+
+    <string name="media_row_see_all">Показати всі</string>
+    <string name="media_card_watched">Переглянуто</string>
+
+    <plurals name="selection_count">
+        <item quantity="one">Вибрано %1$d елемент</item>
+        <item quantity="few">Вибрано %1$d елементи</item>
+        <item quantity="many">Вибрано %1$d елементів</item>
+        <item quantity="other">Вибрано %1$d елемента</item>
+    </plurals>
+    <string name="selection_close">Скасувати вибір</string>
+    <string name="selection_select_all">Вибрати всі</string>
+    <string name="selection_mark_watched">Позначити переглянутим</string>
+    <string name="selection_mark_unwatched">Позначити непереглянутим</string>
+    <string name="selection_download">Завантажити</string>
+
+    <string name="selection_item_selected">Вибрано</string>
+    <string name="selection_item_not_selected">Не вибрано</string>
+
+    <plurals name="selection_result_watched">
+        <item quantity="one">Позначено %1$d переглянутим</item>
+        <item quantity="few">Позначено %1$d переглянутими</item>
+        <item quantity="many">Позначено %1$d переглянутими</item>
+        <item quantity="other">Позначено %1$d переглянутими</item>
+    </plurals>
+    <string name="selection_result_watched_partial">Позначено переглянутими %1$d, не вдалося для %2$d</string>
+    <plurals name="selection_result_watched_failed">
+        <item quantity="one">Не вдалося позначити %1$d елемент переглянутим</item>
+        <item quantity="few">Не вдалося позначити %1$d елементи переглянутими</item>
+        <item quantity="many">Не вдалося позначити %1$d елементів переглянутими</item>
+        <item quantity="other">Не вдалося позначити %1$d елементів переглянутими</item>
+    </plurals>
+
+    <plurals name="selection_result_unwatched">
+        <item quantity="one">Позначено %1$d непереглянутим</item>
+        <item quantity="few">Позначено %1$d непереглянутими</item>
+        <item quantity="many">Позначено %1$d непереглянутими</item>
+        <item quantity="other">Позначено %1$d непереглянутими</item>
+    </plurals>
+    <string name="selection_result_unwatched_partial">Позначено непереглянутими %1$d, не вдалося для %2$d</string>
+    <plurals name="selection_result_unwatched_failed">
+        <item quantity="one">Не вдалося позначити %1$d елемент непереглянутим</item>
+        <item quantity="few">Не вдалося позначити %1$d елементи непереглянутими</item>
+        <item quantity="many">Не вдалося позначити %1$d елементів непереглянутими</item>
+        <item quantity="other">Не вдалося позначити %1$d елементів непереглянутими</item>
+    </plurals>
+
+    <plurals name="selection_result_download">
+        <item quantity="one">Додано %1$d до завантажень</item>
+        <item quantity="few">Додано %1$d до завантажень</item>
+        <item quantity="many">Додано %1$d до завантажень</item>
+        <item quantity="other">Додано %1$d до завантажень</item>
+    </plurals>
+    <string name="selection_result_download_partial">Додано до завантажень %1$d, не вдалося для %2$d</string>
+    <plurals name="selection_result_download_failed">
+        <item quantity="one">Не вдалося додати %1$d елемент до завантажень</item>
+        <item quantity="few">Не вдалося додати %1$d елементи до завантажень</item>
+        <item quantity="many">Не вдалося додати %1$d елементів до завантажень</item>
+        <item quantity="other">Не вдалося додати %1$d елементів до завантажень</item>
+    </plurals>
+    <string name="selection_result_download_skipped">Додано %1$d до завантажень — %2$d вже на цьому пристрої</string>
+    <plurals name="selection_result_download_all_skipped">
+        <item quantity="one">%1$d елемент уже на цьому пристрої</item>
+        <item quantity="few">%1$d елементи вже на цьому пристрої</item>
+        <item quantity="many">%1$d елементів вже на цьому пристрої</item>
+        <item quantity="other">%1$d елементів вже на цьому пристрої</item>
+    </plurals>
+</resources>

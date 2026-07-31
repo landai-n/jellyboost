@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Nog niets om te kijken. Voeg media toe aan je bibliotheken op de server.</string>
+    <string name="home_empty_refresh">Vernieuwen</string>
+
+    <string name="home_section_my_media">Mijn media</string>
+    <string name="home_section_continue_watching">Verdergaan met kijken</string>
+    <string name="home_section_next_up">Volgende</string>
+    <string name="home_section_latest">Nieuw in %1$s</string>
+</resources>

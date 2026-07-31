@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_empty_message">Nimic de vizionat încă. Adăugați conținut media în bibliotecile de pe server.</string>
+    <string name="home_empty_refresh">Reîmprospătează</string>
+    <string name="home_section_my_media">Conținutul meu</string>
+    <string name="home_section_continue_watching">Continuă vizionarea</string>
+    <string name="home_section_next_up">Urmează</string>
+    <string name="home_section_latest">Cele mai recente din %1$s</string>
+</resources>

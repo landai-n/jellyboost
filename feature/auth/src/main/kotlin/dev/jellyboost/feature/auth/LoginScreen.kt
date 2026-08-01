@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -16,21 +17,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,29 +42,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.network.model.PublicUserInfo
+import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
+import dev.jellyboost.core.ui.component.JellyfinTextField
+import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.JellyfinGradients
+import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.JellyfinTheme
+import java.util.UUID
 
 private val AvatarSize = 88.dp
 
 /**
- * Ring around every public-user avatar: the accent gradient on the selected profile (the brand
- * cue), a neutral outline on the rest — per the claude.ai/design "Login (landscape tablet)" card.
+ * Ring around every public-user avatar: a solid primary ring on the selected profile, a faint
+ * neutral one on the rest — per the claude.ai/design "Login (landscape tablet)" card.
  */
 private val AvatarRingWidth = 2.dp
 
@@ -74,6 +80,59 @@ private val AvatarRingGap = 3.dp
 
 /** Horizontal gap between avatars in the picker row. */
 private val AvatarRowSpacing = 32.dp
+
+/** Alpha of the unselected avatar ring — a faint neutral edge rather than [GlassDefaults.Hairline]. */
+private const val AVATAR_RING_UNSELECTED_ALPHA = 0.10f
+
+/** "WHO'S WATCHING?" — a centred eyebrow, one size up from the shared `JellyfinTypeExtras.Eyebrow`. */
+private val WhosWatchingStyle =
+    TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.W600,
+        letterSpacing = 0.12.em,
+    )
+
+/** Server name atop the identity block — bold and tracked in tight, the 2026 refresh's hero type. */
+private val ServerNameStyle =
+    TextStyle(
+        fontSize = 32.sp,
+        fontWeight = FontWeight.W700,
+        letterSpacing = (-0.02).em,
+    )
+
+/** Name under a public-user avatar. */
+private val AvatarNameStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
+
+/** "OR" between the sign-in form and Quick Connect. */
+private val OrDividerTextStyle =
+    TextStyle(
+        fontSize = 11.sp,
+        fontWeight = FontWeight.W600,
+        letterSpacing = 0.1.em,
+    )
+
+/** "Use another server" — a text link rather than a full button, styled in the accent colour. */
+private val ChangeServerLinkStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
+
+/** Quick Connect dialog title. */
+private val QuickConnectTitleStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.W600)
+
+/** Quick Connect instructions — smaller and tighter than the dialog's default `bodyMedium`. */
+private val QuickConnectInstructionStyle = TextStyle(fontSize = 13.sp, lineHeight = 19.sp)
+
+/** One code digit box, per the mocks' "six boxes, not gradient text" treatment. */
+private val QuickConnectDigitWidth = 46.dp
+private val QuickConnectDigitHeight = 58.dp
+private val QuickConnectDigitGap = 8.dp
+private val QuickConnectDigitStyle =
+    TextStyle(
+        fontSize = 26.sp,
+        fontWeight = FontWeight.W600,
+        // Tabular figures: six digits of varying width would otherwise make the boxes' centring
+        // wobble character to character.
+        fontFeatureSettings = "tnum",
+    )
+private val QuickConnectDigitFill = Color.White.copy(alpha = 0.05f)
 
 /**
  * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
@@ -144,7 +203,7 @@ private fun LoginContent(
                 )
                 Text(
                     text = state.serverName,
-                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                    style = ServerNameStyle,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
@@ -194,16 +253,17 @@ private fun LoginContent(
         },
         modifier = modifier,
     ) {
-        // The whole sign-in form lives on one surface card (claude.ai/design, "Login (landscape
+        // The whole sign-in form lives on one m-panel (claude.ai/design, "Login (landscape
         // tablet)") — same treatment as ServerSetup's manual-address panel, so the two screens
         // keep reading as one flow.
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
         ) {
             Column(
-                modifier = Modifier.padding(Dimens.SpaceExtraLarge),
+                modifier = Modifier.padding(Dimens.PanelPadding),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
             ) {
                 LoginFormFields(
@@ -240,27 +300,27 @@ private fun LoginFormFields(
 
     Text(
         text = stringResource(R.string.login_title),
-        style = MaterialTheme.typography.titleLarge,
+        style = AuthHeadingStyle,
         color = MaterialTheme.colorScheme.onSurface,
     )
 
-    OutlinedTextField(
+    JellyfinTextField(
         value = state.username,
         onValueChange = onUsernameChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = !state.isSigningIn,
-        label = { Text(text = stringResource(R.string.login_username_label)) },
+        label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
     )
 
-    OutlinedTextField(
+    JellyfinTextField(
         value = state.password,
         onValueChange = onPasswordChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = !state.isSigningIn,
-        label = { Text(text = stringResource(R.string.login_password_label)) },
+        label = { Text(text = stringResource(R.string.login_password_label).uppercase()) },
         visualTransformation =
             if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions =
@@ -286,54 +346,57 @@ private fun LoginFormFields(
         },
     )
 
-    Button(
+    // PrimaryPillButton's fixed (text, leadingIcon) content leaves no slot for the inline spinner
+    // the old M3 `Button` drew while `isSigningIn`; `enabled` already goes false for that state
+    // (`canSignIn`), and the pill's disabled style is the feedback now — see the 2026-refresh
+    // report for feature/auth.
+    PrimaryPillButton(
+        text = stringResource(R.string.login_sign_in),
         onClick = {
             keyboardController?.hide()
             onSignIn()
         },
         modifier = Modifier.fillMaxWidth(),
         enabled = state.canSignIn,
-    ) {
-        if (state.isSigningIn) {
-            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-            Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
-        }
-        Text(text = stringResource(R.string.login_sign_in))
-    }
+    )
 
     state.error?.let { error -> AuthErrorBlock(message = error) }
 
     if (state.quickConnectEnabled) {
         OrDivider()
-        OutlinedButton(
+        GhostPillButton(
+            text = stringResource(R.string.login_quick_connect),
             onClick = onStartQuickConnect,
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isSigningIn,
-        ) {
-            Text(text = stringResource(R.string.login_quick_connect))
-        }
+        )
     }
 
     TextButton(onClick = onChangeServer, modifier = Modifier.fillMaxWidth()) {
-        Text(text = stringResource(R.string.login_change_server))
+        Text(
+            text = stringResource(R.string.login_change_server),
+            style = ChangeServerLinkStyle,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
-/** `——— or ———`: a centred label with a hairline fading out to each side. */
+/** `——— OR ———`: a centred label with a hairline fading out to each side. */
 @Composable
 private fun OrDivider() {
+    val outline = MaterialTheme.colorScheme.outline
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        HorizontalDivider(modifier = Modifier.weight(1f))
+        HorizontalDivider(modifier = Modifier.weight(1f), color = outline)
         Text(
-            text = stringResource(R.string.login_or),
-            style = MaterialTheme.typography.bodySmall,
+            text = stringResource(R.string.login_or).uppercase(),
+            style = OrDividerTextStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        HorizontalDivider(modifier = Modifier.weight(1f))
+        HorizontalDivider(modifier = Modifier.weight(1f), color = outline)
     }
 }
 
@@ -349,9 +412,9 @@ private fun PublicUsersRow(
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         Text(
-            text = stringResource(R.string.login_public_users_title),
+            text = stringResource(R.string.login_public_users_title).uppercase(),
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.titleMedium,
+            style = WhosWatchingStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -378,8 +441,8 @@ private fun PublicUsersRow(
 /**
  * One of the server's public users, in a ringed circle above their name.
  *
- * [selected] lights the ring up with the accent gradient and the name in full white; unselected
- * users get a neutral outline ring and muted name.
+ * [selected] lights the ring up solid primary and shows the name in full white; unselected users
+ * get a faint neutral ring and a muted name.
  *
  * [avatarUrl] carries the profile picture the server advertises; it is `null` for users who have
  * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
@@ -392,8 +455,12 @@ private fun PublicUserAvatar(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val ringBrush =
-        if (selected) JellyfinGradients.Accent else SolidColor(MaterialTheme.colorScheme.surfaceVariant)
+    val ringColor =
+        if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            Color.White.copy(alpha = AVATAR_RING_UNSELECTED_ALPHA)
+        }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -409,7 +476,7 @@ private fun PublicUserAvatar(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .border(width = AvatarRingWidth, brush = ringBrush, shape = CircleShape)
+                        .border(width = AvatarRingWidth, color = ringColor, shape = CircleShape)
                         .padding(AvatarRingWidth + AvatarRingGap)
                         .clip(CircleShape),
                 contentAlignment = Alignment.Center,
@@ -437,7 +504,7 @@ private fun PublicUserAvatar(
         }
         Text(
             text = user.name,
-            style = MaterialTheme.typography.labelLarge,
+            style = AvatarNameStyle,
             color =
                 if (selected) {
                     MaterialTheme.colorScheme.onSurface
@@ -455,12 +522,21 @@ private fun QuickConnectDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier =
+            Modifier.border(
+                width = GlassDefaults.HairlineWidth,
+                color = GlassDefaults.PanelHairline,
+                shape = MaterialTheme.shapes.extraLarge,
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.login_quick_connect_cancel))
             }
         },
-        title = { Text(text = stringResource(R.string.login_quick_connect_title)) },
+        title = {
+            Text(text = stringResource(R.string.login_quick_connect_title), style = QuickConnectTitleStyle)
+        },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -469,23 +545,21 @@ private fun QuickConnectDialog(
             ) {
                 Text(
                     text = stringResource(R.string.login_quick_connect_instructions),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = QuickConnectInstructionStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                Text(
-                    text = state.code,
-                    style =
-                        MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 8.sp,
-                            brush = JellyfinGradients.Accent,
-                        ),
-                )
+                QuickConnectCodeRow(code = state.code)
                 if (state.isWaiting) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = Color.White.copy(alpha = 0.14f),
+                        )
                         Text(
                             text = stringResource(R.string.login_quick_connect_waiting),
                             style = MaterialTheme.typography.bodySmall,
@@ -495,4 +569,98 @@ private fun QuickConnectDialog(
             }
         },
     )
+}
+
+/**
+ * The Quick Connect code, one digit box per character — [code] is a plain string rather than a
+ * fixed-length type, so this sizes itself to whatever length the server hands back instead of
+ * assuming six.
+ */
+@Composable
+private fun QuickConnectCodeRow(code: String) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(QuickConnectDigitGap),
+    ) {
+        code.forEach { digit -> QuickConnectDigitBox(digit) }
+    }
+}
+
+@Composable
+private fun QuickConnectDigitBox(digit: Char) {
+    val shape = RoundedCornerShape(Dimens.CardCornerRadius)
+    Box(
+        modifier =
+            Modifier
+                .size(width = QuickConnectDigitWidth, height = QuickConnectDigitHeight)
+                .background(color = QuickConnectDigitFill, shape = shape)
+                .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.Hairline, shape = shape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = digit.toString(), style = QuickConnectDigitStyle, color = Color.White)
+    }
+}
+
+private val PreviewPublicUsers =
+    listOf(
+        PublicUserInfo(id = UUID.randomUUID(), name = "claude", primaryImageTag = null),
+        PublicUserInfo(id = UUID.randomUUID(), name = "casey", primaryImageTag = null),
+    )
+
+private val PreviewLoginState =
+    LoginUiState(
+        serverName = "Living Room",
+        serverVersion = "10.11.0",
+        isLoadingContext = false,
+        publicUsers = PreviewPublicUsers,
+        quickConnectEnabled = true,
+        username = "claude",
+    )
+
+@Preview(name = "Login — portrait", showBackground = true, backgroundColor = 0xFF101010, widthDp = 400, heightDp = 900)
+@Composable
+private fun LoginPortraitPreview() {
+    JellyfinTheme {
+        LoginContent(
+            state = PreviewLoginState,
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onPublicUserSelected = {},
+            onSignIn = {},
+            onStartQuickConnect = {},
+            onCancelQuickConnect = {},
+            onChangeServer = {},
+        )
+    }
+}
+
+@Preview(name = "Login — two-pane", showBackground = true, backgroundColor = 0xFF101010, widthDp = 1000, heightDp = 700)
+@Composable
+private fun LoginTwoPanePreview() {
+    JellyfinTheme {
+        LoginContent(
+            state = PreviewLoginState,
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onPublicUserSelected = {},
+            onSignIn = {},
+            onStartQuickConnect = {},
+            onCancelQuickConnect = {},
+            onChangeServer = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Quick Connect dialog",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 400,
+    heightDp = 500,
+)
+@Composable
+private fun QuickConnectDialogPreview() {
+    JellyfinTheme {
+        QuickConnectDialog(state = QuickConnectUiState(code = "482913"), onDismiss = {})
+    }
 }

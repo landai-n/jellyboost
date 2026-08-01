@@ -305,6 +305,27 @@ buttons branch on, so a bulk action can never act on something its own row refus
 
 ---
 
+## Screen scrolling: pinned chrome vs. one page
+
+The screen's chrome — title, storage/queue summary, tab row — is **pinned above an inner-scrolling
+list only when the window is both wide and tall** (`chromePinned(maxWidth, maxHeight)`: not
+`queueRowCompact`, *and* at least 480dp of height — the same figure as the width breakpoint, applied
+to the other axis). Tablets in either orientation are pinned and look exactly as they did.
+
+Everywhere else — every phone, portrait and landscape — the screen is **one `LazyColumn`**: the
+chrome is its leading item, followed by the compact bulk-action bar (queue tab only) and the
+selected tab's rows, so the whole page scrolls together. Height has to count because width alone
+does not: a landscape phone is wide enough for the tablet summary but only ~360dp tall, so pinning
+put the entire window under chrome and the queue could not be reached at all; in portrait it pinned
+about half the screen and scrolled a short list inside the rest.
+
+Both layouts emit their rows through the same `LazyListScope` extensions (`downloadedRows`,
+`queueRows`) and the same `DownloadsChrome` composable, so nothing about a row's or the header's
+appearance depends on which layout is in play; only the delete-confirmation state is hoisted to the
+screen (a `LazyListScope` extension cannot `remember`).
+
+---
+
 ## Delete cascade
 
 `DownloadRepository.delete` (the same call for *Cancel* in the queue and *Delete* in the list):

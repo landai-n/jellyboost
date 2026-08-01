@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Mit Server verbinden</string>
+    <string name="server_setup_tagline">Deine Jellyfin-Bibliothek, nativ auf Android.</string>
     <string name="server_setup_discovered_title">Server in diesem Netzwerk</string>
     <string name="server_setup_discovering">Lokales Netzwerk wird durchsucht …</string>
     <string name="server_setup_no_servers_found">Es haben sich keine Server gemeldet. Gib unten eine Adresse ein.</string>

@@ -2,6 +2,7 @@
 <resources>
     <string name="auth_app_name">Jellyboost</string>
     <string name="server_setup_title">Connecta amb el servidor</string>
+    <string name="server_setup_tagline">La teva biblioteca de Jellyfin, nativa a Android.</string>
     <string name="server_setup_discovered_title">Servidors en aquesta xarxa</string>
     <string name="server_setup_discovering">Cercant a la xarxa local…</string>
     <string name="server_setup_no_servers_found">Cap servidor no s\'ha anunciat. Introdueix una adreça a sota.</string>

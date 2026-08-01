@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">اتصال به سرور</string>
+    <string name="server_setup_tagline">کتابخانه Jellyfin شما، بومی روی Android.</string>
     <string name="server_setup_discovered_title">سرورهای این شبکه</string>
     <string name="server_setup_discovering">در حال جستجوی شبکه محلی…</string>
     <string name="server_setup_no_servers_found">هیچ سروری خود را اعلام نکرد. آدرسی را در زیر وارد کنید.</string>

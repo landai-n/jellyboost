@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Izveidot savienojumu ar serveri</string>
+    <string name="server_setup_tagline">Tava Jellyfin bibliotēka, natīva Android sistēmā.</string>
     <string name="server_setup_discovered_title">Serveri šajā tīklā</string>
     <string name="server_setup_discovering">Meklē vietējā tīklā…</string>
     <string name="server_setup_no_servers_found">Neviens serveris nepieteicās. Ievadiet adresi zemāk.</string>

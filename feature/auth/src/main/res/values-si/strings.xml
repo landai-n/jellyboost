@@ -2,6 +2,7 @@
 <resources>
     <string name="auth_app_name">Jellyboost</string>
     <string name="server_setup_title">සේවාදායකයට සම්බන්ධ වන්න</string>
+    <string name="server_setup_tagline">ඔබගේ Jellyfin පුස්තකාලය, Android හි ස්වදේශීය.</string>
     <string name="server_setup_discovered_title">මෙම ජාලයේ ඇති සේවාදායකයන්</string>
     <string name="server_setup_discovering">දේශීය ජාලය සොයමින්…</string>
     <string name="server_setup_no_servers_found">කිසිදු සේවාදායකයක් ප්‍රකාශයට පත් නොවීය. පහත ලිපිනයක් ඇතුළත් කරන්න.</string>

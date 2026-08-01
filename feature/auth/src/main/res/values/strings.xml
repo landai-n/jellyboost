@@ -2,7 +2,7 @@
 <resources>
     <!-- Shared -->
     <string name="auth_app_name">Jellyboost</string>
-    <string name="auth_logo_description">Jellyboost</string>
+    <string name="auth_logo_description" translatable="false">Jellyboost</string>
 
     <!-- Server setup -->
     <string name="server_setup_title">Connect to server</string>

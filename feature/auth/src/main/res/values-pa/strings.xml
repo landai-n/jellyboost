@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">ਸਰਵਰ ਨਾਲ ਜੁੜੋ</string>
+    <string name="server_setup_tagline">ਤੁਹਾਡੀ Jellyfin ਲਾਇਬ੍ਰੇਰੀ, Android ਉੱਤੇ ਨੇਟਿਵ।</string>
     <string name="server_setup_discovered_title">ਇਸ ਨੈੱਟਵਰਕ ਉੱਤੇ ਸਰਵਰ</string>
     <string name="server_setup_discovering">ਲੋਕਲ ਨੈੱਟਵਰਕ ਦੀ ਖੋਜ ਹੋ ਰਹੀ ਹੈ…</string>
     <string name="server_setup_no_servers_found">ਕੋਈ ਸਰਵਰ ਨਹੀਂ ਮਿਲਿਆ। ਹੇਠਾਂ ਇੱਕ ਪਤਾ ਦਰਜ ਕਰੋ।</string>

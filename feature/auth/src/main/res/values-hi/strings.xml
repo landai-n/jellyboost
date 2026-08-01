@@ -5,6 +5,7 @@
 
     <!-- Server setup -->
     <string name="server_setup_title">सर्वर से कनेक्ट करें</string>
+    <string name="server_setup_tagline">आपकी Jellyfin लाइब्रेरी, Android पर नेटिव।</string>
     <string name="server_setup_discovered_title">इस नेटवर्क पर सर्वर</string>
     <string name="server_setup_discovering">स्थानीय नेटवर्क खोजा जा रहा है…</string>
     <string name="server_setup_no_servers_found">कोई सर्वर नहीं मिला। नीचे एक पता दर्ज करें।</string>

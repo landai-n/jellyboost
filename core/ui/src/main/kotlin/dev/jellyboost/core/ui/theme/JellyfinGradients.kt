@@ -137,6 +137,38 @@ object JellyfinGradients {
                 )
         }
 
+    /**
+     * The colour a screen with no artwork of its own carries behind its header — the library grid's
+     * glow (2026-refresh mocks, "library screen glow").
+     *
+     * Ports `radial-gradient(80% 100% at 22% 0%, rgba(170,92,195,.17) 0%, transparent 76%)`. Fainter
+     * and further to the *start* than [HeroHalo], which sits over a backdrop and has to compete with
+     * it; this one is the only colour on the screen and would read as a wash at hero strength. Fill
+     * a box anchored to the top of the screen with it — the radius is width-derived, so the box must
+     * be at least about as tall as it is wide for the gradient to finish inside it.
+     */
+    val ScreenGlow: Brush =
+        object : ShaderBrush() {
+            /** Horizontal centre of the glow, as a fraction of the box width. */
+            private val centerXFraction = 0.22f
+
+            /** Radius as a fraction of the box width; the stops fade out at 76% of it. */
+            private val radiusFraction = 0.8f
+
+            override fun createShader(size: Size): Shader =
+                RadialGradientShader(
+                    center = Offset(x = size.width * centerXFraction, y = 0f),
+                    radius = size.width * radiusFraction,
+                    colors =
+                        listOf(
+                            JellyfinColors.Secondary.copy(alpha = 0.17f),
+                            Color.Transparent,
+                        ),
+                    colorStops = listOf(0f, 0.76f),
+                    tileMode = TileMode.Clamp,
+                )
+        }
+
     /** Placeholder fill for artwork that has not loaded (or does not exist on the server). */
     val ImagePlaceholder: Brush =
         Brush.linearGradient(

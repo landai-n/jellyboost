@@ -17,6 +17,17 @@
     <string name="media_row_see_all">See all</string>
     <string name="media_card_watched">Watched</string>
 
+    <!--
+      How many items a library (or a filtered library grid) holds. One resource rather than one per
+      feature: the library tiles on Home and on the Libraries tab and the library grid's header all
+      label the same number, and three copies are three chances for the wording to drift.
+    -->
+    <!-- 2026-refresh: pending localization -->
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+
     <!-- Loading / empty / error states -->
     <!-- 2026-refresh: pending localization -->
     <string name="state_retry">Retry</string>

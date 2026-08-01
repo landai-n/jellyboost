@@ -76,6 +76,21 @@ top-level screens to consume in their `contentPadding`. The four tab screens are
 minimally — full restyles are Phase 4. Gate green (ktlint, detekt, 1904 unit tests,
 `assembleDebug`); not yet device-walked.
 
+**Phase 4b (library) landed** on branch `design-refresh-library`: `LibraryGridScreen` lost
+its `TopAppBar` for a status-bar-padded glass header (back + home glass circles, library
+name in `ScreenTitle`, "N items" underneath, sort as a glass circle on compact and as a
+labelled control at the end of the chip row at 600dp+) over a new
+`JellyfinGradients.ScreenGlow`; the filter badge became an inline `PillChip` row (*All*,
+*Unwatched*/*Watched*, one chip per applied genre/year, *Filters* → the unchanged sheet);
+grid cards gained the community-rating badge. `LibrariesScreen` tiles now carry the
+library's item count under a scrolling "Libraries" title, and Home's *My Media* tiles the
+same. Data: `ItemQuery.includeTotalCount` + `ItemPage` let the paged grid's **first** load
+ask for the server's total record count (one COUNT per scroll, not per page) and report it
+through `getItemsPaged(query, onTotalCount)`; `LibraryView.childCount` comes from
+`getUserViews` and stays null offline (no Room column, no migration). Sixth DECISIONS entry
+of the refresh logged for that count. +14 unit tests (paging source 6, library ViewModel 7,
+item mapper 1).
+
 Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
 elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
 filled fields, card overlays, glass selection bar) → 3 chrome (GlassBottomNav pill

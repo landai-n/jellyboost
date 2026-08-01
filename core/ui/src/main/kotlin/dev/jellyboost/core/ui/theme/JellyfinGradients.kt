@@ -42,15 +42,21 @@ object JellyfinGradients {
      * branded header being the first user.
      *
      * It is a [ShaderBrush] rather than a plain `Brush.radialGradient` because the glow has to be
-     * anchored near the top edge of whatever box it fills and reach past the far corner; both
-     * depend on the measured size, which only a shader brush gets to see.
+     * anchored near the top edge of whatever box it fills and fade out *exactly at the box's
+     * bottom edge* — a radius derived from anything but the measured height leaves the gradient
+     * still visible where the box ends, which reads as a hard seam across the background (seen on
+     * the tablet in landscape, where the width-driven radius dwarfed the box height).
      */
     val BrandGlow: Brush =
         object : ShaderBrush() {
-            override fun createShader(size: Size): Shader =
-                RadialGradientShader(
-                    center = Offset(x = size.width / 2f, y = size.height * 0.08f),
-                    radius = size.maxDimension * 0.85f,
+            /** How far down the box the glow's centre sits, as a fraction of its height. */
+            private val centerYFraction = 0.08f
+
+            override fun createShader(size: Size): Shader {
+                val centerY = size.height * centerYFraction
+                return RadialGradientShader(
+                    center = Offset(x = size.width / 2f, y = centerY),
+                    radius = size.height - centerY,
                     colors =
                         listOf(
                             JellyfinColors.Secondary.copy(alpha = 0.20f),
@@ -60,6 +66,7 @@ object JellyfinGradients {
                     colorStops = listOf(0f, 0.45f, 1f),
                     tileMode = TileMode.Clamp,
                 )
+            }
         }
 
     /** Placeholder fill for artwork that has not loaded (or does not exist on the server). */

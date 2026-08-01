@@ -126,59 +126,66 @@ private fun LoginContent(
     val keyboardController = LocalSoftwareKeyboardController.current
     var passwordVisible by remember { mutableStateOf(false) }
 
-    AuthScreenScaffold(modifier = modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
-            JellyboostLogo(
-                size = InlineLogoSize,
-                contentDescription = stringResource(R.string.auth_logo_description),
-            )
-            Text(
-                text = state.serverName,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Text(
-                text =
-                    state.serverVersion
-                        ?.let { version -> stringResource(R.string.login_server_version, version) }
-                        ?: stringResource(R.string.login_server_version_unknown),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        if (state.isLoadingContext) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            Text(
-                text = stringResource(R.string.login_loading),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        state.loginDisclaimer?.let { disclaimer ->
-            Surface(
+    AuthScreenScaffold(
+        header = {
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceVariant,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
             ) {
+                JellyboostLogo(
+                    size = InlineLogoSize,
+                    contentDescription = stringResource(R.string.auth_logo_description),
+                )
                 Text(
-                    text = disclaimer,
-                    modifier = Modifier.padding(Dimens.SpaceLarge),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = state.serverName,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text =
+                        state.serverVersion
+                            ?.let { version -> stringResource(R.string.login_server_version, version) }
+                            ?: stringResource(R.string.login_server_version_unknown),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        }
 
-        if (state.publicUsers.isNotEmpty()) {
-            PublicUsersRow(
-                users = state.publicUsers,
-                avatarUrlFor = state::avatarUrlFor,
-                onUserSelected = onPublicUserSelected,
-            )
-        }
+            if (state.isLoadingContext) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = stringResource(R.string.login_loading),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
+            state.loginDisclaimer?.let { disclaimer ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                ) {
+                    Text(
+                        text = disclaimer,
+                        modifier = Modifier.padding(Dimens.SpaceLarge),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (state.publicUsers.isNotEmpty()) {
+                PublicUsersRow(
+                    users = state.publicUsers,
+                    avatarUrlFor = state::avatarUrlFor,
+                    onUserSelected = onPublicUserSelected,
+                )
+            }
+        },
+        modifier = modifier,
+    ) {
         Text(
             text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.titleSmall,

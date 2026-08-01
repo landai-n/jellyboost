@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.FilterOptions
+import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.SortBy
 import dev.jellyboost.core.common.model.SortOrder
@@ -123,8 +124,9 @@ class LibraryViewModel
             _uiState
                 .map { it.toQuery(libraryId) }
                 .distinctUntilChanged()
-                .flatMapLatest { repository.getItemsPaged(it) }
-                .cachedIn(viewModelScope)
+                .flatMapLatest { query ->
+                    repository.getItemsPaged(query) { total -> publishTotalCount(query, total) }
+                }.cachedIn(viewModelScope)
                 .combine(downloadStates) { paging, states ->
                     paging.map { item ->
                         val next = states[item.id] ?: DownloadState.NotDownloaded
@@ -140,6 +142,23 @@ class LibraryViewModel
                         }
                     }
                 }
+
+        /**
+         * Records the total the grid's first page came back with — the header's "N items".
+         *
+         * Stamped with the query it was counted for, and dropped when that is no longer the query
+         * on screen: a `Pager` that was swapped out mid-load can still deliver its count afterwards,
+         * and labelling the *new* filters with the *old* library's total is worse than showing
+         * nothing. See [LibraryUiState.totalCount].
+         */
+        private fun publishTotalCount(
+            query: ItemQuery,
+            total: Int,
+        ) {
+            _uiState.update { state ->
+                if (state.toQuery(libraryId) == query) state.copy(totalCount = total) else state
+            }
+        }
 
         init {
             observeConnectivityChanges()
@@ -248,10 +267,12 @@ class LibraryViewModel
         /** Commits the sheet's edits onto the grid, which re-queries the server. */
         fun applyFilters() {
             dropSelection()
-            _uiState.update { it.copy(filters = it.draftFilters, isFilterSheetOpen = false) }
+            _uiState.update {
+                it.copy(filters = it.draftFilters, isFilterSheetOpen = false, totalCount = null)
+            }
         }
 
-        /** Drops every filter, from the sheet or from the empty state. */
+        /** Drops every filter, from the sheet, from a chip, or from the empty state. */
         fun clearFilters() {
             dropSelection()
             _uiState.update {
@@ -259,7 +280,25 @@ class LibraryViewModel
                     filters = FilterOptions(),
                     draftFilters = FilterOptions(),
                     isFilterSheetOpen = false,
+                    totalCount = null,
                 )
+            }
+        }
+
+        /**
+         * Flips one chip in the inline filter row.
+         *
+         * The row has no draft stage — a chip *is* the applied state, which is why it commits
+         * straight onto [LibraryUiState.filters] instead of going through the sheet's
+         * draft/[applyFilters] pair. The draft is kept in step all the same, so opening the sheet
+         * afterwards shows the chips' filters rather than reverting them, and the count is dropped
+         * because it belonged to the previous set of filters ([LibraryUiState.totalCount]).
+         */
+        fun toggleFilterChip(chip: LibraryFilterChip) {
+            dropSelection()
+            _uiState.update { state ->
+                val next = state.filters.toggled(chip)
+                state.copy(filters = next, draftFilters = next, totalCount = null)
             }
         }
 

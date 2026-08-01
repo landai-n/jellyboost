@@ -47,9 +47,11 @@ internal fun ItemQuery.toGetItemsRequest(
         enableImageTypes = imageTypes,
         imageTypeLimit = 1,
         enableUserData = true,
-        // Placeholders are off in the grid's PagingConfig, so nothing on screen needs the total —
-        // and computing it costs the server an extra COUNT on every single page.
-        enableTotalRecordCount = false,
+        // Off unless the caller explicitly asked: placeholders are off in the grid's PagingConfig,
+        // so nothing on screen needs a per-page total — and computing it costs the server an extra
+        // COUNT on every single page. The library grid's *first* page opts in, for the "N items"
+        // line in its header (DECISIONS.md 2026-08-01).
+        enableTotalRecordCount = includeTotalCount,
     )
 
 /** Maps a domain item type onto its SDK kind; `null` for kinds the server has no name for. */

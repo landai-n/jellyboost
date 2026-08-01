@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.map
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.FilterOptions
@@ -26,6 +27,7 @@ import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
+import dev.jellyboost.data.paging.ItemPage
 import dev.jellyboost.data.paging.ItemPagingSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -173,7 +175,15 @@ internal class OfflineJellyfinRepository
 
         // ---- library grid & search ---------------------------------------------------------
 
-        override fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>> =
+        /**
+         * @param onTotalCount never called: Room holds the *downloaded* items, so the only count
+         *   this source could report is the number of items on the device — which is not the
+         *   number of items in the library the header would be labelling (see [ItemPage]).
+         */
+        override fun getItemsPaged(
+            query: ItemQuery,
+            onTotalCount: (Int) -> Unit,
+        ): Flow<PagingData<JellyfinItem>> =
             Pager(
                 config =
                     PagingConfig(
@@ -185,8 +195,9 @@ internal class OfflineJellyfinRepository
                 // Room-generated `PagingSource`: the offset/limit contract is identical, and one
                 // paging implementation means one set of edge cases (see DECISIONS.md).
                 pagingSourceFactory = {
-                    ItemPagingSource(pageSize = ItemQuery.DEFAULT_PAGE_SIZE) { startIndex, limit ->
+                    ItemPagingSource(pageSize = ItemQuery.DEFAULT_PAGE_SIZE) { startIndex, limit, _ ->
                         getItems(query.copy(startIndex = startIndex, limit = limit))
+                            .map { ItemPage(items = it) }
                     }
                 },
             ).flow

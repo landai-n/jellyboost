@@ -7,13 +7,14 @@ done is a >500-item library that scrolls cleanly with **one network request per 
 
 | Class | Module | Responsibility |
 |---|---|---|
-| `LibraryGridScreen` | `:feature:library` | Scaffold, top bar (name, sort menu, filter action), grid |
+| `LibraryGridScreen` | `:feature:library` | Glass header (name, item count, back/home/sort), inline filter chips, grid |
 | `LibraryGridContent` | `:feature:library` | Stateless grid + Paging load states |
 | `LibrarySortMenu` | `:feature:library` | Sort key + direction dropdown |
 | `LibraryFilterSheet` | `:feature:library` | Genres / years / watched bottom sheet |
-| `LibraryViewModel` / `LibraryUiState` | `:feature:library` | Query building, sort, filters, facets |
+| `LibraryViewModel` / `LibraryUiState` | `:feature:library` | Query building, sort, filters, facets, item count |
+| `LibraryFilterChip` | `:feature:library` | The inline chips' mapping onto `FilterOptions` |
 | `JellyfinRepository.getItemsPaged` | `:data` | `Flow<PagingData<JellyfinItem>>` contract |
-| `ItemPagingSource` | `:data` | Offset/limit `PagingSource` over `getItems` |
+| `ItemPagingSource` / `ItemPage` | `:data` | Offset/limit `PagingSource` over `getItems`, plus the first page's total |
 | `ItemQuery.toGetItemsRequest` | `:data` (`mapper/QueryMapper.kt`) | Domain query → SDK request |
 | `FilterFacets` / `FilterOptions` / `ItemQuery` | `:core:common` | Domain models |
 | `PosterCard`, `LoadingState`/`ErrorState`/`EmptyState` | `:core:ui` | Cards and states |
@@ -22,7 +23,7 @@ done is a >500-item library that scrolls cleanly with **one network request per 
 
 | Call | Parameters |
 |---|---|
-| `itemsApi.getItems` | `parentId`, `includeItemTypes=[MOVIE, SERIES]`, `recursive=true`, `sortBy`, `sortOrder`, `genres`, `years`, `officialRatings`, `isPlayed`, `isFavorite`, `startIndex`, `limit=50`, `fields=[PRIMARY_IMAGE_ASPECT_RATIO]`, `enableImageTypes=[PRIMARY, BACKDROP, THUMB]`, `imageTypeLimit=1`, `enableUserData=true`, `enableTotalRecordCount=false` |
+| `itemsApi.getItems` | `parentId`, `includeItemTypes=[MOVIE, SERIES]`, `recursive=true`, `sortBy`, `sortOrder`, `genres`, `years`, `officialRatings`, `isPlayed`, `isFavorite`, `startIndex`, `limit=50`, `fields=[PRIMARY_IMAGE_ASPECT_RATIO]`, `enableImageTypes=[PRIMARY, BACKDROP, THUMB]`, `imageTypeLimit=1`, `enableUserData=true`, `enableTotalRecordCount` = **`true` on the grid's first page only**, `false` everywhere else |
 | `filterApi.getQueryFiltersLegacy` | `parentId`, `includeItemTypes` → genres, years, official ratings (see DECISIONS.md 2026-07-28) |
 
 ## Paging
@@ -35,8 +36,13 @@ done is a >500-item library that scrolls cleanly with **one network request per 
   than Paging's default 3×.
 - `prefetchDistance = 10` (Paging's default is the page size, which would queue page 2 the moment
   page 1 renders).
-- The end of the list is detected by a **short page** (`items.size < loadSize`), which is why the
-  request can leave `enableTotalRecordCount` off and save the server a COUNT per page.
+- The end of the list is detected by a **short page** (`items.size < loadSize`), so *appending*
+  never asks the server to count anything.
+- The **first** load of a source (`params is LoadParams.Refresh`) does ask, once, and reports the
+  answer through `getItemsPaged(query, onTotalCount)` → `LibraryUiState.totalCount` → the header's
+  "N items" (`ItemQuery.includeTotalCount`, DECISIONS.md 2026-08-01). A full scroll of a 520-item
+  library still costs exactly one COUNT. The offline grid reports none: Room holds the downloaded
+  items, not the library, so the header simply omits the line.
 - Placeholders are off, so the grid never draws empty cells.
 - `cachedIn(viewModelScope)` keeps loaded pages across configuration changes.
 
@@ -59,9 +65,23 @@ repeat or skip items across page boundaries. jellyfin-web has the same behaviour
 
 ## Filters
 
-The sheet edits a **draft** copy of `FilterOptions`; nothing is re-queried until the user applies
-it — a chip tap must not re-query a 500-item library. Facets are fetched once per screen, the first
-time the sheet opens (including when the server answers with nothing).
+Two surfaces, one model. The **sheet** edits a *draft* copy of `FilterOptions` and re-queries only
+when the user applies it; facets are fetched once per screen, the first time the sheet opens
+(including when the server answers with nothing).
+
+The **inline chip row** under the header is a set of shortcuts into that same `FilterOptions`, with
+no draft stage — a chip *is* the applied state (`LibraryViewModel.toggleFilterChip`):
+
+| Chip | Edit |
+|---|---|
+| *All* | clears every filter; selected when none is active |
+| *Unwatched* / *Watched* | `isPlayed = false` / `true`, exclusive, tapping again clears it |
+| one per applied genre / year | removes that genre or year |
+| *Filters* | opens the sheet, which remains the full editor |
+
+Facets the user has **not** applied are deliberately absent from the row: they only exist once the
+sheet has been opened, and a row that grew a dozen genres after an unrelated interaction would read
+as a bug. The old filter-count badge is gone — the applied filters are legible instead.
 
 Errors are surfaced inside the sheet with a retry, never as a full-screen error over loaded items.
 
@@ -80,14 +100,24 @@ Paging failures travel as `AppErrorException` (`:core:common`) so the screen can
 
 ## Layout
 
-`LazyVerticalGrid(GridCells.Adaptive(120.dp))` — two columns of ~160dp on a 360dp phone
-(device-verified in the 2026-07-31 phone-size sweep), five or more on the tablet, with no separate
-layout. Cells pass `Dp.Unspecified` to `PosterCard` so cards fill their column without per-cell
-subcomposition (the earlier per-cell `BoxWithConstraints` was removed in the cleanup wave).
+`LazyVerticalGrid(GridCells.Adaptive(Dimens.PosterWidth))` with 20dp side padding, a 16dp gutter and
+20dp between rows — two columns on a 360dp phone, four in tablet portrait, seven in tablet
+landscape, with no separate layout. Cells pass `Dp.Unspecified` to `PosterCard` so cards fill their
+column without per-cell subcomposition (the earlier per-cell `BoxWithConstraints` was removed in the
+cleanup wave). Each card carries the item's community rating as its bottom-left badge alongside the
+watched tick, download badge and inset progress.
+
+The header and the chip row sit above the grid; one `BoxWithConstraints` for the whole screen picks
+the two things that change at 600dp+ — the title grows to `ScreenTitleLarge`, and sort moves out of
+the header into the end of the chip row as a labelled control. A faint `JellyfinGradients.ScreenGlow`
+is drawn behind both.
 
 The *Libraries* tab (`LibrariesScreen`) is the screen with a width branch: its adaptive floor is
-`Dimens.ThumbWidth` (210dp) at 600dp+ but 150dp below that, because a 210dp floor folds to a
-single full-width column on a phone (see `librariesMinCellWidth` and DECISIONS 2026-07-31).
+`Dimens.ThumbWidth` at 600dp+ but 150dp below that, because the tablet floor folds to a single
+full-width column on a phone (see `librariesMinCellWidth` and DECISIONS 2026-07-31). Its tiles are
+`LibraryCard`s subtitled with the library's `childCount` ("412 items", shared plural
+`core.ui:library_item_count`, hidden when the count is unknown — e.g. offline), under a scrolling
+`ScreenTitle` header.
 
 ## Navigation
 
@@ -98,11 +128,13 @@ under the property names `libraryId` / `libraryName`.
 `LibraryGridScreen(viewModel, onItemClick, onBack, onHome, modifier)` — the ViewModel is passed in
 so `:app` owns the `hiltViewModel()` call, as it does for home.
 
-The top bar's `navigationIcon` slot holds **both** navigation affordances — Back and Home — rather
-than just Back, because a pushed destination hides the app bar's tabs and this grid is the entry to
+The header holds **both** navigation affordances — Back and Home, as two glass circles — rather than
+just Back, because a pushed destination hides the app's chrome entirely and this grid is the entry to
 detail chains that can get many entries deep. `onHome` is `AppScaffold.navigateHome`; see
 docs/features/item-detail.md, "Getting out of the chain", for why it navigates rather than pops.
-`actions` stays reserved for sort and filter.
+
+The screen is a pushed destination, so `LocalAppChromePadding` is zero and it insets itself: the
+header pads against the status bar, the grid's `contentPadding` clears the navigation bar.
 
 ## Batch selection
 
@@ -110,8 +142,8 @@ Long-press a poster to select it, then act on the whole set — see
 [`docs/features/batch-selection.md`](batch-selection.md) for the full behaviour. Grid-specific
 points:
 
-- the contextual bar **replaces** this screen's `TopAppBar`, so Sort and Filter are gone while a
-  selection is open — which is the point: they re-query the grid;
+- the floating glass `SelectionAppBar` **replaces** the header *and* the chip row, so sort and the
+  filters are gone while a selection is open — which is the point: they re-query the grid;
 - there is **no *Select all*** on a paged grid ("all" would mean either "the pages loaded so far" or
   a page-by-page walk of the library);
 - the selection is **cleared whenever the query changes** — sort applied, filters applied or

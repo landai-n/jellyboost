@@ -287,6 +287,8 @@ class DelegatingJellyfinRepositoryTest {
             String::class -> "id"
             List::class -> listOf(ItemType.MOVIE)
             ItemQuery::class -> ItemQuery()
+            // `getItemsPaged`'s total-count callback: erased to Function1 through reflection.
+            Function1::class -> { _: Any? -> }
             else -> error("No sample value for $type — add one so this member is really exercised")
         }
 
@@ -295,31 +297,31 @@ class DelegatingJellyfinRepositoryTest {
     @Test
     fun `the paged grid reads the server while online`() =
         runTest {
-            every { online.getItemsPaged(any()) } returns flowOf(PagingData.from(fromServer))
-            every { offline.getItemsPaged(any()) } returns flowOf(PagingData.from(fromCache))
+            every { online.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromServer))
+            every { offline.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromCache))
 
             repository.getItemsPaged(ItemQuery()).first()
 
-            verify(exactly = 1) { online.getItemsPaged(any()) }
-            verify(exactly = 0) { offline.getItemsPaged(any()) }
+            verify(exactly = 1) { online.getItemsPaged(any(), any()) }
+            verify(exactly = 0) { offline.getItemsPaged(any(), any()) }
         }
 
     @Test
     fun `the paged grid swaps to downloaded items when the connection drops mid-scroll`() =
         runTest {
-            every { online.getItemsPaged(any()) } returns flowOf(PagingData.from(fromServer))
-            every { offline.getItemsPaged(any()) } returns flowOf(PagingData.from(fromCache))
+            every { online.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromServer))
+            every { offline.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromCache))
 
             // The grid's source is re-chosen on every connection change, so a subscription started
             // online keeps working — against Room — once the network goes away.
             repository.getItemsPaged(ItemQuery()).test {
                 awaitItem()
-                verify(exactly = 1) { online.getItemsPaged(any()) }
+                verify(exactly = 1) { online.getItemsPaged(any(), any()) }
 
                 state.value = ConnectionState.OFFLINE_NO_NETWORK
 
                 awaitItem()
-                verify(exactly = 1) { offline.getItemsPaged(any()) }
+                verify(exactly = 1) { offline.getItemsPaged(any(), any()) }
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -327,7 +329,7 @@ class DelegatingJellyfinRepositoryTest {
     @Test
     fun `the paged grid is not rebuilt for a change between two offline reasons`() =
         runTest {
-            every { offline.getItemsPaged(any()) } returns flowOf(PagingData.from(fromCache))
+            every { offline.getItemsPaged(any(), any()) } returns flowOf(PagingData.from(fromCache))
             state.value = ConnectionState.OFFLINE_NO_NETWORK
 
             repository.getItemsPaged(ItemQuery()).test {
@@ -338,7 +340,7 @@ class DelegatingJellyfinRepositoryTest {
                 state.value = ConnectionState.OFFLINE_FORCED
 
                 expectNoEvents()
-                verify(exactly = 1) { offline.getItemsPaged(any()) }
+                verify(exactly = 1) { offline.getItemsPaged(any(), any()) }
                 cancelAndIgnoreRemainingEvents()
             }
         }

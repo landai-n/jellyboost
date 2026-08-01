@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +56,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The home screen: the app's landing destination, mirroring jellyfin-web's row order so a
@@ -270,11 +272,16 @@ private fun LazyListScope.librariesRow(
             key = LibraryView::id,
             contentType = CARD_LIBRARY,
         ) { library ->
-            // Counts stay unwired this phase — `subtitle` is left null, as on the Libraries tab.
             LibraryCard(
                 library = library,
                 onClick = { actions.onLibraryClick(library) },
                 width = cardWidth,
+                // Absent for a library rebuilt from the offline cache, which stores no count; the
+                // tile then draws its name alone (`LibraryView.childCount`).
+                subtitle =
+                    library.childCount?.let { count ->
+                        pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
+                    },
             )
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.outlined.Cast
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -50,9 +51,12 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupSheet
 import dev.jellyboost.player.syncplay.ui.SyncPlayQueueSheet
@@ -288,6 +292,11 @@ private fun QueueSheetHost(
  * otherwise indistinguishable from a stall: the video is frozen, the controls say paused, and the
  * user's next move would be to tap Play, which in a group only asks the server for something it is
  * already refusing to do.
+ *
+ * The panel is the refresh's *dark* glass rather than `Modifier.glassSurface`: this one floats over
+ * a video frame with no Haze backdrop behind it, where a 6%-white fill would leave white text on
+ * whatever the film happens to be showing. The scrim it already had stays, and takes the panel
+ * radius and the glass hairline.
  */
 @Composable
 private fun WaitingForGroupOverlay(
@@ -297,8 +306,12 @@ private fun WaitingForGroupOverlay(
     Column(
         modifier =
             modifier
-                .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.CardCornerRadius))
-                .padding(Dimens.SpaceExtraLarge),
+                .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.PanelRadius))
+                .border(
+                    width = GlassDefaults.HairlineWidth,
+                    color = GlassDefaults.Hairline,
+                    shape = RoundedCornerShape(Dimens.PanelRadius),
+                ).padding(Dimens.SpaceExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
@@ -321,9 +334,11 @@ private fun WaitingForGroupOverlay(
 /**
  * The "Skip intro" / "Skip outro" offer.
  *
- * A solid button rather than a subtle one: it appears for a bounded window, it is competing with
- * the film for attention, and every other client on the platform draws it the same way — a user who
- * has to look for it has already missed it.
+ * A glass pill since the 2026 refresh, where it had been a filled Material button: the white fill
+ * now belongs to the play/pause disc alone, and a second solid surface on the screen would compete
+ * with it. The pill keeps everything that made the offer findable — bottom-right, clear of the
+ * scrubber, a leading glyph and a word — and the appearance rules are untouched: it is composed only
+ * while `PlayerUiState.skippableSegment` holds, whatever the controls are doing.
  */
 @Composable
 private fun SkipSegmentButton(
@@ -331,19 +346,19 @@ private fun SkipSegmentButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Button(onClick = onClick, modifier = modifier) {
-        Icon(imageVector = Icons.Filled.SkipNext, contentDescription = null)
-        Text(
-            text =
-                stringResource(
-                    when (kind) {
-                        MediaSegmentKind.INTRO -> R.string.player_skip_intro
-                        MediaSegmentKind.OUTRO -> R.string.player_skip_outro
-                    },
-                ),
-            modifier = Modifier.padding(start = Dimens.SpaceExtraSmall),
-        )
-    }
+    GhostPillButton(
+        text =
+            stringResource(
+                when (kind) {
+                    MediaSegmentKind.INTRO -> R.string.player_skip_intro
+                    MediaSegmentKind.OUTRO -> R.string.player_skip_outro
+                },
+            ),
+        onClick = onClick,
+        modifier = modifier,
+        small = true,
+        leadingIcon = Icons.Filled.SkipNext,
+    )
 }
 
 /**
@@ -530,3 +545,46 @@ private val SKIP_BUTTON_BOTTOM_PADDING = 112.dp
 
 /** How long the controls linger after a tap while something is playing. */
 private const val CONTROLS_TIMEOUT_MS = 4_000L
+
+/**
+ * The two things this file draws *over* the controls, at the positions the screen gives them.
+ *
+ * Not a preview of [PlayerScreen] itself: the screen owns a `PlayerView`, a `hiltViewModel()` and a
+ * window it puts into immersive landscape, none of which a preview can supply.
+ */
+@Preview(name = "Player overlays · phone landscape", widthDp = 800, heightDp = 360)
+@Composable
+private fun PlayerOverlaysPhoneLandscapePreview() {
+    PlayerOverlaysPreview()
+}
+
+@Preview(name = "Player overlays · tablet landscape", widthDp = 1138, heightDp = 640)
+@Composable
+private fun PlayerOverlaysTabletLandscapePreview() {
+    PlayerOverlaysPreview()
+}
+
+@Composable
+private fun PlayerOverlaysPreview() {
+    JellyfinTheme {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            WaitingForGroupOverlay(
+                syncPlay =
+                    PlayerSyncPlayState(
+                        inGroup = true,
+                        groupName = "Film night",
+                        participants = listOf("Alex", "Claude"),
+                    ),
+                modifier = Modifier.align(Alignment.Center),
+            )
+            SkipSegmentButton(
+                kind = MediaSegmentKind.INTRO,
+                onClick = {},
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING),
+            )
+        }
+    }
+}

@@ -3320,3 +3320,27 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** direct user request ("Add translation support across the app, translate into
   all the officially supported languages from jellyfin"); the jellyfin-android locale set
   is the closest definition of "officially supported" for an Android client.
+
+## 2026-08-01 — M12 cast: the profile caps AAC at stereo, device-measured
+- **Scope:** `player/src/main/kotlin/dev/jellyboost/player/deviceprofile/CastDeviceProfile.kt`,
+  `player/src/test/kotlin/dev/jellyboost/player/deviceprofile/CastDeviceProfileTest.kt`
+- **Plan said:** a static, conservative cast profile — H.264/AAC up to 1080p, HLS-`ts` — with no
+  audio-channel constraint anywhere; the milestone entry and `docs/notes/chromecast-m12-plan.md`
+  describe channel count only as a non-issue.
+- **Done instead:** capped AAC at 2 channels on both the transcode and direct play. The HLS video
+  `TranscodingProfile` now sets `maxAudioChannels = "2"` (the server puts
+  `TranscodingMaxAudioChannels=2` on the `TranscodingUrl`), and `CODEC_PROFILES` gained two `aac`
+  entries — one `CodecType.VIDEO_AUDIO`, one `CodecType.AUDIO` — each constraining
+  `ProfileConditionValue.AUDIO_CHANNELS` to `≤ 2`, so a direct-played video's audio track and a
+  direct-played audio-only file are held to the same ceiling as the transcode.
+- **Reason:** device-measured on a real Chromecast Ultra (2026-08-01), not assumed. The Default
+  Media Receiver (CC1AD845) rejects **any** AAC stream with more than 2 channels with CAF
+  `detailedErrorCode: 104` (`MEDIA_SRC_NOT_SUPPORTED`) — reproduced in both HLS-ts and progressive
+  mp4 (2×2 matrix of channels × container: both 2ch cells played, both 6ch cells failed), so the
+  container was never the variable. AC3/EAC3 5.1 passthrough also failed (`LOAD_FAILED`), and
+  HLS-fMP4 (`SegmentContainer=mp4`) does not work at all on this receiver at either channel count
+  (load accepted, no media session ever opens, no error) — it was ruled out as a workaround rather
+  than adopted. Stereo AAC is the only cell of that matrix that played consistently, so it becomes
+  the ceiling rather than a per-receiver guess. This trades 5.1 for playback on the Default Media
+  Receiver; a per-device-profile revisit (so a receiver that does accept 5.1 is not held to this
+  floor) is already deferred to M12 phase 2 alongside the existing 4K/HEVC/AC3 detection deferral.

@@ -15,13 +15,35 @@
     <string name="detail_add_favorite">Add to favourites</string>
     <string name="detail_remove_favorite">Remove from favourites</string>
 
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_play_target">Play %1$s</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_resume_target">Resume %1$s</string>
+
     <!-- Section titles -->
     <string name="detail_section_seasons">Seasons</string>
     <string name="detail_section_next_up">Next up</string>
     <string name="detail_section_episodes">Episodes</string>
     <string name="detail_section_similar">More like this</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_section_cast">Cast</string>
 
     <!-- Metadata -->
+    <!-- The item's kind, drawn as the title lockup's eyebrow (uppercased in code).
+         2026-refresh: pending localization -->
+    <string name="detail_type_movie">Movie</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_type_series">Series</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_type_season">Season</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_type_episode">Episode</string>
+    <!-- Season and episode numbers, as the Play button spaces them. 2026-refresh: pending localization -->
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <!-- 2026-refresh: pending localization -->
+    <string name="detail_episode_label_short">E%1$d</string>
+    <!-- Leads the episode card's number line, uppercased in code. 2026-refresh: pending localization -->
+    <string name="detail_episode_number">Episode %1$d</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min left</string>
     <string name="detail_size_on_device">%1$s on device</string>

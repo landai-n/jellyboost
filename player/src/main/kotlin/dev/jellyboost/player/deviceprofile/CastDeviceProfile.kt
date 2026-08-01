@@ -29,6 +29,17 @@ import org.jellyfin.sdk.model.api.TranscodingProfile
  * reliably, a wrong guess costs the user the film rather than some quality, and the quality picker
  * already gives back the control this costs.
  *
+ * Audio is capped at **stereo AAC**, and that cap is device-measured rather than a guess: on a real
+ * Chromecast Ultra (Default Media Receiver, CC1AD845) every stream whose audio was AAC with more
+ * than 2 channels failed with CAF `detailedErrorCode: 104` (`MEDIA_SRC_NOT_SUPPORTED`) — in HLS-ts
+ * *and* progressive mp4 alike, so the container was never the variable. AC3/EAC3 5.1 passthrough
+ * also failed (`LOAD_FAILED`), and HLS-fMP4 (`SegmentContainer=mp4`) does not work at all on this
+ * receiver at either channel count — it accepts the load but never opens a media session, so it is
+ * not a fallback worth adopting. Stereo AAC is the one combination that played in every cell of that
+ * matrix, which is why it is the ceiling here rather than a per-receiver detail: a per-device-profile
+ * revisit (so a receiver that *does* take 5.1 is not held to this floor) is deferred to M12 phase 2,
+ * same as the 4K/HEVC deferral above.
+ *
  * The whole object is a constant; [build] only stamps the quality picker's cap onto it.
  */
 object CastDeviceProfile {
@@ -105,12 +116,22 @@ object CastDeviceProfile {
             DirectPlayProfile(type = DlnaProfileType.AUDIO, container = "mp3", audioCodec = "mp3"),
         )
 
+    /** The one channel count the Default Media Receiver was measured to accept for AAC, anywhere. */
+    private const val MAX_AUDIO_CHANNELS = "2"
+
     /**
-     * The ceiling on a direct-played H.264 stream.
+     * The ceiling on a direct-played H.264 stream, plus the stereo cap on AAC wherever it turns up.
      *
-     * Without it "H.264 in mp4" would also claim High 10, 4:2:2 and 4K files, none of which a Cast
-     * receiver's baseline decoder touches — and the server, having been told they are fine, hands
-     * them over rather than transcoding.
+     * The `h264`/`mp4` entry: without it "H.264 in mp4" would also claim High 10, 4:2:2 and 4K
+     * files, none of which a Cast receiver's baseline decoder touches — and the server, having been
+     * told they are fine, hands them over rather than transcoding.
+     *
+     * The two `aac` entries exist because "direct play" has two shapes that both carry an AAC track
+     * past this profile's [DIRECT_PLAY_PROFILES] container/codec check unchallenged: a video's audio
+     * track (`VIDEO_AUDIO`) and an audio-only file (`AUDIO`). Device-measured on a real Chromecast
+     * Ultra: AAC with more than 2 channels fails with CAF error 104 in every container tried, so both
+     * shapes need the same [ProfileConditionValue.AUDIO_CHANNELS] cap or one of them quietly ships a
+     * file the receiver rejects.
      */
     private val CODEC_PROFILES =
         listOf(
@@ -135,6 +156,32 @@ object CastDeviceProfile {
                         condition(ProfileConditionType.LESS_THAN_EQUAL, ProfileConditionValue.HEIGHT, MAX_HEIGHT),
                     ),
             ),
+            CodecProfile(
+                type = CodecType.VIDEO_AUDIO,
+                codec = "aac",
+                applyConditions = emptyList(),
+                conditions =
+                    listOf(
+                        condition(
+                            ProfileConditionType.LESS_THAN_EQUAL,
+                            ProfileConditionValue.AUDIO_CHANNELS,
+                            MAX_AUDIO_CHANNELS,
+                        ),
+                    ),
+            ),
+            CodecProfile(
+                type = CodecType.AUDIO,
+                codec = "aac",
+                applyConditions = emptyList(),
+                conditions =
+                    listOf(
+                        condition(
+                            ProfileConditionType.LESS_THAN_EQUAL,
+                            ProfileConditionValue.AUDIO_CHANNELS,
+                            MAX_AUDIO_CHANNELS,
+                        ),
+                    ),
+            ),
         )
 
     /**
@@ -144,6 +191,10 @@ object CastDeviceProfile {
      * Framework's own player is what consumes this, and it decodes H.264 + AAC in MPEG-TS
      * everywhere. Verified against the dev server (2026-07-31): the returned `TranscodingUrl` is a
      * `master.m3u8` with `SegmentContainer=ts`.
+     *
+     * `maxAudioChannels = "2"` puts `TranscodingMaxAudioChannels=2` on that same `TranscodingUrl` —
+     * device-measured on a real Chromecast Ultra: without it the server was transcoding 5.1 sources
+     * to 5.1 AAC, which the receiver rejects with CAF error 104 (see the class doc).
      */
     private val TRANSCODING_PROFILES =
         listOf(
@@ -153,6 +204,7 @@ object CastDeviceProfile {
                 videoCodec = "h264",
                 audioCodec = "aac",
                 protocol = MediaStreamProtocol.HLS,
+                maxAudioChannels = MAX_AUDIO_CHANNELS,
                 conditions = emptyList(),
             ),
             TranscodingProfile(

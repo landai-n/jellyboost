@@ -289,6 +289,27 @@ GMS-less contract, test coverage), `docs/ARCHITECTURE.md` (the `cast/` package, 
 seam in the `:player` layout, and a Chromecast (M12) section). Two DECISIONS entries (2026-07-31)
 cover the metadata carry and the verified-not-assumed absence of a cast keep rule.
 
+### Interleaved fix — cast streaming failed on a real Chromecast Ultra (2026-08-01)
+
+Device-measured during DoD walk-up, reproduced on every item with surround audio: the receiver
+raised CAF `detailedErrorCode: 104` (`MEDIA_SRC_NOT_SUPPORTED`) roughly 1.5 s after `LOAD`, in HLS-ts
+and progressive mp4 alike. Root cause: `CastDeviceProfile` had no audio-channel constraint anywhere,
+so the server transcoded surround sources to 5.1 AAC (rejected) and would equally have direct-played
+an mp4 carrying an AAC 5.1 track. AC3/EAC3 5.1 passthrough was tried too and fails outright
+(`LOAD_FAILED`); HLS-fMP4 (`SegmentContainer=mp4`) was tried as a possible way out and is a dead
+end on this receiver — it accepts the `LOAD` but never opens a media session at either channel
+count, so it was ruled out rather than adopted. Fix: `TranscodingProfile.maxAudioChannels = "2"` on
+the HLS video profile, plus a `CodecProfile` stereo cap on AAC for both direct-play shapes
+(`CodecType.VIDEO_AUDIO`, `CodecType.AUDIO`). This trades surround for playback on the Default Media
+Receiver; a per-device-profile revisit is already deferred to M12 phase 2. `:player` gained 2 unit
+tests pinning the cap on the transcode and both direct-play codec profiles (DECISIONS.md
+2026-08-01). **Device re-verified same day on the Chromecast Ultra**: the same surround film
+(EAC3 5.1 mkv) now negotiates `TranscodingMaxAudioChannels=2`, the dashboard shows an
+aac-2ch transcode with video copied, the receiver reaches PLAYING and advances (checked
+past 80 s), pause from the phone round-trips (receiver PAUSED — the pre-fix "Invalid
+Request" symptom is gone), and ending the session fires the one final stop +
+`DELETE /Videos/ActiveEncodings` with zero sessions left on the dashboard.
+
 ### What remains to close M12
 
 Nothing in code. Three things, in this order:

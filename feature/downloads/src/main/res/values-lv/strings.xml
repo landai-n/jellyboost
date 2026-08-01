@@ -3,10 +3,23 @@
     <string name="downloads_tab_downloaded">Lejupielādēts</string>
     <string name="downloads_tab_queue">Rinda</string>
     <string name="downloads_wifi_only">Tikai Wi‑Fi</string>
+    <string name="downloads_screen_title">Lejupielādes</string>
 
     <string name="downloads_group_movies">Filmas</string>
 
     <string name="downloads_storage_summary">Izmantots %1$s · brīvs %2$s</string>
+    <string name="downloads_storage_free">%1$s brīvs</string>
+    <string name="downloads_stat_on_device">Šajā ierīcē</string>
+    <string name="downloads_stat_queue">Rinda</string>
+    <string name="downloads_stat_network">Tīkls</string>
+    <string name="downloads_stat_free_of">%1$s brīvs no %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="zero">%1$d vienumu · %2$s</item>
+        <item quantity="one">%1$d vienums · %2$s</item>
+        <item quantity="other">%1$d vienumi · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Atlicis aptuveni %1$s</string>
+    <string name="downloads_stat_network_helper">Automātiski tiek pauzēts, izmantojot mobilos datus</string>
 
     <string name="downloads_action_delete">Dzēst lejupielādi</string>
     <string name="downloads_action_cancel">Atcelt lejupielādi</string>

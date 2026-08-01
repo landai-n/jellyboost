@@ -1,6 +1,7 @@
 package dev.jellyboost.player.syncplay.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -46,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import java.util.UUID
@@ -77,6 +79,7 @@ internal fun SyncPlayQueueSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         QueueSheetContent(
             state = state,
@@ -218,8 +221,16 @@ private fun QueueRow(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
 ) {
+    // primary@12% (2026 refresh, Phase 5 sweep) — replaces `colorScheme.secondaryContainer` for
+    // consistency with the rest of the refresh's "primary is the one accent" language; see spec
+    // "Phase 5 sweep notes".
     val background =
-        if (row.isPlaying) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+        if (row.isPlaying) {
+            MaterialTheme.colorScheme.primary.copy(alpha = NOW_PLAYING_TINT_ALPHA)
+        } else {
+            Color.Transparent
+        }
+    val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
 
     Row(
         modifier =
@@ -239,7 +250,10 @@ private fun QueueRow(
                 Modifier
                     .width(ROW_THUMB_WIDTH)
                     .heightIn(max = ROW_THUMB_HEIGHT)
-                    .clip(RoundedCornerShape(Dimens.CardCornerRadius)),
+                    .clip(thumbShape)
+                    // The inner hairline every `MediaCardArtwork` draws on top of its image (spec,
+                    // "Artwork") — restyled container visuals only, per the sweep's own scope note.
+                    .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, thumbShape),
             contentScale = ContentScale.Crop,
         )
 
@@ -304,6 +318,9 @@ private const val LIST_MAX_HEIGHT_FRACTION = 0.6f
 
 private val ROW_THUMB_WIDTH = 96.dp
 private val ROW_THUMB_HEIGHT = 54.dp
+
+/** Now-playing row tint (spec, "Phase 5 sweep notes": "now-playing row tint → primary@12%"). */
+private const val NOW_PLAYING_TINT_ALPHA = 0.12f
 
 @Preview(name = "Queue sheet", showBackground = true, widthDp = 800)
 @Composable

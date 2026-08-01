@@ -6,6 +6,11 @@
     <string name="badge_download_failed">බාගත කිරීම අසාර්ථක විය</string>
     <string name="media_row_see_all">සියල්ල බලන්න</string>
     <string name="media_card_watched">නරඹා ඇත</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d අයිතමය</item>
+        <item quantity="other">%1$d අයිතම</item>
+    </plurals>
+    <string name="state_retry">යළි උත්සාහ කරන්න</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d ක් තෝරා ඇත</item>
         <item quantity="other">%1$d ක් තෝරා ඇත</item>

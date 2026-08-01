@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Oraindik ez dago liburutegirik. Gehitu bat zerbitzarian.</string>
+    <string name="libraries_title">Liburutegiak</string>
     <string name="library_back">Atzera</string>
     <string name="library_home">Hasiera</string>
     <string name="library_sort">Ordenatu</string>
     <string name="library_filter">Iragazi</string>
+    <string name="library_filter_all">Guztiak</string>
+    <string name="library_filter_more">Iragazkiak</string>
     <string name="library_sort_title">Ordenatu honen arabera</string>
     <string name="library_sort_name">Izena</string>
     <string name="library_sort_date_added">Gehitze data</string>

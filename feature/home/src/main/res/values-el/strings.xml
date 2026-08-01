@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Συνέχιση παρακολούθησης</string>
     <string name="home_section_next_up">Επόμενα</string>
     <string name="home_section_latest">Πιο πρόσφατα: %1$s</string>
+    <string name="home_hero_resume">Συνέχεια</string>
+    <string name="home_hero_play">Αναπαραγωγή</string>
+    <string name="home_hero_details">Λεπτομέρειες</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Απομένει %1$d λεπτό</item>
+        <item quantity="other">Απομένουν %1$d λεπτά</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dλ απομένουν</string>
+    <string name="home_quick_access_offline">Εκτός σύνδεσης</string>
 </resources>

@@ -2,12 +2,17 @@
 <resources>
     <!-- Libraries tab (integration) -->
     <string name="libraries_empty">No libraries yet. Add one on the server.</string>
+    <string name="libraries_title">Libraries</string>
 
-    <!-- Top bar -->
+    <!-- Header -->
     <string name="library_back">Back</string>
     <string name="library_home">Home</string>
     <string name="library_sort">Sort</string>
     <string name="library_filter">Filter</string>
+
+    <!-- Inline filter chips -->
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_more">Filters</string>
 
     <!-- Sort menu -->
     <string name="library_sort_title">Sort by</string>

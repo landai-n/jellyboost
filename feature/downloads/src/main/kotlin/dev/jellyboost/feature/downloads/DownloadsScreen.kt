@@ -1,37 +1,45 @@
 package dev.jellyboost.feature.downloads
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,21 +50,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
+import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.LoadingState
+import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 
@@ -72,12 +92,13 @@ import dev.jellyboost.data.downloads.model.StorageUsage
  * *Offline mode*: it is a download setting, this is the download screen, and the effect of flipping
  * it (the queue stopping or starting) is visible right underneath (DECISIONS.md 2026-07-28, "M7:
  * the Wi-Fi-only toggle lives in the Downloads top bar"). Since M9 this screen has no top bar of
- * its own — `:app`'s combined `AppTopBar` carries the navigation for every top-level destination —
- * so the toggle sits next to the storage header at the top of the content instead.
+ * its own — `:app`'s chrome carries the navigation for every top-level destination — so the toggle
+ * sits next to the storage header at the top of the content instead.
  *
  * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
- * WindowInsets(0)`: the frame above already reserved both the app bar and the system navigation
- * bar, and a second helping of the same insets would pad the list twice.
+ * WindowInsets(0)`: the app's chrome floats over this screen rather than shrinking it, and how much
+ * of the window it covers arrives through `LocalAppChromePadding` instead — consumed by the outer
+ * column, by both tabs' lists and by the snackbar host.
  *
  * @param onPlay play was requested for a finished download, at its resume position in Jellyfin
  *   ticks — the caller pushes `Routes.Player`, the same destination `:feature:detail`'s Play
@@ -112,7 +133,17 @@ fun DownloadsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            // Clear of the floating navigation pill, which this screen's own frame knows nothing
+            // about — the pill is drawn by `:app` over the top of this whole `Scaffold`. Restyled
+            // as `PillSnackbar` (2026 refresh) — the same glass pill `AppScaffold`'s own snackbar
+            // host draws, so a message from this screen and one from anywhere else in the app look
+            // identical.
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = LocalAppChromePadding.current.calculateBottomPadding()),
+            ) { data -> PillSnackbar(snackbarData = data) }
+        },
     ) { innerPadding ->
         DownloadsContent(
             state = state,
@@ -168,7 +199,16 @@ private fun queueBulkActions(viewModel: DownloadsViewModel) =
         onDismissCancelAll = viewModel::dismissCancelAll,
     )
 
-/** Stateless rendering — a pure function of [state], so it previews without a ViewModel. */
+/**
+ * Stateless rendering — a pure function of [state], so it previews without a ViewModel.
+ *
+ * `wide` (2026 refresh) is decided once here, in the one `BoxWithConstraints` the whole screen
+ * needs, as [queueRowCompact]'s complement — no second breakpoint invented for it (spec "4d
+ * Downloads"). It picks the storage card vs. the three-panel tablet summary, the tab row's
+ * flex-fill vs. content-hug segments, where the bulk-action pills live, and — handed down as
+ * `compact = !wide` — [QueueRow]'s own two-tier/one-tier split, so every one of those decisions
+ * agrees about which width class the screen is in.
+ */
 @Composable
 fun DownloadsContent(
     state: DownloadsUiState,
@@ -178,36 +218,82 @@ fun DownloadsContent(
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        StorageHeader(
-            usage = state.storage,
-            downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk },
-            wifiOnly = state.wifiOnly,
-            onWifiOnlyChange = onWifiOnlyChange,
-        )
+    // The chrome's TOP padding goes on the outer content: the header, storage/summary panel and tab
+    // row never scroll, so they are exactly what would sit under the top nav (or under the compact
+    // layout's floating action cluster) otherwise. The BOTTOM half stays with the two tabs' lists, so
+    // their rows still scroll under the floating nav pill.
+    BoxWithConstraints(
+        modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding()),
+    ) {
+        val wide = !queueRowCompact(maxWidth)
+        val downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk }
 
-        PrimaryTabRow(selectedTabIndex = state.selectedTab.ordinal) {
-            DownloadsTab.entries.forEach { tab ->
-                Tab(
-                    selected = state.selectedTab == tab,
-                    onClick = { actions.onSelectTab(tab) },
-                    text = { Text(text = stringResource(tab.titleRes())) },
+        Column(modifier = Modifier.fillMaxSize()) {
+            DownloadsHeader(wide = wide)
+
+            if (wide) {
+                WideSummary(
+                    storage = state.storage,
+                    downloadedBytes = downloadedBytes,
+                    queue = state.queue,
+                    queueStats = state.queueStats,
+                    wifiOnly = state.wifiOnly,
+                    onWifiOnlyChange = onWifiOnlyChange,
+                )
+            } else {
+                StorageCard(
+                    usage = state.storage,
+                    downloadedBytes = downloadedBytes,
+                    wifiOnly = state.wifiOnly,
+                    onWifiOnlyChange = onWifiOnlyChange,
                 )
             }
+
+            val showInlineBulkActions = wide && state.selectedTab == DownloadsTab.QUEUE && state.queue.isNotEmpty()
+            DownloadsTabRow(
+                selectedTab = state.selectedTab,
+                onSelectTab = actions.onSelectTab,
+                wide = wide,
+                trailing =
+                    if (showInlineBulkActions) {
+                        { QueueActionsBar(state = state, bulk = bulk, horizontalPadding = 0.dp) }
+                    } else {
+                        null
+                    },
+            )
+
+            when {
+                state.isLoading -> LoadingState()
+
+                // Ahead of the tabs: the projection both of them read is the thing that failed, so
+                // neither has anything trustworthy to draw.
+                state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
+
+                state.selectedTab == DownloadsTab.DOWNLOADED ->
+                    DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete, onPlay = onPlay)
+
+                else -> QueueTab(state = state, actions = actions, bulk = bulk, wide = wide)
+            }
         }
+    }
+}
 
-        when {
-            state.isLoading -> LoadingState()
-
-            // Ahead of the tabs: the projection both of them read is the thing that failed, so
-            // neither has anything trustworthy to draw.
-            state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
-
-            state.selectedTab == DownloadsTab.DOWNLOADED ->
-                DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete, onPlay = onPlay)
-
-            else -> QueueTab(state = state, actions = actions, bulk = bulk)
-        }
+/** The screen's own title row — a top-level tab, so unlike a pushed screen it draws no back button. */
+@Composable
+private fun DownloadsHeader(
+    wide: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.downloads_screen_title),
+            style = if (wide) JellyfinTypeExtras.ScreenTitleLarge else JellyfinTypeExtras.ScreenTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -228,7 +314,11 @@ private fun DownloadedTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
+        contentPadding =
+            PaddingValues(
+                top = Dimens.SpaceSmall,
+                bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
+            ),
     ) {
         groups.forEach { group ->
             // A film's heading would only repeat the title of the single row under it, so a lone
@@ -307,6 +397,7 @@ private fun QueueTab(
     state: DownloadsUiState,
     actions: DownloadsActions,
     bulk: QueueBulkActions,
+    wide: Boolean,
 ) {
     if (state.queue.isEmpty()) {
         // No bar either: with nothing queued there is nothing for any of the three to act on, and a
@@ -315,40 +406,42 @@ private fun QueueTab(
         return
     }
 
-    // One subcomposition for the whole tab, not one per row (the codebase's rule against per-cell
-    // `BoxWithConstraints` — see `LibraryGridScreen.kt`, `ItemDetailScreen.kt`): `compact` is
-    // decided here, once, and handed down to every `QueueRow`.
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val compact = queueRowCompact(maxWidth)
+    Column(modifier = Modifier.fillMaxSize()) {
+        // On wide layouts the same bar already sits inline in DownloadsTabRow, to the right of the
+        // segmented control (spec "4d Downloads") — drawing it a second time here would duplicate
+        // every button.
+        if (!wide) {
+            QueueActionsBar(state = state, bulk = bulk, modifier = Modifier.fillMaxWidth())
+        }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            QueueActionsBar(state = state, bulk = bulk)
-
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
-            ) {
-                items(items = state.queue, key = { it.itemId }) { item ->
-                    QueueRow(
-                        item = item,
-                        // The ratcheted fraction, falling back to the row's own only for an item the
-                        // ratchet has not seen yet (the very first frame after an enqueue).
-                        progress = state.progress[item.itemId] ?: item.progress,
-                        speedBytesPerSecond = state.speeds[item.itemId],
-                        actions = actions,
-                        compact = compact,
-                    )
-                }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding =
+                PaddingValues(
+                    top = Dimens.SpaceSmall,
+                    bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
+                ),
+        ) {
+            items(items = state.queue, key = { it.itemId }) { item ->
+                QueueRow(
+                    item = item,
+                    // The ratcheted fraction, falling back to the row's own only for an item the
+                    // ratchet has not seen yet (the very first frame after an enqueue).
+                    progress = state.progress[item.itemId] ?: item.progress,
+                    speedBytesPerSecond = state.speeds[item.itemId],
+                    actions = actions,
+                    compact = !wide,
+                )
             }
         }
+    }
 
-        if (state.showCancelAllConfirmation) {
-            CancelAllDialog(
-                count = state.queue.size,
-                onDismiss = bulk.onDismissCancelAll,
-                onConfirm = bulk.onConfirmCancelAll,
-            )
-        }
+    if (state.showCancelAllConfirmation) {
+        CancelAllDialog(
+            count = state.queue.size,
+            onDismiss = bulk.onDismissCancelAll,
+            onConfirm = bulk.onConfirmCancelAll,
+        )
     }
 }
 
@@ -360,6 +453,10 @@ private fun QueueTab(
  * the title/progress instead, so every action keeps its full 48dp touch target rather than
  * shrinking to fit. Tablet widths (≥600dp) are always well above this, so their layout is
  * unaffected.
+ *
+ * Also the screen's one and only wide/compact breakpoint (2026 refresh) — [DownloadsContent] reads
+ * its complement, `!queueRowCompact(maxWidth)`, to decide the storage card vs. the tablet stat
+ * summary and the tab row's shape, per spec "4d Downloads": "do NOT invent a new breakpoint."
  */
 private val COMPACT_MAX_WIDTH = 480.dp
 
@@ -367,13 +464,11 @@ private val COMPACT_MAX_WIDTH = 480.dp
 internal fun queueRowCompact(maxWidth: Dp): Boolean = maxWidth < COMPACT_MAX_WIDTH
 
 /**
- * The queue-wide actions, above the list.
+ * The queue-wide actions.
  *
- * Here rather than in the app's top bar: that bar is shared by every top-level destination and
- * carries navigation, while these three are about one tab of one screen and have to disappear with
- * it. Labels rather than bare icons — *Cancel all* empties the queue, and an unlabelled bin at the
- * top of a list is not a thing to leave to guesswork. A [FlowRow] because on a narrow phone three
- * labelled buttons wrap rather than clip (the same idiom the detail header's action row uses).
+ * Compact: [QueueTab] draws this as its own full-width row above the list. Wide: [DownloadsContent]
+ * draws it inline inside [DownloadsTabRow], trailing the segmented control, via [horizontalPadding]
+ * `= 0.dp` — the row that hosts it already carries the screen's side margin.
  *
  * *Pause all* and *Resume all* are disabled, not hidden, when they have nothing to act on: a queue
  * of transcodes has nothing pausable in it, and a button that vanishes as the queue changes shape
@@ -385,12 +480,10 @@ private fun QueueActionsBar(
     state: DownloadsUiState,
     bulk: QueueBulkActions,
     modifier: Modifier = Modifier,
+    horizontalPadding: Dp = Dimens.PanelPadding,
 ) {
     FlowRow(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.SpaceSmall, vertical = Dimens.SpaceExtraSmall),
+        modifier = modifier.padding(horizontal = horizontalPadding, vertical = Dimens.SpaceExtraSmall),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
@@ -399,12 +492,14 @@ private fun QueueActionsBar(
             labelRes = R.string.downloads_action_pause_all,
             enabled = state.canPauseAll,
             onClick = bulk.onPauseAll,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         QueueBulkButton(
             icon = Icons.Filled.PlayArrow,
             labelRes = R.string.downloads_action_resume_all,
             enabled = state.canResumeAll,
             onClick = bulk.onResumeAll,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         QueueBulkButton(
             icon = Icons.Filled.Delete,
@@ -417,25 +512,39 @@ private fun QueueActionsBar(
     }
 }
 
+/** A glass pill bulk-action button (spec "4d Downloads": "8×14dp pad, 12sp/500 icon 15dp"). */
 @Composable
 private fun QueueBulkButton(
     icon: ImageVector,
     @StringRes labelRes: Int,
     enabled: Boolean,
     onClick: () -> Unit,
-    contentColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color,
 ) {
-    TextButton(
-        onClick = onClick,
-        enabled = enabled,
-        colors = ButtonDefaults.textButtonColors(contentColor = contentColor),
+    val resolvedColor = if (enabled) contentColor else contentColor.copy(alpha = BULK_BUTTON_DISABLED_ALPHA)
+    Row(
+        modifier =
+            Modifier
+                .clip(CircleShape)
+                .glassSurface(CircleShape)
+                .clickable(enabled = enabled, onClick = onClick, role = Role.Button)
+                .padding(horizontal = BulkButtonHorizontalPadding, vertical = BulkButtonVerticalPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(ButtonDefaults.IconSize),
+            tint = resolvedColor,
+            modifier = Modifier.size(BulkButtonIconSize),
         )
-        Text(text = stringResource(labelRes), modifier = Modifier.padding(start = Dimens.SpaceSmall))
+        Text(
+            text = stringResource(labelRes),
+            style = BulkButtonLabel,
+            color = resolvedColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -499,8 +608,12 @@ private fun GroupHeader(
     }
 }
 
+/**
+ * The compact storage summary — an "m-surface panel" (spec "4d Downloads"): the used/free figures,
+ * a usage bar, and the Wi-Fi-only toggle. Replaced by [WideSummary] on a wide layout.
+ */
 @Composable
-private fun StorageHeader(
+private fun StorageCard(
     usage: StorageUsage,
     downloadedBytes: Long,
     wifiOnly: Boolean,
@@ -508,63 +621,327 @@ private fun StorageHeader(
     modifier: Modifier = Modifier,
 ) {
     val total = usage.usedBytes + usage.availableBytes
+    val usedBytes = maxOf(usage.usedBytes, downloadedBytes)
 
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceMedium),
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall)
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = Dimens.SpaceLarge, vertical = StatPanelVerticalPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Text(text = formatBytes(usedBytes), style = StatValue, color = MaterialTheme.colorScheme.onBackground)
+            Text(
+                text = stringResource(R.string.downloads_storage_free, formatBytes(usage.availableBytes)),
+                style = StatCaption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        UsageBar(fraction = usageFraction(usedBytes, total))
+        Row(
+            modifier =
+                Modifier
+                    .defaultMinSize(minHeight = 48.dp)
+                    .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text =
-                    stringResource(
-                        R.string.downloads_storage_summary,
-                        formatBytes(maxOf(usage.usedBytes, downloadedBytes)),
-                        formatBytes(usage.availableBytes),
-                    ),
-                style = MaterialTheme.typography.bodyMedium,
+                text = stringResource(R.string.downloads_wifi_only),
+                style = WifiLabelCompact,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f, fill = false),
             )
-            WifiOnlyToggle(enabled = wifiOnly, onChange = onWifiOnlyChange)
+            Switch(checked = wifiOnly, onCheckedChange = null)
         }
-        LinearProgressIndicator(
-            progress = { if (total <= 0L) 0f else (usage.usedBytes.toFloat() / total).coerceIn(0f, 1f) },
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            drawStopIndicator = {},
+    }
+}
+
+/**
+ * The wide-layout replacement for [StorageCard] (spec "4d Downloads"): three equal-weight
+ * "m-surface" stat panels — storage, the queue's own numbers, and the network toggle — rather than
+ * one strip. Introduced alongside [DownloadsUiState.queueStats] as this screen's one small pure
+ * derivation beyond a restyle (DECISIONS.md 2026-08-01, "Downloads restyle: a wide-layout queue
+ * summary"; also pre-approved as a "convenience display" in STATUS.md's design-refresh entry).
+ *
+ * The queue panel's own progress bar is *not* one of [QueueStats]' fields — it is derived here, the
+ * same way [StorageCard]'s bar is, from bytes [queue] already carries (`bytesDownloaded` against
+ * `bytesDownloaded + queueStats.remainingBytes`), so [QueueStats] stays exactly the fields the task
+ * asked for rather than growing a field only this one bar needs.
+ */
+@Composable
+private fun WideSummary(
+    storage: StorageUsage,
+    downloadedBytes: Long,
+    queue: List<DownloadItem>,
+    queueStats: QueueStats,
+    wifiOnly: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val queueDownloaded = queue.sumOf { it.bytesDownloaded }
+    val queueTotal = queueDownloaded + queueStats.remainingBytes
+
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+    ) {
+        OnDeviceStatPanel(storage = storage, downloadedBytes = downloadedBytes, modifier = Modifier.weight(1f))
+        QueueStatPanel(
+            stats = queueStats,
+            progress = usageFraction(queueDownloaded, queueTotal),
+            modifier = Modifier.weight(1f),
+        )
+        NetworkStatPanel(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange, modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun OnDeviceStatPanel(
+    storage: StorageUsage,
+    downloadedBytes: Long,
+    modifier: Modifier = Modifier,
+) {
+    val total = storage.usedBytes + storage.availableBytes
+    val usedBytes = maxOf(storage.usedBytes, downloadedBytes)
+
+    StatPanel(modifier = modifier) {
+        StatEyebrow(text = stringResource(R.string.downloads_stat_on_device))
+        Text(text = formatBytes(usedBytes), style = StatValue, color = MaterialTheme.colorScheme.onBackground)
+        UsageBar(fraction = usageFraction(usedBytes, total))
+        Text(
+            text =
+                stringResource(
+                    R.string.downloads_stat_free_of,
+                    formatBytes(storage.availableBytes),
+                    formatBytes(total),
+                ),
+            style = StatCaption,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
 @Composable
-private fun WifiOnlyToggle(
-    enabled: Boolean,
-    onChange: (Boolean) -> Unit,
+private fun QueueStatPanel(
+    stats: QueueStats,
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
+    StatPanel(modifier = modifier) {
+        StatEyebrow(text = stringResource(R.string.downloads_stat_queue))
+        Text(
+            text =
+                pluralStringResource(
+                    R.plurals.downloads_stat_queue_items,
+                    stats.itemCount,
+                    stats.itemCount,
+                    formatBytes(stats.remainingBytes),
+                ),
+            style = StatValueSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        UsageBar(fraction = progress)
+        // Hidden while idle: a speed/ETA line reading "0 B/s" would look like a stall rather than
+        // the truth, which is that nothing is asking the network for anything right now.
+        if (!stats.isIdle) {
+            val etaSeconds = stats.etaSeconds
+            Text(
+                text =
+                    listOfNotNull(
+                        stringResource(R.string.downloads_speed, formatBytes(stats.bytesPerSecond)),
+                        etaSeconds?.let {
+                            stringResource(R.string.downloads_stat_eta_about, formatDurationSeconds(it))
+                        },
+                    ).joinToString(" · "),
+                style = StatCaption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun NetworkStatPanel(
+    wifiOnly: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    StatPanel(modifier = modifier) {
+        StatEyebrow(text = stringResource(R.string.downloads_stat_network))
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 48.dp)
+                    .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.downloads_wifi_only),
+                style = StatSwitchLabel,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Switch(checked = wifiOnly, onCheckedChange = null)
+        }
+        // Shown only while the toggle is on — the moment cellular would actually pause anything.
+        if (wifiOnly) {
+            Text(
+                text = stringResource(R.string.downloads_stat_network_helper),
+                style = StatCaption,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** The "m-surface" wrapper every wide stat panel shares. */
+@Composable
+private fun StatPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier =
+            modifier
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = Dimens.SpaceLarge, vertical = StatPanelVerticalPadding),
+        verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
+        content = content,
+    )
+}
+
+@Composable
+private fun StatEyebrow(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = JellyfinTypeExtras.Eyebrow,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/** `used / total`, guarded against a not-yet-known total — shared by every bar on this screen. */
+private fun usageFraction(
+    used: Long,
+    total: Long,
+): Float = if (total <= 0L) 0f else (used.toFloat() / total).coerceIn(0f, 1f)
+
+/**
+ * The 6dp usage bar every stat panel on this screen draws (spec "4d Downloads": "track white@12%,
+ * primary fill, 3dp radius"). Hand-rolled rather than a stock `LinearProgressIndicator`, the same
+ * reasoning `core/ui`'s `MediaCardArtwork.InsetProgressBar` states for its own bar: at this height
+ * and radius nothing the stock component provides (stop indicator, gap, stroke-cap rounding)
+ * survives being configured away.
+ */
+@Composable
+private fun UsageBar(
+    fraction: Float,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(UsageBarRadius)
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(UsageBarHeight)
+                .clip(shape)
+                .background(UsageBarTrackColor),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                    .fillMaxHeight()
+                    .background(color = MaterialTheme.colorScheme.primary, shape = shape),
+        )
+    }
+}
+
+/**
+ * The Downloaded/Queue glass segmented control (spec "4d Downloads"): a pill container with 4dp
+ * inner padding, each segment a smaller pill that goes solid white when selected — the same shape
+ * `:app`'s `GlassTopNav` uses for its own tab bar, rebuilt here rather than shared across a
+ * `:feature` → `:app` dependency neither module has.
+ *
+ * @param wide compact flex-fills the container's segments across the full row width (20dp side
+ *   margins); wide instead lets the segments hug their own label width and, when [trailing] is
+ *   given, draws it after them on the same row.
+ */
+@Composable
+private fun DownloadsTabRow(
+    selectedTab: DownloadsTab,
+    onSelectTab: (DownloadsTab) -> Unit,
+    wide: Boolean,
+    trailing: (@Composable () -> Unit)?,
+    modifier: Modifier = Modifier,
 ) {
     Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
         verticalAlignment = Alignment.CenterVertically,
-        // The label and the switch are one control, but they must not touch: the same gap the
-        // settings rows put between a label and its switch (`SettingsRows.SettingsSwitchRow`).
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+    ) {
+        Row(
+            modifier =
+                (if (wide) Modifier else Modifier.weight(1f))
+                    .clip(CircleShape)
+                    .background(color = GlassDefaults.Fill, shape = CircleShape)
+                    .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
+                    .padding(SegmentedTabBarPadding),
+            horizontalArrangement = Arrangement.spacedBy(SegmentedTabGap),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            DownloadsTab.entries.forEach { tab ->
+                SegmentedTab(
+                    selected = tab == selectedTab,
+                    label = stringResource(tab.titleRes()),
+                    onClick = { onSelectTab(tab) },
+                    wide = wide,
+                    modifier = if (wide) Modifier else Modifier.weight(1f),
+                )
+            }
+        }
+
+        if (wide && trailing != null) {
+            Spacer(modifier = Modifier.width(Dimens.SpaceMedium))
+            trailing()
+        }
+    }
+}
+
+@Composable
+private fun SegmentedTab(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit,
+    wide: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val contentColor = if (selected) SegmentedSelectedContent else MaterialTheme.colorScheme.onSurfaceVariant
+    Box(
         modifier =
-            Modifier
-                .defaultMinSize(minHeight = 48.dp)
-                .toggleable(value = enabled, onValueChange = onChange, role = Role.Switch)
-                .padding(end = Dimens.SpaceSmall),
+            modifier
+                .height(Dimens.PillHeightSmall)
+                .clip(CircleShape)
+                .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+                .background(color = if (selected) Color.White else Color.Transparent, shape = CircleShape)
+                .padding(
+                    horizontal = if (wide) SegmentedTabHorizontalPaddingWide else SegmentedTabHorizontalPaddingCompact,
+                ),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.downloads_wifi_only),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = label,
+            style = SegmentedTabLabel,
+            color = contentColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        Switch(checked = enabled, onCheckedChange = null)
     }
 }
 
@@ -602,7 +979,31 @@ private fun downloadsMessageText(message: DownloadsMessage): String =
             )
     }
 
-@Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010)
+// ---- 2026 refresh geometry — local to this screen, not shared `Dimens` tokens -------------------
+
+private val StatPanelVerticalPadding = 18.dp
+private val StatPanelInnerGap = 6.dp
+private val UsageBarHeight = 6.dp
+private val UsageBarRadius = 3.dp
+private val UsageBarTrackColor = Color.White.copy(alpha = 0.12f)
+private val SegmentedTabBarPadding = 4.dp
+private val SegmentedTabGap = 2.dp
+private val SegmentedTabHorizontalPaddingCompact = 12.dp
+private val SegmentedTabHorizontalPaddingWide = 20.dp
+private val SegmentedSelectedContent = Color(0xFF101010)
+private val SegmentedTabLabel = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
+private val BulkButtonHorizontalPadding = 14.dp
+private val BulkButtonVerticalPadding = 8.dp
+private val BulkButtonIconSize = 15.dp
+private val BulkButtonLabel = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500)
+private const val BULK_BUTTON_DISABLED_ALPHA = 0.35f
+private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600)
+private val StatValueSmall = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
+private val StatSwitchLabel = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
+private val StatCaption = TextStyle(fontSize = 12.sp)
+private val WifiLabelCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
+
+@Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010, widthDp = 390)
 @Composable
 private fun DownloadsPreview() {
     QueuePreview()
@@ -626,7 +1027,24 @@ private fun DownloadsPreviewCompact() {
 }
 
 /**
- * Shared by both queue previews above. The title is long enough to visibly truncate at 360dp
+ * The wide layout (2026 refresh): the three-panel [WideSummary] in place of [StorageCard], the
+ * content-hug segmented tabs with the bulk-action pills inline, and [QueueRow]'s one-tier form.
+ * `widthDp = 900` is well past `COMPACT_MAX_WIDTH`, so [queueRowCompact] answers `false` here.
+ */
+@Preview(
+    name = "Downloads — queue (wide, 900dp)",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 900,
+    heightDp = 700,
+)
+@Composable
+private fun DownloadsPreviewWide() {
+    QueuePreview()
+}
+
+/**
+ * Shared by every queue preview above. The title is long enough to visibly truncate at 360dp
  * before the compact fix, and to show it fixed after — a short one like the tab bar's own
  * "Chestnut" example would not exercise the defect either way.
  */

@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">ނުބަލާ ކަމަށް ފާހަގަކުރޭ</string>
     <string name="detail_add_favorite">ފެވަރިޓަށް އިތުރުކުރޭ</string>
     <string name="detail_remove_favorite">ފެވަރިޓުން ނަގާ</string>
+    <string name="detail_play_target">%1$s ޕްލޭ</string>
+    <string name="detail_resume_target">%1$s ކުރިއަށް ގެންދޭ</string>
 
     <string name="detail_section_seasons">ސީޒަންތައް</string>
     <string name="detail_section_next_up">ދެން އޮތީ</string>
     <string name="detail_section_episodes">އެޕިސޯޑްތައް</string>
     <string name="detail_section_similar">މިކަހަލަ އިތުރު</string>
+    <string name="detail_section_cast">ކާސްޓް</string>
+    <string name="detail_type_movie">ފިލްމު</string>
+    <string name="detail_type_series">ސީރީޒް</string>
+    <string name="detail_type_season">ސީޒަން</string>
+    <string name="detail_type_episode">އެޕިސޯޑް</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">އެޕިސޯޑް %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d މިނިޓް</string>
     <string name="detail_remaining_minutes">%1$d މިނިޓް ބާކީ</string>

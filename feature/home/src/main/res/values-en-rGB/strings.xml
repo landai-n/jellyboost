@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">Continue Watching</string>
     <string name="home_section_next_up">Next Up</string>
     <string name="home_section_latest">Latest %1$s</string>
+    <string name="home_hero_resume">Resume</string>
+    <string name="home_hero_play">Play</string>
+    <string name="home_hero_details">Details</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minute left</item>
+        <item quantity="other">%1$d minutes left</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dm left</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

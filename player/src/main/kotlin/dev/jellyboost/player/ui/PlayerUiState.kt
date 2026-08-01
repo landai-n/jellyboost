@@ -125,6 +125,16 @@ data class PlayerUiState(
 }
 
 /**
+ * What joins the item's title and its episode line into [PlayerUiState.title], and what splits them
+ * apart again for the top bar's two-line lockup (`String.asTitleAndSubtitle`).
+ *
+ * One constant rather than two literals because the split only works if it is spelled exactly like
+ * the join: `PlayerViewModel.loadTitleAndArtwork` builds the label, `TitleStack` takes it apart, and
+ * a stray space between them would silently collapse the bar back to one line.
+ */
+internal const val PLAYER_LABEL_SEPARATOR = " · "
+
+/**
  * The receiver, as much of it as the player screen draws (M12 Phase 3).
  *
  * Derived from `CastStatusHolder.connection` by [PlayerCastBridge] and deliberately not the same

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">இதுவரை நூலகங்கள் இல்லை. சேவையகத்தில் ஒன்றைச் சேர்க்கவும்.</string>
+    <string name="libraries_title">நூலகங்கள்</string>
 
     <string name="library_back">பின்</string>
     <string name="library_home">முகப்பு</string>
     <string name="library_sort">வரிசைப்படுத்து</string>
     <string name="library_filter">வடிகட்டி</string>
+    <string name="library_filter_all">அனைத்தும்</string>
+    <string name="library_filter_more">வடிகட்டிகள்</string>
 
     <string name="library_sort_title">இதன் அடிப்படையில் வரிசைப்படுத்து</string>
     <string name="library_sort_name">பெயர்</string>

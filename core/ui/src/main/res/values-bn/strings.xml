@@ -6,6 +6,11 @@
     <string name="badge_download_failed">ডাউনলোড ব্যর্থ হয়েছে</string>
     <string name="media_row_see_all">সব দেখুন</string>
     <string name="media_card_watched">দেখা হয়েছে</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$dটি আইটেম</item>
+        <item quantity="other">%1$dটি আইটেম</item>
+    </plurals>
+    <string name="state_retry">আবার চেষ্টা করুন</string>
     <plurals name="selection_count">
         <item quantity="one">%1$dটি নির্বাচিত</item>
         <item quantity="other">%1$dটি নির্বাচিত</item>

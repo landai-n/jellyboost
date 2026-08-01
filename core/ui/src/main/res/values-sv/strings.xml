@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Se alla</string>
     <string name="media_card_watched">Sedd</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d objekt</item>
+        <item quantity="other">%1$d objekt</item>
+    </plurals>
+    <string name="state_retry">Försök igen</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d markerad</item>

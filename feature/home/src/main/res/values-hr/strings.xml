@@ -7,4 +7,14 @@
     <string name="home_section_continue_watching">Nastavi gledati</string>
     <string name="home_section_next_up">Sljedeće</string>
     <string name="home_section_latest">Najnovije: %1$s</string>
+    <string name="home_hero_resume">Nastavi</string>
+    <string name="home_hero_play">Reproduciraj</string>
+    <string name="home_hero_details">Detalji</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Preostalo %1$d minuta</item>
+        <item quantity="few">Preostalo %1$d minute</item>
+        <item quantity="other">Preostalo %1$d minuta</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin preostalo</string>
+    <string name="home_quick_access_offline">Izvanmrežno</string>
 </resources>

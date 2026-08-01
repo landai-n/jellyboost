@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Fortsätt titta</string>
     <string name="home_section_next_up">Näst på tur</string>
     <string name="home_section_latest">Senaste %1$s</string>
+    <string name="home_hero_resume">Återuppta</string>
+    <string name="home_hero_play">Spela upp</string>
+    <string name="home_hero_details">Detaljer</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minut kvar</item>
+        <item quantity="other">%1$d minuter kvar</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin kvar</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

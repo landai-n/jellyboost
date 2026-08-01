@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ਹਾਲੇ ਕੋਈ ਲਾਇਬ੍ਰੇਰੀ ਨਹੀਂ ਹੈ। ਸਰਵਰ ਉੱਤੇ ਇੱਕ ਸ਼ਾਮਲ ਕਰੋ।</string>
+    <string name="libraries_title">ਲਾਇਬ੍ਰੇਰੀਆਂ</string>
 
     <string name="library_back">ਪਿੱਛੇ</string>
     <string name="library_home">ਹੋਮ</string>
     <string name="library_sort">ਕ੍ਰਮਬੱਧ ਕਰੋ</string>
     <string name="library_filter">ਫਿਲਟਰ</string>
+    <string name="library_filter_all">ਸਾਰੇ</string>
+    <string name="library_filter_more">ਫਿਲਟਰ</string>
 
     <string name="library_sort_title">ਇਸ ਅਨੁਸਾਰ ਕ੍ਰਮਬੱਧ ਕਰੋ</string>
     <string name="library_sort_name">ਨਾਮ</string>

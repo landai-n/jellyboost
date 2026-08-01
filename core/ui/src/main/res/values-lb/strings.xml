@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Alles weisen</string>
     <string name="media_card_watched">Gekuckt</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d Element</item>
+        <item quantity="other">%1$d Elementer</item>
+    </plurals>
+    <string name="state_retry">Nach eng Kéier probéieren</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ausgewielt</item>

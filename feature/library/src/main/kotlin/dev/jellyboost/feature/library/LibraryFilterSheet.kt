@@ -5,25 +5,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.FilterOptions
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.PillChip
+import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 
@@ -46,6 +49,7 @@ internal fun LibraryFilterSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         when {
             state.facetsError != null ->
@@ -145,16 +149,11 @@ private fun FilterSheetContent(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = onClear) {
-                Text(text = stringResource(R.string.library_filters_clear))
-            }
-            Button(
-                onClick = onApply,
-                modifier = Modifier.padding(start = Dimens.SpaceSmall),
-            ) {
-                Text(text = stringResource(R.string.library_filters_apply))
-            }
+            GhostPillButton(text = stringResource(R.string.library_filters_clear), onClick = onClear, small = true)
+            Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
+            PrimaryPillButton(text = stringResource(R.string.library_filters_apply), onClick = onApply, small = true)
         }
     }
 }
@@ -183,7 +182,7 @@ private fun ToggleChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    FilterChip(selected = selected, onClick = onClick, label = { Text(text = label) })
+    PillChip(text = label, selected = selected, onClick = onClick)
 }
 
 /** Adds [value] if it is absent, removes it if it is present — chip toggling. */

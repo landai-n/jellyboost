@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Doğrudan oynatma</string>
     <string name="player_method_direct_stream">Doğrudan akış</string>
     <string name="player_method_transcode">Yeniden kodlama</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Cihazınız bu dosyayı çözemedi, bu yüzden sunucu onu yeniden kodluyor.</string>
     <string name="player_message_lower_quality">Akış takıldı — daha düşük kalitede yeniden deneniyor.</string>
     <string name="player_message_track_restart">Sunucu, o parça için akışı yeniden kodlamak zorunda kaldı.</string>

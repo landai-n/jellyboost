@@ -63,26 +63,108 @@ claude.ai/design ("Jellyboost Design System", updated 2026-08-01: new
 screen mocks + 10 rebuilt component cards). Pure UI restyle — no feature changes except
 user-approved convenience displays (home hero, card overlay metadata, library count
 tiles, detail cast rail, downloads tablet stats). Approved plan:
-`~/.claude/plans/integrate-the-modernized-design-hidden-bear.md`. Four DECISIONS
+`~/.claude/plans/integrate-the-modernized-design-hidden-bear.md`. Five DECISIONS
 entries logged 2026-08-01 (nav chrome reversal of M9, Haze dependency, white primary
-buttons, card-metric changes + `ItemDetailSizingTest` re-pins).
+buttons, card-metric changes + `ItemDetailSizingTest` re-pins, and the Phase-3 compact
+action cluster + `LocalAppChromePadding` contract).
+
+**Phase 4a (home) landed** on branch `design-refresh-home`: a full-bleed *Continue
+watching* hero (the promoted first resume card — it plays via the existing
+`Routes.Player` navigation, `Details` opens the item), quick-access glass chips
+replacing the *My Media* tile row on compact (libraries + an *Offline* chip onto the
+Downloads tab), episode badges and time chips on the resume/next-up thumbs, and the
+list consuming only the chrome's *bottom* padding while a hero is present so the banner
+runs under the status bar. Sixth DECISIONS entry logged. Gate green (ktlint, detekt,
+1966 unit tests, `assembleDebug`); not yet device-walked.
+
+**Phases 1–3 landed** on branch `design-refresh`. Phase 3 replaced `AppTopBar` with
+`GlassBottomNav` (<560dp) / `GlassTopNav` (≥560dp) + an `AppActionCluster` of floating
+glass buttons on compact; `AppScaffold` is now a `Box` whose chrome floats over a
+single `hazeSource` nav host and publishes `LocalAppChromePadding` (`core/ui`) for
+top-level screens to consume in their `contentPadding`. The four tab screens are wired
+minimally — full restyles are Phase 4. Gate green (ktlint, detekt, 1904 unit tests,
+`assembleDebug`); not yet device-walked.
+
+**Phase 4b (library) landed** on branch `design-refresh-library`: `LibraryGridScreen` lost
+its `TopAppBar` for a status-bar-padded glass header (back + home glass circles, library
+name in `ScreenTitle`, "N items" underneath, sort as a glass circle on compact and as a
+labelled control at the end of the chip row at 600dp+) over a new
+`JellyfinGradients.ScreenGlow`; the filter badge became an inline `PillChip` row (*All*,
+*Unwatched*/*Watched*, one chip per applied genre/year, *Filters* → the unchanged sheet);
+grid cards gained the community-rating badge. `LibrariesScreen` tiles now carry the
+library's item count under a scrolling "Libraries" title, and Home's *My Media* tiles the
+same. Data: `ItemQuery.includeTotalCount` + `ItemPage` let the paged grid's **first** load
+ask for the server's total record count (one COUNT per scroll, not per page) and report it
+through `getItemsPaged(query, onTotalCount)`; `LibraryView.childCount` comes from
+`getUserViews` and stays null offline (no Room column, no migration). Sixth DECISIONS entry
+of the refresh logged for that count. +14 unit tests (paging source 6, library ViewModel 7,
+item mapper 1).
+
+**Phase 4d (Downloads) landed** on branch `design-refresh-downloads`: header, m-surface
+storage card / m-surface `QueueRow` and `DownloadedRow` cards, a glass segmented
+Downloaded/Queue tab control, glass pill bulk-action buttons, and — on wide layouts
+(`!queueRowCompact`, no new breakpoint) — a three-panel tablet stat summary replacing
+the storage card, backed by a new `DownloadsUiState.queueStats` pure derivation
+(`QueueStats`: item count, remaining bytes, aggregate speed, ceiling-division ETA;
+DECISIONS.md 2026-08-01 "Downloads gets a wide-layout queue summary"). Every row
+action (incl. queue move-down, kept despite the mock dropping it) and both dialogs are
+unchanged. Gate green (ktlint, detekt, unit tests incl. new `DownloadsUiStateTest`,
+`assembleDebug`); `DownloadsScreenTest`/`DownloadRowsTest` pass untouched; not yet
+device-walked. Awaiting merge alongside the other Phase 4 sub-branches.
+
+**Phase 5 (unmocked-surfaces sweep) landed**: every surface the mocks did not render
+swept to the idiom Phases 1-4 already established. `Modifier.mSurface` hoisted from
+`:feature:downloads`'s private copy to `core/ui/theme/GlassDefaults.kt` (Downloads
+refactored onto the shared one); `JellyfinTextField` gained an additive `leadingIcon`
+param. Settings and SyncPlay Groups traded their `TopAppBar` for the `LibraryGridScreen`
+glass header (back + home, `ScreenTitle`; SyncPlay Groups keeps a trailing glass
+*Create* circle); Settings' section headings moved to `JellyfinTypeExtras.SectionTitle`
+(kept primary-coloured — the one open choice the spec left, decided for wayfinding on a
+scrolling list) and its sign-out button became a `GhostPillButton`. Search's field is now
+a `JellyfinTextField` with a leading search glyph. SyncPlay's group/queue rows became
+m-surface panels with pill actions, its now-playing tint moved to primary@12%
+(replacing `secondaryContainer`), and its repeat-mode picker uses `PillChip`. Every
+`AlertDialog` reached from a swept file (Settings' two dialogs, SyncPlay's create/leave
+dialogs, the player's audio/subtitle/quality/speed picker) got the Quick-Connect-dialog
+panel treatment (`containerColor = surface` + hairline border on `shapes.extraLarge`);
+`ModalBottomSheet`s and the library sort `DropdownMenu` gained an explicit surface
+container. The library filter sheet's chips became `PillChip` and its Clear/Apply row
+became pills. Three stray `SnackbarHost`s that had slipped through earlier phases
+without a `PillSnackbar` builder — `LibraryGridScreen`, `ItemDetailScreen`,
+`PlayerScreen` — now use it; no snackbar anywhere in the app still draws the stock M3
+shape, and there is no separate "offline banner" left to restyle (Phase 3 already folded
+it into the chrome status icon + snackbar). Zero navigation/state/string changes. Seventh
+DECISIONS entry of the refresh logged. Gate green (ktlint, detekt, unit tests,
+`assembleDebug`); not yet device-walked.
 
 Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
 elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
 filled fields, card overlays, glass selection bar) → 3 chrome (GlassBottomNav pill
 <560dp / GlassTopNav ≥560dp, Haze wiring, `LocalAppChromePadding`) → 4a–f screens
 (home/library/detail/downloads/player/auth) → 5 unmocked-surface sweep
-(settings/search/syncplay/sheets/dialogs) → 6 i18n (69 locales) → 7 design-mirror +
-docs sync. Deliberately ignored mock elements (no matching feature): in-library
-search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapter ticks.
-Kept despite mock omission: queue move-down, connection indicator + offline banner.
+(settings/search/syncplay/sheets/dialogs, landed) → 6 i18n (69 locales) → 7
+design-mirror + docs sync. Deliberately ignored mock elements (no matching feature):
+in-library search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapter
+ticks. Kept despite mock omission: queue move-down, connection indicator + offline
+banner (now a chrome icon + `PillSnackbar`, not a persistent banner).
+
+**WRAP (2026-08-01): all eight phases landed on `design-refresh`.** Theme/tokens
+(Haze 1.7.2, glass, elevation, type extras, 128/232/12dp card metrics), core components,
+glass chrome (bottom pill <560dp / top nav >=560dp + action cluster), all six screen
+restyles, unmocked-surface sweep, i18n (31 strings x 69 locales, validator clean), and the
+`design/` mirror rewritten code-faithful (22 cards + modern.css + surfaces.html + token
+sync). Gate green at every merge (~1948 unit tests). **Owed: the user's device walk**
+(chrome both widths, hero fallback, grid selection, detail lockups, queue reorder incl.
+move-down, buffered scrub, auth + Quick Connect, offline) and the DesignSync push of the
+mirror to the remote project.
 
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
 `getPublicUsers` and `JellyfinAsyncImage`; no DECISIONS entry needed). Merge `30e4a0f`:
 - Branded auth flow: new tight-viewport in-app logo vector
-  (`feature/auth/res/drawable/ic_jellyboost_logo.xml`, geometry from
+  (`core/ui/res/drawable/ic_jellyboost_logo.xml` — moved there from `feature/auth` in the
+  2026 refresh's Phase 3 so the wide nav bar can draw it too; geometry from
   `logo/ic_launcher_foreground.svg`), gradient wordmark + tagline hero on ServerSetup,
   `JellyfinGradients.BrandGlow` accent halo behind both screens' headers, discovered-server
   cards (gradient Dns badge + chevron), manual-address entry grouped into a panel,

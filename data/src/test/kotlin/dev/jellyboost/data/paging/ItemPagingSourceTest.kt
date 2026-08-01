@@ -8,6 +8,7 @@ import dev.jellyboost.core.common.AppErrorException
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -21,9 +22,19 @@ import org.junit.jupiter.api.Test
  * The M3 definition of done — a >500-item library scrolling cleanly with one request per page —
  * lives or dies on these offsets, so every boundary (first page, middle page, last short page,
  * empty library) is pinned here rather than left to a device scroll.
+ *
+ * The total-record-count block pins the other half of that promise since the 2026 refresh: the
+ * header's "N items" costs exactly one server-side count, on the source's first load, and never
+ * one per page (DECISIONS.md 2026-08-01).
  */
 class ItemPagingSourceTest {
     private val requestedRanges = mutableListOf<Pair<Int, Int>>()
+
+    /** Whether each load asked its source for the total record count, in load order. */
+    private val totalCountRequests = mutableListOf<Boolean>()
+
+    /** Every total the source reported to its owner. */
+    private val reportedTotals = mutableListOf<Int>()
 
     /** A 520-item library: 10 full pages of 50 plus a 20-item tail. */
     private val library = List(TOTAL_ITEMS) { index -> item(index) }
@@ -31,9 +42,19 @@ class ItemPagingSourceTest {
     private fun source(
         pageSize: Int = PAGE_SIZE,
         items: List<JellyfinItem> = library,
-    ) = ItemPagingSource(pageSize = pageSize) { startIndex, limit ->
+    ) = ItemPagingSource(
+        pageSize = pageSize,
+        onTotalCount = { reportedTotals += it },
+    ) { startIndex, limit, withTotalCount ->
         requestedRanges += startIndex to limit
-        AppResult.Success(items.drop(startIndex).take(limit))
+        totalCountRequests += withTotalCount
+        AppResult.Success(
+            ItemPage(
+                items = items.drop(startIndex).take(limit),
+                // What a server that was asked to count answers; `null` when it was not asked.
+                totalCount = items.size.takeIf { withTotalCount },
+            ),
+        )
     }
 
     // ---- first page -------------------------------------------------------------------------
@@ -56,6 +77,69 @@ class ItemPagingSourceTest {
             source().load(refresh(key = null))
 
             requestedRanges.size shouldBe 1
+        }
+
+    // ---- the total record count ---------------------------------------------------------------
+
+    @Test
+    fun `the first load asks for the total and reports it`() =
+        runTest {
+            source().load(refresh(key = null))
+
+            totalCountRequests shouldContainExactly listOf(true)
+            reportedTotals shouldContainExactly listOf(TOTAL_ITEMS)
+        }
+
+    @Test
+    fun `an anchored refresh still asks for the total, since it is the source's first load`() =
+        runTest {
+            source().load(refresh(key = 100))
+
+            totalCountRequests shouldContainExactly listOf(true)
+            reportedTotals shouldContainExactly listOf(TOTAL_ITEMS)
+        }
+
+    @Test
+    fun `appending a page never asks the server to count`() =
+        runTest {
+            source().load(append(key = PAGE_SIZE))
+
+            totalCountRequests shouldContainExactly listOf(false)
+            reportedTotals.shouldBeEmpty()
+        }
+
+    @Test
+    fun `walking the whole library costs exactly one count, on the first page`() =
+        runTest {
+            val source = source()
+            var key: Int? = null
+
+            do {
+                val page =
+                    source
+                        .load(if (key == null) refresh(null) else append(key))
+                        .shouldBeInstanceOf<PagingSource.LoadResult.Page<Int, JellyfinItem>>()
+                key = page.nextKey
+            } while (key != null)
+
+            totalCountRequests.count { it } shouldBe 1
+            reportedTotals shouldContainExactly listOf(TOTAL_ITEMS)
+        }
+
+    @Test
+    fun `a source whose loader reports no total says nothing`() =
+        runTest {
+            val countless =
+                ItemPagingSource(
+                    pageSize = PAGE_SIZE,
+                    onTotalCount = { reportedTotals += it },
+                ) { startIndex, limit, _ ->
+                    AppResult.Success(ItemPage(items = library.drop(startIndex).take(limit)))
+                }
+
+            countless.load(refresh(key = null))
+
+            reportedTotals.shouldBeEmpty()
         }
 
     // ---- middle page ------------------------------------------------------------------------
@@ -155,7 +239,7 @@ class ItemPagingSourceTest {
     fun `a repository failure becomes a paging error carrying the domain error`() =
         runTest {
             val failing =
-                ItemPagingSource(pageSize = PAGE_SIZE) { _, _ ->
+                ItemPagingSource(pageSize = PAGE_SIZE) { _, _, _ ->
                     AppResult.Failure(AppError.Network())
                 }
 
@@ -171,7 +255,7 @@ class ItemPagingSourceTest {
         runTest {
             var requestedStart = -1
             val failing =
-                ItemPagingSource(pageSize = PAGE_SIZE) { startIndex, _ ->
+                ItemPagingSource(pageSize = PAGE_SIZE) { startIndex, _, _ ->
                     requestedStart = startIndex
                     AppResult.Failure(AppError.Server(statusCode = 503))
                 }

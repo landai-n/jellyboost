@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">İzləməyə Davam Et</string>
     <string name="home_section_next_up">Növbəti</string>
     <string name="home_section_latest">Ən Son %1$s</string>
+    <string name="home_hero_resume">Davam et</string>
+    <string name="home_hero_play">Oynat</string>
+    <string name="home_hero_details">Ətraflı</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d dəqiqə qalıb</item>
+        <item quantity="other">%1$d dəqiqə qalıb</item>
+    </plurals>
+    <string name="home_time_left_short">%1$ddəq qalıb</string>
+    <string name="home_quick_access_offline">Oflayn</string>
 </resources>

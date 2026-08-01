@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Otseesitus</string>
     <string name="player_method_direct_stream">Otsevoog</string>
     <string name="player_method_transcode">Ümberkodeerimine</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Sinu seade ei suutnud seda faili dekodeerida, seega server kodeerib selle ümber.</string>
     <string name="player_message_lower_quality">Voog jäi kinni – proovitakse uuesti madalama kvaliteediga.</string>

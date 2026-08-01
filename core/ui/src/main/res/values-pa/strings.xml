@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">ਸਾਰੇ ਦੇਖੋ</string>
     <string name="media_card_watched">ਦੇਖਿਆ ਗਿਆ</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d ਆਈਟਮ</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ</item>
+    </plurals>
+    <string name="state_retry">ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ਚੁਣਿਆ ਗਿਆ</item>

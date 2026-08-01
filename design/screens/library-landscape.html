@@ -1,49 +1,175 @@
-<!-- @dsCard group="Screens" name="Library grid (landscape tablet)" subtitle="TopAppBar unchanged (no width branch); GridCells.Adaptive(120dp) settles at 7 cols x 128dp" -->
+<!-- @dsCard group="Screens" name="Library grid (landscape tablet)" subtitle="2026 refresh, wide (>=600dp) branch: same glass Back+Home header at the larger 30px title, sort moves out of the header into a worded control at the end of the chip row, GridCells.Adaptive(128dp) settles at 6 cols — search deferred, not built" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
-  .tablet { width:1000px; height:620px; margin:0 auto; overflow:hidden; position:relative; }
-  .topbar { height:56px; display:flex; align-items:center; padding:0 4px; gap:4px; background:#202020; }
-  .icon-btn { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
-  .icon-btn svg { width:22px; height:22px; fill:rgba(255,255,255,.85); }
-  .title { flex:1; font-size:22px; margin-left:4px; }
-  .badge-wrap { position:relative; }
-  .count-badge { position:absolute; top:2px; right:2px; min-width:16px; height:16px; border-radius:8px; background:#CF6679; color:#101010; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 3px; }
-  .grid { display:grid; grid-template-columns:repeat(7,128px); gap:12px 12px; padding:16px; }
-  .card { display:flex; flex-direction:column; }
-  .art { position:relative; width:128px; height:192px; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
-  .ttl { margin-top:8px; font-size:12px; line-height:16px; }
-  .sub { font-size:11px; color:rgba(255,255,255,.7); }
-  .progress-track { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(0,0,0,.5); }
-  .progress-fill { height:100%; background:#00A4DC; }
-  .badge { position:absolute; top:4px; right:4px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; }
-  .badge svg { width:14px; height:14px; }
-  .watched { position:absolute; top:4px; left:4px; }
-  .watched svg { width:14px; height:14px; fill:#00A4DC; }
-  .ring { width:14px; height:14px; border-radius:50%; border:2px solid #00A4DC; border-top-color:rgba(0,164,220,.25); }
+  body{margin:0;overflow-x:hidden}
+  .tablet{width:1000px;height:620px;margin:0 auto;position:relative;background:var(--background);overflow:hidden}
+  /* JellyfinGradients.ScreenGlow: radial-gradient(80% 100% at 22% 0%, secondary@17% -> transparent@76%) */
+  .glow{position:absolute;top:0;left:0;right:0;height:320px;z-index:0;pointer-events:none;
+    background:radial-gradient(80% 100% at 22% 0%,rgba(170,92,195,.17) 0%,rgba(0,0,0,0) 76%);}
+
+  /* LibraryHeader, isWide=true: identical structure to the compact layout, ScreenTitleLarge (30px)
+     instead of ScreenTitle (28px), and no Sort glass circle here — one screen shows one sort
+     affordance, and at this width it lives in the chip row instead. */
+  .header{position:relative;z-index:1;display:flex;align-items:center;gap:8px;padding:20px 20px 8px;box-sizing:border-box}
+  .titlewrap{flex:1;min-width:0;padding-left:4px}
+  .screen-title{font-size:30px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item-count{margin-top:2px;font-size:13px;line-height:17px;color:var(--on-surface-variant)}
+
+  /* LibraryFilterRow, isWide=true: LazyRow of PillChips (weight 1, scrollable) + SortLabelAction
+     hugging the row's end via the Row's remaining space — no second sort icon anywhere on this
+     layout. */
+  .chiprow{position:relative;z-index:1;display:flex;align-items:center;padding-bottom:12px;box-sizing:border-box}
+  .chip-scroll{flex:1;display:flex;gap:8px;overflow-x:auto;padding:0 20px;box-sizing:border-box;scrollbar-width:none}
+  .chip-scroll::-webkit-scrollbar{display:none}
+  .m-chip{flex:none;white-space:nowrap;cursor:pointer}
+  .sort-label{flex:none;display:flex;align-items:center;gap:6px;padding:8px 20px;white-space:nowrap;cursor:pointer}
+  .sort-label svg{width:16px;height:16px;fill:var(--on-surface-variant)}
+  .sort-label span{font-size:13px;font-weight:500;color:var(--on-surface-variant)}
+
+  /* ItemGrid: GridCells.Adaptive(Dimens.PosterWidth=128dp) over a 960dp content width (1000dp frame
+     minus 20dp+20dp HeaderPadding) settles at 6 columns per Compose's Adaptive formula
+     floor((avail+gap)/(minSize+gap)) = floor(976/144) = 6, cells ~147dp wide — inside the "6-7
+     columns" range, not the old mock's 7-of-120dp. */
+  .grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(6,1fr);column-gap:16px;row-gap:20px;padding:4px 20px 20px;box-sizing:border-box}
+
+  /* PosterCard / MediaCardArtwork, verbatim metrics */
+  .card{display:flex;flex-direction:column}
+  .art{position:relative;width:100%;aspect-ratio:2/3;border-radius:12px;overflow:hidden;background:var(--image-placeholder);box-shadow:var(--elev-card)}
+  .art::after{content:"";position:absolute;inset:0;border-radius:12px;border:1px solid rgba(255,255,255,.07);pointer-events:none}
+  .ttl{margin-top:10px;font-size:14px;font-weight:500;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{margin-top:2px;font-size:12px;line-height:16px;color:var(--on-surface-variant)}
+
+  /* Top-right stacked corner badges: DownloadBadge above WatchedIndicator, 8px inset, 4px gap */
+  .corner{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .dl-badge{width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+  .dl-badge svg{width:14px;height:14px;fill:var(--primary)}
+  .dl-ring{width:20px;height:20px;border-radius:50%;
+    background:conic-gradient(var(--primary) 0% var(--pct,43%),rgba(0,164,220,.25) var(--pct,43%) 100%);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 2px));}
+  .watched-badge{width:22px;height:22px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center}
+  .watched-badge svg{width:13px;height:13px;fill:#000}
+
+  /* Bottom-left rating badge: 10px star + 1-decimal score, 10px inset */
+  .rating{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.65)}
+  .rating svg{width:10px;height:10px;fill:var(--primary)}
+  .rating span{font-size:10px;font-weight:600;letter-spacing:.06em;color:#fff}
+
+  /* Inset resume-progress bar */
+  .progress-track{position:absolute;left:10px;right:10px;bottom:8px;height:3px;border-radius:2px;background:rgba(255,255,255,.22)}
+  .progress-fill{height:100%;border-radius:2px;background:var(--primary)}
 </style>
 <div class="tablet">
-  <div class="topbar">
-    <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
-    <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
-    <div class="title">Movies</div>
-    <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg></div>
-    <div class="icon-btn badge-wrap"><svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg><div class="count-badge">2</div></div>
+  <div class="glow"></div>
+
+  <div class="header">
+    <div class="m-icon-btn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+    <div class="m-icon-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+    <div class="titlewrap">
+      <div class="screen-title">Movies</div>
+      <div class="item-count">412 items</div>
+    </div>
   </div>
+
+  <div class="chiprow">
+    <div class="chip-scroll">
+      <div class="m-chip">All</div>
+      <div class="m-chip selected">Unwatched</div>
+      <div class="m-chip selected">Sci-Fi</div>
+      <div class="m-chip">2016</div>
+      <div class="m-chip">Filters</div>
+    </div>
+    <div class="sort-label"><svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg><span>Date added</span></div>
+  </div>
+
   <div class="grid">
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"><div class="progress-track"><div class="progress-fill" style="width:30%"></div></div></div><div class="ttl">Arrival</div><div class="sub">2016</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)"><div class="watched"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div></div><div class="ttl">Dune</div><div class="sub">2021</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f4a3a,#9a7a5f)"><div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3v6h2.5L12 15.5 7.5 11H10V5h3z" fill="#00A4DC"/></svg></div></div><div class="ttl">Blade Runner 2049</div><div class="sub">2017</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"><div class="badge"><div class="ring"></div></div></div><div class="ttl">Nope</div><div class="sub">2022</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f3a4a,#9a5f7a)"></div><div class="ttl">Prisoners</div><div class="sub">2013</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a5f5a,#6fa09a)"></div><div class="ttl">Annihilation</div><div class="sub">2018</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f3a3a,#9a6a5f)"></div><div class="ttl">Sicario</div><div class="sub">2015</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a3f5f,#6a70a0)"></div><div class="ttl">Oppenheimer</div><div class="sub">2023</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f5a3a,#a0996a)"></div><div class="ttl">The Batman</div><div class="sub">2022</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a5f4f,#6aa090)"></div><div class="ttl">Interstellar</div><div class="sub">2014</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#4a5f3a,#8aa06a)"></div><div class="ttl">1917</div><div class="sub">2019</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f3a5a,#a06a99)"></div><div class="ttl">Parasite</div><div class="sub">2019</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a4f5f,#6a90a0)"></div><div class="ttl">Tenet</div><div class="sub">2020</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#5f4f3a,#a0906a)"></div><div class="ttl">No Time to Die</div><div class="sub">2021</div></div>
-    <div class="card"><div class="art" style="background:linear-gradient(160deg,#3a5f3a,#6aa06a)"></div><div class="ttl">Everything Everywhere</div><div class="sub">2022</div></div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>7.9</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:30%"></div></div>
+      </div>
+      <div class="ttl">Arrival</div>
+      <div class="sub">2016</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)">
+        <div class="corner"><div class="watched-badge"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div></div>
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.0</span></div>
+      </div>
+      <div class="ttl">Dune</div>
+      <div class="sub">2021</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#5f4a3a,#9a7a5f)">
+        <div class="corner"><div class="dl-badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3v6h2.5L12 15.5 7.5 11H10V5h3z"/></svg></div></div>
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.0</span></div>
+      </div>
+      <div class="ttl">Blade Runner 2049</div>
+      <div class="sub">2017</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)">
+        <div class="corner"><div class="dl-badge"><div class="dl-ring" style="--pct:43%"></div></div></div>
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>6.8</span></div>
+      </div>
+      <div class="ttl">Nope</div>
+      <div class="sub">2022</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#5f3a4a,#9a5f7a)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.1</span></div>
+      </div>
+      <div class="ttl">Prisoners</div>
+      <div class="sub">2013</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#3a5f5a,#6fa09a)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>6.8</span></div>
+      </div>
+      <div class="ttl">Annihilation</div>
+      <div class="sub">2018</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#5f3a3a,#9a6a5f)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>7.6</span></div>
+      </div>
+      <div class="ttl">Sicario</div>
+      <div class="sub">2015</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#3a3f5f,#6a70a0)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.3</span></div>
+      </div>
+      <div class="ttl">Oppenheimer</div>
+      <div class="sub">2023</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#5f5a3a,#a0996a)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>7.8</span></div>
+      </div>
+      <div class="ttl">The Batman</div>
+      <div class="sub">2022</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#3a5f4f,#6aa090)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.7</span></div>
+      </div>
+      <div class="ttl">Interstellar</div>
+      <div class="sub">2014</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#4a5f3a,#8aa06a)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.2</span></div>
+      </div>
+      <div class="ttl">1917</div>
+      <div class="sub">2019</div>
+    </div>
+    <div class="card">
+      <div class="art" style="background:linear-gradient(160deg,#5f3a5a,#a06a99)">
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg><span>8.5</span></div>
+      </div>
+      <div class="ttl">Parasite</div>
+      <div class="sub">2019</div>
+    </div>
   </div>
 </div>

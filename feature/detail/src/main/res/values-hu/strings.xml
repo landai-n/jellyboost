@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Megjelölés nem nézettként</string>
     <string name="detail_add_favorite">Hozzáadás a kedvencekhez</string>
     <string name="detail_remove_favorite">Eltávolítás a kedvencek közül</string>
+    <string name="detail_play_target">%1$s lejátszása</string>
+    <string name="detail_resume_target">%1$s folytatása</string>
 
     <string name="detail_section_seasons">Évadok</string>
     <string name="detail_section_next_up">Következő</string>
     <string name="detail_section_episodes">Epizódok</string>
     <string name="detail_section_similar">Hasonlók</string>
+    <string name="detail_section_cast">Szereplők</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Sorozat</string>
+    <string name="detail_type_season">Évad</string>
+    <string name="detail_type_episode">Epizód</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">%1$d. epizód</string>
 
     <string name="detail_runtime_minutes">%1$d perc</string>
     <string name="detail_remaining_minutes">%1$d perc van hátra</string>

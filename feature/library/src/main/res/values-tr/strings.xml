@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Henüz kitaplık yok. Sunucuda bir tane ekleyin.</string>
+    <string name="libraries_title">Kitaplıklar</string>
     <string name="library_back">Geri</string>
     <string name="library_home">Ana Sayfa</string>
     <string name="library_sort">Sırala</string>
     <string name="library_filter">Filtrele</string>
+    <string name="library_filter_all">Tümü</string>
+    <string name="library_filter_more">Filtreler</string>
     <string name="library_sort_title">Sıralama ölçütü</string>
     <string name="library_sort_name">Ad</string>
     <string name="library_sort_date_added">Eklenme tarihi</string>

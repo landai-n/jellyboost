@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">އަދި ލައިބްރަރީއެއް ނެތް. ސަރވަރގައި އެއް އިތުރުކުރޭ.</string>
+    <string name="libraries_title">ލައިބްރަރީތައް</string>
 
     <string name="library_back">ފަހަތަށް</string>
     <string name="library_home">ހޯމް</string>
     <string name="library_sort">ސޯޓްކުރޭ</string>
     <string name="library_filter">ފިލްޓަރ</string>
+    <string name="library_filter_all">ހުރިހާ</string>
+    <string name="library_filter_more">ފިލްޓަރތައް</string>
 
     <string name="library_sort_title">ސޯޓްކުރާނީ</string>
     <string name="library_sort_name">ނަން</string>

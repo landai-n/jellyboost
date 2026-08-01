@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">अद्याप कोणतीही लायब्ररी नाही. सर्व्हरवर एक जोडा.</string>
+    <string name="libraries_title">लायब्ररी</string>
 
     <string name="library_back">मागे</string>
     <string name="library_home">मुख्यपृष्ठ</string>
     <string name="library_sort">क्रमवारी लावा</string>
     <string name="library_filter">फिल्टर</string>
+    <string name="library_filter_all">सर्व</string>
+    <string name="library_filter_more">फिल्टर्स</string>
 
     <string name="library_sort_title">यानुसार क्रमवारी लावा</string>
     <string name="library_sort_name">नाव</string>

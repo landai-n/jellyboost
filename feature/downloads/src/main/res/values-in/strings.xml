@@ -3,8 +3,19 @@
     <string name="downloads_tab_downloaded">Diunduh</string>
     <string name="downloads_tab_queue">Antrean</string>
     <string name="downloads_wifi_only">Hanya Wi‑Fi</string>
+    <string name="downloads_screen_title">Unduhan</string>
     <string name="downloads_group_movies">Film</string>
     <string name="downloads_storage_summary">%1$s digunakan · %2$s tersisa</string>
+    <string name="downloads_storage_free">%1$s tersisa</string>
+    <string name="downloads_stat_on_device">Di perangkat ini</string>
+    <string name="downloads_stat_queue">Antrean</string>
+    <string name="downloads_stat_network">Jaringan</string>
+    <string name="downloads_stat_free_of">%1$s tersisa dari %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="other">%1$d item · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">sekitar %1$s tersisa</string>
+    <string name="downloads_stat_network_helper">Dijeda otomatis saat menggunakan data seluler</string>
     <string name="downloads_action_delete">Hapus unduhan</string>
     <string name="downloads_action_cancel">Batalkan unduhan</string>
     <string name="downloads_action_pause">Jeda unduhan</string>

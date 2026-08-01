@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">No libraries yet. Add one on the server.</string>
+    <string name="libraries_title">Libraries</string>
     <string name="library_back">Back</string>
     <string name="library_home">Home</string>
     <string name="library_sort">Sort</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_more">Filters</string>
     <string name="library_sort_title">Sort by</string>
     <string name="library_sort_name">Name</string>
     <string name="library_sort_date_added">Date added</string>

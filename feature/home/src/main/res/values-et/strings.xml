@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Jätka vaatamist</string>
     <string name="home_section_next_up">Järgmisena</string>
     <string name="home_section_latest">Uusimad %1$s</string>
+    <string name="home_hero_resume">Jätka</string>
+    <string name="home_hero_play">Esita</string>
+    <string name="home_hero_details">Üksikasjad</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minut jäänud</item>
+        <item quantity="other">%1$d minutit jäänud</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin jäänud</string>
+    <string name="home_quick_access_offline">Võrguühenduseta</string>
 </resources>

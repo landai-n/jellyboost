@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Rekta ludado</string>
     <string name="player_method_direct_stream">Rekta fluo</string>
     <string name="player_method_transcode">Transkodado</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Via aparato ne povis malkodi ĉi tiun dosieron, do la servilo transkodas ĝin.</string>
     <string name="player_message_lower_quality">La fluo haltis — reprovante ĉe pli malalta kvalito.</string>
     <string name="player_message_track_restart">La servilo devis rekodi la fluon por tiu trako.</string>

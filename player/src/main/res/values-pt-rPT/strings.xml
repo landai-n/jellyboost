@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Reprodução direta</string>
     <string name="player_method_direct_stream">Fluxo direto</string>
     <string name="player_method_transcode">Transcodificação</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">O seu dispositivo não conseguiu descodificar este ficheiro, por isso o servidor está a transcodificá-lo.</string>
     <string name="player_message_lower_quality">A transmissão interrompeu-se — a tentar novamente com qualidade inferior.</string>
     <string name="player_message_track_restart">O servidor teve de recodificar o fluxo para essa faixa.</string>

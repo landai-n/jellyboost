@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Nedladdat</string>
     <string name="downloads_tab_queue">Kö</string>
     <string name="downloads_wifi_only">Endast Wi-Fi</string>
+    <string name="downloads_screen_title">Nedladdningar</string>
 
     <string name="downloads_group_movies">Filmer</string>
 
     <string name="downloads_storage_summary">%1$s använt · %2$s ledigt</string>
+    <string name="downloads_storage_free">%1$s ledigt</string>
+    <string name="downloads_stat_on_device">På den här enheten</string>
+    <string name="downloads_stat_queue">Kö</string>
+    <string name="downloads_stat_network">Nätverk</string>
+    <string name="downloads_stat_free_of">%1$s ledigt av %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d objekt · %2$s</item>
+        <item quantity="other">%1$d objekt · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">ungefär %1$s kvar</string>
+    <string name="downloads_stat_network_helper">Pausas automatiskt vid mobildata</string>
 
     <string name="downloads_action_delete">Ta bort nedladdning</string>
     <string name="downloads_action_cancel">Avbryt nedladdning</string>

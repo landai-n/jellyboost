@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Zatiaľ žiadne knižnice. Pridajte nejakú na serveri.</string>
+    <string name="libraries_title">Knižnice</string>
 
     <string name="library_back">Späť</string>
     <string name="library_home">Domov</string>
     <string name="library_sort">Zoradiť</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Všetko</string>
+    <string name="library_filter_more">Filtre</string>
 
     <string name="library_sort_title">Zoradiť podľa</string>
     <string name="library_sort_name">Názov</string>

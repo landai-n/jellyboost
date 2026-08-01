@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Hələ kitabxana yoxdur. Serverdə bir dənə əlavə edin.</string>
+    <string name="libraries_title">Kitabxanalar</string>
     <string name="library_back">Geri</string>
     <string name="library_home">Əsas səhifə</string>
     <string name="library_sort">Sırala</string>
     <string name="library_filter">Filtrlə</string>
+    <string name="library_filter_all">Hamısı</string>
+    <string name="library_filter_more">Filtrlər</string>
     <string name="library_sort_title">Sırala:</string>
     <string name="library_sort_name">Ad</string>
     <string name="library_sort_date_added">Əlavə edilmə tarixi</string>

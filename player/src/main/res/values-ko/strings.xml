@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">다이렉트 플레이</string>
     <string name="player_method_direct_stream">다이렉트 스트림</string>
     <string name="player_method_transcode">트랜스코딩</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">기기에서 이 파일을 디코딩할 수 없어 서버가 트랜스코딩하고 있습니다.</string>
     <string name="player_message_lower_quality">스트림이 멈췄습니다 — 더 낮은 화질로 다시 시도하는 중입니다.</string>

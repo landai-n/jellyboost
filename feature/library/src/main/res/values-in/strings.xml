@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Belum ada perpustakaan. Tambahkan satu di server.</string>
+    <string name="libraries_title">Perpustakaan</string>
     <string name="library_back">Kembali</string>
     <string name="library_home">Beranda</string>
     <string name="library_sort">Urutkan</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Semua</string>
+    <string name="library_filter_more">Filter</string>
     <string name="library_sort_title">Urutkan berdasarkan</string>
     <string name="library_sort_name">Nama</string>
     <string name="library_sort_date_added">Tanggal ditambahkan</string>

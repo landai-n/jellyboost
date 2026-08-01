@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Позначити непереглянутим</string>
     <string name="detail_add_favorite">Додати в обране</string>
     <string name="detail_remove_favorite">Видалити з обраного</string>
+    <string name="detail_play_target">Відтворити %1$s</string>
+    <string name="detail_resume_target">Продовжити %1$s</string>
 
     <string name="detail_section_seasons">Сезони</string>
     <string name="detail_section_next_up">Далі</string>
     <string name="detail_section_episodes">Епізоди</string>
     <string name="detail_section_similar">Схоже</string>
+    <string name="detail_section_cast">Акторський склад</string>
+    <string name="detail_type_movie">Фільм</string>
+    <string name="detail_type_series">Серіал</string>
+    <string name="detail_type_season">Сезон</string>
+    <string name="detail_type_episode">Епізод</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Епізод %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d хв</string>
     <string name="detail_remaining_minutes">Залишилось %1$d хв</string>

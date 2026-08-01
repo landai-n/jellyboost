@@ -3,8 +3,21 @@
     <string name="downloads_tab_downloaded">Descărcate</string>
     <string name="downloads_tab_queue">Coadă</string>
     <string name="downloads_wifi_only">Doar Wi‑Fi</string>
+    <string name="downloads_screen_title">Descărcări</string>
     <string name="downloads_group_movies">Filme</string>
     <string name="downloads_storage_summary">%1$s utilizați · %2$s liberi</string>
+    <string name="downloads_storage_free">%1$s liberi</string>
+    <string name="downloads_stat_on_device">Pe acest dispozitiv</string>
+    <string name="downloads_stat_queue">Coadă</string>
+    <string name="downloads_stat_network">Rețea</string>
+    <string name="downloads_stat_free_of">%1$s liberi din %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d element · %2$s</item>
+        <item quantity="few">%1$d elemente · %2$s</item>
+        <item quantity="other">%1$d de elemente · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">aproximativ %1$s rămas</string>
+    <string name="downloads_stat_network_helper">Pus automat pe pauză pe datele mobile</string>
     <string name="downloads_action_delete">Șterge descărcarea</string>
     <string name="downloads_action_cancel">Anulează descărcarea</string>
     <string name="downloads_action_pause">Pune descărcarea pe pauză</string>

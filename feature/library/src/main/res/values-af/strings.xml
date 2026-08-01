@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Nog geen biblioteke nie. Voeg een by op die bediener.</string>
+    <string name="libraries_title">Biblioteke</string>
 
     <string name="library_back">Terug</string>
     <string name="library_home">Tuis</string>
     <string name="library_sort">Sorteer</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Alles</string>
+    <string name="library_filter_more">Filters</string>
 
     <string name="library_sort_title">Sorteer volgens</string>
     <string name="library_sort_name">Naam</string>

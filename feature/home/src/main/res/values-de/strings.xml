@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Weiterschauen</string>
     <string name="home_section_next_up">Als Nächstes</string>
     <string name="home_section_latest">Neu in %1$s</string>
+    <string name="home_hero_resume">Fortsetzen</string>
+    <string name="home_hero_play">Abspielen</string>
+    <string name="home_hero_details">Details</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Noch %1$d Minute</item>
+        <item quantity="other">Noch %1$d Minuten</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin übrig</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

@@ -3,10 +3,21 @@
     <string name="downloads_tab_downloaded">已下载</string>
     <string name="downloads_tab_queue">队列</string>
     <string name="downloads_wifi_only">仅限 Wi‑Fi</string>
+    <string name="downloads_screen_title">下载</string>
 
     <string name="downloads_group_movies">电影</string>
 
     <string name="downloads_storage_summary">已用 %1$s · 剩余 %2$s</string>
+    <string name="downloads_storage_free">剩余 %1$s</string>
+    <string name="downloads_stat_on_device">在此设备上</string>
+    <string name="downloads_stat_queue">队列</string>
+    <string name="downloads_stat_network">网络</string>
+    <string name="downloads_stat_free_of">%2$s 中剩余 %1$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="other">%1$d 项 · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">剩余约 %1$s</string>
+    <string name="downloads_stat_network_helper">使用移动数据时自动暂停</string>
 
     <string name="downloads_action_delete">删除下载</string>
     <string name="downloads_action_cancel">取消下载</string>

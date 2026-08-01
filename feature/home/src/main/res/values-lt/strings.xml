@@ -7,4 +7,15 @@
     <string name="home_section_continue_watching">Tęsti žiūrėjimą</string>
     <string name="home_section_next_up">Kas toliau</string>
     <string name="home_section_latest">Naujausi %1$s</string>
+    <string name="home_hero_resume">Tęsti</string>
+    <string name="home_hero_play">Leisti</string>
+    <string name="home_hero_details">Detalės</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Liko %1$d minutė</item>
+        <item quantity="few">Liko %1$d minutės</item>
+        <item quantity="many">Liko %1$d minučių</item>
+        <item quantity="other">Liko %1$d minučių</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin liko</string>
+    <string name="home_quick_access_offline">Neprisijungus</string>
 </resources>

@@ -7,6 +7,13 @@
 
     <string name="media_row_see_all">Показати всі</string>
     <string name="media_card_watched">Переглянуто</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d елемент</item>
+        <item quantity="few">%1$d елементи</item>
+        <item quantity="many">%1$d елементів</item>
+        <item quantity="other">%1$d елементів</item>
+    </plurals>
+    <string name="state_retry">Повторити</string>
 
     <plurals name="selection_count">
         <item quantity="one">Вибрано %1$d елемент</item>

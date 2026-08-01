@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Phát trực tiếp</string>
     <string name="player_method_direct_stream">Truyền trực tiếp</string>
     <string name="player_method_transcode">Đang chuyển mã</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Thiết bị của bạn không thể giải mã tệp này, vì vậy máy chủ đang chuyển mã tệp.</string>
     <string name="player_message_lower_quality">Luồng phát bị gián đoạn — đang thử lại với chất lượng thấp hơn.</string>
     <string name="player_message_track_restart">Máy chủ phải mã hóa lại luồng phát cho track đó.</string>

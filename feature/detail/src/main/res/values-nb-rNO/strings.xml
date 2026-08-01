@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Merk som usett</string>
     <string name="detail_add_favorite">Legg til i favoritter</string>
     <string name="detail_remove_favorite">Fjern fra favoritter</string>
+    <string name="detail_play_target">Spill av %1$s</string>
+    <string name="detail_resume_target">Fortsett %1$s</string>
 
     <string name="detail_section_seasons">Sesonger</string>
     <string name="detail_section_next_up">Neste</string>
     <string name="detail_section_episodes">Episoder</string>
     <string name="detail_section_similar">Mer som dette</string>
+    <string name="detail_section_cast">Rollebesetning</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Serie</string>
+    <string name="detail_type_season">Sesong</string>
+    <string name="detail_type_episode">Episode</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Episode %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min igjen</string>

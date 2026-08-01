@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Все още няма библиотеки. Добавете такава на сървъра.</string>
+    <string name="libraries_title">Библиотеки</string>
 
     <string name="library_back">Назад</string>
     <string name="library_home">Начало</string>
     <string name="library_sort">Сортиране</string>
     <string name="library_filter">Филтър</string>
+    <string name="library_filter_all">Всички</string>
+    <string name="library_filter_more">Филтри</string>
 
     <string name="library_sort_title">Сортирай по</string>
     <string name="library_sort_name">Име</string>

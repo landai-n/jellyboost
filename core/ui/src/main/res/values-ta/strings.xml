@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">அனைத்தையும் காண்க</string>
     <string name="media_card_watched">பார்க்கப்பட்டது</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d உருப்படி</item>
+        <item quantity="other">%1$d உருப்படிகள்</item>
+    </plurals>
+    <string name="state_retry">மீண்டும் முயற்சி</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d தேர்ந்தெடுக்கப்பட்டது</item>

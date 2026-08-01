@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Brak bibliotek. Dodaj jedną na serwerze.</string>
+    <string name="libraries_title">Biblioteki</string>
 
     <string name="library_back">Wstecz</string>
     <string name="library_home">Strona główna</string>
     <string name="library_sort">Sortuj</string>
     <string name="library_filter">Filtruj</string>
+    <string name="library_filter_all">Wszystko</string>
+    <string name="library_filter_more">Filtry</string>
 
     <string name="library_sort_title">Sortuj według</string>
     <string name="library_sort_name">Nazwa</string>

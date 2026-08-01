@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Директна репродукција</string>
     <string name="player_method_direct_stream">Директен тек</string>
     <string name="player_method_transcode">Транскодирање</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Вашиот уред не можеше да ја декодира оваа датотека, па серверот ја транскодира.</string>
     <string name="player_message_lower_quality">Стримот застана — обид повторно со понизок квалитет.</string>

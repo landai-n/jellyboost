@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">ყურების გაგრძელება</string>
     <string name="home_section_next_up">შემდეგი</string>
     <string name="home_section_latest">უახლესი %1$s</string>
+    <string name="home_hero_resume">გაგრძელება</string>
+    <string name="home_hero_play">დაკვრა</string>
+    <string name="home_hero_details">დეტალები</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">დარჩენილია %1$d წუთი</item>
+        <item quantity="other">დარჩენილია %1$d წუთი</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dწთ დარჩენილია</string>
+    <string name="home_quick_access_offline">ოფლაინ</string>
 </resources>

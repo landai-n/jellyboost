@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">Baixat</string>
     <string name="downloads_tab_queue">Cua</string>
     <string name="downloads_wifi_only">Només Wi‑Fi</string>
+    <string name="downloads_screen_title">Baixades</string>
     <string name="downloads_group_movies">Pel·lícules</string>
     <string name="downloads_storage_summary">%1$s utilitzats · %2$s lliures</string>
+    <string name="downloads_storage_free">%1$s lliures</string>
+    <string name="downloads_stat_on_device">En aquest dispositiu</string>
+    <string name="downloads_stat_queue">Cua</string>
+    <string name="downloads_stat_network">Xarxa</string>
+    <string name="downloads_stat_free_of">%1$s lliures de %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d element · %2$s</item>
+        <item quantity="other">%1$d elements · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">aproximadament %1$s restant</string>
+    <string name="downloads_stat_network_helper">Es posa en pausa automàticament amb dades mòbils</string>
     <string name="downloads_action_delete">Elimina la baixada</string>
     <string name="downloads_action_cancel">Cancel·la la baixada</string>
     <string name="downloads_action_pause">Posa en pausa la baixada</string>

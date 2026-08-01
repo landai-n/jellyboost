@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">দেখা চালিয়ে যান</string>
     <string name="home_section_next_up">পরবর্তী</string>
     <string name="home_section_latest">সাম্প্রতিক %1$s</string>
+    <string name="home_hero_resume">আবার শুরু করুন</string>
+    <string name="home_hero_play">চালান</string>
+    <string name="home_hero_details">বিস্তারিত</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d মিনিট বাকি</item>
+        <item quantity="other">%1$d মিনিট বাকি</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dমি বাকি</string>
+    <string name="home_quick_access_offline">অফলাইন</string>
 </resources>

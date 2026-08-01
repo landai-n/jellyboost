@@ -3,8 +3,19 @@
     <string name="downloads_tab_downloaded">Đã tải xuống</string>
     <string name="downloads_tab_queue">Hàng đợi</string>
     <string name="downloads_wifi_only">Chỉ dùng Wi‑Fi</string>
+    <string name="downloads_screen_title">Tải xuống</string>
     <string name="downloads_group_movies">Phim</string>
     <string name="downloads_storage_summary">%1$s đã dùng · %2$s còn trống</string>
+    <string name="downloads_storage_free">%1$s còn trống</string>
+    <string name="downloads_stat_on_device">Trên thiết bị này</string>
+    <string name="downloads_stat_queue">Hàng đợi</string>
+    <string name="downloads_stat_network">Mạng</string>
+    <string name="downloads_stat_free_of">%1$s còn trống trong tổng số %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="other">%1$d mục · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Còn khoảng %1$s</string>
+    <string name="downloads_stat_network_helper">Tự động tạm dừng khi dùng dữ liệu di động</string>
     <string name="downloads_action_delete">Xóa tải xuống</string>
     <string name="downloads_action_cancel">Hủy tải xuống</string>
     <string name="downloads_action_pause">Tạm dừng tải xuống</string>

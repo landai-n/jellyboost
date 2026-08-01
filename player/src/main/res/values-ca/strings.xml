@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Reproducció directa</string>
     <string name="player_method_direct_stream">Transmissió directa</string>
     <string name="player_method_transcode">Transcodificació</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">El teu dispositiu no ha pogut descodificar aquest fitxer, així que el servidor l\'està transcodificant.</string>
     <string name="player_message_lower_quality">La transmissió s\'ha aturat — es torna a intentar amb una qualitat inferior.</string>
     <string name="player_message_track_restart">El servidor ha hagut de recodificar la transmissió per a aquesta pista.</string>

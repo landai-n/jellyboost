@@ -6,6 +6,10 @@
     <string name="badge_download_failed">Unduhan gagal</string>
     <string name="media_row_see_all">Lihat semua</string>
     <string name="media_card_watched">Sudah ditonton</string>
+    <plurals name="library_item_count">
+        <item quantity="other">%1$d item</item>
+    </plurals>
+    <string name="state_retry">Coba lagi</string>
     <plurals name="selection_count">
         <item quantity="other">%1$d dipilih</item>
     </plurals>

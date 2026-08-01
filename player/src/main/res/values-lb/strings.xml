@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direktwiddergab</string>
     <string name="player_method_direct_stream">Direktstream</string>
     <string name="player_method_transcode">Transkodéierung</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Däin Apparat konnt dëse Fichier net decodéieren, dofir transkodéiert de Server en.</string>
     <string name="player_message_lower_quality">De Stream ass hänke bliwwen – et gëtt mat enger niddregerer Qualitéit nees probéiert.</string>

@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">سب دیکھیں</string>
     <string name="media_card_watched">دیکھا گیا</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d آئٹم</item>
+        <item quantity="other">%1$d آئٹمز</item>
+    </plurals>
+    <string name="state_retry">دوبارہ کوشش کریں</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d منتخب</item>

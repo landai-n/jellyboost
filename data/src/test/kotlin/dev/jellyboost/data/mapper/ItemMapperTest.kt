@@ -273,6 +273,20 @@ class ItemMapperTest {
     }
 
     @Test
+    fun `carries a library's item count when the server reported one`() {
+        val views =
+            listOf(
+                library(UUID.randomUUID(), "Movies", CollectionType.MOVIES, childCount = 412),
+                // Some libraries come back without one; the tile hides its subtitle then.
+                library(UUID.randomUUID(), "Shows", CollectionType.TVSHOWS),
+            )
+
+        val mapped = mapper.toLibraryViews(views)
+
+        mapped.map { it.childCount } shouldContainExactly listOf(412, null)
+    }
+
+    @Test
     fun `maps a list preserving server order`() {
         val ids = List(3) { UUID.randomUUID() }
         val dtos = ids.map { BaseItemDto(id = it, type = BaseItemKind.MOVIE) }
@@ -441,11 +455,13 @@ class ItemMapperTest {
         id: UUID,
         name: String,
         collectionType: CollectionType?,
+        childCount: Int? = null,
     ) = BaseItemDto(
         id = id,
         type = BaseItemKind.COLLECTION_FOLDER,
         name = name,
         collectionType = collectionType,
+        childCount = childCount,
     )
 
     private fun mediaSource(size: Long?) =

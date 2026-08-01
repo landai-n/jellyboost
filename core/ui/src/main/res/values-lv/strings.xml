@@ -7,6 +7,12 @@
 
     <string name="media_row_see_all">Skatīt visu</string>
     <string name="media_card_watched">Skatīts</string>
+    <plurals name="library_item_count">
+        <item quantity="zero">%1$d vienumu</item>
+        <item quantity="one">%1$d vienums</item>
+        <item quantity="other">%1$d vienumi</item>
+    </plurals>
+    <string name="state_retry">Mēģināt vēlreiz</string>
 
     <plurals name="selection_count">
         <item quantity="zero">%1$d atlasīti</item>

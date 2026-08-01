@@ -7,6 +7,13 @@
 
     <string name="media_row_see_all">Zobacz wszystko</string>
     <string name="media_card_watched">Obejrzane</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d pozycja</item>
+        <item quantity="few">%1$d pozycje</item>
+        <item quantity="many">%1$d pozycji</item>
+        <item quantity="other">%1$d pozycji</item>
+    </plurals>
+    <string name="state_retry">Spróbuj ponownie</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d zaznaczona</item>

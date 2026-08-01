@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">न पाहिलेले म्हणून चिन्हांकित करा</string>
     <string name="detail_add_favorite">आवडींमध्ये जोडा</string>
     <string name="detail_remove_favorite">आवडींमधून काढून टाका</string>
+    <string name="detail_play_target">%1$s प्ले करा</string>
+    <string name="detail_resume_target">%1$s पुन्हा सुरू करा</string>
 
     <string name="detail_section_seasons">सीझन</string>
     <string name="detail_section_next_up">पुढे</string>
     <string name="detail_section_episodes">भाग</string>
     <string name="detail_section_similar">यासारखे आणखी</string>
+    <string name="detail_section_cast">कलाकार</string>
+    <string name="detail_type_movie">चित्रपट</string>
+    <string name="detail_type_series">मालिका</string>
+    <string name="detail_type_season">सीझन</string>
+    <string name="detail_type_episode">भाग</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">भाग %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d मिनिटे</string>
     <string name="detail_remaining_minutes">%1$d मिनिटे शिल्लक</string>

@@ -6,6 +6,12 @@
     <string name="badge_download_failed">Descărcare eșuată</string>
     <string name="media_row_see_all">Vezi tot</string>
     <string name="media_card_watched">Vizionat</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d element</item>
+        <item quantity="few">%1$d elemente</item>
+        <item quantity="other">%1$d de elemente</item>
+    </plurals>
+    <string name="state_retry">Reîncearcă</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d selectat</item>
         <item quantity="few">%1$d selectate</item>

@@ -347,7 +347,9 @@ class PlayerViewModel
             metadataLoad =
                 viewModelScope.launch {
                     val item = repository.getItem(itemId).getOrNull() ?: return@launch
-                    val label = listOfNotNull(item.displayTitle, item.displaySubtitle).joinToString(" · ")
+                    val label =
+                        listOfNotNull(item.displayTitle, item.displaySubtitle)
+                            .joinToString(PLAYER_LABEL_SEPARATOR)
                     val artwork = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl
                     castMetadata.publish(
                         mediaId = itemId,

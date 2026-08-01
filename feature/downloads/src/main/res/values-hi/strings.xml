@@ -3,12 +3,24 @@
     <string name="downloads_tab_downloaded">डाउनलोड किया गया</string>
     <string name="downloads_tab_queue">कतार</string>
     <string name="downloads_wifi_only">केवल Wi-Fi</string>
+    <string name="downloads_screen_title">डाउनलोड</string>
 
     <!-- Downloaded tab grouping -->
     <string name="downloads_group_movies">फ़िल्में</string>
 
     <!-- Storage header -->
     <string name="downloads_storage_summary">%1$s उपयोग में · %2$s खाली</string>
+    <string name="downloads_storage_free">%1$s खाली</string>
+    <string name="downloads_stat_on_device">इस डिवाइस पर</string>
+    <string name="downloads_stat_queue">कतार</string>
+    <string name="downloads_stat_network">नेटवर्क</string>
+    <string name="downloads_stat_free_of">%2$s में से %1$s खाली</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d आइटम · %2$s</item>
+        <item quantity="other">%1$d आइटम · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">लगभग %1$s शेष</string>
+    <string name="downloads_stat_network_helper">मोबाइल डेटा पर अपने आप रुक जाता है</string>
 
     <!-- Row actions -->
     <string name="downloads_action_delete">डाउनलोड हटाएँ</string>

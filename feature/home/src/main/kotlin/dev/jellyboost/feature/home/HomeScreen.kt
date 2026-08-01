@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -31,6 +32,7 @@ import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The home screen: the app's landing destination, mirroring jellyfin-web's row order so a
@@ -167,7 +169,17 @@ private fun LazyListScope.librariesRow(
             key = LibraryView::id,
             contentType = CARD_LIBRARY,
         ) { library ->
-            LibraryCard(library = library, onClick = { onLibraryClick(library) }, width = cardWidth)
+            LibraryCard(
+                library = library,
+                onClick = { onLibraryClick(library) },
+                width = cardWidth,
+                // Absent for a library rebuilt from the offline cache, which stores no count; the
+                // tile then draws its name alone (`LibraryView.childCount`).
+                subtitle =
+                    library.childCount?.let { count ->
+                        pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
+                    },
+            )
         }
     }
 }

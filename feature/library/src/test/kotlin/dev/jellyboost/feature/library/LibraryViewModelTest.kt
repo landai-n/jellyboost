@@ -23,6 +23,7 @@ import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.userdata.UserDataChange
 import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -80,10 +81,18 @@ class LibraryViewModelTest {
     /** Every query the grid asked the repository for, in order. */
     private val queries = mutableListOf<ItemQuery>()
 
+    /**
+     * The total-count callbacks handed to the repository alongside those queries.
+     *
+     * Captured rather than ignored so a test can play the part of the paging source and report a
+     * total the way the first page of a real one does.
+     */
+    private val totalCountSinks = mutableListOf<(Int) -> Unit>()
+
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        every { repository.getItemsPaged(capture(queries)) } returns
+        every { repository.getItemsPaged(capture(queries), capture(totalCountSinks)) } returns
             flowOf(PagingData.from(listOf(movie("m1", "Dune"))))
     }
 
@@ -239,6 +248,151 @@ class LibraryViewModelTest {
                 advanceUntilIdle()
 
                 queries.size shouldBe 1
+            }
+        }
+
+    // ---- the inline filter chips ---------------------------------------------------------------
+
+    @Test
+    fun `a chip commits straight onto the grid, with no draft stage`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+
+                queries.size shouldBe 2
+                queries.last().filters.isPlayed shouldBe false
+                // The sheet opens on what the chips did rather than reverting it.
+                viewModel.uiState.value.draftFilters.isPlayed shouldBe false
+            }
+        }
+
+    @Test
+    fun `tapping an applied chip removes that filter`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+
+                queries.last().filters shouldBe FilterOptions()
+                viewModel.uiState.value.activeFilterCount shouldBe 0
+            }
+        }
+
+    @Test
+    fun `the two watched chips are exclusive, as the sheet's three-way row is`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+                viewModel.toggleFilterChip(LibraryFilterChip.Watched)
+                advanceUntilIdle()
+
+                queries.last().filters.isPlayed shouldBe true
+                viewModel.uiState.value.activeFilterCount shouldBe 1
+            }
+        }
+
+    @Test
+    fun `an applied genre is offered as a chip that can drop it`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.updateDraftFilters(FilterOptions(genres = listOf("Thriller")))
+                viewModel.applyFilters()
+                advanceUntilIdle()
+
+                viewModel.uiState.value.filterChips shouldContain LibraryFilterChip.Genre("Thriller")
+
+                viewModel.toggleFilterChip(LibraryFilterChip.Genre("Thriller"))
+                advanceUntilIdle()
+
+                queries
+                    .last()
+                    .filters.genres
+                    .shouldBeEmpty()
+            }
+        }
+
+    @Test
+    fun `a chip ends selection mode, as every other re-query does`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                viewModel.onSelection(SelectionIntent.Toggle("m1"))
+                viewModel.uiState.value.totalCount
+                    .shouldBeNull()
+
+                viewModel.toggleFilterChip(LibraryFilterChip.Watched)
+                advanceUntilIdle()
+
+                viewModel.selection.value.isActive shouldBe false
+            }
+        }
+
+    // ---- the item count ------------------------------------------------------------------------
+
+    @Test
+    fun `the total the first page reports becomes the header's count`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                advanceUntilIdle()
+                // What the paging source does once the server has counted the library.
+                totalCountSinks.last().invoke(412)
+
+                viewModel.uiState.value.totalCount shouldBe 412
+            }
+        }
+
+    @Test
+    fun `changing the filters drops the count until the new page reports one`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                advanceUntilIdle()
+                totalCountSinks.last().invoke(412)
+
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+
+                viewModel.uiState.value.totalCount
+                    .shouldBeNull()
+
+                totalCountSinks.last().invoke(37)
+                viewModel.uiState.value.totalCount shouldBe 37
+            }
+        }
+
+    @Test
+    fun `a count from a query the user has moved on from is ignored`() =
+        runTest(dispatcher) {
+            val viewModel = viewModel()
+
+            collectingItems(viewModel) {
+                advanceUntilIdle()
+                val staleSink = totalCountSinks.last()
+
+                viewModel.toggleFilterChip(LibraryFilterChip.Unwatched)
+                advanceUntilIdle()
+
+                // The `Pager` that was swapped out finishes counting *after* the swap.
+                staleSink.invoke(412)
+
+                viewModel.uiState.value.totalCount
+                    .shouldBeNull()
             }
         }
 

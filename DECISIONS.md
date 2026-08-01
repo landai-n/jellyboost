@@ -3354,3 +3354,22 @@ Seeded from the approved plan; listed for traceability, no divergence:
   (2) **Inset contract.** The chrome reserves no layout space at all: the bars are siblings of the nav host inside a `Box`, and how much of the window they cover is published as `LocalAppChromePadding` — a `PaddingValues` composition local that top-level screens add to their scrollable `contentPadding`. It lives in `:core:ui` rather than `:app` because feature modules cannot depend on `:app`. Compact `top` is the status bar plus the action cluster (not zero), so a screen's non-scrolling first row — the search field — never comes to rest under the Cast button; everything below it still scrolls under the glass.
   (3) **`GlassTopNav` is glass in pieces, not one slab.** The 64dp row is transparent; the tab capsule and each action carry their own blur. A full-width blurred bar would nest a `hazeEffect` inside another `hazeEffect`, which Haze does not composite (it samples a backdrop, not an effect). The in-app fin-mark vector moved from `feature/auth` to `core/ui` so `:app` can draw it; `ServerSetupScreen` references it as `CoreUiR.drawable.ic_jellyboost_logo`, same resource name.
 - **Reason:** the mocks specify the two bars but not the compact home of the actions or the inset mechanism, and none of the three could be deferred without either losing a feature on phones or double-padding every top-level screen.
+
+## 2026-08-01 — 2026 design refresh (Phase 4b): the library grid's first page asks for the total record count
+- **Scope:** `core/common/model/ItemQuery.kt` (`includeTotalCount`), `data/paging/ItemPagingSource.kt` (`ItemPage`, `onTotalCount`), `data/mapper/QueryMapper.kt`, `OnlineJellyfinRepository`/`OfflineJellyfinRepository`/`DelegatingJellyfinRepository`/`JellyfinRepository.getItemsPaged`, `:feature:library` (`LibraryUiState.totalCount`), `docs/features/library-grid.md`
+- **Plan said:** docs/PLAN.md:73 specifies the LibraryGrid query without a total record count, and
+  docs/features/library-grid.md records the deliberate consequence: "The end of the list is detected
+  by a **short page** … which is why the request can leave `enableTotalRecordCount` off and save the
+  server a COUNT per page." `ItemPagingSource`'s KDoc says the same.
+- **Done instead:** the count is requested on the **first load of a paging source only** (a Paging
+  `Refresh`; appends and prepends never ask), surfaced through an `onTotalCount` callback on
+  `getItemsPaged` into `LibraryUiState.totalCount`, and drawn as the "N items" subtitle of the
+  refreshed grid header. Every other consumer of `getItems` — search, the home rows, the offline
+  grid — still sends `enableTotalRecordCount=false`; it is opt-in per query
+  (`ItemQuery.includeTotalCount`, default `false`), so `QueryMapper`'s default and the tests pinning
+  it are unchanged. The offline grid reports no count at all (Room holds only what was downloaded,
+  and "23 items" over a 500-item library would be a lie); the header then simply omits the line.
+- **Reason:** the 2026-refresh mock's library header is a title plus an item count, and the count
+  has no other source — a separate `COUNT` request would cost strictly more than the one the first
+  page already pays for. The "one COUNT per *page*" cost the original decision avoided is preserved:
+  a full scroll of a 520-item library still costs exactly one count, on page one.

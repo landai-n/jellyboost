@@ -90,6 +90,9 @@ class ItemMapper
                 collectionType = kind,
                 primaryImageUrl = dto.primaryImageUrl(),
                 thumbImageUrl = dto.thumbImageUrl(),
+                // `getUserViews` reports it for most libraries and omits it for some; the tile
+                // hides its subtitle when it is absent rather than guessing a number.
+                childCount = dto.childCount,
             )
         }
 

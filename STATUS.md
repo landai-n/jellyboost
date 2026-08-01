@@ -214,6 +214,23 @@ unchanged (Room stores no count). +4 unit tests; DECISIONS entry "library tiles 
 titles with a per-library COUNT request". Owed: a look on device — the tiles should read
 "177 items" / "20 items" on the user's server.
 
+**Round 4, phone sweep (2026-08-01, same session):** first real phone pass surfaced five
+more defects, all fixed: (1) spamming the chrome's offline badge queued a snackbar per tap
+(M3 `showSnackbar` is a mutex queue) — a tap now cancels the pending show so the message is
+replaced, not enqueued (`29d476d`). (2) The detail screen's Back/heart/Home circles drew
+the white@6% `GlassDefaults.Fill` over bright backdrops — they now pass `ChromeFill` like
+the rest of the floating chrome (`4cc2cb3`). (3) Quick Connect's six 46dp digit boxes
+overflowed a phone dialog into a horizontal scroll — boxes now narrow to fit
+(`4cc2cb3`). (4) Login/ServerSetup overflowed a phone window vertically — compact-width
+(<600dp) trims pane padding, avatars 88→64dp, server-name 32→26sp; tablet two-pane
+untouched (`705470f`). (5) Downloads was unusable on a phone: landscape pinned
+chrome taller than the window (queue unreachable), portrait pinned half the screen with
+inner-list scrolling — chrome is now pinned only when the window is wide *and* ≥480dp
+tall; otherwise the whole page is one LazyColumn (DECISIONS entry, `a125cba`).
+Owed to a phone walk: login fits without scrolling, QC code fits its dialog, detail nav
+readable over bright art, downloads scrolls as one page in both orientations, library
+tiles show real counts.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

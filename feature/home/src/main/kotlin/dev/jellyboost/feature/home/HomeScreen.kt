@@ -276,10 +276,11 @@ private fun LazyListScope.librariesRow(
                 library = library,
                 onClick = { actions.onLibraryClick(library) },
                 width = cardWidth,
-                // Absent for a library rebuilt from the offline cache, which stores no count; the
-                // tile then draws its name alone (`LibraryView.childCount`).
+                // Absent for a library rebuilt from the offline cache, which stores no count, or one
+                // whose count request failed; the tile then draws its name alone
+                // (`LibraryView.itemCount`).
                 subtitle =
-                    library.childCount?.let { count ->
+                    library.itemCount?.let { count ->
                         pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
                     },
             )

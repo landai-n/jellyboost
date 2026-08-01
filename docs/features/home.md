@@ -84,9 +84,16 @@ Up* costs no `getNextUp` call, and a layout with neither the libraries row nor *
 then *Continue Watching*, *Next Up* and every *Latest* row are fetched concurrently in a
 `coroutineScope`, so the screen is bound by the slowest single request rather than by their sum.
 
+`getUserViews` itself costs one extra round trip: the tiles' "N items" subtitle has no source in
+the `/UserViews` response (its `ChildCount` counts the library's media folders, not its titles —
+3 for a 177-movie library), so the repository fires a `limit=0` count query per supported library,
+all concurrently, and reports the totals as `LibraryView.itemCount` (DECISIONS 2026-08-01). A count
+that fails is swallowed per library — that tile draws its name alone.
+
 **Failure policy:** only a failing `getUserViews` produces an error screen — without libraries
 there is nothing to render. A single row that fails is left empty, matching jellyfin-web, which
-omits a section it could not load instead of blanking the page.
+omits a section it could not load instead of blanking the page. A failing *count* is not a failing
+`getUserViews`: it costs a subtitle, never the row.
 
 One deliberate consequence: the *My Media* cards are filtered to libraries with something behind
 them using the *Latest* answers, so a layout that hides *Latest* shows every library the user can

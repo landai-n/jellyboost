@@ -69,7 +69,8 @@ and the two DECISIONS entries of 2026-08-01 for the full contract.
 
 Home continue-watching hero (Resume plays via `HomeActions.onPlay`; Details opens the
 item), card overlay metadata (episode badge / time-left / grid rating), library tiles with
-`childCount` (null offline → line hidden), library grid "N items" (first-page-only
+`itemCount` (a per-library recursive count query, not `ChildCount`; null offline → line
+hidden — DECISIONS 2026-08-01), library grid "N items" (first-page-only
 `enableTotalRecordCount`, DECISIONS 2026-08-01), detail Cast rail (`people` +
 `primaryImageUrl`), downloads wide-layout `QueueStats` summary.
 

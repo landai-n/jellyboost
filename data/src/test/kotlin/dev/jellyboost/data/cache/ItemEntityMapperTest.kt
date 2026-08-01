@@ -239,6 +239,8 @@ class ItemEntityMapperTest {
                 name = "Films",
                 collectionType = org.jellyfin.sdk.model.api.CollectionType.MOVIES,
                 imageTags = mapOf(ImageType.PRIMARY to "library-tag"),
+                // The folder-children count the server sends; the cache stores no count at all.
+                childCount = 3,
             )
 
         val row = mapper.toEntity(dto, sortIndex = 3, cachedAt = NOW)
@@ -253,6 +255,9 @@ class ItemEntityMapperTest {
         restored.name shouldBe "Films"
         restored.collectionType shouldBe CollectionKind.MOVIES
         restored.primaryImageUrl!! shouldContain "library-tag"
+        // Offline tiles draw their name alone: Room has no column for a count, and a cache holding
+        // only downloaded items could not answer one honestly.
+        restored.itemCount.shouldBeNull()
     }
 
     @Test

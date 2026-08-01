@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.FakeImageUrlFactory
 import dev.jellyboost.data.mapper.ItemMapper
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -111,6 +112,7 @@ class OnlineJellyfinRepositoryTest {
                         libraryDto(UUID.randomUUID(), "Music", CollectionType.MUSIC),
                     ),
                 )
+            coEvery { itemsApi.getItems(any<GetItemsRequest>()) } returns countResponse(0)
 
             val result = repository.getUserViews()
 
@@ -119,6 +121,65 @@ class OnlineJellyfinRepositoryTest {
             libraries.map { it.name } shouldContainExactly listOf("Movies", "Shows")
             libraries.map { it.collectionType } shouldContainExactly
                 listOf(CollectionKind.MOVIES, CollectionKind.TVSHOWS)
+        }
+
+    @Test
+    fun `getUserViews counts each library's titles instead of trusting ChildCount`() =
+        runTest {
+            val showsLibraryId = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+            coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
+                queryResponse(
+                    listOf(
+                        // What the dev server actually reports: 3 media folders for 177 movies,
+                        // 6 for 20 series. `ChildCount` counts folders, never titles.
+                        libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES, childCount = 3),
+                        libraryDto(showsLibraryId, "Shows", CollectionType.TVSHOWS, childCount = 6),
+                    ),
+                )
+            val requests = mutableListOf<GetItemsRequest>()
+            coEvery { itemsApi.getItems(capture(requests)) } answers
+                {
+                    countResponse(if (firstArg<GetItemsRequest>().parentId == moviesLibraryId) 177 else 20)
+                }
+
+            val libraries = (repository.getUserViews() as AppResult.Success).value
+
+            libraries.map { it.itemCount } shouldContainExactly listOf(177, 20)
+            requests.map { it.parentId } shouldContainExactly listOf(moviesLibraryId, showsLibraryId)
+            requests.forEach { request ->
+                request.includeItemTypes shouldContainExactly
+                    listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
+                request.recursive shouldBe true
+                // A pure COUNT: the server reports the total and serialises no items.
+                request.limit shouldBe 0
+                request.enableTotalRecordCount shouldBe true
+            }
+        }
+
+    @Test
+    fun `getUserViews leaves the count unset when a library's count request fails`() =
+        runTest {
+            coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
+                queryResponse(listOf(libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES, childCount = 3)))
+            coEvery { itemsApi.getItems(any<GetItemsRequest>()) } throws IOException("reset")
+
+            val result = repository.getUserViews()
+
+            // The row still loads — a missing subtitle beats a home screen that failed over a count.
+            val libraries = (result as AppResult.Success).value
+            libraries.map { it.name } shouldContainExactly listOf("Movies")
+            libraries.single().itemCount.shouldBeNull()
+        }
+
+    @Test
+    fun `getUserViews asks for no counts when there are no supported libraries`() =
+        runTest {
+            coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
+                queryResponse(listOf(libraryDto(UUID.randomUUID(), "Music", CollectionType.MUSIC)))
+
+            (repository.getUserViews() as AppResult.Success).value.shouldBeEmpty()
+
+            coVerify(exactly = 0) { itemsApi.getItems(any<GetItemsRequest>()) }
         }
 
     @Test
@@ -401,15 +462,30 @@ class OnlineJellyfinRepositoryTest {
             headers = emptyMap(),
         )
 
+    /** What a `limit = 0` count request answers with: a total and no items at all. */
+    private fun countResponse(total: Int) =
+        Response(
+            content =
+                BaseItemDtoQueryResult(
+                    items = emptyList(),
+                    totalRecordCount = total,
+                    startIndex = 0,
+                ),
+            status = 200,
+            headers = emptyMap(),
+        )
+
     private fun libraryDto(
         id: UUID,
         name: String,
         collectionType: CollectionType,
+        childCount: Int? = null,
     ) = BaseItemDto(
         id = id,
         type = BaseItemKind.COLLECTION_FOLDER,
         name = name,
         collectionType = collectionType,
+        childCount = childCount,
     )
 
     private fun itemDto(

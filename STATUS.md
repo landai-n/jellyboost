@@ -201,6 +201,19 @@ every tab showed ellipsised text (DECISIONS entry "Top-nav tabs: labels only on 
 selected tab"). Cast-with-receiver still needs a look when a Chromecast is next on the
 network.
 
+**Round 4 (2026-08-01, library-tile item counts):** the *My Media* tiles reported nonsense
+("1" for a 177-movie library, "9" for 20 series). Root cause confirmed against the dev
+server: `BaseItemDto.ChildCount` on a `CollectionFolder` counts the library's **media
+folders**, not its titles (`/UserViews` → 3 for *Films*, 6 for *Séries*; the real totals are
+177 and 20). `LibraryView.childCount` is renamed `itemCount` and no longer comes from the
+DTO at all — `OnlineJellyfinRepository.getUserViews` now fires one `limit=0`
+`enableTotalRecordCount` items query per supported library (all concurrent, `[Movie, Series]`
+recursive, so a tile and the grid it opens agree), and a failing count leaves `itemCount`
+null so the tile drops its subtitle instead of the home screen failing. Offline path
+unchanged (Room stores no count). +4 unit tests; DECISIONS entry "library tiles count their
+titles with a per-library COUNT request". Owed: a look on device — the tiles should read
+"177 items" / "20 items" on the user's server.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

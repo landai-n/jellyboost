@@ -273,17 +273,19 @@ class ItemMapperTest {
     }
 
     @Test
-    fun `carries a library's item count when the server reported one`() {
+    fun `never reads a library's item count from the collection folder's ChildCount`() {
         val views =
             listOf(
-                library(UUID.randomUUID(), "Movies", CollectionType.MOVIES, childCount = 412),
-                // Some libraries come back without one; the tile hides its subtitle then.
+                // `ChildCount` on a collection folder counts its *media folders*, not its titles —
+                // the dev server reports 3 here for a 177-movie library. The repository fills the
+                // real number in from a recursive count query; the mapper must not guess.
+                library(UUID.randomUUID(), "Movies", CollectionType.MOVIES, childCount = 3),
                 library(UUID.randomUUID(), "Shows", CollectionType.TVSHOWS),
             )
 
         val mapped = mapper.toLibraryViews(views)
 
-        mapped.map { it.childCount } shouldContainExactly listOf(412, null)
+        mapped.map { it.itemCount } shouldContainExactly listOf(null, null)
     }
 
     @Test

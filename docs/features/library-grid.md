@@ -115,9 +115,12 @@ is drawn behind both.
 The *Libraries* tab (`LibrariesScreen`) is the screen with a width branch: its adaptive floor is
 `Dimens.ThumbWidth` at 600dp+ but 150dp below that, because the tablet floor folds to a single
 full-width column on a phone (see `librariesMinCellWidth` and DECISIONS 2026-07-31). Its tiles are
-`LibraryCard`s subtitled with the library's `childCount` ("412 items", shared plural
-`core.ui:library_item_count`, hidden when the count is unknown — e.g. offline), under a scrolling
-`ScreenTitle` header.
+`LibraryCard`s subtitled with the library's `itemCount` ("412 items", shared plural
+`core.ui:library_item_count`, hidden when the count is unknown — offline, or when the count request
+failed), under a scrolling `ScreenTitle` header. That count is **not** the server's `ChildCount`,
+which counts a collection folder's media folders rather than its titles: `getUserViews` fires one
+concurrent `limit=0` count query per library over the same `[Movie, Series]` recursive selection this
+grid pages, so a tile and the grid it opens always report the same total (DECISIONS 2026-08-01).
 
 ## Navigation
 

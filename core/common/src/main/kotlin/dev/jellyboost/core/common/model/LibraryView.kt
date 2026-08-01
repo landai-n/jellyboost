@@ -3,6 +3,11 @@ package dev.jellyboost.core.common.model
 /**
  * A user library ("Movies", "Shows") as shown in the home screen's *My Media* row and in the
  * Libraries tab.
+ *
+ * @param childCount how many items the library holds, when the server said — the tile's "412 items"
+ *   subtitle. `null` whenever it is unknown, which is every library rebuilt from the offline cache:
+ *   the count is not stored in Room (no entity column, no migration), and a cache that holds only
+ *   the downloaded items could not answer it honestly anyway. Tiles simply hide the line then.
  */
 data class LibraryView(
     val id: String,
@@ -10,6 +15,7 @@ data class LibraryView(
     val collectionType: CollectionKind,
     val primaryImageUrl: String? = null,
     val thumbImageUrl: String? = null,
+    val childCount: Int? = null,
 )
 
 /**

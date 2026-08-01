@@ -3364,3 +3364,22 @@ Seeded from the approved plan; listed for traceability, no divergence:
   (3) **Quick-access chips.** Below 600dp the *My Media* tile row is drawn as one scrolling line of 38dp glass pills — one per library, plus an *Offline* pill that switches to the Downloads tab through `AppScaffold`'s existing `navigateToTab` (now `internal`). Same destinations, a sixth of the height. At and above 600dp *My Media* stays a row of the new 232×64 `LibraryCard` tiles.
   (4) **Shape breakpoint.** The hero/tiles-vs-chips branch is `maxWidth ≥ 600dp && maxHeight ≥ 560dp` (`isWideHome`), not the chrome's 560dp: 600 is the width the screen's own card sizing has always used (`homeThumbCardWidth`, unchanged and still width-only), and the height guard keeps a phone in landscape — wide but ~360dp tall — on the compact banner. `HomeSizingTest` keeps every existing assertion and gains coverage of the two new pure functions.
 - **Reason:** the approved refresh plan lists the home hero as one of the user-approved convenience displays; a *Resume* button that opened a page instead of playing would be the one affordance on the screen that does not do what it says, and the play navigation it uses is the app's existing one rather than a new playback path.
+
+## 2026-08-01 — 2026 design refresh (Phase 4b): the library grid's first page asks for the total record count
+- **Scope:** `core/common/model/ItemQuery.kt` (`includeTotalCount`), `data/paging/ItemPagingSource.kt` (`ItemPage`, `onTotalCount`), `data/mapper/QueryMapper.kt`, `OnlineJellyfinRepository`/`OfflineJellyfinRepository`/`DelegatingJellyfinRepository`/`JellyfinRepository.getItemsPaged`, `:feature:library` (`LibraryUiState.totalCount`), `docs/features/library-grid.md`
+- **Plan said:** docs/PLAN.md:73 specifies the LibraryGrid query without a total record count, and
+  docs/features/library-grid.md records the deliberate consequence: "The end of the list is detected
+  by a **short page** … which is why the request can leave `enableTotalRecordCount` off and save the
+  server a COUNT per page." `ItemPagingSource`'s KDoc says the same.
+- **Done instead:** the count is requested on the **first load of a paging source only** (a Paging
+  `Refresh`; appends and prepends never ask), surfaced through an `onTotalCount` callback on
+  `getItemsPaged` into `LibraryUiState.totalCount`, and drawn as the "N items" subtitle of the
+  refreshed grid header. Every other consumer of `getItems` — search, the home rows, the offline
+  grid — still sends `enableTotalRecordCount=false`; it is opt-in per query
+  (`ItemQuery.includeTotalCount`, default `false`), so `QueryMapper`'s default and the tests pinning
+  it are unchanged. The offline grid reports no count at all (Room holds only what was downloaded,
+  and "23 items" over a 500-item library would be a lie); the header then simply omits the line.
+- **Reason:** the 2026-refresh mock's library header is a title plus an item count, and the count
+  has no other source — a separate `COUNT` request would cost strictly more than the one the first
+  page already pays for. The "one COUNT per *page*" cost the original decision avoided is preserved:
+  a full scroll of a 520-item library still costs exactly one count, on page one.

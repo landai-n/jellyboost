@@ -3320,3 +3320,28 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** direct user request ("Add translation support across the app, translate into
   all the officially supported languages from jellyfin"); the jellyfin-android locale set
   is the closest definition of "officially supported" for an Android client.
+
+
+## 2026-08-01 — 2026 design refresh: navigation chrome becomes glass bottom pill + glass top nav
+- **Scope:** `:app` (`AppScaffold`, `AppTopBar` split into `GlassTopNav`/`GlassBottomNav`/`ConnectionStatus`/`AppChrome`), contentPadding wiring in `:feature:home`, `:feature:library`, `:feature:search`, `:feature:downloads`
+- **Plan said:** "**Navigation:** bottom nav bar Home / Libraries / Search / Downloads; Settings behind top-bar avatar." (docs/PLAN.md:13) — subsequently amended by DECISIONS 2026-07-29 "M9: the top bar and the bottom navigation bar are one combined bar".
+- **Done instead:** the M9 single combined `AppTopBar` is reversed per the claude.ai/design "2026 refresh" mocks: compact widths (<560dp) get a floating glass bottom-nav pill (60dp, 20dp margins, selected tab = white pill with icon+label), ≥560dp gets a 64dp glass top nav (brand mark + 36dp pill tab bar + trailing glass icon buttons hosting the existing connection-status/Cast/SyncPlay/overflow actions). Same four destinations, same nav options and tests; only the chrome changes. Partially returns to the plan's original bottom-nav intent on phones.
+- **Reason:** user-approved integration of the modernized design system (explicit confirmation via plan review, 2026-08-01); the mock chrome is the centerpiece of the refresh.
+
+## 2026-08-01 — 2026 design refresh: Haze dependency for backdrop blur
+- **Scope:** `gradle/libs.versions.toml`, `core/ui/build.gradle.kts` (api), glass surfaces app-wide via `core/ui` `GlassDefaults`/`LocalHazeState`
+- **Plan said:** "Key versions (verify exact patches at M0 via a real dependency resolution; record deltas in DECISIONS.md): AGP …, Kotlin …, Hilt …, Room …, Media3 …, jellyfin-core 1.8.12, Coil 3.4.0, Compose BOM current, detekt + ktlint, JUnit5/Kotest/MockK/Turbine." (docs/PLAN.md:54) — no other third-party UI dependencies contemplated.
+- **Done instead:** added `dev.chrisbanes.haze:haze` (1.7.2; 2.0.0-alpha03 as fallback if BOM-incompatible) for real backdrop blur behind the glass chrome. Blur renders on API 31+; below that Haze falls back to a scrim and the design's 6%-white fill + 9%-white hairline carry the glass look (minSdk 26 unaffected).
+- **Reason:** the refresh's glass language specifies backdrop blur(18); the user explicitly chose the Haze library over a translucent-only approximation or hand-rolled RenderEffect.
+
+## 2026-08-01 — 2026 design refresh: primary action buttons are white, colorScheme.primary stays #00A4DC
+- **Scope:** `core/ui/component/Buttons.kt` (new `JellyfinButtons`), all screens' primary/ghost action buttons
+- **Plan said:** "`:core:ui` | Theme (`#101010` bg, `#202020` surface, `#00A4DC` primary, `#AA5CC3→#00A4DC` gradient), …" (docs/PLAN.md:45)
+- **Done instead:** primary action buttons (Play/Resume/Sign in/Connect/Retry) become 44dp white-fill pills with `#101010` content per the refresh; `colorScheme.primary` remains `#00A4DC` for progress, selection, accents and links. Implemented as `ButtonDefaults`-wrapper composables in `core/ui`, not an extended color scheme.
+- **Reason:** the modern layer's strongest visual signature; wrappers keep the change greppable and reversible without touching the M3 color scheme that dozens of call sites rely on.
+
+## 2026-08-01 — 2026 design refresh: card metrics and radii leave the jellyfin-web footprint
+- **Scope:** `core/ui/theme/Dimens.kt` (`PosterWidth` 120→128, `ThumbWidth` 210→232, `CardCornerRadius` 8→12), `feature/detail` backdrop constants (`COMPACT_PORTRAIT_BACKDROP_FRACTION` 0.32→0.52, `PORTRAIT_BACKDROP_FRACTION` 0.40→0.46, floor 220→320, `WIDE_BACKDROP_HEIGHT` 320→360), `ItemDetailSizingTest` re-pinned to the new expected values (416/468/414/165/360/523.48dp for the existing viewports)
+- **Plan said:** "**M2 Design system + Home (online).** Verify: side-by-side vs jellyfin-web home — same rows/items/order." (docs/PLAN.md:101); `:core:ui` card specs per docs/PLAN.md:45. Card widths were chosen to match jellyfin-web's home rows (M2 DoD).
+- **Done instead:** poster cards become 128×192, thumbs 232×130, artwork corner radius 12dp with soft shadow + inner hairline, and the detail backdrop grows to carry the title lockup — per the 2026-refresh mocks. Sizing tests are updated to pin the NEW values in the same commits as the changes (values change, assertions and coverage do not — not a test weakening).
+- **Reason:** the refresh supersedes the M2 "reads as the same product as jellyfin-web" definition; most sizing tests assert against the `Dimens` symbols and follow automatically, `ItemDetailSizingTest` pins literals and is re-pinned deliberately.

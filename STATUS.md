@@ -188,6 +188,19 @@ now take `weight(1f)`. Verified on device: nav/logo readable over bright artwork
 orientations, filter-sheet pills spaced, Downloads margins/circles aligned, no
 title/cluster overlap. Owed: the user's own look at the reinstalled build.
 
+**Round 3 (2026-08-01, user feedback on round 2):** (1) composing the Cast button out on
+NoDevices was a chicken-and-egg — the attached `MediaRouteButton` is what registers the
+discovery callback, so no button meant discovery never ran and the button never came back;
+it now stays attached always and is toggled `VISIBLE`/`INVISIBLE` (never GONE, never
+composed out) in sync with the glass-circle gating. (2) The three wide Downloads stat
+panels had equal widths but unequal heights — the row now uses `IntrinsicSize.Max` +
+`fillMaxHeight` so all three cards match the tallest. (3) Top-nav tabs: unselected tabs
+are icon-only (icon carries the label as content description), only the selected tab keeps
+the labelled white pill — French labels never fit four-abreast on a portrait tablet and
+every tab showed ellipsised text (DECISIONS entry "Top-nav tabs: labels only on the
+selected tab"). Cast-with-receiver still needs a look when a Chromecast is next on the
+network.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

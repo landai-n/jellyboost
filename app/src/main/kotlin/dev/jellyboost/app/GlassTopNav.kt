@@ -63,11 +63,12 @@ import dev.jellyboost.core.ui.R as CoreUiR
  *
  * ### Fitting at the breakpoint
  * The row does not scroll and never clips: the tab capsule takes whatever the brand mark and the
- * actions leave (`weight`), and its four tabs share *that* evenly and ellipsise their labels. At
- * 560dp — the narrowest window that gets this bar at all — a full set of four actions leaves the
- * labels heavily abbreviated, which is the intended degradation; before, the trailing actions
- * simply ran off the end of the window, because a `Spacer(weight)` collapses to zero and then the
- * row overflowed.
+ * actions leave (`weight`), and only the *selected* tab carries a label — the other three are
+ * icon-only (DECISIONS.md 2026-08-01, "Top-nav tabs: labels only on the selected tab"; labels on
+ * all four never fit a portrait tablet in a wordy locale and ellipsised into noise). One label plus
+ * three icons fits every window ≥560dp, and the weights remain as a backstop: a capsule with less
+ * room than it wants starves all four tabs equally and the one label ellipsises, rather than the
+ * trailing actions running off the end of the window as a collapsed `Spacer(weight)` once let them.
  *
  * @param currentDestination selects the tab; `null` while the graph is still settling.
  * @param connectionState decides whether the offline status icon is drawn, and which one.
@@ -135,9 +136,9 @@ internal fun GlassTopNav(
  * hero behind it happened to be a bright frame.
  *
  * Every tab is weighted so that a capsule with less room than it wants starves all four equally and
- * each ellipsises its own label, rather than measuring them in order and leaving the last one with
- * nothing — the same reasoning `GlassBottomNav.UNSELECTED_ITEM_WEIGHT` records. `fill = false` is
- * what keeps a *roomy* capsule hugging its tabs instead of stretching them across the window.
+ * the selected tab's label ellipsises, rather than measuring them in order and leaving the last one
+ * with nothing — the same reasoning `GlassBottomNav.UNSELECTED_ITEM_WEIGHT` records. `fill = false`
+ * is what keeps a *roomy* capsule hugging its tabs instead of stretching them across the window.
  */
 @Composable
 private fun TopNavTabs(
@@ -166,11 +167,13 @@ private fun TopNavTabs(
 }
 
 /**
- * One tab: a 36dp capsule that fills solid white when it is the current destination.
+ * One tab: a 36dp capsule that fills solid white — and gains its label — when it is the current
+ * destination. Unselected tabs are icon-only (see the file KDoc's "Fitting at the breakpoint").
  *
  * `Role.Tab` plus `selectable` is what makes the capsule announce as "Home, tab, selected" rather
- * than as four unrelated buttons, exactly as the combined app bar's tabs did; the label is always
- * drawn, so the icon needs no content description of its own.
+ * than as four unrelated buttons, exactly as the combined app bar's tabs did. The label text and
+ * the icon's content description trade places: whichever of the two is present names the tab, so
+ * an icon-only tab still reads as "Downloads, tab" to TalkBack.
  */
 @Composable
 private fun TopNavTab(
@@ -196,17 +199,19 @@ private fun TopNavTab(
     ) {
         Icon(
             imageVector = tab.icon,
-            contentDescription = null,
+            contentDescription = if (selected) null else stringResource(tab.labelRes),
             tint = contentColor,
             modifier = Modifier.size(TabIconSize),
         )
-        Text(
-            text = stringResource(tab.labelRes),
-            style = TabLabel,
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (selected) {
+            Text(
+                text = stringResource(tab.labelRes),
+                style = TabLabel,
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -259,9 +264,10 @@ private fun TopNavTabsPreview() {
  * with two app actions showing — 358, 438 and 538dp.
  *
  * This is the fit check for the row: the capsule has to stay *inside* each of those boxes (the
- * dashed-looking edge of the surrounding box is exactly the space it is allowed) with its labels
- * ellipsised rather than its last tab pushed out. The full bar cannot be previewed — its actions
- * include `CastRouteButton`, which resolves a `hiltViewModel()`.
+ * dashed-looking edge of the surrounding box is exactly the space it is allowed) rather than push
+ * its last tab out. With `currentDestination = null` no tab is selected, so all four render
+ * icon-only — the capsule's widest state adds one selected label to that. The full bar cannot be
+ * previewed — its actions include `CastRouteButton`, which resolves a `hiltViewModel()`.
  */
 @Preview(
     name = "GlassTopNav tabs — 560/640/740dp windows",

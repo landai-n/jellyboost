@@ -76,9 +76,10 @@ internal fun AppActions(
             status = connectionState.toStatus(),
             onClick = onConnectionStatusClick,
         )
-        // Composes to nothing unless the device has a Cast stack and a receiver has been discovered
-        // (M12); it needs no state from here, and takes none. `glassContainer` draws the same circle
-        // its three neighbours have, so whenever the button exists at all it matches the row.
+        // Shows nothing unless the device has a Cast stack and a receiver has been discovered (M12) —
+        // but its view stays attached even then, because that is what keeps route discovery running;
+        // it needs no state from here, and takes none. `glassContainer` draws the same circle its
+        // three neighbours have, so whenever the button is visible at all it matches the row.
         CastRouteButton(
             modifier = Modifier.size(Dimens.MinTouchTarget),
             glassContainer = true,

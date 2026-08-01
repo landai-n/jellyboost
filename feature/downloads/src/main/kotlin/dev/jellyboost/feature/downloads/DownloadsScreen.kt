@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -699,16 +700,31 @@ private fun WideSummary(
     val queueTotal = queueDownloaded + queueStats.remainingBytes
 
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
+                // Equal heights as well as equal widths: the three panels carry different amounts
+                // of content (the network one grows a helper line while Wi-Fi-only is on), and
+                // three same-width cards of three different heights read as misaligned.
+                .height(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
     ) {
-        OnDeviceStatPanel(storage = storage, downloadedBytes = downloadedBytes, modifier = Modifier.weight(1f))
+        OnDeviceStatPanel(
+            storage = storage,
+            downloadedBytes = downloadedBytes,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
         QueueStatPanel(
             stats = queueStats,
             progress = usageFraction(queueDownloaded, queueTotal),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
-        NetworkStatPanel(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange, modifier = Modifier.weight(1f))
+        NetworkStatPanel(
+            wifiOnly = wifiOnly,
+            onWifiOnlyChange = onWifiOnlyChange,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
     }
 }
 

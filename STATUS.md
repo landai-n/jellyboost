@@ -78,6 +78,12 @@ User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
   width-driven radius, leaving a hard seam where the 420dp glow box ended (worst in
   landscape); radius now ends exactly at the box's bottom edge, re-verified on device.
 - Debug + release builds (with the fix) installed on the tablet.
+- Follow-ups from user feedback, same day, each device-verified + `/verify`-green:
+  profile picker proportions (`b5b9b49`), two-pane landscape auth layout
+  (`e8405c2`), centred pane pair (`6fed51d`).
+- Design system mirrored to claude.ai/design ("Jellyboost Design System" project):
+  `design/` in the repo holds the preview-card bundle (tokens, logo, auth components,
+  screen mocks) and is the sync source — push updates via DesignSync, incrementally.
 
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 

@@ -1,0 +1,53 @@
+<!-- @dsCard group="Screens" name="Login (landscape tablet)" subtitle="Two-pane >=840dp: identity + picker left, form right, pair capped at 920dp" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
+  .tablet { width:1000px; height:620px; margin:0 auto; position:relative; overflow:hidden; }
+  .glow { position:absolute; inset:0 0 auto 0; height:420px; background:radial-gradient(circle at 50% 8%,rgba(170,92,195,.20) 0%,rgba(0,164,220,.09) 45%,transparent 100%); }
+  .pair { position:relative; display:flex; max-width:920px; margin:0 auto; height:100%; align-items:center; }
+  .pane { flex:1; display:flex; flex-direction:column; gap:16px; padding:32px 24px; }
+  .ident { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .server { font-size:28px; }
+  .version { font-size:12px; color:rgba(255,255,255,.7); }
+  .ptitle { text-align:center; font-size:16px; font-weight:600; color:rgba(255,255,255,.7); }
+  .rowc { display:flex; justify-content:center; gap:24px; }
+  .user { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .ring { width:80px; height:80px; border-radius:50%; padding:2px; background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
+  .well { width:100%; height:100%; border-radius:50%; background:#101010; padding:3px; box-sizing:border-box; }
+  .face { width:100%; height:100%; border-radius:50%; }
+  .photo1 { background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0); }
+  .photo2 { background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d); }
+  .uname { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
+  .section { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
+  .field { border:1px solid #3C3C3C; border-radius:4px; padding:16px; font-size:16px; color:rgba(255,255,255,.5); }
+  .btn { border-radius:24px; padding:12px; text-align:center; font-size:14px; font-weight:500; background:#292929; color:rgba(255,255,255,.4); }
+  .divider { border-top:1px solid #3C3C3C; }
+  .or { text-align:center; font-size:12px; color:rgba(255,255,255,.7); }
+  .link { text-align:center; color:#00A4DC; font-size:14px; font-weight:500; }
+</style>
+<div class="tablet">
+  <div class="glow"></div>
+  <div class="pair">
+    <div class="pane">
+      <div class="ident">
+        <svg width="43" height="36" viewBox="0 0 168 142"><defs><linearGradient id="f" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs><path fill="url(#f)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/><g stroke="url(#f)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g></svg>
+        <div class="server">test-server</div>
+        <div class="version">Version 10.11.11</div>
+      </div>
+      <div class="ptitle">Who's watching?</div>
+      <div class="rowc">
+        <div class="user"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
+        <div class="user"><div class="ring"><div class="well"><div class="face photo2"></div></div></div><div class="uname">Alex</div></div>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="section">Sign in</div>
+      <div class="field">Username</div>
+      <div class="field">Password</div>
+      <div class="btn">Sign in</div>
+      <div class="divider"></div>
+      <div class="or">or</div>
+      <div class="link">Use Quick Connect</div>
+      <div class="link">Use another server</div>
+    </div>
+  </div>
+</div>

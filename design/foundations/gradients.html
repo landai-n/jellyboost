@@ -1,0 +1,23 @@
+<!-- @dsCard group="Colors" name="Gradients" subtitle="Accent sweep, diagonal variant, BrandGlow halo" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .row { display:flex; gap:16px; max-width:720px; }
+  .card { flex:1; border-radius:12px; border:1px solid #3C3C3C; overflow:hidden; background:#202020; }
+  .demo { height:96px; }
+  .label { padding:8px 12px; font-size:13px; }
+  .sub { font-size:11px; color:rgba(255,255,255,.6); }
+</style>
+<div class="row">
+  <div class="card">
+    <div class="demo" style="background:linear-gradient(90deg,#AA5CC3,#00A4DC)"></div>
+    <div class="label">Accent<div class="sub">horizontal — wordmark, rings, badges</div></div>
+  </div>
+  <div class="card">
+    <div class="demo" style="background:linear-gradient(135deg,#AA5CC3,#00A4DC)"></div>
+    <div class="label">AccentDiagonal<div class="sub">larger surfaces, server badges</div></div>
+  </div>
+  <div class="card">
+    <div class="demo" style="background:#101010"><div style="height:100%;background:radial-gradient(circle at 50% 8%,rgba(170,92,195,.20) 0%,rgba(0,164,220,.09) 45%,transparent 100%)"></div></div>
+    <div class="label">BrandGlow<div class="sub">auth halo — fades to zero at its bottom edge</div></div>
+  </div>
+</div>

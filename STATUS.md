@@ -70,11 +70,14 @@ User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
   URLs (trailing-slash tolerant, `maxWidth=168`), rendered via `JellyfinAsyncImage` in a
   gradient-ringed circle; users without a `primaryImageTag` keep the initial-letter
   fallback. 4 new LoginViewModel tests (17 total in the class), suite green.
-- Follow-up in flight: the two new strings translated into the 69 locales
-  (`server_setup_tagline`; `auth_logo_description` marked `translatable="false"`).
-- Owed to the device: a quick visual pass of both screens (portrait + landscape —
-  the 420dp halo is tuned portrait-first) and confirming avatars load against the
-  dev server. Debug build already installed on the tablet.
+- Localization follow-up landed (`4aaadc2`): `server_setup_tagline` translated into all
+  69 locales, `auth_logo_description` marked `translatable="false"`, validator 0 problems.
+- Device-checked 2026-08-01 (screenshots, both orientations, French locale): hero,
+  tagline translation, server card, and real avatars against the dev server all good.
+  One defect found and fixed on the spot (`941fe2f`): the `BrandGlow` radial faded with a
+  width-driven radius, leaving a hard seam where the 420dp glow box ended (worst in
+  landscape); radius now ends exactly at the box's bottom edge, re-verified on device.
+- Debug + release builds (with the fix) installed on the tablet.
 
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 

@@ -441,7 +441,14 @@ internal fun AuthScreenScaffold(
                 contentAlignment = Alignment.TopCenter,
             ) {
                 if (maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight) {
-                    Row(modifier = Modifier.fillMaxSize()) {
+                    // Capped and centred as a pair: two full-half panes on a wide screen leave a
+                    // dead void in the middle and the content stranded at the edges.
+                    Row(
+                        modifier =
+                            Modifier
+                                .widthIn(max = AuthContentMaxWidth * 2)
+                                .fillMaxHeight(),
+                    ) {
                         AuthPane(
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                             alignment = Alignment.Center,

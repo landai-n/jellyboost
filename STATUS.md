@@ -63,9 +63,18 @@ claude.ai/design ("Jellyboost Design System", updated 2026-08-01: new
 screen mocks + 10 rebuilt component cards). Pure UI restyle — no feature changes except
 user-approved convenience displays (home hero, card overlay metadata, library count
 tiles, detail cast rail, downloads tablet stats). Approved plan:
-`~/.claude/plans/integrate-the-modernized-design-hidden-bear.md`. Four DECISIONS
+`~/.claude/plans/integrate-the-modernized-design-hidden-bear.md`. Five DECISIONS
 entries logged 2026-08-01 (nav chrome reversal of M9, Haze dependency, white primary
-buttons, card-metric changes + `ItemDetailSizingTest` re-pins).
+buttons, card-metric changes + `ItemDetailSizingTest` re-pins, and the Phase-3 compact
+action cluster + `LocalAppChromePadding` contract).
+
+**Phases 1–3 landed** on branch `design-refresh`. Phase 3 replaced `AppTopBar` with
+`GlassBottomNav` (<560dp) / `GlassTopNav` (≥560dp) + an `AppActionCluster` of floating
+glass buttons on compact; `AppScaffold` is now a `Box` whose chrome floats over a
+single `hazeSource` nav host and publishes `LocalAppChromePadding` (`core/ui`) for
+top-level screens to consume in their `contentPadding`. The four tab screens are wired
+minimally — full restyles are Phase 4. Gate green (ktlint, detekt, 1904 unit tests,
+`assembleDebug`); not yet device-walked.
 
 Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
 elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
@@ -82,7 +91,8 @@ Kept despite mock omission: queue move-down, connection indicator + offline bann
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
 `getPublicUsers` and `JellyfinAsyncImage`; no DECISIONS entry needed). Merge `30e4a0f`:
 - Branded auth flow: new tight-viewport in-app logo vector
-  (`feature/auth/res/drawable/ic_jellyboost_logo.xml`, geometry from
+  (`core/ui/res/drawable/ic_jellyboost_logo.xml` — moved there from `feature/auth` in the
+  2026 refresh's Phase 3 so the wide nav bar can draw it too; geometry from
   `logo/ic_launcher_foreground.svg`), gradient wordmark + tagline hero on ServerSetup,
   `JellyfinGradients.BrandGlow` accent halo behind both screens' headers, discovered-server
   cards (gradient Dns badge + chevron), manual-address entry grouped into a panel,

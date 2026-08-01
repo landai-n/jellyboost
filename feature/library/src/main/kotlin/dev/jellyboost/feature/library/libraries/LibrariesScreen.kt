@@ -23,6 +23,7 @@ import dev.jellyboost.core.ui.component.LibraryCard
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.feature.library.R
 import dev.jellyboost.feature.library.toMessage
 
@@ -30,10 +31,13 @@ import dev.jellyboost.feature.library.toMessage
  * The Libraries tab: every movie/TV library the user has, as a browsable grid
  * (docs/PLAN.md, "Confirmed decisions" — bottom nav bar Home / Libraries / Search / Downloads).
  *
- * It draws no bar of its own: `:app`'s combined `AppTopBar` carries the navigation and the app
- * actions for every top-level destination, and its selected tab already says "Libraries"
- * (DECISIONS.md 2026-07-29). Pushed screens such as `LibraryGridScreen` still own their bars,
- * because they have a back action and screen-specific actions to put in them.
+ * It draws no bar of its own: `:app`'s chrome carries the navigation and the app actions for every
+ * top-level destination, and its selected tab already says "Libraries" (DECISIONS.md 2026-07-29).
+ * Pushed screens such as `LibraryGridScreen` still own their bars, because they have a back action
+ * and screen-specific actions to put in them.
+ *
+ * Since the 2026 refresh that chrome *floats over* the grid rather than sitting above it, so the
+ * grid consumes `LocalAppChromePadding` in its `contentPadding` — see [LibrariesGrid].
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call
  *   together with the rest of the navigation graph wiring, as it does for the other screens.
@@ -84,10 +88,19 @@ private fun LibrariesGrid(
     // avoid subcomposing per card (see the comment below); this is the single subcomposition that
     // buys the phone-vs-tablet branch in `librariesMinCellWidth` instead.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        // The app's chrome floats over this grid rather than above it, so the first and last rows
+        // buy themselves clearance from it here; the rest of the grid scrolls under the glass.
+        val chrome = LocalAppChromePadding.current
         LazyVerticalGrid(
             columns = GridCells.Adaptive(librariesMinCellWidth(maxWidth)),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(Dimens.ScreenPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.ScreenPadding,
+                    end = Dimens.ScreenPadding,
+                    top = Dimens.ScreenPadding + chrome.calculateTopPadding(),
+                    bottom = Dimens.ScreenPadding + chrome.calculateBottomPadding(),
+                ),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         ) {

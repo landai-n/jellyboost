@@ -60,6 +60,7 @@ import dev.jellyboost.core.network.model.DiscoveredServer
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import kotlinx.coroutines.flow.Flow
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /** Widest the auth forms grow to; keeps them readable on the tablet the project targets. */
 internal val AuthContentMaxWidth = 460.dp
@@ -194,6 +195,9 @@ private fun BrandHero() {
 /**
  * The gradient fin mark, drawn from the shared vector so every auth surface uses one geometry.
  *
+ * The vector itself lives in `:core:ui` rather than here: `:app`'s wide navigation bar draws the
+ * same mark, and a drawable in a feature module is not reachable from outside it.
+ *
  * @param contentDescription `null` wherever the wordmark is already spelled out next to the logo.
  */
 @Composable
@@ -203,7 +207,7 @@ internal fun JellyboostLogo(
     modifier: Modifier = Modifier,
 ) {
     Image(
-        painter = painterResource(R.drawable.ic_jellyboost_logo),
+        painter = painterResource(CoreUiR.drawable.ic_jellyboost_logo),
         contentDescription = contentDescription,
         modifier = modifier.size(size),
     )

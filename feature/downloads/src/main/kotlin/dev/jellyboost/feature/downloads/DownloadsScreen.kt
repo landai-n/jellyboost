@@ -57,6 +57,7 @@ import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 
@@ -72,12 +73,13 @@ import dev.jellyboost.data.downloads.model.StorageUsage
  * *Offline mode*: it is a download setting, this is the download screen, and the effect of flipping
  * it (the queue stopping or starting) is visible right underneath (DECISIONS.md 2026-07-28, "M7:
  * the Wi-Fi-only toggle lives in the Downloads top bar"). Since M9 this screen has no top bar of
- * its own — `:app`'s combined `AppTopBar` carries the navigation for every top-level destination —
- * so the toggle sits next to the storage header at the top of the content instead.
+ * its own — `:app`'s chrome carries the navigation for every top-level destination — so the toggle
+ * sits next to the storage header at the top of the content instead.
  *
  * The `Scaffold` that remains is here for the snackbar alone, hence `contentWindowInsets =
- * WindowInsets(0)`: the frame above already reserved both the app bar and the system navigation
- * bar, and a second helping of the same insets would pad the list twice.
+ * WindowInsets(0)`: the app's chrome floats over this screen rather than shrinking it, and how much
+ * of the window it covers arrives through `LocalAppChromePadding` instead — consumed by the outer
+ * column, by both tabs' lists and by the snackbar host.
  *
  * @param onPlay play was requested for a finished download, at its resume position in Jellyfin
  *   ticks — the caller pushes `Routes.Player`, the same destination `:feature:detail`'s Play
@@ -112,7 +114,14 @@ fun DownloadsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            // Clear of the floating navigation pill, which this screen's own frame knows nothing
+            // about — the pill is drawn by `:app` over the top of this whole `Scaffold`.
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = LocalAppChromePadding.current.calculateBottomPadding()),
+            )
+        },
     ) { innerPadding ->
         DownloadsContent(
             state = state,
@@ -178,7 +187,11 @@ fun DownloadsContent(
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
+    // The chrome's TOP padding goes on the outer column: the storage header and the tab row never
+    // scroll, so they are exactly what would sit under the top nav (or under the compact layout's
+    // floating action cluster) otherwise. The BOTTOM half stays with the two tabs' lists, so their
+    // rows still scroll under the floating nav pill.
+    Column(modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding())) {
         StorageHeader(
             usage = state.storage,
             downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk },
@@ -228,7 +241,11 @@ private fun DownloadedTab(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
+        contentPadding =
+            PaddingValues(
+                top = Dimens.SpaceSmall,
+                bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
+            ),
     ) {
         groups.forEach { group ->
             // A film's heading would only repeat the title of the single row under it, so a lone
@@ -326,7 +343,11 @@ private fun QueueTab(
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = Dimens.SpaceSmall),
+                contentPadding =
+                    PaddingValues(
+                        top = Dimens.SpaceSmall,
+                        bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
+                    ),
             ) {
                 items(items = state.queue, key = { it.itemId }) { item ->
                     QueueRow(

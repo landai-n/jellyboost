@@ -30,6 +30,7 @@ import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 
 /**
  * The home screen: the app's landing destination, mirroring jellyfin-web's row order so a
@@ -104,9 +105,16 @@ private fun HomeRows(
     // buys the phone-vs-tablet branch in `homeThumbCardWidth` instead of one per thumb/library card.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val cardWidth = homeThumbCardWidth(maxWidth)
+        // The app's chrome floats over this list rather than above it, so the first and last rows
+        // buy themselves clearance from it here; the rest of the column scrolls under the glass.
+        val chrome = LocalAppChromePadding.current
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = Dimens.SpaceLarge),
+            contentPadding =
+                PaddingValues(
+                    top = Dimens.SpaceLarge + chrome.calculateTopPadding(),
+                    bottom = Dimens.SpaceLarge + chrome.calculateBottomPadding(),
+                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
         ) {
             // The order and the presence of every row is the user's, read from the server (see

@@ -3,26 +3,31 @@ package dev.jellyboost.app
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -30,46 +35,61 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
+import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
+import dev.jellyboost.core.ui.theme.LocalHazeState
 import kotlinx.coroutines.launch
 
 /**
- * The app's outer frame: the [JellyfinNavHost] under one [AppTopBar], plus the snackbar that
- * explains the connection status.
+ * The app's outer frame: the [JellyfinNavHost] with the app's floating chrome drawn *over* it, plus
+ * the snackbar that explains the connection status.
  *
- * The bar carries the four top-level destinations, the app overflow menu (Settings + the
- * offline-mode toggle) and the offline status icon — it is the whole of the app's chrome on a
- * top-level destination, replacing the bottom `NavigationBar` + per-screen `TopAppBar` + full-width
- * `OfflineBanner` arrangement the app carried until M9 (DECISIONS.md 2026-07-29).
+ * ### The inset contract (2026 refresh)
+ * The frame is a plain `Box`, not a `Scaffold`, and it reserves no space for anything. Every piece
+ * of chrome — [GlassBottomNav], [GlassTopNav], [AppActionCluster] — is a *sibling* of the nav host
+ * that floats on top of it, so the page below always fills the whole window and its content scrolls
+ * under the glass, which is the whole point of the refresh's material (DECISIONS.md 2026-08-01).
  *
- * `contentWindowInsets = WindowInsets(0)` is deliberate and unchanged: pushed destinations
- * (Settings, LibraryGrid, ItemDetail, the auth flow) each manage their own system-bar insets, and
- * letting this outer `Scaffold` consume them as well would pad those screens twice. What the frame
- * does own on a **top-level** destination is both ends of the window: [AppTopBar] pads itself out
- * of the status bar, and the nav host gets the bottom navigation-bar inset — the space the bottom
- * navigation bar used to reserve for it.
+ * - **Pushed destinations are unchanged.** Settings, LibraryGrid, ItemDetail, the player and the
+ *   auth flow each manage their own system-bar insets and get no chrome at all; nothing here pads
+ *   them, exactly as before.
+ * - **Top-level destinations consume [LocalAppChromePadding]** in the `contentPadding` of whatever
+ *   they scroll. That is the one thing a top-level screen has to do, and it replaces the
+ *   `innerPadding`/bottom-inset the old `Scaffold` used to hand down: padding that scrolls away,
+ *   rather than a window that got shorter. See the composition local's own KDoc for the values.
+ *
+ * ### Which chrome a window gets
+ * [useBottomNav] decides, from one [BoxWithConstraints] at this level (one subcomposition per
+ * screen, the codebase's rule against per-item constraint reads). Below [TopNavMinWidth] the
+ * navigation is the floating bottom pill and the app-wide actions float in the top-right corner as
+ * the [AppActionCluster]; at and above it, [GlassTopNav] carries both in one row.
  *
  * ### Why the chrome is animated rather than switched
  * `isTopLevel` is read from the back stack, so it flips the instant `navigate()` is called — a good
- * half-second before the [JellyfinNavHost] cross-fade that follows it has finished. Drawing the bar
- * with a bare `if` therefore added or removed a ~112dp slot under a screen that was still fading:
- * `innerPadding` snapped, the outgoing page jumped, and the bar and its page never came or went
- * together. Both ends of the frame are consequently animated on the same clock the pages use
- * ([NAV_TRANSITION_MILLIS]) — the bar through `AnimatedVisibility`, which the `Scaffold` re-measures
- * every frame, and the bottom inset through [animateDpAsState] instead of a toggled modifier. The
- * inset contract above is unchanged; only the way the top-level padding arrives is.
+ * half-second before the [JellyfinNavHost] cross-fade that follows it has finished. Drawing the
+ * chrome with a bare `if` therefore made it disappear from under a screen that was still fading.
+ * Both the bars and the padding they publish are consequently animated on the same clock the pages
+ * use ([NAV_TRANSITION_MILLIS]) — the bars through `AnimatedVisibility`, the padding through
+ * [animateDpAsState] so a list's `contentPadding` slides to zero instead of snapping.
  *
- * The bar is fed the last *top-level* destination rather than the live one, because during the exit
- * animation the current destination is already the pushed screen and the selected-tab pill would
- * blink off halfway through the fade.
+ * The chrome is fed the last *top-level* destination rather than the live one, because during the
+ * exit animation the current destination is already the pushed screen and the selected-tab pill
+ * would blink off halfway through the fade.
+ *
+ * ### One backdrop, one source
+ * [HazeState] is created here and the nav host is the only `hazeSource` in the app: every glass
+ * surface in the chrome samples the page underneath it through `LocalHazeState`. A second source —
+ * inside a lazy item, say — would sample a node that scrolls, which is both wrong and expensive.
  */
 @Composable
 internal fun AppScaffold(
@@ -80,8 +100,8 @@ internal fun AppScaffold(
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = currentDestination.isTopLevel()
 
-    // What the bar shows while it animates away: the destination it was last drawn for. Writing it
-    // during composition is idempotent — the same value for the same destination — and it is only
+    // What the chrome shows while it animates away: the destination it was last drawn for. Writing
+    // it during composition is idempotent — the same value for the same destination — and it is only
     // ever read below, after this line has run.
     var barDestination by remember { mutableStateOf<NavDestination?>(null) }
     if (isTopLevel) barDestination = currentDestination
@@ -108,26 +128,30 @@ internal fun AppScaffold(
         onPauseOrDispose { }
     }
 
-    // The bottom half of the frame, as a value rather than a modifier, so it can be animated to and
-    // from zero on the same clock as the bar instead of appearing and vanishing in one frame.
-    val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val bottomInset by animateDpAsState(
-        targetValue = if (isTopLevel) navigationBarInset else 0.dp,
-        animationSpec = tween(NAV_TRANSITION_MILLIS),
-        label = "navHostBottomPadding",
-    )
+    val hazeState = remember { HazeState() }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            // Expanding/shrinking from the top (the defaults) is what makes the bar slide out from
-            // under the status bar rather than detach from it.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val bottomNav = useBottomNav(maxWidth)
+        val chromePadding = chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav)
+
+        CompositionLocalProvider(
+            LocalHazeState provides hazeState,
+            LocalAppChromePadding provides chromePadding,
+        ) {
+            JellyfinNavHost(
+                startsSignedIn = startsSignedIn,
+                sessionState = sessionState,
+                navController = navController,
+                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
+            )
+
             AnimatedVisibility(
-                visible = isTopLevel,
-                enter = expandVertically(tween(NAV_TRANSITION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_MILLIS)),
-                exit = shrinkVertically(tween(NAV_TRANSITION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                visible = isTopLevel && !bottomNav,
+                enter = slideInVertically { -it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { -it } + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                modifier = Modifier.align(Alignment.TopCenter),
             ) {
-                AppTopBar(
+                GlassTopNav(
                     currentDestination = barDestination,
                     connectionState = connectionState,
                     hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
@@ -138,27 +162,108 @@ internal fun AppScaffold(
                     onSetForceOffline = connectionViewModel::setForceOffline,
                 )
             }
-        },
-        snackbarHost = {
-            // The frame consumes no insets, so the host has to keep itself off the gesture bar.
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.navigationBarsPadding())
-        },
-    ) { innerPadding ->
-        JellyfinNavHost(
-            startsSignedIn = startsSignedIn,
-            sessionState = sessionState,
-            navController = navController,
-            modifier =
-                Modifier
-                    .padding(innerPadding)
-                    .padding(bottom = bottomInset),
-        )
+
+            AnimatedVisibility(
+                visible = isTopLevel && bottomNav,
+                enter = fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                modifier = Modifier.align(Alignment.TopEnd),
+            ) {
+                AppActionCluster(
+                    connectionState = connectionState,
+                    hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
+                    onConnectionStatusClick = showConnectionStatus,
+                    onOpenSyncPlayGroups = { navController.navigate(Routes.SyncPlay) },
+                    onNavigateToSettings = { navController.navigate(Routes.Settings) },
+                    onSetForceOffline = connectionViewModel::setForceOffline,
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isTopLevel && bottomNav,
+                enter = slideInVertically { it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { it } + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = BottomNavMargin),
+            ) {
+                GlassBottomNav(
+                    currentDestination = barDestination,
+                    onSelectTab = navController::navigateToTab,
+                )
+            }
+
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter).snackbarInset(chromePadding),
+            ) { data ->
+                PillSnackbar(snackbarData = data)
+            }
+        }
     }
 }
 
 /**
- * Builds the action behind the app bar's offline status icon: a snackbar carrying the reason the
- * app is offline, and — for the two reasons the user can act on — the action that fixes it.
+ * Keeps the snackbar clear of whatever is at the bottom of the window.
+ *
+ * With the floating nav pill up that is the chrome's own bottom padding — the pill's height, its
+ * margin and the navigation-bar inset — so the snackbar floats just above it. Everywhere else the
+ * frame consumes no insets at all, so the host has to keep itself off the gesture bar on its own.
+ */
+private fun Modifier.snackbarInset(chromePadding: PaddingValues): Modifier {
+    val bottom = chromePadding.calculateBottomPadding()
+    return if (bottom > 0.dp) padding(bottom = bottom) else navigationBarsPadding()
+}
+
+/**
+ * How much of a top-level screen the chrome covers, as the animated value published through
+ * [LocalAppChromePadding] — see that composition local for the contract itself.
+ *
+ * Both ends animate over [NAV_TRANSITION_MILLIS] rather than switching, for the reason spelled out
+ * in [AppScaffold]'s KDoc: the value is read by a list's `contentPadding`, and a screen fading out
+ * while its padding snapped to zero jumped visibly under the fade.
+ *
+ * The compact top value is the status bar plus the floating [AppActionCluster] rather than zero.
+ * The cluster overlaps content by design — the mocks' home hero runs full-bleed under it — but a
+ * screen's *first, non-scrolling* row (the search field) would otherwise sit permanently under the
+ * Cast and overflow buttons, so the frame keeps that band clear and lets the rest scroll under.
+ */
+@Composable
+private fun chromePadding(
+    isTopLevel: Boolean,
+    bottomNav: Boolean,
+): PaddingValues {
+    val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    val topTarget =
+        when {
+            !isTopLevel -> 0.dp
+            bottomNav -> statusBarInset + ActionClusterHeight
+            else -> statusBarInset + TopNavHeight
+        }
+    val bottomTarget =
+        if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp
+
+    val top by animateDpAsState(
+        targetValue = topTarget,
+        animationSpec = tween(NAV_TRANSITION_MILLIS),
+        label = "chromeTopPadding",
+    )
+    val bottom by animateDpAsState(
+        targetValue = bottomTarget,
+        animationSpec = tween(NAV_TRANSITION_MILLIS),
+        label = "chromeBottomPadding",
+    )
+
+    return remember(top, bottom) { PaddingValues(top = top, bottom = bottom) }
+}
+
+/**
+ * Builds the action behind the chrome's offline status icon: a snackbar carrying the reason the app
+ * is offline, and — for the two reasons the user can act on — the action that fixes it.
  *
  * The strings are resolved here rather than inside the click handler because a handler runs outside
  * composition, where `stringResource` is not available.
@@ -196,13 +301,6 @@ private fun rememberConnectionStatusExplainer(
         }
     }
 }
-
-/** The four destinations the bar can switch between; hidden everywhere else. */
-private fun NavDestination?.isTopLevel(): Boolean =
-    this?.hasRoute<Routes.Home>() == true ||
-        this?.hasRoute<Routes.Libraries>() == true ||
-        this?.hasRoute<Routes.Search>() == true ||
-        this?.hasRoute<Routes.Downloads>() == true
 
 private fun NavHostController.navigateToTab(route: Any) {
     navigate(route, topLevelNavOptions())
@@ -266,7 +364,7 @@ internal fun NavHostController.navigateHome() {
  *
  * The tab bar escapes this only by accident. `popUpTo<Home>` from Home itself pops nothing, so
  * `savedState.firstOrNull()?.id` is `null`, and `backStackMap[Home] = null` acts as a sentinel that
- * makes the later `restoreStateInternal` a no-op. Since the bar is hidden on pushed destinations
+ * makes the later `restoreStateInternal` a no-op. Since the chrome is hidden on pushed destinations
  * ([isTopLevel]), every tab switch starts from a top-level screen and that sentinel is always in
  * place — which is why [topLevelNavOptions] is left exactly as it was.
  *

@@ -1,7 +1,5 @@
 package dev.jellyboost.feature.downloads
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,7 +37,7 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
 
@@ -74,25 +72,6 @@ private val QueueStatusWide = TextStyle(fontSize = 12.sp)
 /** Shared "card text" title/subtitle styles (spec, "Shared visual language" → Card text). */
 private val CardTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 18.sp)
 private val CardSubtitle = TextStyle(fontSize = 12.sp)
-
-/**
- * The restyled 2026 "m-surface" card fill shared by every list row and stat panel on this screen —
- * `Panels` (`m-panel`) without glass translucency: a solid [surfaceColor] fill, set apart from the
- * page by the same white@6% hairline glass surfaces use rather than by blur. Mirrors
- * `:feature:detail`'s `EpisodeRow.kt` `episodeCard` precedent (spec, "Panels (`m-panel`)"), at
- * [Dimens.CardCornerRadius] rather than [Dimens.PanelRadius] — the 4d spec states 12dp explicitly for
- * this screen's cards.
- */
-internal fun Modifier.mSurface(
-    surfaceColor: Color,
-    radius: Dp = Dimens.CardCornerRadius,
-): Modifier {
-    val shape = RoundedCornerShape(radius)
-    return this
-        .clip(shape)
-        .background(color = surfaceColor, shape = shape)
-        .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.PanelHairline, shape = shape)
-}
 
 /**
  * One finished download: artwork, title, size on disk, delete — an "m-surface card" (2026 refresh).

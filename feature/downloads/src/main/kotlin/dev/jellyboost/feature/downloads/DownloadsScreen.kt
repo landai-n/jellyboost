@@ -76,6 +76,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 

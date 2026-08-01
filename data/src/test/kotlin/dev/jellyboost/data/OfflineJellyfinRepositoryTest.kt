@@ -120,6 +120,66 @@ class OfflineJellyfinRepositoryTest {
             items.single().userData.playbackPositionTicks shouldBe 30_000_000_000L
         }
 
+    /**
+     * The home hero's online/offline parity, from the offline side.
+     *
+     * A download's cached blob is the **whole** item — the enqueue fetch asks for
+     * `OVERVIEW, GENRES, PEOPLE, …` so the detail page works with no server (docs/PLAN.md,
+     * "Downloads engine") — while the online home rows are fetched with `CARD_FIELDS`, which asks
+     * for no overview at all (pinned by `OnlineJellyfinRepositoryTest`: *getResumeItems asks the
+     * server for the requested number of lean cards*). Read back raw, the same wide *Continue
+     * watching* hero therefore drew a synopsis offline that an online user never sees, and the
+     * extra paragraph pushed the resume button down over the row below the banner.
+     */
+    @Test
+    fun `continue watching carries no overview offline either, matching the lean online card fields`() =
+        runTest {
+            val movie = movieDto(uuid(1), "Arrival").copy(overview = SYNOPSIS)
+            coEvery { itemDao.resumeDownloaded(ItemSource.DOWNLOAD, USER_ID, 12) } returns
+                listOf(entity(movie))
+
+            val items = repository.getResumeItems(limit = 12).getOrNull()!!
+
+            items.single().name shouldBe "Arrival"
+            items.single().overview.shouldBeNull()
+        }
+
+    @Test
+    fun `next up and latest are card-shaped offline too`() =
+        runTest {
+            val episode =
+                episodeDto(uuid(12), "Winter Is Coming", uuid(10), "Thrones", uuid(11), 1, 1)
+                    .copy(overview = SYNOPSIS)
+            coEvery {
+                itemDao.unwatchedDownloadedEpisodes(ItemSource.DOWNLOAD, USER_ID, ItemType.EPISODE, null)
+            } returns listOf(entity(episode))
+            seedLatest(listOf(entity(movieDto(uuid(1), "Dune").copy(overview = SYNOPSIS))))
+
+            repository
+                .getNextUp(limit = 24)
+                .getOrNull()!!
+                .single()
+                .overview
+                .shouldBeNull()
+            repository
+                .getLatestMedia(MOVIES_LIBRARY.toString(), limit = 16)
+                .getOrNull()!!
+                .single()
+                .overview
+                .shouldBeNull()
+        }
+
+    @Test
+    fun `the offline detail page still reads the overview the download cached`() =
+        runTest {
+            // The other half of the rule above: the blob's synopsis is dropped from the *rows*, not
+            // from the item — the offline detail screen has nowhere else to read it from.
+            coEvery { itemDao.getItem(uuid(1)) } returns
+                entity(movieDto(uuid(1), "Arrival").copy(overview = SYNOPSIS))
+
+            repository.getItem(uuid(1).toString()).getOrNull()!!.overview shouldBe SYNOPSIS
+        }
+
     @Test
     fun `continue watching is empty when nobody is signed in`() =
         runTest {
@@ -665,6 +725,11 @@ class OfflineJellyfinRepositoryTest {
     private companion object {
         val THRONES: UUID = uuid(10)
         val DRAGON: UUID = uuid(20)
+
+        /** A synopsis long enough to be the paragraph that used to unbalance the home hero. */
+        const val SYNOPSIS =
+            "A linguist is recruited by the military to communicate with alien lifeforms after " +
+                "twelve mysterious spacecraft appear around the world."
     }
 
     private fun loggedIn() =

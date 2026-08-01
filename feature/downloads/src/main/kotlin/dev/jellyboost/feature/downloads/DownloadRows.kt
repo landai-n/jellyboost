@@ -52,12 +52,6 @@ private val ROW_ART_HEIGHT_COMPACT = 38.dp
 private val ROW_ART_WIDTH_WIDE = 76.dp
 private val ROW_ART_HEIGHT_WIDE = 44.dp
 
-/** [QueueRow]'s compact-layout trailing action circle diameter. */
-private val ACTION_CIRCLE_SIZE_COMPACT = 32.dp
-
-/** [QueueRow]'s wide-layout trailing action circle diameter, also used by [DownloadedRow]. */
-private val ACTION_CIRCLE_SIZE_WIDE = 34.dp
-
 /** Half the "m-surface card" list's 10dp inter-card gap — applied top and bottom of every row. */
 private val ROW_GAP_HALF = 5.dp
 
@@ -84,6 +78,9 @@ private val CardSubtitle = TextStyle(fontSize = 12.sp)
  * @param onDelete the trailing icon button; nested inside the row's clickable area but its own
  *   independent target — Compose resolves the tap to whichever target is hit first, so pressing
  *   the icon never also fires [onPlay].
+ * @param compact mirrors [QueueRow]'s own parameter of the same name: the same width class that
+ *   picks [QueueRow]'s artwork size picks this row's, so switching tabs never shifts the text
+ *   columns or row height out from under the user.
  */
 @Composable
 internal fun DownloadedRow(
@@ -92,19 +89,24 @@ internal fun DownloadedRow(
     onPlay: () -> Unit,
     modifier: Modifier = Modifier,
     inSeriesGroup: Boolean = false,
+    compact: Boolean = false,
 ) {
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = ROW_GAP_HALF)
+                .padding(horizontal = Dimens.PanelPadding, vertical = ROW_GAP_HALF)
                 .mSurface(MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onPlay)
                 .padding(Dimens.SpaceMedium),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowArtwork(item = item, width = ROW_ART_WIDTH_WIDE, height = ROW_ART_HEIGHT_WIDE)
+        RowArtwork(
+            item = item,
+            width = if (compact) ROW_ART_WIDTH_COMPACT else ROW_ART_WIDTH_WIDE,
+            height = if (compact) ROW_ART_HEIGHT_COMPACT else ROW_ART_HEIGHT_WIDE,
+        )
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -125,7 +127,7 @@ internal fun DownloadedRow(
             icon = Icons.Filled.Delete,
             contentDescription = stringResource(R.string.downloads_action_delete),
             onClick = onDelete,
-            size = ACTION_CIRCLE_SIZE_WIDE,
+            size = Dimens.PillHeightSmall,
         )
     }
 }
@@ -157,7 +159,7 @@ internal fun QueueRow(
     val cardModifier =
         modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.ScreenPadding, vertical = ROW_GAP_HALF)
+            .padding(horizontal = Dimens.PanelPadding, vertical = ROW_GAP_HALF)
             .mSurface(MaterialTheme.colorScheme.surface)
             .padding(Dimens.SpaceMedium)
 
@@ -182,7 +184,7 @@ internal fun QueueRow(
             QueueRowActions(
                 item = item,
                 actions = actions,
-                size = ACTION_CIRCLE_SIZE_COMPACT,
+                size = Dimens.PillHeightSmall,
                 modifier = Modifier.align(Alignment.End),
             )
         }
@@ -200,7 +202,7 @@ internal fun QueueRow(
                 compact = false,
                 modifier = Modifier.weight(1f),
             )
-            QueueRowActions(item = item, actions = actions, size = ACTION_CIRCLE_SIZE_WIDE)
+            QueueRowActions(item = item, actions = actions, size = Dimens.PillHeightSmall)
         }
     }
 }

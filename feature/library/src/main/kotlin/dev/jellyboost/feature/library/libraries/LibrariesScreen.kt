@@ -146,10 +146,11 @@ private fun LibrariesGrid(
                     library = library,
                     onClick = { onLibraryClick(library) },
                     width = Dp.Unspecified,
-                    // Absent for a library served from the offline cache, which stores no count
-                    // (`LibraryView.childCount`); the tile then draws its name alone.
+                    // Absent for a library served from the offline cache, which stores no count, or
+                    // one whose count request failed (`LibraryView.itemCount`); the tile then draws
+                    // its name alone.
                     subtitle =
-                        library.childCount?.let { count ->
+                        library.itemCount?.let { count ->
                             pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
                         },
                 )
@@ -221,7 +222,7 @@ private fun LibrariesContentPreview() {
                         id = "lib-movies",
                         name = "Movies",
                         collectionType = CollectionKind.MOVIES,
-                        childCount = 412,
+                        itemCount = 412,
                     ),
                     // No count: what a library restored from the offline cache looks like.
                     LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS),
@@ -245,7 +246,7 @@ private fun LibrariesContentPhonePreview() {
                         id = "lib-movies",
                         name = "Movies",
                         collectionType = CollectionKind.MOVIES,
-                        childCount = 412,
+                        itemCount = 412,
                     ),
                     // No count: what a library restored from the offline cache looks like.
                     LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS),

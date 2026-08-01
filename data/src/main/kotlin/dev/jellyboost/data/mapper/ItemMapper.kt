@@ -80,6 +80,12 @@ class ItemMapper
          *
          * Returns `null` for libraries outside v1 scope (music, live TV, photos …) so callers can
          * simply `mapNotNull`.
+         *
+         * [LibraryView.itemCount] is always left unset here: the only count `getUserViews` carries
+         * is `ChildCount`, which counts a collection folder's *direct children* (its media folders),
+         * not its titles — the dev server reports 3 for a 177-movie library and 6 for a 20-series
+         * one. The real number comes from a recursive item query the repository issues per library
+         * (`OnlineJellyfinRepository.getUserViews`).
          */
         fun toLibraryView(dto: BaseItemDto): LibraryView? {
             val kind = dto.collectionType.toCollectionKind()
@@ -90,9 +96,6 @@ class ItemMapper
                 collectionType = kind,
                 primaryImageUrl = dto.primaryImageUrl(),
                 thumbImageUrl = dto.thumbImageUrl(),
-                // `getUserViews` reports it for most libraries and omits it for some; the tile
-                // hides its subtitle when it is absent rather than guessing a number.
-                childCount = dto.childCount,
             )
         }
 

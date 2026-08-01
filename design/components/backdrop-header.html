@@ -1,0 +1,16 @@
+<!-- @dsCard group="Components" name="Backdrop header" subtitle="Full-bleed artwork + BackdropScrim, title/subtitle anchored bottom-left" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .header { position:relative; width:640px; height:220px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; }
+  .scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(16,16,16,0) 0%, rgba(16,16,16,.65) 60%, #101010 100%); }
+  .text { position:absolute; left:0; right:0; bottom:0; padding:16px; }
+  .title { font-size:24px; line-height:32px; font-weight:400; }
+  .subtitle { font-size:14px; line-height:20px; color:rgba(255,255,255,.7); }
+</style>
+<div class="header">
+  <div class="scrim"></div>
+  <div class="text">
+    <div class="title">Westworld</div>
+    <div class="subtitle">2016 · TV-MA · 4 seasons</div>
+  </div>
+</div>

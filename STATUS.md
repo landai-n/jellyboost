@@ -84,6 +84,13 @@ User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
 - Design system mirrored to claude.ai/design ("Jellyboost Design System" project):
   `design/` in the repo holds the preview-card bundle (tokens, logo, auth components,
   screen mocks) and is the sync source — push updates via DesignSync, incrementally.
+- 2026-08-01: bundle extended beyond auth to the full `core/ui` browse/media design
+  system and synced (7 new cards, 2 updated): media cards (poster/thumb/library +
+  resume/watched/placeholder overlays), download badge (5 states), batch selection
+  (SelectionAppBar, card indicators, outcome snackbar), media row, backdrop header,
+  state views, spacing & card metrics; gradients card gained BackdropScrim +
+  ImagePlaceholder and tokens.css the matching tokens. claude.ai/design now covers
+  every `core/ui` component.
 
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 

@@ -1,0 +1,48 @@
+<!-- @dsCard group="Spacing" name="Spacing & card metrics" subtitle="4/8/12/16/24 scale, corner radii, and card footprints to scale" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .section { display:flex; flex-direction:column; gap:8px; margin-bottom:24px; }
+  .label { font-size:12px; font-weight:500; color:rgba(255,255,255,.7); }
+  .bar-row { display:flex; align-items:center; gap:12px; }
+  .bar { height:16px; background:#00A4DC; border-radius:2px; }
+  .bar-name { font-size:12px; width:140px; flex:none; color:rgba(255,255,255,.7); }
+  .radii-row { display:flex; gap:24px; align-items:flex-end; }
+  .radius { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .radius-box { width:64px; height:64px; background:#292929; border:1px solid #3C3C3C; }
+  .footprints { display:flex; gap:24px; align-items:flex-end; }
+  .footprint { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .fp-box { border-radius:8px; background:linear-gradient(135deg,#292929,#202020); border:1px solid #3C3C3C; }
+  .fp-name { font-size:12px; color:rgba(255,255,255,.7); text-align:center; }
+  .badge-row { display:flex; align-items:center; gap:12px; }
+  .badge-demo { width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; }
+  .badge-demo .dot { width:20px; height:20px; border-radius:50%; border:2px solid #00A4DC; }
+</style>
+<div class="section">
+  <div class="label">Space scale (Dimens)</div>
+  <div class="bar-row"><div class="bar-name">XS · 4dp</div><div class="bar" style="width:12px"></div></div>
+  <div class="bar-row"><div class="bar-name">SM · 8dp</div><div class="bar" style="width:24px"></div></div>
+  <div class="bar-row"><div class="bar-name">MD · 12dp</div><div class="bar" style="width:36px"></div></div>
+  <div class="bar-row"><div class="bar-name">LG · 16dp</div><div class="bar" style="width:48px"></div></div>
+  <div class="bar-row"><div class="bar-name">XL · 24dp</div><div class="bar" style="width:72px"></div></div>
+  <div class="bar-row"><div class="bar-name">ScreenPadding · 16dp</div><div class="bar" style="width:48px;background:#AA5CC3"></div></div>
+</div>
+<div class="section">
+  <div class="label">Corner radii</div>
+  <div class="radii-row">
+    <div class="radius"><div class="radius-box" style="border-radius:8px"></div><div class="fp-name">Card · 8dp</div></div>
+    <div class="radius"><div class="radius-box" style="border-radius:12px"></div><div class="fp-name">radius-md · 12dp</div></div>
+    <div class="radius"><div class="radius-box" style="border-radius:16px"></div><div class="fp-name">radius-lg · 16dp</div></div>
+  </div>
+</div>
+<div class="section">
+  <div class="label">Card footprints (to scale, 1px = 1dp)</div>
+  <div class="footprints">
+    <div class="footprint"><div class="fp-box" style="width:120px;height:180px"></div><div class="fp-name">Poster<br>120×180 · 2:3</div></div>
+    <div class="footprint"><div class="fp-box" style="width:210px;height:118px"></div><div class="fp-name">Thumb<br>210×118 · 16:9</div></div>
+    <div class="footprint"><div class="fp-box" style="width:280px;height:220px"></div><div class="fp-name">Backdrop<br>height 220</div></div>
+  </div>
+</div>
+<div class="section">
+  <div class="label">Badge</div>
+  <div class="badge-row"><div class="badge-demo"><div class="dot"></div></div><div class="fp-name">BadgeSize · 20dp (+4dp black-60% circle)</div></div>
+</div>

@@ -15,6 +15,11 @@
 
   --accent-gradient: linear-gradient(90deg, #AA5CC3 0%, #00A4DC 100%);
   --accent-gradient-diagonal: linear-gradient(135deg, #AA5CC3 0%, #00A4DC 100%);
+  /* BackdropScrim — transparent -> background scrim over detail-header artwork
+     (JellyfinGradients.BackdropScrim: Transparent -> Background@65% -> Background). */
+  --backdrop-scrim: linear-gradient(180deg, rgba(16, 16, 16, 0) 0%, rgba(16, 16, 16, .65) 60%, #101010 100%);
+  /* ImagePlaceholder — fill for artwork that hasn't loaded or doesn't exist on the server. */
+  --image-placeholder: linear-gradient(135deg, #292929 0%, #202020 100%);
 
   --space-xs: 4px;
   --space-sm: 8px;
@@ -23,6 +28,13 @@
   --space-xl: 24px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-card: 8px;
+
+  /* Card metrics (Dimens) */
+  --poster-width: 120px;
+  --thumb-width: 210px;
+  --backdrop-height: 220px;
+  --badge-size: 20px;
 }
 body {
   margin: 0;

@@ -1,0 +1,38 @@
+<!-- @dsCard group="Components" name="Media row" subtitle="Section header + See all, LazyRow of ThumbCards clipping at the frame edge" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .frame { width:640px; overflow:hidden; border:1px solid #292929; }
+  .header { display:flex; align-items:center; justify-content:space-between; padding:0 16px; }
+  .header-title { font-size:16px; line-height:24px; font-weight:600; }
+  .see-all { font-size:14px; line-height:20px; font-weight:500; color:#00A4DC; background:none; border:none; padding:8px; }
+  .lazy-row { display:flex; gap:12px; padding:8px 0 16px 16px; }
+  .thumb { flex:none; width:210px; }
+  .art { position:relative; width:210px; height:118px; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
+  .progress-track { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(0,0,0,.5); }
+  .progress-fill { height:100%; background:#00A4DC; }
+  .title { margin-top:8px; font-size:14px; }
+  .subtitle { font-size:12px; color:rgba(255,255,255,.7); }
+</style>
+<div class="frame">
+  <div class="header">
+    <div class="header-title">Continue watching</div>
+    <button class="see-all">See all</button>
+  </div>
+  <div class="lazy-row">
+    <div class="thumb">
+      <div class="art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
+      <div class="title">Arrival</div>
+      <div class="subtitle">2016</div>
+    </div>
+    <div class="thumb">
+      <div class="art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"><div class="progress-track"><div class="progress-fill" style="width:30%"></div></div></div>
+      <div class="title">1. The Bicameral Mind</div>
+      <div class="subtitle">Westworld · S1E10</div>
+    </div>
+    <div class="thumb">
+      <div class="art" style="background:linear-gradient(160deg,#5f4a3a,#9a7a5f)"><div class="progress-track"><div class="progress-fill" style="width:85%"></div></div></div>
+      <div class="title">Dune</div>
+      <div class="subtitle">2021</div>
+    </div>
+  </div>
+</div>

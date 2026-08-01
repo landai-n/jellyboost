@@ -68,12 +68,16 @@ import dev.jellyboost.data.downloads.model.StorageVolumeOption
  * @param onBack pops this destination off the back stack.
  * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
  *   `AppScaffold.navigateHome`.
+ * @param appVersion the app's version name for the About section. Passed in rather than read here
+ *   because this feature module cannot see `:app`'s `BuildConfig` — the caller (`JellyfinNavHost`)
+ *   supplies `BuildConfig.VERSION_NAME`.
  */
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    appVersion: String,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,6 +97,7 @@ fun SettingsScreen(
             ),
         onBack = onBack,
         onHome = onHome,
+        appVersion = appVersion,
         modifier = modifier,
     )
 }
@@ -117,6 +122,10 @@ data class SettingsActions(
  * The width cap matters on the test tablet: an unconstrained settings list on a 2560 px-wide screen
  * puts the label at one edge and its switch at the other, which is unreadable and unreachable
  * one-handed. Same reasoning (and same shape) as `:feature:auth`'s `AuthContentMaxWidth`.
+ *
+ * @param appVersion the app's version name shown in the About section. Threaded in from
+ *   [SettingsScreen] rather than read here because this feature module cannot see `:app`'s
+ *   `BuildConfig`.
  */
 @Composable
 fun SettingsContent(
@@ -124,6 +133,7 @@ fun SettingsContent(
     actions: SettingsActions,
     onBack: () -> Unit,
     onHome: () -> Unit,
+    appVersion: String,
     modifier: Modifier = Modifier,
 ) {
     var confirmingSignOut by remember { mutableStateOf(false) }
@@ -152,6 +162,8 @@ fun SettingsContent(
                 ConnectivitySection(state = state, actions = actions)
                 HorizontalDivider()
                 AccountSection(account = state.account, onSignOutClick = { confirmingSignOut = true })
+                HorizontalDivider()
+                AboutSection(appVersion = appVersion)
             }
         }
     }
@@ -497,8 +509,25 @@ private fun AccountSection(
                         start = Dimens.ScreenPadding,
                         end = Dimens.ScreenPadding,
                         top = Dimens.SpaceMedium,
-                        bottom = Dimens.SpaceExtraLarge,
+                        bottom = Dimens.SpaceMedium,
                     ),
+        )
+    }
+}
+
+/**
+ * The build's version — the one section that never changes based on account state or preferences.
+ *
+ * Last in the list, so it carries the screen's bottom breathing room ([Dimens.SpaceExtraLarge]) that
+ * used to sit under the sign-out button in [AccountSection].
+ */
+@Composable
+private fun AboutSection(appVersion: String) {
+    SettingsSection(title = stringResource(R.string.settings_section_about)) {
+        SettingsInfoRow(
+            label = stringResource(R.string.settings_version),
+            value = appVersion,
+            modifier = Modifier.padding(bottom = Dimens.SpaceExtraLarge),
         )
     }
 }
@@ -641,6 +670,7 @@ private fun SettingsPreview() {
                 ),
             onBack = {},
             onHome = {},
+            appVersion = "0.1.0-debug",
         )
     }
 }

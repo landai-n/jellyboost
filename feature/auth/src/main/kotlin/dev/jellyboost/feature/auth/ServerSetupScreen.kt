@@ -4,10 +4,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,6 +85,12 @@ internal val InlineLogoSize = 36.dp
 private val ServerBadgeSize = 40.dp
 
 /**
+ * Minimum window width for the side-by-side auth layout (branding pane + form pane). Matches the
+ * Material "expanded" width class; below it, or in portrait, the two stack in one column.
+ */
+private val AuthTwoPaneMinWidth = 840.dp
+
+/**
  * First screen of the app: pick a Jellyfin server, either from the local-network announcements or
  * by typing an address (docs/PLAN.md, "ServerSetup").
  *
@@ -119,9 +127,10 @@ private fun ServerSetupContent(
     onDiscoveredServerClick: (DiscoveredServer) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    AuthScreenScaffold(modifier = modifier) {
-        BrandHero()
-
+    AuthScreenScaffold(
+        header = { BrandHero() },
+        modifier = modifier,
+    ) {
         Text(
             text = stringResource(R.string.server_setup_title),
             style = MaterialTheme.typography.titleLarge,
@@ -394,11 +403,16 @@ private fun HintRow(
 
 /**
  * The frame both auth screens share: full-bleed dark background with a faint accent halo behind
- * the top of the content, insets handled, and a centred column that stays legible on a tablet in
- * landscape while still scrolling on a small phone.
+ * the top of the content, insets handled.
+ *
+ * Portrait (and any window narrower than [AuthTwoPaneMinWidth]) stacks [header] above [content]
+ * in one scrolling column. A landscape tablet instead puts them side by side — the branded
+ * identity on the left, the form on the right — because stacked they overflow the short viewport
+ * and the last actions end up cropped below the fold.
  */
 @Composable
 internal fun AuthScreenScaffold(
+    header: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -418,7 +432,7 @@ internal fun AuthScreenScaffold(
                         .background(JellyfinGradients.BrandGlow),
             )
 
-            Box(
+            BoxWithConstraints(
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -426,18 +440,51 @@ internal fun AuthScreenScaffold(
                         .imePadding(),
                 contentAlignment = Alignment.TopCenter,
             ) {
-                Column(
-                    modifier =
-                        Modifier
-                            .widthIn(max = AuthContentMaxWidth)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = Dimens.SpaceExtraLarge, vertical = AuthContentVerticalPadding),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
-                    content = content,
-                )
+                if (maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        AuthPane(
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            alignment = Alignment.Center,
+                            content = header,
+                        )
+                        AuthPane(
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            alignment = Alignment.Center,
+                            content = content,
+                        )
+                    }
+                } else {
+                    AuthPane {
+                        header()
+                        content()
+                    }
+                }
             }
         }
+    }
+}
+
+/**
+ * One column of auth content: capped at [AuthContentMaxWidth], placed per [alignment] while it
+ * fits the pane, scrolling on its own once it doesn't.
+ */
+@Composable
+private fun AuthPane(
+    modifier: Modifier = Modifier,
+    alignment: Alignment = Alignment.TopCenter,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Box(modifier = modifier, contentAlignment = alignment) {
+        Column(
+            modifier =
+                Modifier
+                    .widthIn(max = AuthContentMaxWidth)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = Dimens.SpaceExtraLarge, vertical = AuthContentVerticalPadding),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+            content = content,
+        )
     }
 }
 

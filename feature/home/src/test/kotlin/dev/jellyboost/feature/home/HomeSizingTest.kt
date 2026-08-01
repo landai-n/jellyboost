@@ -11,8 +11,9 @@ private const val TOLERANCE = 0.01f
 
 /**
  * Unit tests for the home screen's measured-width decisions: [homeThumbCardWidth] (how wide a
- * thumb-shaped card is), [isWideHome] (which shape the screen draws) and [heroHeight] (how tall the
- * *Continue watching* banner is).
+ * thumb-shaped card is), [isWideHome] (which shape the screen draws), [heroHeight] (how tall the
+ * *Continue watching* banner is) and the band that banner's copy is laid out in
+ * ([wideHeroCopyTopInset], [wideHeroCopyHeight]).
  *
  * A phone-width viewport (360dp, 328dp available after [Dimens.ScreenPadding]) used to fit only
  * ~1.4 of the tablet-calibrated [Dimens.ThumbWidth] cards per row, reading as zoomed-in.
@@ -73,5 +74,49 @@ class HomeSizingTest {
     @Test
     fun `a tablet in landscape gets the mocks' 400dp hero`() {
         heroHeight(wide = true, viewportHeight = 711.dp) shouldBe 400.dp
+    }
+
+    // ---- the wide hero's copy band ----------------------------------------------------------
+
+    @Test
+    fun `the mocks' banner keeps the calibrated copy inset exactly`() {
+        wideHeroCopyTopInset(400.dp).value shouldBe (104f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `a taller banner never pushes the copy further down than the nav needs`() {
+        wideHeroCopyTopInset(600.dp) shouldBe 104.dp
+    }
+
+    @Test
+    fun `a capped short banner gives the copy back the room a flat inset would have wasted`() {
+        // A 600dp-tall window caps the hero at 360dp; the flat 104dp inset would have left the
+        // lockup 208dp, which a two-line title plus the buttons does not fit inside.
+        val short = heroHeight(wide = true, viewportHeight = 600.dp)
+
+        wideHeroCopyTopInset(short).value shouldBe (93.6f plusOrMinus TOLERANCE)
+        wideHeroCopyHeight(short).value shouldBe (218.4f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `the copy band of the mocks' banner is the banner minus the nav inset and the rail`() {
+        wideHeroCopyHeight(400.dp).value shouldBe (248f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `the copy always stops short of the rail the rows below overlap into`() {
+        // The invariant behind the bug: whatever the banner's height, the copy — the resume button
+        // included — is laid out inside a band that ends before the next section rises into it.
+        listOf(336.dp, 360.dp, 400.dp, 460.dp).forEach { banner ->
+            val band = wideHeroCopyHeight(banner)
+            (band + wideHeroCopyTopInset(banner) + HeroRailOverlap).value shouldBe
+                (banner.value plusOrMinus TOLERANCE)
+            (band.value <= (banner - HeroRailOverlap).value) shouldBe true
+        }
+    }
+
+    @Test
+    fun `an absurdly short banner leaves an empty copy band rather than a negative one`() {
+        wideHeroCopyHeight(40.dp) shouldBe 0.dp
     }
 }

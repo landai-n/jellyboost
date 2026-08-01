@@ -231,6 +231,22 @@ Owed to a phone walk: login fits without scrolling, QC code fits its dialog, det
 readable over bright art, downloads scrolls as one page in both orientations, library
 tiles show real counts.
 
+**Round 5 (2026-08-01, offline home hero):** the *Continue watching* hero showed a synopsis
+**offline only**, and the extra paragraph pushed its resume button over the section below the
+banner. Two causes, both fixed. (1) Data: online home rows are fetched with `CARD_FIELDS`,
+which does not ask for `OVERVIEW`, while offline rows are rebuilt from a download's cached
+blob — which the enqueue fetch deliberately caches in full for the offline detail page. The
+offline `getResumeItems`/`getNextUp`/`getLatestMedia` now return the same card shape the
+online ones do (`asHomeCards()`); `getItem` still carries the overview, so the offline detail
+page is unaffected. (2) Layout: the wide hero is a fixed-height banner the rows below overlap
+by 48dp, and its copy block was free-standing, so any taller copy drew over them. The block
+now fills the banner, insets itself above (`wideHeroCopyTopInset` — the mock's 104dp as a
+fraction, so a short-capped banner keeps its lockup) and below (the rail), clips to those
+bounds, and weights the overview so it, not the buttons, gives way. +3 offline-repository
+tests, +6 `HomeSizingTest` tests; DECISIONS entry "Home rows answer in the same card shape
+offline as online". Owed: a look on device with the network off — hero identical to online,
+resume button clear of the row beneath it.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

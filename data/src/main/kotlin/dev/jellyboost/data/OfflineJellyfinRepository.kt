@@ -86,6 +86,7 @@ internal class OfflineJellyfinRepository
                 itemDao
                     .resumeDownloaded(ItemSource.DOWNLOAD, userId, limit)
                     .withLocalUserData(userId)
+                    .asHomeCards()
             }
 
         override suspend fun getNextUp(limit: Int): AppResult<List<JellyfinItem>> =
@@ -103,6 +104,7 @@ internal class OfflineJellyfinRepository
                     .distinctBy { it.seriesId }
                     .take(limit)
                     .withLocalUserData(userId)
+                    .asHomeCards()
             }
 
         /**
@@ -132,7 +134,7 @@ internal class OfflineJellyfinRepository
                     // recent download — the position `GroupItems=true` gives it online.
                     .distinctBy { it.groupId }
                     .take(limit)
-                    .let { groups -> latestCards(groups) }
+                    .let { groups -> latestCards(groups).asHomeCards() }
             }
 
         /**
@@ -437,6 +439,28 @@ internal class OfflineJellyfinRepository
             val TV_LIBRARY_TYPES = listOf(ItemType.SERIES, ItemType.EPISODE)
         }
     }
+
+/**
+ * Narrows detail-shaped rows to the **card shape the home screen is drawn for**.
+ *
+ * The two paths into the home rows do not carry the same amount of item. Online they are fetched
+ * with `OnlineJellyfinRepository.CARD_FIELDS`, which asks the server for exactly one extra field —
+ * the primary image aspect ratio — and deliberately not for `OVERVIEW` (`OnlineJellyfinRepository`'s
+ * own test pins that). Offline they are read back out of a cached `BaseItemDto`, and a download's
+ * blob is the *full* item: the enqueue fetch asks for `OVERVIEW, GENRES, PEOPLE, …` so that the
+ * detail page works with no server (docs/PLAN.md, "Downloads"). So the identical screen was handed
+ * a synopsis offline and none online, and the wide *Continue watching* hero — the one card that
+ * draws an overview — grew by a paragraph offline and pushed its resume button over the row
+ * beneath it.
+ *
+ * Dropping the field here rather than hiding it in the UI keeps the plan's promise that a cached
+ * item and a fetched one are indistinguishable downstream (docs/PLAN.md, "Data layer"): the home
+ * rows answer with the same shape from either source, so the hero has no way to look different
+ * offline. `getItem` is untouched — the offline *detail* page is precisely where the blob's
+ * overview is meant to be read.
+ */
+private fun List<JellyfinItem>.asHomeCards(): List<JellyfinItem> =
+    map { if (it.overview == null) it else it.copy(overview = null) }
 
 /**
  * The answer for an item we do not have.

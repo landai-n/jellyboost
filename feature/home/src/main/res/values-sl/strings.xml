@@ -7,4 +7,15 @@
     <string name="home_section_continue_watching">Nadaljuj z ogledom</string>
     <string name="home_section_next_up">Naslednje</string>
     <string name="home_section_latest">Najnovejše: %1$s</string>
+    <string name="home_hero_resume">Nadaljuj</string>
+    <string name="home_hero_play">Predvajaj</string>
+    <string name="home_hero_details">Podrobnosti</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Še %1$d minuta</item>
+        <item quantity="two">Še %1$d minuti</item>
+        <item quantity="few">Še %1$d minute</item>
+        <item quantity="other">Še %1$d minut</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin še</string>
+    <string name="home_quick_access_offline">Brez povezave</string>
 </resources>

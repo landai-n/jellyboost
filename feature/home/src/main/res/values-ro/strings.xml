@@ -6,4 +6,14 @@
     <string name="home_section_continue_watching">Continuă vizionarea</string>
     <string name="home_section_next_up">Urmează</string>
     <string name="home_section_latest">Cele mai recente din %1$s</string>
+    <string name="home_hero_resume">Continuă</string>
+    <string name="home_hero_play">Redă</string>
+    <string name="home_hero_details">Detalii</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minut rămas</item>
+        <item quantity="few">%1$d minute rămase</item>
+        <item quantity="other">%1$d de minute rămase</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin rămase</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Suora toisto</string>
     <string name="player_method_direct_stream">Suoratoisto</string>
     <string name="player_method_transcode">Transkoodaus</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Laitteesi ei pystynyt purkamaan tätä tiedostoa, joten palvelin transkoodaa sen.</string>
     <string name="player_message_lower_quality">Suoratoisto pysähtyi – yritetään uudelleen heikommalla laadulla.</string>

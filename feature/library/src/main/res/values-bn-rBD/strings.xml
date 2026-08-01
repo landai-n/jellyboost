@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">এখনও কোনো লাইব্রেরি নেই। সার্ভারে একটি যোগ করুন।</string>
+    <string name="libraries_title">লাইব্রেরি</string>
     <string name="library_back">ফিরে যান</string>
     <string name="library_home">হোম</string>
     <string name="library_sort">সাজান</string>
     <string name="library_filter">ফিল্টার</string>
+    <string name="library_filter_all">সব</string>
+    <string name="library_filter_more">ফিল্টার</string>
     <string name="library_sort_title">যেভাবে সাজাবেন</string>
     <string name="library_sort_name">নাম</string>
     <string name="library_sort_date_added">যোগ করার তারিখ</string>

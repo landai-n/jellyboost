@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Прикажи ги сите</string>
     <string name="media_card_watched">Гледано</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d ставка</item>
+        <item quantity="other">%1$d ставки</item>
+    </plurals>
+    <string name="state_retry">Обиди се повторно</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d избрана ставка</item>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">التشغيل المباشر</string>
     <string name="player_method_direct_stream">البث المباشر</string>
     <string name="player_method_transcode">تحويل الترميز</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">تعذّر على جهازك فك تشفير هذا الملف، لذا يقوم الخادم بتحويل ترميزه.</string>
     <string name="player_message_lower_quality">تعطّل البث — تجري إعادة المحاولة بجودة أقل.</string>

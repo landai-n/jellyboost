@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ابھی تک کوئی لائبریری نہیں ہے۔ سرور پر ایک شامل کریں۔</string>
+    <string name="libraries_title">لائبریریاں</string>
 
     <string name="library_back">واپس</string>
     <string name="library_home">ہوم</string>
     <string name="library_sort">ترتیب دیں</string>
     <string name="library_filter">فلٹر</string>
+    <string name="library_filter_all">سب</string>
+    <string name="library_filter_more">فلٹرز</string>
 
     <string name="library_sort_title">اس کے مطابق ترتیب دیں</string>
     <string name="library_sort_name">نام</string>

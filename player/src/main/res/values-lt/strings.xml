@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Tiesioginis leidimas</string>
     <string name="player_method_direct_stream">Tiesioginis srautas</string>
     <string name="player_method_transcode">Perkodavimas</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Jūsų įrenginys negalėjo dekoduoti šio failo, todėl serveris jį perkoduoja.</string>
     <string name="player_message_lower_quality">Srautas strigo – bandoma iš naujo žemesne kokybe.</string>

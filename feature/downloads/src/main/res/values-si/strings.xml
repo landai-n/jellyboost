@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">බාගත කළ</string>
     <string name="downloads_tab_queue">පෝලිම</string>
     <string name="downloads_wifi_only">Wi‑Fi පමණි</string>
+    <string name="downloads_screen_title">බාගත කිරීම්</string>
     <string name="downloads_group_movies">චිත්‍රපට</string>
     <string name="downloads_storage_summary">%1$s භාවිතයි · %2$s නිදහස්</string>
+    <string name="downloads_storage_free">%1$s නිදහස්</string>
+    <string name="downloads_stat_on_device">මෙම උපාංගයේ</string>
+    <string name="downloads_stat_queue">පෝලිම</string>
+    <string name="downloads_stat_network">ජාලය</string>
+    <string name="downloads_stat_free_of">%2$s න් %1$s නිදහස්</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d අයිතමය · %2$s</item>
+        <item quantity="other">%1$d අයිතම · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">දළ වශයෙන් %1$s ඉතිරිය</string>
+    <string name="downloads_stat_network_helper">ජංගම දත්ත මත ස්වයංක්‍රීයව විරාම වේ</string>
     <string name="downloads_action_delete">බාගත කිරීම මකන්න</string>
     <string name="downloads_action_cancel">බාගත කිරීම අවලංගු කරන්න</string>
     <string name="downloads_action_pause">බාගත කිරීම විරාම කරන්න</string>

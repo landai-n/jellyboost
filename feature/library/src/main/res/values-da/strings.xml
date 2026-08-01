@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Ingen biblioteker endnu. Tilføj et på serveren.</string>
+    <string name="libraries_title">Biblioteker</string>
 
     <string name="library_back">Tilbage</string>
     <string name="library_home">Hjem</string>
     <string name="library_sort">Sorter</string>
     <string name="library_filter">Filtrer</string>
+    <string name="library_filter_all">Alle</string>
+    <string name="library_filter_more">Filtre</string>
 
     <string name="library_sort_title">Sorter efter</string>
     <string name="library_sort_name">Navn</string>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">ਡਾਇਰੈਕਟ ਪਲੇ</string>
     <string name="player_method_direct_stream">ਡਾਇਰੈਕਟ ਸਟ੍ਰੀਮ</string>
     <string name="player_method_transcode">ਟ੍ਰਾਂਸਕੋਡਿੰਗ</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">ਤੁਹਾਡੀ ਡਿਵਾਈਸ ਇਸ ਫਾਈਲ ਨੂੰ ਡੀਕੋਡ ਨਹੀਂ ਕਰ ਸਕੀ, ਇਸ ਲਈ ਸਰਵਰ ਇਸਨੂੰ ਟ੍ਰਾਂਸਕੋਡ ਕਰ ਰਿਹਾ ਹੈ।</string>
     <string name="player_message_lower_quality">ਸਟ੍ਰੀਮ ਰੁਕ ਗਈ — ਘੱਟ ਕੁਆਲਿਟੀ ਉੱਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ।</string>

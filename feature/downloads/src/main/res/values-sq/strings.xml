@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Të shkarkuara</string>
     <string name="downloads_tab_queue">Radha</string>
     <string name="downloads_wifi_only">Vetëm Wi‑Fi</string>
+    <string name="downloads_screen_title">Shkarkimet</string>
 
     <string name="downloads_group_movies">Filma</string>
 
     <string name="downloads_storage_summary">%1$s të përdorura · %2$s të lira</string>
+    <string name="downloads_storage_free">%1$s të lira</string>
+    <string name="downloads_stat_on_device">Në këtë pajisje</string>
+    <string name="downloads_stat_queue">Radha</string>
+    <string name="downloads_stat_network">Rrjeti</string>
+    <string name="downloads_stat_free_of">%1$s të lira nga %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d artikull · %2$s</item>
+        <item quantity="other">%1$d artikuj · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Edhe rreth %1$s</string>
+    <string name="downloads_stat_network_helper">Vihet automatikisht në pauzë me të dhëna celulare</string>
 
     <string name="downloads_action_delete">Fshi shkarkimin</string>
     <string name="downloads_action_cancel">Anulo shkarkimin</string>

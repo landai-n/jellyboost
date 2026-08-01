@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Ende s\'ka biblioteka. Shto një në server.</string>
+    <string name="libraries_title">Bibliotekat</string>
 
     <string name="library_back">Mbrapa</string>
     <string name="library_home">Kryefaqja</string>
     <string name="library_sort">Rendit</string>
     <string name="library_filter">Filtro</string>
+    <string name="library_filter_all">Të gjitha</string>
+    <string name="library_filter_more">Filtrat</string>
 
     <string name="library_sort_title">Rendit sipas</string>
     <string name="library_sort_name">Emri</string>

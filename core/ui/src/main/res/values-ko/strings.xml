@@ -7,6 +7,10 @@
 
     <string name="media_row_see_all">전체 보기</string>
     <string name="media_card_watched">시청함</string>
+    <plurals name="library_item_count">
+        <item quantity="other">%1$d개</item>
+    </plurals>
+    <string name="state_retry">다시 시도</string>
 
     <plurals name="selection_count">
         <item quantity="other">%1$d개 선택됨</item>

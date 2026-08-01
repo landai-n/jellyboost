@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Atzīmēt kā neskatītu</string>
     <string name="detail_add_favorite">Pievienot izlasei</string>
     <string name="detail_remove_favorite">Noņemt no izlases</string>
+    <string name="detail_play_target">Atskaņot %1$s</string>
+    <string name="detail_resume_target">Turpināt %1$s</string>
 
     <string name="detail_section_seasons">Sezonas</string>
     <string name="detail_section_next_up">Nākamais</string>
     <string name="detail_section_episodes">Sērijas</string>
     <string name="detail_section_similar">Līdzīgi</string>
+    <string name="detail_section_cast">Aktieru sastāvs</string>
+    <string name="detail_type_movie">Filma</string>
+    <string name="detail_type_series">Seriāls</string>
+    <string name="detail_type_season">Sezona</string>
+    <string name="detail_type_episode">Sērija</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Sērija %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Atlikušas %1$d min</string>

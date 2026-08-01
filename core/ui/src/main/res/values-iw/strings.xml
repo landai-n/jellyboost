@@ -7,6 +7,13 @@
 
     <string name="media_row_see_all">הצג הכול</string>
     <string name="media_card_watched">נצפה</string>
+    <plurals name="library_item_count">
+        <item quantity="one">פריט אחד</item>
+        <item quantity="two">שני פריטים</item>
+        <item quantity="many">%1$d פריטים</item>
+        <item quantity="other">%1$d פריטים</item>
+    </plurals>
+    <string name="state_retry">ניסיון חוזר</string>
 
     <plurals name="selection_count">
         <item quantity="one">פריט אחד נבחר</item>

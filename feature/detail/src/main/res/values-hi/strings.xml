@@ -14,12 +14,22 @@
     <string name="detail_mark_unwatched">न देखा हुआ चिह्नित करें</string>
     <string name="detail_add_favorite">पसंदीदा में जोड़ें</string>
     <string name="detail_remove_favorite">पसंदीदा से हटाएँ</string>
+    <string name="detail_play_target">%1$s चलाएँ</string>
+    <string name="detail_resume_target">%1$s फिर से शुरू करें</string>
 
     <!-- Section titles -->
     <string name="detail_section_seasons">सीज़न</string>
     <string name="detail_section_next_up">आगे देखें</string>
     <string name="detail_section_episodes">एपिसोड</string>
     <string name="detail_section_similar">इससे मिलते-जुलते</string>
+    <string name="detail_section_cast">कलाकार</string>
+    <string name="detail_type_movie">फ़िल्म</string>
+    <string name="detail_type_series">सीरीज़</string>
+    <string name="detail_type_season">सीज़न</string>
+    <string name="detail_type_episode">एपिसोड</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">एपिसोड %1$d</string>
 
     <!-- Metadata -->
     <string name="detail_runtime_minutes">%1$d मिनट</string>

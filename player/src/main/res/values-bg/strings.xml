@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Директно възпроизвеждане</string>
     <string name="player_method_direct_stream">Директен поток</string>
     <string name="player_method_transcode">Транскодиране</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Устройството ви не можа да декодира този файл, затова сървърът го транскодира.</string>
     <string name="player_message_lower_quality">Потокът заседна — нов опит с по-ниско качество.</string>

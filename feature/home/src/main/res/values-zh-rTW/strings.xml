@@ -7,4 +7,12 @@
     <string name="home_section_continue_watching">繼續觀看</string>
     <string name="home_section_next_up">接下來</string>
     <string name="home_section_latest">最新%1$s</string>
+    <string name="home_hero_resume">繼續播放</string>
+    <string name="home_hero_play">播放</string>
+    <string name="home_hero_details">詳情</string>
+    <plurals name="home_minutes_left">
+        <item quantity="other">剩餘 %1$d 分鐘</item>
+    </plurals>
+    <string name="home_time_left_short">%1$d分剩餘</string>
+    <string name="home_quick_access_offline">離線</string>
 </resources>

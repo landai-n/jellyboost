@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Markér som ikke set</string>
     <string name="detail_add_favorite">Føj til favoritter</string>
     <string name="detail_remove_favorite">Fjern fra favoritter</string>
+    <string name="detail_play_target">Afspil %1$s</string>
+    <string name="detail_resume_target">Genoptag %1$s</string>
 
     <string name="detail_section_seasons">Sæsoner</string>
     <string name="detail_section_next_up">Op næste</string>
     <string name="detail_section_episodes">Episoder</string>
     <string name="detail_section_similar">Mere som dette</string>
+    <string name="detail_section_cast">Medvirkende</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Serie</string>
+    <string name="detail_type_season">Sæson</string>
+    <string name="detail_type_episode">Episode</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Episode %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min tilbage</string>

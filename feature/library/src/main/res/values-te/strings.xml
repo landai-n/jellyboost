@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ఇంకా లైబ్రరీలు లేవు. సర్వర్‌లో ఒకటి జోడించండి.</string>
+    <string name="libraries_title">లైబ్రరీలు</string>
 
     <string name="library_back">వెనుకకు</string>
     <string name="library_home">హోమ్</string>
     <string name="library_sort">క్రమం</string>
     <string name="library_filter">ఫిల్టర్</string>
+    <string name="library_filter_all">అన్నీ</string>
+    <string name="library_filter_more">ఫిల్టర్‌లు</string>
 
     <string name="library_sort_title">దీని ప్రకారం క్రమబద్ధీకరించు</string>
     <string name="library_sort_name">పేరు</string>

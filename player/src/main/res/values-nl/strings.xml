@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direct afspelen</string>
     <string name="player_method_direct_stream">Directe stream</string>
     <string name="player_method_transcode">Transcoderen</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Je apparaat kon dit bestand niet decoderen, dus de server transcodeert het.</string>
     <string name="player_message_lower_quality">De stream haperde – opnieuw proberen met lagere kwaliteit.</string>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direct play</string>
     <string name="player_method_direct_stream">Direct stream</string>
     <string name="player_method_transcode">Prekódovanie</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Vaše zariadenie nedokázalo dekódovať tento súbor, preto ho server prekódováva.</string>
     <string name="player_message_lower_quality">Prenos sa zasekol — skúša sa nižšia kvalita.</string>

@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">İndirildi</string>
     <string name="downloads_tab_queue">Kuyruk</string>
     <string name="downloads_wifi_only">Yalnızca Wi‑Fi</string>
+    <string name="downloads_screen_title">İndirilenler</string>
     <string name="downloads_group_movies">Filmler</string>
     <string name="downloads_storage_summary">%1$s kullanıldı · %2$s boş</string>
+    <string name="downloads_storage_free">%1$s boş</string>
+    <string name="downloads_stat_on_device">Bu cihazda</string>
+    <string name="downloads_stat_queue">Kuyruk</string>
+    <string name="downloads_stat_network">Ağ</string>
+    <string name="downloads_stat_free_of">%2$s içinden %1$s boş</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d öğe · %2$s</item>
+        <item quantity="other">%1$d öğe · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">yaklaşık %1$s kaldı</string>
+    <string name="downloads_stat_network_helper">Mobil veride otomatik olarak duraklatılır</string>
     <string name="downloads_action_delete">İndirmeyi sil</string>
     <string name="downloads_action_cancel">İndirmeyi iptal et</string>
     <string name="downloads_action_pause">İndirmeyi duraklat</string>

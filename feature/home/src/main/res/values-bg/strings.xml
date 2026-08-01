@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Продължи гледането</string>
     <string name="home_section_next_up">Следващо</string>
     <string name="home_section_latest">Най-ново: %1$s</string>
+    <string name="home_hero_resume">Продължи</string>
+    <string name="home_hero_play">Пусни</string>
+    <string name="home_hero_details">Подробности</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Остава %1$d минута</item>
+        <item quantity="other">Остават %1$d минути</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dмин остават</string>
+    <string name="home_quick_access_offline">Офлайн</string>
 </resources>

@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Ladattu</string>
     <string name="downloads_tab_queue">Jono</string>
     <string name="downloads_wifi_only">Vain Wi‑Fi</string>
+    <string name="downloads_screen_title">Lataukset</string>
 
     <string name="downloads_group_movies">Elokuvat</string>
 
     <string name="downloads_storage_summary">%1$s käytetty · %2$s vapaana</string>
+    <string name="downloads_storage_free">%1$s vapaana</string>
+    <string name="downloads_stat_on_device">Tällä laitteella</string>
+    <string name="downloads_stat_queue">Jono</string>
+    <string name="downloads_stat_network">Verkko</string>
+    <string name="downloads_stat_free_of">%1$s vapaana %2$s:sta</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d kohde · %2$s</item>
+        <item quantity="other">%1$d kohdetta · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">noin %1$s jäljellä</string>
+    <string name="downloads_stat_network_helper">Keskeytyy automaattisesti mobiilidatalla</string>
 
     <string name="downloads_action_delete">Poista lataus</string>
     <string name="downloads_action_cancel">Peruuta lataus</string>

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Vēl nav neviena bibliotēka. Pievienojiet vienu serverī.</string>
+    <string name="libraries_title">Bibliotēkas</string>
 
     <string name="library_back">Atpakaļ</string>
     <string name="library_home">Sākums</string>
     <string name="library_sort">Kārtot</string>
     <string name="library_filter">Filtrs</string>
+    <string name="library_filter_all">Viss</string>
+    <string name="library_filter_more">Filtri</string>
 
     <string name="library_sort_title">Kārtot pēc</string>
     <string name="library_sort_name">Nosaukums</string>

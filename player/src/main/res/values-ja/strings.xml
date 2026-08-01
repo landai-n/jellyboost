@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">ダイレクト再生</string>
     <string name="player_method_direct_stream">ダイレクトストリーム</string>
     <string name="player_method_transcode">トランスコード</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">お使いの端末ではこのファイルをデコードできないため、サーバーでトランスコードしています。</string>
     <string name="player_message_lower_quality">ストリームが停止しました — 画質を下げて再試行しています。</string>

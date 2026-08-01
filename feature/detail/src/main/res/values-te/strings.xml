@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">చూడనట్లు గుర్తించండి</string>
     <string name="detail_add_favorite">ఇష్టమైనవిగా జోడించండి</string>
     <string name="detail_remove_favorite">ఇష్టమైనవి నుండి తీసివేయండి</string>
+    <string name="detail_play_target">%1$s ప్లే చేయండి</string>
+    <string name="detail_resume_target">%1$s కొనసాగించండి</string>
 
     <string name="detail_section_seasons">సీజన్‌లు</string>
     <string name="detail_section_next_up">తర్వాత రానున్నవి</string>
     <string name="detail_section_episodes">ఎపిసోడ్‌లు</string>
     <string name="detail_section_similar">దీనిలాంటివి మరిన్ని</string>
+    <string name="detail_section_cast">నటీనటులు</string>
+    <string name="detail_type_movie">సినిమా</string>
+    <string name="detail_type_series">సిరీస్</string>
+    <string name="detail_type_season">సీజన్</string>
+    <string name="detail_type_episode">ఎపిసోడ్</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">ఎపిసోడ్ %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d నిమి</string>
     <string name="detail_remaining_minutes">%1$d నిమి మిగిలి ఉంది</string>

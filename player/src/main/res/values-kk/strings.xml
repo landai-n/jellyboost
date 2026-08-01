@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Тікелей ойнату</string>
     <string name="player_method_direct_stream">Тікелей трансляция</string>
     <string name="player_method_transcode">Қайта кодтау</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Құрылғыңыз бұл файлды декодтай алмады, сондықтан сервер оны қайта кодтауда.</string>
     <string name="player_message_lower_quality">Трансляция тоқтап қалды — төменірек сападан қайта көрілуде.</string>

@@ -6,4 +6,12 @@
     <string name="home_section_continue_watching">Tiếp tục xem</string>
     <string name="home_section_next_up">Tiếp theo</string>
     <string name="home_section_latest">%1$s mới nhất</string>
+    <string name="home_hero_resume">Tiếp tục</string>
+    <string name="home_hero_play">Phát</string>
+    <string name="home_hero_details">Chi tiết</string>
+    <plurals name="home_minutes_left">
+        <item quantity="other">Còn %1$d phút</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dphút còn</string>
+    <string name="home_quick_access_offline">Ngoại tuyến</string>
 </resources>

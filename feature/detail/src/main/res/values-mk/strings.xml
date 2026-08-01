@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Означи како негледано</string>
     <string name="detail_add_favorite">Додај во омилени</string>
     <string name="detail_remove_favorite">Отстрани од омилени</string>
+    <string name="detail_play_target">Пушти %1$s</string>
+    <string name="detail_resume_target">Продолжи %1$s</string>
 
     <string name="detail_section_seasons">Сезони</string>
     <string name="detail_section_next_up">Следно</string>
     <string name="detail_section_episodes">Епизоди</string>
     <string name="detail_section_similar">Слично на ова</string>
+    <string name="detail_section_cast">Актерска постава</string>
+    <string name="detail_type_movie">Филм</string>
+    <string name="detail_type_series">Серија</string>
+    <string name="detail_type_season">Сезона</string>
+    <string name="detail_type_episode">Епизода</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Епизода %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d мин</string>
     <string name="detail_remaining_minutes">Уште %1$d мин</string>

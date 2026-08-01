@@ -7,6 +7,12 @@
 
     <string name="media_row_see_all">Prikaži sve</string>
     <string name="media_card_watched">Gledano</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d stavka</item>
+        <item quantity="few">%1$d stavke</item>
+        <item quantity="other">%1$d stavki</item>
+    </plurals>
+    <string name="state_retry">Pokušaj ponovno</string>
 
     <plurals name="selection_count">
         <item quantity="one">Odabrano: %1$d</item>

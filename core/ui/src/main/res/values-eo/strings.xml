@@ -6,6 +6,11 @@
     <string name="badge_download_failed">Elŝuto malsukcesis</string>
     <string name="media_row_see_all">Vidi ĉiujn</string>
     <string name="media_card_watched">Spektita</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d ero</item>
+        <item quantity="other">%1$d eroj</item>
+    </plurals>
+    <string name="state_retry">Reprovi</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d elektita</item>
         <item quantity="other">%1$d elektitaj</item>

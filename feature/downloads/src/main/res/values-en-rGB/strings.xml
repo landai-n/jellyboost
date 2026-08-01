@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">Downloaded</string>
     <string name="downloads_tab_queue">Queue</string>
     <string name="downloads_wifi_only">Wi‑Fi only</string>
+    <string name="downloads_screen_title">Downloads</string>
     <string name="downloads_group_movies">Movies</string>
     <string name="downloads_storage_summary">%1$s used · %2$s free</string>
+    <string name="downloads_storage_free">%1$s free</string>
+    <string name="downloads_stat_on_device">On this device</string>
+    <string name="downloads_stat_queue">Queue</string>
+    <string name="downloads_stat_network">Network</string>
+    <string name="downloads_stat_free_of">%1$s free of %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d item · %2$s</item>
+        <item quantity="other">%1$d items · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">about %1$s left</string>
+    <string name="downloads_stat_network_helper">Paused automatically on mobile data</string>
     <string name="downloads_action_delete">Delete download</string>
     <string name="downloads_action_cancel">Cancel download</string>
     <string name="downloads_action_pause">Pause download</string>

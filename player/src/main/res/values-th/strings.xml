@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">เล่นโดยตรง</string>
     <string name="player_method_direct_stream">สตรีมโดยตรง</string>
     <string name="player_method_transcode">กำลังทรานสโค้ด</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">อุปกรณ์ของคุณไม่สามารถถอดรหัสไฟล์นี้ได้ เซิร์ฟเวอร์จึงกำลังทรานสโค้ดให้</string>
     <string name="player_message_lower_quality">การสตรีมหยุดชะงัก — กำลังลองใหม่ที่คุณภาพต่ำลง</string>
     <string name="player_message_track_restart">เซิร์ฟเวอร์ต้องเข้ารหัสสตรีมใหม่สำหรับแทร็กนั้น</string>

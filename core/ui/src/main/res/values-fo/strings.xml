@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Sí alt</string>
     <string name="media_card_watched">Sætt</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d lutur</item>
+        <item quantity="other">%1$d lutir</item>
+    </plurals>
+    <string name="state_retry">Royn aftur</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valt</item>

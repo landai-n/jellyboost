@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ჯერ ბიბლიოთეკები არ არის. დაამატეთ ერთი სერვერზე.</string>
+    <string name="libraries_title">ბიბლიოთეკები</string>
     <string name="library_back">უკან</string>
     <string name="library_home">მთავარი</string>
     <string name="library_sort">დალაგება</string>
     <string name="library_filter">ფილტრი</string>
+    <string name="library_filter_all">ყველა</string>
+    <string name="library_filter_more">ფილტრები</string>
     <string name="library_sort_title">დალაგება მიხედვით</string>
     <string name="library_sort_name">სახელი</string>
     <string name="library_sort_date_added">დამატების თარიღი</string>

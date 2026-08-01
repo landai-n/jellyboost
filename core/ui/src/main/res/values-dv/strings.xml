@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">ހުރިހާ އެއްޗެއް ބަލާ</string>
     <string name="media_card_watched">ބަލައިފި</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d އައިޓަމް</item>
+        <item quantity="other">%1$d އައިޓަމް</item>
+    </plurals>
+    <string name="state_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ހޮވިއްޖެ</item>

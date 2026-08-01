@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">아직 라이브러리가 없습니다. 서버에서 하나를 추가하세요.</string>
+    <string name="libraries_title">라이브러리</string>
 
     <string name="library_back">뒤로</string>
     <string name="library_home">홈</string>
     <string name="library_sort">정렬</string>
     <string name="library_filter">필터</string>
+    <string name="library_filter_all">전체</string>
+    <string name="library_filter_more">필터</string>
 
     <string name="library_sort_title">정렬 기준</string>
     <string name="library_sort_name">이름</string>

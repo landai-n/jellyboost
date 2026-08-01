@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">ਡਾਊਨਲੋਡ ਕੀਤੇ</string>
     <string name="downloads_tab_queue">ਕਤਾਰ</string>
     <string name="downloads_wifi_only">ਸਿਰਫ਼ Wi‑Fi</string>
+    <string name="downloads_screen_title">ਡਾਊਨਲੋਡ</string>
 
     <string name="downloads_group_movies">ਫ਼ਿਲਮਾਂ</string>
 
     <string name="downloads_storage_summary">%1$s ਵਰਤਿਆ · %2$s ਖਾਲੀ</string>
+    <string name="downloads_storage_free">%1$s ਖਾਲੀ</string>
+    <string name="downloads_stat_on_device">ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ</string>
+    <string name="downloads_stat_queue">ਕਤਾਰ</string>
+    <string name="downloads_stat_network">ਨੈੱਟਵਰਕ</string>
+    <string name="downloads_stat_free_of">%2$s ਵਿੱਚੋਂ %1$s ਖਾਲੀ</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d ਆਈਟਮ · %2$s</item>
+        <item quantity="other">%1$d ਆਈਟਮਾਂ · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">ਲਗਭਗ %1$s ਬਾਕੀ</string>
+    <string name="downloads_stat_network_helper">ਮੋਬਾਈਲ ਡਾਟਾ ਉੱਤੇ ਆਪਣੇ-ਆਪ ਰੁਕ ਜਾਂਦਾ ਹੈ</string>
 
     <string name="downloads_action_delete">ਡਾਊਨਲੋਡ ਮਿਟਾਓ</string>
     <string name="downloads_action_cancel">ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੋ</string>

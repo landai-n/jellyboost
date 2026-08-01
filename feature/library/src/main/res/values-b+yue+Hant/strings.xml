@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">暫時未有媒體庫。請喺伺服器度加一個。</string>
+    <string name="libraries_title">媒體庫</string>
 
     <string name="library_back">返回</string>
     <string name="library_home">主頁</string>
     <string name="library_sort">排序</string>
     <string name="library_filter">篩選</string>
+    <string name="library_filter_all">全部</string>
+    <string name="library_filter_more">篩選條件</string>
 
     <string name="library_sort_title">排序方式</string>
     <string name="library_sort_name">名稱</string>

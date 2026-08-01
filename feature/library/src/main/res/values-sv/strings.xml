@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Inga bibliotek än. Lägg till ett på servern.</string>
+    <string name="libraries_title">Bibliotek</string>
 
     <string name="library_back">Tillbaka</string>
     <string name="library_home">Hem</string>
     <string name="library_sort">Sortera</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Alla</string>
+    <string name="library_filter_more">Filter</string>
 
     <string name="library_sort_title">Sortera efter</string>
     <string name="library_sort_name">Namn</string>

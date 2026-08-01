@@ -6,6 +6,11 @@
     <string name="badge_download_failed">Deskargak huts egin du</string>
     <string name="media_row_see_all">Ikusi guztiak</string>
     <string name="media_card_watched">Ikusita</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d elementu</item>
+        <item quantity="other">%1$d elementu</item>
+    </plurals>
+    <string name="state_retry">Berriz saiatu</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d hautatuta</item>
         <item quantity="other">%1$d hautatuta</item>

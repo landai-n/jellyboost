@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Lecture directe</string>
     <string name="player_method_direct_stream">Flux direct</string>
     <string name="player_method_transcode">Transcodage</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Votre appareil n\'a pas pu décoder ce fichier, le serveur le transcode donc.</string>
     <string name="player_message_lower_quality">Le flux s\'est interrompu — nouvelle tentative avec une qualité inférieure.</string>
     <string name="player_message_track_restart">Le serveur a dû réencoder le flux pour cette piste.</string>

@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Žymėti kaip nežiūrėtą</string>
     <string name="detail_add_favorite">Pridėti prie mėgstamų</string>
     <string name="detail_remove_favorite">Pašalinti iš mėgstamų</string>
+    <string name="detail_play_target">Leisti %1$s</string>
+    <string name="detail_resume_target">Tęsti %1$s</string>
 
     <string name="detail_section_seasons">Sezonai</string>
     <string name="detail_section_next_up">Kas toliau</string>
     <string name="detail_section_episodes">Epizodai</string>
     <string name="detail_section_similar">Panašūs</string>
+    <string name="detail_section_cast">Aktoriai</string>
+    <string name="detail_type_movie">Filmas</string>
+    <string name="detail_type_series">Serialas</string>
+    <string name="detail_type_season">Sezonas</string>
+    <string name="detail_type_episode">Epizodas</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Epizodas %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Liko %1$d min</string>

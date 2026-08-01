@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Direct play</string>
     <string name="player_method_direct_stream">Direct stream</string>
     <string name="player_method_transcode">Transcoding</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Hindi ma-decode ng device mo ang file na ito, kaya tinatranscode ito ng server.</string>
     <string name="player_message_lower_quality">Na-stall ang stream — sinusubukan ulit sa mas mababang kalidad.</string>
     <string name="player_message_track_restart">Kinailangan ng server na i-re-encode ang stream para sa track na iyon.</string>

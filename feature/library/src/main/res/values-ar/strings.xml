@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">لا توجد مكتبات بعد. أضف واحدة على الخادم.</string>
+    <string name="libraries_title">المكتبات</string>
 
     <string name="library_back">رجوع</string>
     <string name="library_home">الرئيسية</string>
     <string name="library_sort">فرز</string>
     <string name="library_filter">تصفية</string>
+    <string name="library_filter_all">الكل</string>
+    <string name="library_filter_more">عوامل التصفية</string>
 
     <string name="library_sort_title">الفرز حسب</string>
     <string name="library_sort_name">الاسم</string>

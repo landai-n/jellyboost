@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ยังไม่มีคลังสื่อ เพิ่มคลังบนเซิร์ฟเวอร์</string>
+    <string name="libraries_title">คลังสื่อ</string>
     <string name="library_back">ย้อนกลับ</string>
     <string name="library_home">หน้าแรก</string>
     <string name="library_sort">จัดเรียง</string>
     <string name="library_filter">กรอง</string>
+    <string name="library_filter_all">ทั้งหมด</string>
+    <string name="library_filter_more">ตัวกรอง</string>
     <string name="library_sort_title">จัดเรียงตาม</string>
     <string name="library_sort_name">ชื่อ</string>
     <string name="library_sort_date_added">วันที่เพิ่ม</string>

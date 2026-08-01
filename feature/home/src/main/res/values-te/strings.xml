@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">చూడటం కొనసాగించండి</string>
     <string name="home_section_next_up">తర్వాత రానున్నవి</string>
     <string name="home_section_latest">తాజా %1$s</string>
+    <string name="home_hero_resume">కొనసాగించండి</string>
+    <string name="home_hero_play">ప్లే చేయండి</string>
+    <string name="home_hero_details">వివరాలు</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d నిమిషం మిగిలి ఉంది</item>
+        <item quantity="other">%1$d నిమిషాలు మిగిలి ఉన్నాయి</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dనిమి మిగిలి</string>
+    <string name="home_quick_access_offline">ఆఫ్‌లైన్</string>
 </resources>

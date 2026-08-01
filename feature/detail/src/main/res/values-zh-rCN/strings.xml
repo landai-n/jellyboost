@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">标记为未观看</string>
     <string name="detail_add_favorite">添加到收藏</string>
     <string name="detail_remove_favorite">从收藏中移除</string>
+    <string name="detail_play_target">播放 %1$s</string>
+    <string name="detail_resume_target">继续播放 %1$s</string>
 
     <string name="detail_section_seasons">季</string>
     <string name="detail_section_next_up">接下来</string>
     <string name="detail_section_episodes">剧集</string>
     <string name="detail_section_similar">更多类似内容</string>
+    <string name="detail_section_cast">演员表</string>
+    <string name="detail_type_movie">电影</string>
+    <string name="detail_type_series">剧集</string>
+    <string name="detail_type_season">季</string>
+    <string name="detail_type_episode">集</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">第%1$d集</string>
 
     <string name="detail_runtime_minutes">%1$d 分钟</string>
     <string name="detail_remaining_minutes">剩余 %1$d 分钟</string>

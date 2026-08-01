@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Chưa có thư viện nào. Thêm một thư viện trên máy chủ.</string>
+    <string name="libraries_title">Thư viện</string>
     <string name="library_back">Quay lại</string>
     <string name="library_home">Trang chủ</string>
     <string name="library_sort">Sắp xếp</string>
     <string name="library_filter">Lọc</string>
+    <string name="library_filter_all">Tất cả</string>
+    <string name="library_filter_more">Bộ lọc</string>
     <string name="library_sort_title">Sắp xếp theo</string>
     <string name="library_sort_name">Tên</string>
     <string name="library_sort_date_added">Ngày thêm</string>

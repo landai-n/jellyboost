@@ -55,6 +55,28 @@ syncplay, downloads). Screenshot-test frameworks evaluated and rejected for now 
 compileSdk 37.1 blocks Roborazzi/Paparazzi; no disk for an emulator — see DECISIONS).
 Left on the device: HotD S3:E1 stays downloaded (useful for M11's local-in-group DoD item).
 
+## 2026 design refresh — full-app modern UI pass (2026-08-01 — IN PROGRESS)
+
+User-directed integration of the modernized design system authored remotely on
+claude.ai/design ("Jellyboost Design System", updated 2026-08-01: new
+`_shared/modern.css` modern surface layer + `foundations/surfaces.html` + 12 rebuilt
+screen mocks + 10 rebuilt component cards). Pure UI restyle — no feature changes except
+user-approved convenience displays (home hero, card overlay metadata, library count
+tiles, detail cast rail, downloads tablet stats). Approved plan:
+`~/.claude/plans/integrate-the-modernized-design-hidden-bear.md`. Four DECISIONS
+entries logged 2026-08-01 (nav chrome reversal of M9, Haze dependency, white primary
+buttons, card-metric changes + `ItemDetailSizingTest` re-pins).
+
+Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
+elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
+filled fields, card overlays, glass selection bar) → 3 chrome (GlassBottomNav pill
+<560dp / GlassTopNav ≥560dp, Haze wiring, `LocalAppChromePadding`) → 4a–f screens
+(home/library/detail/downloads/player/auth) → 5 unmocked-surface sweep
+(settings/search/syncplay/sheets/dialogs) → 6 i18n (69 locales) → 7 design-mirror +
+docs sync. Deliberately ignored mock elements (no matching feature): in-library
+search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapter ticks.
+Kept despite mock omission: queue move-down, connection indicator + offline banner.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

@@ -1,17 +1,24 @@
 package dev.jellyboost.app
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import dev.jellyboost.core.common.Routes
+import dev.jellyboost.core.ui.theme.Dimens
 
 // The shape of the app's chrome: which of the two navigation layouts a window gets, how tall each
 // one is, and the four destinations both of them switch between (DECISIONS.md 2026-08-01, the
@@ -42,21 +49,55 @@ internal val BottomNavMargin: Dp = 20.dp
 /** Height of the wide layout's navigation row, above whatever the status bar takes. */
 internal val TopNavHeight: Dp = 64.dp
 
-/**
- * Height of the compact layout's floating action cluster, its gap below the status bar included.
- *
- * The cluster is one row of 36dp glass buttons under an [ActionClusterTopGap] gap. It floats over
- * the content rather than reserving space; this is only how much of the top of the window
- * `AppScaffold` keeps clear of a screen's *first* row, so that a static header — the search field,
- * say — never comes to rest underneath it.
- */
-internal val ActionClusterHeight: Dp = 44.dp
-
 /** Gap between the status bar and the top of the compact action cluster's buttons. */
 internal val ActionClusterTopGap: Dp = 8.dp
 
-/** Distance the compact action cluster keeps from the right edge of the window. */
-internal val ActionClusterEndPadding: Dp = 12.dp
+/**
+ * Height of the compact layout's floating action cluster, its gap below the status bar included.
+ *
+ * *Derived*, not a number: the cluster is one row of glass action buttons under an
+ * [ActionClusterTopGap] gap, and each of those buttons lays out at [Dimens.MinTouchTarget] however
+ * big the circle it draws inside that frame is (see `JellyfinButtons.kt`). It used to be a literal
+ * 44dp, which was neither the 36dp circle nor the 48dp row that actually got laid out, and the
+ * 12dp shortfall is what let a screen's first row slide under the Cast and overflow buttons.
+ *
+ * The cluster floats over the content rather than reserving space; this is only how much of the top
+ * of the window `AppScaffold` keeps clear of a screen's *first* row, so that a static header — the
+ * search field, say — never comes to rest underneath it.
+ */
+internal val ActionClusterHeight: Dp = ActionClusterTopGap + Dimens.MinTouchTarget
+
+/**
+ * How far one app action's invisible [Dimens.MinTouchTarget] frame overhangs the circle it actually
+ * draws, on each side.
+ *
+ * The number every margin around the chrome's actions has to be corrected by: padding is applied to
+ * the frame, but what the eye lines up is the circle inside it.
+ */
+internal val ActionFrameOverhang: Dp = (Dimens.MinTouchTarget - Dimens.PillHeightSmall) / 2
+
+/** Distance the compact action cluster's last *circle* keeps from the right edge of the window. */
+internal val ActionClusterEndMargin: Dp = 12.dp
+
+/** That margin as padding on the cluster's frame — see [ActionFrameOverhang]. */
+internal val ActionClusterEndPadding: Dp = ActionClusterEndMargin - ActionFrameOverhang
+
+/**
+ * The insets every piece of *top* chrome keeps itself clear of: the status bar, and — the part both
+ * bars used to miss — the display cutout.
+ *
+ * `statusBarsPadding()` is only correct while the cutout is inside the status bar, which is the
+ * portrait case. Rotate a cutout device and the notch becomes a *horizontal* inset: the top nav's
+ * brand mark and the cluster's first circle both ended up underneath it. `safeDrawing` restricted to
+ * the top and horizontal sides covers both without pulling in the navigation bar or the IME, which
+ * belong to whatever the screen itself is doing at the bottom of the window.
+ */
+internal val TopChromeInsets: WindowInsets
+    @Composable get() = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+
+/** How far down the window [TopChromeInsets] pushes the chrome — the scrim's and the padding's top. */
+internal val topChromeInset: Dp
+    @Composable get() = TopChromeInsets.asPaddingValues().calculateTopPadding()
 
 /**
  * Whether a window [maxWidth] wide gets the floating bottom navigation pill rather than the top

@@ -48,6 +48,17 @@ object Dimens {
     /** Height of a secondary pill — tab bars, filter chips, and icon buttons in dense chrome. */
     val PillHeightSmall: Dp = 36.dp
 
+    /**
+     * The smallest area a control is allowed to *reserve*, whatever it draws inside it — Material's
+     * 48dp accessibility minimum.
+     *
+     * The refresh's buttons are deliberately smaller than this ([PillHeightSmall] circles, [PillHeight]
+     * pills), so every one of them lays out an invisible frame this size around its visual and centres
+     * the visual in it. Neighbours therefore cannot crowd a button's touch slop, and the drawn surface
+     * still comes out at the size the mocks specify — see `JellyfinButtons.kt`.
+     */
+    val MinTouchTarget: Dp = 48.dp
+
     /** Corner radius of the mini outlined metadata badge (rating, resolution, codec). */
     val MPillRadius: Dp = 6.dp
 

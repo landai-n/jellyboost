@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.popShadow
@@ -69,7 +70,10 @@ internal fun GlassBottomNav(
                 .padding(horizontal = BottomNavMargin)
                 .height(BottomNavHeight)
                 .popShadow(CircleShape)
-                .glassSurface(CircleShape)
+                // Chrome tint, not the card-level white@6%: the pill floats over whatever the page
+                // happens to have scrolled under it, and an unselected item's muted white label
+                // needs the blur behind it pulled down to stay readable over bright artwork.
+                .glassSurface(shape = CircleShape, tint = GlassDefaults.ChromeFill)
                 .padding(horizontal = BarHorizontalPadding),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,

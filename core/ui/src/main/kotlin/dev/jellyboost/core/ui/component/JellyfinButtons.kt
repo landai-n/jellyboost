@@ -1,28 +1,34 @@
 package dev.jellyboost.core.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +50,26 @@ import dev.jellyboost.core.ui.theme.glassSurface
 // deliberate departure from stock Material, which is why these are wrappers over `ButtonDefaults`
 // rather than a re-tuned colour scheme: every call site names the component it wants, and the choice
 // stays greppable and reversible.
+//
+// ### Why none of the three is an M3 `Button`
+// They were, until the drawn surfaces turned out not to be the size they asked for. `Button`
+// delegates to `Surface`, which applies `Modifier.minimumInteractiveComponentSize()` *inside* the
+// caller's modifier chain:
+//
+//     modifier /* the caller's */ → minimumInteractiveComponentSize() → surface() → clickable()
+//
+// The min-size node reports 48dp whatever it wraps, so a caller's `.size(36.dp).glassSurface(…)`
+// clipped, blurred and outlined the node *below* it — 48dp — and every glass circle in the app came
+// out the same size regardless of the diameter it declared (36, 44 and 34dp call sites all drew at
+// 48). Building the three from `Box`/`Row` puts the order back the right way round: the caller's
+// modifier stays outermost (so `fillMaxWidth`/`weight` still work), then the 48dp frame, then the
+// visual at its declared size, then the click target and its ripple *inside* the visual's clip.
+//
+// Nothing is given up on accessibility: the frame reserves [Dimens.MinTouchTarget] on both axes, so
+// the automatic 48dp touch slop Compose gives every pointer-input node has room to live in and
+// neighbouring controls cannot eat into it. What changes is that a row of these buttons is now
+// 48dp tall with a 36dp circle drawn in the middle of it, rather than a 48dp circle — which is why
+// call sites that space them apart may want *less* arrangement spacing than before.
 
 /** Container of a primary pill. Not `colorScheme.primary` — see the file KDoc. */
 private val PrimaryPillContainer = Color.White
@@ -79,6 +105,9 @@ private val PillIconSizeSmall = 16.dp
 /** Glyph size inside a [GlassIconButton], independent of the button's own diameter. */
 private val GlassIconSize = 18.dp
 
+/** Track width of the inline busy spinner a `loading` pill draws in place of its leading icon. */
+private val PillSpinnerStroke = 2.dp
+
 private val PillLabel =
     TextStyle(
         fontSize = 14.sp,
@@ -112,19 +141,18 @@ fun PrimaryPillButton(
     leadingIcon: ImageVector? = null,
     loading: Boolean = false,
 ) {
-    Button(
+    PillFrame(
         onClick = onClick,
-        modifier = modifier.height(if (small) Dimens.PillHeightSmall else Dimens.PillHeight),
         enabled = enabled,
-        shape = CircleShape,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = PrimaryPillContainer,
-                contentColor = PrimaryPillContent,
-                disabledContainerColor = PrimaryPillDisabledContainer,
-                disabledContentColor = PrimaryPillDisabledContent,
+        height = if (small) Dimens.PillHeightSmall else Dimens.PillHeight,
+        surface =
+            Modifier.background(
+                color = if (enabled) PrimaryPillContainer else PrimaryPillDisabledContainer,
+                shape = CircleShape,
             ),
         contentPadding = pillContentPadding(small),
+        contentColor = if (enabled) PrimaryPillContent else PrimaryPillDisabledContent,
+        modifier = modifier,
     ) {
         PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
     }
@@ -145,25 +173,17 @@ fun GhostPillButton(
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
 ) {
-    Button(
+    PillFrame(
         onClick = onClick,
-        // The glass goes on the *modifier* rather than through `containerColor`: the fill is a
-        // blurred backdrop sample, not a colour, so the button's own container has to be
-        // transparent and let the surface underneath it show through.
-        modifier =
-            modifier
-                .height(if (small) Dimens.PillHeightSmall else Dimens.PillHeight)
-                .glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder),
         enabled = enabled,
-        shape = CircleShape,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = GhostPillContent,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = GhostPillDisabledContent,
-            ),
+        height = if (small) Dimens.PillHeightSmall else Dimens.PillHeight,
+        // The glass is a *surface* rather than a container colour: the fill is a blurred backdrop
+        // sample, not a colour, so it has to be a modifier on the drawn pill and let whatever is
+        // underneath show through.
+        surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder),
         contentPadding = pillContentPadding(small),
+        contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
+        modifier = modifier,
     ) {
         PillContent(text = text, small = small, leadingIcon = leadingIcon)
     }
@@ -173,9 +193,12 @@ fun GhostPillButton(
  * A circular glass button holding a single glyph — the refresh's only icon-button shape, used for
  * back, close, search, cast, sort and the rest of the app's chrome.
  *
- * @param size diameter of the circle: 36dp in dense chrome, 44dp where the button stands alone as a
- *   primary-sized affordance. The glyph stays 18dp either way, so the two sizes differ in touch
- *   target rather than in weight.
+ * @param size diameter of the *drawn* circle: 36dp in dense chrome, 44dp where the button stands
+ *   alone as a primary-sized affordance. The glyph stays 18dp either way, so the two sizes differ in
+ *   weight rather than in reach — the button always reserves [Dimens.MinTouchTarget] around whatever
+ *   it draws (see this file's header).
+ * @param surfaceTint the glass fill. [GlassDefaults.Fill] for a button inside a screen's own
+ *   content; chrome floating over arbitrary artwork passes [GlassDefaults.ChromeFill].
  */
 @Composable
 fun GlassIconButton(
@@ -185,38 +208,87 @@ fun GlassIconButton(
     modifier: Modifier = Modifier,
     size: Dp = Dimens.PillHeightSmall,
     tint: Color = GlassIconTint,
+    surfaceTint: Color = GlassDefaults.Fill,
     enabled: Boolean = true,
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.size(size).glassSurface(CircleShape),
-        enabled = enabled,
-        shape = CircleShape,
-        colors =
-            ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = tint,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = tint.copy(alpha = tint.alpha * DISABLED_GLYPH_FACTOR),
-            ),
-        // A circle this small has no room for Material's default 24dp of button padding; the glyph
-        // is centred in the whole thing instead.
-        contentPadding = PaddingValues(0.dp),
+    Box(
+        modifier = modifier.size(Dimens.MinTouchTarget),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(GlassIconSize),
-        )
+        Box(
+            // The click target sits *inside* the glass so the ripple is clipped to the circle the
+            // user can see, rather than to the invisible frame around it.
+            modifier =
+                Modifier
+                    .size(size)
+                    .glassSurface(shape = CircleShape, tint = surfaceTint)
+                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = if (enabled) tint else tint.copy(alpha = tint.alpha * DISABLED_GLYPH_FACTOR),
+                modifier = Modifier.size(GlassIconSize),
+            )
+        }
     }
 }
 
 /** How much of its alpha a glass glyph keeps once the button is disabled. */
 private const val DISABLED_GLYPH_FACTOR = 0.45f
 
+/**
+ * The frame both pills are drawn in: the visual at exactly [height], centred inside an invisible
+ * interactive area at least [Dimens.MinTouchTarget] tall.
+ *
+ * `propagateMinConstraints` is what keeps the two honest about width. A caller's `fillMaxWidth()`
+ * or `weight(1f)` arrives as a *minimum* width on this box, and propagating it means the drawn pill
+ * fills the same width the caller asked for instead of hugging its label in the middle of an empty
+ * frame; a caller that constrains nothing propagates a zero minimum, and the pill hugs its content
+ * as it always did. `requiredHeight` then overrides the propagated minimum *height* — that one is
+ * the 48dp frame's, not the pill's, and the pill must stay at the height the design specifies.
+ */
+@Composable
+private fun PillFrame(
+    onClick: () -> Unit,
+    enabled: Boolean,
+    height: Dp,
+    surface: Modifier,
+    contentPadding: PaddingValues,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier.heightIn(min = Dimens.MinTouchTarget),
+        propagateMinConstraints = true,
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .requiredHeight(height)
+                    .defaultMinSize(minWidth = Dimens.MinTouchTarget)
+                    .clip(CircleShape)
+                    .then(surface)
+                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                    .padding(contentPadding),
+            horizontalArrangement = Arrangement.spacedBy(PillIconGap, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CompositionLocalProvider(LocalContentColor provides contentColor) { content() }
+        }
+    }
+}
+
 private fun pillContentPadding(small: Boolean): PaddingValues =
     PaddingValues(horizontal = if (small) PillHorizontalPaddingSmall else PillHorizontalPadding)
 
+/**
+ * A pill's glyph and label, emitted straight into [PillFrame]'s row — the gap between them is that
+ * row's arrangement rather than a nested one, so a pill that fills its width centres the pair.
+ */
 @Composable
 private fun PillContent(
     text: String,
@@ -224,31 +296,26 @@ private fun PillContent(
     leadingIcon: ImageVector?,
     loading: Boolean = false,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(PillIconGap),
-    ) {
-        val iconSize = if (small) PillIconSizeSmall else PillIconSize
-        if (loading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(iconSize),
-                color = LocalContentColor.current,
-                strokeWidth = 2.dp,
-            )
-        } else if (leadingIcon != null) {
-            Icon(
-                imageVector = leadingIcon,
-                contentDescription = null,
-                modifier = Modifier.size(iconSize),
-            )
-        }
-        Text(
-            text = text,
-            style = if (small) PillLabelSmall else PillLabel,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+    val iconSize = if (small) PillIconSizeSmall else PillIconSize
+    if (loading) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(iconSize),
+            color = LocalContentColor.current,
+            strokeWidth = PillSpinnerStroke,
+        )
+    } else if (leadingIcon != null) {
+        Icon(
+            imageVector = leadingIcon,
+            contentDescription = null,
+            modifier = Modifier.size(iconSize),
         )
     }
+    Text(
+        text = text,
+        style = if (small) PillLabelSmall else PillLabel,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Preview(name = "Pill buttons", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)

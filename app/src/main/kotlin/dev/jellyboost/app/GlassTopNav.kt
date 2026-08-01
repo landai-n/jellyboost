@@ -4,13 +4,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -54,7 +56,18 @@ import dev.jellyboost.core.ui.R as CoreUiR
  *
  * The row draws over the content rather than above it — `AppScaffold` hands screens the height
  * through `LocalAppChromePadding` so their first row comes to rest just below the bar and the rest
- * scrolls under it.
+ * scrolls under it. What keeps it *readable* over a bright backdrop is not a background on this row
+ * — that would be the nested-effect mistake described above — but the `TopChromeScrim` band
+ * `AppScaffold` draws as a sibling underneath it, plus the darker [GlassDefaults.ChromeFill] its
+ * pieces are tinted with (DECISIONS.md 2026-08-01, chrome readability).
+ *
+ * ### Fitting at the breakpoint
+ * The row does not scroll and never clips: the tab capsule takes whatever the brand mark and the
+ * actions leave (`weight`), and its four tabs share *that* evenly and ellipsise their labels. At
+ * 560dp — the narrowest window that gets this bar at all — a full set of four actions leaves the
+ * labels heavily abbreviated, which is the intended degradation; before, the trailing actions
+ * simply ran off the end of the window, because a `Spacer(weight)` collapses to zero and then the
+ * row overflowed.
  *
  * @param currentDestination selects the tab; `null` while the graph is still settling.
  * @param connectionState decides whether the offline status icon is drawn, and which one.
@@ -76,9 +89,11 @@ internal fun GlassTopNav(
         modifier =
             modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
+                .windowInsetsPadding(TopChromeInsets)
                 .height(TopNavHeight)
-                .padding(horizontal = BarHorizontalPadding),
+                // The trailing edge is corrected for the actions' invisible frame, so the last
+                // *circle* sits the same distance from the window edge as the brand mark does.
+                .padding(start = BarHorizontalPadding, end = BarHorizontalPadding - ActionFrameOverhang),
         horizontalArrangement = Arrangement.spacedBy(BarGap),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -90,9 +105,13 @@ internal fun GlassTopNav(
             modifier = Modifier.size(width = BrandMarkWidth, height = BrandMarkHeight),
         )
 
-        TopNavTabs(currentDestination = currentDestination, onSelectTab = onSelectTab)
-
-        Spacer(modifier = Modifier.weight(1f))
+        // A weighted box rather than the capsule plus a `Spacer(weight)`: the box is what pushes the
+        // actions to the end, and it hands the capsule a *maximum* width to fit inside instead of
+        // letting it take its intrinsic width and shove them off the edge. The capsule still hugs
+        // its tabs whenever there is room, because the box wraps its content.
+        Box(modifier = Modifier.weight(1f)) {
+            TopNavTabs(currentDestination = currentDestination, onSelectTab = onSelectTab)
+        }
 
         AppActions(
             connectionState = connectionState,
@@ -108,9 +127,17 @@ internal fun GlassTopNav(
 /**
  * The four destinations as one glass capsule.
  *
- * The capsule's fill is a flat [GlassDefaults.Fill] rather than a blur: it is already sitting on the
- * glass of its own tabs' container in the mocks, and nesting a second `hazeEffect` inside the
- * buttons it holds would blur an effect rather than the page — see this file's KDoc.
+ * The capsule's fill is flat rather than a blur: it is already sitting on the glass of its own tabs'
+ * container in the mocks, and nesting a second `hazeEffect` inside the buttons it holds would blur
+ * an effect rather than the page — see this file's KDoc. The colour is [GlassDefaults.ChromeFill]
+ * rather than the white@6% [GlassDefaults.Fill] the mocks specify, because an unselected tab's label
+ * is `onSurfaceVariant` — white at 70% — and white-on-white is what the bar looked like whenever the
+ * hero behind it happened to be a bright frame.
+ *
+ * Every tab is weighted so that a capsule with less room than it wants starves all four equally and
+ * each ellipsises its own label, rather than measuring them in order and leaving the last one with
+ * nothing — the same reasoning `GlassBottomNav.UNSELECTED_ITEM_WEIGHT` records. `fill = false` is
+ * what keeps a *roomy* capsule hugging its tabs instead of stretching them across the window.
  */
 @Composable
 private fun TopNavTabs(
@@ -121,7 +148,7 @@ private fun TopNavTabs(
         modifier =
             Modifier
                 .clip(CircleShape)
-                .background(color = GlassDefaults.Fill, shape = CircleShape)
+                .background(color = GlassDefaults.ChromeFill, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                 .padding(TabBarPadding),
         horizontalArrangement = Arrangement.spacedBy(TabGap),
@@ -132,6 +159,7 @@ private fun TopNavTabs(
                 tab = tab,
                 selected = currentDestination.isSelected(tab),
                 onClick = { onSelectTab(tab.route) },
+                modifier = Modifier.weight(1f, fill = false),
             )
         }
     }
@@ -149,12 +177,13 @@ private fun TopNavTab(
     tab: TopLevelTab,
     selected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val contentColor = if (selected) SelectedContent else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier =
-            Modifier
+            modifier
                 .height(Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
@@ -224,3 +253,41 @@ private fun TopNavTabsPreview() {
         }
     }
 }
+
+/**
+ * The capsule at the three widths the bar's own weighted box hands it on a 560 / 640 / 740dp window
+ * with two app actions showing — 358, 438 and 538dp.
+ *
+ * This is the fit check for the row: the capsule has to stay *inside* each of those boxes (the
+ * dashed-looking edge of the surrounding box is exactly the space it is allowed) with its labels
+ * ellipsised rather than its last tab pushed out. The full bar cannot be previewed — its actions
+ * include `CastRouteButton`, which resolves a `hiltViewModel()`.
+ */
+@Preview(
+    name = "GlassTopNav tabs — 560/640/740dp windows",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 560,
+)
+@Composable
+private fun TopNavTabsFitPreview() {
+    JellyfinTheme {
+        Column(
+            modifier = Modifier.padding(Dimens.SpaceMedium),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        ) {
+            listOf(TabsBoxAt560, TabsBoxAt640, TabsBoxAt740).forEach { width ->
+                Box(modifier = Modifier.width(width)) {
+                    TopNavTabs(currentDestination = null, onSelectTab = {})
+                }
+            }
+        }
+    }
+}
+
+/** What the bar's weighted box measures out for the capsule at 560dp, with two actions showing. */
+private val TabsBoxAt560: Dp = 358.dp
+
+private val TabsBoxAt640: Dp = 438.dp
+
+private val TabsBoxAt740: Dp = 538.dp

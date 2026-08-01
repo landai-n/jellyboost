@@ -114,6 +114,64 @@ data class DownloadsUiState(
 
     /** `true` while at least one queue row is paused or failed. */
     val canResumeAll: Boolean = resumeAllTargets.isNotEmpty()
+
+    /**
+     * The queue's tablet-summary numbers (2026 refresh, Phase 4d — DECISIONS.md 2026-08-01,
+     * "Downloads restyle: a wide-layout queue summary").
+     *
+     * A pure derivation over [queue] and [speeds] — nothing here reads anything this class does not
+     * already carry — computed once in the constructor body for the same reason every other `val`
+     * above is: a queue that writes progress two to six times a second must not re-walk its own list
+     * on every one of the several places the wide `QueueStatPanel` reads it from.
+     */
+    val queueStats: QueueStats =
+        run {
+            // Existing fields only, per DownloadItem's own accessors: displayTotalBytes is the
+            // denominator DownloadRowsText already draws against (the projection when there is one,
+            // the enqueue-time ceiling otherwise), clamped so a row already past its own total never
+            // contributes a negative remainder.
+            val remaining =
+                queue.sumOf { (it.displayTotalBytes - it.bytesDownloaded).coerceAtLeast(0L) }
+            val bytesPerSecond = queue.sumOf { speeds[it.itemId] ?: 0L }
+            val eta =
+                if (bytesPerSecond > 0L && remaining > 0L) {
+                    // Same ceiling division and 24-hour guesswork guard as DownloadItem.etaSeconds
+                    // (DownloadRows.kt) — an aggregate ETA is exactly as untrustworthy as a per-row
+                    // one once it runs past a day, and the two must not disagree about where that
+                    // line is.
+                    ((remaining + bytesPerSecond - 1) / bytesPerSecond).takeIf { it <= ETA_GUARD_SECONDS }
+                } else {
+                    null
+                }
+            QueueStats(
+                itemCount = queue.size,
+                remainingBytes = remaining,
+                bytesPerSecond = bytesPerSecond,
+                etaSeconds = eta,
+            )
+        }
+}
+
+/**
+ * The Downloads screen's wide-layout "QUEUE" stat panel, in one place rather than three separate
+ * reads of [DownloadsUiState.queue] and [DownloadsUiState.speeds] (see [DownloadsUiState.queueStats]).
+ */
+data class QueueStats(
+    /** How many rows are on the queue tab — [DownloadsUiState.queue]'s own size. */
+    val itemCount: Int,
+    /** Bytes still to transfer across every queued row, summed and clamped at zero per row. */
+    val remainingBytes: Long,
+    /** Every row's current transfer rate added together, in bytes per second; `0` while idle. */
+    val bytesPerSecond: Long,
+    /**
+     * Ceiling-division ETA at [bytesPerSecond] for [remainingBytes], guarded the same way
+     * [DownloadItem.etaSeconds] is — `null` while nothing is moving, nothing remains, or the
+     * estimate would be beyond [ETA_GUARD_SECONDS] and so is guesswork rather than an estimate.
+     */
+    val etaSeconds: Long?,
+) {
+    /** `true` while nothing on the queue is transferring — the wide summary hides its speed/ETA line. */
+    val isIdle: Boolean get() = bytesPerSecond <= 0L
 }
 
 /**

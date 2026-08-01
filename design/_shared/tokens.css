@@ -28,11 +28,11 @@
   --space-xl: 24px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-card: 8px;
+  --radius-card: 12px;
 
   /* Card metrics (Dimens) */
-  --poster-width: 120px;
-  --thumb-width: 210px;
+  --poster-width: 128px;
+  --thumb-width: 232px;
   --backdrop-height: 220px;
   --badge-size: 20px;
 }

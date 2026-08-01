@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Kol kas nėra bibliotekų. Pridėkite vieną serveryje.</string>
+    <string name="libraries_title">Bibliotekos</string>
 
     <string name="library_back">Atgal</string>
     <string name="library_home">Pradžia</string>
     <string name="library_sort">Rikiuoti</string>
     <string name="library_filter">Filtras</string>
+    <string name="library_filter_all">Viskas</string>
+    <string name="library_filter_more">Filtrai</string>
 
     <string name="library_sort_title">Rikiuoti pagal</string>
     <string name="library_sort_name">Pavadinimas</string>

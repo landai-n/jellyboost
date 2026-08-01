@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">未視聴にする</string>
     <string name="detail_add_favorite">お気に入りに追加</string>
     <string name="detail_remove_favorite">お気に入りから削除</string>
+    <string name="detail_play_target">%1$sを再生</string>
+    <string name="detail_resume_target">%1$sを再開</string>
 
     <string name="detail_section_seasons">シーズン</string>
     <string name="detail_section_next_up">次のエピソード</string>
     <string name="detail_section_episodes">エピソード</string>
     <string name="detail_section_similar">関連作品</string>
+    <string name="detail_section_cast">キャスト</string>
+    <string name="detail_type_movie">映画</string>
+    <string name="detail_type_series">シリーズ</string>
+    <string name="detail_type_season">シーズン</string>
+    <string name="detail_type_episode">エピソード</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">第%1$d話</string>
 
     <string name="detail_runtime_minutes">%1$d分</string>
     <string name="detail_remaining_minutes">残り %1$d分</string>

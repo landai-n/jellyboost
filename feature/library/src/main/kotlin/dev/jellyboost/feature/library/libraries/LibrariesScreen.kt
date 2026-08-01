@@ -4,12 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -23,17 +28,23 @@ import dev.jellyboost.core.ui.component.LibraryCard
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.feature.library.R
 import dev.jellyboost.feature.library.toMessage
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The Libraries tab: every movie/TV library the user has, as a browsable grid
  * (docs/PLAN.md, "Confirmed decisions" — bottom nav bar Home / Libraries / Search / Downloads).
  *
- * It draws no bar of its own: `:app`'s combined `AppTopBar` carries the navigation and the app
- * actions for every top-level destination, and its selected tab already says "Libraries"
- * (DECISIONS.md 2026-07-29). Pushed screens such as `LibraryGridScreen` still own their bars,
- * because they have a back action and screen-specific actions to put in them.
+ * It draws no bar of its own: `:app`'s chrome carries the navigation and the app actions for every
+ * top-level destination, and its selected tab already says "Libraries" (DECISIONS.md 2026-07-29).
+ * Pushed screens such as `LibraryGridScreen` still own their bars, because they have a back action
+ * and screen-specific actions to put in them.
+ *
+ * Since the 2026 refresh that chrome *floats over* the grid rather than sitting above it, so the
+ * grid consumes `LocalAppChromePadding` in its `contentPadding` — see [LibrariesGrid].
  *
  * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call
  *   together with the rest of the navigation graph wiring, as it does for the other screens.
@@ -84,13 +95,35 @@ private fun LibrariesGrid(
     // avoid subcomposing per card (see the comment below); this is the single subcomposition that
     // buys the phone-vs-tablet branch in `librariesMinCellWidth` instead.
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        // The app's chrome floats over this grid rather than above it, so the first and last rows
+        // buy themselves clearance from it here; the rest of the grid scrolls under the glass.
+        val chrome = LocalAppChromePadding.current
         LazyVerticalGrid(
             columns = GridCells.Adaptive(librariesMinCellWidth(maxWidth)),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(Dimens.ScreenPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.ScreenPadding,
+                    end = Dimens.ScreenPadding,
+                    top = Dimens.ScreenPadding + chrome.calculateTopPadding(),
+                    bottom = Dimens.ScreenPadding + chrome.calculateBottomPadding(),
+                ),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         ) {
+            // The screen's title rides in the grid rather than above it, so it scrolls away with
+            // the first row instead of pinning a band of chrome over a screen that is already
+            // wearing the app's own (`DownloadsScreen` puts its `ScreenTitle` at the top of its
+            // content for the same reason).
+            item(key = TITLE_ITEM_KEY, span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = stringResource(R.string.libraries_title),
+                    style = JellyfinTypeExtras.ScreenTitle,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(bottom = Dimens.SpaceExtraSmall),
+                )
+            }
+
             items(
                 items = libraries,
                 key = LibraryView::id,
@@ -105,6 +138,12 @@ private fun LibrariesGrid(
                     library = library,
                     onClick = { onLibraryClick(library) },
                     width = Dp.Unspecified,
+                    // Absent for a library served from the offline cache, which stores no count
+                    // (`LibraryView.childCount`); the tile then draws its name alone.
+                    subtitle =
+                        library.childCount?.let { count ->
+                            pluralStringResource(CoreUiR.plurals.library_item_count, count, count)
+                        },
                 )
             }
         }
@@ -115,19 +154,16 @@ private fun LibrariesGrid(
  * Minimum grid column width for tablet / regular-width screens (>= [COMPACT_MAX_WIDTH]).
  *
  * This screen has no spec in docs/PLAN.md (only `LibraryGrid` — the paged item grid *inside* a
- * library — does), so 160dp was a screen-local guess. It read smaller than Home's *My Media* row,
- * which draws the same 16:9 library-tile shape at a fixed [Dimens.ThumbWidth] (210dp): on the test tablet, `Adaptive(160.dp)` settles at 4 portrait columns of ~161dp and 6 landscape columns of
- * ~174dp — both below Home's 210dp card, and portrait in particular is barely off the 160dp floor.
- * Anchoring the floor to [Dimens.ThumbWidth] itself (the same token Home's row uses) gives 3
- * portrait columns of ~218dp and 5 landscape columns of ~212dp — both now at or above the home
- * card width (`Adaptive` always grows cells to ≥ minSize) — and the widest of those, ~218dp, still
- * sits under `ArtworkRequestWidths.THUMB_DP` (224dp), so the artwork request size doesn't need to
- * change.
+ * library — does), so 160dp was a screen-local guess. It read smaller than Home's library row,
+ * which draws the same wide tile at a fixed [Dimens.ThumbWidth]; anchoring the floor to that same
+ * token is what keeps the two surfaces drawing one card shape. On the test tablet the grid then
+ * settles at 2 portrait columns and 4 landscape ones, every cell at or above Home's tile width
+ * (`Adaptive` always grows cells to >= minSize).
  *
  * At phone widths this floor is too tall: a 360dp device has 328dp available after
- * [Dimens.ScreenPadding], and `Adaptive` only starts a second column once two 210dp cells plus the
- * 12dp gutter fit (432dp) — below that it folds to a single full-width column, which is the device
- * bug this file was fixed for. See [librariesMinCellWidth] for the compact-width branch.
+ * [Dimens.ScreenPadding], and `Adaptive` only starts a second column once two cells plus the 12dp
+ * gutter fit — below that it folds to a single full-width column, which is the device bug this file
+ * was fixed for. See [librariesMinCellWidth] for the compact-width branch.
  */
 private val MIN_CELL_WIDTH = Dimens.ThumbWidth
 
@@ -136,9 +172,8 @@ private val MIN_CELL_WIDTH = Dimens.ThumbWidth
  *
  * 150dp is the largest floor that still gives a 360dp phone (328dp available) two columns:
  * `Adaptive` needs `2 * minSize + gutter <= available`, i.e. `2 * 150 + 12 = 312 <= 328`, so it
- * settles at 2 columns of ~158dp. It also stays comfortably above [Dimens.PosterWidth] (120dp) —
- * this is a 16:9 library tile, not a poster, and shrinking it to poster width would misread as a
- * different card type.
+ * settles at 2 columns of ~158dp. It also stays above [Dimens.PosterWidth] — this is a wide library
+ * tile, not a poster, and shrinking it to poster width would misread as a different card type.
  */
 private val COMPACT_MIN_CELL_WIDTH = 150.dp
 
@@ -147,8 +182,8 @@ private val COMPACT_MIN_CELL_WIDTH = 150.dp
  *
  * 600dp is the standard compact/medium width-class boundary, and comfortably below every width
  * this screen actually renders at on a tablet: the test tablet is 711dp in portrait and 1138dp in
- * landscape, so both stay on the [MIN_CELL_WIDTH] (210dp) branch and the tablet render this file
- * was calibrated against is unchanged.
+ * landscape, so both stay on the [MIN_CELL_WIDTH] branch and the tablet render this file was
+ * calibrated against is unchanged.
  */
 private val COMPACT_MAX_WIDTH = 600.dp
 
@@ -164,6 +199,8 @@ internal fun librariesMinCellWidth(maxWidth: Dp): Dp =
 
 private const val LIBRARY_CELL_CONTENT_TYPE = "library-card"
 
+private const val TITLE_ITEM_KEY = "libraries-title"
+
 @Preview(name = "Libraries", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 800)
 @Composable
 private fun LibrariesContentPreview() {
@@ -172,7 +209,13 @@ private fun LibrariesContentPreview() {
             isLoading = false,
             libraries =
                 listOf(
-                    LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES),
+                    LibraryView(
+                        id = "lib-movies",
+                        name = "Movies",
+                        collectionType = CollectionKind.MOVIES,
+                        childCount = 412,
+                    ),
+                    // No count: what a library restored from the offline cache looks like.
                     LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS),
                 ),
         )
@@ -190,7 +233,13 @@ private fun LibrariesContentPhonePreview() {
             isLoading = false,
             libraries =
                 listOf(
-                    LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES),
+                    LibraryView(
+                        id = "lib-movies",
+                        name = "Movies",
+                        collectionType = CollectionKind.MOVIES,
+                        childCount = 412,
+                    ),
+                    // No count: what a library restored from the offline cache looks like.
                     LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS),
                 ),
         )

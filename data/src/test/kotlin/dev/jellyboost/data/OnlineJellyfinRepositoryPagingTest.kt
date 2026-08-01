@@ -230,6 +230,43 @@ class OnlineJellyfinRepositoryPagingTest {
             repository.getItemsPaged(libraryQuery()).asSnapshot().shouldBeEmpty()
         }
 
+    // ---- the total record count ---------------------------------------------------------------
+
+    @Test
+    fun `only the first page asks the server to count the library`() =
+        runTest {
+            stubPagedLibrary()
+
+            repository.getItemsPaged(libraryQuery()).asSnapshot { scrollTo(index = 60) }
+
+            requests.size shouldBe 2
+            // The header's "N items" costs one COUNT for the whole scroll, not one per page
+            // (DECISIONS.md 2026-08-01).
+            requests.first().enableTotalRecordCount shouldBe true
+            requests.drop(1).none { it.enableTotalRecordCount == true } shouldBe true
+        }
+
+    @Test
+    fun `the total the first page carries reaches the caller exactly once`() =
+        runTest {
+            // Unlike `stubPagedLibrary`, this server reports the size of the *library* rather than
+            // of the page it is answering with — which is what a real total record count is.
+            coEvery { itemsApi.getItems(any<GetItemsRequest>()) } answers {
+                val request = firstArg<GetItemsRequest>()
+                requests += request
+                val start = request.startIndex ?: 0
+                val limit = request.limit ?: PAGE_SIZE
+                queryResponse(library.drop(start).take(limit), totalRecordCount = TOTAL_ITEMS)
+            }
+            val totals = mutableListOf<Int>()
+
+            repository
+                .getItemsPaged(libraryQuery()) { totals += it }
+                .asSnapshot { scrollTo(index = 60) }
+
+            totals shouldContainExactly listOf(TOTAL_ITEMS)
+        }
+
     // ---- getFilterFacets --------------------------------------------------------------------
 
     @Test
@@ -304,17 +341,19 @@ class OnlineJellyfinRepositoryPagingTest {
         }
     }
 
-    private fun queryResponse(items: List<BaseItemDto>) =
-        Response(
-            content =
-                BaseItemDtoQueryResult(
-                    items = items,
-                    totalRecordCount = items.size,
-                    startIndex = 0,
-                ),
-            status = 200,
-            headers = emptyMap(),
-        )
+    private fun queryResponse(
+        items: List<BaseItemDto>,
+        totalRecordCount: Int = items.size,
+    ) = Response(
+        content =
+            BaseItemDtoQueryResult(
+                items = items,
+                totalRecordCount = totalRecordCount,
+                startIndex = 0,
+            ),
+        status = 200,
+        headers = emptyMap(),
+    )
 
     private fun filtersResponse(filters: QueryFiltersLegacy) =
         Response(content = filters, status = 200, headers = emptyMap())

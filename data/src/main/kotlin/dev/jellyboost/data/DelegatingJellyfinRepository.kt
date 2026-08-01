@@ -107,12 +107,19 @@ internal class DelegatingJellyfinRepository
          * the downloaded items instead of freezing on a failed page.
          */
         @OptIn(ExperimentalCoroutinesApi::class)
-        override fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>> =
+        override fun getItemsPaged(
+            query: ItemQuery,
+            onTotalCount: (Int) -> Unit,
+        ): Flow<PagingData<JellyfinItem>> =
             connectionState.state
                 .map { it.isOnline }
                 .distinctUntilChanged()
                 .flatMapLatest { isOnline ->
-                    if (isOnline) online.getItemsPaged(query) else offline.getItemsPaged(query)
+                    if (isOnline) {
+                        online.getItemsPaged(query, onTotalCount)
+                    } else {
+                        offline.getItemsPaged(query, onTotalCount)
+                    }
                 }
 
         /**

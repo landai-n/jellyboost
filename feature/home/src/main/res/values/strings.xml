@@ -10,4 +10,20 @@
     <string name="home_section_next_up">Next Up</string>
     <!-- %1$s is a library name, e.g. "Latest Movies" -->
     <string name="home_section_latest">Latest %1$s</string>
+
+    <!-- Continue-watching hero (2026 refresh) -->
+    <string name="home_hero_resume">Resume</string>
+    <string name="home_hero_play">Play</string>
+    <string name="home_hero_details">Details</string>
+    <!-- How much of the hero item is left to watch. %1$d is a whole number of minutes. -->
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d min left</item>
+        <item quantity="other">%1$d min left</item>
+    </plurals>
+
+    <!-- Card overlays and quick access (2026 refresh) -->
+    <!-- Time left on a card corner, where only a few characters fit. %1$d is minutes. -->
+    <string name="home_time_left_short">%1$dm left</string>
+    <!-- Quick-access chip that opens the Downloads tab -->
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

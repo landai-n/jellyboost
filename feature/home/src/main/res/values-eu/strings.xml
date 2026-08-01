@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">Ikusten Jarraitu</string>
     <string name="home_section_next_up">Hurrengoa</string>
     <string name="home_section_latest">%1$s berrienak</string>
+    <string name="home_hero_resume">Jarraitu</string>
+    <string name="home_hero_play">Erreproduzitu</string>
+    <string name="home_hero_details">Xehetasunak</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minutu falta</item>
+        <item quantity="other">%1$d minutu falta</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin falta</string>
+    <string name="home_quick_access_offline">Lineaz kanpo</string>
 </resources>

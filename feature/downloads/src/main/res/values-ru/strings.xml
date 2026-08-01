@@ -3,10 +3,24 @@
     <string name="downloads_tab_downloaded">Загружено</string>
     <string name="downloads_tab_queue">Очередь</string>
     <string name="downloads_wifi_only">Только Wi-Fi</string>
+    <string name="downloads_screen_title">Загрузки</string>
 
     <string name="downloads_group_movies">Фильмы</string>
 
     <string name="downloads_storage_summary">Занято: %1$s · свободно: %2$s</string>
+    <string name="downloads_storage_free">свободно: %1$s</string>
+    <string name="downloads_stat_on_device">На этом устройстве</string>
+    <string name="downloads_stat_queue">Очередь</string>
+    <string name="downloads_stat_network">Сеть</string>
+    <string name="downloads_stat_free_of">свободно %1$s из %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d элемент · %2$s</item>
+        <item quantity="few">%1$d элемента · %2$s</item>
+        <item quantity="many">%1$d элементов · %2$s</item>
+        <item quantity="other">%1$d элементов · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">осталось около %1$s</string>
+    <string name="downloads_stat_network_helper">Автоматически приостанавливается при мобильном интернете</string>
 
     <string name="downloads_action_delete">Удалить загрузку</string>
     <string name="downloads_action_cancel">Отменить загрузку</string>

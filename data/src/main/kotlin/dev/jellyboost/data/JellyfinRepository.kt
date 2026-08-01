@@ -147,8 +147,16 @@ interface JellyfinRepository {
      * @param query everything the grid can vary: library, item types, sort and filters.
      *   [ItemQuery.startIndex] and [ItemQuery.limit] are overridden per page and can be left at
      *   their defaults.
+     * @param onTotalCount how many items match [query] in total, reported at most once per load of
+     *   the stream and only where the source can answer — the online grid asks the server for it on
+     *   its first page, the offline one never does (DECISIONS.md 2026-08-01). It is a callback
+     *   rather than part of the stream because `PagingData` carries items and nothing else; the
+     *   default drops it, which is what every caller but the library header wants.
      */
-    fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>>
+    fun getItemsPaged(
+        query: ItemQuery,
+        onTotalCount: (Int) -> Unit = {},
+    ): Flow<PagingData<JellyfinItem>>
 
     /**
      * One unpaged page of items — the search screen's source.

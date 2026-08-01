@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Niðurhalað</string>
     <string name="downloads_tab_queue">Bíðirøð</string>
     <string name="downloads_wifi_only">Bert Wi‑Fi</string>
+    <string name="downloads_screen_title">Niðurhal</string>
 
     <string name="downloads_group_movies">Filmar</string>
 
     <string name="downloads_storage_summary">%1$s brúkt · %2$s frítt</string>
+    <string name="downloads_storage_free">%1$s frítt</string>
+    <string name="downloads_stat_on_device">Á hesum tólinum</string>
+    <string name="downloads_stat_queue">Bíðirøð</string>
+    <string name="downloads_stat_network">Net</string>
+    <string name="downloads_stat_free_of">%1$s frítt av %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d lutur · %2$s</item>
+        <item quantity="other">%1$d lutir · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">umleið %1$s eftir</string>
+    <string name="downloads_stat_network_helper">Steðgar sjálvvirkandi við mobildátur</string>
 
     <string name="downloads_action_delete">Strika niðurhal</string>
     <string name="downloads_action_cancel">Avlýs niðurhal</string>

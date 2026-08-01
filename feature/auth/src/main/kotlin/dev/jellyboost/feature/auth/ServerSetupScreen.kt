@@ -1,7 +1,9 @@
 package dev.jellyboost.feature.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -20,20 +22,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,24 +41,35 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.network.model.DiscoveredServer
+import dev.jellyboost.core.ui.component.ErrorBanner
+import dev.jellyboost.core.ui.component.JellyfinTextField
+import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinGradients
+import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /** Widest the auth forms grow to; keeps them readable on the tablet the project targets. */
 internal val AuthContentMaxWidth = 460.dp
@@ -85,7 +95,7 @@ private val HeroLogoSize = 88.dp
 internal val InlineLogoSize = 36.dp
 
 /** Diameter of the leading badge on a discovered-server card. */
-private val ServerBadgeSize = 40.dp
+private val ServerBadgeSize = 38.dp
 
 /**
  * Minimum window width for the side-by-side auth layout (branding pane + form pane). Matches the
@@ -94,12 +104,53 @@ private val ServerBadgeSize = 40.dp
 private val AuthTwoPaneMinWidth = 840.dp
 
 /**
+ * Heading atop each screen's primary panel ("Connect to server", "Sign in") — 2026 refresh
+ * (DECISIONS.md 2026-08-01). Shared between [ServerSetupScreen] and `LoginScreen` because both
+ * live in this module and both want the exact same restyle of what used to be `titleLarge`.
+ */
+internal val AuthHeadingStyle =
+    TextStyle(
+        fontSize = 22.sp,
+        fontWeight = FontWeight.W600,
+        letterSpacing = (-0.01).em,
+    )
+
+/** Inline failure copy below an auth form — the refresh's error-text size, shared by both screens. */
+internal val AuthErrorTextStyle = TextStyle(fontSize = 13.sp, lineHeight = 18.sp)
+
+/** The tagline under the ServerSetup wordmark: smaller than any Material body role. */
+private val TaglineStyle = TextStyle(fontSize = 13.sp, lineHeight = 18.sp)
+
+/** Discovered-server card name — 15sp/600, a step down from `titleMedium`. */
+private val ServerCardNameStyle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.W600)
+
+/** Vertical padding of a discovered-server card, per the m-surface spec (14×16dp). */
+private val ServerCardVerticalPadding = 14.dp
+
+/** Alpha of the discovered-server badge's primary fill / border. */
+private const val SERVER_BADGE_FILL_ALPHA = 0.14f
+private const val SERVER_BADGE_BORDER_ALPHA = 0.30f
+private val ServerBadgeBorderWidth = 1.dp
+private val ServerBadgeIconSize = 18.dp
+
+/** Track colour of an inline spinner or progress bar — white held at the refresh's low alpha. */
+private val TrackColor = Color.White.copy(alpha = 0.14f)
+
+/** Track colour of the manual-connect progress bar — the refresh calls this one out separately. */
+private val ProgressTrackColor = Color.White.copy(alpha = 0.12f)
+
+private val ConnectingProgressHeight = 4.dp
+
+/** Gap inside a manual/sign-in panel, per the m-panel spec (14dp — narrower than [Dimens.SpaceLarge]). */
+private val AuthPanelInnerGap = 14.dp
+
+/**
  * First screen of the app: pick a Jellyfin server, either from the local-network announcements or
  * by typing an address (docs/PLAN.md, "ServerSetup").
  *
- * Visually it is a branded landing screen: the gradient Jellyboost mark and wordmark sit in an
- * accent halo at the top, the servers found on the network are offered as tappable cards, and the
- * manual address entry is grouped into its own panel below them.
+ * Visually it is a branded landing screen: the Jellyboost mark and wordmark sit in an accent halo
+ * at the top, the servers found on the network are offered as tappable cards, and the manual
+ * address entry is grouped into its own panel below them.
  *
  * @param onNavigateToLogin invoked once an address has been resolved to a usable server.
  */
@@ -136,7 +187,7 @@ private fun ServerSetupContent(
     ) {
         Text(
             text = stringResource(R.string.server_setup_title),
-            style = MaterialTheme.typography.titleLarge,
+            style = AuthHeadingStyle,
             color = MaterialTheme.colorScheme.onBackground,
         )
 
@@ -176,15 +227,15 @@ private fun BrandHero() {
         JellyboostLogo(size = HeroLogoSize, contentDescription = null)
         Text(
             text = stringResource(R.string.auth_app_name),
-            style =
-                MaterialTheme.typography.headlineLarge.copy(
-                    brush = JellyfinGradients.Accent,
-                    fontWeight = FontWeight.Bold,
-                ),
+            // Solid white rather than the accent gradient (DECISIONS.md 2026-08-01): the wordmark
+            // is the one piece of brand type the refresh keeps flat, so it reads next to the
+            // gradient fin mark instead of competing with it.
+            style = JellyfinTypeExtras.Wordmark,
+            color = Color.White,
         )
         Text(
             text = stringResource(R.string.server_setup_tagline),
-            style = MaterialTheme.typography.bodyMedium,
+            style = TaglineStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -193,6 +244,9 @@ private fun BrandHero() {
 
 /**
  * The gradient fin mark, drawn from the shared vector so every auth surface uses one geometry.
+ *
+ * The vector itself lives in `:core:ui` rather than here: `:app`'s wide navigation bar draws the
+ * same mark, and a drawable in a feature module is not reachable from outside it.
  *
  * @param contentDescription `null` wherever the wordmark is already spelled out next to the logo.
  */
@@ -203,36 +257,19 @@ internal fun JellyboostLogo(
     modifier: Modifier = Modifier,
 ) {
     Image(
-        painter = painterResource(R.drawable.ic_jellyboost_logo),
+        painter = painterResource(CoreUiR.drawable.ic_jellyboost_logo),
         contentDescription = contentDescription,
         modifier = modifier.size(size),
     )
 }
 
-/** Why the user is back on this screen: an error-tinted panel, distinct from a failed attempt. */
+/** Why the user is back on this screen: an error-tinted banner, distinct from a failed attempt. */
 @Composable
 private fun SessionLostBanner() {
-    Surface(
+    ErrorBanner(
+        message = stringResource(R.string.server_setup_session_lost),
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
-    ) {
-        Row(
-            modifier = Modifier.padding(Dimens.SpaceLarge),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ErrorOutline,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.error,
-            )
-            Text(
-                text = stringResource(R.string.server_setup_session_lost),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -243,8 +280,10 @@ private fun DiscoveredServersSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
         Text(
-            text = stringResource(R.string.server_setup_discovered_title),
-            style = MaterialTheme.typography.titleSmall,
+            // The mocks' k-label caption: the same tracked-out uppercase style a field label
+            // renders inside JellyfinTextField, reused here for a section heading instead.
+            text = stringResource(R.string.server_setup_discovered_title).uppercase(),
+            style = JellyfinTypeExtras.Eyebrow,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
@@ -268,36 +307,45 @@ private fun DiscoveredServerCard(
     server: DiscoveredServer,
     onClick: () -> Unit,
 ) {
+    val shape = RoundedCornerShape(Dimens.CardCornerRadius)
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = shape,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
+            modifier = Modifier.padding(horizontal = Dimens.SpaceLarge, vertical = ServerCardVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         ) {
+            val badgeShape = RoundedCornerShape(Dimens.CardCornerRadius)
             Box(
                 modifier =
                     Modifier
                         .size(ServerBadgeSize)
-                        .clip(CircleShape)
-                        .background(JellyfinGradients.AccentDiagonal),
+                        .background(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = SERVER_BADGE_FILL_ALPHA),
+                            shape = badgeShape,
+                        ).border(
+                            width = ServerBadgeBorderWidth,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = SERVER_BADGE_BORDER_ALPHA),
+                            shape = badgeShape,
+                        ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Dns,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(ServerBadgeIconSize),
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    style = ServerCardNameStyle,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
@@ -328,23 +376,20 @@ private fun ManualAddressSection(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
     ) {
         Column(
-            modifier = Modifier.padding(Dimens.SpaceLarge),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+            modifier = Modifier.padding(Dimens.PanelPadding),
+            verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
         ) {
-            Text(
-                text = stringResource(R.string.server_setup_manual_title),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            OutlinedTextField(
+            JellyfinTextField(
                 value = state.address,
                 onValueChange = onAddressChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !state.isConnecting,
-                label = { Text(text = stringResource(R.string.server_setup_address_label)) },
+                // "Server address" — was the panel's own heading; now the field's own caption.
+                label = { Text(text = stringResource(R.string.server_setup_manual_title).uppercase()) },
                 placeholder = { Text(text = stringResource(R.string.server_setup_address_placeholder)) },
                 keyboardOptions =
                     KeyboardOptions(
@@ -360,19 +405,22 @@ private fun ManualAddressSection(
                     ),
             )
 
-            Button(
+            PrimaryPillButton(
+                text = stringResource(R.string.server_setup_connect),
                 onClick = {
                     keyboardController?.hide()
                     onConnect()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = state.canConnect,
-            ) {
-                Text(text = stringResource(R.string.server_setup_connect))
-            }
+            )
 
             if (state.isConnecting) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().height(ConnectingProgressHeight),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = ProgressTrackColor,
+                )
                 Text(
                     text = stringResource(R.string.server_setup_connecting),
                     style = MaterialTheme.typography.bodySmall,
@@ -394,7 +442,12 @@ private fun HintRow(
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         if (showSpinner) {
-            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = TrackColor,
+            )
         }
         Text(
             text = text,
@@ -546,7 +599,7 @@ internal fun AuthErrorBlock(
     Text(
         text = authErrorText(message),
         modifier = modifier.fillMaxWidth(),
-        style = MaterialTheme.typography.bodyMedium,
+        style = AuthErrorTextStyle,
         color = MaterialTheme.colorScheme.error,
     )
 }
@@ -570,4 +623,48 @@ internal fun OnNavigationEvent(
     onEvent: () -> Unit,
 ) {
     OnNavigationEvent<Unit>(flow) { onEvent() }
+}
+
+private val PreviewDiscoveredServers =
+    listOf(
+        DiscoveredServer(id = UUID.randomUUID(), name = "Living Room", address = "http://192.168.1.10:8096"),
+        DiscoveredServer(id = UUID.randomUUID(), name = "Office NAS", address = "http://192.168.1.24:8096"),
+    )
+
+@Preview(
+    name = "ServerSetup — portrait",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 400,
+    heightDp = 800,
+)
+@Composable
+private fun ServerSetupPortraitPreview() {
+    JellyfinTheme {
+        ServerSetupContent(
+            state = ServerSetupUiState(discoveredServers = PreviewDiscoveredServers, isDiscovering = false),
+            onAddressChange = {},
+            onConnect = {},
+            onDiscoveredServerClick = {},
+        )
+    }
+}
+
+@Preview(
+    name = "ServerSetup — two-pane",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 1000,
+    heightDp = 700,
+)
+@Composable
+private fun ServerSetupTwoPanePreview() {
+    JellyfinTheme {
+        ServerSetupContent(
+            state = ServerSetupUiState(discoveredServers = PreviewDiscoveredServers, isDiscovering = false),
+            onAddressChange = {},
+            onConnect = {},
+            onDiscoveredServerClick = {},
+        )
+    }
 }

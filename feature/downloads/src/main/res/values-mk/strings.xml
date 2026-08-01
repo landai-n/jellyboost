@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Преземено</string>
     <string name="downloads_tab_queue">Редица</string>
     <string name="downloads_wifi_only">Само Wi‑Fi</string>
+    <string name="downloads_screen_title">Преземања</string>
 
     <string name="downloads_group_movies">Филмови</string>
 
     <string name="downloads_storage_summary">%1$s искористено · %2$s слободно</string>
+    <string name="downloads_storage_free">%1$s слободно</string>
+    <string name="downloads_stat_on_device">На овој уред</string>
+    <string name="downloads_stat_queue">Редица</string>
+    <string name="downloads_stat_network">Мрежа</string>
+    <string name="downloads_stat_free_of">%1$s слободно од %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d ставка · %2$s</item>
+        <item quantity="other">%1$d ставки · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Уште приближно %1$s</string>
+    <string name="downloads_stat_network_helper">Автоматски се паузира на мобилни податоци</string>
 
     <string name="downloads_action_delete">Избриши преземање</string>
     <string name="downloads_action_cancel">Откажи преземање</string>

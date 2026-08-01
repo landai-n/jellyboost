@@ -3,10 +3,26 @@
     <string name="downloads_tab_downloaded">تم تنزيله</string>
     <string name="downloads_tab_queue">قائمة الانتظار</string>
     <string name="downloads_wifi_only">Wi‑Fi فقط</string>
+    <string name="downloads_screen_title">التنزيلات</string>
 
     <string name="downloads_group_movies">الأفلام</string>
 
     <string name="downloads_storage_summary">%1$s مستخدَمة · %2$s متاحة</string>
+    <string name="downloads_storage_free">%1$s متاحة</string>
+    <string name="downloads_stat_on_device">على هذا الجهاز</string>
+    <string name="downloads_stat_queue">قائمة الانتظار</string>
+    <string name="downloads_stat_network">الشبكة</string>
+    <string name="downloads_stat_free_of">%1$s متاحة من %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="zero">لا عناصر · %2$s</item>
+        <item quantity="one">عنصر واحد · %2$s</item>
+        <item quantity="two">عنصران · %2$s</item>
+        <item quantity="few">%1$d عناصر · %2$s</item>
+        <item quantity="many">%1$d عنصرًا · %2$s</item>
+        <item quantity="other">%1$d عنصر · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">نحو %1$s متبقٍ</string>
+    <string name="downloads_stat_network_helper">يتم الإيقاف المؤقت تلقائيًا عند استخدام بيانات الجوال</string>
 
     <string name="downloads_action_delete">حذف التنزيل</string>
     <string name="downloads_action_cancel">إلغاء التنزيل</string>

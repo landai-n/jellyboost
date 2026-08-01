@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ</string>
     <string name="detail_add_favorite">ಮೆಚ್ಚಿನವುಗಳಿಗೆ ಸೇರಿಸಿ</string>
     <string name="detail_remove_favorite">ಮೆಚ್ಚಿನವುಗಳಿಂದ ತೆಗೆದುಹಾಕಿ</string>
+    <string name="detail_play_target">%1$s ಪ್ಲೇ ಮಾಡಿ</string>
+    <string name="detail_resume_target">%1$s ಮುಂದುವರಿಸಿ</string>
 
     <string name="detail_section_seasons">ಸೀಸನ್‌ಗಳು</string>
     <string name="detail_section_next_up">ಮುಂದಿನದು</string>
     <string name="detail_section_episodes">ಸಂಚಿಕೆಗಳು</string>
     <string name="detail_section_similar">ಇದೇ ರೀತಿಯ ಇನ್ನಷ್ಟು</string>
+    <string name="detail_section_cast">ನಟವರ್ಗ</string>
+    <string name="detail_type_movie">ಚಲನಚಿತ್ರ</string>
+    <string name="detail_type_series">ಸರಣಿ</string>
+    <string name="detail_type_season">ಸೀಸನ್</string>
+    <string name="detail_type_episode">ಸಂಚಿಕೆ</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">ಸಂಚಿಕೆ %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d ನಿಮಿಷ</string>
     <string name="detail_remaining_minutes">%1$d ನಿಮಿಷ ಬಾಕಿ</string>

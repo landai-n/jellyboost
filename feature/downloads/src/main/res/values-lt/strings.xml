@@ -3,10 +3,24 @@
     <string name="downloads_tab_downloaded">Atsisiųsta</string>
     <string name="downloads_tab_queue">Eilė</string>
     <string name="downloads_wifi_only">Tik Wi‑Fi</string>
+    <string name="downloads_screen_title">Atsisiuntimai</string>
 
     <string name="downloads_group_movies">Filmai</string>
 
     <string name="downloads_storage_summary">Naudota %1$s · laisva %2$s</string>
+    <string name="downloads_storage_free">%1$s laisva</string>
+    <string name="downloads_stat_on_device">Šiame įrenginyje</string>
+    <string name="downloads_stat_queue">Eilė</string>
+    <string name="downloads_stat_network">Tinklas</string>
+    <string name="downloads_stat_free_of">%1$s laisva iš %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d elementas · %2$s</item>
+        <item quantity="few">%1$d elementai · %2$s</item>
+        <item quantity="many">%1$d elementų · %2$s</item>
+        <item quantity="other">%1$d elementų · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Liko maždaug %1$s</string>
+    <string name="downloads_stat_network_helper">Automatiškai pristabdoma naudojant mobiliuosius duomenis</string>
 
     <string name="downloads_action_delete">Ištrinti atsisiuntimą</string>
     <string name="downloads_action_cancel">Atšaukti atsisiuntimą</string>

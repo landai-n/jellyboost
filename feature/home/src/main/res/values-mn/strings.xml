@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Үзсээр байгаа</string>
     <string name="home_section_next_up">Дараагийн</string>
     <string name="home_section_latest">Сүүлийн үеийн %1$s</string>
+    <string name="home_hero_resume">Үргэлжлүүлэх</string>
+    <string name="home_hero_play">Тоглуулах</string>
+    <string name="home_hero_details">Дэлгэрэнгүй</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d минут үлдсэн</item>
+        <item quantity="other">%1$d минут үлдсэн</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dмин үлдсэн</string>
+    <string name="home_quick_access_offline">Офлайн</string>
 </resources>

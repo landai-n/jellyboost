@@ -6,6 +6,11 @@
     <string name="badge_download_failed">Baixada fallida</string>
     <string name="media_row_see_all">Mostra-ho tot</string>
     <string name="media_card_watched">Vist</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d element</item>
+        <item quantity="other">%1$d elements</item>
+    </plurals>
+    <string name="state_retry">Torna-ho a provar</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d seleccionat</item>
         <item quantity="other">%1$d seleccionats</item>

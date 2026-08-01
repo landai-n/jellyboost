@@ -1,5 +1,6 @@
 package dev.jellyboost.player.syncplay.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,12 +14,10 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,7 +33,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.PillChip
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
@@ -65,6 +67,7 @@ internal fun SyncPlayGroupSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         GroupSheetContent(
             state = state,
@@ -143,31 +146,34 @@ private fun GroupSheetContent(
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
             SyncPlayRepeatMode.entries.forEach { mode ->
-                FilterChip(
+                PillChip(
+                    text = stringResource(mode.labelRes()),
                     selected = mode == state.repeatMode,
                     onClick = { onSetRepeat(mode) },
-                    label = { Text(text = stringResource(mode.labelRes())) },
                 )
             }
         }
 
         HorizontalDivider()
 
-        OutlinedButton(
+        GhostPillButton(
+            text = stringResource(R.string.player_syncplay_leave),
             onClick = { confirmingLeave = true },
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null)
-            Text(
-                text = stringResource(R.string.player_syncplay_leave),
-                modifier = Modifier.padding(start = Dimens.SpaceSmall),
-            )
-        }
+            leadingIcon = Icons.AutoMirrored.Filled.Logout,
+        )
     }
 
     if (confirmingLeave) {
         AlertDialog(
             onDismissRequest = { confirmingLeave = false },
+            modifier =
+                Modifier.border(
+                    width = GlassDefaults.HairlineWidth,
+                    color = GlassDefaults.PanelHairline,
+                    shape = MaterialTheme.shapes.extraLarge,
+                ),
+            containerColor = MaterialTheme.colorScheme.surface,
             title = { Text(text = stringResource(R.string.player_syncplay_leave_title)) },
             text = { Text(text = stringResource(R.string.player_syncplay_leave_body)) },
             confirmButton = {

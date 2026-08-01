@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Әзірге кітапханалар жоқ. Серверде біреуін қосыңыз.</string>
+    <string name="libraries_title">Кітапханалар</string>
 
     <string name="library_back">Артқа</string>
     <string name="library_home">Басты бет</string>
     <string name="library_sort">Сұрыптау</string>
     <string name="library_filter">Сүзгі</string>
+    <string name="library_filter_all">Барлығы</string>
+    <string name="library_filter_more">Сүзгілер</string>
 
     <string name="library_sort_title">Сұрыптау тәртібі</string>
     <string name="library_sort_name">Атауы</string>

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Još nema biblioteka. Dodajte jednu na poslužitelju.</string>
+    <string name="libraries_title">Biblioteke</string>
 
     <string name="library_back">Natrag</string>
     <string name="library_home">Početna</string>
     <string name="library_sort">Razvrstaj</string>
     <string name="library_filter">Filtar</string>
+    <string name="library_filter_all">Sve</string>
+    <string name="library_filter_more">Filtri</string>
 
     <string name="library_sort_title">Razvrstaj po</string>
     <string name="library_sort_name">Naziv</string>

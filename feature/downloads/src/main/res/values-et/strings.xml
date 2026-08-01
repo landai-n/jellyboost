@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Alla laaditud</string>
     <string name="downloads_tab_queue">Järjekord</string>
     <string name="downloads_wifi_only">Ainult Wi‑Fi</string>
+    <string name="downloads_screen_title">Allalaadimised</string>
 
     <string name="downloads_group_movies">Filmid</string>
 
     <string name="downloads_storage_summary">%1$s kasutatud · %2$s vaba</string>
+    <string name="downloads_storage_free">%1$s vaba</string>
+    <string name="downloads_stat_on_device">Selles seadmes</string>
+    <string name="downloads_stat_queue">Järjekord</string>
+    <string name="downloads_stat_network">Võrk</string>
+    <string name="downloads_stat_free_of">%1$s vaba %2$s-st</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d üksus · %2$s</item>
+        <item quantity="other">%1$d üksust · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">umbes %1$s jäänud</string>
+    <string name="downloads_stat_network_helper">Peatatakse automaatselt mobiilse andmeside korral</string>
 
     <string name="downloads_action_delete">Kustuta allalaadimine</string>
     <string name="downloads_action_cancel">Tühista allalaadimine</string>

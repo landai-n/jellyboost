@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">డైరెక్ట్ ప్లే</string>
     <string name="player_method_direct_stream">డైరెక్ట్ స్ట్రీమ్</string>
     <string name="player_method_transcode">ట్రాన్స్‌కోడింగ్</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">మీ పరికరం ఈ ఫైల్‌ను డీకోడ్ చేయలేకపోయింది, కాబట్టి సర్వర్ దీన్ని ట్రాన్స్‌కోడ్ చేస్తోంది.</string>
     <string name="player_message_lower_quality">స్ట్రీమ్ ఆగిపోయింది — తక్కువ నాణ్యతతో మళ్లీ ప్రయత్నిస్తోంది.</string>

@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">ޑައުންލޯޑްކޮށްފި</string>
     <string name="downloads_tab_queue">ކިއޫ</string>
     <string name="downloads_wifi_only">Wi‑Fi އެކަނި</string>
+    <string name="downloads_screen_title">ޑައުންލޯޑްތައް</string>
 
     <string name="downloads_group_movies">ފިލްމުތައް</string>
 
     <string name="downloads_storage_summary">%1$s ބޭނުންކޮށްފި · %2$s ހުސް</string>
+    <string name="downloads_storage_free">%1$s ހުސް</string>
+    <string name="downloads_stat_on_device">މި ޑިވައިސްގައި</string>
+    <string name="downloads_stat_queue">ކިއޫ</string>
+    <string name="downloads_stat_network">ނެޓްވޯކް</string>
+    <string name="downloads_stat_free_of">%2$s ގެ ތެރެއިން %1$s ހުސް</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d އައިޓަމް · %2$s</item>
+        <item quantity="other">%1$d އައިޓަމް · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">ގާތްގަނޑަކަށް %1$s ބާކީ</string>
+    <string name="downloads_stat_network_helper">މޯބައިލް ޑޭޓާގައި އޮޓަމެޓިކުން މެދުކަނޑާލެވޭ</string>
 
     <string name="downloads_action_delete">ޑައުންލޯޑް ފޮހެލާ</string>
     <string name="downloads_action_cancel">ޑައުންލޯޑް ކެންސަލްކުރޭ</string>

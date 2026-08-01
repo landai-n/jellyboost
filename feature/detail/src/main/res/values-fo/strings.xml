@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Merk sum ósætt</string>
     <string name="detail_add_favorite">Legg til uppáhald</string>
     <string name="detail_remove_favorite">Tak burtur úr uppáhaldi</string>
+    <string name="detail_play_target">Spæl %1$s</string>
+    <string name="detail_resume_target">Halda áfram %1$s</string>
 
     <string name="detail_section_seasons">Sesongir</string>
     <string name="detail_section_next_up">Næsta</string>
     <string name="detail_section_episodes">Partar</string>
     <string name="detail_section_similar">Meira sum hetta</string>
+    <string name="detail_section_cast">Leikarar</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Sería</string>
+    <string name="detail_type_season">Sesong</string>
+    <string name="detail_type_episode">Partur</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Partur %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d mín.</string>
     <string name="detail_remaining_minutes">%1$d mín. eftir</string>

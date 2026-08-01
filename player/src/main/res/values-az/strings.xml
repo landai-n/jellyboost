@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Birbaşa oxutma</string>
     <string name="player_method_direct_stream">Birbaşa yayım</string>
     <string name="player_method_transcode">Transkodlaşdırma</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Cihazınız bu faylı deşifrə edə bilmədi, ona görə də server onu transkodlaşdırır.</string>
     <string name="player_message_lower_quality">Yayım dayandı — daha aşağı keyfiyyətlə yenidən cəhd edilir.</string>
     <string name="player_message_track_restart">Server həmin trek üçün yayımı yenidən kodlaşdırmalı oldu.</string>

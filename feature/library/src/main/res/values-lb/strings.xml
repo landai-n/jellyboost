@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Nach keng Bibliothéiken. Setz eng um Server dobäi.</string>
+    <string name="libraries_title">Bibliothéiken</string>
 
     <string name="library_back">Zréck</string>
     <string name="library_home">Start</string>
     <string name="library_sort">Sortéieren</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">All</string>
+    <string name="library_filter_more">Filteren</string>
 
     <string name="library_sort_title">Sortéieren no</string>
     <string name="library_sort_name">Numm</string>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Директна репродукција</string>
     <string name="player_method_direct_stream">Директни ток</string>
     <string name="player_method_transcode">Транскодовање</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Ваш уређај није могао да декодира овај фајл, па сервер врши транскодовање.</string>
     <string name="player_message_lower_quality">Ток је застао — поновни покушај у нижем квалитету.</string>

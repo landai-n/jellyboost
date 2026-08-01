@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direktuppspelning</string>
     <string name="player_method_direct_stream">Direktströmning</string>
     <string name="player_method_transcode">Omkodning</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Din enhet kunde inte avkoda den här filen, så servern omkodar den.</string>
     <string name="player_message_lower_quality">Strömmen fastnade – försöker igen med lägre kvalitet.</string>

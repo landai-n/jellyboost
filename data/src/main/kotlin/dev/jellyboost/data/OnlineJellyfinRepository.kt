@@ -4,6 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.map
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
@@ -14,6 +15,7 @@ import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.ItemMapper
 import dev.jellyboost.data.mapper.toBaseItemKind
 import dev.jellyboost.data.mapper.toGetItemsRequest
+import dev.jellyboost.data.paging.ItemPage
 import dev.jellyboost.data.paging.ItemPagingSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -135,7 +137,10 @@ internal class OnlineJellyfinRepository
 
         // ---- M3 — library & search ----------------------------------------------------------
 
-        override fun getItemsPaged(query: ItemQuery): Flow<PagingData<JellyfinItem>> =
+        override fun getItemsPaged(
+            query: ItemQuery,
+            onTotalCount: (Int) -> Unit,
+        ): Flow<PagingData<JellyfinItem>> =
             Pager(
                 config =
                     PagingConfig(
@@ -144,25 +149,46 @@ internal class OnlineJellyfinRepository
                         // like every other page, instead of Paging's default 3×.
                         initialLoadSize = ItemQuery.DEFAULT_PAGE_SIZE,
                         prefetchDistance = PREFETCH_DISTANCE,
-                        // The grid never draws placeholder cells, and turning them off is what
-                        // lets the request skip the server-side total record count.
+                        // The grid never draws placeholder cells, which is what lets every page
+                        // but the first skip the server-side total record count.
                         enablePlaceholders = false,
                     ),
                 pagingSourceFactory = {
-                    ItemPagingSource(pageSize = ItemQuery.DEFAULT_PAGE_SIZE) { startIndex, limit ->
-                        getItems(query.copy(startIndex = startIndex, limit = limit))
+                    ItemPagingSource(
+                        pageSize = ItemQuery.DEFAULT_PAGE_SIZE,
+                        onTotalCount = onTotalCount,
+                    ) { startIndex, limit, withTotalCount ->
+                        getItemsPage(
+                            query.copy(
+                                startIndex = startIndex,
+                                limit = limit,
+                                includeTotalCount = withTotalCount,
+                            ),
+                        )
                     }
                 },
             ).flow
 
         override suspend fun getItems(query: ItemQuery): AppResult<List<JellyfinItem>> =
+            getItemsPage(query).map { it.items }
+
+        /**
+         * The one `getItems` round trip, with the server's total attached when [query] asked for it.
+         *
+         * `totalRecordCount` is a non-null `Int` on the wire and reads 0 when the request left the
+         * count off, so the flag — not the value — decides whether there is a number to report.
+         */
+        private suspend fun getItemsPage(query: ItemQuery): AppResult<ItemPage> =
             onIo {
                 val response =
                     apiClient.itemsApi.getItems(
                         query.toGetItemsRequest(fields = CARD_FIELDS, imageTypes = CARD_IMAGE_TYPES),
                     )
                 browseCache.cacheItems(response.content.items)
-                mapper.toDomain(response.content.items)
+                ItemPage(
+                    items = mapper.toDomain(response.content.items),
+                    totalCount = if (query.includeTotalCount) response.content.totalRecordCount else null,
+                )
             }
 
         override suspend fun getFilterFacets(

@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">تعليم كغير مشاهَد</string>
     <string name="detail_add_favorite">إضافة إلى المفضلة</string>
     <string name="detail_remove_favorite">إزالة من المفضلة</string>
+    <string name="detail_play_target">تشغيل %1$s</string>
+    <string name="detail_resume_target">استئناف %1$s</string>
 
     <string name="detail_section_seasons">المواسم</string>
     <string name="detail_section_next_up">التالي</string>
     <string name="detail_section_episodes">الحلقات</string>
     <string name="detail_section_similar">أعمال مشابهة</string>
+    <string name="detail_section_cast">طاقم التمثيل</string>
+    <string name="detail_type_movie">فيلم</string>
+    <string name="detail_type_series">مسلسل</string>
+    <string name="detail_type_season">موسم</string>
+    <string name="detail_type_episode">حلقة</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">الحلقة %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d د</string>
     <string name="detail_remaining_minutes">%1$d د متبقية</string>

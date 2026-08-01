@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ</string>
     <string name="detail_add_favorite">ਪਸੰਦੀਦਾ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ</string>
     <string name="detail_remove_favorite">ਪਸੰਦੀਦਾ ਵਿੱਚੋਂ ਹਟਾਓ</string>
+    <string name="detail_play_target">%1$s ਚਲਾਓ</string>
+    <string name="detail_resume_target">%1$s ਜਾਰੀ ਰੱਖੋ</string>
 
     <string name="detail_section_seasons">ਸੀਜ਼ਨ</string>
     <string name="detail_section_next_up">ਅੱਗੇ</string>
     <string name="detail_section_episodes">ਐਪੀਸੋਡ</string>
     <string name="detail_section_similar">ਇਸ ਵਰਗਾ ਹੋਰ</string>
+    <string name="detail_section_cast">ਕਲਾਕਾਰ</string>
+    <string name="detail_type_movie">ਫ਼ਿਲਮ</string>
+    <string name="detail_type_series">ਸੀਰੀਜ਼</string>
+    <string name="detail_type_season">ਸੀਜ਼ਨ</string>
+    <string name="detail_type_episode">ਐਪੀਸੋਡ</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">ਐਪੀਸੋਡ %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d ਮਿੰਟ</string>
     <string name="detail_remaining_minutes">%1$d ਮਿੰਟ ਬਾਕੀ</string>

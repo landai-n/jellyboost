@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Beinleiðis avspæling</string>
     <string name="player_method_direct_stream">Beinleiðis streymur</string>
     <string name="player_method_transcode">Transkoding</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Títt tól kundi ikki decoda hesa fíluna, so ambætarin transkoderar hana.</string>
     <string name="player_message_lower_quality">Streymurin steðgaði — roynir aftur við lægri gæði.</string>

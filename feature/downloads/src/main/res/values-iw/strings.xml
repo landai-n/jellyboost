@@ -3,10 +3,24 @@
     <string name="downloads_tab_downloaded">הורד</string>
     <string name="downloads_tab_queue">תור</string>
     <string name="downloads_wifi_only">Wi‑Fi בלבד</string>
+    <string name="downloads_screen_title">הורדות</string>
 
     <string name="downloads_group_movies">סרטים</string>
 
     <string name="downloads_storage_summary">%1$s בשימוש · %2$s פנויים</string>
+    <string name="downloads_storage_free">%1$s פנויים</string>
+    <string name="downloads_stat_on_device">במכשיר זה</string>
+    <string name="downloads_stat_queue">תור</string>
+    <string name="downloads_stat_network">רשת</string>
+    <string name="downloads_stat_free_of">%1$s פנויים מתוך %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">פריט אחד · %2$s</item>
+        <item quantity="two">שני פריטים · %2$s</item>
+        <item quantity="many">%1$d פריטים · %2$s</item>
+        <item quantity="other">%1$d פריטים · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">בערך %1$s נותרו</string>
+    <string name="downloads_stat_network_helper">מושהה אוטומטית בנתונים סלולריים</string>
 
     <string name="downloads_action_delete">מחיקת הורדה</string>
     <string name="downloads_action_cancel">ביטול הורדה</string>

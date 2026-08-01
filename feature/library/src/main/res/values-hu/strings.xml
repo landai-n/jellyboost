@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Még nincs könyvtár. Adj hozzá egyet a szerveren.</string>
+    <string name="libraries_title">Könyvtárak</string>
 
     <string name="library_back">Vissza</string>
     <string name="library_home">Kezdőlap</string>
     <string name="library_sort">Rendezés</string>
     <string name="library_filter">Szűrő</string>
+    <string name="library_filter_all">Összes</string>
+    <string name="library_filter_more">Szűrők</string>
 
     <string name="library_sort_title">Rendezés</string>
     <string name="library_sort_name">Név</string>

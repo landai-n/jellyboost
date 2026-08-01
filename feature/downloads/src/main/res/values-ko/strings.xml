@@ -3,10 +3,21 @@
     <string name="downloads_tab_downloaded">다운로드됨</string>
     <string name="downloads_tab_queue">대기열</string>
     <string name="downloads_wifi_only">Wi‑Fi에서만</string>
+    <string name="downloads_screen_title">다운로드</string>
 
     <string name="downloads_group_movies">영화</string>
 
     <string name="downloads_storage_summary">사용 %1$s · 여유 공간 %2$s</string>
+    <string name="downloads_storage_free">여유 공간 %1$s</string>
+    <string name="downloads_stat_on_device">이 기기에</string>
+    <string name="downloads_stat_queue">대기열</string>
+    <string name="downloads_stat_network">네트워크</string>
+    <string name="downloads_stat_free_of">%2$s 중 여유 공간 %1$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="other">%1$d개 · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">약 %1$s 남음</string>
+    <string name="downloads_stat_network_helper">모바일 데이터에서는 자동으로 일시정지됨</string>
 
     <string name="downloads_action_delete">다운로드 삭제</string>
     <string name="downloads_action_cancel">다운로드 취소</string>

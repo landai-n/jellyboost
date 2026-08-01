@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">තවම පුස්තකාල නැත. සේවාදායකයේ එකක් එක් කරන්න.</string>
+    <string name="libraries_title">පුස්තකාල</string>
     <string name="library_back">ආපසු</string>
     <string name="library_home">මුල් පිටුව</string>
     <string name="library_sort">අනුපිළිවෙල</string>
     <string name="library_filter">පෙරහන</string>
+    <string name="library_filter_all">සියල්ල</string>
+    <string name="library_filter_more">පෙරහන්</string>
     <string name="library_sort_title">අනුව අනුපිළිවෙල කරන්න</string>
     <string name="library_sort_name">නම</string>
     <string name="library_sort_date_added">එකතු කළ දිනය</string>

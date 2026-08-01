@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Још нема библиотека. Додајте једну на серверу.</string>
+    <string name="libraries_title">Библиотеке</string>
 
     <string name="library_back">Назад</string>
     <string name="library_home">Почетна</string>
     <string name="library_sort">Сортирај</string>
     <string name="library_filter">Филтер</string>
+    <string name="library_filter_all">Све</string>
+    <string name="library_filter_more">Филтери</string>
 
     <string name="library_sort_title">Сортирај по</string>
     <string name="library_sort_name">Назив</string>

@@ -4,6 +4,9 @@
     <string name="downloads_tab_queue">Queue</string>
     <string name="downloads_wifi_only">Wi‑Fi only</string>
 
+    <!-- Screen header (top-level tab, 2026 refresh — no back button). -->
+    <string name="downloads_screen_title">Downloads</string>
+
     <!-- Downloaded tab grouping -->
     <!-- Heading over every standalone film, shown only once at least one series group is also on
          the tab — see DownloadGroup.isMoviesSection. -->
@@ -11,6 +14,28 @@
 
     <!-- Storage header -->
     <string name="downloads_storage_summary">%1$s used · %2$s free</string>
+    <!-- The compact storage card's free-space caption (2026 refresh), standing on its own baseline
+         row beside the used-bytes figure rather than joined into one sentence. -->
+    <string name="downloads_storage_free">%1$s free</string>
+
+    <!-- Wide-layout tablet stat panels (2026 refresh, spec "4d Downloads"). Eyebrow labels are
+         uppercased in code. -->
+    <string name="downloads_stat_on_device">On this device</string>
+    <string name="downloads_stat_queue">Queue</string>
+    <string name="downloads_stat_network">Network</string>
+    <!-- "ON THIS DEVICE" panel's caption: available space against the storage total. -->
+    <string name="downloads_stat_free_of">%1$s free of %2$s</string>
+    <!-- "QUEUE" panel's value line: how many rows are queued and how much is still to transfer. -->
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d item · %2$s</item>
+        <item quantity="other">%1$d items · %2$s</item>
+    </plurals>
+    <!-- "QUEUE" panel's speed/ETA caption — hedged like every other ETA on this screen
+         (downloads_eta_approx), since the queue's aggregate remainder can carry the same
+         projection/ceiling uncertainty any one row's own total does. -->
+    <string name="downloads_stat_eta_about">about %1$s left</string>
+    <!-- "NETWORK" panel's caption, shown only while Wi‑Fi-only is on. -->
+    <string name="downloads_stat_network_helper">Paused automatically on cellular</string>
 
     <!-- Row actions -->
     <string name="downloads_action_delete">Delete download</string>

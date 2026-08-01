@@ -6,6 +6,11 @@
     <string name="badge_download_failed">გადმოწერა ვერ მოხერხდა</string>
     <string name="media_row_see_all">ყველას ნახვა</string>
     <string name="media_card_watched">ნანახია</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d ერთეული</item>
+        <item quantity="other">%1$d ერთეული</item>
+    </plurals>
+    <string name="state_retry">ხელახლა ცდა</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d მონიშნულია</item>
         <item quantity="other">%1$d მონიშნულია</item>

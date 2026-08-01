@@ -3,10 +3,21 @@
     <string name="downloads_tab_downloaded">已下載</string>
     <string name="downloads_tab_queue">佇列</string>
     <string name="downloads_wifi_only">僅限 Wi‑Fi</string>
+    <string name="downloads_screen_title">下載</string>
 
     <string name="downloads_group_movies">電影</string>
 
     <string name="downloads_storage_summary">已用 %1$s · 剩餘 %2$s</string>
+    <string name="downloads_storage_free">剩餘 %1$s</string>
+    <string name="downloads_stat_on_device">在此裝置上</string>
+    <string name="downloads_stat_queue">佇列</string>
+    <string name="downloads_stat_network">網路</string>
+    <string name="downloads_stat_free_of">%2$s 中剩餘 %1$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="other">%1$d 項 · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">剩餘約 %1$s</string>
+    <string name="downloads_stat_network_helper">使用行動數據時自動暫停</string>
 
     <string name="downloads_action_delete">刪除下載</string>
     <string name="downloads_action_cancel">取消下載</string>

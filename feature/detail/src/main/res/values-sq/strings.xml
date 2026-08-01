@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Shëno si të pashikuar</string>
     <string name="detail_add_favorite">Shto te të preferuarat</string>
     <string name="detail_remove_favorite">Hiq nga të preferuarat</string>
+    <string name="detail_play_target">Luaj %1$s</string>
+    <string name="detail_resume_target">Vazhdo %1$s</string>
 
     <string name="detail_section_seasons">Sezonet</string>
     <string name="detail_section_next_up">Në vijim</string>
     <string name="detail_section_episodes">Episodet</string>
     <string name="detail_section_similar">Të ngjashme me këtë</string>
+    <string name="detail_section_cast">Aktorët</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Serial</string>
+    <string name="detail_type_season">Sezoni</string>
+    <string name="detail_type_episode">Episodi</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Episodi %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Edhe %1$d min</string>

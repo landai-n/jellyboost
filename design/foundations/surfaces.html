@@ -1,0 +1,48 @@
+<!-- @dsCard group="Colors" viewport="900x460" name="Surfaces & elevation" subtitle="Glass chrome, elevation, radii and control shapes used by the refreshed screens" -->
+<link rel="stylesheet" href="../_shared/modern.css">
+<style>
+body{padding:28px;display:flex;flex-direction:column;gap:26px;background:radial-gradient(70% 60% at 20% 0%,rgba(170,92,195,.16),rgba(0,0,0,0) 70%),var(--background)}
+.k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:12px}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.swatch{width:150px;padding:14px;border-radius:var(--radius-md);font-size:11px;line-height:16px;color:var(--on-surface-variant)}
+.swatch b{display:block;font-size:13px;color:#fff;font-weight:600;margin-bottom:4px}
+.box{width:150px;height:74px;border-radius:var(--radius-md);background:var(--surface)}
+.box.card{box-shadow:var(--elev-card)}
+.box.pop{box-shadow:var(--elev-pop)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:rgba(255,255,255,.55)}
+</style>
+<div>
+  <div class="k">Chrome</div>
+  <div class="row">
+    <div class="m-tabs"><div class="m-tab selected"><span>Home</span></div><div class="m-tab"><span>Libraries</span></div><div class="m-tab"><span>Search</span></div></div>
+    <div class="m-icon-btn"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+    <div class="m-avatar">BL</div>
+  </div>
+</div>
+<div>
+  <div class="k">Controls</div>
+  <div class="row">
+    <div class="m-btn m-btn-primary"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Resume</span></div>
+    <div class="m-btn m-btn-ghost"><span>Details</span></div>
+    <div class="m-chip selected">All</div>
+    <div class="m-chip">Unwatched</div>
+    <div class="m-pill">4K HDR</div>
+  </div>
+</div>
+<div>
+  <div class="k">Surface &amp; elevation</div>
+  <div class="row">
+    <div class="swatch m-glass"><b>Glass</b><code>--glass-bg / --glass-line + blur(18px)</code></div>
+    <div class="swatch m-surface"><b>Surface</b><code>--surface + 6% hairline</code></div>
+    <div class="box card"></div>
+    <div class="box pop"></div>
+    <div class="swatch"><b>Elevation</b><code>--elev-card 0 8 24 · --elev-pop 0 16 44</code></div>
+  </div>
+</div>
+<div>
+  <div class="k">Progress</div>
+  <div class="row">
+    <div class="m-art m-thumb" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"><div class="m-badge">S1 · E10</div><div class="m-time">22m left</div><div class="m-progress-track"><div class="m-progress-fill" style="width:65%"></div></div></div>
+    <div class="swatch"><b>Inset gradient bar</b><code>--accent-gradient, 3px, inset 10px, radius 2px</code></div>
+  </div>
+</div>

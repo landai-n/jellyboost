@@ -7,4 +7,15 @@
     <string name="home_section_continue_watching">Продовжити перегляд</string>
     <string name="home_section_next_up">Далі</string>
     <string name="home_section_latest">Останні %1$s</string>
+    <string name="home_hero_resume">Продовжити</string>
+    <string name="home_hero_play">Відтворити</string>
+    <string name="home_hero_details">Подробиці</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Залишилось %1$d хвилина</item>
+        <item quantity="few">Залишилось %1$d хвилини</item>
+        <item quantity="many">Залишилось %1$d хвилин</item>
+        <item quantity="other">Залишилось %1$d хвилин</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dхв залишилось</string>
+    <string name="home_quick_access_offline">Офлайн</string>
 </resources>

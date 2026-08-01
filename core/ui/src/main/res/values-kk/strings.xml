@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Барлығын көру</string>
     <string name="media_card_watched">Қаралды</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d элемент</item>
+        <item quantity="other">%1$d элемент</item>
+    </plurals>
+    <string name="state_retry">Қайталау</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d таңдалды</item>

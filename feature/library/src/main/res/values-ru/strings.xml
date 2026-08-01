@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Пока нет библиотек. Добавьте её на сервере.</string>
+    <string name="libraries_title">Библиотеки</string>
 
     <string name="library_back">Назад</string>
     <string name="library_home">Главная</string>
     <string name="library_sort">Сортировка</string>
     <string name="library_filter">Фильтр</string>
+    <string name="library_filter_all">Все</string>
+    <string name="library_filter_more">Фильтры</string>
 
     <string name="library_sort_title">Сортировать по</string>
     <string name="library_sort_name">Названию</string>

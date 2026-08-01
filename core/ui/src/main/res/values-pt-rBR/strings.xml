@@ -6,6 +6,11 @@
     <string name="badge_download_failed">Falha no download</string>
     <string name="media_row_see_all">Ver tudo</string>
     <string name="media_card_watched">Assistido</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d itens</item>
+    </plurals>
+    <string name="state_retry">Tentar novamente</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d selecionado</item>
         <item quantity="other">%1$d selecionados</item>

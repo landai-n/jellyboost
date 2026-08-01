@@ -1,6 +1,7 @@
 package dev.jellyboost.feature.library
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import dev.jellyboost.core.common.model.SortBy
 import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 
 /**
  * The sort menu behind the top bar's sort action.
@@ -34,7 +36,12 @@ internal fun LibrarySortMenu(
     onSelectSort: (SortBy) -> Unit,
     onToggleOrder: () -> Unit,
 ) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
+    ) {
         Text(
             text = stringResource(R.string.library_sort_title),
             style = MaterialTheme.typography.labelMedium,

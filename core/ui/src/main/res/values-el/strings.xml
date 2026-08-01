@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Προβολή όλων</string>
     <string name="media_card_watched">Παρακολουθήθηκε</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d στοιχείο</item>
+        <item quantity="other">%1$d στοιχεία</item>
+    </plurals>
+    <string name="state_retry">Επανάληψη</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d επιλεγμένο</item>

@@ -7,6 +7,13 @@
 
     <string name="media_row_see_all">Žiūrėti viską</string>
     <string name="media_card_watched">Žiūrėta</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d elementas</item>
+        <item quantity="few">%1$d elementai</item>
+        <item quantity="many">%1$d elementų</item>
+        <item quantity="other">%1$d elementų</item>
+    </plurals>
+    <string name="state_retry">Bandyti dar kartą</string>
 
     <plurals name="selection_count">
         <item quantity="one">Pasirinktas %1$d</item>

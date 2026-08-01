@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">ڈائریکٹ پلے</string>
     <string name="player_method_direct_stream">ڈائریکٹ اسٹریم</string>
     <string name="player_method_transcode">ٹرانس کوڈنگ</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">آپ کی ڈیوائس اس فائل کو ڈی کوڈ نہیں کر سکی، اس لیے سرور اسے ٹرانس کوڈ کر رہا ہے۔</string>
     <string name="player_message_lower_quality">اسٹریم رک گئی — کم کوالٹی پر دوبارہ کوشش کی جا رہی ہے۔</string>

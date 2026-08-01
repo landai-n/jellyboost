@@ -7,6 +7,10 @@
 
     <string name="media_row_see_all">すべて表示</string>
     <string name="media_card_watched">視聴済み</string>
+    <plurals name="library_item_count">
+        <item quantity="other">%1$d 件</item>
+    </plurals>
+    <string name="state_retry">再試行</string>
 
     <plurals name="selection_count">
         <item quantity="other">%1$d 件選択中</item>

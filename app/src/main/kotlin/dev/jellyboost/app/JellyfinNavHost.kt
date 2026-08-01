@@ -22,6 +22,7 @@ import dev.jellyboost.feature.auth.LoginScreen
 import dev.jellyboost.feature.auth.ServerSetupScreen
 import dev.jellyboost.feature.detail.ItemDetailScreen
 import dev.jellyboost.feature.downloads.DownloadsScreen
+import dev.jellyboost.feature.home.HomeActions
 import dev.jellyboost.feature.home.HomeScreen
 import dev.jellyboost.feature.library.LibraryGridScreen
 import dev.jellyboost.feature.library.libraries.LibrariesScreen
@@ -94,10 +95,21 @@ internal fun JellyfinNavHost(
         composable<Routes.Home> {
             HomeScreen(
                 viewModel = hiltViewModel(),
-                onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
-                onLibraryClick = { library ->
-                    navController.navigate(Routes.LibraryGrid(library.id, library.name))
-                },
+                actions =
+                    HomeActions(
+                        onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                        onPlay = { itemId, startPositionTicks ->
+                            navController.navigate(
+                                Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
+                            )
+                        },
+                        onLibraryClick = { library ->
+                            navController.navigate(Routes.LibraryGrid(library.id, library.name))
+                        },
+                        // A tab switch, not a push: the Downloads chip lands on the Downloads tab
+                        // exactly as its button in the nav bar does, back stack and all.
+                        onOpenDownloads = { navController.navigateToTab(Routes.Downloads) },
+                    ),
             )
         }
 

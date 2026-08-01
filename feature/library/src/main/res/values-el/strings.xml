@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Δεν υπάρχουν ακόμη βιβλιοθήκες. Προσθέστε μία στον διακομιστή.</string>
+    <string name="libraries_title">Βιβλιοθήκες</string>
 
     <string name="library_back">Πίσω</string>
     <string name="library_home">Αρχική</string>
     <string name="library_sort">Ταξινόμηση</string>
     <string name="library_filter">Φίλτρο</string>
+    <string name="library_filter_all">Όλα</string>
+    <string name="library_filter_more">Φίλτρα</string>
 
     <string name="library_sort_title">Ταξινόμηση κατά</string>
     <string name="library_sort_name">Όνομα</string>

@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Redare directă</string>
     <string name="player_method_direct_stream">Flux direct</string>
     <string name="player_method_transcode">Transcodare</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Dispozitivul dvs. nu a putut decoda acest fișier, așa că serverul îl transcodează.</string>
     <string name="player_message_lower_quality">Fluxul s-a blocat — se reîncearcă la o calitate mai scăzută.</string>
     <string name="player_message_track_restart">Serverul a trebuit să reencodeze fluxul pentru acea pistă.</string>

@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Gaan voort met kyk</string>
     <string name="home_section_next_up">Volgende</string>
     <string name="home_section_latest">Nuutste %1$s</string>
+    <string name="home_hero_resume">Hervat</string>
+    <string name="home_hero_play">Speel</string>
+    <string name="home_hero_details">Besonderhede</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minuut oor</item>
+        <item quantity="other">%1$d minute oor</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin oor</string>
+    <string name="home_quick_access_offline">Vanlyn</string>
 </resources>

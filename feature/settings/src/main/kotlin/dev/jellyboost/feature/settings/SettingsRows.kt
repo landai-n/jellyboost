@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 // The Settings screen's row vocabulary.
 //
@@ -38,7 +39,16 @@ import dev.jellyboost.core.ui.theme.Dimens
 /** Material's minimum touch target; every row honours it whether or not its text needs the height. */
 internal val SettingsRowMinHeight: Dp = 48.dp
 
-/** A titled group of rows. */
+/**
+ * A titled group of rows.
+ *
+ * The heading wears the refresh's shared [JellyfinTypeExtras.SectionTitle] style (2026 refresh,
+ * Phase 5 sweep) but keeps its primary accent colour rather than going plain white like a home or
+ * library row's heading: a long scrolling preference list has no artwork or layout to orient by, so
+ * the accent is the one piece of wayfinding a thumb flicking past divider lines gets, and dropping it
+ * would leave "Playback"/"Downloads"/"Account" reading exactly like the [SettingsChoiceGroup] labels
+ * one level below them.
+ */
 @Composable
 internal fun SettingsSection(
     title: String,
@@ -48,7 +58,7 @@ internal fun SettingsSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
+            style = JellyfinTypeExtras.SectionTitle,
             color = MaterialTheme.colorScheme.primary,
             modifier =
                 Modifier.padding(

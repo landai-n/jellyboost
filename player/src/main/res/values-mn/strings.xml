@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Шууд тоглуулалт</string>
     <string name="player_method_direct_stream">Шууд дамжуулалт</string>
     <string name="player_method_transcode">Кодчилол хөрвүүлэлт</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Таны төхөөрөмж энэ файлыг дэкодлож чадаагүй тул сервер үүнийг хөрвүүлж байна.</string>
     <string name="player_message_lower_quality">Дамжуулалт зогслоо — бага чанараар дахин оролдож байна.</string>

@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Als ungesehen markieren</string>
     <string name="detail_add_favorite">Zu Favoriten hinzufügen</string>
     <string name="detail_remove_favorite">Aus Favoriten entfernen</string>
+    <string name="detail_play_target">%1$s abspielen</string>
+    <string name="detail_resume_target">%1$s fortsetzen</string>
 
     <string name="detail_section_seasons">Staffeln</string>
     <string name="detail_section_next_up">Als Nächstes</string>
     <string name="detail_section_episodes">Folgen</string>
     <string name="detail_section_similar">Ähnliche Titel</string>
+    <string name="detail_section_cast">Besetzung</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Serie</string>
+    <string name="detail_type_season">Staffel</string>
+    <string name="detail_type_episode">Folge</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Folge %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d Min.</string>
     <string name="detail_remaining_minutes">Noch %1$d Min.</string>

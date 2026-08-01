@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">直接播放</string>
     <string name="player_method_direct_stream">直接串流</string>
     <string name="player_method_transcode">轉碼</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">你的裝置無法解碼這個檔案，因此伺服器正在為其轉碼。</string>
     <string name="player_message_lower_quality">串流卡頓——正在以較低畫質重試。</string>

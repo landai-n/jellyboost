@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Прямое воспроизведение</string>
     <string name="player_method_direct_stream">Прямая трансляция</string>
     <string name="player_method_transcode">Перекодирование</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Ваше устройство не может декодировать этот файл, поэтому сервер выполняет перекодирование.</string>
     <string name="player_message_lower_quality">Поток прервался — повтор попытки с более низким качеством.</string>

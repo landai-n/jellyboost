@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Märgi vaatamata</string>
     <string name="detail_add_favorite">Lisa lemmikutesse</string>
     <string name="detail_remove_favorite">Eemalda lemmikutest</string>
+    <string name="detail_play_target">Esita %1$s</string>
+    <string name="detail_resume_target">Jätka %1$s</string>
 
     <string name="detail_section_seasons">Hooajad</string>
     <string name="detail_section_next_up">Järgmisena</string>
     <string name="detail_section_episodes">Osad</string>
     <string name="detail_section_similar">Rohkem sarnaseid</string>
+    <string name="detail_section_cast">Osatäitjad</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Sari</string>
+    <string name="detail_type_season">Hooaeg</string>
+    <string name="detail_type_episode">Osa</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Osa %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min jäänud</string>

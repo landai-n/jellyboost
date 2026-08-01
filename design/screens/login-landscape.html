@@ -1,63 +1,78 @@
-<!-- @dsCard group="Screens" name="Login (landscape tablet)" subtitle="Two-pane >=840dp: identity + picker left, form card right, pair capped at 920dp" -->
+<!-- @dsCard group="Screens" name="Login (landscape tablet)" subtitle="Verified against LoginScreen.kt + AuthScreenScaffold: identity pane logo fixed to 36px InlineLogoSize (was 52px), glow fixed to side-anchored 20%-alpha full-height BrandGlowSide (was 22%), avatar ring/field/pill fixes mirrored from login.html's fixes since both panes reuse the same composables" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
-  .tablet { width:1000px; height:620px; margin:0 auto; position:relative; overflow:hidden; }
-  .glow { position:absolute; inset:0; background:radial-gradient(ellipse 90% 85% at 28% 0%,rgba(170,92,195,.22) 0%,rgba(0,164,220,.09) 45%,rgba(0,0,0,0) 78%); }
-  .pair { position:relative; display:grid; grid-template-columns:1fr 1px 1fr; gap:40px; align-items:center; max-width:920px; height:100%; margin:0 auto; padding:0 24px; box-sizing:border-box; }
-  .rule { align-self:stretch; margin:64px 0; background:linear-gradient(180deg,transparent,#3C3C3C 20%,#3C3C3C 80%,transparent); }
-  .identity { display:flex; flex-direction:column; align-items:center; gap:32px; }
-  .brand { display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .server { font-size:32px; line-height:40px; font-weight:700; }
-  .version { font-size:12px; line-height:16px; color:rgba(255,255,255,.7); }
-  .picker { display:flex; flex-direction:column; align-items:center; gap:16px; }
-  .ptitle { font-size:16px; line-height:24px; font-weight:600; color:rgba(255,255,255,.7); }
-  .rowc { display:flex; justify-content:center; gap:32px; }
-  .user { display:flex; flex-direction:column; align-items:center; gap:10px; }
-  .ring { width:88px; height:88px; border-radius:50%; padding:2px; background:#292929; }
-  .user.selected .ring { background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
-  .well { width:100%; height:100%; border-radius:50%; background:#101010; padding:3px; box-sizing:border-box; }
-  .face { width:100%; height:100%; border-radius:50%; }
-  .photo1 { background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0); }
-  .photo2 { background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d); }
-  .uname { font-size:14px; line-height:20px; font-weight:500; color:rgba(255,255,255,.7); }
-  .user.selected .uname { color:#fff; }
-  .card { background:#202020; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:16px; }
-  .section { font-size:22px; line-height:28px; }
-  .field { border:1px solid #3C3C3C; border-radius:4px; padding:14px 16px; font-size:16px; line-height:24px; color:rgba(255,255,255,.5); }
-  .field.filled { color:#fff; border-color:rgba(255,255,255,.35); }
-  .btn { border-radius:24px; padding:14px; text-align:center; font-size:14px; line-height:20px; font-weight:500; background:#00A4DC; color:#000; }
-  .alt { display:flex; align-items:center; gap:12px; }
-  .alt .divider { flex:1; border-top:1px solid #3C3C3C; }
-  .or { font-size:12px; line-height:16px; color:rgba(255,255,255,.7); }
-  .ghost { border:1px solid #3C3C3C; border-radius:24px; padding:13px; text-align:center; font-size:14px; line-height:20px; font-weight:500; color:#00A4DC; }
-  .link { text-align:center; color:#00A4DC; font-size:14px; line-height:20px; font-weight:500; }
+  .tablet{width:1000px;height:620px;margin:0 auto;position:relative;overflow:hidden}
+  .glow{position:absolute;inset:0;background:radial-gradient(ellipse 90% 85% at 28% 0%,rgba(170,92,195,.20) 0%,rgba(0,164,220,.09) 45%,rgba(0,0,0,0) 78%)}
+  .pair{position:relative;display:grid;grid-template-columns:1fr 1px 1fr;gap:40px;align-items:center;max-width:920px;height:100%;margin:0 auto;padding:0 24px;box-sizing:border-box}
+  .rule{align-self:stretch;margin:64px 0;background:linear-gradient(180deg,transparent,var(--outline) 20%,var(--outline) 80%,transparent)}
+  .identity{display:flex;flex-direction:column;align-items:center;gap:16px}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .sname{font-size:32px;font-weight:700;letter-spacing:-.02em}
+  .version{font-size:12px;color:var(--on-surface-variant)}
+  .picker{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .caption{font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .rowc{display:flex;justify-content:center;gap:32px}
+  .user{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .uname{font-size:13px;font-weight:500;color:var(--on-surface-variant)}
+  .user.selected .uname{color:#fff}
+  .photo1{background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+  .photo2{background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d)}
+  .heading{font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .field-wrap{display:flex;flex-direction:column;gap:8px}
+  .pw-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .eye{width:18px;height:18px;fill:none;stroke:var(--on-surface-variant);stroke-width:1.6;flex:none}
+  .spin-dark{width:16px;height:16px;border-radius:50%;border:2px solid rgba(16,16,16,.3);border-top-color:#101010;animation:m-spin 1s linear infinite;flex:none}
+  .divider-row{display:flex;align-items:center;gap:12px}
+  .divider-row .line{flex:1;height:1px;background:var(--outline)}
+  .divider-row .or{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .login-panel{gap:16px}
 </style>
 <div class="tablet">
   <div class="glow"></div>
   <div class="pair">
     <div class="identity">
       <div class="brand">
-        <svg width="52" height="44" viewBox="0 0 168 142"><defs><linearGradient id="f" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs><path fill="url(#f)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/><g stroke="url(#f)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g></svg>
-        <div class="server">test-server</div>
-        <div class="version">Version 10.11.11</div>
+        <svg width="36" height="36" viewBox="0 0 168 142">
+          <defs><linearGradient id="fin" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs>
+          <path fill="url(#fin)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/>
+          <g stroke="url(#fin)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g>
+        </svg>
+        <div class="sname">test-server</div>
+        <div class="version">Version 10.11.0</div>
       </div>
       <div class="picker">
-        <div class="ptitle">Who's watching?</div>
+        <div class="caption">Who is watching?</div>
         <div class="rowc">
-          <div class="user selected"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
-          <div class="user"><div class="ring"><div class="well"><div class="face photo2"></div></div></div><div class="uname">Alex</div></div>
+          <div class="user selected">
+            <div class="m-avatar-ring selected"><div class="m-avatar-well"><div class="m-face photo1"></div></div></div>
+            <div class="uname">Sam</div>
+          </div>
+          <div class="user">
+            <div class="m-avatar-ring"><div class="m-avatar-well"><div class="m-face photo2"></div></div></div>
+            <div class="uname">Alex</div>
+          </div>
         </div>
       </div>
     </div>
     <div class="rule"></div>
-    <div class="card">
-      <div class="section">Sign in</div>
-      <div class="field filled">Sam</div>
-      <div class="field">Password</div>
-      <div class="btn">Sign in</div>
-      <div class="alt"><div class="divider"></div><div class="or">or</div><div class="divider"></div></div>
-      <div class="ghost">Use Quick Connect</div>
-      <div class="link">Use another server</div>
+    <div class="m-panel login-panel">
+      <div class="heading">Sign in</div>
+      <div class="field-wrap">
+        <div class="eyebrow">Username</div>
+        <div class="m-field filled">Sam</div>
+      </div>
+      <div class="field-wrap">
+        <div class="eyebrow">Password</div>
+        <div class="m-field filled pw-row">
+          <span>••••••••</span>
+          <svg class="eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+      <div class="m-btn m-btn-primary m-btn-block"><div class="spin-dark"></div>Sign in</div>
+      <div class="divider-row"><div class="line"></div><div class="or">Or</div><div class="line"></div></div>
+      <div class="m-btn m-btn-ghost m-btn-block">Use Quick Connect</div>
+      <div class="m-link" style="text-align:center">Use a different server</div>
     </div>
   </div>
 </div>

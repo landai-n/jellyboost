@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Үзээгүй гэж тэмдэглэх</string>
     <string name="detail_add_favorite">Дуртай зүйлд нэмэх</string>
     <string name="detail_remove_favorite">Дуртай зүйлээс хасах</string>
+    <string name="detail_play_target">%1$s тоглуулах</string>
+    <string name="detail_resume_target">%1$s үргэлжлүүлэх</string>
 
     <string name="detail_section_seasons">Улирлууд</string>
     <string name="detail_section_next_up">Дараагийн</string>
     <string name="detail_section_episodes">Ангиуд</string>
     <string name="detail_section_similar">Үүнтэй төстэй</string>
+    <string name="detail_section_cast">Жүжигчид</string>
+    <string name="detail_type_movie">Кино</string>
+    <string name="detail_type_series">Цуврал</string>
+    <string name="detail_type_season">Улирал</string>
+    <string name="detail_type_episode">Анги</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Анги %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d мин</string>
     <string name="detail_remaining_minutes">%1$d мин үлдсэн</string>

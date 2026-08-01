@@ -1,59 +1,179 @@
-<!-- @dsCard group="Screens" name="Item detail (landscape tablet)" subtitle="isWide (>=720x480dp): 320dp fixed backdrop, 200dp side poster, compact=false labelled actions" -->
+<!-- @dsCard group="Screens" name="Item detail (landscape tablet)" subtitle="isWide stage: 360px fixed backdrop + accent halo, 190×285 poster overlapping ~190px up into it, facts beside it, labelled Download ghost pill, two-row episode strip cards" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
-  .tablet { width:1000px; height:620px; margin:0 auto; overflow:hidden; position:relative; }
-  .backdrop { position:relative; width:100%; height:320px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; }
-  .scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(16,16,16,0) 0%, rgba(16,16,16,.65) 60%, #101010 100%); }
-  .overlay-nav { position:absolute; top:0; left:0; display:flex; padding:8px; }
-  .overlay-btn { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
-  .overlay-btn svg { width:22px; height:22px; fill:#fff; }
-  .header { display:flex; gap:24px; padding:24px 16px 0; }
-  .poster { width:200px; height:300px; flex:none; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
-  .facts { flex:1; max-width:680px; display:flex; flex-direction:column; gap:12px; }
-  .h-title { font-size:32px; line-height:38px; }
-  .meta { font-size:14px; color:rgba(255,255,255,.7); }
-  .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .btn { display:flex; align-items:center; gap:8px; height:40px; padding:0 20px; border-radius:20px; font-size:14px; font-weight:500; }
-  .btn.primary { background:#00A4DC; color:#000; }
-  .btn.primary svg { fill:#000; width:20px; height:20px; }
-  .btn.outline { border:1px solid #3C3C3C; color:rgba(255,255,255,.85); }
-  .btn.outline svg { fill:#00A4DC; width:20px; height:20px; }
-  .circle-btn { width:40px; height:40px; border-radius:50%; border:1px solid #3C3C3C; display:flex; align-items:center; justify-content:center; flex:none; }
-  .circle-btn svg { width:20px; height:20px; fill:#00A4DC; }
-  .tagline { font-size:14px; color:#00A4DC; }
-  .overview { font-size:14px; line-height:20px; color:#fff; }
-  .credits { font-size:12px; color:rgba(255,255,255,.7); }
+  body { margin:0; background:var(--background); color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
+  .tablet { width:1000px; margin:0 auto; position:relative; box-sizing:border-box; }
+
+  .backdrop { position:relative; width:100%; height:360px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; box-sizing:border-box; }
+  .scrim { position:absolute; inset:0; background:var(--backdrop-scrim); }
+  .halo { position:absolute; inset:0; }
+
+  .overlay-nav { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:12px; padding:20px; box-sizing:border-box; }
+  .overlay-btn { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+  .overlay-btn svg { width:20px; height:20px; fill:rgba(255,255,255,.8); }
+  .nav-spacer { flex:1; }
+
+  /* Row holding poster + facts pulled up -190px (POSTER_OVERLAP) so the poster reaches up over the
+     backdrop's bottom edge by nearly its own 285px height, and hangs ~95px below it into the body. */
+  .stage { display:flex; gap:24px; padding:0 24px; margin-top:-190px; position:relative; box-sizing:border-box; }
+  .poster { width:190px; height:285px; border-radius:16px; box-shadow:var(--elev-pop); flex:none; background:linear-gradient(160deg,#4a3a5f,#7a5f9a); }
+  .facts { flex:1; max-width:660px; padding-top:96px; box-sizing:border-box; display:flex; flex-direction:column; gap:16px; }
+
+  .lockup { display:flex; flex-direction:column; gap:8px; }
+  .eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--on-surface-variant); }
+  .h-title { font-size:44px; font-weight:700; letter-spacing:-.02em; line-height:1.1; }
+  .meta { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--on-surface-variant); flex-wrap:wrap; }
+  .rating { display:flex; align-items:center; gap:3px; font-size:12px; font-weight:600; color:#fff; }
+  .rating svg { width:13px; height:13px; fill:var(--primary); }
+
+  .actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .circle-action { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+  .circle-action svg { width:20px; height:20px; fill:rgba(255,255,255,.8); }
+  .circle-action.active svg { fill:var(--primary); }
+
+  .body-text { display:flex; flex-direction:column; gap:12px; }
+  .tagline { font-size:13px; font-style:italic; line-height:18px; color:var(--on-surface-variant); }
+  .overview { font-size:14px; line-height:22px; max-width:660px; }
+  .credits { font-size:12px; line-height:17px; color:var(--on-surface-variant); }
   .chips { display:flex; gap:8px; flex-wrap:wrap; }
-  .chip { border:1px solid #3C3C3C; border-radius:8px; padding:6px 12px; font-size:13px; color:rgba(255,255,255,.85); }
-  .section { padding:24px 16px 0; display:flex; flex-direction:column; gap:8px; }
-  .section-title { font-size:16px; font-weight:600; }
+  .chip-inert { opacity:.82; }
+
+  .section { margin-top:24px; }
+
+  /* Episode strip: 300px two-row tiles, not the phone's single-row stacked card. */
+  .strip-row { display:flex; gap:12px; overflow:hidden; padding:0 24px 4px; box-sizing:border-box; }
+  .strip-card { width:300px; flex:none; display:flex; flex-direction:column; gap:8px; padding:12px; box-sizing:border-box; }
+  .strip-top { display:flex; gap:12px; }
+  .strip-thumb { width:150px; height:84px; flex:none; }
+  .strip-text { display:flex; flex-direction:column; gap:4px; min-width:0; justify-content:center; }
+  .ep-num { font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--on-surface-variant); }
+  .ep-title { font-size:14px; font-weight:500; line-height:18px; }
+  .strip-bottom { display:flex; align-items:center; gap:10px; }
+  .strip-overview { flex:1; font-size:12px; line-height:16px; color:var(--on-surface-variant); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .strip-play { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+  .strip-play svg { width:18px; height:18px; fill:rgba(255,255,255,.8); }
+
+  .cast-row { display:flex; gap:12px; overflow:hidden; padding:0 24px 4px; box-sizing:border-box; }
+  .cast-col { width:96px; flex:none; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .cast-photo { width:72px; height:72px; border-radius:50%; flex:none; background:linear-gradient(135deg,#292929,#202020); }
+  .cast-name { font-size:12px; font-weight:500; line-height:16px; text-align:center; }
+  .cast-role { font-size:11px; line-height:15px; color:var(--on-surface-variant); text-align:center; }
 </style>
+
 <div class="tablet">
   <div class="backdrop">
     <div class="scrim"></div>
+    <div class="halo m-halo"></div>
     <div class="overlay-nav">
-      <div class="overlay-btn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
-      <div class="overlay-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+      <div class="overlay-btn m-glass"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+      <div class="nav-spacer"></div>
+      <!-- No favourite here on wide — it moves into the action row below (showFavorite=false when isWide). -->
+      <div class="overlay-btn m-glass"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
     </div>
   </div>
-  <div class="header">
-    <div class="poster" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"></div>
+
+  <div class="stage">
+    <div class="poster m-art"></div>
     <div class="facts">
-      <div class="h-title">Westworld</div>
-      <div class="meta">2016 · TV-MA · 8.6 · 4 seasons</div>
-      <div class="actions">
-        <div class="btn primary"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play</div>
-        <div class="btn outline"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>Mark watched</div>
-        <div class="circle-btn"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
-        <div class="btn outline"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>Download</div>
+      <div class="lockup">
+        <div class="eyebrow">Series</div>
+        <div class="h-title">Westworld</div>
+        <div class="meta">
+          <span class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>8.6</span>
+          <span>2016</span>
+          <span class="m-pill">TV-MA</span>
+          <span>4 seasons · 36 episodes</span>
+        </div>
       </div>
-      <div class="tagline">Everything is a story.</div>
-      <div class="overview">Westworld is a dark odyssey about the dawn of artificial consciousness and the evolution of sin, exploring a world in which every human appetite can be indulged without consequence.</div>
-      <div class="credits">Directed by Jonathan Nolan · Evan Rachel Wood, Thandiwe Newton, Jeffrey Wright</div>
-      <div class="chips"><div class="chip">Drama</div><div class="chip">Mystery</div><div class="chip">Sci-Fi &amp; Fantasy</div></div>
+
+      <div class="actions">
+        <div class="m-btn m-btn-primary"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Play S1 · E10</span></div>
+        <div class="m-btn m-btn-ghost"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg><span>Download</span></div>
+        <div class="circle-action m-glass active"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+        <div class="circle-action m-glass"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      </div>
+
+      <div class="body-text">
+        <div class="tagline">Everything is a story.</div>
+        <div class="overview">Westworld is a dark odyssey about the dawn of artificial consciousness and the evolution of sin, exploring a world in which every human appetite can be indulged without consequence.</div>
+        <div class="credits">Directed by Jonathan Nolan · Evan Rachel Wood, Thandiwe Newton, Jeffrey Wright</div>
+        <div class="chips">
+          <div class="m-chip chip-inert">Drama</div>
+          <div class="m-chip chip-inert">Mystery</div>
+          <div class="m-chip chip-inert">Sci-Fi &amp; Fantasy</div>
+        </div>
+      </div>
     </div>
   </div>
+
   <div class="section">
-    <div class="section-title">Next up</div>
+    <div class="m-section-title" style="padding:0 24px">Episodes</div>
+    <div class="strip-row" style="margin-top:8px">
+      <div class="strip-card m-surface">
+        <div class="strip-top">
+          <div class="m-art strip-thumb" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"></div>
+          <div class="strip-text">
+            <div class="ep-num">Episode 1 · 62 min</div>
+            <div class="ep-title">Journey Into Night</div>
+          </div>
+        </div>
+        <div class="strip-bottom">
+          <div class="strip-overview">Dolores continues to gain in awareness. Maeve makes a shocking discovery.</div>
+          <div class="strip-play m-glass"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+      </div>
+      <div class="strip-card m-surface">
+        <div class="strip-top">
+          <div class="m-art strip-thumb" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"></div>
+          <div class="strip-text">
+            <div class="ep-num">Episode 2 · 57 min</div>
+            <div class="ep-title">Reunion</div>
+          </div>
+        </div>
+        <div class="strip-bottom">
+          <div class="strip-overview">Dolores recalls her past. Young Ford builds his first hosts.</div>
+          <div class="strip-play m-glass"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+      </div>
+      <div class="strip-card m-surface">
+        <div class="strip-top">
+          <div class="m-art strip-thumb" style="background:linear-gradient(160deg,#3a5f4a,#5f9a7a)"></div>
+          <div class="strip-text">
+            <div class="ep-num">Episode 3 · 68 min</div>
+            <div class="ep-title">The Bicameral Mind</div>
+          </div>
+        </div>
+        <div class="strip-bottom">
+          <div class="strip-overview">Dolores and Maeve approach full consciousness as the board moves against Ford.</div>
+          <div class="strip-play m-glass"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="m-section-title" style="padding:0 24px">Cast</div>
+    <div class="cast-row" style="margin-top:8px">
+      <div class="cast-col">
+        <div class="cast-photo" style="background:linear-gradient(160deg,#5f3a4a,#9a6a7f)"></div>
+        <div class="cast-name">Evan Rachel Wood</div>
+        <div class="cast-role">Dolores Abernathy</div>
+      </div>
+      <div class="cast-col">
+        <div class="cast-photo" style="background:linear-gradient(160deg,#3a5f4a,#6a9a7f)"></div>
+        <div class="cast-name">Thandiwe Newton</div>
+        <div class="cast-role">Maeve Millay</div>
+      </div>
+      <div class="cast-col">
+        <div class="cast-photo" style="background:linear-gradient(160deg,#4a4a5f,#7a7a9a)"></div>
+        <div class="cast-name">Jeffrey Wright</div>
+        <div class="cast-role">Bernard Lowe</div>
+      </div>
+      <div class="cast-col">
+        <div class="cast-photo" style="background:linear-gradient(160deg,#5f5a3a,#9a916a)"></div>
+        <div class="cast-name">Jonathan Nolan</div>
+        <div class="cast-role"></div>
+      </div>
+    </div>
   </div>
 </div>

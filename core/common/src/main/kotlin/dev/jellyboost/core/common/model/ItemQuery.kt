@@ -18,6 +18,16 @@ data class ItemQuery(
     val filters: FilterOptions = FilterOptions(),
     val startIndex: Int = 0,
     val limit: Int = DEFAULT_PAGE_SIZE,
+    /**
+     * Whether the server should also report how many items match — the "N items" line in the
+     * library grid's header.
+     *
+     * Off by default, and set by the paging source on the **first** page of a grid only: the total
+     * costs the server a `COUNT` over the whole query, and nothing else in the app needs it (the
+     * end of a paged list is detected by a short page, not by a total). See DECISIONS.md
+     * 2026-08-01, "the library grid's first page asks for the total record count".
+     */
+    val includeTotalCount: Boolean = false,
 ) {
     init {
         require(startIndex >= 0) { "startIndex must not be negative, was $startIndex" }

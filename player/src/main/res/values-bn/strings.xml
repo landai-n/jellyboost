@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">ডাইরেক্ট প্লে</string>
     <string name="player_method_direct_stream">ডাইরেক্ট স্ট্রিম</string>
     <string name="player_method_transcode">ট্রান্সকোডিং</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">আপনার ডিভাইস এই ফাইলটি ডিকোড করতে পারেনি, তাই সার্ভার এটি ট্রান্সকোড করছে।</string>
     <string name="player_message_lower_quality">স্ট্রিম আটকে গিয়েছিল — কম মানে আবার চেষ্টা করা হচ্ছে।</string>
     <string name="player_message_track_restart">সার্ভারকে সেই ট্র্যাকের জন্য স্ট্রিম পুনরায় এনকোড করতে হয়েছে।</string>

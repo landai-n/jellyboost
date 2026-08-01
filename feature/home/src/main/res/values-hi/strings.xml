@@ -9,4 +9,13 @@
     <string name="home_section_continue_watching">देखना जारी रखें</string>
     <string name="home_section_next_up">आगे देखें</string>
     <string name="home_section_latest">नवीनतम %1$s</string>
+    <string name="home_hero_resume">फिर से शुरू करें</string>
+    <string name="home_hero_play">चलाएँ</string>
+    <string name="home_hero_details">विवरण</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d मिनट शेष</item>
+        <item quantity="other">%1$d मिनट शेष</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dमि शेष</string>
+    <string name="home_quick_access_offline">ऑफ़लाइन</string>
 </resources>

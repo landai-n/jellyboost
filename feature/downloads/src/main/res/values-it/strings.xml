@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">Scaricati</string>
     <string name="downloads_tab_queue">Coda</string>
     <string name="downloads_wifi_only">Solo Wi‑Fi</string>
+    <string name="downloads_screen_title">Download</string>
     <string name="downloads_group_movies">Film</string>
     <string name="downloads_storage_summary">%1$s usati · %2$s liberi</string>
+    <string name="downloads_storage_free">%1$s liberi</string>
+    <string name="downloads_stat_on_device">Su questo dispositivo</string>
+    <string name="downloads_stat_queue">Coda</string>
+    <string name="downloads_stat_network">Rete</string>
+    <string name="downloads_stat_free_of">%1$s liberi su %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d elemento · %2$s</item>
+        <item quantity="other">%1$d elementi · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">circa %1$s rimanenti</string>
+    <string name="downloads_stat_network_helper">Messo in pausa automaticamente sui dati mobili</string>
     <string name="downloads_action_delete">Elimina download</string>
     <string name="downloads_action_cancel">Annulla download</string>
     <string name="downloads_action_pause">Metti in pausa il download</string>

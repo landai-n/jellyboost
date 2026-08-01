@@ -2,15 +2,20 @@ package dev.jellyboost.feature.home
 
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
+import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
+/** Slack allowed when a dp value is the product of a float fraction rather than a literal. */
+private const val TOLERANCE = 0.01f
+
 /**
- * Unit tests for [homeThumbCardWidth] — the fixed width `HomeRows` picks for its thumb-shaped
- * cards (*My Media*, *Continue Watching*, *Next Up*) at a given viewport width.
+ * Unit tests for the home screen's measured-width decisions: [homeThumbCardWidth] (how wide a
+ * thumb-shaped card is), [isWideHome] (which shape the screen draws) and [heroHeight] (how tall the
+ * *Continue watching* banner is).
  *
  * A phone-width viewport (360dp, 328dp available after [Dimens.ScreenPadding]) used to fit only
- * ~1.6 of the tablet-calibrated [Dimens.ThumbWidth] (210dp) cards per row, reading as zoomed-in.
+ * ~1.4 of the tablet-calibrated [Dimens.ThumbWidth] cards per row, reading as zoomed-in.
  * These tests pin the compact branch (160dp, below 600dp — sized so two full cards plus a peek of
  * a third fit) and the tablet branch (unchanged at [Dimens.ThumbWidth], at and above 600dp) so
  * that regression can't sneak back in.
@@ -34,5 +39,39 @@ class HomeSizingTest {
     @Test
     fun `the test tablet portrait width uses the tablet width, unchanged`() {
         homeThumbCardWidth(711.dp) shouldBe Dimens.ThumbWidth
+    }
+
+    @Test
+    fun `a phone in portrait is not the wide shape`() {
+        isWideHome(maxWidth = 360.dp, maxHeight = 800.dp) shouldBe false
+    }
+
+    @Test
+    fun `a phone in landscape is wide enough but far too short for the wide shape`() {
+        isWideHome(maxWidth = 800.dp, maxHeight = 360.dp) shouldBe false
+    }
+
+    @Test
+    fun `both test tablet orientations draw the wide shape`() {
+        isWideHome(maxWidth = 711.dp, maxHeight = 1138.dp) shouldBe true
+        isWideHome(maxWidth = 1138.dp, maxHeight = 711.dp) shouldBe true
+    }
+
+    @Test
+    fun `a roomy phone gets the mocks' 460dp hero`() {
+        heroHeight(wide = false, viewportHeight = 800.dp) shouldBe 460.dp
+    }
+
+    @Test
+    fun `a short viewport caps the hero at three fifths of its height`() {
+        // Compared with a tolerance rather than `shouldBe 384.dp`: the cap is a float multiplication,
+        // and 640 * 0.6f is a hair off the decimal value on either side of the comparison.
+        heroHeight(wide = false, viewportHeight = 640.dp).value shouldBe (384f plusOrMinus TOLERANCE)
+        heroHeight(wide = true, viewportHeight = 600.dp).value shouldBe (360f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `a tablet in landscape gets the mocks' 400dp hero`() {
+        heroHeight(wide = true, viewportHeight = 711.dp) shouldBe 400.dp
     }
 }

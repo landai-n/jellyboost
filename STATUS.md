@@ -68,6 +68,15 @@ entries logged 2026-08-01 (nav chrome reversal of M9, Haze dependency, white pri
 buttons, card-metric changes + `ItemDetailSizingTest` re-pins, and the Phase-3 compact
 action cluster + `LocalAppChromePadding` contract).
 
+**Phase 4a (home) landed** on branch `design-refresh-home`: a full-bleed *Continue
+watching* hero (the promoted first resume card — it plays via the existing
+`Routes.Player` navigation, `Details` opens the item), quick-access glass chips
+replacing the *My Media* tile row on compact (libraries + an *Offline* chip onto the
+Downloads tab), episode badges and time chips on the resume/next-up thumbs, and the
+list consuming only the chrome's *bottom* padding while a hero is present so the banner
+runs under the status bar. Sixth DECISIONS entry logged. Gate green (ktlint, detekt,
+1966 unit tests, `assembleDebug`); not yet device-walked.
+
 **Phases 1–3 landed** on branch `design-refresh`. Phase 3 replaced `AppTopBar` with
 `GlassBottomNav` (<560dp) / `GlassTopNav` (≥560dp) + an `AppActionCluster` of floating
 glass buttons on compact; `AppScaffold` is now a `Box` whose chrome floats over a

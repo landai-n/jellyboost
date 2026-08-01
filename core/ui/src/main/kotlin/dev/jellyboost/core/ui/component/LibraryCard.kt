@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,6 +55,19 @@ private val TileSubtitle =
         fontSize = 11.sp,
         lineHeight = 14.sp,
     )
+
+/**
+ * The glyph that stands for a library of [kind], wherever a library is drawn without its artwork.
+ *
+ * Shared rather than repeated because the tile is no longer the only place a library appears as an
+ * icon and a name: the home screen's quick-access chips draw the same pairing at chip size, and two
+ * copies of the mapping are two chances for the Shows library to be a film reel on one screen.
+ */
+fun libraryIcon(kind: CollectionKind): ImageVector =
+    when (kind) {
+        CollectionKind.TVSHOWS -> Icons.Outlined.Tv
+        else -> Icons.Outlined.Movie
+    }
 
 /**
  * A user library tile — the home screen's library row and the Libraries tab.
@@ -95,11 +109,7 @@ fun LibraryCard(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector =
-                    when (library.collectionType) {
-                        CollectionKind.TVSHOWS -> Icons.Outlined.Tv
-                        else -> Icons.Outlined.Movie
-                    },
+                imageVector = libraryIcon(library.collectionType),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(GlyphSize),

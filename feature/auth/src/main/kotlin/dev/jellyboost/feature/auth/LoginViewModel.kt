@@ -20,6 +20,34 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+/**
+ * Width requested for a public user's profile picture, in pixels.
+ *
+ * The avatar slot is 56dp, so this is ~3x — enough for the xxhdpi tablet the project targets
+ * without asking the server to re-encode a full-size portrait for a 56dp circle.
+ */
+private const val AVATAR_MAX_WIDTH_PX = 168
+
+/**
+ * Builds the URL of [user]'s profile picture on the server at [serverAddress], or `null` when
+ * there is nothing to load — the server advertises no avatar for them (`primaryImageTag == null`,
+ * the common case) or no server is known yet.
+ *
+ * Kept a pure top-level function rather than a member so the URL shape — which the
+ * `PublicUserInfo` KDoc only describes in prose — is directly unit-testable.
+ *
+ * @param serverAddress base URL of the server; a trailing slash is tolerated.
+ */
+internal fun publicUserAvatarUrl(
+    serverAddress: String?,
+    user: PublicUserInfo,
+    maxWidth: Int = AVATAR_MAX_WIDTH_PX,
+): String? {
+    val tag = user.primaryImageTag?.takeIf { it.isNotBlank() } ?: return null
+    val base = serverAddress?.trimEnd('/')?.takeIf { it.isNotBlank() } ?: return null
+    return "$base/Users/${user.id}/Images/Primary?tag=$tag&maxWidth=$maxWidth"
+}
+
 /** The Quick Connect sheet, present only while a request is open. */
 internal data class QuickConnectUiState(
     /** The short code the user types into an already-authenticated client. */
@@ -32,6 +60,8 @@ internal data class QuickConnectUiState(
 internal data class LoginUiState(
     val serverName: String = "",
     val serverVersion: String? = null,
+    /** Base URL of the server being signed in to; only used to build [avatarUrlFor]. */
+    val serverAddress: String? = null,
     /** True until the public users / branding / Quick Connect probe has answered. */
     val isLoadingContext: Boolean = true,
     val publicUsers: List<PublicUserInfo> = emptyList(),
@@ -47,6 +77,9 @@ internal data class LoginUiState(
     /** Jellyfin allows blank passwords, so only a username is required. */
     val canSignIn: Boolean get() = username.isNotBlank() && !isSigningIn
 
+    /** Profile picture for [user], or `null` when the initial-letter fallback should be drawn. */
+    fun avatarUrlFor(user: PublicUserInfo): String? = publicUserAvatarUrl(serverAddress, user)
+
     /**
      * Redacts [password] (audit SEC-09): the generated data-class `toString()` would otherwise
      * print it in full the moment this state ever reaches a log line — state-restoration crash
@@ -54,6 +87,7 @@ internal data class LoginUiState(
      */
     override fun toString(): String =
         "LoginUiState(serverName='$serverName', serverVersion=$serverVersion, " +
+            "serverAddress=$serverAddress, " +
             "isLoadingContext=$isLoadingContext, publicUsers=$publicUsers, " +
             "loginDisclaimer=$loginDisclaimer, quickConnectEnabled=$quickConnectEnabled, " +
             "username='$username', password=<redacted>, isSigningIn=$isSigningIn, " +
@@ -96,6 +130,7 @@ internal class LoginViewModel
                 LoginUiState(
                     serverName = server?.name.orEmpty(),
                     serverVersion = server?.version,
+                    serverAddress = server?.address,
                     isLoadingContext = server != null,
                 ),
             )

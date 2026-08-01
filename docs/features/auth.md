@@ -8,8 +8,10 @@ secure session persistence, session restore and sign-out.
 First-run flow: the ServerSetup screen lists Jellyfin servers found on the LAN (UDP
 broadcast, live) and accepts a manual URL; connecting resolves the input through the SDK's
 address-candidate scoring and moves to Login. The Login screen shows the server's public
-users (tap to pre-fill), the server's login disclaimer if configured, and offers password
-login plus Quick Connect (code displayed, approval polled). A successful sign-in is
+users with their real profile pictures (tap to pre-fill), the server's login disclaimer if
+configured, and offers password login plus Quick Connect (code displayed, approval polled).
+Both screens are branded: the gradient Jellyboost mark sits in a faint accent halo, large on
+ServerSetup and inline above the server name on Login. A successful sign-in is
 persisted so the app starts straight into the (placeholder) Home screen next time, fully
 offline-capable; sign-out returns to ServerSetup.
 
@@ -62,8 +64,18 @@ one-time upgrade past this change requires signing in again.
     ServerSetup to Login; `Routes.Login` stays parameterless), `AuthErrorMessage`
     (AppError → user copy incl. the partitioned "unable to reach" / "unsupported version"
     lists modeled on jellyfin-android).
-  - Styling: plain Material 3, self-contained — `:core:ui` deliberately untouched while
-    the M2 design-system branch is in flight (DECISIONS.md 2026-07-28).
+  - Styling: Material 3 on the `:core:ui` design system. `AuthScreenScaffold` (in
+    `ServerSetupScreen.kt`) is the shared frame — `JellyfinGradients.BrandGlow` halo, safe-drawing
+    + IME padding, a scrolling column capped at `AuthContentMaxWidth` so a landscape tablet does
+    not stretch the form. `res/drawable/ic_jellyboost_logo.xml` is the tight-viewport in-app
+    variant of the launcher mark (`logo/ic_launcher_foreground.svg` stays the geometry's source of
+    truth; the launcher vector keeps its adaptive-icon safe-zone padding and is unusable inline).
+    The feature started out self-contained while the M2 design-system branch was in flight
+    (DECISIONS.md 2026-07-28); that constraint is gone.
+  - `publicUserAvatarUrl(serverAddress, user, maxWidth)` (in `LoginViewModel.kt`) — the one place
+    a public user's `primaryImageTag` is turned into a `/Users/{id}/Images/Primary` URL, tolerating
+    a trailing slash on the address. `null` (no tag, or no server yet) keeps the initial-letter
+    circle; anything else renders through `:core:ui`'s `JellyfinAsyncImage`.
 - `:app` — `MainViewModel` (calls `restoreSession()` once; splash held while
   `SessionState.Unknown`), `JellyfinNavHost` (start destination from session state;
   `LaunchedEffect` redirects to ServerSetup when the session flips to LoggedOut outside

@@ -38,6 +38,9 @@ import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
  *   `Boolean` per card (rather than the selection set itself) is what keeps a toggle from
  *   recomposing every visible cell: only the two cards whose flag actually flipped have a changed
  *   parameter.
+ * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. The card does not derive
+ *   these from [item]: they are already-formatted strings, and formatting them takes string
+ *   resources that belong to the screen showing the card rather than to `:core:ui`.
  */
 @Composable
 fun PosterCard(
@@ -48,6 +51,9 @@ fun PosterCard(
     showTitle: Boolean = true,
     onLongClick: (() -> Unit)? = null,
     selected: Boolean? = null,
+    topStartBadge: String? = null,
+    timeChipText: String? = null,
+    ratingBadge: Float? = null,
 ) {
     Column(
         modifier =
@@ -70,21 +76,25 @@ fun PosterCard(
             progress = item.playbackProgress,
             placeholderIcon = Icons.Outlined.Movie,
             selected = selected,
+            topStartBadge = topStartBadge,
+            timeChipText = timeChipText,
+            ratingBadge = ratingBadge,
         )
 
         if (showTitle) {
-            Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
+            Spacer(modifier = Modifier.height(CardTitleGap))
             Text(
                 text = item.displayTitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = CardTitleStyle,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             item.displaySubtitle?.let { subtitle ->
+                Spacer(modifier = Modifier.height(CardSubtitleGap))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = CardSubtitleStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -110,6 +120,29 @@ private fun PosterCardPreview() {
                     downloadState = DownloadState.Downloaded,
                 ),
             onClick = {},
+        )
+    }
+}
+
+@Preview(name = "PosterCard — overlays", showBackground = true, backgroundColor = 0xFF101010)
+@Composable
+private fun PosterCardOverlaysPreview() {
+    JellyfinTheme {
+        PosterCard(
+            item =
+                JellyfinItem(
+                    id = "2",
+                    name = "Dune",
+                    type = ItemType.MOVIE,
+                    productionYear = 2021,
+                    communityRating = 8f,
+                    runTimeTicks = 60_000_000_000L,
+                    userData = UserData(playbackPositionTicks = 30_000_000_000L),
+                ),
+            onClick = {},
+            topStartBadge = "4K",
+            timeChipText = "48m left",
+            ratingBadge = 8f,
         )
     }
 }

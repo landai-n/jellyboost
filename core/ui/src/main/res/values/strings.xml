@@ -17,6 +17,10 @@
     <string name="media_row_see_all">See all</string>
     <string name="media_card_watched">Watched</string>
 
+    <!-- Loading / empty / error states -->
+    <!-- 2026-refresh: pending localization -->
+    <string name="state_retry">Retry</string>
+
     <!-- Contextual action bar -->
     <plurals name="selection_count">
         <item quantity="one">%1$d selected</item>

@@ -66,8 +66,11 @@ one-time upgrade past this change requires signing in again.
     lists modeled on jellyfin-android).
   - Styling: Material 3 on the `:core:ui` design system. `AuthScreenScaffold` (in
     `ServerSetupScreen.kt`) is the shared frame — `JellyfinGradients.BrandGlow` halo, safe-drawing
-    + IME padding, a scrolling column capped at `AuthContentMaxWidth` so a landscape tablet does
-    not stretch the form. `res/drawable/ic_jellyboost_logo.xml` is the tight-viewport in-app
+    + IME padding, and a header slot + content slot. Portrait / narrow windows stack the two in
+    one scrolling column; windows ≥ 840dp wide that are wider than tall (a landscape tablet) get
+    side-by-side panes — branding/identity centred on the left, form on the right, each scrolling
+    on its own — because stacked they overflowed the short viewport. Every pane's column is
+    capped at `AuthContentMaxWidth` so the form is never stretched. `res/drawable/ic_jellyboost_logo.xml` is the tight-viewport in-app
     variant of the launcher mark (`logo/ic_launcher_foreground.svg` stays the geometry's source of
     truth; the launcher vector keeps its adaptive-icon safe-zone padding and is unusable inline).
     The feature started out self-contained while the M2 design-system branch was in flight

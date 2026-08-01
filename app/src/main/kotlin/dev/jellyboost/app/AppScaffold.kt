@@ -7,15 +7,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -30,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -46,6 +50,8 @@ import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.LocalHazeState
 import kotlinx.coroutines.launch
@@ -146,9 +152,20 @@ internal fun AppScaffold(
             )
 
             AnimatedVisibility(
+                visible = isTopLevel,
+                enter = fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
+                modifier = Modifier.align(Alignment.TopCenter),
+            ) {
+                TopChromeScrim(
+                    height = topChromeInset + if (bottomNav) ActionClusterHeight else TopNavHeight,
+                )
+            }
+
+            AnimatedVisibility(
                 visible = isTopLevel && !bottomNav,
                 enter = slideInVertically { -it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
-                exit = slideOutVertically { -it } + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { -it } + fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
                 modifier = Modifier.align(Alignment.TopCenter),
             ) {
                 GlassTopNav(
@@ -166,7 +183,7 @@ internal fun AppScaffold(
             AnimatedVisibility(
                 visible = isTopLevel && bottomNav,
                 enter = fadeIn(tween(NAV_TRANSITION_MILLIS)),
-                exit = fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                exit = fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
                 modifier = Modifier.align(Alignment.TopEnd),
             ) {
                 AppActionCluster(
@@ -182,7 +199,7 @@ internal fun AppScaffold(
             AnimatedVisibility(
                 visible = isTopLevel && bottomNav,
                 enter = slideInVertically { it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
-                exit = slideOutVertically { it } + fadeOut(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { it } + fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
@@ -203,6 +220,44 @@ internal fun AppScaffold(
             }
         }
     }
+}
+
+/**
+ * How much faster than the page cross-fade the chrome leaves.
+ *
+ * The bars are drawn for the whole of [NAV_TRANSITION_MILLIS] so that they do not vanish from under
+ * a screen that is still fading (see [AppScaffold]'s KDoc) — but for that whole time the pushed
+ * screen underneath is *also* fading in, with its own top-right buttons: the detail screen's overlay
+ * nav, the library grid's sort, SyncPlay's create, the player's cast. Two sets of controls in the
+ * same corner, both semi-transparent, read as one smeared pile. Halving the chrome's exit clears the
+ * corner well before the incoming screen is legible, and the *padding* is deliberately left on the
+ * full clock — that one is read by a list's `contentPadding`, where a faster collapse would make the
+ * content jump under the fade.
+ */
+private const val CHROME_EXIT_DIVISOR = 2
+
+/**
+ * The band of darkened background the top chrome is read against.
+ *
+ * A sibling of the nav host, drawn over it and under the bars — deliberately *not* a background on
+ * [GlassTopNav]'s row or on the cluster. Those pieces are glass, and glass samples the `hazeSource`
+ * around the nav host; a scrim inside that source would be blurred into the very surfaces it is
+ * meant to protect, and a scrim inside a `hazeEffect` would be sampling an effect rather than a
+ * backdrop, which Haze does not do (`GlassTopNav`'s KDoc). Outside both, it is exactly what it looks
+ * like: a gradient over the page, with the glass floating on top of it.
+ */
+@Composable
+private fun TopChromeScrim(
+    height: Dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(height)
+                .background(JellyfinGradients.TopChromeScrim),
+    )
 }
 
 /**
@@ -229,6 +284,10 @@ private fun Modifier.snackbarInset(chromePadding: PaddingValues): Modifier {
  * The cluster overlaps content by design — the mocks' home hero runs full-bleed under it — but a
  * screen's *first, non-scrolling* row (the search field) would otherwise sit permanently under the
  * Cast and overflow buttons, so the frame keeps that band clear and lets the rest scroll under.
+ *
+ * Both variants add [Dimens.SpaceSmall] of clearance on top of the bar's own height. Reserving
+ * *exactly* the bar meant a screen's first row came to rest touching the glass, so any rounding —
+ * a shadow, a focus ring, a row whose own top padding was zero — read as an overlap.
  */
 @Composable
 private fun chromePadding(
@@ -236,13 +295,13 @@ private fun chromePadding(
     bottomNav: Boolean,
 ): PaddingValues {
     val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val statusBarInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val statusBarInset = topChromeInset
 
     val topTarget =
         when {
             !isTopLevel -> 0.dp
-            bottomNav -> statusBarInset + ActionClusterHeight
-            else -> statusBarInset + TopNavHeight
+            bottomNav -> statusBarInset + ActionClusterHeight + Dimens.SpaceSmall
+            else -> statusBarInset + TopNavHeight + Dimens.SpaceSmall
         }
     val bottomTarget =
         if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp

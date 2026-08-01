@@ -49,6 +49,20 @@ object GlassDefaults {
     val GhostBorder: Color = Color.White.copy(alpha = 0.12f)
 
     /**
+     * The fill of a *chrome* surface — the top nav's tab capsule, the app-wide action circles, the
+     * floating bottom pill — as opposed to a card-level one.
+     *
+     * Chrome floats over whatever the user is looking at, which on this app's screens is very often
+     * a bright frame of artwork, and [Fill]'s white@6% over a blurred bright backdrop leaves a white
+     * glyph sitting on a near-white surface. A *dark* tint is the only thing that makes the blur
+     * subtractive: the backdrop still shows through at 55%, but it is pulled far enough down that
+     * white content on top of it keeps its contrast whatever is behind. In-content glass — overlay
+     * badges on card artwork, metadata pills — keeps [Fill], because those already sit on artwork
+     * the card itself has scrimmed (DECISIONS.md 2026-08-01, chrome readability).
+     */
+    val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.45f)
+
+    /**
      * The Haze style every glass surface blurs with.
      *
      * `backgroundColor` is the app background rather than transparent: Haze composites the blurred
@@ -89,18 +103,23 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  *   [GlassDefaults.GhostBorder], because a control the user is meant to press has to read as an
  *   edge rather than as a seam. Stacking a second `border` on top of the default would composite
  *   the two alphas instead of replacing one with the other, hence a parameter.
+ * @param tint what the blurred backdrop is composited under (and, where no backdrop is available,
+ *   the flat fill that stands in for it). [GlassDefaults.Fill] — white@6% — for anything sitting
+ *   inside a screen's own content; chrome that floats over arbitrary artwork passes
+ *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
  */
 fun Modifier.glassSurface(
     shape: Shape,
     borderColor: Color = GlassDefaults.Hairline,
+    tint: Color = GlassDefaults.Fill,
 ): Modifier =
     composed {
         val hazeState = LocalHazeState.current
         val backdrop =
             if (hazeState != null) {
-                Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style())
+                Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint))
             } else {
-                Modifier.background(color = GlassDefaults.Fill, shape = shape)
+                Modifier.background(color = tint, shape = shape)
             }
         clip(shape)
             .then(backdrop)

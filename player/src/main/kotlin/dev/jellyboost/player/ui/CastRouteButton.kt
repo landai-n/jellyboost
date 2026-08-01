@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -17,6 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.framework.CastButtonFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.player.R
 import dev.jellyboost.player.cast.CastAvailability
@@ -46,11 +48,18 @@ import javax.inject.Inject
  *   keeps its slot — so an unconditional circle would be an empty ring on the bar for as long as
  *   the network has no Chromecast on it. [CastDeviceState.NoDevices] is exactly the framework's
  *   `NO_DEVICES_AVAILABLE`, which is the same condition the view hides itself on.
+ * @param size diameter of that circle, matching the `GlassIconButton`s beside it —
+ *   [Dimens.PillHeightSmall] in chrome, [Dimens.PillHeight] in the player's top bar. The caller's
+ *   [modifier] carries the *frame* around it (a `GlassIconButton` reserves
+ *   [Dimens.MinTouchTarget]); this is the drawn surface, so the two lines of buttons agree.
+ * @param surfaceTint the circle's glass fill, as on `GlassIconButton`.
  */
 @Composable
 fun CastRouteButton(
     modifier: Modifier = Modifier,
     glassContainer: Boolean = false,
+    size: Dp = Dimens.PillHeightSmall,
+    surfaceTint: Color = GlassDefaults.Fill,
 ) {
     val viewModel: CastRouteButtonViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -58,15 +67,26 @@ fun CastRouteButton(
     if (state == CastDeviceState.Unavailable) return
 
     if (!glassContainer) {
-        MediaRouteButtonHost(modifier = modifier)
+        MediaRouteButtonHost(modifier = modifier.size(CastButtonSize))
         return
     }
 
-    Box(
-        modifier = if (state == CastDeviceState.NoDevices) modifier else modifier.glassSurface(CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        MediaRouteButtonHost()
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Box(
+            modifier =
+                Modifier
+                    .size(size)
+                    .then(
+                        if (state == CastDeviceState.NoDevices) {
+                            Modifier
+                        } else {
+                            Modifier.glassSurface(shape = CircleShape, tint = surfaceTint)
+                        },
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            MediaRouteButtonHost(modifier = Modifier.size(size))
+        }
     }
 }
 
@@ -84,7 +104,7 @@ fun CastRouteButton(
 @Composable
 private fun MediaRouteButtonHost(modifier: Modifier = Modifier) {
     AndroidView(
-        modifier = modifier.size(CastButtonSize),
+        modifier = modifier,
         factory = { context ->
             val themed = ContextThemeWrapper(context, R.style.Theme_Jellyboost_Cast)
             MediaRouteButton(themed).apply {
@@ -96,10 +116,11 @@ private fun MediaRouteButtonHost(modifier: Modifier = Modifier) {
 }
 
 /**
- * An M3 `IconButton`'s size — the view draws its own 24dp icon centred in it, so the cast button
- * lines up with the app-bar actions beside it and keeps the same 48dp touch target.
+ * What a *bare* cast button (no glass circle) occupies — Material's 48dp minimum touch target, with
+ * the view drawing its own 24dp icon centred in it. The glass variant sizes itself from its caller
+ * instead, so that its circle matches the `GlassIconButton`s it sits beside.
  */
-private val CastButtonSize: Dp = 48.dp
+private val CastButtonSize: Dp = Dimens.MinTouchTarget
 
 /**
  * Holds the cast state for [CastRouteButton].

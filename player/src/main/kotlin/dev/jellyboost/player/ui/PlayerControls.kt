@@ -169,7 +169,13 @@ private fun TopBar(
         // out rather than given a hidden state: a group is a deliberate, long-lived thing, unlike
         // the receivers appearing and disappearing that the button animates through on its own.
         if (!state.syncPlay.inGroup) {
-            CastRouteButton(modifier = Modifier.size(CHROME_BUTTON), glassContainer = true)
+            CastRouteButton(
+                // The frame the `GlassIconButton`s in this bar reserve, with the circle drawn at
+                // the bar's own button size inside it — see `JellyfinButtons.kt`.
+                modifier = Modifier.size(Dimens.MinTouchTarget),
+                glassContainer = true,
+                size = CHROME_BUTTON,
+            )
         }
     }
 }

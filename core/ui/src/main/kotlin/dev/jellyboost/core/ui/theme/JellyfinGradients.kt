@@ -38,6 +38,28 @@ object JellyfinGradients {
         )
 
     /**
+     * The protective band the app's floating top chrome is read against — background@80% at the very
+     * top of the window, fading out by the bottom edge of the bar.
+     *
+     * [BackdropScrim] runs the other way (transparent at the top, solid at the bottom) because it
+     * exists to seat a hero *into* the page below it; that leaves the top of the window — exactly
+     * where the brand mark, the tab capsule and the app-wide actions float — the least protected
+     * part of a full-bleed backdrop. This brush is the counterpart: it is drawn as a sibling *over*
+     * the page and *under* the bars, never inside a `hazeSource` and never inside a `hazeEffect`,
+     * since Haze samples a backdrop rather than another effect
+     * (DECISIONS.md 2026-08-01, chrome readability).
+     */
+    val TopChromeScrim: Brush =
+        Brush.verticalGradient(
+            colors =
+                listOf(
+                    JellyfinColors.Background.copy(alpha = 0.80f),
+                    JellyfinColors.Background.copy(alpha = 0.45f),
+                    Color.Transparent,
+                ),
+        )
+
+    /**
      * Faint accent halo for hero areas that have no artwork of their own — the auth screens'
      * branded header being the first user.
      *

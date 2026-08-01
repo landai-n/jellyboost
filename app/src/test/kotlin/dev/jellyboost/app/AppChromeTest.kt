@@ -1,6 +1,7 @@
 package dev.jellyboost.app
 
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.core.ui.theme.Dimens
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -39,5 +40,17 @@ class AppChromeTest {
     @DisplayName("the test tablet portrait width uses the top nav")
     fun tabletPortraitUsesTheTopNav() {
         useBottomNav(711.dp) shouldBe false
+    }
+
+    @Test
+    @DisplayName("the action cluster reserves its gap plus a full touch target, not a magic 44dp")
+    fun theActionClusterHeightIsDerivedFromWhatItDraws() {
+        // The cluster is one row of app actions under `ActionClusterTopGap`, and every action lays
+        // out `Dimens.MinTouchTarget` around the smaller circle it draws (`JellyfinButtons.kt`).
+        // Pinned because this is the number `AppScaffold` keeps clear of a compact screen's first,
+        // non-scrolling row: it used to be a literal 44dp — neither the circle nor the row — and the
+        // shortfall is what let the search field slide under the Cast and overflow buttons.
+        ActionClusterHeight shouldBe 56.dp
+        ActionClusterHeight shouldBe ActionClusterTopGap + Dimens.MinTouchTarget
     }
 }

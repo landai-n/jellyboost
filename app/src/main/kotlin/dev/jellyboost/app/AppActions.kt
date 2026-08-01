@@ -3,19 +3,15 @@ package dev.jellyboost.app
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -34,10 +30,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.player.ui.CastRouteButton
 
 // The app-wide actions the combined app bar used to carry, unpicked from it so that both of the
@@ -53,38 +51,66 @@ import dev.jellyboost.player.ui.CastRouteButton
 /**
  * The four app-wide actions, in bar order: connection status, Cast, SyncPlay groups, overflow.
  *
- * A `RowScope` extension rather than a container of its own so a caller decides the spacing and the
- * alignment — the top nav packs them at the end of a 64dp row, the cluster floats them.
+ * A row of its own rather than a `RowScope` extension, because the spacing between these four is a
+ * property of *them* and not of whichever bar is drawing them: each action reserves
+ * [Dimens.MinTouchTarget] around a [Dimens.PillHeightSmall] circle, so the arrangement gap that
+ * produces the mocks' 12dp between two circles is [ActionGap] — a value neither the top nav's
+ * between-groups gap nor the cluster's old `SpaceSmall` would have got right on its own.
  */
 @Composable
-internal fun RowScope.AppActions(
+internal fun AppActions(
     connectionState: ConnectionState,
     hasActiveSyncPlayGroup: Boolean,
     onConnectionStatusClick: () -> Unit,
     onOpenSyncPlayGroups: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onSetForceOffline: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    ConnectionStatusAction(
-        status = connectionState.toStatus(),
-        onClick = onConnectionStatusClick,
-    )
-    // Draws nothing at all unless the device has a Cast stack and something to cast to (M12); it
-    // needs no state from here, and takes none. The glass circle goes on the modifier it applies to
-    // its own view, so an unavailable Cast leaves no empty circle behind.
-    CastRouteButton(
-        modifier = Modifier.size(Dimens.PillHeightSmall).glassSurface(CircleShape),
-    )
-    SyncPlayGroupsAction(
-        hasActiveGroup = hasActiveSyncPlayGroup,
-        onClick = onOpenSyncPlayGroups,
-    )
-    AppOverflowMenu(
-        forceOffline = connectionState == ConnectionState.OFFLINE_FORCED,
-        onNavigateToSettings = onNavigateToSettings,
-        onSetForceOffline = onSetForceOffline,
-    )
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(ActionGap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ConnectionStatusAction(
+            status = connectionState.toStatus(),
+            onClick = onConnectionStatusClick,
+        )
+        // Draws nothing at all unless the device has a Cast stack and something to cast to (M12); it
+        // needs no state from here, and takes none. `glassContainer` is what makes it draw the same
+        // circle its three neighbours do — and, crucially, *stop* drawing it while there is nothing
+        // to route to, which an unconditional `glassSurface` on the modifier could not do.
+        CastRouteButton(
+            modifier = Modifier.size(Dimens.MinTouchTarget),
+            glassContainer = true,
+            size = Dimens.PillHeightSmall,
+            surfaceTint = GlassDefaults.ChromeFill,
+        )
+        SyncPlayGroupsAction(
+            hasActiveGroup = hasActiveSyncPlayGroup,
+            onClick = onOpenSyncPlayGroups,
+        )
+        AppOverflowMenu(
+            forceOffline = connectionState == ConnectionState.OFFLINE_FORCED,
+            onNavigateToSettings = onNavigateToSettings,
+            onSetForceOffline = onSetForceOffline,
+        )
+    }
 }
+
+/**
+ * Arrangement gap between two app actions.
+ *
+ * Zero on purpose. Each action lays out a [Dimens.MinTouchTarget] frame around the
+ * [Dimens.PillHeightSmall] circle it draws, which already leaves 12dp of clear background between
+ * two adjacent circles — the gap the mocks show. Any positive arrangement spacing is added *on top*
+ * of that, which is how the cluster's `SpaceSmall` used to read as 20dp once the frames were honest
+ * about their size.
+ */
+private val ActionGap: Dp = 0.dp
+
+/** Inset of the SyncPlay badge from the corner of its action's frame — back onto the circle. */
+private val BadgeInset: Dp = ActionFrameOverhang
 
 /**
  * [AppActions] as the compact layout draws them: a small right-aligned cluster of glass circles
@@ -108,23 +134,21 @@ internal fun AppActionCluster(
     onSetForceOffline: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    AppActions(
+        connectionState = connectionState,
+        hasActiveSyncPlayGroup = hasActiveSyncPlayGroup,
+        onConnectionStatusClick = onConnectionStatusClick,
+        onOpenSyncPlayGroups = onOpenSyncPlayGroups,
+        onNavigateToSettings = onNavigateToSettings,
+        onSetForceOffline = onSetForceOffline,
+        // `safeDrawing` rather than `statusBars`: in landscape on a device with a display cutout the
+        // notch is a *horizontal* inset, and a cluster padded only for the status bar put its first
+        // circle underneath it.
         modifier =
             modifier
-                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(TopChromeInsets)
                 .padding(top = ActionClusterTopGap, end = ActionClusterEndPadding),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AppActions(
-            connectionState = connectionState,
-            hasActiveSyncPlayGroup = hasActiveSyncPlayGroup,
-            onConnectionStatusClick = onConnectionStatusClick,
-            onOpenSyncPlayGroups = onOpenSyncPlayGroups,
-            onNavigateToSettings = onNavigateToSettings,
-            onSetForceOffline = onSetForceOffline,
-        )
-    }
+    )
 }
 
 /**
@@ -151,6 +175,7 @@ private fun ConnectionStatusAction(
             } else {
                 MaterialTheme.colorScheme.error
             },
+        surfaceTint = GlassDefaults.ChromeFill,
     )
 }
 
@@ -161,15 +186,18 @@ private fun ConnectionStatusAction(
  * The badge is a plain [Badge] dot rather than a participant count: what the icon has to say from
  * here is only "you are in a group right now, wherever that happened" — the count, the name and
  * everything else about it belongs to the section itself once opened.
+ *
+ * It is placed by hand rather than by `BadgedBox`, which anchors to the corner of its *anchor's*
+ * bounds — that is now the button's invisible 48dp frame, and the dot floated a clear [BadgeInset]
+ * away from the circle it belongs to. Nothing is lost in semantics: the dot carries no text of its
+ * own, and the state it stands for is already in the button's content description.
  */
 @Composable
 private fun SyncPlayGroupsAction(
     hasActiveGroup: Boolean,
     onClick: () -> Unit,
 ) {
-    BadgedBox(
-        badge = { if (hasActiveGroup) Badge() },
-    ) {
+    Box(contentAlignment = Alignment.Center) {
         GlassIconButton(
             icon = Icons.Filled.Groups,
             contentDescription =
@@ -177,7 +205,16 @@ private fun SyncPlayGroupsAction(
                     if (hasActiveGroup) R.string.syncplay_groups_action_active else R.string.syncplay_groups_action,
                 ),
             onClick = onClick,
+            surfaceTint = GlassDefaults.ChromeFill,
         )
+        if (hasActiveGroup) {
+            Badge(
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = -BadgeInset, y = BadgeInset),
+            )
+        }
     }
 }
 
@@ -206,6 +243,7 @@ private fun AppOverflowMenu(
             icon = Icons.Filled.MoreVert,
             contentDescription = stringResource(R.string.home_more_options),
             onClick = { expanded = true },
+            surfaceTint = GlassDefaults.ChromeFill,
         )
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

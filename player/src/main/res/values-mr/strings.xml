@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">डायरेक्ट प्ले</string>
     <string name="player_method_direct_stream">डायरेक्ट स्ट्रीम</string>
     <string name="player_method_transcode">ट्रान्सकोडिंग</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">आपले डिव्हाइस ही फाइल डीकोड करू शकले नाही, त्यामुळे सर्व्हर ती ट्रान्सकोड करत आहे.</string>
     <string name="player_message_lower_quality">स्ट्रीम थांबली — कमी गुणवत्तेत पुन्हा प्रयत्न करत आहे.</string>

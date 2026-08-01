@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">பதிவிறக்கப்பட்டவை</string>
     <string name="downloads_tab_queue">வரிசை</string>
     <string name="downloads_wifi_only">Wi‑Fi மட்டும்</string>
+    <string name="downloads_screen_title">பதிவிறக்கங்கள்</string>
 
     <string name="downloads_group_movies">திரைப்படங்கள்</string>
 
     <string name="downloads_storage_summary">%1$s பயன்படுத்தப்பட்டது · %2$s காலி</string>
+    <string name="downloads_storage_free">%1$s காலி</string>
+    <string name="downloads_stat_on_device">இந்தச் சாதனத்தில்</string>
+    <string name="downloads_stat_queue">வரிசை</string>
+    <string name="downloads_stat_network">நெட்வொர்க்</string>
+    <string name="downloads_stat_free_of">%2$s இல் %1$s காலி</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d உருப்படி · %2$s</item>
+        <item quantity="other">%1$d உருப்படிகள் · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">தோராயமாக %1$s மீதம்</string>
+    <string name="downloads_stat_network_helper">மொபைல் டேட்டாவில் தானாக இடைநிறுத்தப்படும்</string>
 
     <string name="downloads_action_delete">பதிவிறக்கத்தை நீக்கு</string>
     <string name="downloads_action_cancel">பதிவிறக்கத்தை ரத்துசெய்</string>

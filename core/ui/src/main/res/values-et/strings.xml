@@ -7,6 +7,11 @@
 
     <string name="media_row_see_all">Vaata kõiki</string>
     <string name="media_card_watched">Vaadatud</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d üksus</item>
+        <item quantity="other">%1$d üksust</item>
+    </plurals>
+    <string name="state_retry">Proovi uuesti</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valitud</item>

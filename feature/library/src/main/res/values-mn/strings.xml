@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Одоогоор сан алга. Сервер дээр сан нэмнэ үү.</string>
+    <string name="libraries_title">Сангууд</string>
 
     <string name="library_back">Буцах</string>
     <string name="library_home">Нүүр</string>
     <string name="library_sort">Эрэмбэлэх</string>
     <string name="library_filter">Шүүлтүүр</string>
+    <string name="library_filter_all">Бүгд</string>
+    <string name="library_filter_more">Шүүлтүүрүүд</string>
 
     <string name="library_sort_title">Эрэмбэлэх шалгуур</string>
     <string name="library_sort_name">Нэр</string>

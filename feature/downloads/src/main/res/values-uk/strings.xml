@@ -3,10 +3,24 @@
     <string name="downloads_tab_downloaded">Завантажено</string>
     <string name="downloads_tab_queue">Черга</string>
     <string name="downloads_wifi_only">Лише Wi-Fi</string>
+    <string name="downloads_screen_title">Завантаження</string>
 
     <string name="downloads_group_movies">Фільми</string>
 
     <string name="downloads_storage_summary">%1$s використано · %2$s вільно</string>
+    <string name="downloads_storage_free">%1$s вільно</string>
+    <string name="downloads_stat_on_device">На цьому пристрої</string>
+    <string name="downloads_stat_queue">Черга</string>
+    <string name="downloads_stat_network">Мережа</string>
+    <string name="downloads_stat_free_of">%1$s вільно з %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d елемент · %2$s</item>
+        <item quantity="few">%1$d елементи · %2$s</item>
+        <item quantity="many">%1$d елементів · %2$s</item>
+        <item quantity="other">%1$d елементів · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Залишилось приблизно %1$s</string>
+    <string name="downloads_stat_network_helper">Автоматично призупиняється на мобільному інтернеті</string>
 
     <string name="downloads_action_delete">Видалити завантаження</string>
     <string name="downloads_action_cancel">Скасувати завантаження</string>

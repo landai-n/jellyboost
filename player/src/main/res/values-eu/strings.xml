@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Erreprodukzio zuzena</string>
     <string name="player_method_direct_stream">Zuzeneko jarioa</string>
     <string name="player_method_transcode">Transkodifikatzen</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Zure gailuak ezin izan du fitxategi hau deskodifikatu, beraz zerbitzaria transkodifikatzen ari da.</string>
     <string name="player_message_lower_quality">Jarioa trabatu da — kalitate baxuagoarekin berriro saiatzen.</string>
     <string name="player_message_track_restart">Zerbitzariak pista horren jarioa berriz kodetu behar izan du.</string>

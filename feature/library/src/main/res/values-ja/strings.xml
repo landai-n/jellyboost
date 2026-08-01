@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">ライブラリがまだありません。サーバーで追加してください。</string>
+    <string name="libraries_title">ライブラリ</string>
 
     <string name="library_back">戻る</string>
     <string name="library_home">ホーム</string>
     <string name="library_sort">並べ替え</string>
     <string name="library_filter">フィルター</string>
+    <string name="library_filter_all">すべて</string>
+    <string name="library_filter_more">フィルター</string>
 
     <string name="library_sort_title">並べ替え</string>
     <string name="library_sort_name">名前</string>

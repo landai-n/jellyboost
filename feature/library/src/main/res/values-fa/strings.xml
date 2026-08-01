@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">هنوز کتابخانه‌ای وجود ندارد. یکی در سرور اضافه کنید.</string>
+    <string name="libraries_title">کتابخانه‌ها</string>
 
     <string name="library_back">بازگشت</string>
     <string name="library_home">خانه</string>
     <string name="library_sort">مرتب‌سازی</string>
     <string name="library_filter">فیلتر</string>
+    <string name="library_filter_all">همه</string>
+    <string name="library_filter_more">فیلترها</string>
 
     <string name="library_sort_title">مرتب‌سازی بر اساس</string>
     <string name="library_sort_name">نام</string>

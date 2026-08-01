@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">علامت‌گذاری به‌عنوان تماشا نشده</string>
     <string name="detail_add_favorite">افزودن به علاقه‌مندی‌ها</string>
     <string name="detail_remove_favorite">حذف از علاقه‌مندی‌ها</string>
+    <string name="detail_play_target">پخش %1$s</string>
+    <string name="detail_resume_target">ازسرگیری %1$s</string>
 
     <string name="detail_section_seasons">فصل‌ها</string>
     <string name="detail_section_next_up">بعدی</string>
     <string name="detail_section_episodes">قسمت‌ها</string>
     <string name="detail_section_similar">موارد مشابه</string>
+    <string name="detail_section_cast">بازیگران</string>
+    <string name="detail_type_movie">فیلم</string>
+    <string name="detail_type_series">سریال</string>
+    <string name="detail_type_season">فصل</string>
+    <string name="detail_type_episode">قسمت</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">قسمت %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d دقیقه</string>
     <string name="detail_remaining_minutes">%1$d دقیقه مانده</string>

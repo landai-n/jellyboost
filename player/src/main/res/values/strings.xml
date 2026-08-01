@@ -25,7 +25,6 @@
     <string name="player_method_direct_stream">Direct stream</string>
     <string name="player_method_transcode">Transcoding</string>
 
-    <!-- 2026-refresh: pending localization -->
     <!-- The top bar's method tag: %1$s is the play method above, %2$d the video height in pixels
          ("Transcoding 1080p"). Drawn uppercased. -->
     <string name="player_method_tag_height">%1$s %2$dp</string>

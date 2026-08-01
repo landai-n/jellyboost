@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">ನೇರ ಪ್ಲೇ</string>
     <string name="player_method_direct_stream">ನೇರ ಸ್ಟ್ರೀಮ್</string>
     <string name="player_method_transcode">ಟ್ರಾನ್ಸ್‌ಕೋಡಿಂಗ್</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಈ ಫೈಲ್ ಅನ್ನು ಡಿಕೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ, ಆದ್ದರಿಂದ ಸರ್ವರ್ ಅದನ್ನು ಟ್ರಾನ್ಸ್‌ಕೋಡ್ ಮಾಡುತ್ತಿದೆ.</string>
     <string name="player_message_lower_quality">ಸ್ಟ್ರೀಮ್ ನಿಂತುಹೋಯಿತು — ಕಡಿಮೆ ಗುಣಮಟ್ಟದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತಿದೆ.</string>

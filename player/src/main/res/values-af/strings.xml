@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direkte terugspeel</string>
     <string name="player_method_direct_stream">Direkte stroom</string>
     <string name="player_method_transcode">Transkodering</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Jou toestel kon nie hierdie lêer dekodeer nie, so die bediener transkodeer dit.</string>
     <string name="player_message_lower_quality">Die stroom het gehaper — probeer weer teen \'n laer gehalte.</string>

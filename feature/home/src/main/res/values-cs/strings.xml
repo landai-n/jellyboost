@@ -7,4 +7,15 @@
     <string name="home_section_continue_watching">Pokračovat ve sledování</string>
     <string name="home_section_next_up">Další v pořadí</string>
     <string name="home_section_latest">Nejnovější %1$s</string>
+    <string name="home_hero_resume">Pokračovat</string>
+    <string name="home_hero_play">Přehrát</string>
+    <string name="home_hero_details">Podrobnosti</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Zbývá %1$d minuta</item>
+        <item quantity="few">Zbývá %1$d minuty</item>
+        <item quantity="many">Zbývá %1$d minut</item>
+        <item quantity="other">Zbývá %1$d minut</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin zbývá</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

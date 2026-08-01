@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">සෘජු වාදනය</string>
     <string name="player_method_direct_stream">සෘජු ප්‍රවාහය</string>
     <string name="player_method_transcode">පරිවර්තනය කරමින්</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">ඔබගේ උපාංගයට මෙම ගොනුව විකේතනය කළ නොහැකි වූ බැවින්, සේවාදායකය එය පරිවර්තනය කරමින් සිටී.</string>
     <string name="player_message_lower_quality">ප්‍රවාහය නතර විය — අඩු ගුණත්වයකින් නැවත උත්සාහ කරමින්.</string>
     <string name="player_message_track_restart">එම මාර්ගය සඳහා ප්‍රවාහය නැවත කේතනය කිරීමට සේවාදායකයට සිදු විය.</string>

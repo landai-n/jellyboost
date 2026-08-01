@@ -3,10 +3,24 @@
     <string name="downloads_tab_downloaded">Pobrane</string>
     <string name="downloads_tab_queue">Kolejka</string>
     <string name="downloads_wifi_only">Tylko Wi-Fi</string>
+    <string name="downloads_screen_title">Pobrania</string>
 
     <string name="downloads_group_movies">Filmy</string>
 
     <string name="downloads_storage_summary">%1$s użyte · %2$s wolne</string>
+    <string name="downloads_storage_free">%1$s wolne</string>
+    <string name="downloads_stat_on_device">Na tym urządzeniu</string>
+    <string name="downloads_stat_queue">Kolejka</string>
+    <string name="downloads_stat_network">Sieć</string>
+    <string name="downloads_stat_free_of">%1$s wolne z %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d pozycja · %2$s</item>
+        <item quantity="few">%1$d pozycje · %2$s</item>
+        <item quantity="many">%1$d pozycji · %2$s</item>
+        <item quantity="other">%1$d pozycji · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Pozostało około %1$s</string>
+    <string name="downloads_stat_network_helper">Wstrzymywane automatycznie przy danych komórkowych</string>
 
     <string name="downloads_action_delete">Usuń pobieranie</string>
     <string name="downloads_action_cancel">Anuluj pobieranie</string>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direkte afspilning</string>
     <string name="player_method_direct_stream">Direkte stream</string>
     <string name="player_method_transcode">Transkodning</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Din enhed kunne ikke afkode denne fil, så serveren transkoder den.</string>
     <string name="player_message_lower_quality">Streamen gik i stå – prøver igen med lavere kvalitet.</string>

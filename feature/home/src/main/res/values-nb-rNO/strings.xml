@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Fortsett å se</string>
     <string name="home_section_next_up">Neste</string>
     <string name="home_section_latest">Nyeste %1$s</string>
+    <string name="home_hero_resume">Fortsett</string>
+    <string name="home_hero_play">Spill av</string>
+    <string name="home_hero_details">Detaljer</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minutt igjen</item>
+        <item quantity="other">%1$d minutter igjen</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin igjen</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

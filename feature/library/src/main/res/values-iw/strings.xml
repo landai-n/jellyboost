@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">עדיין אין ספריות. הוסף אחת בשרת.</string>
+    <string name="libraries_title">ספריות</string>
 
     <string name="library_back">חזרה</string>
     <string name="library_home">בית</string>
     <string name="library_sort">מיון</string>
     <string name="library_filter">סינון</string>
+    <string name="library_filter_all">הכול</string>
+    <string name="library_filter_more">מסננים</string>
 
     <string name="library_sort_title">מיון לפי</string>
     <string name="library_sort_name">שם</string>

@@ -3,8 +3,20 @@
     <string name="downloads_tab_downloaded">ডাউনলোড হয়েছে</string>
     <string name="downloads_tab_queue">সারি</string>
     <string name="downloads_wifi_only">শুধু Wi‑Fi</string>
+    <string name="downloads_screen_title">ডাউনলোড</string>
     <string name="downloads_group_movies">মুভি</string>
     <string name="downloads_storage_summary">%1$s ব্যবহৃত · %2$s খালি</string>
+    <string name="downloads_storage_free">%1$s খালি</string>
+    <string name="downloads_stat_on_device">এই ডিভাইসে</string>
+    <string name="downloads_stat_queue">সারি</string>
+    <string name="downloads_stat_network">নেটওয়ার্ক</string>
+    <string name="downloads_stat_free_of">%2$s এর মধ্যে %1$s খালি</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$dটি আইটেম · %2$s</item>
+        <item quantity="other">%1$dটি আইটেম · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">প্রায় %1$s বাকি</string>
+    <string name="downloads_stat_network_helper">মোবাইল ডেটাতে স্বয়ংক্রিয়ভাবে বিরত থাকে</string>
     <string name="downloads_action_delete">ডাউনলোড মুছুন</string>
     <string name="downloads_action_cancel">ডাউনলোড বাতিল করুন</string>
     <string name="downloads_action_pause">ডাউনলোড থামান</string>

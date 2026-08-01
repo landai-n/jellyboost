@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Direktwiedergabe</string>
     <string name="player_method_direct_stream">Direktübertragung</string>
     <string name="player_method_transcode">Transkodierung</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Dein Gerät konnte diese Datei nicht dekodieren, daher transkodiert der Server sie.</string>
     <string name="player_message_lower_quality">Der Stream ist stecken geblieben – wird mit niedrigerer Qualität erneut versucht.</string>

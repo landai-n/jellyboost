@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">Putar langsung</string>
     <string name="player_method_direct_stream">Aliran langsung</string>
     <string name="player_method_transcode">Transcoding</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">Perangkat Anda tidak dapat mendekode file ini, sehingga server mentranskodenya.</string>
     <string name="player_message_lower_quality">Streaming terhenti — mencoba lagi dengan kualitas lebih rendah.</string>
     <string name="player_message_track_restart">Server harus mengenkode ulang streaming untuk trek itu.</string>

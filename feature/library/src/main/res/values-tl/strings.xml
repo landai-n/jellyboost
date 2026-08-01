@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Wala pang aklatan. Magdagdag ng isa sa server.</string>
+    <string name="libraries_title">Mga Aklatan</string>
     <string name="library_back">Bumalik</string>
     <string name="library_home">Home</string>
     <string name="library_sort">Ayusin</string>
     <string name="library_filter">I-filter</string>
+    <string name="library_filter_all">Lahat</string>
+    <string name="library_filter_more">Mga Filter</string>
     <string name="library_sort_title">Ayusin ayon sa</string>
     <string name="library_sort_name">Pangalan</string>
     <string name="library_sort_date_added">Petsa idinagdag</string>

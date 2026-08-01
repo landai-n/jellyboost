@@ -7,4 +7,15 @@
     <string name="home_section_continue_watching">Продолжить просмотр</string>
     <string name="home_section_next_up">Далее</string>
     <string name="home_section_latest">Новое: %1$s</string>
+    <string name="home_hero_resume">Продолжить</string>
+    <string name="home_hero_play">Воспроизвести</string>
+    <string name="home_hero_details">Подробнее</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">Осталось %1$d минута</item>
+        <item quantity="few">Осталось %1$d минуты</item>
+        <item quantity="many">Осталось %1$d минут</item>
+        <item quantity="other">Осталось %1$d минут</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dмин осталось</string>
+    <string name="home_quick_access_offline">Офлайн</string>
 </resources>

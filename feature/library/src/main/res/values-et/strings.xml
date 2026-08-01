@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Teeke pole veel. Lisa üks serveris.</string>
+    <string name="libraries_title">Teegid</string>
 
     <string name="library_back">Tagasi</string>
     <string name="library_home">Avaleht</string>
     <string name="library_sort">Sordi</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Kõik</string>
+    <string name="library_filter_more">Filtrid</string>
 
     <string name="library_sort_title">Sordi</string>
     <string name="library_sort_name">Nimi</string>

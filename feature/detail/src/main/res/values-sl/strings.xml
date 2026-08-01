@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Označi kot neogledano</string>
     <string name="detail_add_favorite">Dodaj med priljubljene</string>
     <string name="detail_remove_favorite">Odstrani iz priljubljenih</string>
+    <string name="detail_play_target">Predvajaj %1$s</string>
+    <string name="detail_resume_target">Nadaljuj %1$s</string>
 
     <string name="detail_section_seasons">Sezone</string>
     <string name="detail_section_next_up">Naslednje</string>
     <string name="detail_section_episodes">Epizode</string>
     <string name="detail_section_similar">Podobno</string>
+    <string name="detail_section_cast">Igralska zasedba</string>
+    <string name="detail_type_movie">Film</string>
+    <string name="detail_type_series">Serija</string>
+    <string name="detail_type_season">Sezona</string>
+    <string name="detail_type_episode">Epizoda</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Epizoda %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Še %1$d min</string>

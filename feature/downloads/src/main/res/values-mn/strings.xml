@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Татсан</string>
     <string name="downloads_tab_queue">Дараалал</string>
     <string name="downloads_wifi_only">Зөвхөн Wi-Fi</string>
+    <string name="downloads_screen_title">Татсан</string>
 
     <string name="downloads_group_movies">Кино</string>
 
     <string name="downloads_storage_summary">%1$s ашигласан · %2$s чөлөөтэй</string>
+    <string name="downloads_storage_free">%1$s чөлөөтэй</string>
+    <string name="downloads_stat_on_device">Энэ төхөөрөмж дээр</string>
+    <string name="downloads_stat_queue">Дараалал</string>
+    <string name="downloads_stat_network">Сүлжээ</string>
+    <string name="downloads_stat_free_of">%2$s-с %1$s чөлөөтэй</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d зүйл · %2$s</item>
+        <item quantity="other">%1$d зүйл · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">ойролцоогоор %1$s үлдсэн</string>
+    <string name="downloads_stat_network_helper">Мобайл дата дээр автоматаар түр зогсдог</string>
 
     <string name="downloads_action_delete">Татсан файлыг устгах</string>
     <string name="downloads_action_cancel">Татаж авалтыг цуцлах</string>

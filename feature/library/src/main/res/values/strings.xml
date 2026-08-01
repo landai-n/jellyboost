@@ -2,7 +2,6 @@
 <resources>
     <!-- Libraries tab (integration) -->
     <string name="libraries_empty">No libraries yet. Add one on the server.</string>
-    <!-- 2026-refresh: pending localization -->
     <string name="libraries_title">Libraries</string>
 
     <!-- Header -->
@@ -12,9 +11,7 @@
     <string name="library_filter">Filter</string>
 
     <!-- Inline filter chips -->
-    <!-- 2026-refresh: pending localization -->
     <string name="library_filter_all">All</string>
-    <!-- 2026-refresh: pending localization -->
     <string name="library_filter_more">Filters</string>
 
     <!-- Sort menu -->

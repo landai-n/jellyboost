@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Пакуль няма бібліятэк. Дадайце адну на серверы.</string>
+    <string name="libraries_title">Бібліятэкі</string>
 
     <string name="library_back">Назад</string>
     <string name="library_home">Галоўная</string>
     <string name="library_sort">Сартаванне</string>
     <string name="library_filter">Фільтр</string>
+    <string name="library_filter_all">Усё</string>
+    <string name="library_filter_more">Фільтры</string>
 
     <string name="library_sort_title">Сартаваць па</string>
     <string name="library_sort_name">Назве</string>

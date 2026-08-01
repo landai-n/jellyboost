@@ -7,4 +7,17 @@
     <string name="home_section_continue_watching">متابعة المشاهدة</string>
     <string name="home_section_next_up">التالي</string>
     <string name="home_section_latest">أحدث %1$s</string>
+    <string name="home_hero_resume">استئناف</string>
+    <string name="home_hero_play">تشغيل</string>
+    <string name="home_hero_details">التفاصيل</string>
+    <plurals name="home_minutes_left">
+        <item quantity="zero">لا دقائق متبقية</item>
+        <item quantity="one">دقيقة واحدة متبقية</item>
+        <item quantity="two">دقيقتان متبقيتان</item>
+        <item quantity="few">%1$d دقائق متبقية</item>
+        <item quantity="many">%1$d دقيقة متبقية</item>
+        <item quantity="other">%1$d دقيقة متبقية</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dد متبقية</string>
+    <string name="home_quick_access_offline">غير متصل</string>
 </resources>

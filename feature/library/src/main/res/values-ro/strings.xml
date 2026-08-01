@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Nicio bibliotecă încă. Adăugați una pe server.</string>
+    <string name="libraries_title">Biblioteci</string>
     <string name="library_back">Înapoi</string>
     <string name="library_home">Acasă</string>
     <string name="library_sort">Sortează</string>
     <string name="library_filter">Filtrează</string>
+    <string name="library_filter_all">Tot</string>
+    <string name="library_filter_more">Filtre</string>
     <string name="library_sort_title">Sortează după</string>
     <string name="library_sort_name">Nume</string>
     <string name="library_sort_date_added">Data adăugării</string>

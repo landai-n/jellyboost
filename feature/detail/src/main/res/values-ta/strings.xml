@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">பார்க்காததாகக் குறி</string>
     <string name="detail_add_favorite">விருப்பங்களில் சேர்</string>
     <string name="detail_remove_favorite">விருப்பங்களிலிருந்து அகற்று</string>
+    <string name="detail_play_target">%1$s ஐ இயக்கு</string>
+    <string name="detail_resume_target">%1$s ஐ தொடர்</string>
 
     <string name="detail_section_seasons">சீசன்கள்</string>
     <string name="detail_section_next_up">அடுத்தது</string>
     <string name="detail_section_episodes">எபிசோடுகள்</string>
     <string name="detail_section_similar">இது போன்ற மேலும்</string>
+    <string name="detail_section_cast">நடிகர்கள்</string>
+    <string name="detail_type_movie">திரைப்படம்</string>
+    <string name="detail_type_series">தொடர்</string>
+    <string name="detail_type_season">சீசன்</string>
+    <string name="detail_type_episode">எபிசோட்</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">எபிசோட் %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d நிமி</string>
     <string name="detail_remaining_minutes">%1$d நிமிடம் மீதம்</string>

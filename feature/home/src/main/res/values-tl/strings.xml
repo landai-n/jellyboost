@@ -6,4 +6,13 @@
     <string name="home_section_continue_watching">Ipagpatuloy ang Panonood</string>
     <string name="home_section_next_up">Susunod</string>
     <string name="home_section_latest">Pinakabagong %1$s</string>
+    <string name="home_hero_resume">Ipagpatuloy</string>
+    <string name="home_hero_play">I-play</string>
+    <string name="home_hero_details">Detalye</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minuto na lang</item>
+        <item quantity="other">%1$d minuto na lang</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin na lang</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

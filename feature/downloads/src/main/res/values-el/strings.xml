@@ -3,10 +3,22 @@
     <string name="downloads_tab_downloaded">Ληφθέντα</string>
     <string name="downloads_tab_queue">Ουρά</string>
     <string name="downloads_wifi_only">Μόνο Wi‑Fi</string>
+    <string name="downloads_screen_title">Λήψεις</string>
 
     <string name="downloads_group_movies">Ταινίες</string>
 
     <string name="downloads_storage_summary">%1$s σε χρήση · %2$s ελεύθερα</string>
+    <string name="downloads_storage_free">%1$s ελεύθερα</string>
+    <string name="downloads_stat_on_device">Σε αυτή τη συσκευή</string>
+    <string name="downloads_stat_queue">Ουρά</string>
+    <string name="downloads_stat_network">Δίκτυο</string>
+    <string name="downloads_stat_free_of">%1$s ελεύθερα από %2$s</string>
+    <plurals name="downloads_stat_queue_items">
+        <item quantity="one">%1$d στοιχείο · %2$s</item>
+        <item quantity="other">%1$d στοιχεία · %2$s</item>
+    </plurals>
+    <string name="downloads_stat_eta_about">Απομένουν περίπου %1$s</string>
+    <string name="downloads_stat_network_helper">Παύση αυτόματα με δεδομένα κινητής</string>
 
     <string name="downloads_action_delete">Διαγραφή λήψης</string>
     <string name="downloads_action_cancel">Ακύρωση λήψης</string>

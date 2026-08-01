@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Halda áfram at hyggja</string>
     <string name="home_section_next_up">Næsta</string>
     <string name="home_section_latest">Nýggjastu %1$s</string>
+    <string name="home_hero_resume">Halda áfram</string>
+    <string name="home_hero_play">Spæl</string>
+    <string name="home_hero_details">Frágreiðing</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d minuttur eftir</item>
+        <item quantity="other">%1$d minuttir eftir</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmín. eftir</string>
+    <string name="home_quick_access_offline">Ofline</string>
 </resources>

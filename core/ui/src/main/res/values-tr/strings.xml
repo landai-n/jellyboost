@@ -6,6 +6,11 @@
     <string name="badge_download_failed">İndirme başarısız oldu</string>
     <string name="media_row_see_all">Tümünü gör</string>
     <string name="media_card_watched">İzlendi</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d öğe</item>
+        <item quantity="other">%1$d öğe</item>
+    </plurals>
+    <string name="state_retry">Tekrar dene</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d öğe seçildi</item>
         <item quantity="other">%1$d öğe seçildi</item>

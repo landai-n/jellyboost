@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">ادامه تماشا</string>
     <string name="home_section_next_up">بعدی</string>
     <string name="home_section_latest">جدیدترین %1$s</string>
+    <string name="home_hero_resume">ازسرگیری</string>
+    <string name="home_hero_play">پخش</string>
+    <string name="home_hero_details">جزئیات</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d دقیقه مانده</item>
+        <item quantity="other">%1$d دقیقه مانده</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dد مانده</string>
+    <string name="home_quick_access_offline">آفلاین</string>
 </resources>

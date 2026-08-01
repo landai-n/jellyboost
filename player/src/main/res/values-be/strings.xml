@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">Прамое прайграванне</string>
     <string name="player_method_direct_stream">Прамая трансляцыя</string>
     <string name="player_method_transcode">Перакадаванне</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">Ваша прылада не змагла дэкадаваць гэты файл, таму сервер перакадоўвае яго.</string>
     <string name="player_message_lower_quality">Трансляцыя спынілася — паўтор спробы з нізкай якасцю.</string>

@@ -7,4 +7,14 @@
     <string name="home_section_continue_watching">Turpināt skatīties</string>
     <string name="home_section_next_up">Nākamais</string>
     <string name="home_section_latest">Jaunākie %1$s</string>
+    <string name="home_hero_resume">Turpināt</string>
+    <string name="home_hero_play">Atskaņot</string>
+    <string name="home_hero_details">Detaļas</string>
+    <plurals name="home_minutes_left">
+        <item quantity="zero">Atlikušas %1$d minūšu</item>
+        <item quantity="one">Atlikušas %1$d minūte</item>
+        <item quantity="other">Atlikušas %1$d minūtes</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmin atlikušas</string>
+    <string name="home_quick_access_offline">Bezsaistē</string>
 </resources>

@@ -7,6 +7,13 @@
 
     <string name="media_row_see_all">Смотреть всё</string>
     <string name="media_card_watched">Просмотрено</string>
+    <plurals name="library_item_count">
+        <item quantity="one">%1$d элемент</item>
+        <item quantity="few">%1$d элемента</item>
+        <item quantity="many">%1$d элементов</item>
+        <item quantity="other">%1$d элементов</item>
+    </plurals>
+    <string name="state_retry">Повторить</string>
 
     <plurals name="selection_count">
         <item quantity="one">Выбран %1$d элемент</item>

@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">ޑައިރެކްޓް ޕްލޭ</string>
     <string name="player_method_direct_stream">ޑައިރެކްޓް ސްޓްރީމް</string>
     <string name="player_method_transcode">ޓްރާންސްކޯޑިންގް</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">ތިޔަ ޑިވައިސްއަށް މި ފައިލް ޑީކޯޑްކުރެވޭގޮތެއް ނުވި، ވީމާ ސަރވަރއިން ދަނީ ޓްރާންސްކޯޑްކުރަމުންނެވެ.</string>
     <string name="player_message_lower_quality">ސްޓްރީމް ހުއްޓިއްޖެ — ދަށް ކޮލިޓީއެއްގައި އަލުން މަސައްކަތްކުރަނީ.</string>

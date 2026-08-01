@@ -2,12 +2,15 @@
 <resources>
     <!-- Libraries tab (integration) -->
     <string name="libraries_empty">अभी कोई लाइब्रेरी नहीं है। सर्वर पर एक जोड़ें।</string>
+    <string name="libraries_title">लाइब्रेरियां</string>
 
     <!-- Top bar -->
     <string name="library_back">वापस</string>
     <string name="library_home">होम</string>
     <string name="library_sort">क्रमबद्ध करें</string>
     <string name="library_filter">फ़िल्टर</string>
+    <string name="library_filter_all">सभी</string>
+    <string name="library_filter_more">फ़िल्टर</string>
 
     <!-- Sort menu -->
     <string name="library_sort_title">इसके अनुसार क्रमबद्ध करें</string>

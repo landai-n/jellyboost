@@ -7,4 +7,13 @@
     <string name="home_section_continue_watching">Folytatás</string>
     <string name="home_section_next_up">Következő</string>
     <string name="home_section_latest">Legújabb: %1$s</string>
+    <string name="home_hero_resume">Folytatás</string>
+    <string name="home_hero_play">Lejátszás</string>
+    <string name="home_hero_details">Részletek</string>
+    <plurals name="home_minutes_left">
+        <item quantity="one">%1$d perc van hátra</item>
+        <item quantity="other">%1$d perc van hátra</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dp hátra</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

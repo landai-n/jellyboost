@@ -24,6 +24,7 @@
     <string name="player_method_direct_play">پخش مستقیم</string>
     <string name="player_method_direct_stream">استریم مستقیم</string>
     <string name="player_method_transcode">ترنسکد</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
 
     <string name="player_message_transcode">دستگاه شما نتوانست این فایل را رمزگشایی کند، بنابراین سرور در حال ترنسکد کردن آن است.</string>
     <string name="player_message_lower_quality">پخش متوقف شد — تلاش دوباره با کیفیت پایین‌تر.</string>

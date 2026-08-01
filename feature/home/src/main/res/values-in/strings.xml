@@ -6,4 +6,12 @@
     <string name="home_section_continue_watching">Lanjutkan Menonton</string>
     <string name="home_section_next_up">Berikutnya</string>
     <string name="home_section_latest">%1$s Terbaru</string>
+    <string name="home_hero_resume">Lanjutkan</string>
+    <string name="home_hero_play">Putar</string>
+    <string name="home_hero_details">Detail</string>
+    <plurals name="home_minutes_left">
+        <item quantity="other">%1$d menit tersisa</item>
+    </plurals>
+    <string name="home_time_left_short">%1$dmnt tersisa</string>
+    <string name="home_quick_access_offline">Offline</string>
 </resources>

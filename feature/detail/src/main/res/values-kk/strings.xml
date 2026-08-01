@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">Қаралмады деп белгілеу</string>
     <string name="detail_add_favorite">Таңдаулыларға қосу</string>
     <string name="detail_remove_favorite">Таңдаулылардан жою</string>
+    <string name="detail_play_target">%1$s ойнату</string>
+    <string name="detail_resume_target">%1$s жалғастыру</string>
 
     <string name="detail_section_seasons">Маусымдар</string>
     <string name="detail_section_next_up">Келесі</string>
     <string name="detail_section_episodes">Бөлімдер</string>
     <string name="detail_section_similar">Осыған ұқсас</string>
+    <string name="detail_section_cast">Актерлар құрамы</string>
+    <string name="detail_type_movie">Фильм</string>
+    <string name="detail_type_series">Сериал</string>
+    <string name="detail_type_season">Маусым</string>
+    <string name="detail_type_episode">Бөлім</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">Бөлім %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d мин</string>
     <string name="detail_remaining_minutes">%1$d мин қалды</string>

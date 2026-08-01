@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Še ni knjižnic. Dodajte jo na strežniku.</string>
+    <string name="libraries_title">Knjižnice</string>
 
     <string name="library_back">Nazaj</string>
     <string name="library_home">Domov</string>
     <string name="library_sort">Razvrsti</string>
     <string name="library_filter">Filter</string>
+    <string name="library_filter_all">Vse</string>
+    <string name="library_filter_more">Filtri</string>
 
     <string name="library_sort_title">Razvrsti po</string>
     <string name="library_sort_name">Ime</string>

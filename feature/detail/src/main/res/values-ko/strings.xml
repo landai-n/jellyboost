@@ -13,11 +13,21 @@
     <string name="detail_mark_unwatched">시청 안 함으로 표시</string>
     <string name="detail_add_favorite">즐겨찾기에 추가</string>
     <string name="detail_remove_favorite">즐겨찾기에서 제거</string>
+    <string name="detail_play_target">%1$s 재생</string>
+    <string name="detail_resume_target">%1$s 이어서 재생</string>
 
     <string name="detail_section_seasons">시즌</string>
     <string name="detail_section_next_up">다음 시청</string>
     <string name="detail_section_episodes">에피소드</string>
     <string name="detail_section_similar">비슷한 콘텐츠</string>
+    <string name="detail_section_cast">출연진</string>
+    <string name="detail_type_movie">영화</string>
+    <string name="detail_type_series">시리즈</string>
+    <string name="detail_type_season">시즌</string>
+    <string name="detail_type_episode">에피소드</string>
+    <string name="detail_episode_label">S%1$d · E%2$d</string>
+    <string name="detail_episode_label_short">E%1$d</string>
+    <string name="detail_episode_number">에피소드 %1$d</string>
 
     <string name="detail_runtime_minutes">%1$d분</string>
     <string name="detail_remaining_minutes">%1$d분 남음</string>

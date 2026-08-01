@@ -6,6 +6,10 @@
     <string name="badge_download_failed">ดาวน์โหลดล้มเหลว</string>
     <string name="media_row_see_all">ดูทั้งหมด</string>
     <string name="media_card_watched">ดูแล้ว</string>
+    <plurals name="library_item_count">
+        <item quantity="other">%1$d รายการ</item>
+    </plurals>
+    <string name="state_retry">ลองอีกครั้ง</string>
     <plurals name="selection_count">
         <item quantity="other">เลือกแล้ว %1$d รายการ</item>
     </plurals>

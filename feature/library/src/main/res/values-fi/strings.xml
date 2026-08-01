@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="libraries_empty">Ei vielä kirjastoja. Lisää yksi palvelimelle.</string>
+    <string name="libraries_title">Kirjastot</string>
 
     <string name="library_back">Takaisin</string>
     <string name="library_home">Koti</string>
     <string name="library_sort">Lajittele</string>
     <string name="library_filter">Suodatin</string>
+    <string name="library_filter_all">Kaikki</string>
+    <string name="library_filter_more">Suodattimet</string>
 
     <string name="library_sort_title">Lajitteluperuste</string>
     <string name="library_sort_name">Nimi</string>

@@ -20,6 +20,7 @@
     <string name="player_method_direct_play">პირდაპირი დაკვრა</string>
     <string name="player_method_direct_stream">პირდაპირი ნაკადი</string>
     <string name="player_method_transcode">გადაკოდვა</string>
+    <string name="player_method_tag_height">%1$s %2$dp</string>
     <string name="player_message_transcode">თქვენმა მოწყობილობამ ვერ შეძლო ამ ფაილის დეკოდირება, ამიტომ სერვერი გადაკოდავს მას.</string>
     <string name="player_message_lower_quality">ნაკადი შეჩერდა — ცდილობს დაბალი ხარისხით.</string>
     <string name="player_message_track_restart">სერვერს იმ ტრეკისთვის ნაკადის ხელახლა კოდირება მოუწია.</string>

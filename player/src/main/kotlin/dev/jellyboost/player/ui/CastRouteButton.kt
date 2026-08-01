@@ -38,16 +38,15 @@ import javax.inject.Inject
  * with no Play services at all: the guard sits in this function, and everything that names a GMS
  * type sits in [MediaRouteButtonHost], which such a device never calls.
  *
- * Beyond that the button decides its own visibility: MediaRouter hides it whenever there is nothing
- * to route to, which is why [CastDeviceState.NoDevices] is not filtered here — letting the view
- * animate itself in as receivers appear is smoother than composing it in and out.
+ * Beyond that, [CastDeviceState.NoDevices] composes the button out entirely. The raw
+ * `MediaRouteButton` does *not* hide itself with no routes around — auto-hiding is
+ * `MediaRouteActionProvider` behaviour, and the bare view just sits there dimmed (seen on the
+ * tablet walk: a lone oversized glyph beside the circled actions). Gating composition on the same
+ * [CastDeviceState] the glass used to be gated on keeps glyph and circle in agreement in every
+ * state: nothing at all without receivers, circle + glyph as soon as one is discovered.
  *
  * @param glassContainer draws the 2026 refresh's glass circle behind the button, for the bars whose
- *   other actions are `GlassIconButton`s. It is gated on there being a receiver to route to, unlike
- *   the button itself: `MediaRouteButton` hides itself by going *invisible* rather than gone — it
- *   keeps its slot — so an unconditional circle would be an empty ring on the bar for as long as
- *   the network has no Chromecast on it. [CastDeviceState.NoDevices] is exactly the framework's
- *   `NO_DEVICES_AVAILABLE`, which is the same condition the view hides itself on.
+ *   other actions are `GlassIconButton`s.
  * @param size diameter of that circle, matching the `GlassIconButton`s beside it —
  *   [Dimens.PillHeightSmall] in chrome, [Dimens.PillHeight] in the player's top bar. The caller's
  *   [modifier] carries the *frame* around it (a `GlassIconButton` reserves
@@ -64,7 +63,7 @@ fun CastRouteButton(
     val viewModel: CastRouteButtonViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    if (state == CastDeviceState.Unavailable) return
+    if (state == CastDeviceState.Unavailable || state == CastDeviceState.NoDevices) return
 
     if (!glassContainer) {
         MediaRouteButtonHost(modifier = modifier.size(CastButtonSize))
@@ -76,13 +75,7 @@ fun CastRouteButton(
             modifier =
                 Modifier
                     .size(size)
-                    .then(
-                        if (state == CastDeviceState.NoDevices) {
-                            Modifier
-                        } else {
-                            Modifier.glassSurface(shape = CircleShape, tint = surfaceTint)
-                        },
-                    ),
+                    .glassSurface(shape = CircleShape, tint = surfaceTint),
             contentAlignment = Alignment.Center,
         ) {
             MediaRouteButtonHost(modifier = Modifier.size(size))

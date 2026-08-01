@@ -176,7 +176,17 @@ on 20dp, Wi-Fi row `fillMaxWidth`, one label style, 36dp action circles (32/34
 constants deleted), same artwork size on both tabs per width class, dead spacer
 removed; `LibrariesScreen` title gains the same wide `ScreenTitleLarge` switch. The
 watched/unwatched filter report was retracted (server + pipeline verified correct via
-live probe). Owed: the user's re-walk.
+live probe). A screenshot re-walk on the test tablet (agent-driven, at the user's request)
+confirmed the fixes and caught three leftovers, fixed in the same round: (1) the raw
+`MediaRouteButton` does NOT auto-hide with no routes (that's `MediaRouteActionProvider`
+behaviour), so the Cast action showed as a bare oversized glyph with no circle —
+`CastRouteButton` now composes out entirely on `NoDevices` and draws the glass circle
+unconditionally otherwise; (2) `TopChromeScrim` at 80/45% still let white section titles
+read through the brand mark mid-scroll — raised to 94/72%; (3) the "Wi-Fi uniquement"
+label overlapped its switch in the narrow portrait stat panel — both switch rows' labels
+now take `weight(1f)`. Verified on device: nav/logo readable over bright artwork both
+orientations, filter-sheet pills spaced, Downloads margins/circles aligned, no
+title/cluster overlap. Owed: the user's own look at the reinstalled build.
 
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 

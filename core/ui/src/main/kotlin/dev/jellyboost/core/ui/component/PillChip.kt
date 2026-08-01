@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,7 +90,9 @@ fun PillChip(
                             .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                     },
                 ).clickable(enabled = enabled, onClick = onClick)
+                .defaultMinSize(minHeight = Dimens.PillHeightSmall)
                 .padding(horizontal = ChipHorizontalPadding, vertical = ChipVerticalPadding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,

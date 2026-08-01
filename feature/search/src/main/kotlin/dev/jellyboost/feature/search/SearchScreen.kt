@@ -38,15 +38,16 @@ import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 
 /**
  * The search screen: a debounced text field over one server query, rendered as one section per
  * item type (docs/PLAN.md, "Screens" → Search).
  *
- * Like the other top-level tabs it draws no bar of its own and no status-bar padding: `:app`'s
- * combined `AppTopBar` sits above it and the modifier it is handed already accounts for the bar
- * (which is what stopped the search field from rendering under the status-bar icons — the screen
- * used to be a bare full-screen `Column` under an edge-to-edge window).
+ * Like the other top-level tabs it draws no bar of its own: `:app`'s chrome floats over it and
+ * publishes how much of the window it covers through `LocalAppChromePadding`, which this screen
+ * consumes so that neither the field nor the last result comes to rest under the glass (and so that
+ * the field still clears the status bar, which an edge-to-edge window does not do on its own).
  *
  * The [SearchViewModel] is passed in rather than resolved here so `:app` owns the
  * `hiltViewModel()` call together with the rest of the navigation graph wiring, as it does for
@@ -83,7 +84,12 @@ fun SearchContent(
     onItemClick: (JellyfinItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
+    // The chrome's TOP padding goes on the outer column, not on the results list: the field is the
+    // one thing on this screen that never scrolls, so it is also the one thing that would sit
+    // permanently under the top nav (or under the compact layout's floating action cluster) if it
+    // were left to the list's `contentPadding`. The BOTTOM half stays with the list — see
+    // [SearchResults] — so results still scroll under the floating nav pill.
+    Column(modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding())) {
         SearchField(
             query = state.query,
             onQueryChange = onQueryChange,
@@ -170,9 +176,14 @@ private fun SearchResults(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
 ) {
+    // Only the bottom half of the chrome padding: the top half is already on the outer column, and
+    // taking it twice would push the first section a whole nav bar below the field.
+    val chromeBottom = LocalAppChromePadding.current.calculateBottomPadding()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(vertical = Dimens.SpaceLarge),
+        contentPadding =
+            PaddingValues(top = Dimens.SpaceLarge, bottom = Dimens.SpaceLarge + chromeBottom),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
         // Sections in jellyfin-web's order; MediaRow renders nothing for an empty list, and an

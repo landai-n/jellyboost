@@ -35,8 +35,9 @@ object Routes {
     /**
      * The dedicated SyncPlay section (M11 Phase 5): the group list, join/create/leave.
      *
-     * Reached from the home top bar's Groups action — see `AppTopBar` — the same way `Settings` is
-     * reached from its overflow menu; both are pushed destinations with no arguments of their own.
+     * Reached from the app chrome's Groups action — see `:app`'s `AppActions` — the same way
+     * `Settings` is reached from its overflow menu; both are pushed destinations with no arguments
+     * of their own.
      */
     @Serializable
     data object SyncPlay

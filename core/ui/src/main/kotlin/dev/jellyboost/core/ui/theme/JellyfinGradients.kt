@@ -38,8 +38,10 @@ object JellyfinGradients {
         )
 
     /**
-     * The protective band the app's floating top chrome is read against — background@80% at the very
-     * top of the window, fading out by the bottom edge of the bar.
+     * The protective band the app's floating top chrome is read against — background@94% at the very
+     * top of the window, fading out by the bottom edge of the bar. Strong on purpose: white section
+     * titles scroll directly behind the brand mark, and at 80%/45% they still read through it
+     * (seen on the tablet walk).
      *
      * [BackdropScrim] runs the other way (transparent at the top, solid at the bottom) because it
      * exists to seat a hero *into* the page below it; that leaves the top of the window — exactly
@@ -53,8 +55,8 @@ object JellyfinGradients {
         Brush.verticalGradient(
             colors =
                 listOf(
-                    JellyfinColors.Background.copy(alpha = 0.80f),
-                    JellyfinColors.Background.copy(alpha = 0.45f),
+                    JellyfinColors.Background.copy(alpha = 0.94f),
+                    JellyfinColors.Background.copy(alpha = 0.72f),
                     Color.Transparent,
                 ),
         )

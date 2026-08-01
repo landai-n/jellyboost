@@ -666,6 +666,7 @@ private fun StorageCard(
                 text = stringResource(R.string.downloads_wifi_only),
                 style = StatSwitchLabel,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
             )
             Switch(checked = wifiOnly, onCheckedChange = null)
         }
@@ -797,6 +798,7 @@ private fun NetworkStatPanel(
                 text = stringResource(R.string.downloads_wifi_only),
                 style = StatSwitchLabel,
                 color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
             )
             Switch(checked = wifiOnly, onCheckedChange = null)
         }

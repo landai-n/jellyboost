@@ -76,10 +76,9 @@ internal fun AppActions(
             status = connectionState.toStatus(),
             onClick = onConnectionStatusClick,
         )
-        // Draws nothing at all unless the device has a Cast stack and something to cast to (M12); it
-        // needs no state from here, and takes none. `glassContainer` is what makes it draw the same
-        // circle its three neighbours do — and, crucially, *stop* drawing it while there is nothing
-        // to route to, which an unconditional `glassSurface` on the modifier could not do.
+        // Composes to nothing unless the device has a Cast stack and a receiver has been discovered
+        // (M12); it needs no state from here, and takes none. `glassContainer` draws the same circle
+        // its three neighbours have, so whenever the button exists at all it matches the row.
         CastRouteButton(
             modifier = Modifier.size(Dimens.MinTouchTarget),
             glassContainer = true,

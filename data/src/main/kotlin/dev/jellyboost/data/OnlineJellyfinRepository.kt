@@ -17,7 +17,11 @@ import dev.jellyboost.data.mapper.toBaseItemKind
 import dev.jellyboost.data.mapper.toGetItemsRequest
 import dev.jellyboost.data.paging.ItemPage
 import dev.jellyboost.data.paging.ItemPagingSource
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
@@ -27,15 +31,18 @@ import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
+import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
+import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
 import org.jellyfin.sdk.model.api.request.GetSeasonsRequest
 import org.jellyfin.sdk.model.api.request.GetSimilarItemsRequest
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -70,7 +77,57 @@ internal class OnlineJellyfinRepository
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
                 browseCache.cacheViews(response.content.items)
                 // The mapper drops everything outside v1 scope (music, live TV, photos, …).
-                mapper.toLibraryViews(response.content.items)
+                val views = mapper.toLibraryViews(response.content.items)
+                coroutineScope {
+                    views
+                        .map { view -> async { view.copy(itemCount = itemCountOrNull(view.id)) } }
+                        .awaitAll()
+                }
+            }
+
+        /**
+         * How many titles the library with [libraryId] actually holds, or `null` if the server could
+         * not say.
+         *
+         * `getUserViews` carries a `ChildCount` per library and it is **not** this number: it counts
+         * the collection folder's direct children — its media folders — so the dev server answers 3
+         * for a 177-movie library and 6 for a 20-series one. Only a recursive query over the
+         * library's titles gives the count the tile promises, and it is the same query the library
+         * grid pages over (`LibraryUiState.GRID_ITEM_TYPES`, `recursive = true`), so the tile's
+         * number and the grid header's "N items" cannot disagree.
+         *
+         * `limit = 0` makes it a pure COUNT: the server still reports `totalRecordCount` but
+         * serialises no items at all. One such request per library, all in flight together
+         * ([getUserViews] runs them under one `coroutineScope`), so the home load pays one extra
+         * round trip rather than one per library.
+         *
+         * A failure here is deliberately *not* an error for the caller: the subtitle is one line on
+         * a tile, and losing the whole libraries row — and with it the home screen — over a count
+         * would be a far worse trade than a tile that draws its name alone. Cancellation is the one
+         * exception, re-thrown so a cancelled home load does not linger.
+         */
+        private suspend fun itemCountOrNull(libraryId: String): Int? =
+            try {
+                apiClient.itemsApi
+                    .getItems(
+                        GetItemsRequest(
+                            parentId = UUID.fromString(libraryId),
+                            includeItemTypes = LIBRARY_COUNT_TYPES,
+                            recursive = true,
+                            limit = 0,
+                            enableTotalRecordCount = true,
+                            // Nothing is drawn from this response, only counted.
+                            enableImages = false,
+                            enableUserData = false,
+                        ),
+                    ).content.totalRecordCount
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (
+                @Suppress("TooGenericExceptionCaught") throwable: Throwable,
+            ) {
+                Timber.w(throwable, "Library item count failed for %s; the tile drops its subtitle", libraryId)
+                null
             }
 
         override suspend fun getResumeItems(limit: Int): AppResult<List<JellyfinItem>> =
@@ -353,6 +410,17 @@ internal class OnlineJellyfinRepository
 
             /** Artwork the cards can actually draw — anything else is wasted server work. */
             val CARD_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP, ImageType.THUMB)
+
+            /**
+             * The item kinds a library tile's count counts.
+             *
+             * Top-level titles, whatever kind of library it is: a movie library answers with movies
+             * and a TV library with series, so one list serves both — which is exactly why
+             * `:feature:library`'s `LibraryUiState.GRID_ITEM_TYPES` is the same pair. Kept in step
+             * with it deliberately: the grid a tile opens must not report a different total than the
+             * tile did. (`:data` cannot depend on a feature module, hence the duplicate.)
+             */
+            val LIBRARY_COUNT_TYPES = listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
 
             /** jellyfin-web's default "Days in Next Up" user setting. */
             const val NEXT_UP_WINDOW_DAYS = 365L

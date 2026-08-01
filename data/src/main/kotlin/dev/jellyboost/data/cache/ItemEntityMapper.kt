@@ -200,7 +200,7 @@ class ItemEntityMapper
          * Image URLs are re-derived from the stored tags rather than stored whole: the base URL
          * changes whenever the reachability probe rotates to another server address.
          *
-         * [LibraryView.childCount] is deliberately left `null`: the entity has no column for it and
+         * [LibraryView.itemCount] is deliberately left `null`: the entity has no column for it and
          * adding one would be a migration for a number the offline cache could not honestly answer
          * anyway (it holds the downloaded items, not the library). Tiles hide the line instead.
          */

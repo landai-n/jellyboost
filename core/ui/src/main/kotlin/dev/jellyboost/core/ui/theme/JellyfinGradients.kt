@@ -98,6 +98,45 @@ object JellyfinGradients {
                 )
         }
 
+    /**
+     * The 2026 refresh's hero halo: a much stronger, off-centre accent glow than [BrandGlow], laid
+     * behind (or over) a hero backdrop so the top-right of the screen carries colour even where the
+     * artwork is dark or missing.
+     *
+     * Ports the mocks'
+     * `radial-gradient(120% 90% at 78% 18%, rgba(170,92,195,.35) 0%, rgba(0,164,220,.16) 42%,
+     * transparent 72%)`. CSS sizes a radial gradient's two axes independently; a
+     * [RadialGradientShader] has one radius, so the width-derived value is used and the ellipse
+     * becomes a circle. That is the right trade here: the halo's ellipticity is imperceptible, but
+     * a radius that stopped short of the box would not be — the gradient reaches full transparency
+     * at 72% of it, well inside the fill, so no edge of the box can cut a visible ring.
+     */
+    val HeroHalo: Brush =
+        object : ShaderBrush() {
+            /** Horizontal centre of the halo, as a fraction of the box width. */
+            private val centerXFraction = 0.78f
+
+            /** Vertical centre — high in the box, so the glow reads as coming from above. */
+            private val centerYFraction = 0.18f
+
+            /** Radius as a fraction of the box width; the colour stops fade out well within it. */
+            private val radiusFraction = 1.0f
+
+            override fun createShader(size: Size): Shader =
+                RadialGradientShader(
+                    center = Offset(x = size.width * centerXFraction, y = size.height * centerYFraction),
+                    radius = size.width * radiusFraction,
+                    colors =
+                        listOf(
+                            JellyfinColors.Secondary.copy(alpha = 0.35f),
+                            JellyfinColors.Primary.copy(alpha = 0.16f),
+                            Color.Transparent,
+                        ),
+                    colorStops = listOf(0f, 0.42f, 0.72f),
+                    tileMode = TileMode.Clamp,
+                )
+        }
+
     /** Placeholder fill for artwork that has not loaded (or does not exist on the server). */
     val ImagePlaceholder: Brush =
         Brush.linearGradient(

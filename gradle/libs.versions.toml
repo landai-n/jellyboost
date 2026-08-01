@@ -46,6 +46,9 @@ androidxHilt = "1.4.0"
 
 # Compose
 composeBom = "2026.06.01"
+# Backdrop blur behind the 2026-refresh glass chrome (DECISIONS.md 2026-08-01). Blur is real on
+# API 31+; below that Haze degrades to a scrim on its own, so minSdk 26 stays supported.
+haze = "1.7.2"
 
 # Media
 media3 = "1.9.0"
@@ -159,6 +162,7 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "androidxRoom" }

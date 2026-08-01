@@ -14,6 +14,21 @@ The approved architecture and milestone plan lives in [`docs/PLAN.md`](docs/PLAN
 divergence from it is recorded in [`DECISIONS.md`](DECISIONS.md), and the current state of work is
 in [`STATUS.md`](STATUS.md).
 
+## Highlights
+
+- **Downloads with a quality selector** — pick the quality/bitrate for a download (the original
+  file, or a smaller server-side re-encode) right from the download action, so a season that would
+  not fit on the device at full quality still can.
+- **SyncPlay (watch-together)** — join or create Jellyfin SyncPlay groups for synchronized playback
+  with other Jellyfin clients: play, pause, seek and the queue itself are the group's, coordinated by
+  the server, with every member's player following along.
+- **SyncPlay works with downloaded media** — a movie or episode already downloaded for offline use
+  can play from local storage while still taking part in a SyncPlay session, staying in lockstep with
+  everyone else and reporting progress to the server like any other member.
+- **Chromecast support** — cast to the default Google Cast receiver with the controls that matter:
+  play/pause/seek, audio and subtitle selection, the quality picker, resume, and progress reporting,
+  all orchestrated from the phone.
+
 ## Building
 
 Requirements: JDK 21 and the Android SDK (compileSdk 36, minSdk 26).
@@ -49,3 +64,8 @@ alongside a release build.
 Build conventions are shared through the `build-logic` included build
 (`jellyboost.android.application`, `.android.library`, `.android.library.compose`,
 `.android.feature`, `.android.hilt`, `.android.room`, `.kotlin.library`).
+
+## Development
+
+Jellyboost is being built with AI-assisted development. Contributions are welcome — issues and
+pull requests are appreciated.

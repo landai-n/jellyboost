@@ -1,12 +1,17 @@
 package dev.jellyboost.feature.settings
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
@@ -15,16 +20,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,8 +41,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
 import dev.jellyboost.data.downloads.model.StorageVolumeOption
@@ -53,8 +56,8 @@ import dev.jellyboost.data.downloads.model.StorageVolumeOption
  *
  * Reached from the home top bar's overflow menu rather than from a user avatar — there is no avatar
  * asset pipeline in this app (DECISIONS.md 2026-07-29, "Settings is opened from the home overflow
- * menu"). It is a pushed destination, not a bottom-nav tab, so it owns a `TopAppBar` with a back
- * action the way `LibraryGridScreen` and `ItemDetailScreen` do.
+ * menu"). It is a pushed destination, not a bottom-nav tab, so it owns the glass back-plus-home header
+ * `LibraryGridScreen` established (2026 refresh, Phase 5 sweep) rather than a `TopAppBar`.
  *
  * The Downloads section's storage **location picker** chooses between the app-specific directories
  * the platform reports — internal storage and, when one is in, the SD card. Picking an arbitrary
@@ -115,7 +118,6 @@ data class SettingsActions(
  * puts the label at one edge and its switch at the other, which is unreadable and unreachable
  * one-handed. Same reasoning (and same shape) as `:feature:auth`'s `AuthContentMaxWidth`.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContent(
     state: SettingsUiState,
@@ -126,38 +128,18 @@ fun SettingsContent(
 ) {
     var confirmingSignOut by remember { mutableStateOf(false) }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.settings_title)) },
-                navigationIcon = {
-                    // Same two-affordance navigation slot the other pushed screens carry, so the
-                    // way out of a pushed destination is in one place wherever the user is.
-                    Row {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.settings_back),
-                            )
-                        }
-                        IconButton(onClick = onHome) {
-                            Icon(
-                                imageVector = Icons.Filled.Home,
-                                contentDescription = stringResource(R.string.settings_home),
-                            )
-                        }
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
+    Column(modifier = modifier.fillMaxSize()) {
+        // The pushed-screen glass idiom `LibraryGridScreen` established (2026 refresh): back-then-home
+        // glass circles ahead of the screen title, no `TopAppBar` (DECISIONS.md 2026-08-01, "2026
+        // design refresh (Phase 5)").
+        SettingsHeader(onBack = onBack, onHome = onHome)
+
         Column(
             modifier =
                 Modifier
-                    .padding(innerPadding)
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
@@ -184,6 +166,43 @@ fun SettingsContent(
         )
     }
 }
+
+/** The screen's own header row — back, home, title; no trailing action. */
+@Composable
+private fun SettingsHeader(
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlassIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.settings_back),
+            onClick = onBack,
+        )
+        GlassIconButton(
+            icon = Icons.Filled.Home,
+            contentDescription = stringResource(R.string.settings_home),
+            onClick = onHome,
+        )
+        Text(
+            text = stringResource(R.string.settings_title),
+            style = JellyfinTypeExtras.ScreenTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(start = Dimens.SpaceExtraSmall),
+        )
+    }
+}
+
+/** Side padding of the header — the same 20dp `LibraryGridScreen`'s header uses. */
+private val HeaderPadding = 20.dp
 
 /** How wide the list is allowed to get; wider than a login form, narrow enough to stay one column. */
 internal val SettingsContentMaxWidth: Dp = 640.dp
@@ -327,6 +346,13 @@ private fun SwitchStorageDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier =
+            Modifier.border(
+                width = GlassDefaults.HairlineWidth,
+                color = GlassDefaults.PanelHairline,
+                shape = MaterialTheme.shapes.extraLarge,
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = { Text(text = stringResource(R.string.settings_storage_switch_title)) },
         text = {
             Text(
@@ -462,7 +488,8 @@ private fun AccountSection(
                 value = account.serverName,
             )
         }
-        OutlinedButton(
+        GhostPillButton(
+            text = stringResource(R.string.settings_sign_out),
             onClick = onSignOutClick,
             modifier =
                 Modifier
@@ -472,9 +499,7 @@ private fun AccountSection(
                         top = Dimens.SpaceMedium,
                         bottom = Dimens.SpaceExtraLarge,
                     ),
-        ) {
-            Text(text = stringResource(R.string.settings_sign_out))
-        }
+        )
     }
 }
 
@@ -494,6 +519,13 @@ private fun SignOutDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier =
+            Modifier.border(
+                width = GlassDefaults.HairlineWidth,
+                color = GlassDefaults.PanelHairline,
+                shape = MaterialTheme.shapes.extraLarge,
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = { Text(text = stringResource(R.string.settings_sign_out_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {

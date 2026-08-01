@@ -55,6 +55,7 @@ import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.GlassIconTint
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
+import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.ThumbCard
@@ -186,7 +187,7 @@ fun ItemDetailScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
-        )
+        ) { data -> PillSnackbar(snackbarData = data) }
 
         if (state.showDeleteConfirmation) {
             DeleteDownloadDialog(

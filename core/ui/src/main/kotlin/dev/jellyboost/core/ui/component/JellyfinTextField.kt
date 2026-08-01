@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -78,6 +80,10 @@ private val FieldSupportingStyle =
  * lambdas for the same reason, even though every current caller passes a bare `Text`.
  *
  * @param label drawn above the field as a caption, not floated into it.
+ * @param leadingIcon drawn before the well's content, in the muted [MaterialTheme.colorScheme]
+ *   `onSurfaceVariant` tint — added for `:feature:search`'s field (2026 refresh, Phase 5 sweep),
+ *   which wants a search glyph the way every `OutlinedTextField` call site it replaces already had
+ *   one. `null` (the default) leaves every existing caller's layout untouched.
  * @param supportingText drawn below in [MaterialTheme] error colour when [isError], muted otherwise.
  */
 @Composable
@@ -90,6 +96,7 @@ fun JellyfinTextField(
     singleLine: Boolean = true,
     label: (@Composable () -> Unit)? = null,
     placeholder: (@Composable () -> Unit)? = null,
+    leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     supportingText: (@Composable () -> Unit)? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -146,6 +153,13 @@ fun JellyfinTextField(
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             decorationBox = { innerTextField ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (leadingIcon != null) {
+                        CompositionLocalProvider(
+                            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+                            content = leadingIcon,
+                        )
+                        Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
+                    }
                     Box(modifier = Modifier.weight(1f)) {
                         if (value.isEmpty() && placeholder != null) {
                             CompositionLocalProvider(

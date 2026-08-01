@@ -1,5 +1,6 @@
 package dev.jellyboost.player.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.player.R
 import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackSpeed
@@ -109,7 +112,14 @@ private fun OptionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = title) },
+        modifier =
+            Modifier.border(
+                width = GlassDefaults.HairlineWidth,
+                color = GlassDefaults.PanelHairline,
+                shape = MaterialTheme.shapes.extraLarge,
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text(text = title, style = JellyfinTypeExtras.SectionTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 options.forEach { option ->

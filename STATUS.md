@@ -112,15 +112,41 @@ unchanged. Gate green (ktlint, detekt, unit tests incl. new `DownloadsUiStateTes
 `assembleDebug`); `DownloadsScreenTest`/`DownloadRowsTest` pass untouched; not yet
 device-walked. Awaiting merge alongside the other Phase 4 sub-branches.
 
+**Phase 5 (unmocked-surfaces sweep) landed**: every surface the mocks did not render
+swept to the idiom Phases 1-4 already established. `Modifier.mSurface` hoisted from
+`:feature:downloads`'s private copy to `core/ui/theme/GlassDefaults.kt` (Downloads
+refactored onto the shared one); `JellyfinTextField` gained an additive `leadingIcon`
+param. Settings and SyncPlay Groups traded their `TopAppBar` for the `LibraryGridScreen`
+glass header (back + home, `ScreenTitle`; SyncPlay Groups keeps a trailing glass
+*Create* circle); Settings' section headings moved to `JellyfinTypeExtras.SectionTitle`
+(kept primary-coloured — the one open choice the spec left, decided for wayfinding on a
+scrolling list) and its sign-out button became a `GhostPillButton`. Search's field is now
+a `JellyfinTextField` with a leading search glyph. SyncPlay's group/queue rows became
+m-surface panels with pill actions, its now-playing tint moved to primary@12%
+(replacing `secondaryContainer`), and its repeat-mode picker uses `PillChip`. Every
+`AlertDialog` reached from a swept file (Settings' two dialogs, SyncPlay's create/leave
+dialogs, the player's audio/subtitle/quality/speed picker) got the Quick-Connect-dialog
+panel treatment (`containerColor = surface` + hairline border on `shapes.extraLarge`);
+`ModalBottomSheet`s and the library sort `DropdownMenu` gained an explicit surface
+container. The library filter sheet's chips became `PillChip` and its Clear/Apply row
+became pills. Three stray `SnackbarHost`s that had slipped through earlier phases
+without a `PillSnackbar` builder — `LibraryGridScreen`, `ItemDetailScreen`,
+`PlayerScreen` — now use it; no snackbar anywhere in the app still draws the stock M3
+shape, and there is no separate "offline banner" left to restyle (Phase 3 already folded
+it into the chrome status icon + snackbar). Zero navigation/state/string changes. Seventh
+DECISIONS entry of the refresh logged. Gate green (ktlint, detekt, unit tests,
+`assembleDebug`); not yet device-walked.
+
 Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
 elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
 filled fields, card overlays, glass selection bar) → 3 chrome (GlassBottomNav pill
 <560dp / GlassTopNav ≥560dp, Haze wiring, `LocalAppChromePadding`) → 4a–f screens
 (home/library/detail/downloads/player/auth) → 5 unmocked-surface sweep
-(settings/search/syncplay/sheets/dialogs) → 6 i18n (69 locales) → 7 design-mirror +
-docs sync. Deliberately ignored mock elements (no matching feature): in-library
-search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapter ticks.
-Kept despite mock omission: queue move-down, connection indicator + offline banner.
+(settings/search/syncplay/sheets/dialogs, landed) → 6 i18n (69 locales) → 7
+design-mirror + docs sync. Deliberately ignored mock elements (no matching feature):
+in-library search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapter
+ticks. Kept despite mock omission: queue move-down, connection indicator + offline
+banner (now a chrome icon + `PillSnackbar`, not a persistent banner).
 
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 

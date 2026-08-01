@@ -90,6 +90,42 @@ class LoginViewModelTest {
         }
 
     @Test
+    @DisplayName("a public user with an image tag gets a sized Primary-image URL")
+    fun avatarUrlIsBuiltFromTheImageTag() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.avatarUrlFor(USER_WITH_AVATAR) shouldBe
+                "https://media.example.com/Users/$USER_ID/Images/Primary?tag=$IMAGE_TAG&maxWidth=168"
+        }
+
+    @Test
+    @DisplayName("a public user without an image tag has no avatar URL, so the letter fallback stands")
+    fun avatarUrlIsNullWithoutAnImageTag() =
+        runTest {
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.avatarUrlFor(PUBLIC_USER) shouldBe null
+        }
+
+    @Test
+    @DisplayName("a server address with a trailing slash does not produce a doubled slash")
+    fun avatarUrlToleratesATrailingSlash() =
+        runTest {
+            publicUserAvatarUrl("https://media.example.com/", USER_WITH_AVATAR) shouldBe
+                "https://media.example.com/Users/$USER_ID/Images/Primary?tag=$IMAGE_TAG&maxWidth=168"
+        }
+
+    @Test
+    @DisplayName("no known server address means no avatar URL")
+    fun avatarUrlIsNullWithoutAServerAddress() =
+        runTest {
+            publicUserAvatarUrl(null, USER_WITH_AVATAR) shouldBe null
+        }
+
+    @Test
     @DisplayName("a successful password sign-in clears the pending server and navigates home")
     fun passwordLoginSucceeds() =
         runTest {
@@ -301,6 +337,7 @@ class LoginViewModelTest {
         const val SECRET = "quick-connect-secret"
         const val CODE = "428913"
         const val POLL_INTERVAL_MILLIS = 5_000L
+        const val IMAGE_TAG = "a1b2c3d4e5"
 
         val SERVER_ID: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
         val USER_ID: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
@@ -314,6 +351,8 @@ class LoginViewModelTest {
             )
 
         val PUBLIC_USER = PublicUserInfo(id = USER_ID, name = USER_NAME, primaryImageTag = null)
+
+        val USER_WITH_AVATAR = PUBLIC_USER.copy(primaryImageTag = IMAGE_TAG)
 
         val LOGIN_CONTEXT =
             LoginContext(

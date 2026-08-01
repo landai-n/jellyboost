@@ -1,11 +1,13 @@
 package dev.jellyboost.feature.auth
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -51,14 +53,22 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.network.model.PublicUserInfo
+import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 
 private val AvatarSize = 56.dp
 
+/** Gradient ring around every public-user avatar — the brand cue that ties the two screens. */
+private val AvatarRingWidth = 2.dp
+
 /**
  * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
  * Quick Connect (docs/PLAN.md, "Login").
+ *
+ * It carries the same branding as ServerSetup — accent halo, the Jellyboost mark above the server
+ * name — so the two screens read as one flow, and it shows the server's real profile pictures for
+ * the users it advertises.
  *
  * @param onLoggedIn invoked once a session exists; the NavHost swaps to the signed-in graph.
  * @param onBackToServerSetup invoked when the user picks a different server, or when this screen
@@ -112,19 +122,25 @@ private fun LoginContent(
     var passwordVisible by remember { mutableStateOf(false) }
 
     AuthScreenScaffold(modifier = modifier) {
-        Text(
-            text = state.serverName,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text =
-                state.serverVersion
-                    ?.let { version -> stringResource(R.string.login_server_version, version) }
-                    ?: stringResource(R.string.login_server_version_unknown),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+            JellyboostLogo(
+                size = InlineLogoSize,
+                contentDescription = stringResource(R.string.auth_logo_description),
+            )
+            Text(
+                text = state.serverName,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                text =
+                    state.serverVersion
+                        ?.let { version -> stringResource(R.string.login_server_version, version) }
+                        ?: stringResource(R.string.login_server_version_unknown),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
         if (state.isLoadingContext) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -151,7 +167,11 @@ private fun LoginContent(
         }
 
         if (state.publicUsers.isNotEmpty()) {
-            PublicUsersRow(users = state.publicUsers, onUserSelected = onPublicUserSelected)
+            PublicUsersRow(
+                users = state.publicUsers,
+                avatarUrlFor = state::avatarUrlFor,
+                onUserSelected = onPublicUserSelected,
+            )
         }
 
         Text(
@@ -252,6 +272,7 @@ private fun LoginContent(
 @Composable
 private fun PublicUsersRow(
     users: List<PublicUserInfo>,
+    avatarUrlFor: (PublicUserInfo) -> String?,
     onUserSelected: (PublicUserInfo) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
@@ -265,21 +286,27 @@ private fun PublicUsersRow(
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         ) {
             users.forEach { user ->
-                PublicUserAvatar(user = user, onClick = { onUserSelected(user) })
+                PublicUserAvatar(
+                    user = user,
+                    avatarUrl = avatarUrlFor(user),
+                    onClick = { onUserSelected(user) },
+                )
             }
         }
     }
 }
 
 /**
- * Initial-letter circle standing in for the user's avatar.
+ * One of the server's public users, in a gradient-ringed circle above their name.
  *
- * Real avatars need an image loader pointed at the server; that arrives with the design system
- * in M2 (docs/PLAN.md, `:core:ui` `JellyfinAsyncImage`).
+ * [avatarUrl] carries the profile picture the server advertises; it is `null` for users who have
+ * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
+ * empty hole.
  */
 @Composable
 private fun PublicUserAvatar(
     user: PublicUserInfo,
+    avatarUrl: String?,
     onClick: () -> Unit,
 ) {
     Column(
@@ -288,15 +315,28 @@ private fun PublicUserAvatar(
     ) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.size(AvatarSize).clip(CircleShape),
+            modifier =
+                Modifier
+                    .size(AvatarSize)
+                    .clip(CircleShape)
+                    .border(width = AvatarRingWidth, brush = JellyfinGradients.Accent, shape = CircleShape),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primary,
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    text = user.name.take(1).uppercase(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimary,
+            if (avatarUrl == null) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = user.name.take(1).uppercase(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            } else {
+                JellyfinAsyncImage(
+                    url = avatarUrl,
+                    contentDescription = user.name,
+                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                    placeholderIcon = null,
                 )
             }
         }

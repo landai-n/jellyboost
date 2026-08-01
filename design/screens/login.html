@@ -1,26 +1,32 @@
-<!-- @dsCard group="Screens" name="Login (portrait)" subtitle="Server identity, profile picker, password + Quick Connect" -->
+<!-- @dsCard group="Screens" name="Login (portrait)" subtitle="Server identity, profile picker, sign-in card" -->
 <style>
   body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
-  .phone { width:400px; min-height:820px; margin:0 auto; position:relative; overflow:hidden; }
+  .phone { width:400px; min-height:860px; margin:0 auto; position:relative; overflow:hidden; }
   .glow { position:absolute; inset:0 0 auto 0; height:420px; background:radial-gradient(circle at 50% 8%,rgba(170,92,195,.20) 0%,rgba(0,164,220,.09) 45%,transparent 100%); }
   .content { position:relative; padding:32px 24px; display:flex; flex-direction:column; gap:16px; }
   .ident { display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .server { font-size:28px; }
+  .server { font-size:32px; font-weight:700; }
   .version { font-size:12px; color:rgba(255,255,255,.7); }
   .ptitle { text-align:center; font-size:16px; font-weight:600; color:rgba(255,255,255,.7); }
-  .rowc { display:flex; justify-content:center; gap:24px; }
+  .rowc { display:flex; justify-content:center; gap:32px; }
   .user { display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .ring { width:80px; height:80px; border-radius:50%; padding:2px; background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
+  .ring { width:88px; height:88px; border-radius:50%; padding:2px; background:#292929; }
+  .user.selected .ring { background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
   .well { width:100%; height:100%; border-radius:50%; background:#101010; padding:3px; box-sizing:border-box; }
   .face { width:100%; height:100%; border-radius:50%; display:flex; align-items:center; justify-content:center; }
   .photo1 { background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0); }
   .photo2 { background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d); }
   .uname { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
-  .section { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
-  .field { border:1px solid #3C3C3C; border-radius:4px; padding:16px; font-size:16px; color:rgba(255,255,255,.5); }
-  .btn { border-radius:24px; padding:12px; text-align:center; font-size:14px; font-weight:500; background:#292929; color:rgba(255,255,255,.4); }
-  .divider { border-top:1px solid #3C3C3C; }
-  .or { text-align:center; font-size:12px; color:rgba(255,255,255,.7); }
+  .user.selected .uname { color:#fff; }
+  .card { background:#202020; border-radius:16px; padding:24px; display:flex; flex-direction:column; gap:16px; }
+  .section { font-size:22px; }
+  .field { border:1px solid #3C3C3C; border-radius:4px; padding:14px 16px; font-size:16px; color:rgba(255,255,255,.5); }
+  .field.filled { color:#fff; border-color:rgba(255,255,255,.35); }
+  .btn { border-radius:24px; padding:14px; text-align:center; font-size:14px; font-weight:500; background:#00A4DC; color:#000; }
+  .alt { display:flex; align-items:center; gap:12px; }
+  .alt .divider { flex:1; border-top:1px solid #3C3C3C; }
+  .or { font-size:12px; color:rgba(255,255,255,.7); }
+  .ghost { border:1px solid #3C3C3C; border-radius:24px; padding:13px; text-align:center; font-size:14px; font-weight:500; color:#00A4DC; }
   .link { text-align:center; color:#00A4DC; font-size:14px; font-weight:500; }
 </style>
 <div class="phone">
@@ -33,16 +39,17 @@
     </div>
     <div class="ptitle">Who's watching?</div>
     <div class="rowc">
-      <div class="user"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
+      <div class="user selected"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
       <div class="user"><div class="ring"><div class="well"><div class="face photo2"></div></div></div><div class="uname">Alex</div></div>
     </div>
-    <div class="section">Sign in</div>
-    <div class="field">Username</div>
-    <div class="field">Password</div>
-    <div class="btn">Sign in</div>
-    <div class="divider"></div>
-    <div class="or">or</div>
-    <div class="link">Use Quick Connect</div>
-    <div class="link">Use another server</div>
+    <div class="card">
+      <div class="section">Sign in</div>
+      <div class="field filled">Sam</div>
+      <div class="field">Password</div>
+      <div class="btn">Sign in</div>
+      <div class="alt"><div class="divider"></div><div class="or">or</div><div class="divider"></div></div>
+      <div class="ghost">Use Quick Connect</div>
+      <div class="link">Use another server</div>
+    </div>
   </div>
 </div>

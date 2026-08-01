@@ -106,6 +106,17 @@ Scope, from the plan's "Confirmed decisions": **downloaded items only**, with on
 | Search | name / series-name `LIKE` over downloaded items |
 | Item detail | any cached row; `getSimilarItems` is empty offline |
 
+**The three home rows answer in the online *card* shape, not the blob's.** A download's cached DTO
+is the whole item — the enqueue fetch asks for `OVERVIEW, GENRES, PEOPLE, …` precisely so the detail
+page works with no server — while the online home rows are fetched with
+`OnlineJellyfinRepository.CARD_FIELDS`, which asks for one extra field and deliberately not
+`OVERVIEW`. Read back raw, the same screen was handed more item offline than online, and the wide
+*Continue watching* hero (the one card that draws a synopsis) grew by a paragraph and pushed its
+resume button over the row beneath it. `getResumeItems`, `getNextUp` and `getLatestMedia` therefore
+clear `overview` on the way out (`asHomeCards()`), so the hero cannot look different offline;
+`getItem` is untouched, since the offline detail page is exactly where that synopsis belongs
+(DECISIONS.md 2026-08-01).
+
 **`getUserViews` does not know about the download filter.** My Media is the one row above that
 isn't scoped to downloaded items — it answers from the full cached `library_views` table, the same
 rows an online session would see, whether or not anything in a given library has actually been

@@ -302,7 +302,11 @@ private fun rememberConnectionStatusExplainer(
     }
 }
 
-private fun NavHostController.navigateToTab(route: Any) {
+/**
+ * How every tab is switched to: the nav bars' own taps, and the one in-content affordance that
+ * crosses tabs — the home screen's *Offline* quick-access chip, which is the Downloads tab.
+ */
+internal fun NavHostController.navigateToTab(route: Any) {
     navigate(route, topLevelNavOptions())
 }
 

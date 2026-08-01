@@ -91,6 +91,11 @@ User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
   state views, spacing & card metrics; gradients card gained BackdropScrim +
   ImagePlaceholder and tokens.css the matching tokens. claude.ai/design now covers
   every `core/ui` component.
+- 2026-08-01, follow-up: Screens group extended past the auth mocks with five
+  code-faithful screen mocks (home, library grid, item detail, downloads queue,
+  player OSD), each mirrored from the real composables (row order, compact-width
+  branches, tab bars) and synced. Settings/Search/SyncPlay-groups deliberately
+  left unmocked (utility surfaces).
 
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 

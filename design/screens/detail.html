@@ -1,0 +1,88 @@
+<!-- @dsCard group="Screens" name="Item detail (portrait)" subtitle="BackdropHeader (no title, per code) + DetailFacts, compact actions row, Next Up/Seasons/Episodes/Similar" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; }
+  .phone { width:400px; margin:0 auto; }
+  .backdrop { position:relative; width:100%; height:256px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; }
+  .scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(16,16,16,0) 0%, rgba(16,16,16,.65) 60%, #101010 100%); }
+  .overlay-nav { position:absolute; top:0; left:0; display:flex; padding:8px; }
+  .overlay-btn { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+  .overlay-btn svg { width:22px; height:22px; fill:#fff; }
+  .facts { padding:0 16px; display:flex; flex-direction:column; gap:12px; }
+  .h-title { font-size:28px; line-height:36px; }
+  .meta { font-size:14px; color:rgba(255,255,255,.7); }
+  .actions { display:flex; gap:8px; align-items:center; }
+  .play-btn { flex:1; height:40px; border-radius:20px; background:#00A4DC; color:#000; display:flex; align-items:center; justify-content:center; gap:8px; font-size:14px; font-weight:500; }
+  .play-btn svg { width:20px; height:20px; fill:#000; }
+  .circle-btn { width:40px; height:40px; border-radius:50%; border:1px solid #3C3C3C; display:flex; align-items:center; justify-content:center; flex:none; }
+  .circle-btn svg { width:20px; height:20px; fill:rgba(255,255,255,.7); }
+  .circle-btn.active svg { fill:#00A4DC; }
+  .tagline { font-size:14px; color:#00A4DC; }
+  .overview { font-size:14px; line-height:20px; color:#fff; }
+  .credits { font-size:12px; color:rgba(255,255,255,.7); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { border:1px solid #3C3C3C; border-radius:8px; padding:6px 12px; font-size:13px; color:rgba(255,255,255,.85); }
+  .section { padding:0 16px; display:flex; flex-direction:column; gap:8px; margin-top:24px; }
+  .section-title { font-size:16px; font-weight:600; }
+  .row { display:flex; gap:12px; overflow:hidden; }
+  .thumb-art { position:relative; width:160px; height:90px; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
+  .poster-art { width:120px; height:180px; border-radius:8px; overflow:hidden; flex:none; background:linear-gradient(135deg,#292929,#202020); }
+  .ttl { margin-top:8px; font-size:14px; }
+  .sub { font-size:12px; color:rgba(255,255,255,.7); }
+  .ep-row { display:flex; gap:12px; padding:8px 16px; }
+  .ep-thumb { position:relative; width:128px; height:72px; flex:none; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
+  .ep-text { display:flex; flex-direction:column; gap:2px; }
+  .ep-title { font-size:14px; font-weight:500; }
+  .ep-runtime { font-size:11px; color:rgba(255,255,255,.7); }
+  .ep-overview { font-size:12px; color:rgba(255,255,255,.7); line-height:16px; }
+</style>
+<div class="phone">
+  <div class="backdrop">
+    <div class="scrim"></div>
+    <div class="overlay-nav">
+      <div class="overlay-btn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+      <div class="overlay-btn"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></div>
+    </div>
+  </div>
+  <div class="facts">
+    <div class="h-title">Westworld</div>
+    <div class="meta">2016 · TV-MA · 8.6 · 4 seasons</div>
+    <div class="actions">
+      <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Play</div>
+      <div class="circle-btn"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+      <div class="circle-btn active"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+      <div class="circle-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
+    </div>
+    <div class="tagline">Everything is a story.</div>
+    <div class="overview">Westworld is a dark odyssey about the dawn of artificial consciousness and the evolution of sin, exploring a world in which every human appetite can be indulged without consequence.</div>
+    <div class="credits">Directed by Jonathan Nolan · Evan Rachel Wood, Thandiwe Newton, Jeffrey Wright</div>
+    <div class="chips"><div class="chip">Drama</div><div class="chip">Mystery</div><div class="chip">Sci-Fi &amp; Fantasy</div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Next up</div>
+    <div class="row"><div class="thumb-art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"></div>
+      <div><div class="ttl">1. Journey Into Night</div><div class="sub">Westworld · S2E1</div></div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Seasons</div>
+    <div class="row">
+      <div><div class="poster-art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"></div><div class="ttl">Season 1</div></div>
+      <div><div class="poster-art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"></div><div class="ttl">Season 2</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Episodes</div>
+    <div class="ep-row"><div class="ep-thumb" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"></div>
+      <div class="ep-text"><div class="ep-title">1 · Journey Into Night</div><div class="ep-runtime">62 min</div>
+      <div class="ep-overview">Dolores continues to gain in awareness. Maeve makes a shocking discovery.</div></div></div>
+    <div class="ep-row"><div class="ep-thumb" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"></div>
+      <div class="ep-text"><div class="ep-title">2 · Reunion</div><div class="ep-runtime">57 min</div>
+      <div class="ep-overview">Dolores recalls her past. Young Ford builds his first hosts.</div></div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">More like this</div>
+    <div class="row">
+      <div><div class="poster-art" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)"></div><div class="ttl">Dune</div></div>
+      <div><div class="poster-art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"></div><div class="ttl">Arrival</div></div>
+    </div>
+  </div>
+</div>

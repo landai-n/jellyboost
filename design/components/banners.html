@@ -1,25 +1,51 @@
-<!-- @dsCard group="Components" name="Banners & feedback" subtitle="Session-lost panel, error copy, Quick Connect code" -->
+<!-- @dsCard group="Components" name="Banners & feedback" subtitle="ErrorBanner in lightened #F0A3AE + session-lost reuse + six-box Quick Connect code (was gradient text)" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .col { max-width:460px; display:flex; flex-direction:column; gap:16px; }
-  .banner { display:flex; gap:12px; background:rgba(207,102,121,.12); border-radius:12px; padding:16px; align-items:flex-start; }
-  .banner svg { width:22px; height:22px; fill:#CF6679; flex:none; }
-  .banner div { font-size:14px; color:#CF6679; }
-  .errtext { font-size:14px; color:#CF6679; }
-  .qc { background:#202020; border-radius:16px; padding:24px; text-align:center; display:flex; flex-direction:column; gap:16px; }
-  .qc .t { font-size:22px; }
-  .qc .i { font-size:14px; color:rgba(255,255,255,.85); }
-  .code { font-size:36px; font-weight:700; letter-spacing:8px; background:linear-gradient(90deg,#AA5CC3,#00A4DC); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  body{padding:24px}
+  .col{max-width:460px;display:flex;flex-direction:column;gap:22px}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:10px}
+  .note{font-size:11px;line-height:16px;color:rgba(255,255,255,.45);margin-top:10px}
+  .qc{align-items:center;text-align:center}
+  .qc-title{font-size:18px;font-weight:600}
+  .qc-instructions{font-size:13px;line-height:19px;color:var(--on-surface-variant)}
+  .qc-code{display:flex;justify-content:center;gap:8px}
+  .qc-digit{width:46px;height:58px;border-radius:var(--radius-md);background:rgba(255,255,255,.05);border:1px solid var(--glass-line);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;box-sizing:border-box}
+  .waiting-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--on-surface-variant)}
+  .spin-sm{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.14);border-top-color:var(--primary);animation:m-spin 1s linear infinite;flex:none}
 </style>
 <div class="col">
-  <div class="banner">
-    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-13h2v6h-2V7Zm0 8h2v2h-2v-2Z"/></svg>
-    <div>Your session ended. Pick a server to sign in again.</div>
+  <div>
+    <div class="k">ErrorBanner</div>
+    <div class="m-banner">
+      <svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <div>Your session expired. Sign in again to keep watching.</div>
+    </div>
+    <div class="note">Icon and text are BOTH the exact color #F0A3AE — a deliberately lightened `--error` (raw token is #CF6679), not `colorScheme.error` itself. At 13sp on a 10%-alpha error wash the raw hue fails contrast, so the component pushes lightness up until the sentence reads comfortably. Fill 10% / border 28% of the same raw `--error`, 12px radius, 16×14px padding.</div>
   </div>
-  <div class="errtext">Unable to reach the server. Check the address and your network.</div>
-  <div class="qc">
-    <div class="t">Quick Connect</div>
-    <div class="i">Enter this code in an already signed-in Jellyfin app.</div>
-    <div class="code">428913</div>
+
+  <div>
+    <div class="k">Session-lost banner — same ErrorBanner component, different copy</div>
+    <div class="m-banner">
+      <svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <div>Your session ended. Pick a server to sign in again.</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="k">Quick Connect</div>
+    <div class="m-panel qc">
+      <div class="qc-title">Quick Connect</div>
+      <div class="qc-instructions">Enter this code in an already signed-in Jellyfin app or at jf.org/pin</div>
+      <div class="qc-code">
+        <div class="qc-digit">4</div>
+        <div class="qc-digit">8</div>
+        <div class="qc-digit">2</div>
+        <div class="qc-digit">9</div>
+        <div class="qc-digit">1</div>
+        <div class="qc-digit">3</div>
+      </div>
+      <div class="waiting-row"><div class="spin-sm"></div>Waiting for confirmation…</div>
+    </div>
+    <div class="note">SIX separate digit boxes (46×58px, white@5% fill, glass hairline, 12px radius, tabular figures) — replaces the old single gradient-text code string. Sizes itself to whatever length the server returns rather than assuming six. Below the code, an optional waiting row: 16px mini spinner + muted hint.</div>
   </div>
 </div>

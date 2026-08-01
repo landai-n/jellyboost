@@ -1,54 +1,149 @@
-<!-- @dsCard group="Components" name="Media cards" subtitle="PosterCard (resume/watched), ThumbCard, LibraryCard, placeholder artwork" -->
+<!-- @dsCard group="Components" name="Media cards" subtitle="PosterCard/ThumbCard overlays + the new 232×64 glass LibraryCard tile — download & watched now stack top-right (was top-left/separate), tile replaces the old 16:9 art card" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .row { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
-  .card { display:flex; flex-direction:column; }
-  .art { position:relative; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
-  .poster-art { width:120px; height:180px; }
-  .thumb-art { width:210px; height:118px; }
-  .title { margin-top:8px; font-size:14px; line-height:20px; color:#fff; }
-  .subtitle { font-size:12px; line-height:16px; color:rgba(255,255,255,.7); }
-  .badge { position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; }
-  .badge svg { width:16px; height:16px; }
-  .watched { position:absolute; top:4px; left:4px; }
-  .watched svg { width:16px; height:16px; fill:#00A4DC; }
-  .progress-track { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(0,0,0,.5); }
-  .progress-fill { height:100%; background:#00A4DC; }
-  .ring { width:16px; height:16px; border-radius:50%; border:2px solid #00A4DC; border-top-color:rgba(0,164,220,.25); }
-  .placeholder-icon { width:32px; height:32px; fill:rgba(255,255,255,.7); position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+  body{padding:28px;display:flex;flex-direction:column;gap:26px}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:12px}
+  .row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .note{font-size:11px;line-height:16px;color:rgba(255,255,255,.45);max-width:640px}
+
+  /* corner indicator column — top-right, 8px inset, 4px gap, right-aligned */
+  .m-corner-stack{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .m-watched{width:22px;height:22px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;flex:none}
+  .m-watched svg{width:13px;height:13px;fill:#101010}
+  .m-dl-badge{width:24px;height:24px;border-radius:50%;background:rgba(16,16,16,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;flex:none}
+  .m-dl-badge svg{width:14px;height:14px}
+  .m-dl-badge .ring{width:20px;height:20px}
+
+  /* bottom-left rating badge — library grid cards only */
+  .m-rating{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:6px;background:rgba(16,16,16,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:10px;font-weight:600}
+  .m-rating svg{width:10px;height:10px;fill:var(--primary)}
+
+  .m-placeholder-glyph{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;fill:rgba(255,255,255,.35)}
+
+  /* library tile — replaces the old 16:9 art thumbnail */
+  .lib-tile{width:232px;height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:var(--radius-md)}
+  .lib-glyph-well{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex:none}
+  .lib-glyph-well svg{width:18px;height:18px;fill:#fff}
+  .lib-text{display:flex;flex-direction:column;gap:2px;overflow:hidden}
+  .lib-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lib-sub{font-size:11px;line-height:14px;color:var(--on-surface-variant);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
-<div class="row">
-  <div class="card">
-    <div class="art poster-art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)">
-      <div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3v6h2.5L12 15.5 7.5 11H10V5h3z" fill="#00A4DC"/></svg></div>
-      <div class="progress-track"><div class="progress-fill" style="width:30%"></div></div>
+
+<div>
+  <div class="k">Poster · 128×192 · radius 12px · elev-card</div>
+  <div class="row">
+    <div class="m-card">
+      <div class="m-art m-poster" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)">
+        <div class="m-badge">4K</div>
+        <div class="m-corner-stack">
+          <div class="m-dl-badge">
+            <svg class="ring" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="9" fill="none" style="stroke:rgba(0,164,220,.25)" stroke-width="2"/>
+              <circle cx="10" cy="10" r="9" fill="none" style="stroke:var(--primary)" stroke-width="2" stroke-dasharray="56.5" stroke-dashoffset="33.9" transform="rotate(-90 10 10)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="m-time" style="bottom:14px">1h 42m left</div>
+        <div class="m-progress-track"><div class="m-progress-fill" style="width:30%"></div></div>
+      </div>
+      <div class="m-ttl">Arrival</div>
+      <div class="m-sub">2016 · downloading, in progress</div>
     </div>
-    <div class="title">Arrival</div>
-    <div class="subtitle">2016</div>
-  </div>
-  <div class="card">
-    <div class="art poster-art" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)">
-      <div class="watched"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>
+
+    <div class="m-card">
+      <div class="m-art m-poster" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)">
+        <div class="m-corner-stack">
+          <div class="m-watched"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>
+        </div>
+      </div>
+      <div class="m-ttl">Dune</div>
+      <div class="m-sub">2021 · watched, not downloaded</div>
     </div>
-    <div class="title">Dune</div>
-    <div class="subtitle">2021</div>
-  </div>
-  <div class="card">
-    <div class="art thumb-art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)">
-      <div class="badge"><div class="ring"></div></div>
-      <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
+
+    <div class="m-card">
+      <div class="m-art m-poster" style="background:linear-gradient(160deg,#3a3a5f,#6a6aa0)">
+        <div class="m-corner-stack">
+          <div class="m-dl-badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3v6h2.5L12 15.5 7.5 11H10V5h3z" fill="var(--primary)"/></svg></div>
+          <div class="m-watched"><svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div>
+        </div>
+      </div>
+      <div class="m-ttl">Blade Runner 2049</div>
+      <div class="m-sub">2017 · downloaded + watched, stacked</div>
     </div>
-    <div class="title">1. The Bicameral Mind</div>
-    <div class="subtitle">Westworld · S1E10</div>
-  </div>
-  <div class="card">
-    <div class="art thumb-art" style="background:linear-gradient(160deg,#5f4a3a,#9a7a5f)"></div>
-    <div class="title">Movies</div>
-  </div>
-  <div class="card">
-    <div class="art poster-art">
-      <svg class="placeholder-icon" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zM4 18V8h16v10H4z"/></svg>
+
+    <div class="m-card">
+      <div class="m-art m-poster" style="background:linear-gradient(160deg,#5f3a3a,#9a6a6a)">
+        <div class="m-rating">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          <span>7.4</span>
+        </div>
+      </div>
+      <div class="m-ttl">Nope</div>
+      <div class="m-sub">2022 · library-grid rating badge, one decimal</div>
     </div>
-    <div class="title">No artwork</div>
+
+    <div class="m-card">
+      <div class="m-art m-poster">
+        <svg class="m-placeholder-glyph" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zM4 18V8h16v10H4z"/></svg>
+      </div>
+      <div class="m-ttl">No artwork</div>
+      <div class="m-sub">--image-placeholder fill, no image loaded</div>
+    </div>
   </div>
+</div>
+
+<div>
+  <div class="k">Thumb · 232×130 (16:9) · radius 12px</div>
+  <div class="row">
+    <div class="m-card">
+      <div class="m-art m-thumb" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)">
+        <div class="m-badge">S1 · E10</div>
+        <div class="m-corner-stack">
+          <div class="m-dl-badge">
+            <svg class="ring" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="9" fill="none" style="stroke:rgba(0,164,220,.25)" stroke-width="2"/>
+              <circle cx="10" cy="10" r="9" fill="none" style="stroke:var(--primary)" stroke-width="2" stroke-dasharray="56.5" stroke-dashoffset="19.8" transform="rotate(-90 10 10)"/>
+            </svg>
+          </div>
+        </div>
+        <div class="m-time" style="bottom:14px">22m left</div>
+        <div class="m-progress-track"><div class="m-progress-fill" style="width:65%"></div></div>
+      </div>
+      <div class="m-ttl">The Bicameral Mind</div>
+      <div class="m-sub">Westworld · S1 · E10</div>
+    </div>
+
+    <div class="m-card">
+      <div class="m-art m-thumb" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)">
+        <div class="m-badge">HDR</div>
+      </div>
+      <div class="m-ttl">Dune</div>
+      <div class="m-sub">2021 · no resume, unwatched</div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="k">Library tile · 232×64 · glass (LibraryCard.kt — replaces the old 16:9 art thumbnail)</div>
+  <div class="row">
+    <div class="lib-tile m-glass">
+      <div class="lib-glyph-well">
+        <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4zM4 18V8h16v10H4z"/></svg>
+      </div>
+      <div class="lib-text">
+        <div class="lib-name">Movies</div>
+        <div class="lib-sub">1,204 items</div>
+      </div>
+    </div>
+    <div class="lib-tile m-glass">
+      <div class="lib-glyph-well">
+        <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+      </div>
+      <div class="lib-text">
+        <div class="lib-name">Shows</div>
+        <div class="lib-sub">412 items</div>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:12px">LibraryCard.kt: a Jellyfin library's own image is usually a poster collage that at tile size reads as noise — the wide 64px glass tile with a glyph well replaced the earlier 16:9 artwork card.</div>
 </div>

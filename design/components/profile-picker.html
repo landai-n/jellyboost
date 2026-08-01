@@ -1,29 +1,33 @@
-<!-- @dsCard group="Components" name="Profile picker" subtitle="88dp avatars, selection ring, initial-letter fallback" -->
+<!-- @dsCard group="Components" name="Profile picker" subtitle="88px avatars — flat solid-primary ring when selected (was a gradient), dark initial-letter fallback" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .picker { display:flex; flex-direction:column; gap:12px; max-width:460px; }
-  .title { text-align:center; font-size:16px; font-weight:600; color:rgba(255,255,255,.7); }
-  .rowc { display:flex; justify-content:center; gap:32px; }
-  .user { display:flex; flex-direction:column; align-items:center; gap:8px; }
-  .ring { width:88px; height:88px; border-radius:50%; padding:2px; background:#292929; }
-  .user.selected .ring { background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
-  .well { width:100%; height:100%; border-radius:50%; background:#101010; padding:3px; box-sizing:border-box; }
-  .face { width:100%; height:100%; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; }
-  .photo1 { background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0); }
-  .photo2 { background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d); }
-  .letter { background:#00A4DC; color:#000; font-size:24px; }
-  .uname { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
-  .user.selected .uname { color:#fff; }
-  .note { margin-top:16px; font-size:11px; color:rgba(255,255,255,.45); text-align:center; }
+  body{padding:24px}
+  .picker{display:flex;flex-direction:column;gap:22px;max-width:460px}
+  .caption{text-align:center;font-size:13px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .rowc{display:flex;justify-content:center;gap:32px}
+  .user{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .uname{font-size:13px;font-weight:500;color:var(--on-surface-variant)}
+  .user.selected .uname{color:#fff}
+  .photo1{background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0)}
+  .photo2{background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d)}
+  .letter{background:var(--primary);color:#101010}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px;text-align:center}
 </style>
 <div class="picker">
-  <div class="title">Who's watching?</div>
+  <div class="caption">Who's watching?</div>
   <div class="rowc">
-    <div class="user selected"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
-    <div class="user"><div class="ring"><div class="well"><div class="face photo2"></div></div></div><div class="uname">Alex</div></div>
-    <div class="user"><div class="ring"><div class="well"><div class="face letter">C</div></div></div><div class="uname">claude</div></div>
+    <div class="user selected">
+      <div class="m-avatar-ring selected"><div class="m-avatar-well"><div class="m-face photo1"></div></div></div>
+      <div class="uname">Sam</div>
+    </div>
+    <div class="user">
+      <div class="m-avatar-ring"><div class="m-avatar-well"><div class="m-face photo2"></div></div></div>
+      <div class="uname">Alex</div>
+    </div>
+    <div class="user">
+      <div class="m-avatar-ring"><div class="m-avatar-well"><div class="m-face letter">C</div></div></div>
+      <div class="uname">claude</div>
+    </div>
   </div>
-  <div class="note">Photos load from /Users/{id}/Images/Primary (maxWidth=168); no primaryImageTag → initial-letter circle.
-Selection = the profile whose name fills the username field: gradient ring + white name; others keep the neutral ring.
-Row centres while it fits, scrolls horizontally on overflow.</div>
+  <div class="note">Selection ring: 2px solid `--primary`, FLAT — this changed from an accent-gradient ring to a solid color. Unselected ring: faint white@10%. 3px `#101010` (app-background) well gap between ring and photo/initial content. Initial-letter fallback (no primaryImageTag): solid `--primary` circle + a single uppercase letter at 26px/600 in dark `#101010` content color, NOT white-on-primary. Name below: 13px/500, muted when unselected, full white when selected. 32px gap between avatars; row centres while it fits, scrolls horizontally on overflow.</div>
 </div>

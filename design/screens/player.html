@@ -1,48 +1,94 @@
-<!-- @dsCard group="Screens" name="Player controls (landscape)" subtitle="TopBar (title/method) + transport row + Scrubber/Clock/picker row + Skip Intro" -->
+<!-- @dsCard group="Screens" name="Player controls (landscape)" subtitle="Glass-only chrome over film, one solid surface (68px white play disc); buffered scrubber layer; glass skip-intro pill; pickers icon-only below 840dp — this 640px frame included; no chapter ticks" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .frame { width:640px; height:360px; position:relative; background:linear-gradient(135deg,#3a4a5f 0%,#202020 70%); overflow:hidden; }
+  body { padding:24px; }
+  .frame { width:640px; height:360px; position:relative; background:linear-gradient(135deg,#3a4a5f 0%,#202020 70%); overflow:hidden; border-radius:12px; }
   .scrim { position:absolute; inset:0; background:rgba(0,0,0,.35); }
-  .topbar { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:8px; padding:8px; }
-  .icon-btn { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
-  .icon-btn svg { width:20px; height:20px; fill:#fff; }
-  .title { flex:1; font-size:16px; font-weight:600; }
-  .method { font-size:11px; font-weight:500; color:#00A4DC; padding-right:8px; }
+
+  /* Top bar — 44px glass circles (Dimens.PillHeight), NOT the 36px chrome circles used elsewhere:
+     these are thumbed over a moving picture. Glyph is a fixed 18px regardless of the circle size. */
+  .topbar { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:12px; padding:12px 16px; box-sizing:border-box; }
+  .chrome-btn { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+  .chrome-btn svg { width:18px; height:18px; }
+  .back-btn svg { fill:#fff; } /* full white, not the usual 80% chrome tint */
+  .cast-btn svg { fill:rgba(255,255,255,.8); } /* default GlassIconButton tint */
+  .title-stack { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .title-stack .t { font-size:15px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .title-stack .s { font-size:12px; font-weight:500; color:rgba(255,255,255,.7); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* Tag pills — primary-tinted, not glass: these say something about the stream rather than act as
+     a control. Text is a lightened primary (#7FD8F5), not raw --primary, for contrast over video. */
+  .tag-pill { flex:none; padding:4px 10px; border-radius:999px; font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; background:rgba(0,164,220,.18); border:1px solid rgba(0,164,220,.4); color:#7FD8F5; }
+
+  /* Transport row — 52px glass seek circles either side of a 68px WHITE disc (up from ~48px). The
+     disc is the one solid surface on the whole screen; its glyph is #101010, the app background
+     colour, matching every other primary-action surface in the refresh. */
   .transport { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:24px; }
-  .transport svg.secondary { width:32px; height:32px; fill:#fff; }
-  .transport svg.primary { width:48px; height:48px; fill:#fff; }
-  .bottombar { position:absolute; left:16px; right:16px; bottom:12px; display:flex; flex-direction:column; gap:4px; }
-  .scrub-track { height:4px; border-radius:2px; background:rgba(255,255,255,.3); position:relative; }
-  .scrub-fill { height:100%; border-radius:2px; background:#00A4DC; width:27%; }
-  .scrub-thumb { position:absolute; top:50%; left:27%; width:12px; height:12px; border-radius:50%; background:#00A4DC; transform:translate(-50%,-50%); }
-  .picker-row { display:flex; align-items:center; }
-  .clock { font-size:12px; flex:1; }
-  .clock .dim { color:rgba(255,255,255,.7); }
-  .picker-row .icon-btn svg { width:20px; height:20px; }
-  .skip-btn { position:absolute; right:24px; bottom:64px; display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:20px; background:#00A4DC; color:#000; font-size:13px; font-weight:500; }
-  .skip-btn svg { width:18px; height:18px; fill:#000; }
+  .seek-btn { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .seek-btn svg { width:26px; height:26px; fill:#fff; }
+  .play-btn { width:68px; height:68px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; }
+  .play-btn svg { width:30px; height:30px; fill:#101010; }
+
+  /* Skip-intro — a GLASS ghost pill since the refresh (was solid --primary). The white/solid
+     treatment is reserved for the play/pause disc alone now, so this pill went glass: m-btn-ghost's
+     6% fill + 12% border is exactly GlassDefaults.GhostBorder. */
+  .skip-pill { position:absolute; right:16px; bottom:78px; font-weight:500; } /* PillLabelSmall is W500, not m-btn's default W600 */
+  .skip-pill svg { width:16px; height:16px; }
+
+  /* Bottom bar */
+  .bottombar { position:absolute; left:16px; right:16px; bottom:16px; display:flex; flex-direction:column; gap:4px; }
+  /* Scrubber — 5px track (up from 4px), THREE layers: base @20%, a BUFFERED segment @32% measured
+     from zero (new since the last mock — no SliderColors can express it, so it is hand-drawn here
+     the same way the Compose track draws it as two stacked boxes), then the played --primary fill,
+     then a 14px white thumb with a small drop shadow. No chapter tick marks anywhere on the track —
+     that was an older proposal; the implemented Scrubber has no such feature. */
+  .scrub-track { position:relative; height:5px; border-radius:999px; background:rgba(255,255,255,.2); overflow:hidden; }
+  .scrub-buffered { position:absolute; top:0; left:0; bottom:0; width:45%; background:rgba(255,255,255,.32); }
+  .scrub-fill { position:absolute; top:0; left:0; bottom:0; width:27%; background:var(--primary); }
+  .scrub-thumb { position:absolute; top:50%; left:27%; width:14px; height:14px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); box-shadow:0 2px 4px rgba(0,0,0,.45); }
+
+  .picker-row { display:flex; align-items:center; gap:8px; }
+  .clock { flex:1; font-size:12px; font-weight:500; font-variant-numeric:tabular-nums; color:#fff; }
+  .clock .dim { color:rgba(255,255,255,.6); }
+  /* Pickers below the 840dp label threshold — this 640px frame is a phone-landscape width, so every
+     chip collapses to an icon-only 32px glass circle with no text, exactly as showSheetButtonLabels()
+     would render it here. The speed picker shows no "1.5×" readout in this state: the rate label only
+     replaces the word "Speed" once there is a word to replace. */
+  .picker-circle { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; }
+  .picker-circle svg { width:15px; height:15px; fill:#fff; }
 </style>
 <div class="frame">
   <div class="scrim"></div>
+
   <div class="topbar">
-    <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
-    <div class="title">1. The Bicameral Mind</div>
-    <div class="method">Transcode</div>
-    <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div>
+    <div class="chrome-btn back-btn m-glass"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></div>
+    <div class="title-stack">
+      <div class="t">The Bicameral Mind</div>
+      <div class="s">Westworld &middot; S1 E10</div>
+    </div>
+    <div class="tag-pill">1.5&times;</div>
+    <div class="tag-pill">TRANSCODE 1080P</div>
+    <div class="chrome-btn cast-btn m-glass"><svg viewBox="0 0 24 24"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg></div>
   </div>
+
   <div class="transport">
-    <svg class="secondary" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
-    <svg class="primary" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    <svg class="secondary" viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+    <div class="seek-btn m-glass"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></div>
+    <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+    <div class="seek-btn m-glass"><svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></div>
   </div>
-  <div class="skip-btn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>Skip Intro</div>
+
+  <div class="skip-pill m-btn m-btn-sm m-btn-ghost"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg><span>Skip Intro</span></div>
+
   <div class="bottombar">
-    <div class="scrub-track"><div class="scrub-fill"></div><div class="scrub-thumb"></div></div>
+    <div class="scrub-track">
+      <div class="scrub-buffered"></div>
+      <div class="scrub-fill"></div>
+      <div class="scrub-thumb"></div>
+    </div>
     <div class="picker-row">
       <div class="clock">14:36<span class="dim"> / 54:00</span></div>
-      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
-      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/></svg></div>
-      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/></svg></div>
+      <div class="picker-circle m-glass"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+      <div class="picker-circle m-glass"><svg viewBox="0 0 24 24"><path d="M19 4H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/></svg></div>
+      <div class="picker-circle m-glass"><svg viewBox="0 0 24 24"><path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.27-10.44zm-9.79 6.84a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/></svg></div>
     </div>
   </div>
 </div>

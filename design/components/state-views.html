@@ -1,25 +1,35 @@
-<!-- @dsCard group="Components" name="State views" subtitle="Loading spinner, Error (icon + message + Retry), Empty" -->
+<!-- @dsCard group="Components" name="State views" subtitle="LoadingState spinner, ErrorState/EmptyState glyph + message, optional dashed panel, small white Retry pill" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .row { display:flex; gap:16px; }
-  .panel { width:200px; height:200px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; border:1px solid #292929; border-radius:8px; padding:24px; box-sizing:border-box; }
-  .panel svg { width:48px; height:48px; fill:rgba(255,255,255,.7); }
-  .message { font-size:14px; line-height:20px; color:rgba(255,255,255,.7); text-align:center; }
-  .spinner { width:40px; height:40px; border-radius:50%; border:4px solid rgba(0,164,220,.25); border-top-color:#00A4DC; animation:spin 1s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .retry { margin-top:4px; height:40px; padding:0 24px; border-radius:20px; background:#00A4DC; color:#000; font-size:14px; font-weight:500; border:none; display:flex; align-items:center; }
+  body{margin:0;background:var(--background);color:#fff;font-family:Roboto,"Segoe UI",system-ui,sans-serif;padding:28px;}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:10px;}
+  .note{font-size:12px;line-height:17px;color:var(--on-surface-variant);max-width:520px;margin-top:14px;}
+  .row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
+  .panel{width:220px;height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;}
+  .panel.dashed{border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:28px;width:auto;height:auto;min-width:200px;}
+  .panel svg{width:36px;height:36px;fill:rgba(255,255,255,.45);}
+  .message{font-size:13px;line-height:19px;color:var(--on-surface-variant);text-align:center;margin-top:12px;}
+  .caption{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--on-surface-variant);margin-top:10px;text-align:center;}
+  .retry{margin-top:16px;height:36px;padding:0 16px;border-radius:999px;background:#fff;color:#101010;font-size:14px;font-weight:500;border:none;display:flex;align-items:center;box-sizing:border-box;}
 </style>
+<div class="k">Loading / Error / Empty</div>
 <div class="row">
   <div class="panel">
-    <div class="spinner"></div>
+    <div class="m-spinner"></div>
+    <div class="caption">LoadingState</div>
   </div>
-  <div class="panel">
+  <div class="panel dashed">
     <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4c-1.48 0-2.85.43-4.01 1.17l1.46 1.46C10.21 6.24 11.08 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3 0 1.13-.64 2.11-1.56 2.62l1.45 1.45C23.16 18.16 24 16.68 24 15c0-2.64-2.05-4.78-4.65-4.96zM3 5.27l2.75 2.74C2.56 8.15 0 10.77 0 14c0 3.31 2.69 6 6 6h11.73l1.73 1.73L20.73 20.5 4.27 4 3 5.27zM7.73 10l8 8H6c-2.21 0-4-1.79-4-4 0-2.21 1.79-4 4-4h1.73z"/></svg>
     <div class="message">Could not reach the server.</div>
     <button class="retry">Retry</button>
+    <div class="caption">ErrorState · dashedPanel=true</div>
   </div>
   <div class="panel">
     <svg viewBox="0 0 24 24"><path d="M19 3H4.99c-1.11 0-1.98.9-1.98 2L3 19c0 1.1.88 2 1.99 2H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H5V5h14v10z"/></svg>
     <div class="message">Nothing here yet.</div>
+    <div class="caption">EmptyState · dashedPanel=false</div>
   </div>
 </div>
+<div class="note">Spinner: 36px, 3px stroke, track white@14%, head <code>--primary</code> (<code>.m-spinner</code>). Glyph: 36px at white@45% — <code>CloudOff</code> for error, <code>Inbox</code> for empty. Message: 13px/19px muted, 12px gap below the glyph.<br><br>
+<code>dashedPanel</code> is opt-in per call site (white@12% 1px dashed, 16px radius, ~28px padding) — a state view filling a whole screen needs no container, but one sitting inside other content (an empty tab under a header, a failed section of a populated screen) does, or it reads as content that's missing rather than a place content will appear. Shown here with the panel on Error and without it on Empty to make that contrast explicit — it is not tied to error-vs-empty, either state can take either treatment.<br><br>
+Retry is a small white <code>PrimaryPillButton</code> — 36px height, pill, white fill + <code>#101010</code> content, 14px/500 label, 16px h-padding — not the old solid-<code>--primary</code>-colored button an earlier mock showed.</div>

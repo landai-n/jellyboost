@@ -1,36 +1,59 @@
-<!-- @dsCard group="Components" name="Forms & panels" subtitle="Manual-address panel, outlined fields, primary button states" -->
+<!-- @dsCard group="Components" name="Forms & panels" subtitle="Eyebrow label above the field (not floated inside), primary pill enabled/disabled/loading, connecting progress" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .panel { max-width:460px; background:#202020; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; }
-  .section { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
-  .field { border:1px solid #3C3C3C; border-radius:4px; padding:16px; font-size:16px; color:rgba(255,255,255,.5); }
-  .field.filled { color:#fff; }
-  .btn { border-radius:24px; padding:12px; text-align:center; font-size:14px; font-weight:500; }
-  .btn.enabled { background:#00A4DC; color:#000; }
-  .btn.disabled { background:#292929; color:rgba(255,255,255,.4); }
-  .progress { height:4px; border-radius:2px; background:#292929; overflow:hidden; }
-  .progress i { display:block; height:100%; width:40%; background:#00A4DC; border-radius:2px; }
-  .hint { font-size:12px; color:rgba(255,255,255,.7); }
-  .links { max-width:460px; margin-top:16px; text-align:center; display:flex; flex-direction:column; gap:12px; }
-  .divider { border-top:1px solid #3C3C3C; position:relative; margin:8px 0 0; }
-  .or { font-size:12px; color:rgba(255,255,255,.7); }
-  .link { color:#00A4DC; font-size:14px; font-weight:500; }
+  body{padding:24px}
+  .col{max-width:460px;display:flex;flex-direction:column;gap:26px}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:10px}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:8px}
+  .progress{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+  .progress i{display:block;height:100%;width:42%;background:var(--primary);border-radius:2px}
+  .hint{font-size:12px;color:var(--on-surface-variant);margin-top:8px}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .divider-row{display:flex;align-items:center;gap:12px;max-width:460px}
+  .divider-row .line{flex:1;height:1px;background:var(--outline)}
+  .divider-row .or{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant)}
+  .spin-dark{width:16px;height:16px;border-radius:50%;border:2px solid rgba(16,16,16,.3);border-top-color:#101010;animation:m-spin 1s linear infinite;flex:none}
+  .note{font-size:11px;color:rgba(255,255,255,.45);line-height:16px;max-width:460px;margin-top:10px}
 </style>
-<div class="panel">
-  <div class="section">Server address</div>
-  <div class="field filled">http://192.168.1.10:8096</div>
-  <div class="btn enabled">Connect</div>
-  <div class="progress"><i></i></div>
-  <div class="hint">Connecting…</div>
-</div>
-<div class="panel" style="margin-top:16px">
-  <div class="section">Server address</div>
-  <div class="field">Host or URL</div>
-  <div class="btn disabled">Connect</div>
-</div>
-<div class="links">
-  <div class="divider"></div>
-  <div class="or">or</div>
-  <div class="link">Use Quick Connect</div>
-  <div class="link">Use another server</div>
+<div class="col">
+  <div>
+    <div class="k">Manual-address panel — connecting</div>
+    <div class="m-panel">
+      <div>
+        <div class="eyebrow">Server address</div>
+        <div class="m-field filled">http://192.168.1.10:8096</div>
+      </div>
+      <div class="m-btn m-btn-primary m-btn-block">Connect</div>
+      <div>
+        <div class="progress"><i></i></div>
+        <div class="hint">Connecting…</div>
+      </div>
+    </div>
+    <div class="note">Label is an UPPERCASE tracked caption (11px/600/.14em — the shared Eyebrow style) drawn ABOVE the well, not a Material label floated inside it. That's the key change from the old plain-top-border `.field` treatment. Well: white@4% fill, glass hairline (white@9%) that brightens to white@22% once focused/filled, 12px radius, 14px padding, 15px text. `.m-panel` itself: surface bg, white@6% hairline, 16px radius, 20px padding, 14px inner gap.</div>
+  </div>
+
+  <div>
+    <div class="k">Empty / disabled state</div>
+    <div class="m-panel">
+      <div>
+        <div class="eyebrow">Server address</div>
+        <div class="m-field">http://192.168.1.10:8096</div>
+      </div>
+      <div class="m-btn m-btn-disabled m-btn-block">Connect</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="k">PrimaryPillButton — enabled / disabled / loading</div>
+    <div class="btn-row">
+      <div class="m-btn m-btn-primary">Connect</div>
+      <div class="m-btn m-btn-disabled">Connect</div>
+      <div class="m-btn m-btn-primary"><div class="spin-dark"></div>Connecting…</div>
+    </div>
+    <div class="note">`loading` is a param INDEPENDENT of `enabled` — `PrimaryPillButton(loading = true)` keeps the button's normal enabled colors (white fill, #101010 content) and only swaps the leading-icon slot for an inline spinner in that same content color. It does not turn the button into a fourth, dimmer state.</div>
+  </div>
+
+  <div class="divider-row">
+    <div class="line"></div><div class="or">Or</div><div class="line"></div>
+  </div>
 </div>

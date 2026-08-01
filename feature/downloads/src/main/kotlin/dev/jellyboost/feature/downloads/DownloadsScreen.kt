@@ -270,7 +270,12 @@ fun DownloadsContent(
                 state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
 
                 state.selectedTab == DownloadsTab.DOWNLOADED ->
-                    DownloadedTab(groups = state.downloaded, onDelete = actions.onDelete, onPlay = onPlay)
+                    DownloadedTab(
+                        groups = state.downloaded,
+                        onDelete = actions.onDelete,
+                        onPlay = onPlay,
+                        compact = !wide,
+                    )
 
                 else -> QueueTab(state = state, actions = actions, bulk = bulk, wide = wide)
             }
@@ -293,7 +298,6 @@ private fun DownloadsHeader(
             style = if (wide) JellyfinTypeExtras.ScreenTitleLarge else JellyfinTypeExtras.ScreenTitle,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -302,6 +306,7 @@ private fun DownloadedTab(
     groups: List<DownloadGroup>,
     onDelete: (DownloadItem) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    compact: Boolean,
 ) {
     if (groups.isEmpty()) {
         EmptyState(message = stringResource(R.string.downloads_empty_downloaded))
@@ -344,6 +349,7 @@ private fun DownloadedTab(
                     onDelete = { pendingDelete = item },
                     onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
                     inSeriesGroup = group.isSeries,
+                    compact = compact,
                 )
             }
         }
@@ -528,6 +534,7 @@ private fun QueueBulkButton(
                 .clip(CircleShape)
                 .glassSurface(CircleShape)
                 .clickable(enabled = enabled, onClick = onClick, role = Role.Button)
+                .defaultMinSize(minHeight = Dimens.PillHeightSmall)
                 .padding(horizontal = BulkButtonHorizontalPadding, vertical = BulkButtonVerticalPadding),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
         verticalAlignment = Alignment.CenterVertically,
@@ -589,7 +596,7 @@ private fun GroupHeader(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -627,11 +634,12 @@ private fun StorageCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall)
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
                 .mSurface(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = Dimens.SpaceLarge, vertical = StatPanelVerticalPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        verticalArrangement = Arrangement.spacedBy(StatPanelInnerGap),
     ) {
+        StatEyebrow(text = stringResource(R.string.downloads_stat_on_device))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -648,6 +656,7 @@ private fun StorageCard(
         Row(
             modifier =
                 Modifier
+                    .fillMaxWidth()
                     .defaultMinSize(minHeight = 48.dp)
                     .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -655,7 +664,7 @@ private fun StorageCard(
         ) {
             Text(
                 text = stringResource(R.string.downloads_wifi_only),
-                style = WifiLabelCompact,
+                style = StatSwitchLabel,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Switch(checked = wifiOnly, onCheckedChange = null)
@@ -1001,7 +1010,6 @@ private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600
 private val StatValueSmall = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
 private val StatSwitchLabel = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
 private val StatCaption = TextStyle(fontSize = 12.sp)
-private val WifiLabelCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 
 @Preview(name = "Downloads — queue", showBackground = true, backgroundColor = 0xFF101010, widthDp = 390)
 @Composable

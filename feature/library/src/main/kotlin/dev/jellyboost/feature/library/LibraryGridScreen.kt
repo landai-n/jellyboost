@@ -332,6 +332,7 @@ private fun LibraryFilterRow(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = HeaderPadding),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             item(key = CHIP_ALL_KEY) {
                 PillChip(

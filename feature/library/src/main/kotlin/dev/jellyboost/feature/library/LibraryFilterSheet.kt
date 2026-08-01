@@ -170,7 +170,10 @@ private fun FilterSection(
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        ) {
             chips()
         }
     }

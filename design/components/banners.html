@@ -1,0 +1,25 @@
+<!-- @dsCard group="Components" name="Banners & feedback" subtitle="Session-lost panel, error copy, Quick Connect code" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .col { max-width:460px; display:flex; flex-direction:column; gap:16px; }
+  .banner { display:flex; gap:12px; background:rgba(207,102,121,.12); border-radius:12px; padding:16px; align-items:flex-start; }
+  .banner svg { width:22px; height:22px; fill:#CF6679; flex:none; }
+  .banner div { font-size:14px; color:#CF6679; }
+  .errtext { font-size:14px; color:#CF6679; }
+  .qc { background:#202020; border-radius:16px; padding:24px; text-align:center; display:flex; flex-direction:column; gap:16px; }
+  .qc .t { font-size:22px; }
+  .qc .i { font-size:14px; color:rgba(255,255,255,.85); }
+  .code { font-size:36px; font-weight:700; letter-spacing:8px; background:linear-gradient(90deg,#AA5CC3,#00A4DC); -webkit-background-clip:text; background-clip:text; color:transparent; }
+</style>
+<div class="col">
+  <div class="banner">
+    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-13h2v6h-2V7Zm0 8h2v2h-2v-2Z"/></svg>
+    <div>Your session ended. Pick a server to sign in again.</div>
+  </div>
+  <div class="errtext">Unable to reach the server. Check the address and your network.</div>
+  <div class="qc">
+    <div class="t">Quick Connect</div>
+    <div class="i">Enter this code in an already signed-in Jellyfin app.</div>
+    <div class="code">428913</div>
+  </div>
+</div>

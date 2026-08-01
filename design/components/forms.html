@@ -1,0 +1,36 @@
+<!-- @dsCard group="Components" name="Forms & panels" subtitle="Manual-address panel, outlined fields, primary button states" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .panel { max-width:460px; background:#202020; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .section { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
+  .field { border:1px solid #3C3C3C; border-radius:4px; padding:16px; font-size:16px; color:rgba(255,255,255,.5); }
+  .field.filled { color:#fff; }
+  .btn { border-radius:24px; padding:12px; text-align:center; font-size:14px; font-weight:500; }
+  .btn.enabled { background:#00A4DC; color:#000; }
+  .btn.disabled { background:#292929; color:rgba(255,255,255,.4); }
+  .progress { height:4px; border-radius:2px; background:#292929; overflow:hidden; }
+  .progress i { display:block; height:100%; width:40%; background:#00A4DC; border-radius:2px; }
+  .hint { font-size:12px; color:rgba(255,255,255,.7); }
+  .links { max-width:460px; margin-top:16px; text-align:center; display:flex; flex-direction:column; gap:12px; }
+  .divider { border-top:1px solid #3C3C3C; position:relative; margin:8px 0 0; }
+  .or { font-size:12px; color:rgba(255,255,255,.7); }
+  .link { color:#00A4DC; font-size:14px; font-weight:500; }
+</style>
+<div class="panel">
+  <div class="section">Server address</div>
+  <div class="field filled">http://192.168.1.10:8096</div>
+  <div class="btn enabled">Connect</div>
+  <div class="progress"><i></i></div>
+  <div class="hint">Connecting…</div>
+</div>
+<div class="panel" style="margin-top:16px">
+  <div class="section">Server address</div>
+  <div class="field">Host or URL</div>
+  <div class="btn disabled">Connect</div>
+</div>
+<div class="links">
+  <div class="divider"></div>
+  <div class="or">or</div>
+  <div class="link">Use Quick Connect</div>
+  <div class="link">Use another server</div>
+</div>

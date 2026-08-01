@@ -1,0 +1,26 @@
+<!-- @dsCard group="Brand" name="Jellyboost mark" subtitle="Hero 88dp / inline 36dp, gradient wordmark + tagline" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:32px; }
+  .stage { display:flex; gap:64px; align-items:flex-start; }
+  .hero { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .wordmark { font-size:32px; font-weight:700; background:linear-gradient(90deg,#AA5CC3,#00A4DC); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .tagline { font-size:14px; color:rgba(255,255,255,.7); }
+  .inline { display:flex; flex-direction:column; gap:8px; }
+  .server { font-size:28px; }
+  .version { font-size:12px; color:rgba(255,255,255,.7); }
+  .note { margin-top:24px; font-size:11px; color:rgba(255,255,255,.45); max-width:520px; }
+</style>
+<div class="stage">
+  <div class="hero">
+    <svg width="105" height="88" viewBox="0 0 168 142"><defs><linearGradient id="f1" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs><path fill="url(#f1)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/><g stroke="url(#f1)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g></svg>
+    <div class="wordmark">Jellyboost</div>
+    <div class="tagline">Your Jellyfin library, native on Android.</div>
+  </div>
+  <div class="inline">
+    <svg width="43" height="36" viewBox="0 0 168 142"><defs><linearGradient id="f2" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="164" y2="138"><stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/></linearGradient></defs><path fill="url(#f2)" d="M164 4 C118 18, 78 52, 60 98 C54 112, 52 126, 54 138 C90 136, 124 112, 144 78 C158 54, 164 28, 164 4 Z"/><g stroke="url(#f2)" stroke-width="12" stroke-linecap="round" fill="none"><path d="M24 38 L74 38"/><path d="M10 72 L54 72"/><path d="M22 110 L42 110"/></g></svg>
+    <div class="server">test-server</div>
+    <div class="version">Version 10.11.11</div>
+  </div>
+</div>
+<div class="note">Geometry source of truth: logo/ic_launcher_foreground.svg (launcher variant keeps adaptive-icon
+safe-zone padding; this tight-viewport variant is the in-app mark). Gradient #AA5CC3 → #00A4DC across the ink.</div>

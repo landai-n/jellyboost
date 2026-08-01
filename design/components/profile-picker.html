@@ -1,0 +1,26 @@
+<!-- @dsCard group="Components" name="Profile picker" subtitle="80dp avatars, 2dp gradient ring + 3dp gap, initial-letter fallback" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .picker { display:flex; flex-direction:column; gap:12px; max-width:460px; }
+  .title { text-align:center; font-size:16px; font-weight:600; color:rgba(255,255,255,.7); }
+  .rowc { display:flex; justify-content:center; gap:24px; }
+  .user { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .ring { width:80px; height:80px; border-radius:50%; padding:2px; background:linear-gradient(90deg,#AA5CC3,#00A4DC); }
+  .well { width:100%; height:100%; border-radius:50%; background:#101010; padding:3px; box-sizing:border-box; }
+  .face { width:100%; height:100%; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .photo1 { background:linear-gradient(160deg,#3a5f3f,#7fa06a 55%,#b0c4a0); }
+  .photo2 { background:linear-gradient(200deg,#e8e4de,#c9a86a 60%,#8a6f4d); }
+  .letter { background:#00A4DC; color:#000; font-size:24px; }
+  .uname { font-size:14px; font-weight:500; color:rgba(255,255,255,.7); }
+  .note { margin-top:16px; font-size:11px; color:rgba(255,255,255,.45); text-align:center; }
+</style>
+<div class="picker">
+  <div class="title">Who's watching?</div>
+  <div class="rowc">
+    <div class="user"><div class="ring"><div class="well"><div class="face photo1"></div></div></div><div class="uname">Sam</div></div>
+    <div class="user"><div class="ring"><div class="well"><div class="face photo2"></div></div></div><div class="uname">Alex</div></div>
+    <div class="user"><div class="ring"><div class="well"><div class="face letter">C</div></div></div><div class="uname">claude</div></div>
+  </div>
+  <div class="note">Photos load from /Users/{id}/Images/Primary (maxWidth=168); no primaryImageTag → initial-letter circle.
+Row centres while it fits, scrolls horizontally on overflow.</div>
+</div>

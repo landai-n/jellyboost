@@ -69,6 +69,35 @@ object JellyfinGradients {
             }
         }
 
+    /**
+     * [BrandGlow]'s sibling for the side-by-side auth layout: the halo hangs over the *start*
+     * pane (centre at 28% of the width, top edge) instead of the middle of the window. Fill a
+     * full-bleed box with it — the radius is sized so the gradient reaches zero before any
+     * interior edge, so it must never be cut off by a smaller box.
+     */
+    val BrandGlowSide: Brush =
+        object : ShaderBrush() {
+            /** Horizontal centre of the halo, as a fraction of the box width. */
+            private val centerXFraction = 0.28f
+
+            /** Radius as a fraction of the box width — fades out before reaching the far side. */
+            private val radiusFraction = 0.55f
+
+            override fun createShader(size: Size): Shader =
+                RadialGradientShader(
+                    center = Offset(x = size.width * centerXFraction, y = 0f),
+                    radius = size.width * radiusFraction,
+                    colors =
+                        listOf(
+                            JellyfinColors.Secondary.copy(alpha = 0.20f),
+                            JellyfinColors.Primary.copy(alpha = 0.09f),
+                            Color.Transparent,
+                        ),
+                    colorStops = listOf(0f, 0.45f, 1f),
+                    tileMode = TileMode.Clamp,
+                )
+        }
+
     /** Placeholder fill for artwork that has not loaded (or does not exist on the server). */
     val ImagePlaceholder: Brush =
         Brush.linearGradient(

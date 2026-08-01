@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import org.jellyfin.sdk.model.api.CodecType
 import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.ProfileConditionType
@@ -85,6 +86,31 @@ class CastDeviceProfileTest {
         // One audio codec, not the local profile's long list: the Cast receiver's own player is what
         // consumes this, and AAC is the one it decodes everywhere.
         video.audioCodec shouldBe "aac"
+        // Device-measured on a real Chromecast Ultra: AAC above 2 channels fails with CAF error 104,
+        // so the server is told to keep the transcode's audio to stereo.
+        video.maxAudioChannels shouldBe "2"
+    }
+
+    @Test
+    fun `caps a direct-played video's AAC track at stereo`() {
+        val videoAudio = profile.codecProfiles.single { it.type == CodecType.VIDEO_AUDIO && it.codec == "aac" }
+        val conditions = videoAudio.conditions.associateBy { it.property }
+
+        conditions[ProfileConditionValue.AUDIO_CHANNELS].shouldNotBeNull().let {
+            it.condition shouldBe ProfileConditionType.LESS_THAN_EQUAL
+            it.value shouldBe "2"
+        }
+    }
+
+    @Test
+    fun `caps a direct-played audio-only file's AAC track at stereo`() {
+        val audio = profile.codecProfiles.single { it.type == CodecType.AUDIO && it.codec == "aac" }
+        val conditions = audio.conditions.associateBy { it.property }
+
+        conditions[ProfileConditionValue.AUDIO_CHANNELS].shouldNotBeNull().let {
+            it.condition shouldBe ProfileConditionType.LESS_THAN_EQUAL
+            it.value shouldBe "2"
+        }
     }
 
     @Test

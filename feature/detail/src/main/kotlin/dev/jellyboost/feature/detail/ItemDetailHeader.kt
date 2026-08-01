@@ -1,18 +1,21 @@
 package dev.jellyboost.feature.detail
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
@@ -21,21 +24,17 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Downloading
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,34 +45,64 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.PersonKind
+import dev.jellyboost.core.ui.component.BackdropHeader
+import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.GlassIconTint
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
+import dev.jellyboost.core.ui.component.MPillBadge
+import dev.jellyboost.core.ui.component.PillChip
+import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
-import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.glassSurface
+import dev.jellyboost.core.ui.theme.popShadow
 import java.util.Locale
 
 /**
- * The block under the backdrop: poster, title, metadata line, action buttons, taglines and
- * overview.
+ * The top of the detail screen: the backdrop, the title lockup drawn **on** it, the action row, and
+ * the long-form text under them (2026 refresh, spec section 4c).
  *
- * On a wide screen (this project's test device is a tablet) the poster sits beside the text rather
- * than above it — the same rearrangement jellyfin-web makes on a desktop viewport.
+ * The lockup moved onto the artwork in the refresh — eyebrow, title and metadata now sit in the
+ * bottom-left of the banner instead of in a block below it, which is what the taller backdrop
+ * (`ItemDetailScreen`'s fractions) exists to make room for.
+ *
+ * On a wide screen the same lockup lives in a *stage*: a 190×285 poster overlaps the bottom of the
+ * backdrop and the facts column runs beside it, capped at [FACTS_MAX_WIDTH] so a paragraph never
+ * spans a tablet. The two shapes share every piece below the lockup, so a change to the metadata
+ * line or the action row lands on both.
+ *
+ * @param playTarget what the Play button will actually start (`ItemDetailUiState.playTarget`) — the
+ *   label says so ("Play S1 · E10") when a series or season page resolves to an episode.
  */
 @Composable
-internal fun DetailHeader(
+internal fun DetailHero(
     item: JellyfinItem,
+    playTarget: JellyfinItem?,
     isWide: Boolean,
+    backdropHeight: Dp,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
@@ -81,29 +110,129 @@ internal fun DetailHeader(
     compact: Boolean = false,
 ) {
     if (isWide) {
-        Row(
-            modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
-        ) {
-            DetailPoster(item = item, modifier = Modifier.width(WIDE_POSTER_WIDTH))
-            DetailFacts(
-                item = item,
-                downloadState = downloadState,
-                actions = actions,
-                downloadedBytes = downloadedBytes,
-                compact = compact,
-                modifier = Modifier.weight(1f),
-            )
-        }
-    } else {
-        DetailFacts(
+        WideStage(
             item = item,
+            playTarget = playTarget,
+            backdropHeight = backdropHeight,
             downloadState = downloadState,
             actions = actions,
             downloadedBytes = downloadedBytes,
-            compact = compact,
-            modifier = modifier.fillMaxWidth().padding(horizontal = Dimens.ScreenPadding),
+            modifier = modifier,
         )
+    } else {
+        Column(modifier = modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.fillMaxWidth().height(backdropHeight)) {
+                DetailBackdrop(item = item, height = backdropHeight, halo = false)
+                TitleLockup(
+                    item = item,
+                    downloadState = downloadState,
+                    downloadedBytes = downloadedBytes,
+                    expanded = false,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(DetailEdgePadding),
+                )
+            }
+
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DetailEdgePadding)
+                        .padding(top = Dimens.SpaceLarge),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+            ) {
+                ProgressLine(item = item)
+                DetailActions(
+                    item = item,
+                    playTarget = playTarget,
+                    downloadState = downloadState,
+                    actions = actions,
+                    isWide = false,
+                )
+                DetailBody(item = item, compact = compact)
+            }
+        }
+    }
+}
+
+/**
+ * The wide stage: poster over the backdrop's bottom edge, facts beside it.
+ *
+ * The overlap is a top padding on the whole row rather than a negative offset, so the stage stays a
+ * single measured box — a negative offset inside a `LazyColumn` item would draw outside the item's
+ * bounds and be clipped away by the row above it.
+ */
+@Composable
+private fun WideStage(
+    item: JellyfinItem,
+    playTarget: JellyfinItem?,
+    backdropHeight: Dp,
+    downloadState: DownloadState,
+    actions: DetailActionHandlers,
+    modifier: Modifier = Modifier,
+    downloadedBytes: Long? = null,
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth().height(backdropHeight)) {
+            DetailBackdrop(item = item, height = backdropHeight, halo = true)
+        }
+
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.SpaceExtraLarge)
+                    .padding(top = (backdropHeight - POSTER_OVERLAP).coerceAtLeast(0.dp)),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
+        ) {
+            DetailPoster(item = item)
+
+            Column(
+                // `fill = false` is what lets [FACTS_MAX_WIDTH] bite: a filled weight hands the
+                // child a *fixed* width, and `widthIn` enforces the incoming constraint over its
+                // own, so the cap would silently do nothing on a 1200dp tablet.
+                modifier =
+                    Modifier
+                        .weight(1f, fill = false)
+                        .widthIn(max = FACTS_MAX_WIDTH)
+                        .padding(top = FACTS_TOP_PADDING),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+            ) {
+                TitleLockup(
+                    item = item,
+                    downloadState = downloadState,
+                    downloadedBytes = downloadedBytes,
+                    expanded = true,
+                )
+                ProgressLine(item = item)
+                DetailActions(
+                    item = item,
+                    playTarget = playTarget,
+                    downloadState = downloadState,
+                    actions = actions,
+                    isWide = true,
+                )
+                DetailBody(item = item, compact = false)
+            }
+        }
+    }
+}
+
+/** The artwork itself, with the scrim it always had and — on wide — the refresh's accent halo. */
+@Composable
+private fun DetailBackdrop(
+    item: JellyfinItem,
+    height: Dp,
+    halo: Boolean,
+) {
+    BackdropHeader(
+        imageUrl = item.backdropImageUrl ?: item.thumbImageUrl ?: item.primaryImageUrl,
+        height = height,
+    )
+    if (halo) {
+        Box(modifier = Modifier.fillMaxSize().background(JellyfinGradients.HeroHalo))
     }
 }
 
@@ -142,62 +271,179 @@ private fun DetailPoster(
     item: JellyfinItem,
     modifier: Modifier = Modifier,
 ) {
+    val shape = RoundedCornerShape(Dimens.PanelRadius)
     JellyfinAsyncImage(
         url = item.primaryImageUrl,
         contentDescription = null,
         modifier =
             modifier
-                .aspectRatio(POSTER_ASPECT_RATIO)
-                .clip(RoundedCornerShape(Dimens.CardCornerRadius)),
+                .width(Dimens.DetailPosterWidth)
+                .height(Dimens.DetailPosterHeight)
+                .popShadow(shape)
+                .clip(shape),
         contentScale = ContentScale.Crop,
     )
 }
 
+/**
+ * Eyebrow, title and metadata — the block that reads as the page's headline, wherever it is drawn.
+ *
+ * @param expanded the wide/landscape size of the title (44sp rather than 34sp).
+ */
 @Composable
-private fun DetailFacts(
+private fun TitleLockup(
     item: JellyfinItem,
     downloadState: DownloadState,
-    actions: DetailActionHandlers,
+    downloadedBytes: Long?,
+    expanded: Boolean,
     modifier: Modifier = Modifier,
-    downloadedBytes: Long? = null,
-    compact: Boolean = false,
 ) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        modifier = modifier.widthIn(max = TEXT_MAX_WIDTH),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
+        item.typeEyebrow()?.let { eyebrow ->
+            Text(
+                text = eyebrow,
+                style = JellyfinTypeExtras.Eyebrow,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         Text(
             text = item.displayTitle,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
+            color = Color.White,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
 
         item.subtitleLine()?.let { subtitle ->
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.titleSmall,
+                style = SubtitleStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
 
-        MetadataLine(item = item, downloadState = downloadState, downloadedBytes = downloadedBytes)
+        MetaRow(item = item, downloadState = downloadState, downloadedBytes = downloadedBytes)
+    }
+}
 
-        item.playbackProgress?.let { progress ->
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                drawStopIndicator = {},
+/**
+ * `★ 8.6 · 2016 · TV-MA · 4 seasons`, skipping whatever the server does not know.
+ *
+ * The refresh splits the old single metadata line into three kinds of element — the accent-starred
+ * community rating, the outlined certificate badge, and plain muted text for the rest — but the
+ * *data* is the pre-refresh line's, in the pre-refresh order: a fact that used to show still shows.
+ *
+ * The size entry reads from the device rather than the server once a local copy is what the user
+ * actually has: [downloadedBytes] is only trusted while [downloadState] itself is
+ * [DownloadState.Downloaded], so a season mid-download (whose aggregate state is not yet
+ * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
+ * container — which has no download row, and so no bytes, of its own — falls back to it too.
+ */
+@Composable
+private fun MetaRow(
+    item: JellyfinItem,
+    downloadState: DownloadState,
+    modifier: Modifier = Modifier,
+    downloadedBytes: Long? = null,
+) {
+    val facts = item.metaFacts(downloadState = downloadState, downloadedBytes = downloadedBytes)
+    if (item.communityRating == null && item.officialRating == null && facts.isEmpty()) return
+
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(MetaGap),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+    ) {
+        item.communityRating?.let { rating ->
+            RatingFact(rating = rating, modifier = Modifier.align(Alignment.CenterVertically))
+        }
+        item.productionYear?.let { year ->
+            MetaText(text = year.toString(), modifier = Modifier.align(Alignment.CenterVertically))
+        }
+        item.officialRating?.let { certificate ->
+            MPillBadge(text = certificate, modifier = Modifier.align(Alignment.CenterVertically))
+        }
+        if (facts.isNotEmpty()) {
+            MetaText(
+                text = facts.joinToString(SEPARATOR),
+                modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
+    }
+}
 
-        DetailActions(item = item, downloadState = downloadState, actions = actions, compact = compact)
+/** The starred community rating — the one part of the metadata line the refresh draws in colour. */
+@Composable
+private fun RatingFact(
+    rating: Float,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Star,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(RatingStarSize),
+        )
+        Text(text = formatRating(rating), style = RatingStyle, color = Color.White)
+    }
+}
 
+@Composable
+private fun MetaText(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = MetaStyle,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier,
+    )
+}
+
+/** The resume bar, kept from the pre-refresh header — a page for a half-watched item says so. */
+@Composable
+private fun ProgressLine(
+    item: JellyfinItem,
+    modifier: Modifier = Modifier,
+) {
+    val progress = item.playbackProgress ?: return
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier.fillMaxWidth().height(Dimens.InsetProgressHeight),
+        color = MaterialTheme.colorScheme.primary,
+        trackColor = Color.White.copy(alpha = PROGRESS_TRACK_ALPHA),
+        drawStopIndicator = {},
+    )
+}
+
+/** Tagline, overview, credits and genres — everything under the action row, in both layouts. */
+@Composable
+private fun DetailBody(
+    item: JellyfinItem,
+    compact: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
         item.taglines.firstOrNull()?.let { tagline ->
             Text(
                 text = tagline,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
+                style = TaglineStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.widthIn(max = TEXT_MAX_WIDTH),
             )
         }
@@ -208,7 +454,7 @@ private fun DetailFacts(
             } else {
                 Text(
                     text = overview,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = OverviewStyle,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.widthIn(max = TEXT_MAX_WIDTH),
                 )
@@ -218,17 +464,21 @@ private fun DetailFacts(
         item.creditLine()?.let { credits ->
             Text(
                 text = credits,
-                style = MaterialTheme.typography.bodySmall,
+                style = CreditStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.widthIn(max = TEXT_MAX_WIDTH),
             )
         }
 
         if (item.genres.isNotEmpty()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+            ) {
                 item.genres.forEach { genre ->
-                    // Not a filter yet — genre filtering lives on the library grid (M3).
-                    AssistChip(onClick = {}, enabled = false, label = { Text(text = genre) })
+                    // Not a filter yet — genre filtering lives on the library grid (M3). `enabled`
+                    // is what keeps the pill inert while it still looks like the filter it will be.
+                    PillChip(text = genre, selected = false, onClick = {}, enabled = false)
                 }
             }
         }
@@ -236,114 +486,113 @@ private fun DetailFacts(
 }
 
 /**
- * `2016 · 116 min · PG-13 · 8.4 · 4 seasons`, skipping whatever the server does not know.
+ * The action row.
  *
- * The size entry reads from the device rather than the server once a local copy is what the user
- * actually has: [downloadedBytes] is only trusted while [downloadState] itself is
- * [DownloadState.Downloaded], so a season mid-download (whose aggregate state is not yet
- * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
- * container — which has no download row, and so no bytes, of its own — falls back to it too.
- */
-@Composable
-private fun MetadataLine(
-    item: JellyfinItem,
-    downloadState: DownloadState,
-    modifier: Modifier = Modifier,
-    downloadedBytes: Long? = null,
-) {
-    val parts =
-        buildList {
-            item.productionYear?.let { add(it.toString()) }
-            item.runtimeMinutes?.let { add(stringResource(R.string.detail_runtime_minutes, it)) }
-            if (downloadState is DownloadState.Downloaded && downloadedBytes != null && downloadedBytes > 0) {
-                add(stringResource(R.string.detail_size_on_device, formatBytes(downloadedBytes)))
-            } else {
-                item.sizeBytes?.let { add(formatBytes(it)) }
-            }
-            item.officialRating?.let(::add)
-            item.communityRating?.let { add(String.format(Locale.US, "%.1f", it)) }
-            item.childCountLabel()?.let(::add)
-            item.remainingMinutes?.let { add(stringResource(R.string.detail_remaining_minutes, it)) }
-        }
-    if (parts.isEmpty()) return
-
-    Text(
-        text = parts.joinToString(SEPARATOR),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier,
-    )
-}
-
-/**
- * On a compact (phone) width the buttons move from a wrapping [FlowRow] — which left ragged,
- * left-aligned rows once four buttons plus labels stopped fitting one line — to a single
- * edge-to-edge row where Play keeps the only label and stretches, and the watched/favorite/
- * download controls are icon-only (user: "buttons feel misaligned", then "reduce the text
- * usage"). Wide layouts are untouched: the `false` default keeps every existing call site on
- * the original `FlowRow` path byte-for-byte.
+ * Compact keeps one worded button — the white Play pill, which stretches — beside 44dp glass
+ * circles for download and mark-watched; the favourite heart moved up to the overlay nav
+ * (`ItemDetailScreen`), which is what freed the room. Wide has the width for a labelled Download
+ * ghost pill, and keeps favourite and watched as glass circles beside it.
  */
 @Composable
 private fun DetailActions(
     item: JellyfinItem,
+    playTarget: JellyfinItem?,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
+    isWide: Boolean,
     modifier: Modifier = Modifier,
-    compact: Boolean = false,
 ) {
     val watched = item.userData.played
-    val favorite = item.userData.isFavorite
+    val label = playLabel(item = item, playTarget = playTarget, group = actions.group)
+    val playIcon = if (actions.group == null) Icons.Filled.PlayArrow else Icons.Outlined.Groups
 
-    if (compact) {
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        ) {
-            // One row, one worded button: Play keeps its label and stretches; the three secondary
-            // controls are icon-only circles (the heart already was — the other two now match it,
-            // labels moving to contentDescription). A 360dp screen fits all four with ~136dp of
-            // Play, where any second labelled button forced two-line wraps or a second row.
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-                verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        if (isWide) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             ) {
-                PlayButton(
-                    item = item,
-                    group = actions.group,
-                    onClick = actions.onPlay,
-                    modifier = Modifier.weight(1f),
-                    compact = true,
+                PrimaryPillButton(text = label, onClick = actions.onPlay, leadingIcon = playIcon)
+                GhostPillButton(
+                    text = stringResource(downloadState.labelRes()),
+                    onClick = actions.onDownload,
+                    leadingIcon = downloadState.icon(),
                 )
-                MarkWatchedButton(
+                FavoriteButton(
+                    favorite = item.userData.isFavorite,
+                    onClick = actions.onToggleFavorite,
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                )
+                WatchedButton(
                     watched = watched,
                     onClick = actions.onToggleWatched,
-                    iconOnly = true,
-                )
-                FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite, compact = true)
-                DownloadButton(
-                    state = downloadState,
-                    onClick = actions.onDownload,
-                    iconOnly = true,
+                    modifier = Modifier.align(Alignment.CenterVertically),
                 )
             }
-            actions.group?.let { group ->
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
-                    GroupActionButtons(group = group)
-                }
+        } else {
+            // A plain Row, not a FlowRow: the Play pill takes the width the two circles leave, and
+            // a weighted child in a wrapping row is what would decide to wrap them onto a line of
+            // their own instead.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PrimaryPillButton(
+                    text = label,
+                    onClick = actions.onPlay,
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = playIcon,
+                )
+                DownloadButton(state = downloadState, onClick = actions.onDownload)
+                WatchedButton(watched = watched, onClick = actions.onToggleWatched)
             }
         }
-    } else {
-        FlowRow(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        ) {
-            PlayButton(item = item, group = actions.group, onClick = actions.onPlay)
-            MarkWatchedButton(watched = watched, onClick = actions.onToggleWatched)
-            FavoriteButton(favorite = favorite, onClick = actions.onToggleFavorite)
-            DownloadButton(state = downloadState, onClick = actions.onDownload)
-            actions.group?.let { group -> GroupActionButtons(group = group) }
+
+        actions.group?.let { group ->
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+            ) {
+                GroupActionButtons(group = group)
+            }
         }
+    }
+}
+
+/**
+ * What the Play button says.
+ *
+ * In a group there is one Play button and it plays for the group — there is no second "Play for
+ * group" button beside it, and no solo escape hatch on this page (DECISIONS.md, 2026-07-31): while
+ * a group is joined, everything this page starts is started for everyone in it. What must *not*
+ * happen is the meaning changing silently, so the label carries the group's name and the group icon
+ * replaces the play triangle.
+ *
+ * Outside a group the refresh names the *episode* a container page will start — "Play S1 · E10",
+ * from [playTarget] — which is the one thing "Play" on a series page never said. An episode's own
+ * page keeps the bare word: its title lockup is already the episode.
+ */
+@Composable
+private fun playLabel(
+    item: JellyfinItem,
+    playTarget: JellyfinItem?,
+    group: DetailGroupActions?,
+): String {
+    val resume = item.userData.isResumable
+    val episode =
+        playTarget
+            ?.takeIf { it.type == ItemType.EPISODE && it.id != item.id }
+            ?.episodeNumberLabel()
+    return when {
+        group != null && resume -> stringResource(R.string.detail_group_resume, group.groupName)
+        group != null -> stringResource(R.string.detail_group_play, group.groupName)
+        episode != null && resume -> stringResource(R.string.detail_resume_target, episode)
+        episode != null -> stringResource(R.string.detail_play_target, episode)
+        resume -> stringResource(R.string.detail_resume)
+        else -> stringResource(R.string.detail_play)
     }
 }
 
@@ -363,7 +612,7 @@ private fun ExpandableOverview(
     val toggleable = overflowing || expanded
     Text(
         text = text,
-        style = MaterialTheme.typography.bodyMedium,
+        style = OverviewStyle,
         color = MaterialTheme.colorScheme.onBackground,
         maxLines = if (expanded) Int.MAX_VALUE else COMPACT_OVERVIEW_MAX_LINES,
         overflow = TextOverflow.Ellipsis,
@@ -382,206 +631,110 @@ private fun ExpandableOverview(
 private const val COMPACT_OVERVIEW_MAX_LINES = 5
 
 /**
- * The "mark watched/unwatched" toggle, shared between the wide [FlowRow] and the compact row.
- *
- * @param iconOnly drop the label and let the icon (accent-tinted when watched, like the favorite
- *   heart) carry the state — the compact row keeps Play as its only worded button. The label moves
- *   to the icon's `contentDescription`, so TalkBack reads the same either way.
+ * The "mark watched/unwatched" toggle: a 44dp glass circle whose glyph goes accent when the item is
+ * watched. The label it used to carry moved to the icon's `contentDescription`, so TalkBack reads
+ * the same thing it always did.
  */
 @Composable
-private fun MarkWatchedButton(
+private fun WatchedButton(
     watched: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconOnly: Boolean = false,
 ) {
-    val label = stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched)
-    OutlinedButton(
+    GlassIconButton(
+        icon = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
+        contentDescription =
+            stringResource(if (watched) R.string.detail_mark_unwatched else R.string.detail_mark_watched),
         onClick = onClick,
         modifier = modifier,
-        contentPadding = if (iconOnly) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
-    ) {
-        Icon(
-            imageVector = if (watched) Icons.Filled.Check else Icons.Outlined.CheckCircle,
-            contentDescription = if (iconOnly) label else null,
-            tint = accent(watched),
-        )
-        if (!iconOnly) {
-            Text(text = label, modifier = Modifier.padding(start = Dimens.SpaceSmall))
-        }
-    }
+        size = Dimens.PillHeight,
+        tint = accent(watched),
+    )
 }
 
-/**
- * The favorite toggle — icon-only, so its content sets the button's intrinsic size rather than a
- * [Modifier.weight] the way the text buttons beside it do.
- */
+/** The favourite toggle, drawn here only on wide — compact hosts it in the overlay nav. */
 @Composable
 private fun FavoriteButton(
     favorite: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    compact: Boolean = false,
 ) {
-    OutlinedButton(
+    GlassIconButton(
+        icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+        contentDescription =
+            stringResource(if (favorite) R.string.detail_remove_favorite else R.string.detail_add_favorite),
         onClick = onClick,
         modifier = modifier,
-        contentPadding = if (compact) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
-    ) {
-        Icon(
-            imageVector = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription =
-                stringResource(
-                    if (favorite) R.string.detail_remove_favorite else R.string.detail_add_favorite,
-                ),
-            tint = accent(favorite),
-        )
-    }
-}
-
-/**
- * The page's primary action, which says who it plays *for*.
- *
- * In a group there is one Play button and it plays for the group — there is no second "Play for
- * group" button beside it any more, and no solo escape hatch on this page (DECISIONS.md,
- * 2026-07-31, superseding M11 Phase 4's "the group buttons join Play rather than replace it").
- * The rule the user set is that a group is a group: while one is joined, everything this page starts
- * is started for everyone in it, and the way out of that is to leave the group, which is one tap
- * away in the player and on the Groups screen.
- *
- * What must *not* happen is the meaning changing silently, so the label carries the group's name —
- * "Play for Film night" — and the group icon replaces the play triangle. [group] is non-null exactly
- * when a tap will reach the group (`ItemDetailUiState.groupTarget` resolved), so the label can never
- * promise a group play this page will not make.
- *
- * The resume position travels either way: watching something together starts where the person who
- * chose it had got to.
- */
-@Composable
-private fun PlayButton(
-    item: JellyfinItem,
-    group: DetailGroupActions?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    compact: Boolean = false,
-) {
-    val resume = item.userData.isResumable
-    // The three 58dp-minimum circles beside it leave this button ~130dp on a 360dp screen;
-    // Material's 24dp-per-side padding would ellipsize "Resume" inside that, 16dp does not.
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        contentPadding =
-            if (compact) {
-                PaddingValues(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceSmall)
-            } else {
-                ButtonDefaults.ContentPadding
-            },
-    ) {
-        Icon(
-            imageVector = if (group == null) Icons.Filled.PlayArrow else Icons.Outlined.Groups,
-            contentDescription = null,
-        )
-        Text(
-            text =
-                when {
-                    group == null && resume -> stringResource(R.string.detail_resume)
-                    group == null -> stringResource(R.string.detail_play)
-                    resume -> stringResource(R.string.detail_group_resume, group.groupName)
-                    else -> stringResource(R.string.detail_group_play, group.groupName)
-                },
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = Dimens.SpaceSmall),
-        )
-    }
+        size = Dimens.PillHeight,
+        tint = accent(favorite),
+    )
 }
 
 /**
  * The two group *queue* actions, drawn only while a SyncPlay group is active (M11 Phase 4).
  *
- * They join the Play button — which is itself the group's play, see [PlayButton] — because they are
- * the two things playing has no way to say: put this after what we are watching, or at the end. Both
- * stay outlined so the page keeps one primary action, and they sit in the same `FlowRow` as the
- * rest, so on a phone in portrait they simply wrap onto their own line.
+ * They join the Play button — which is itself the group's play, see [playLabel] — because they are
+ * the two things playing has no way to say: put this after what we are watching, or at the end.
+ * Small ghost pills, so the page keeps exactly one primary action.
  */
 @Composable
 private fun GroupActionButtons(group: DetailGroupActions) {
-    OutlinedButton(onClick = { group.onAction(GroupAction.PLAY_NEXT) }) {
-        Icon(imageVector = Icons.AutoMirrored.Outlined.PlaylistPlay, contentDescription = null)
-        Text(
-            text = stringResource(R.string.detail_group_play_next),
-            modifier = Modifier.padding(start = Dimens.SpaceSmall),
-        )
-    }
-
-    OutlinedButton(onClick = { group.onAction(GroupAction.ADD_TO_QUEUE) }) {
-        Icon(imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd, contentDescription = null)
-        Text(
-            text = stringResource(R.string.detail_group_add_to_queue),
-            modifier = Modifier.padding(start = Dimens.SpaceSmall),
-        )
-    }
+    GhostPillButton(
+        text = stringResource(R.string.detail_group_play_next),
+        onClick = { group.onAction(GroupAction.PLAY_NEXT) },
+        small = true,
+        leadingIcon = Icons.AutoMirrored.Outlined.PlaylistPlay,
+    )
+    GhostPillButton(
+        text = stringResource(R.string.detail_group_add_to_queue),
+        onClick = { group.onAction(GroupAction.ADD_TO_QUEUE) },
+        small = true,
+        leadingIcon = Icons.AutoMirrored.Outlined.PlaylistAdd,
+    )
 }
 
 /**
- * The Download button, which is really four buttons wearing one coat.
+ * The Download control on compact: one 44dp glass circle that is really four buttons wearing one
+ * coat, its glyph saying what tapping it does *now* — download, cancel, remove, retry.
  *
- * Its icon and its label say what tapping it does *now*: download, or remove what is already there
- * (or being fetched). A downloading item shows the same determinate ring the cards' `DownloadBadge`
- * draws, so the two agree at a glance.
+ * A transfer in flight keeps the determinate ring the cards' `DownloadBadge` draws, which is why
+ * this is not simply a `GlassIconButton`: that case has no glyph at all, it has progress.
  */
 @Composable
 private fun DownloadButton(
     state: DownloadState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconOnly: Boolean = false,
 ) {
-    // Icon-only still says what it is: the icon is already state-distinct (download / spinner /
-    // done / error), and the label survives as the icon's contentDescription for TalkBack.
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier,
-        contentPadding = if (iconOnly) IconOnlyButtonPadding else ButtonDefaults.ContentPadding,
-    ) {
-        when (state) {
-            is DownloadState.Downloading ->
-                CircularProgressIndicator(
-                    progress = { state.progress },
-                    modifier = Modifier.size(Dimens.BadgeSize),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.dp,
-                )
-
-            else ->
-                Icon(
-                    imageVector = state.icon(),
-                    contentDescription = if (iconOnly) stringResource(state.labelRes()) else null,
-                    tint =
-                        if (state is DownloadState.Downloaded) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            LocalContentColor.current
-                        },
-                )
-        }
-        if (!iconOnly) {
-            Text(
-                text = stringResource(state.labelRes()),
-                modifier = Modifier.padding(start = Dimens.SpaceSmall),
+    val label = stringResource(state.labelRes())
+    if (state is DownloadState.Downloading) {
+        Box(
+            modifier =
+                modifier
+                    .size(Dimens.PillHeight)
+                    .glassSurface(CircleShape)
+                    .clickable(onClick = onClick)
+                    .semantics { contentDescription = label },
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                progress = { state.progress },
+                modifier = Modifier.size(Dimens.BadgeSize),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = DownloadRingWidth,
             )
         }
+    } else {
+        GlassIconButton(
+            icon = state.icon(),
+            contentDescription = label,
+            onClick = onClick,
+            modifier = modifier,
+            size = Dimens.PillHeight,
+            tint = if (state is DownloadState.Downloaded) MaterialTheme.colorScheme.primary else GlassIconTint,
+        )
     }
 }
-
-/**
- * Content padding for the compact row's icon-only buttons. Material's default pill padding is
- * 24dp per side, which makes an icon-only `OutlinedButton` ~72dp wide — three of those left the
- * weighted Play button ~88dp and its label wrapped letter-per-line. 12dp brings each circle to
- * ~48dp (still the full touch target) and gives Play back ~160dp.
- */
-private val IconOnlyButtonPadding = PaddingValues(Dimens.SpaceMedium)
 
 private fun DownloadState.icon() =
     when (this) {
@@ -608,8 +761,28 @@ private fun DownloadState.labelRes(): Int =
     }
 
 @Composable
-private fun accent(active: Boolean) =
-    if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+private fun accent(active: Boolean) = if (active) MaterialTheme.colorScheme.primary else GlassIconTint
+
+/** The facts that stay plain text in the metadata row, in the order the old single line used. */
+@Composable
+private fun JellyfinItem.metaFacts(
+    downloadState: DownloadState,
+    downloadedBytes: Long?,
+): List<String> =
+    buildList {
+        val children = childCountLabel()
+        if (children != null) {
+            add(children)
+        } else {
+            runtimeMinutes?.let { add(stringResource(R.string.detail_runtime_minutes, it)) }
+        }
+        if (downloadState is DownloadState.Downloaded && downloadedBytes != null && downloadedBytes > 0) {
+            add(stringResource(R.string.detail_size_on_device, formatBytes(downloadedBytes)))
+        } else {
+            sizeBytes?.let { add(formatBytes(it)) }
+        }
+        remainingMinutes?.let { add(stringResource(R.string.detail_remaining_minutes, it)) }
+    }
 
 @Composable
 private fun JellyfinItem.childCountLabel(): String? {
@@ -621,6 +794,32 @@ private fun JellyfinItem.childCountLabel(): String? {
     }
 }
 
+/** `SERIES` / `MOVIE` — the lockup's eyebrow, or nothing for the shapes a user never opens. */
+@Composable
+private fun JellyfinItem.typeEyebrow(): String? {
+    val label =
+        when (type) {
+            ItemType.MOVIE -> R.string.detail_type_movie
+            ItemType.SERIES -> R.string.detail_type_series
+            ItemType.SEASON -> R.string.detail_type_season
+            ItemType.EPISODE -> R.string.detail_type_episode
+            else -> return null
+        }
+    return stringResource(label).uppercase()
+}
+
+/** `S1 · E4` — the refresh's spacing of `JellyfinItem.episodeLabel`, used in the Play button. */
+@Composable
+internal fun JellyfinItem.episodeNumberLabel(): String? {
+    val episode = indexNumber ?: return null
+    val season = parentIndexNumber
+    return if (season != null) {
+        stringResource(R.string.detail_episode_label, season, episode)
+    } else {
+        stringResource(R.string.detail_episode_label_short, episode)
+    }
+}
+
 /** `S1:E4 · Trompe L'Oeil` for an episode, the series name for a season, nothing otherwise. */
 private fun JellyfinItem.subtitleLine(): String? =
     when (type) {
@@ -629,7 +828,7 @@ private fun JellyfinItem.subtitleLine(): String? =
         else -> null
     }
 
-/** `Directed by X · A, B, C` — the cheap version of a cast row, from the `PEOPLE` field. */
+/** `Directed by X · A, B, C` — the one-line version of the credits the cast rail draws in full. */
 @Composable
 private fun JellyfinItem.creditLine(): String? {
     val director = people.firstOrNull { it.kind == PersonKind.DIRECTOR }?.name
@@ -650,43 +849,156 @@ private fun JellyfinItem.creditLine(): String? {
 private const val TOP_BILLED = 4
 
 /** Interpunct with hair spaces — the separator jellyfin-web uses between metadata facts. */
-private const val SEPARATOR = " · "
+internal const val SEPARATOR = " · "
 
-private val WIDE_POSTER_WIDTH = 200.dp
+/** Screen gutter of the lockup and of everything under it (the mocks' 20dp detail padding). */
+internal val DetailEdgePadding = 20.dp
+
+/** How far the wide stage's poster reaches up over the backdrop. */
+private val POSTER_OVERLAP = 190.dp
+
+/** Top inset of the wide facts column, which lands its eyebrow inside the backdrop. */
+private val FACTS_TOP_PADDING = 96.dp
+
+/** Width cap of the wide stage's facts column. */
+private val FACTS_MAX_WIDTH = 660.dp
 
 /** Long-form text stops growing here; a full-width paragraph on a tablet is unreadable. */
 private val TEXT_MAX_WIDTH = 680.dp
 
-@Preview(name = "DetailActions", showBackground = true, widthDp = 420)
+private val MetaGap = 10.dp
+
+private val RatingStarSize = 13.dp
+
+private val DownloadRingWidth = 2.dp
+
+/** Track of the resume bar — the same white@22% the cards' inset progress uses. */
+private const val PROGRESS_TRACK_ALPHA = 0.22f
+
+private val RatingStyle =
+    TextStyle(
+        fontSize = 12.sp,
+        fontWeight = FontWeight.W600,
+    )
+
+private val MetaStyle =
+    TextStyle(
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+    )
+
+private val SubtitleStyle =
+    TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.W500,
+        lineHeight = 18.sp,
+    )
+
+private val TaglineStyle =
+    TextStyle(
+        fontSize = 13.sp,
+        fontStyle = FontStyle.Italic,
+        lineHeight = 18.sp,
+    )
+
+private val OverviewStyle =
+    TextStyle(
+        fontSize = 14.sp,
+        lineHeight = 22.sp,
+    )
+
+private val CreditStyle =
+    TextStyle(
+        fontSize = 12.sp,
+        lineHeight = 17.sp,
+        letterSpacing = 0.01.em,
+    )
+
+/** One decimal place, always — see `formatRatingBadge`, which the cards share the reasoning with. */
+private fun formatRating(rating: Float): String = String.format(Locale.US, "%.1f", rating)
+
+@Preview(name = "DetailHero", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 900)
 @Composable
-private fun DetailActionsPreview() {
+private fun DetailHeroPreview() {
     JellyfinTheme {
-        DetailActions(
-            item = previewActionsItem,
+        DetailHero(
+            item = previewSeries,
+            playTarget = previewEpisodeTarget,
+            isWide = false,
+            backdropHeight = 416.dp,
             downloadState = DownloadState.NotDownloaded,
             actions = previewActionHandlers,
+            compact = false,
         )
     }
 }
 
-@Preview(name = "DetailActions — compact", showBackground = true, widthDp = 360)
+@Preview(
+    name = "DetailHero — compact",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 360,
+    heightDp = 900,
+)
 @Composable
-private fun DetailActionsCompactPreview() {
+private fun DetailHeroCompactPreview() {
     JellyfinTheme {
-        DetailActions(
-            item = previewActionsItem,
-            downloadState = DownloadState.NotDownloaded,
+        DetailHero(
+            item = previewSeries,
+            playTarget = previewEpisodeTarget,
+            isWide = false,
+            backdropHeight = 416.dp,
+            downloadState = DownloadState.Downloaded,
             actions = previewActionHandlers,
             compact = true,
         )
     }
 }
 
-private val previewActionsItem =
+@Preview(
+    name = "DetailHero — wide",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 1000,
+    heightDp = 700,
+)
+@Composable
+private fun DetailHeroWidePreview() {
+    JellyfinTheme {
+        DetailHero(
+            item = previewSeries,
+            playTarget = previewEpisodeTarget,
+            isWide = true,
+            backdropHeight = 360.dp,
+            downloadState = DownloadState.NotDownloaded,
+            actions = previewActionHandlers,
+        )
+    }
+}
+
+private val previewSeries =
     JellyfinItem(
         id = "1",
         name = "Westworld",
-        type = ItemType.MOVIE,
+        type = ItemType.SERIES,
+        productionYear = 2016,
+        communityRating = 8.6f,
+        officialRating = "TV-MA",
+        childCount = 4,
+        genres = listOf("Sci-Fi", "Drama", "Western"),
+        taglines = listOf("These violent delights have violent ends."),
+        overview =
+            "A dark odyssey about the dawn of artificial consciousness and the evolution of sin, set " +
+                "at the intersection of the near future and the reimagined past.",
+    )
+
+private val previewEpisodeTarget =
+    JellyfinItem(
+        id = "2",
+        name = "The Original",
+        type = ItemType.EPISODE,
+        indexNumber = 1,
+        parentIndexNumber = 1,
     )
 
 private val previewActionHandlers =

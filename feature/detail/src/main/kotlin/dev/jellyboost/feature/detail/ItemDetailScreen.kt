@@ -2,24 +2,29 @@ package dev.jellyboost.feature.detail
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -37,15 +42,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.selection.ItemSelection
 import dev.jellyboost.core.common.selection.SelectionIntent
-import dev.jellyboost.core.ui.component.BackdropHeader
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.GlassIconTint
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
 import dev.jellyboost.core.ui.component.PosterCard
@@ -53,6 +60,7 @@ import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.batchOutcomeText
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
  * The movie / series / season detail screen (docs/PLAN.md, "Screens" → ItemDetail).
@@ -114,7 +122,11 @@ fun ItemDetailScreen(
     // Back / Home buttons keep working — at every other moment.
     BackHandler(enabled = isSelecting) { viewModel.onSelection(SelectionIntent.Clear) }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        // The overlay needs the same answer the content does, because the favourite heart is only
+        // *up here* on the shapes whose action row has no room for it (spec section 4c).
+        val isWide = isWideLayout(maxWidth = maxWidth, maxHeight = maxHeight)
+
         ItemDetailContent(
             state = state,
             onRetry = viewModel::refresh,
@@ -145,7 +157,9 @@ fun ItemDetailScreen(
         //
         // Home sits beside Back because a detail chain is the one place in the app that gets deep:
         // series → season → episode → "More like this" → … with no app bar to escape through, so
-        // the only way out used to be tapping Back once per hop.
+        // the only way out used to be tapping Back once per hop. The favourite heart joins them on
+        // compact, where the action row below keeps one worded button and two circles and has no
+        // room for a third (spec section 4c); on wide it stays in that row instead.
         //
         // While episodes are selected the contextual bar takes this overlay's place rather than
         // sitting beside or below it. This screen has no top bar of its own, so the overlaid pair
@@ -159,26 +173,14 @@ fun ItemDetailScreen(
                 modifier = Modifier.align(Alignment.TopCenter),
             )
         } else {
-            Row(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopStart)
-                        .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(Dimens.SpaceSmall),
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.detail_back),
-                    )
-                }
-                IconButton(onClick = onHome) {
-                    Icon(
-                        imageVector = Icons.Filled.Home,
-                        contentDescription = stringResource(R.string.detail_home),
-                    )
-                }
-            }
+            OverlayNav(
+                favorite = state.item?.userData?.isFavorite,
+                showFavorite = state.item != null && !isWide,
+                onBack = onBack,
+                onHome = onHome,
+                onToggleFavorite = viewModel::toggleFavorite,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
         }
 
         SnackbarHost(
@@ -192,6 +194,57 @@ fun ItemDetailScreen(
                 onConfirm = viewModel::confirmDeleteDownload,
             )
         }
+    }
+}
+
+/**
+ * The floating navigation the detail screen wears instead of a top bar: glass circles over the
+ * backdrop, Back at the start and the page's own affordances at the end.
+ *
+ * @param showFavorite `false` on the wide layout, whose action row hosts the heart, and before the
+ *   item has loaded — there is nothing to favourite yet.
+ */
+@Composable
+private fun OverlayNav(
+    favorite: Boolean?,
+    showFavorite: Boolean,
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(DetailEdgePadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlassIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.detail_back),
+            onClick = onBack,
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (showFavorite) {
+            val isFavorite = favorite == true
+            GlassIconButton(
+                icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription =
+                    stringResource(
+                        if (isFavorite) R.string.detail_remove_favorite else R.string.detail_add_favorite,
+                    ),
+                onClick = onToggleFavorite,
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
+            )
+        }
+        GlassIconButton(
+            icon = Icons.Filled.Home,
+            contentDescription = stringResource(R.string.detail_home),
+            onClick = onHome,
+        )
     }
 }
 
@@ -307,19 +360,14 @@ private fun DetailSections(
         contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
-        item(key = SECTION_BACKDROP, contentType = DetailContentType.SECTION) {
-            // No title here — DetailFacts (below, in the header section) already renders the
-            // headline once; drawing it again over the backdrop duplicated it.
-            BackdropHeader(
-                imageUrl = detail.backdropImageUrl ?: detail.thumbImageUrl ?: detail.primaryImageUrl,
-                height = backdropHeight,
-            )
-        }
-
-        item(key = SECTION_HEADER, contentType = DetailContentType.SECTION) {
-            DetailHeader(
+        // The backdrop and the lockup drawn on it are one node: the refresh puts the title *over*
+        // the artwork, and two lazy items cannot overlap.
+        item(key = SECTION_HERO, contentType = DetailContentType.SECTION) {
+            DetailHero(
                 item = detail,
+                playTarget = state.playTarget,
                 isWide = isWide,
+                backdropHeight = backdropHeight,
                 downloadState = state.downloadState,
                 actions = actions,
                 downloadedBytes = state.downloadedBytes,
@@ -347,40 +395,21 @@ private fun DetailSections(
             }
         }
 
-        if (state.episodes.isNotEmpty()) {
-            item(key = SECTION_EPISODES, contentType = DetailContentType.SECTION) {
-                SectionTitle(text = stringResource(R.string.detail_section_episodes))
-            }
-            items(
-                items = state.episodes,
-                key = JellyfinItem::id,
-                contentType = { DetailContentType.EPISODE },
-            ) { episode ->
-                val id = episode.id
-                // One derived flag per row, so toggling one episode invalidates one row rather than
-                // the forty a season can hold — the same idiom `LibraryGridScreen` uses.
-                val selected by
-                    remember(selection, id) {
-                        derivedStateOf {
-                            val current = selection.value
-                            if (current.isActive) id in current else null
-                        }
-                    }
+        episodeSection(
+            episodes = state.episodes,
+            isWide = isWide,
+            handlers =
+                EpisodeHandlers(
+                    onItemClick = onItemClick,
+                    onPlay = onPlay,
+                    selection = selection,
+                    onSelection = onSelection,
+                ),
+        )
 
-                EpisodeRow(
-                    episode = episode,
-                    onClick = {
-                        if (selection.value.isActive) {
-                            onSelection(SelectionIntent.Toggle(id))
-                        } else {
-                            onItemClick(episode)
-                        }
-                    },
-                    onPlay = { onPlay(episode) },
-                    onLongClick = { onSelection(SelectionIntent.Toggle(id)) },
-                    selected = selected,
-                    compact = compact,
-                )
+        if (detail.people.isNotEmpty()) {
+            item(key = SECTION_CAST, contentType = DetailContentType.SECTION) {
+                CastRail(people = detail.people)
             }
         }
 
@@ -397,12 +426,110 @@ private fun DetailSections(
 }
 
 /**
+ * The season's episodes: a column of full-width cards on a phone, a horizontal strip of tiles on a
+ * wide layout (spec section 4c).
+ *
+ * The wide shape is one lazy node holding a `LazyRow`, not one node per episode, because a row that
+ * scrolls sideways is a single item of the column it sits in — the same shape every `MediaRow` on
+ * this screen already has.
+ */
+private fun LazyListScope.episodeSection(
+    episodes: List<JellyfinItem>,
+    isWide: Boolean,
+    handlers: EpisodeHandlers,
+) {
+    if (episodes.isEmpty()) return
+
+    if (isWide) {
+        item(key = SECTION_EPISODES, contentType = DetailContentType.SECTION) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                DetailSectionTitle(text = stringResource(R.string.detail_section_episodes))
+                Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = DetailEdgePadding),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+                ) {
+                    items(
+                        items = episodes,
+                        key = JellyfinItem::id,
+                        contentType = { DetailContentType.EPISODE },
+                    ) { episode ->
+                        SelectableEpisode(episode = episode, strip = true, handlers = handlers)
+                    }
+                }
+            }
+        }
+        return
+    }
+
+    item(key = SECTION_EPISODES, contentType = DetailContentType.SECTION) {
+        DetailSectionTitle(text = stringResource(R.string.detail_section_episodes))
+    }
+    items(
+        items = episodes,
+        key = JellyfinItem::id,
+        contentType = { DetailContentType.EPISODE },
+    ) { episode ->
+        SelectableEpisode(episode = episode, strip = false, handlers = handlers)
+    }
+}
+
+/**
+ * Everything one episode card is wired to, bundled so the section function and the card stay under
+ * the parameter limit — the same shape [DetailActionHandlers] takes for the hero's buttons.
+ */
+private data class EpisodeHandlers(
+    val onItemClick: (JellyfinItem) -> Unit,
+    val onPlay: (JellyfinItem) -> Unit,
+    val selection: State<ItemSelection>,
+    val onSelection: (SelectionIntent) -> Unit,
+)
+
+/**
+ * One episode card, wired to the selection mode.
+ *
+ * The derived flag is per row on purpose, so toggling one episode invalidates one card rather than
+ * the forty a season can hold — the same idiom `LibraryGridScreen` uses.
+ */
+@Composable
+private fun SelectableEpisode(
+    episode: JellyfinItem,
+    strip: Boolean,
+    handlers: EpisodeHandlers,
+) {
+    val id = episode.id
+    val selection = handlers.selection
+    val selected by
+        remember(selection, id) {
+            derivedStateOf {
+                val current = selection.value
+                if (current.isActive) id in current else null
+            }
+        }
+
+    EpisodeRow(
+        episode = episode,
+        onClick = {
+            if (selection.value.isActive) {
+                handlers.onSelection(SelectionIntent.Toggle(id))
+            } else {
+                handlers.onItemClick(episode)
+            }
+        },
+        onPlay = { handlers.onPlay(episode) },
+        onLongClick = { handlers.onSelection(SelectionIntent.Toggle(id)) },
+        selected = selected,
+        strip = strip,
+    )
+}
+
+/**
  * The two node shapes this screen's `LazyColumn` draws (audit PERF-08).
  *
- * `SECTION` covers the backdrop, the header, and every `MediaRow`/`SectionTitle` block: each is
- * structurally different, but none of them repeats — there is exactly one of each per screen — so
- * there is nothing to gain from telling them apart further, and one shared type keeps a header slot
- * from being compared against a `MediaRow` slot as if reuse between them were ever on the table.
+ * `SECTION` covers the hero, and every `MediaRow`/`SectionTitle` block: each is structurally
+ * different, but none of them repeats — there is exactly one of each per screen — so there is
+ * nothing to gain from telling them apart further, and one shared type keeps a header slot from
+ * being compared against a `MediaRow` slot as if reuse between them were ever on the table.
  * `EPISODE` is the one node shape that *does* repeat, up to a season's worth of times, and is the
  * one this exists for: without it, a `LazyColumn` with no `contentType` at all defaults every node
  * to the same type regardless of shape, so scrolling a section into a slot the recycler last held an
@@ -414,16 +541,19 @@ private enum class DetailContentType {
     EPISODE,
 }
 
+/** A section heading on this screen, in the refresh's row-title type (spec, "Sections"). */
 @Composable
-private fun SectionTitle(
+internal fun DetailSectionTitle(
     text: String,
     modifier: Modifier = Modifier,
 ) {
     Text(
         text = text,
-        style = MaterialTheme.typography.titleMedium,
+        style = JellyfinTypeExtras.SectionTitle,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = modifier.padding(horizontal = Dimens.ScreenPadding),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier.padding(horizontal = DetailEdgePadding),
     )
 }
 
@@ -456,11 +586,11 @@ private fun userMessageText(message: UserMessage): String =
             )
     }
 
-private const val SECTION_BACKDROP = "section-backdrop"
-private const val SECTION_HEADER = "section-header"
+private const val SECTION_HERO = "section-hero"
 private const val SECTION_NEXT_UP = "section-next-up"
 private const val SECTION_SEASONS = "section-seasons"
 private const val SECTION_EPISODES = "section-episodes"
+private const val SECTION_CAST = "section-cast"
 private const val SECTION_SIMILAR = "section-similar"
 
 /**
@@ -501,7 +631,7 @@ internal fun backdropHeight(
     maxWidth: Dp,
     maxHeight: Dp,
 ): Dp {
-    val fixed = if (maxWidth >= WIDE_BREAKPOINT) WIDE_BACKDROP_HEIGHT else Dimens.BackdropHeight
+    val fixed = if (maxWidth >= WIDE_BREAKPOINT) WIDE_BACKDROP_HEIGHT else NARROW_BACKDROP_HEIGHT
     val isPortrait = maxHeight > maxWidth
     val portraitFraction =
         if (maxWidth < COMPACT_MAX_WIDTH) COMPACT_PORTRAIT_BACKDROP_FRACTION else PORTRAIT_BACKDROP_FRACTION
@@ -522,19 +652,30 @@ private val WIDE_BREAKPOINT = 720.dp
  */
 private val WIDE_MIN_HEIGHT = 480.dp
 
-private val WIDE_BACKDROP_HEIGHT = 320.dp
+/**
+ * The banner on a wide layout, which is also the floor the poster overlaps into (2026 refresh: 320
+ * → 360dp, DECISIONS.md 2026-08-01 "card metrics and radii leave the jellyfin-web footprint").
+ */
+private val WIDE_BACKDROP_HEIGHT = 360.dp
+
+/**
+ * The floor under a narrow layout's proportional banner (220 → 320dp in the refresh): the title
+ * lockup is drawn *on* the artwork now, so a banner shorter than this has nothing to say it on.
+ */
+private val NARROW_BACKDROP_HEIGHT = 320.dp
 
 /** Share of the viewport height the banner claims in portrait. */
-private const val PORTRAIT_BACKDROP_FRACTION = 0.40f
+private const val PORTRAIT_BACKDROP_FRACTION = 0.46f
 
 /**
  * Share of the viewport height the banner claims in portrait on a compact-width ([COMPACT_MAX_WIDTH])
  * phone screen, instead of [PORTRAIT_BACKDROP_FRACTION].
  *
- * A 0.40 banner is 320dp of art on a 360×800 phone — tablet-tuned dead space; 0.32 ≈ 256dp keeps the
- * art dominant but returns a paragraph of screen to the facts.
+ * The refresh takes both fractions up (0.32 → 0.52, 0.40 → 0.46) because the banner now carries the
+ * eyebrow, the title and the metadata row that used to sit under it — on a 360×800 phone that is
+ * 416dp of hero, and the text it holds is the reason for the height rather than dead art.
  */
-private const val COMPACT_PORTRAIT_BACKDROP_FRACTION = 0.32f
+private const val COMPACT_PORTRAIT_BACKDROP_FRACTION = 0.52f
 
 /** Share of the viewport height the banner claims in a short (phone) landscape. */
 private const val COMPACT_LANDSCAPE_BACKDROP_FRACTION = 0.5f
@@ -543,7 +684,8 @@ private const val COMPACT_LANDSCAPE_BACKDROP_FRACTION = 0.5f
 private val MAX_BACKDROP_HEIGHT = 560.dp
 
 /**
- * Below this width, the episode row's 160dp thumb would leave text too little room to hold a
- * title — [EpisodeRow] switches to its narrower `compact` thumb instead.
+ * Below this width a portrait viewport is a phone, and takes the taller
+ * [COMPACT_PORTRAIT_BACKDROP_FRACTION] share of its (short) height; it is also where the overview
+ * collapses to a tappable five lines rather than running in full.
  */
 private val COMPACT_MAX_WIDTH = 480.dp

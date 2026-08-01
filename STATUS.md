@@ -298,6 +298,16 @@ Full app translation into the 69 locales the official jellyfin-android client sh
   (currently carries a literal "Jellyboost" entry in every locale); dv (Divehi) and fo
   (Faroese) are the lowest-confidence locales.
 
+## Settings: About section with app version (2026-08-01 — landed)
+
+User-requested, DECISIONS entry logged (plan scoped Settings to prefs/account/sign-out).
+An About section closes the settings list with the installed version as an info row —
+`BuildConfig.VERSION_NAME` passed from `:app` at the `SettingsScreen` call site, so the
+`-debug`/`-debugsigned` suffixes show as-is. Deliberately not in `SettingsUiState`
+(build-time constant, not state). New strings (`settings_section_about`,
+`settings_version`) are in the default locale only; the 69 translated locales fall back
+to English until the next i18n pass.
+
 ## Current milestone: M11 — SyncPlay (IN PROGRESS: all 6 phases landed 2026-07-30, device DoD owed)
 
 Full plan: `docs/notes/syncplay-m11-plan.md`; feature doc `docs/features/syncplay.md`.

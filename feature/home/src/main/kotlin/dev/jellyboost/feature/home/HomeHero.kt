@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -85,6 +87,7 @@ internal fun HomeHero(
             HeroRailFade(modifier = Modifier.align(Alignment.BottomStart))
             WideHeroCopy(
                 item = item,
+                heroHeight = height,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -165,11 +168,24 @@ private fun CompactHeroCopy(
  * Left-hand lockup for a landscape or tablet window: the same block plus the overview, capped at
  * [WideCopyMaxWidth] so a paragraph never spans a 1200dp tablet, with buttons at their own width.
  *
- * [WideCopyTopPadding] clears the `GlassTopNav` that floats over this banner at these widths.
+ * ### Why this block is height-bounded
+ * The banner is a *fixed-height* box and the rows below it come to rest [HeroRailOverlap] inside its
+ * bottom edge, so copy that grows past that edge does not push anything — it draws straight over the
+ * next section. A synopsis is exactly the block that can grow (an item with an overview is two to
+ * three lines taller than one without), which is how the offline hero came to overlap the row under
+ * it. So the column takes the whole banner, insets itself by [wideHeroCopyTopInset] above and the
+ * rail below, and the overview alone is weighted: it is handed whatever is left once the eyebrow,
+ * title, metadata and buttons have measured, and ellipsizes into it. The buttons therefore stay
+ * inside the banner whatever the copy says, and `clipToBounds` makes that a guarantee rather than an
+ * arithmetic argument.
+ *
+ * The compact lockup needs none of this: it is anchored to the *bottom* edge, so taller copy grows
+ * up over the artwork rather than down into the rows.
  */
 @Composable
 private fun WideHeroCopy(
     item: JellyfinItem,
+    heroHeight: Dp,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
@@ -177,8 +193,10 @@ private fun WideHeroCopy(
     Column(
         modifier =
             modifier
+                .fillMaxHeight()
+                .clipToBounds()
                 .padding(horizontal = Dimens.SpaceExtraLarge)
-                .padding(top = WideCopyTopPadding)
+                .padding(top = wideHeroCopyTopInset(heroHeight), bottom = HeroRailOverlap)
                 .widthIn(max = WideCopyMaxWidth),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
@@ -192,6 +210,10 @@ private fun WideHeroCopy(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = OVERVIEW_MAX_LINES,
                 overflow = TextOverflow.Ellipsis,
+                // `fill = false`: the synopsis may take what is left, never demand it — a short
+                // overview keeps its own height and the buttons stay under it instead of being
+                // pushed to the bottom of the banner.
+                modifier = Modifier.weight(1f, fill = false),
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
@@ -351,8 +373,36 @@ private const val WIDE_SCRIM_END_STOP = 0.70f
 /** Gutter of the compact banner's copy — the mocks' 20dp hero padding. */
 private val CompactCopyPadding = 20.dp
 
-/** Where the wide copy block starts, clear of the 64dp glass top nav and the status bar above it. */
+/**
+ * Where the wide copy block starts on the 400dp banner it was drawn for, clear of the 64dp glass top
+ * nav and the status bar above it. [wideHeroCopyTopInset] is what the layout actually uses.
+ */
 private val WideCopyTopPadding = 104.dp
+
+/**
+ * How far down a [heroHeight]-tall wide banner the copy block starts.
+ *
+ * [WideCopyTopPadding] as a flat literal is a quarter of the mocks' 400dp banner, but `heroHeight`
+ * caps the banner at three fifths of a short window: at 600dp of viewport the banner is 360dp and
+ * the same 104dp would spend nearly a third of it on empty space above copy that then has nowhere
+ * to end but over the rows below. Scaling it keeps the nav clear (the nav does not shrink, but at
+ * 360dp of banner 94dp still clears its 64dp plus a status bar) and gives the block back the room
+ * it needs. The fraction is calibrated so the mocks' banner is unchanged: 400 × 0.26 = 104.
+ */
+internal fun wideHeroCopyTopInset(heroHeight: Dp): Dp =
+    (heroHeight * WIDE_COPY_TOP_FRACTION).coerceAtMost(WideCopyTopPadding)
+
+/**
+ * The vertical band the wide copy block has to itself: the banner minus the inset above it and the
+ * rail the rows below overlap into ([HeroRailOverlap]).
+ *
+ * Not read by the layout — the column derives it from the same two insets — but it is the number
+ * that decides whether the resume button clears the next section, so `HomeSizingTest` pins it.
+ */
+internal fun wideHeroCopyHeight(heroHeight: Dp): Dp =
+    (heroHeight - wideHeroCopyTopInset(heroHeight) - HeroRailOverlap).coerceAtLeast(0.dp)
+
+private const val WIDE_COPY_TOP_FRACTION = 0.26f
 
 /** Width cap of that block: about a third of a tablet, and never a full-width paragraph. */
 private val WideCopyMaxWidth = 420.dp

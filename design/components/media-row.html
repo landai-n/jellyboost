@@ -1,38 +1,81 @@
-<!-- @dsCard group="Components" name="Media row" subtitle="Section header + See all, LazyRow of ThumbCards clipping at the frame edge" -->
+<!-- @dsCard group="Components" name="Media row" subtitle="Section title 17px/600, optional eyebrow above it, and 'See all' now muted on-surface-variant instead of accent-colored" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .frame { width:640px; overflow:hidden; border:1px solid #292929; }
-  .header { display:flex; align-items:center; justify-content:space-between; padding:0 16px; }
-  .header-title { font-size:16px; line-height:24px; font-weight:600; }
-  .see-all { font-size:14px; line-height:20px; font-weight:500; color:#00A4DC; background:none; border:none; padding:8px; }
-  .lazy-row { display:flex; gap:12px; padding:8px 0 16px 16px; }
-  .thumb { flex:none; width:210px; }
-  .art { position:relative; width:210px; height:118px; border-radius:8px; overflow:hidden; background:linear-gradient(135deg,#292929,#202020); }
-  .progress-track { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(0,0,0,.5); }
-  .progress-fill { height:100%; background:#00A4DC; }
-  .title { margin-top:8px; font-size:14px; }
-  .subtitle { font-size:12px; color:rgba(255,255,255,.7); }
+  body{padding:28px;display:flex;flex-direction:column;gap:32px}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:12px}
+  .frame{width:680px;max-width:100%;overflow:hidden;border:1px solid var(--outline);border-radius:var(--radius-md);padding:18px 0}
+  .row-block{display:flex;flex-direction:column;gap:8px}
+  .m-eyebrow{font-weight:600;padding:0 16px}
+  .m-section-head{padding:0 16px}
+  .see-all-btn{font-size:12px;font-weight:500;color:var(--on-surface-variant);padding:8px 4px;background:none;border:none}
+  .lazy-row{display:flex;gap:12px;padding:0 0 4px 16px;overflow:hidden}
 </style>
-<div class="frame">
-  <div class="header">
-    <div class="header-title">Continue watching</div>
-    <button class="see-all">See all</button>
+
+<div>
+  <div class="k">With eyebrow — Continue Watching (LazyRow, contentPadding 16px, gap 12px, 8px vertical rhythm)</div>
+  <div class="frame">
+    <div class="row-block">
+      <div class="m-eyebrow"><span class="dot"></span><span>CONTINUE WATCHING</span></div>
+      <div class="m-section-head">
+        <div class="m-section-title">Pick up where you left off</div>
+        <button class="see-all-btn m-see-all">See all</button>
+      </div>
+      <div class="lazy-row">
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)">
+            <div class="m-badge">S1 · E10</div>
+            <div class="m-time" style="bottom:14px">22m left</div>
+            <div class="m-progress-track"><div class="m-progress-fill" style="width:65%"></div></div>
+          </div>
+          <div class="m-ttl">The Bicameral Mind</div>
+          <div class="m-sub">Westworld · S1 · E10</div>
+        </div>
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)">
+            <div class="m-time" style="bottom:14px">1h 42m left</div>
+            <div class="m-progress-track"><div class="m-progress-fill" style="width:30%"></div></div>
+          </div>
+          <div class="m-ttl">Arrival</div>
+          <div class="m-sub">2016</div>
+        </div>
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)">
+            <div class="m-time" style="bottom:14px">38m left</div>
+            <div class="m-progress-track"><div class="m-progress-fill" style="width:85%"></div></div>
+          </div>
+          <div class="m-ttl">Dune</div>
+          <div class="m-sub">2021</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="lazy-row">
-    <div class="thumb">
-      <div class="art" style="background:linear-gradient(160deg,#3a4a5f,#5f7a9a)"><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
-      <div class="title">Arrival</div>
-      <div class="subtitle">2016</div>
-    </div>
-    <div class="thumb">
-      <div class="art" style="background:linear-gradient(160deg,#4a3a5f,#7a5f9a)"><div class="progress-track"><div class="progress-fill" style="width:30%"></div></div></div>
-      <div class="title">1. The Bicameral Mind</div>
-      <div class="subtitle">Westworld · S1E10</div>
-    </div>
-    <div class="thumb">
-      <div class="art" style="background:linear-gradient(160deg,#5f4a3a,#9a7a5f)"><div class="progress-track"><div class="progress-fill" style="width:85%"></div></div></div>
-      <div class="title">Dune</div>
-      <div class="subtitle">2021</div>
+</div>
+
+<div>
+  <div class="k">No eyebrow — Latest Movies (frame edge clips the last card, same 16px content padding)</div>
+  <div class="frame">
+    <div class="row-block">
+      <div class="m-section-head">
+        <div class="m-section-title">Latest movies</div>
+        <button class="see-all-btn m-see-all">See all</button>
+      </div>
+      <div class="lazy-row">
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#5f3a3a,#9a6a6a)"></div>
+          <div class="m-ttl">Nope</div>
+          <div class="m-sub">2022</div>
+        </div>
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#3a3a5f,#6a6aa0)"></div>
+          <div class="m-ttl">Blade Runner 2049</div>
+          <div class="m-sub">2017</div>
+        </div>
+        <div class="m-card">
+          <div class="m-art m-thumb" style="background:linear-gradient(160deg,#3a5f3f,#7fa06a)"></div>
+          <div class="m-ttl">Dune</div>
+          <div class="m-sub">2021</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -1,16 +1,30 @@
-<!-- @dsCard group="Components" name="Backdrop header" subtitle="Full-bleed artwork + BackdropScrim, title/subtitle anchored bottom-left" -->
+<!-- @dsCard group="Components" name="Backdrop header" subtitle="Full-bleed BackdropScrim + DetailHero's TitleLockup layered on top (eyebrow, title, star rating, year, cert badge, seasons)" -->
+<link rel="stylesheet" href="../_shared/modern.css">
 <style>
-  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .header { position:relative; width:640px; height:220px; background:linear-gradient(135deg,#292929,#202020); overflow:hidden; }
-  .scrim { position:absolute; inset:0; background:linear-gradient(180deg, rgba(16,16,16,0) 0%, rgba(16,16,16,.65) 60%, #101010 100%); }
-  .text { position:absolute; left:0; right:0; bottom:0; padding:16px; }
-  .title { font-size:24px; line-height:32px; font-weight:400; }
-  .subtitle { font-size:14px; line-height:20px; color:rgba(255,255,255,.7); }
+  body{margin:0;background:var(--background);color:#fff;font-family:Roboto,"Segoe UI",system-ui,sans-serif;padding:28px;}
+  .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:10px;}
+  .note{font-size:12px;line-height:17px;color:var(--on-surface-variant);max-width:640px;margin-top:14px;}
+  .header{position:relative;width:640px;height:280px;background:linear-gradient(160deg,#4a3a5f,#7a5f9a);overflow:hidden;border-radius:var(--radius-md);}
+  .scrim{position:absolute;inset:0;background:var(--backdrop-scrim);}
+  .lockup{position:absolute;left:0;right:0;bottom:0;padding:24px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);}
+  .title{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1;}
+  .meta{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--on-surface-variant);}
+  .rating{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:#fff;}
+  .rating svg{width:13px;height:13px;fill:var(--primary);}
 </style>
+<div class="k">BackdropHeader + DetailHero's TitleLockup</div>
 <div class="header">
   <div class="scrim"></div>
-  <div class="text">
+  <div class="lockup">
+    <div class="eyebrow">Series</div>
     <div class="title">Westworld</div>
-    <div class="subtitle">2016 · TV-MA · 4 seasons</div>
+    <div class="meta">
+      <span class="rating"><svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>8.6</span>
+      <span>2016</span>
+      <span class="m-pill">TV-MA</span>
+      <span>4 seasons</span>
+    </div>
   </div>
 </div>
+<div class="note"><code>BackdropHeader.kt</code> itself only draws full-bleed artwork + <code>JellyfinGradients.BackdropScrim</code> (transparent → background@65% → <code>#101010</code>, bottom-left) and, when passed, a plain optional <code>title</code>/<code>subtitle</code> pair — no eyebrow, no star rating, no cert badge by default. The richer lockup shown here — eyebrow, 34px/700/-.02em title, then a ★ rating / year / outlined <code>TV-MA</code> pill / season count meta row — is what the detail screen's own <code>DetailHero</code> (<code>ItemDetailHeader.kt</code>'s <code>TitleLockup</code>) layers on top of the generic header. Included at full richness here so the card is a useful reference for how the component is actually used, not just what it draws unassisted.</div>

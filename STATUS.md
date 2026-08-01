@@ -148,6 +148,16 @@ in-library search, notifications bell, share, snackbar Undo, 4K/HDR pills, chapt
 ticks. Kept despite mock omission: queue move-down, connection indicator + offline
 banner (now a chrome icon + `PillSnackbar`, not a persistent banner).
 
+**WRAP (2026-08-01): all eight phases landed on `design-refresh`.** Theme/tokens
+(Haze 1.7.2, glass, elevation, type extras, 128/232/12dp card metrics), core components,
+glass chrome (bottom pill <560dp / top nav >=560dp + action cluster), all six screen
+restyles, unmocked-surface sweep, i18n (31 strings x 69 locales, validator clean), and the
+`design/` mirror rewritten code-faithful (22 cards + modern.css + surfaces.html + token
+sync). Gate green at every merge (~1948 unit tests). **Owed: the user's device walk**
+(chrome both widths, hero fallback, grid selection, detail lockups, queue reorder incl.
+move-down, buffered scrub, auth + Quick Connect, offline) and the DesignSync push of the
+mirror to the remote project.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

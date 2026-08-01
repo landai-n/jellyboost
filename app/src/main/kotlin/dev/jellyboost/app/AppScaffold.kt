@@ -54,6 +54,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 import dev.jellyboost.core.ui.theme.LocalHazeState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -338,6 +339,7 @@ private fun rememberConnectionStatusExplainer(
     val status = state.toStatus()
     val message = stringResource((status ?: ConnectionStatus.NO_NETWORK).messageRes)
     val actionLabel = status?.actionLabelRes?.let { stringResource(it) }
+    val pending = remember { mutableStateOf<Job?>(null) }
 
     return {
         val action =
@@ -346,18 +348,23 @@ private fun rememberConnectionStatusExplainer(
                 ConnectionStatus.FORCED -> onLeaveOfflineMode
                 else -> null
             }
-        scope.launch {
-            // `actionLabel` alone would default `duration` to Indefinite (M3's `showSnackbar`) — the
-            // M9 device walk found the offline snackbar sitting over the last list row for minutes.
-            // `Long` still leaves the action tappable, just not forever.
-            val result =
-                snackbarHostState.showSnackbar(
-                    message = message,
-                    actionLabel = actionLabel,
-                    duration = SnackbarDuration.Long,
-                )
-            if (result == SnackbarResult.ActionPerformed) action?.invoke()
-        }
+        // Repeated taps must replace the snackbar, not line up behind it: `showSnackbar` is a
+        // mutex queue, so without the cancel each tap would append another Long-duration entry.
+        // Cancelling the suspended call dismisses its snackbar (or drops it from the queue).
+        pending.value?.cancel()
+        pending.value =
+            scope.launch {
+                // `actionLabel` alone would default `duration` to Indefinite (M3's `showSnackbar`)
+                // — the M9 device walk found the offline snackbar sitting over the last list row
+                // for minutes. `Long` still leaves the action tappable, just not forever.
+                val result =
+                    snackbarHostState.showSnackbar(
+                        message = message,
+                        actionLabel = actionLabel,
+                        duration = SnackbarDuration.Long,
+                    )
+                if (result == SnackbarResult.ActionPerformed) action?.invoke()
+            }
     }
 }
 

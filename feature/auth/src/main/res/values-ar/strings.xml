@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">الاتصال بالخادم</string>
+    <string name="server_setup_tagline">مكتبة Jellyfin الخاصة بك، أصلية على Android.</string>
     <string name="server_setup_discovered_title">الخوادم على هذه الشبكة</string>
     <string name="server_setup_discovering">جارٍ البحث في الشبكة المحلية…</string>
     <string name="server_setup_no_servers_found">لم يُعلن أي خادم عن نفسه. أدخل عنوانًا أدناه.</string>

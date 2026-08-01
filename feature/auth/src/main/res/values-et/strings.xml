@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Ühenda serveriga</string>
+    <string name="server_setup_tagline">Sinu Jellyfin teek, natiivne Androidile.</string>
     <string name="server_setup_discovered_title">Serverid selles võrgus</string>
     <string name="server_setup_discovering">Kohaliku võrgu otsimine…</string>
     <string name="server_setup_no_servers_found">Ühtegi serverit ei leitud. Sisesta aadress allpool.</string>

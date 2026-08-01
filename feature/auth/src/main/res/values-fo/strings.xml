@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Knýt saman við ambætara</string>
+    <string name="server_setup_tagline">Títt Jellyfin-savn, upprunaligt til Android.</string>
     <string name="server_setup_discovered_title">Ambætarar á hesum netverki</string>
     <string name="server_setup_discovering">Leitar á staðbundna netverkinum…</string>
     <string name="server_setup_no_servers_found">Ongir ambætarar gjørdu vart við seg. Skriva eina adressu niðanfyri.</string>

@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">连接到服务器</string>
+    <string name="server_setup_tagline">你的 Jellyfin 媒体库，Android 原生体验。</string>
     <string name="server_setup_discovered_title">此网络上的服务器</string>
     <string name="server_setup_discovering">正在搜索本地网络…</string>
     <string name="server_setup_no_servers_found">没有服务器进行了通告。请在下方输入地址。</string>

@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">சேவையகத்துடன் இணை</string>
+    <string name="server_setup_tagline">உங்கள் Jellyfin நூலகம், Android-இல் நேட்டிவ்.</string>
     <string name="server_setup_discovered_title">இந்த நெட்வொர்க்கில் உள்ள சேவையகங்கள்</string>
     <string name="server_setup_discovering">உள்ளூர் நெட்வொர்க்கைத் தேடுகிறது…</string>
     <string name="server_setup_no_servers_found">எந்த சேவையகமும் அறிவிக்கப்படவில்லை. கீழே ஒரு முகவரியை உள்ளிடவும்.</string>

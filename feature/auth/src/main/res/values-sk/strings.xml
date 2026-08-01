@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Pripojiť k serveru</string>
+    <string name="server_setup_tagline">Vaša knižnica Jellyfin, natívna na Androide.</string>
     <string name="server_setup_discovered_title">Servery v tejto sieti</string>
     <string name="server_setup_discovering">Prehľadáva sa lokálna sieť…</string>
     <string name="server_setup_no_servers_found">Žiadny server sa neohlásil. Zadajte adresu nižšie.</string>

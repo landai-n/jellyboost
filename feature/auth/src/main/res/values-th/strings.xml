@@ -2,6 +2,7 @@
 <resources>
     <string name="auth_app_name">Jellyboost</string>
     <string name="server_setup_title">เชื่อมต่อกับเซิร์ฟเวอร์</string>
+    <string name="server_setup_tagline">คลัง Jellyfin ของคุณ เนทีฟบน Android</string>
     <string name="server_setup_discovered_title">เซิร์ฟเวอร์ในเครือข่ายนี้</string>
     <string name="server_setup_discovering">กำลังค้นหาในเครือข่ายท้องถิ่น…</string>
     <string name="server_setup_no_servers_found">ไม่พบเซิร์ฟเวอร์ที่ประกาศตัว กรอกที่อยู่ด้านล่าง</string>

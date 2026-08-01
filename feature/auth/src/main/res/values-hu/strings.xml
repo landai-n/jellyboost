@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">Kapcsolódás szerverhez</string>
+    <string name="server_setup_tagline">A Jellyfin könyvtárad, natív Androidon.</string>
     <string name="server_setup_discovered_title">Szerverek ezen a hálózaton</string>
     <string name="server_setup_discovering">Helyi hálózat keresése…</string>
     <string name="server_setup_no_servers_found">Egyetlen szerver sem jelentkezett. Adj meg egy címet lent.</string>

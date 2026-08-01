@@ -3,6 +3,7 @@
     <string name="auth_app_name">Jellyboost</string>
 
     <string name="server_setup_title">ސަރވަރއަށް ގުޅާ</string>
+    <string name="server_setup_tagline">ތިޔަގެ Jellyfin ލައިބްރަރީ، Android އަށް ނޭޓިވް.</string>
     <string name="server_setup_discovered_title">މި ނެޓްވޯކްގައި ހުރި ސަރވަރތައް</string>
     <string name="server_setup_discovering">ލޯކަލް ނެޓްވޯކް ބަލަނީ…</string>
     <string name="server_setup_no_servers_found">އެއްވެސް ސަރވަރއަކުން ސިގްނަލެއް ނުދިން. ތިރީގައި އެޑްރެހެއް ޖަހާ.</string>

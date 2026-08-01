@@ -1,6 +1,7 @@
 package dev.jellyboost.player.ui
 
 import android.view.ContextThemeWrapper
+import android.view.View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -38,12 +39,19 @@ import javax.inject.Inject
  * with no Play services at all: the guard sits in this function, and everything that names a GMS
  * type sits in [MediaRouteButtonHost], which such a device never calls.
  *
- * Beyond that, [CastDeviceState.NoDevices] composes the button out entirely. The raw
- * `MediaRouteButton` does *not* hide itself with no routes around — auto-hiding is
- * `MediaRouteActionProvider` behaviour, and the bare view just sits there dimmed (seen on the
- * tablet walk: a lone oversized glyph beside the circled actions). Gating composition on the same
- * [CastDeviceState] the glass used to be gated on keeps glyph and circle in agreement in every
- * state: nothing at all without receivers, circle + glyph as soon as one is discovered.
+ * Beyond that, [CastDeviceState.NoDevices] *hides* the view rather than composing it out, and the
+ * distinction is load-bearing on both sides:
+ * - The view must stay attached, because an attached `MediaRouteButton` is what registers the
+ *   `MediaRouter` callback that requests route discovery. Composing it out on [NoDevices] was a
+ *   chicken-and-egg: no button → no discovery → the state never left NoDevices → no button.
+ * - It must be hidden *by us*, because the raw `MediaRouteButton` does not hide itself with no
+ *   routes around — auto-hiding is `MediaRouteActionProvider` behaviour, and the bare view just
+ *   sits there dimmed (seen on the tablet walk: a lone oversized glyph beside the circled actions).
+ *
+ * `View.INVISIBLE` (not `GONE`) keeps the attached view laid out, and takes it out of hit-testing
+ * so an invisible corner of the bar cannot open the route chooser. The glass circle is gated on the
+ * same state, so glyph and circle agree in every state: an empty (but reserved) slot without
+ * receivers, circle + glyph as soon as one is discovered.
  *
  * @param glassContainer draws the 2026 refresh's glass circle behind the button, for the bars whose
  *   other actions are `GlassIconButton`s.
@@ -63,10 +71,11 @@ fun CastRouteButton(
     val viewModel: CastRouteButtonViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    if (state == CastDeviceState.Unavailable || state == CastDeviceState.NoDevices) return
+    if (state == CastDeviceState.Unavailable) return
+    val hasReceivers = state != CastDeviceState.NoDevices
 
     if (!glassContainer) {
-        MediaRouteButtonHost(modifier = modifier.size(CastButtonSize))
+        MediaRouteButtonHost(visible = hasReceivers, modifier = modifier.size(CastButtonSize))
         return
     }
 
@@ -75,10 +84,16 @@ fun CastRouteButton(
             modifier =
                 Modifier
                     .size(size)
-                    .glassSurface(shape = CircleShape, tint = surfaceTint),
+                    .then(
+                        if (hasReceivers) {
+                            Modifier.glassSurface(shape = CircleShape, tint = surfaceTint)
+                        } else {
+                            Modifier
+                        },
+                    ),
             contentAlignment = Alignment.Center,
         ) {
-            MediaRouteButtonHost(modifier = Modifier.size(size))
+            MediaRouteButtonHost(visible = hasReceivers, modifier = Modifier.size(size))
         }
     }
 }
@@ -93,9 +108,15 @@ fun CastRouteButton(
  * `CastButtonFactory` gives the button the route selector that matches the configured receiver and
  * keeps its connection state in step with the session. It needs an initialised `CastContext`, which
  * the caller's [CastDeviceState] guard already guarantees.
+ *
+ * @param visible `View.VISIBLE` vs `View.INVISIBLE` — never `GONE`, and never conditional
+ *   composition: the attached view is what keeps route discovery running (see [CastRouteButton]).
  */
 @Composable
-private fun MediaRouteButtonHost(modifier: Modifier = Modifier) {
+private fun MediaRouteButtonHost(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -104,6 +125,9 @@ private fun MediaRouteButtonHost(modifier: Modifier = Modifier) {
                 contentDescription = context.getString(R.string.player_cast)
                 CastButtonFactory.setUpMediaRouteButton(themed, this)
             }
+        },
+        update = { view ->
+            view.visibility = if (visible) View.VISIBLE else View.INVISIBLE
         },
     )
 }

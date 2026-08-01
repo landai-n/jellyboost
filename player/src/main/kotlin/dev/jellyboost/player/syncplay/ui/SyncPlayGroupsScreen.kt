@@ -1,15 +1,20 @@
 package dev.jellyboost.player.syncplay.ui
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,21 +22,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,9 +46,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
+import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.SyncPlayLaunchRequest
 import dev.jellyboost.player.syncplay.SyncPlayMessage
@@ -63,8 +69,8 @@ import java.util.UUID
  * account may join, the one it is already in pinned above them, and the three membership actions.
  *
  * A pushed destination like `SettingsScreen` and `LibraryGridScreen` — reached from the home top
- * bar's Groups action, not one of the four tabs — so it owns the same back-plus-home `TopAppBar`
- * those screens carry rather than the app's combined bar.
+ * bar's Groups action, not one of the four tabs — so it owns the same back-plus-home glass header
+ * `LibraryGridScreen` established (2026 refresh, Phase 5 sweep) rather than the app's own chrome.
  *
  * Join, create and leave are never handled here: they go straight to [SyncPlayGroupsViewModel],
  * which forwards them to `SyncPlayController` — the only thing that owns the socket and the join
@@ -101,7 +107,6 @@ fun SyncPlayGroupsScreen(
 }
 
 /** Stateless rendering — a pure function of [state], previewable without a ViewModel. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SyncPlayGroupsContent(
     state: SyncPlayGroupsUiState,
@@ -129,44 +134,26 @@ fun SyncPlayGroupsContent(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.player_syncplay_groups_title)) },
-                navigationIcon = {
-                    // Same two-affordance navigation slot every other pushed screen carries.
-                    Row {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.player_syncplay_groups_back),
-                            )
-                        }
-                        IconButton(onClick = onHome) {
-                            Icon(
-                                imageVector = Icons.Filled.Home,
-                                contentDescription = stringResource(R.string.player_syncplay_groups_home),
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    // Disabled together with the disabled state: a create call against a server that
-                    // just answered 403 to the list would only fail the same way.
-                    IconButton(onClick = { showCreateDialog = true }, enabled = !state.disabled) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = stringResource(R.string.player_syncplay_groups_create),
-                        )
-                    }
-                },
-            )
+        // The header below carries its own status-bar padding, the same way `LibraryGridScreen`'s
+        // does — nothing here reserves space for a `TopAppBar` any more.
+        contentWindowInsets = WindowInsets(0),
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data -> PillSnackbar(snackbarData = data) }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            SyncPlayGroupsHeader(
+                onBack = onBack,
+                onHome = onHome,
+                onCreate = { showCreateDialog = true },
+                // Disabled together with the disabled state: a create call against a server that
+                // just answered 403 to the list would only fail the same way.
+                createEnabled = !state.disabled,
+            )
+
             Box(
                 // Capped and centred like every other pushed screen's content: a full-bleed list on
                 // the test tablet puts a row's name and its state hint a hand-span apart.
@@ -205,6 +192,13 @@ fun SyncPlayGroupsContent(
     if (confirmingLeave) {
         AlertDialog(
             onDismissRequest = { confirmingLeave = false },
+            modifier =
+                Modifier.border(
+                    width = GlassDefaults.HairlineWidth,
+                    color = GlassDefaults.PanelHairline,
+                    shape = MaterialTheme.shapes.extraLarge,
+                ),
+            containerColor = MaterialTheme.colorScheme.surface,
             title = { Text(text = stringResource(R.string.player_syncplay_leave_title)) },
             text = { Text(text = stringResource(R.string.player_syncplay_leave_body)) },
             confirmButton = {
@@ -223,6 +217,55 @@ fun SyncPlayGroupsContent(
         )
     }
 }
+
+/**
+ * The screen's header: the pushed-screen glass idiom `LibraryGridScreen` established (2026 refresh,
+ * Phase 5 sweep) — back-then-home glass circles, the screen title, and a trailing glass *Create*
+ * circle where the old `TopAppBar`'s `actions` slot used to sit.
+ */
+@Composable
+private fun SyncPlayGroupsHeader(
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onCreate: () -> Unit,
+    createEnabled: Boolean,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        GlassIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.player_syncplay_groups_back),
+            onClick = onBack,
+        )
+        GlassIconButton(
+            icon = Icons.Filled.Home,
+            contentDescription = stringResource(R.string.player_syncplay_groups_home),
+            onClick = onHome,
+        )
+        Text(
+            text = stringResource(R.string.player_syncplay_groups_title),
+            style = JellyfinTypeExtras.ScreenTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f).padding(start = Dimens.SpaceExtraSmall),
+        )
+        GlassIconButton(
+            icon = Icons.Filled.Add,
+            contentDescription = stringResource(R.string.player_syncplay_groups_create),
+            onClick = onCreate,
+            enabled = createEnabled,
+        )
+    }
+}
+
+/** Side padding of the header — the same 20dp `LibraryGridScreen`'s header uses. */
+private val HeaderPadding = 20.dp
 
 @Composable
 private fun GroupsList(
@@ -277,37 +320,49 @@ private fun ActiveGroupCard(
     onLeave: () -> Unit,
     onOpenPlayer: (SyncPlayLaunchRequest) -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(Dimens.SpaceLarge),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        ) {
-            Text(
-                text = stringResource(R.string.player_syncplay_groups_active_label),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(text = membership.groupName, style = MaterialTheme.typography.titleMedium)
-            Text(
-                text =
-                    pluralStringResource(
-                        R.plurals.player_syncplay_participants,
-                        membership.participants.size,
-                        membership.participants.size,
-                    ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
-                membership.openPlayer?.let { request ->
-                    Button(onClick = { onOpenPlayer(request) }) {
-                        Text(text = stringResource(R.string.player_syncplay_groups_open_player))
-                    }
-                }
-                OutlinedButton(onClick = onLeave) {
-                    Text(text = stringResource(R.string.player_syncplay_leave))
-                }
+    // An "m-surface" panel (2026 refresh, Phase 5 sweep) — the container language `:feature:downloads`
+    // established for cards that sit inside another screen rather than over a backdrop image.
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .padding(Dimens.PanelPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+    ) {
+        Text(
+            text = stringResource(R.string.player_syncplay_groups_active_label).uppercase(),
+            style = JellyfinTypeExtras.Eyebrow,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = membership.groupName,
+            style = JellyfinTypeExtras.SectionTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            text =
+                pluralStringResource(
+                    R.plurals.player_syncplay_participants,
+                    membership.participants.size,
+                    membership.participants.size,
+                ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+            membership.openPlayer?.let { request ->
+                PrimaryPillButton(
+                    text = stringResource(R.string.player_syncplay_groups_open_player),
+                    onClick = { onOpenPlayer(request) },
+                    small = true,
+                )
             }
+            GhostPillButton(
+                text = stringResource(R.string.player_syncplay_leave),
+                onClick = onLeave,
+                small = true,
+            )
         }
     }
 }
@@ -319,7 +374,12 @@ private fun JoiningRow() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(Dimens.SpaceLarge))
+        CircularProgressIndicator(
+            modifier = Modifier.size(Dimens.SpaceLarge),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = SPINNER_STROKE,
+            trackColor = Color.White.copy(alpha = SPINNER_TRACK_ALPHA),
+        )
         Text(text = stringResource(R.string.player_syncplay_groups_joining))
     }
 }
@@ -330,29 +390,36 @@ private fun GroupRow(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    Card(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.SpaceLarge),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = group.name, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = participantsSummary(group.participants),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            // The list DTO carries no playing-item title (`GroupInfoDto` has none) — its own
-            // Idle/Waiting/Paused/Playing state is the closest hint this row can give for free.
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(Dimens.PanelPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = group.name, style = MaterialTheme.typography.titleMedium)
             Text(
-                text = stringResource(group.state.labelRes()),
-                style = MaterialTheme.typography.labelMedium,
+                text = participantsSummary(group.participants),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        // The list DTO carries no playing-item title (`GroupInfoDto` has none) — its own
+        // Idle/Waiting/Paused/Playing state is the closest hint this row can give for free.
+        Text(
+            text = stringResource(group.state.labelRes()),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
+
+/** [CircularProgressIndicator] geometry per the shared "inline hint" spinner (spec, "Spinner"). */
+private val SPINNER_STROKE = 2.dp
+private const val SPINNER_TRACK_ALPHA = 0.14f
 
 /**
  * Turns [participants] into the row's secondary text (B6).
@@ -388,13 +455,20 @@ private fun CreateGroupDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier =
+            Modifier.border(
+                width = GlassDefaults.HairlineWidth,
+                color = GlassDefaults.PanelHairline,
+                shape = MaterialTheme.shapes.extraLarge,
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = { Text(text = stringResource(R.string.player_syncplay_groups_create_title)) },
         text = {
-            OutlinedTextField(
+            JellyfinTextField(
                 value = name,
                 onValueChange = { name = it },
                 singleLine = true,
-                label = { Text(text = stringResource(R.string.player_syncplay_groups_create_hint)) },
+                placeholder = { Text(text = stringResource(R.string.player_syncplay_groups_create_hint)) },
                 modifier = Modifier.fillMaxWidth(),
             )
         },

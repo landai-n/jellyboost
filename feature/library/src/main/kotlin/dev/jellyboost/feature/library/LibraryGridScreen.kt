@@ -76,6 +76,7 @@ import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.PillChip
+import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.batchOutcomeText
@@ -142,7 +143,9 @@ fun LibraryGridScreen(
         // grid's own contentPadding clears the navigation bar.
         contentWindowInsets = WindowInsets(0),
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.navigationBarsPadding())
+            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.navigationBarsPadding()) { data ->
+                PillSnackbar(snackbarData = data)
+            }
         },
     ) { innerPadding ->
         // One `BoxWithConstraints` for the whole screen — not per cell (see [ItemGrid]). It buys

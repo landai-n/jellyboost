@@ -54,6 +54,7 @@ import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
+import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -219,7 +220,7 @@ fun PlayerScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = SNACKBAR_PADDING),
-        )
+        ) { data -> PillSnackbar(snackbarData = data) }
     }
 
     // Outside the video `Box`, so it is not covered by the controls and not drawn in the floating

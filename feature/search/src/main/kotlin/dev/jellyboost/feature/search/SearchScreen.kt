@@ -14,7 +14,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +31,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
 import dev.jellyboost.core.ui.component.PosterCard
@@ -146,11 +146,16 @@ private fun SearchField(
         }
     }
 
-    OutlinedTextField(
+    JellyfinTextField(
         value = query,
         onValueChange = onQueryChange,
-        label = { Text(text = stringResource(R.string.search_field_label)) },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         singleLine = true,
+        placeholder = { Text(text = stringResource(R.string.search_field_label)) },
         leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
@@ -163,11 +168,6 @@ private fun SearchField(
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester)
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
     )
 }
 

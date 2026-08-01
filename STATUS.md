@@ -158,6 +158,26 @@ sync). Gate green at every merge (~1948 unit tests). **Owed: the user's device w
 move-down, buffered scrub, auth + Quick Connect, offline) and the DesignSync push of the
 mirror to the remote project.
 
+**Walk-defect fix round (2026-08-01, merges `4df11f7` + `fix/pill-downloads-align`):**
+the user's first walk reported four defects, all fixed. (1) *Chrome unreadable over
+bright content* — root cause was twofold: M3 `Button` floors every surface to 48dp, so
+all glass circles/pills drew at 48dp regardless of declared size (`JellyfinButtons`
+rebuilt on `Box`/`Row`; visual at declared size, invisible 48dp touch frame kept), and
+the top-nav row/logo had no backdrop at all (new `TopChromeScrim` gradient sibling in
+`AppScaffold` + darker `GlassDefaults.ChromeFill` Background@45% tint on chrome-level
+glass). (2) *Button overlap* — `ActionClusterHeight` was 12dp short (now derived, 56dp,
+pinned in `AppChromeTest`), chrome now exits at half the nav cross-fade so the action
+cluster no longer overlaps pushed screens' own buttons, top nav fits 560–740dp (capsule
+shrinks, labels ellipsise), safe-drawing/cutout insets consumed, and the phantom empty
+Cast ring is gone (`glassContainer = true`). (3) *Filter-sheet pill overlap* — the
+sheet's `FlowRow` had no `verticalArrangement` (0dp between wrapped lines) and
+`PillChip` had no min height (now 36dp). (4) *Downloads misalignment* — margins unified
+on 20dp, Wi-Fi row `fillMaxWidth`, one label style, 36dp action circles (32/34
+constants deleted), same artwork size on both tabs per width class, dead spacer
+removed; `LibrariesScreen` title gains the same wide `ScreenTitleLarge` switch. The
+watched/unwatched filter report was retracted (server + pipeline verified correct via
+live probe). Owed: the user's re-walk.
+
 ## Auth screens redesign + real avatars (2026-08-01 — landed)
 
 User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify

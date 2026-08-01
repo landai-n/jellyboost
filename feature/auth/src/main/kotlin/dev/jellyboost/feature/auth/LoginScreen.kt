@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,10 +59,13 @@ import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 
-private val AvatarSize = 56.dp
+private val AvatarSize = 80.dp
 
 /** Gradient ring around every public-user avatar — the brand cue that ties the two screens. */
 private val AvatarRingWidth = 2.dp
+
+/** Breathing room between the ring and the picture it frames, so the ring doesn't crop it. */
+private val AvatarRingGap = 3.dp
 
 /**
  * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
@@ -275,22 +280,31 @@ private fun PublicUsersRow(
     avatarUrlFor: (PublicUserInfo) -> String?,
     onUserSelected: (PublicUserInfo) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
         Text(
             text = stringResource(R.string.login_public_users_title),
-            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
         )
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
-        ) {
-            users.forEach { user ->
-                PublicUserAvatar(
-                    user = user,
-                    avatarUrl = avatarUrlFor(user),
-                    onClick = { onUserSelected(user) },
-                )
+        // The Box centres the row while it fits; once there are enough users to overflow, the
+        // row takes the full width and scrolls instead.
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
+            ) {
+                users.forEach { user ->
+                    PublicUserAvatar(
+                        user = user,
+                        avatarUrl = avatarUrlFor(user),
+                        onClick = { onUserSelected(user) },
+                    )
+                }
             }
         }
     }
@@ -311,38 +325,47 @@ private fun PublicUserAvatar(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         Surface(
             onClick = onClick,
-            modifier =
-                Modifier
-                    .size(AvatarSize)
-                    .clip(CircleShape)
-                    .border(width = AvatarRingWidth, brush = JellyfinGradients.Accent, shape = CircleShape),
+            modifier = Modifier.size(AvatarSize),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary,
+            color = Color.Transparent,
         ) {
-            if (avatarUrl == null) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = user.name.take(1).uppercase(),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimary,
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .border(width = AvatarRingWidth, brush = JellyfinGradients.Accent, shape = CircleShape)
+                        .padding(AvatarRingWidth + AvatarRingGap)
+                        .clip(CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (avatarUrl == null) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = user.name.take(1).uppercase(),
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                } else {
+                    JellyfinAsyncImage(
+                        url = avatarUrl,
+                        contentDescription = user.name,
+                        modifier = Modifier.fillMaxSize(),
+                        placeholderIcon = null,
                     )
                 }
-            } else {
-                JellyfinAsyncImage(
-                    url = avatarUrl,
-                    contentDescription = user.name,
-                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                    placeholderIcon = null,
-                )
             }
         }
         Text(
             text = user.name,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

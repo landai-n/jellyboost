@@ -95,7 +95,12 @@ User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
   code-faithful screen mocks (home, library grid, item detail, downloads queue,
   player OSD), each mirrored from the real composables (row order, compact-width
   branches, tab bars) and synced. Settings/Search/SyncPlay-groups deliberately
-  left unmocked (utility surfaces).
+  left unmocked (utility surfaces). Landscape-tablet variants added for
+  home/library/detail/downloads from the real wide-layout branches (labelled
+  tabs, 7-col grid, isWide poster+facts, single-tier queue rows). NOTE: raw
+  DesignSync uploads don't refresh the remote `_ds_manifest.json` card index —
+  new @dsCard files must be merged into it in the same sync pass or they stay
+  invisible in the pane.
 
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 

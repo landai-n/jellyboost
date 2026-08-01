@@ -1,9 +1,9 @@
-<!-- @dsCard group="Colors" name="Gradients" subtitle="Accent sweep, diagonal variant, BrandGlow halo" -->
+<!-- @dsCard group="Colors" name="Gradients" subtitle="Accent sweep, diagonal variant, BrandGlow halo, BackdropScrim, ImagePlaceholder" -->
 <style>
   body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
-  .row { display:flex; gap:16px; max-width:720px; }
-  .card { flex:1; border-radius:12px; border:1px solid #3C3C3C; overflow:hidden; background:#202020; }
-  .demo { height:96px; }
+  .row { display:flex; flex-wrap:wrap; gap:16px; max-width:760px; }
+  .card { flex:1; min-width:200px; border-radius:12px; border:1px solid #3C3C3C; overflow:hidden; background:#202020; }
+  .demo { height:96px; position:relative; }
   .label { padding:8px 12px; font-size:13px; }
   .sub { font-size:11px; color:rgba(255,255,255,.6); }
 </style>
@@ -19,5 +19,15 @@
   <div class="card">
     <div class="demo" style="background:#101010"><div style="height:100%;background:radial-gradient(circle at 50% 8%,rgba(170,92,195,.20) 0%,rgba(0,164,220,.09) 45%,transparent 100%)"></div></div>
     <div class="label">BrandGlow<div class="sub">auth halo — fades to zero at its bottom edge</div></div>
+  </div>
+  <div class="card">
+    <div class="demo" style="background:linear-gradient(135deg,#292929,#202020)">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(16,16,16,0) 0%, rgba(16,16,16,.65) 60%, #101010 100%)"></div>
+    </div>
+    <div class="label">BackdropScrim<div class="sub">detail headers — fades into content</div></div>
+  </div>
+  <div class="card">
+    <div class="demo" style="background:linear-gradient(135deg,#292929,#202020)"></div>
+    <div class="label">ImagePlaceholder<div class="sub">artwork placeholder</div></div>
   </div>
 </div>

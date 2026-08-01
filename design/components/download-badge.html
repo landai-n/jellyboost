@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" name="Download badge" subtitle="Downloaded/Downloading/Queued/Paused/Failed — all overlaid on a 24dp black-60% circle" -->
+<style>
+  body { margin:0; background:#101010; color:#fff; font-family:Roboto,"Segoe UI",system-ui,sans-serif; padding:24px; }
+  .row { display:flex; gap:24px; }
+  .swatch { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .art { position:relative; width:88px; height:88px; border-radius:8px; background:linear-gradient(135deg,#292929,#202020); }
+  .badge { position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; }
+  .badge svg { width:16px; height:16px; }
+  .ring { width:16px; height:16px; border-radius:50%; border:2px solid #00A4DC; border-top-color:rgba(0,164,220,.2); border-right-color:rgba(0,164,220,.2); }
+  .name { font-size:12px; color:rgba(255,255,255,.7); text-align:center; }
+  .note { margin-top:16px; font-size:11px; color:rgba(255,255,255,.45); }
+</style>
+<div class="row">
+  <div class="swatch">
+    <div class="art"><div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 3v6h2.5L12 15.5 7.5 11H10V5h3z" fill="#00A4DC"/></svg></div></div>
+    <div class="name">Downloaded</div>
+  </div>
+  <div class="swatch">
+    <div class="art"><div class="badge"><div class="ring" style="transform:rotate(144deg)"></div></div></div>
+    <div class="name">Downloading · 40%</div>
+  </div>
+  <div class="swatch">
+    <div class="art"><div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.5 5H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="rgba(255,255,255,.7)"/></svg></div></div>
+    <div class="name">Queued</div>
+  </div>
+  <div class="swatch">
+    <div class="art"><div class="badge"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="rgba(255,255,255,.7)"/></svg></div></div>
+    <div class="name">Paused</div>
+  </div>
+  <div class="swatch">
+    <div class="art"><div class="badge"><svg viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#CF6679"/></svg></div></div>
+    <div class="name">Failed</div>
+  </div>
+</div>
+<div class="note">DownloadState.NotDownloaded renders nothing — DownloadBadge returns before drawing the circle at all.</div>

@@ -1,9 +1,12 @@
 package dev.jellyboost.player.ui
 
 import android.view.ContextThemeWrapper
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -14,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.framework.CastButtonFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.player.R
 import dev.jellyboost.player.cast.CastAvailability
 import dev.jellyboost.player.cast.CastDeviceState
@@ -35,15 +39,35 @@ import javax.inject.Inject
  * Beyond that the button decides its own visibility: MediaRouter hides it whenever there is nothing
  * to route to, which is why [CastDeviceState.NoDevices] is not filtered here — letting the view
  * animate itself in as receivers appear is smoother than composing it in and out.
+ *
+ * @param glassContainer draws the 2026 refresh's glass circle behind the button, for the bars whose
+ *   other actions are `GlassIconButton`s. It is gated on there being a receiver to route to, unlike
+ *   the button itself: `MediaRouteButton` hides itself by going *invisible* rather than gone — it
+ *   keeps its slot — so an unconditional circle would be an empty ring on the bar for as long as
+ *   the network has no Chromecast on it. [CastDeviceState.NoDevices] is exactly the framework's
+ *   `NO_DEVICES_AVAILABLE`, which is the same condition the view hides itself on.
  */
 @Composable
-fun CastRouteButton(modifier: Modifier = Modifier) {
+fun CastRouteButton(
+    modifier: Modifier = Modifier,
+    glassContainer: Boolean = false,
+) {
     val viewModel: CastRouteButtonViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     if (state == CastDeviceState.Unavailable) return
 
-    MediaRouteButtonHost(modifier = modifier)
+    if (!glassContainer) {
+        MediaRouteButtonHost(modifier = modifier)
+        return
+    }
+
+    Box(
+        modifier = if (state == CastDeviceState.NoDevices) modifier else modifier.glassSurface(CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        MediaRouteButtonHost()
+    }
 }
 
 /**

@@ -118,7 +118,15 @@ private fun LibrariesGrid(
             item(key = TITLE_ITEM_KEY, span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     text = stringResource(R.string.libraries_title),
-                    style = JellyfinTypeExtras.ScreenTitle,
+                    // Same wide switch as DownloadsScreen's own title (spec "4d Downloads" mocks use
+                    // the larger 30px title on wide) — reusing this file's own COMPACT_MAX_WIDTH
+                    // breakpoint rather than inventing a second one.
+                    style =
+                        if (maxWidth >= COMPACT_MAX_WIDTH) {
+                            JellyfinTypeExtras.ScreenTitleLarge
+                        } else {
+                            JellyfinTypeExtras.ScreenTitle
+                        },
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = Dimens.SpaceExtraSmall),
                 )

@@ -61,6 +61,7 @@ import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.batchOutcomeText
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 
 /**
@@ -223,10 +224,13 @@ private fun OverlayNav(
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // ChromeFill, not the default Fill: these circles float directly over the movie backdrop,
+        // which is exactly the bright-artwork case GlassDefaults.ChromeFill exists for.
         GlassIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(R.string.detail_back),
             onClick = onBack,
+            surfaceTint = GlassDefaults.ChromeFill,
         )
         Spacer(modifier = Modifier.weight(1f))
         if (showFavorite) {
@@ -239,12 +243,14 @@ private fun OverlayNav(
                     ),
                 onClick = onToggleFavorite,
                 tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
+                surfaceTint = GlassDefaults.ChromeFill,
             )
         }
         GlassIconButton(
             icon = Icons.Filled.Home,
             contentDescription = stringResource(R.string.detail_home),
             onClick = onHome,
+            surfaceTint = GlassDefaults.ChromeFill,
         )
     }
 }

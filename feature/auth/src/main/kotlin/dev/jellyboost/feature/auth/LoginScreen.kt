@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -572,24 +574,33 @@ private fun QuickConnectDialog(
  * The Quick Connect code, one digit box per character — [code] is a plain string rather than a
  * fixed-length type, so this sizes itself to whatever length the server hands back instead of
  * assuming six.
+ *
+ * The boxes narrow below [QuickConnectDigitWidth] when the dialog can't fit them all — a phone-width
+ * `AlertDialog` is narrower than six full boxes — because a code the user has to scroll to read
+ * defeats the point of showing it.
  */
 @Composable
 private fun QuickConnectCodeRow(code: String) {
-    Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(QuickConnectDigitGap),
-    ) {
-        code.forEach { digit -> QuickConnectDigitBox(digit) }
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        val count = code.length.coerceAtLeast(1)
+        val fitWidth = (maxWidth - QuickConnectDigitGap * (count - 1)) / count
+        val digitWidth = minOf(QuickConnectDigitWidth, fitWidth)
+        Row(horizontalArrangement = Arrangement.spacedBy(QuickConnectDigitGap)) {
+            code.forEach { digit -> QuickConnectDigitBox(digit = digit, width = digitWidth) }
+        }
     }
 }
 
 @Composable
-private fun QuickConnectDigitBox(digit: Char) {
+private fun QuickConnectDigitBox(
+    digit: Char,
+    width: Dp,
+) {
     val shape = RoundedCornerShape(Dimens.CardCornerRadius)
     Box(
         modifier =
             Modifier
-                .size(width = QuickConnectDigitWidth, height = QuickConnectDigitHeight)
+                .size(width = width, height = QuickConnectDigitHeight)
                 .background(color = QuickConnectDigitFill, shape = shape)
                 .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.Hairline, shape = shape),
         contentAlignment = Alignment.Center,

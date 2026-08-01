@@ -4,17 +4,28 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jellyboost.core.ui.theme.JellyfinGradients
+
+/** Size of the glyph on the placeholder gradient — one size everywhere, from card to backdrop. */
+private val PlaceholderGlyphSize = 30.dp
+
+/**
+ * Its tint: quieter than `onSurfaceVariant`, because a placeholder should read as *absence* rather
+ * than as a picture of a film reel.
+ */
+private val PlaceholderGlyphTint = Color.White.copy(alpha = 0.35f)
 
 /**
  * Every remote image in the app goes through this composable.
@@ -52,7 +63,8 @@ fun JellyfinAsyncImage(
                 Icon(
                     imageVector = placeholderIcon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = PlaceholderGlyphTint,
+                    modifier = Modifier.size(PlaceholderGlyphSize),
                 )
             }
         } else {

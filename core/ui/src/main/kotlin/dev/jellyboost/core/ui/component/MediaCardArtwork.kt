@@ -3,20 +3,25 @@ package dev.jellyboost.core.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,12 +32,21 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.cardShadow
+import java.util.Locale
 
 /**
  * How every card in the design system reads its `width` parameter.
@@ -70,15 +84,108 @@ fun Modifier.selectableCardClick(
     )
 }
 
+/** Title under a card's artwork. */
+internal val CardTitleStyle =
+    TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.W500,
+        lineHeight = 18.sp,
+    )
+
+/** Its second line — a year, a series name, an episode label. */
+internal val CardSubtitleStyle =
+    TextStyle(
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+    )
+
+/** Gap between the artwork and the title under it. */
+internal val CardTitleGap = 10.dp
+
+/** Gap between that title and its subtitle — tight, so the two read as one block. */
+internal val CardSubtitleGap = 2.dp
+
+/** Text inside every overlay badge drawn on artwork — small, heavy and slightly tracked out. */
+private val OverlayBadgeLabel =
+    TextStyle(
+        fontSize = 10.sp,
+        fontWeight = FontWeight.W600,
+        letterSpacing = 0.06.em,
+    )
+
+/** Inset of the corner *circles* (watched, download, selection), tighter than [Dimens.OverlayInset]. */
+private val CornerIndicatorInset = 8.dp
+
+private val IndicatorSize = 22.dp
+
+private val IndicatorGlyphSize = 13.dp
+
+/** Ring thickness of the hollow "selectable but not selected" indicator. */
+private val IndicatorRingWidth = 2.dp
+
+private val BadgeRadius = Dimens.MPillRadius
+
+private val BadgeVerticalPadding = 3.dp
+
+private val TopBadgeHorizontalPadding = 8.dp
+
+private val CornerBadgeHorizontalPadding = 7.dp
+
+private val RatingStarSize = 10.dp
+
+private val RatingStarGap = 3.dp
+
+/** How far the time chip lifts when it would otherwise sit on the inset progress bar. */
+private val TimeChipProgressOffset = 14.dp
+
+private val SelectedOutlineWidth = 2.dp
+
+/** Backdrops of the three overlay badges, from the mocks: top badge, time chip, rating badge. */
+private val TopBadgeScrim = Color.Black.copy(alpha = 0.60f)
+
+private val TimeChipScrim = Color.Black.copy(alpha = 0.70f)
+
+private val RatingScrim = Color.Black.copy(alpha = 0.65f)
+
+/** Backdrop of the hollow selection indicator, which has to stay visible over bright artwork. */
+private val IndicatorScrim = Color.Black.copy(alpha = 0.60f)
+
+private const val UNSELECTED_INDICATOR_ALPHA = 0.85f
+
+/** Tint over selected artwork — enough to read as "picked", not so much that the image is gone. */
+private const val SELECTED_TINT_ALPHA = 0.22f
+
+/** Track of the inset progress bar. */
+private const val PROGRESS_TRACK_ALPHA = 0.22f
+
+/**
+ * Formats a community rating for the corner badge: one decimal place, always.
+ *
+ * The trailing digit is not decoration. Ratings arrive as a float that is very often a whole number
+ * (`8.0`), and rendering that as "8" beside a neighbouring card's "7.4" makes two values on the
+ * same scale look like values on different ones. Locale-aware, because a decimal separator is not
+ * universally a point.
+ */
+internal fun formatRatingBadge(
+    rating: Float,
+    locale: Locale = Locale.getDefault(),
+): String = String.format(locale, "%.1f", rating)
+
 /**
  * Shared artwork block behind [PosterCard] and [ThumbCard]: the image itself plus the overlays
- * every card carries — the resume progress bar, the watched tick, the download badge, and (while a
- * list is in batch-selection mode) the selection scrim and indicator.
+ * every card carries — the resume progress bar, the watched tick, the download badge, the optional
+ * metadata badges, and (while a list is in batch-selection mode) the selection tint and indicator.
  *
  * @param selected `null` when the list is **not** in selection mode, which is the ordinary case and
  *   draws nothing extra; `false`/`true` put the card in the mode's unselected/selected state. One
  *   nullable flag rather than a pair of booleans because "selected while not selectable" is not a
  *   state that exists, and a pair would let a caller express it.
+ * @param topStartBadge short, already-formatted label for the top-left glass badge — "S1 · E10",
+ *   "4K". Suppressed in selection mode, where that corner belongs to the selection indicator.
+ * @param timeChipText already-formatted remaining time for the bottom-right chip ("22m left"). The
+ *   *number* comes from `JellyfinItem.remainingMinutes`; the wording is a caller's string resource,
+ *   which is why this is a `String` and not an `Int`.
+ * @param ratingBadge community rating for the bottom-left badge — see [formatRatingBadge].
  */
 @Composable
 internal fun MediaCardArtwork(
@@ -91,6 +198,9 @@ internal fun MediaCardArtwork(
     placeholderIcon: ImageVector?,
     modifier: Modifier = Modifier,
     selected: Boolean? = null,
+    topStartBadge: String? = null,
+    timeChipText: String? = null,
+    ratingBadge: Float? = null,
 ) {
     val shape = RoundedCornerShape(Dimens.CardCornerRadius)
     JellyfinAsyncImage(
@@ -100,21 +210,20 @@ internal fun MediaCardArtwork(
             modifier
                 .fillMaxWidth()
                 .aspectRatio(aspectRatio)
-                .then(
-                    if (selected == true) {
-                        Modifier.border(SELECTED_BORDER_WIDTH, MaterialTheme.colorScheme.primary, shape)
-                    } else {
-                        Modifier
-                    },
-                ).clip(shape),
+                .cardShadow(shape)
+                .clip(shape),
         contentScale = ContentScale.Crop,
         placeholderIcon = placeholderIcon,
         overlay = {
             CardOverlays(
+                shape = shape,
                 downloadState = downloadState,
                 played = played,
                 progress = progress,
                 selected = selected,
+                topStartBadge = topStartBadge,
+                timeChipText = timeChipText,
+                ratingBadge = ratingBadge,
             )
         },
     )
@@ -122,55 +231,205 @@ internal fun MediaCardArtwork(
 
 @Composable
 private fun BoxScope.CardOverlays(
+    shape: RoundedCornerShape,
     downloadState: DownloadState,
     played: Boolean,
     progress: Float?,
     selected: Boolean?,
+    topStartBadge: String?,
+    timeChipText: String?,
+    ratingBadge: Float?,
 ) {
+    // Drawn over the image rather than under it: on a background this close to black, artwork with
+    // dark edges has no visible boundary at all unless the hairline sits on top of it.
+    Box(
+        modifier =
+            Modifier
+                .matchParentSize()
+                .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, shape),
+    )
+
     if (selected == true) {
         Box(
             modifier =
                 Modifier
                     .matchParentSize()
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = SELECTED_SCRIM_ALPHA)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = SELECTED_TINT_ALPHA))
+                    .border(SelectedOutlineWidth, MaterialTheme.colorScheme.primary, shape),
         )
     }
 
-    DownloadBadge(
-        state = downloadState,
-        modifier = Modifier.align(Alignment.TopEnd).padding(Dimens.SpaceExtraSmall),
-    )
+    TopStartOverlay(selected = selected, topStartBadge = topStartBadge)
 
-    // The selection indicator takes the watched tick's corner and, while the mode is on, its place:
-    // both are a check, and two checks on one card would be a puzzle rather than two facts. The
-    // tick comes back the moment selection mode ends.
-    if (selected != null) {
-        SelectionIndicator(selected = selected, modifier = Modifier.align(Alignment.TopStart))
-    } else if (played && progress == null) {
-        Box(
-            modifier =
-                Modifier
-                    .align(Alignment.TopStart)
-                    .padding(Dimens.SpaceExtraSmall)
-                    .clip(RoundedCornerShape(percent = 50)),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(R.string.media_card_watched),
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(2.dp),
-            )
+    // The download badge and the watched tick share the top-right corner, stacked rather than
+    // overlaid: both are facts about the same item and neither replaces the other, and the common
+    // case (one of the two, or neither) looks identical either way.
+    Column(
+        modifier = Modifier.align(Alignment.TopEnd).padding(CornerIndicatorInset),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
+    ) {
+        DownloadBadge(state = downloadState)
+        // Hidden mid-episode (the progress bar already says "not finished"), and hidden in
+        // selection mode, where a second primary circle with a check in it would be a puzzle.
+        if (played && progress == null && selected == null) {
+            WatchedIndicator()
         }
     }
 
+    if (ratingBadge != null) {
+        RatingBadge(
+            rating = ratingBadge,
+            modifier = Modifier.align(Alignment.BottomStart).padding(Dimens.OverlayInset),
+        )
+    }
+
+    if (timeChipText != null) {
+        TimeChip(
+            text = timeChipText,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        start = Dimens.OverlayInset,
+                        end = Dimens.OverlayInset,
+                        bottom = if (progress != null) TimeChipProgressOffset else Dimens.OverlayInset,
+                    ),
+        )
+    }
+
     if (progress != null) {
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = Color.Black.copy(alpha = 0.5f),
-            drawStopIndicator = {},
-            gapSize = 0.dp,
+        InsetProgressBar(progress = progress, modifier = Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+/**
+ * The top-left corner, which one of two things can claim.
+ *
+ * In selection mode it is the indicator, always — a grid where only some cards said they were
+ * selectable would read as a grid where only some cards can be picked. Otherwise it is the metadata
+ * badge, when the caller passed one.
+ */
+@Composable
+private fun BoxScope.TopStartOverlay(
+    selected: Boolean?,
+    topStartBadge: String?,
+) {
+    if (selected != null) {
+        SelectionIndicator(
+            selected = selected,
+            modifier = Modifier.align(Alignment.TopStart).padding(CornerIndicatorInset),
+        )
+    } else if (topStartBadge != null) {
+        Text(
+            text = topStartBadge,
+            style = OverlayBadgeLabel,
+            color = Color.White,
+            maxLines = 1,
+            modifier =
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(Dimens.OverlayInset)
+                    .background(color = TopBadgeScrim, shape = RoundedCornerShape(BadgeRadius))
+                    .padding(horizontal = TopBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
+        )
+    }
+}
+
+/** The bottom-right "22m left" chip. */
+@Composable
+private fun TimeChip(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
+        style = OverlayBadgeLabel,
+        color = Color.White,
+        maxLines = 1,
+        modifier =
+            modifier
+                .background(color = TimeChipScrim, shape = RoundedCornerShape(BadgeRadius))
+                .padding(horizontal = CornerBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
+    )
+}
+
+/** The bottom-left star + score badge, shown on library grids. */
+@Composable
+private fun RatingBadge(
+    rating: Float,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .background(color = RatingScrim, shape = RoundedCornerShape(BadgeRadius))
+                .padding(horizontal = CornerBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(RatingStarGap),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Star,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(RatingStarSize),
+        )
+        Text(
+            text = formatRatingBadge(rating),
+            style = OverlayBadgeLabel,
+            color = Color.White,
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * The resume bar, inset from the artwork's edges rather than spanning them.
+ *
+ * A hand-rolled pair of boxes rather than a `LinearProgressIndicator`: at 3dp with a 2dp radius and
+ * neither stop indicator nor gap, nothing that component provides survives being configured away.
+ */
+@Composable
+private fun InsetProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
+    val trackShape = RoundedCornerShape(Dimens.InsetProgressRadius)
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.OverlayInset)
+                .padding(bottom = Dimens.SpaceSmall)
+                .height(Dimens.InsetProgressHeight)
+                .clip(trackShape)
+                .background(Color.White.copy(alpha = PROGRESS_TRACK_ALPHA)),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth(fraction = progress.coerceIn(0f, 1f))
+                    .height(Dimens.InsetProgressHeight)
+                    .background(color = MaterialTheme.colorScheme.primary, shape = trackShape),
+        )
+    }
+}
+
+/** The solid primary disc with a dark tick that marks an item as watched. */
+@Composable
+private fun WatchedIndicator(modifier: Modifier = Modifier) {
+    Box(
+        modifier =
+            modifier
+                .size(IndicatorSize)
+                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Check,
+            contentDescription = stringResource(R.string.media_card_watched),
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(IndicatorGlyphSize),
         )
     }
 }
@@ -180,38 +439,46 @@ private fun BoxScope.CardOverlays(
  *
  * Both states are drawn, not just the selected one: an unselected card in a selection-mode grid has
  * to say that it *could* be selected, otherwise the mode looks like it applies to one card only.
+ *
+ * The unselected ring has no glyph to hang a `contentDescription` off, so it labels itself through
+ * `semantics` instead — a card that reads out its title and nothing about its selection state is a
+ * card a screen-reader user cannot batch-edit.
  */
 @Composable
 internal fun SelectionIndicator(
     selected: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Icon(
-        imageVector = if (selected) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
-        contentDescription =
-            stringResource(
-                if (selected) R.string.selection_item_selected else R.string.selection_item_not_selected,
-            ),
-        tint =
-            if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = UNSELECTED_INDICATOR_ALPHA)
-            },
-        modifier =
-            modifier
-                .padding(Dimens.SpaceExtraSmall)
-                .clip(RoundedCornerShape(percent = 50))
-                .background(Color.Black.copy(alpha = INDICATOR_BACKDROP_ALPHA))
-                .padding(2.dp),
-    )
+    val description =
+        stringResource(
+            if (selected) R.string.selection_item_selected else R.string.selection_item_not_selected,
+        )
+    if (selected) {
+        Box(
+            modifier =
+                modifier
+                    .size(IndicatorSize)
+                    .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = description,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(IndicatorGlyphSize),
+            )
+        }
+    } else {
+        Box(
+            modifier =
+                modifier
+                    .size(IndicatorSize)
+                    .background(color = IndicatorScrim, shape = CircleShape)
+                    .border(
+                        width = IndicatorRingWidth,
+                        color = Color.White.copy(alpha = UNSELECTED_INDICATOR_ALPHA),
+                        shape = CircleShape,
+                    ).semantics { this.contentDescription = description },
+        )
+    }
 }
-
-private val SELECTED_BORDER_WIDTH = 2.dp
-
-private const val SELECTED_SCRIM_ALPHA = 0.35f
-
-private const val UNSELECTED_INDICATOR_ALPHA = 0.85f
-
-/** Keeps both indicator states legible over bright artwork. */
-private const val INDICATOR_BACKDROP_ALPHA = 0.45f

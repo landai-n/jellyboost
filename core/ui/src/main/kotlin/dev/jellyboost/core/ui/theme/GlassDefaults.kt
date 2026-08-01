@@ -82,8 +82,17 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  * The order of the chain is load-bearing. The clip comes first so the blur is sampled and drawn
  * only inside the shape; the border comes last so the hairline is drawn *over* the fill rather
  * than under it, which at a 9% alpha is the difference between a visible edge and none.
+ *
+ * @param borderColor the edge to draw. Defaults to [GlassDefaults.Hairline], which is what every
+ *   floating surface uses; a ghost *button* is the exception and passes
+ *   [GlassDefaults.GhostBorder], because a control the user is meant to press has to read as an
+ *   edge rather than as a seam. Stacking a second `border` on top of the default would composite
+ *   the two alphas instead of replacing one with the other, hence a parameter.
  */
-fun Modifier.glassSurface(shape: Shape): Modifier =
+fun Modifier.glassSurface(
+    shape: Shape,
+    borderColor: Color = GlassDefaults.Hairline,
+): Modifier =
     composed {
         val hazeState = LocalHazeState.current
         val backdrop =
@@ -94,5 +103,5 @@ fun Modifier.glassSurface(shape: Shape): Modifier =
             }
         clip(shape)
             .then(backdrop)
-            .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.Hairline, shape = shape)
+            .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
     }

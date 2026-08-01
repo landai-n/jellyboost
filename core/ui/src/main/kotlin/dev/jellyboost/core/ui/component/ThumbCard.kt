@@ -32,6 +32,8 @@ import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
  *   width instead, which is what an adaptive grid cell wants.
  * @param onLongClick offered by lists that support batch selection; `null` everywhere else.
  * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork].
+ * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. Formatted by the caller,
+ *   which is the screen that owns the string resources ("S1 · E10", "22m left").
  */
 @Composable
 fun ThumbCard(
@@ -42,6 +44,9 @@ fun ThumbCard(
     showTitle: Boolean = true,
     onLongClick: (() -> Unit)? = null,
     selected: Boolean? = null,
+    topStartBadge: String? = null,
+    timeChipText: String? = null,
+    ratingBadge: Float? = null,
 ) {
     Column(
         modifier =
@@ -64,21 +69,25 @@ fun ThumbCard(
             progress = item.playbackProgress,
             placeholderIcon = Icons.Outlined.Tv,
             selected = selected,
+            topStartBadge = topStartBadge,
+            timeChipText = timeChipText,
+            ratingBadge = ratingBadge,
         )
 
         if (showTitle) {
-            Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
+            Spacer(modifier = Modifier.height(CardTitleGap))
             Text(
                 text = item.displayTitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = CardTitleStyle,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             item.displaySubtitle?.let { subtitle ->
+                Spacer(modifier = Modifier.height(CardSubtitleGap))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = CardSubtitleStyle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -106,6 +115,29 @@ private fun ThumbCardPreview() {
                     downloadState = DownloadState.Downloading(progress = 0.7f),
                 ),
             onClick = {},
+        )
+    }
+}
+
+@Preview(name = "ThumbCard — overlays", showBackground = true, backgroundColor = 0xFF101010)
+@Composable
+private fun ThumbCardOverlaysPreview() {
+    JellyfinTheme {
+        ThumbCard(
+            item =
+                JellyfinItem(
+                    id = "3",
+                    name = "The Original",
+                    type = ItemType.EPISODE,
+                    seriesName = "Westworld",
+                    indexNumber = 1,
+                    parentIndexNumber = 1,
+                    runTimeTicks = 54_000_000_000L,
+                    userData = UserData(playbackPositionTicks = 27_000_000_000L),
+                ),
+            onClick = {},
+            topStartBadge = "S1 · E1",
+            timeChipText = "27m left",
         )
     }
 }

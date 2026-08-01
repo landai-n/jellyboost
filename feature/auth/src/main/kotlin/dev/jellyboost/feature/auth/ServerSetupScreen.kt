@@ -82,6 +82,13 @@ internal val AuthContentMaxWidth = 460.dp
 private val AuthContentVerticalPadding = 32.dp
 
 /**
+ * [AuthContentVerticalPadding] on a compact (phone) window: a typical portrait phone window is
+ * short enough that the full 32dp on both the header and the form panel, twice, is the difference
+ * between the Login screen fitting without scrolling and it not.
+ */
+private val AuthContentVerticalPaddingCompact = 16.dp
+
+/**
  * How far down the screen the accent halo behind the auth content reaches. Tall enough to sit
  * behind the whole branded header on a phone, short enough that the form below stays on the flat
  * `#101010` background.
@@ -465,12 +472,17 @@ private fun HintRow(
  * in one scrolling column. A landscape tablet instead puts them side by side — the branded
  * identity on the left, the form on the right — because stacked they overflow the short viewport
  * and the last actions end up cropped below the fold.
+ *
+ * [header] and [content] both receive the window's compactness so a caller can shrink oversized
+ * pieces (e.g. `LoginContent`'s header) instead of just relying on [AuthPane]'s tighter padding.
+ * The two-pane branch always reports `false`: the tablet layout is pixel-identical to the
+ * approved design regardless of exactly how wide the expanded window is.
  */
 @Composable
 internal fun AuthScreenScaffold(
-    header: @Composable ColumnScope.() -> Unit,
+    header: @Composable ColumnScope.(compact: Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.(compact: Boolean) -> Unit,
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -478,6 +490,11 @@ internal fun AuthScreenScaffold(
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val isTwoPane = maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight
+
+            // Material's "compact" width class: below it, the branded header and the panel below
+            // it are shrunk just enough that the whole screen fits a typical phone window without
+            // scrolling (the two-pane branch never sees this — it always passes `false` below).
+            val compact = maxWidth < 600.dp
 
             // Drawn under the insets on purpose: the halo bleeding behind the status bar is what
             // makes it read as part of the background rather than as a banner. Side by side, the
@@ -519,19 +536,23 @@ internal fun AuthScreenScaffold(
                         AuthPane(
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                             alignment = Alignment.Center,
-                            content = header,
-                        )
+                            compact = false,
+                        ) {
+                            header(false)
+                        }
                         PaneRule()
                         AuthPane(
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                             alignment = Alignment.Center,
-                            content = content,
-                        )
+                            compact = false,
+                        ) {
+                            content(false)
+                        }
                     }
                 } else {
-                    AuthPane {
-                        header()
-                        content()
+                    AuthPane(compact = compact) {
+                        header(compact)
+                        content(compact)
                     }
                 }
             }
@@ -569,13 +590,21 @@ private fun PaneRule() {
 /**
  * One column of auth content: capped at [AuthContentMaxWidth], placed per [alignment] while it
  * fits the pane, scrolling on its own once it doesn't.
+ *
+ * [compact] trims the pane's own padding on a phone-width window — the biggest single chunk of
+ * vertical space this screen spends on anything but actual content — so the single-pane layout
+ * fits a typical phone window without scrolling.
  */
 @Composable
 private fun AuthPane(
     modifier: Modifier = Modifier,
     alignment: Alignment = Alignment.TopCenter,
+    compact: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val verticalPadding = if (compact) AuthContentVerticalPaddingCompact else AuthContentVerticalPadding
+    val horizontalPadding = if (compact) Dimens.SpaceLarge else Dimens.SpaceExtraLarge
+
     Box(modifier = modifier, contentAlignment = alignment) {
         Column(
             modifier =
@@ -583,7 +612,7 @@ private fun AuthPane(
                     .widthIn(max = AuthContentMaxWidth)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = Dimens.SpaceExtraLarge, vertical = AuthContentVerticalPadding),
+                    .padding(horizontal = horizontalPadding, vertical = verticalPadding),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
             content = content,
         )

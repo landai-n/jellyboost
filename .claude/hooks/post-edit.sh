@@ -4,32 +4,6 @@
 
 INPUT="$(cat)"
 
-# Resolve the repo root of the checkout the edit actually happened in: for a
-# worktree-isolated agent that is the worktree (with its own gitignored .claude/state) —
-# trusting CLAUDE_PROJECT_DIR there would stale-mark the main checkout's verify state
-# (same bug as fixed in pre-commit-gate.sh).
-HOOK_CWD="$(printf '%s' "$INPUT" | python3 -c '
-import json, sys
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    print("")
-    sys.exit(0)
-print(data.get("cwd", "") or "")
-' 2>/dev/null)"
-
-REPO_ROOT=""
-if [ -n "$HOOK_CWD" ]; then
-  REPO_ROOT="$(git -C "$HOOK_CWD" rev-parse --show-toplevel 2>/dev/null)"
-fi
-if [ -z "$REPO_ROOT" ]; then
-  REPO_ROOT="${CLAUDE_PROJECT_DIR:-}"
-fi
-if [ -z "$REPO_ROOT" ]; then
-  REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-fi
-cd "$REPO_ROOT" 2>/dev/null || exit 0
-
 FILE_PATH="$(printf '%s' "$INPUT" | python3 -c '
 import json, sys
 try:
@@ -44,6 +18,33 @@ print(data.get("tool_input", {}).get("file_path", "") or "")
 if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
+
+# Resolve the repo root of the checkout the edit actually happened in — from the edited
+# FILE's own directory, not the hook cwd. A subagent with a pinned cwd reports the main
+# checkout in "cwd" even while editing files inside .claude/worktrees/<name>/, which used
+# to stale-mark the main checkout's verify state (the cwd-based resolution only covered
+# isolation:"worktree" agents, whose cwd really is the worktree).
+HOOK_CWD="$(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("")
+    sys.exit(0)
+print(data.get("cwd", "") or "")
+' 2>/dev/null)"
+
+REPO_ROOT="$(git -C "$(dirname "$FILE_PATH")" rev-parse --show-toplevel 2>/dev/null)"
+if [ -z "$REPO_ROOT" ] && [ -n "$HOOK_CWD" ]; then
+  REPO_ROOT="$(git -C "$HOOK_CWD" rev-parse --show-toplevel 2>/dev/null)"
+fi
+if [ -z "$REPO_ROOT" ]; then
+  REPO_ROOT="${CLAUDE_PROJECT_DIR:-}"
+fi
+if [ -z "$REPO_ROOT" ]; then
+  REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+fi
+cd "$REPO_ROOT" 2>/dev/null || exit 0
 
 case "$FILE_PATH" in
   *.kt|*.kts)

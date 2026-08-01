@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -203,12 +204,23 @@ private fun queueBulkActions(viewModel: DownloadsViewModel) =
 /**
  * Stateless rendering — a pure function of [state], so it previews without a ViewModel.
  *
- * `wide` (2026 refresh) is decided once here, in the one `BoxWithConstraints` the whole screen
- * needs, as [queueRowCompact]'s complement — no second breakpoint invented for it (spec "4d
- * Downloads"). It picks the storage card vs. the three-panel tablet summary, the tab row's
- * flex-fill vs. content-hug segments, where the bulk-action pills live, and — handed down as
- * `compact = !wide` — [QueueRow]'s own two-tier/one-tier split, so every one of those decisions
- * agrees about which width class the screen is in.
+ * Two *independent* layout decisions are taken here, in the one `BoxWithConstraints` the whole
+ * screen needs:
+ *
+ * - **`wide`** (2026 refresh) — the *style* every piece is drawn in: [queueRowCompact]'s
+ *   complement, no second width breakpoint invented for it (spec "4d Downloads"). It picks the
+ *   storage card vs. the three-panel tablet summary, the tab row's flex-fill vs. content-hug
+ *   segments, where the bulk-action pills live, and — handed down as `compact = !wide` —
+ *   [QueueRow]'s own two-tier/one-tier split.
+ * - **[chromePinned]** — whether those pieces are *pinned* above an inner-scrolling list at all.
+ *   That needs height as well as width: the two were fused into `wide` until a landscape phone
+ *   (wide enough for the tablet summary, ~360dp tall) pinned chrome over a list with no room left
+ *   to scroll in. When chrome is not pinned the screen is a single [LazyColumn] and scrolls as one
+ *   page — the header, summary and tab row are simply its first item.
+ *
+ * Both layouts emit their rows through the same [downloadedRows]/[queueRows] `LazyListScope`
+ * extensions and the same [DownloadsChrome], so nothing about how a row or the header looks can
+ * depend on which of the two is in play.
  */
 @Composable
 fun DownloadsContent(
@@ -219,70 +231,295 @@ fun DownloadsContent(
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // The chrome's TOP padding goes on the outer content: the header, storage/summary panel and tab
-    // row never scroll, so they are exactly what would sit under the top nav (or under the compact
-    // layout's floating action cluster) otherwise. The BOTTOM half stays with the two tabs' lists, so
-    // their rows still scroll under the floating nav pill.
+    // The chrome's TOP padding goes on the outer content in both layouts: pinned, the header is
+    // exactly what would sit under the top nav (or under the compact layout's floating action
+    // cluster) otherwise; unified, it is the first thing that scrolls up under it. The BOTTOM half
+    // stays on whichever list is drawn (listContentPadding), so rows still scroll out from under
+    // the floating nav pill.
     BoxWithConstraints(
         modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding()),
     ) {
         val wide = !queueRowCompact(maxWidth)
-        val downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            DownloadsHeader(wide = wide)
+        // Which delete the user has asked for but not yet confirmed. Local to the screen on
+        // purpose: it is a question the UI is asking, not something the ViewModel or Room knows
+        // about. It is hoisted this far up because the unified layout has no *Downloaded tab*
+        // composable left to hold it; keying the `remember` on the selected tab preserves what
+        // leaving that composable used to do — switching tabs drops the pending question.
+        var pendingDelete by remember(state.selectedTab) { mutableStateOf<DownloadItem?>(null) }
 
-            if (wide) {
-                WideSummary(
-                    storage = state.storage,
-                    downloadedBytes = downloadedBytes,
-                    queue = state.queue,
-                    queueStats = state.queueStats,
-                    wifiOnly = state.wifiOnly,
-                    onWifiOnlyChange = onWifiOnlyChange,
-                )
-            } else {
-                StorageCard(
-                    usage = state.storage,
-                    downloadedBytes = downloadedBytes,
-                    wifiOnly = state.wifiOnly,
-                    onWifiOnlyChange = onWifiOnlyChange,
-                )
-            }
-
-            val showInlineBulkActions = wide && state.selectedTab == DownloadsTab.QUEUE && state.queue.isNotEmpty()
-            DownloadsTabRow(
-                selectedTab = state.selectedTab,
-                onSelectTab = actions.onSelectTab,
-                wide = wide,
-                trailing =
-                    if (showInlineBulkActions) {
-                        { QueueActionsBar(state = state, bulk = bulk, horizontalPadding = 0.dp) }
-                    } else {
-                        null
-                    },
+        if (chromePinned(maxWidth, maxHeight)) {
+            PinnedChromeLayout(
+                state = state,
+                actions = actions,
+                bulk = bulk,
+                onPlay = onPlay,
+                onWifiOnlyChange = onWifiOnlyChange,
+                onRequestDelete = { pendingDelete = it },
             )
+        } else {
+            UnifiedScrollLayout(
+                state = state,
+                actions = actions,
+                bulk = bulk,
+                wide = wide,
+                onPlay = onPlay,
+                onWifiOnlyChange = onWifiOnlyChange,
+                onRequestDelete = { pendingDelete = it },
+            )
+        }
 
-            when {
-                state.isLoading -> LoadingState()
+        pendingDelete?.let { item ->
+            DeleteDownloadDialog(
+                item = item,
+                onDismiss = { pendingDelete = null },
+                onConfirm = {
+                    pendingDelete = null
+                    actions.onDelete(item)
+                },
+            )
+        }
 
-                // Ahead of the tabs: the projection both of them read is the thing that failed, so
-                // neither has anything trustworthy to draw.
-                state.loadFailed -> EmptyState(message = stringResource(R.string.downloads_load_failed))
-
-                state.selectedTab == DownloadsTab.DOWNLOADED ->
-                    DownloadedTab(
-                        groups = state.downloaded,
-                        onDelete = actions.onDelete,
-                        onPlay = onPlay,
-                        compact = !wide,
-                    )
-
-                else -> QueueTab(state = state, actions = actions, bulk = bulk, wide = wide)
-            }
+        // Still guarded on a non-empty queue, as it was when this dialog lived inside a queue tab
+        // that returned early on an empty one: a confirmation counting zero downloads asks nothing.
+        if (state.showCancelAllConfirmation && state.queue.isNotEmpty()) {
+            CancelAllDialog(
+                count = state.queue.size,
+                onDismiss = bulk.onDismissCancelAll,
+                onConfirm = bulk.onConfirmCancelAll,
+            )
         }
     }
 }
+
+/**
+ * The pinned layout (tablets, and anything else with both the width and the height for it): chrome
+ * fixed at the top, the selected tab's list scrolling underneath in what is left. Unchanged from
+ * the 2026 refresh — this is the arrangement the whole screen used to have.
+ *
+ * [chromePinned] is only ever true where `wide` is, so every piece is drawn in its wide form: the
+ * three-panel summary, content-hug tabs, and the bulk-action pills inline in [DownloadsTabRow]
+ * rather than as a bar of their own.
+ */
+@Composable
+private fun PinnedChromeLayout(
+    state: DownloadsUiState,
+    actions: DownloadsActions,
+    bulk: QueueBulkActions,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    onRequestDelete: (DownloadItem) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        DownloadsChrome(
+            state = state,
+            actions = actions,
+            bulk = bulk,
+            wide = true,
+            onWifiOnlyChange = onWifiOnlyChange,
+        )
+
+        when (val body = state.body()) {
+            DownloadsBody.DOWNLOADS ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = listContentPadding(top = Dimens.SpaceSmall),
+                ) {
+                    downloadedRows(
+                        groups = state.downloaded,
+                        onDelete = onRequestDelete,
+                        onPlay = onPlay,
+                        compact = false,
+                    )
+                }
+
+            DownloadsBody.QUEUE ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = listContentPadding(top = Dimens.SpaceSmall),
+                ) {
+                    queueRows(state = state, actions = actions, bulk = bulk, wide = true)
+                }
+
+            // Full-height, vertically centred in the space the chrome left — these states have
+            // nothing to scroll, so there is no list under the chrome to put them in.
+            else -> DownloadsStateView(body = body)
+        }
+    }
+}
+
+/**
+ * The unified layout (every phone, portrait and landscape): one list for the whole screen, with the
+ * chrome as its leading item.
+ *
+ * Fixes two halves of one user-reported defect. In landscape the chrome alone is taller than the
+ * window, so pinning it left the queue unreachable — nothing on the screen scrolled. In portrait it
+ * pinned roughly half the screen, so a short list moved inside the bottom half while the page
+ * itself sat still. Both become ordinary page scrolling here.
+ */
+@Composable
+private fun UnifiedScrollLayout(
+    state: DownloadsUiState,
+    actions: DownloadsActions,
+    bulk: QueueBulkActions,
+    wide: Boolean,
+    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    onRequestDelete: (DownloadItem) -> Unit,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        // No top padding of its own: the chrome is inside this list now and brings the spacing it
+        // always had, and the window's top inset is already on the outer box.
+        contentPadding = listContentPadding(top = 0.dp),
+    ) {
+        item(key = CHROME_ITEM_KEY, contentType = DownloadsContentType.CHROME) {
+            DownloadsChrome(
+                state = state,
+                actions = actions,
+                bulk = bulk,
+                wide = wide,
+                onWifiOnlyChange = onWifiOnlyChange,
+            )
+        }
+
+        when (val body = state.body()) {
+            DownloadsBody.DOWNLOADS ->
+                downloadedRows(
+                    groups = state.downloaded,
+                    onDelete = onRequestDelete,
+                    onPlay = onPlay,
+                    compact = !wide,
+                )
+
+            DownloadsBody.QUEUE -> queueRows(state = state, actions = actions, bulk = bulk, wide = wide)
+
+            // An item rather than a sibling of the list: the chrome above it must still scroll,
+            // because on a landscape phone the chrome on its own overflows the window.
+            else ->
+                item(key = STATE_ITEM_KEY, contentType = DownloadsContentType.STATE) {
+                    DownloadsStateView(body = body)
+                }
+        }
+    }
+}
+
+/**
+ * The header, storage/queue summary and tab row: the three pieces that are either pinned above the
+ * list ([PinnedChromeLayout]) or scroll away as its first item ([UnifiedScrollLayout]). One
+ * composable, so the two layouts cannot drift apart in anything but where it is put.
+ */
+@Composable
+private fun DownloadsChrome(
+    state: DownloadsUiState,
+    actions: DownloadsActions,
+    bulk: QueueBulkActions,
+    wide: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        DownloadsHeader(wide = wide)
+
+        val downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk }
+        if (wide) {
+            WideSummary(
+                storage = state.storage,
+                downloadedBytes = downloadedBytes,
+                queue = state.queue,
+                queueStats = state.queueStats,
+                wifiOnly = state.wifiOnly,
+                onWifiOnlyChange = onWifiOnlyChange,
+            )
+        } else {
+            StorageCard(
+                usage = state.storage,
+                downloadedBytes = downloadedBytes,
+                wifiOnly = state.wifiOnly,
+                onWifiOnlyChange = onWifiOnlyChange,
+            )
+        }
+
+        val showInlineBulkActions = wide && state.selectedTab == DownloadsTab.QUEUE && state.queue.isNotEmpty()
+        DownloadsTabRow(
+            selectedTab = state.selectedTab,
+            onSelectTab = actions.onSelectTab,
+            wide = wide,
+            trailing =
+                if (showInlineBulkActions) {
+                    { QueueActionsBar(state = state, bulk = bulk, horizontalPadding = 0.dp) }
+                } else {
+                    null
+                },
+        )
+    }
+}
+
+/**
+ * What the area under the chrome is showing, named once so the two layouts can differ in *how* they
+ * draw it (a full-height state in a column, or an item in a list) without ever drifting apart on
+ * *what* they draw.
+ */
+private enum class DownloadsBody {
+    LOADING,
+    LOAD_FAILED,
+    NO_DOWNLOADS,
+    DOWNLOADS,
+    NO_QUEUE,
+    QUEUE,
+}
+
+private fun DownloadsUiState.body(): DownloadsBody =
+    when {
+        isLoading -> DownloadsBody.LOADING
+
+        // Ahead of the tabs: the projection both of them read is the thing that failed, so neither
+        // has anything trustworthy to draw.
+        loadFailed -> DownloadsBody.LOAD_FAILED
+
+        selectedTab == DownloadsTab.DOWNLOADED ->
+            if (downloaded.isEmpty()) DownloadsBody.NO_DOWNLOADS else DownloadsBody.DOWNLOADS
+
+        // No bulk-action bar on an empty queue either: with nothing queued there is nothing for any
+        // of the three to act on, and a row of dead buttons over an empty state says less than the
+        // empty state alone (see queueRows, which draws the bar only alongside rows).
+        queue.isEmpty() -> DownloadsBody.NO_QUEUE
+
+        else -> DownloadsBody.QUEUE
+    }
+
+/** The rowless bodies. [DownloadsBody.DOWNLOADS] and [DownloadsBody.QUEUE] draw nothing here. */
+@Composable
+private fun DownloadsStateView(
+    body: DownloadsBody,
+    modifier: Modifier = Modifier,
+) {
+    when (body) {
+        DownloadsBody.LOADING -> LoadingState(modifier = modifier)
+        DownloadsBody.LOAD_FAILED ->
+            EmptyState(message = stringResource(R.string.downloads_load_failed), modifier = modifier)
+
+        DownloadsBody.NO_DOWNLOADS ->
+            EmptyState(message = stringResource(R.string.downloads_empty_downloaded), modifier = modifier)
+
+        DownloadsBody.NO_QUEUE ->
+            EmptyState(message = stringResource(R.string.downloads_empty_queue), modifier = modifier)
+
+        DownloadsBody.DOWNLOADS, DownloadsBody.QUEUE -> Unit
+    }
+}
+
+/**
+ * A list's content padding: [top] as the caller wants it, and a bottom that clears `:app`'s
+ * floating navigation pill — the chrome floats over this screen rather than shrinking it
+ * (`LocalAppChromePadding`), so the last row would otherwise end underneath it.
+ */
+@Composable
+private fun listContentPadding(top: Dp): PaddingValues =
+    PaddingValues(
+        top = top,
+        bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
+    )
 
 /** The screen's own title row — a top-level tab, so unlike a pushed screen it draws no back button. */
 @Composable
@@ -302,69 +539,50 @@ private fun DownloadsHeader(
     }
 }
 
-@Composable
-private fun DownloadedTab(
+/**
+ * The *Downloaded* tab's rows, emitted into whichever list is drawing the screen.
+ *
+ * A `LazyListScope` extension rather than a composable of its own: [PinnedChromeLayout] gives these
+ * rows a list under the pinned chrome, [UnifiedScrollLayout] appends them to the one list that
+ * carries the chrome as well, and neither can end up rendering a row differently from the other.
+ *
+ * @param onDelete asks for a delete rather than performing one — the confirmation state it feeds
+ *   lives in [DownloadsContent], since a `LazyListScope` extension is not a composition and cannot
+ *   `remember` anything.
+ */
+private fun LazyListScope.downloadedRows(
     groups: List<DownloadGroup>,
     onDelete: (DownloadItem) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     compact: Boolean,
 ) {
-    if (groups.isEmpty()) {
-        EmptyState(message = stringResource(R.string.downloads_empty_downloaded))
-        return
-    }
-
-    // Which delete the user has asked for but not yet confirmed. Local to the list on purpose: it
-    // is a question the screen is asking, not something the ViewModel or Room knows about.
-    var pendingDelete by remember { mutableStateOf<DownloadItem?>(null) }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding =
-            PaddingValues(
-                top = Dimens.SpaceSmall,
-                bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
-            ),
-    ) {
-        groups.forEach { group ->
-            // A film's heading would only repeat the title of the single row under it, so a lone
-            // film group draws no header. A series always gets one, and so does the shared Movies
-            // group once one exists — otherwise a film row right after a series' last episode reads
-            // as one more row of that series (the bug docs/POLISH.md's "Downloads page duplicate
-            // movie header" entry did not cover, since it only ever looked at a film on its own).
-            if (group.isSeries || group.isMoviesSection) {
-                item(
-                    key = "header-${if (group.isMoviesSection) "movies-section" else group.title}",
-                    contentType = DownloadsContentType.HEADER,
-                ) {
-                    GroupHeader(group = group)
-                }
-            }
-            items(
-                items = group.items,
-                key = { it.itemId },
-                contentType = { DownloadsContentType.ROW },
-            ) { item ->
-                DownloadedRow(
-                    item = item,
-                    onDelete = { pendingDelete = item },
-                    onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
-                    inSeriesGroup = group.isSeries,
-                    compact = compact,
-                )
+    groups.forEach { group ->
+        // A film's heading would only repeat the title of the single row under it, so a lone film
+        // group draws no header. A series always gets one, and so does the shared Movies group once
+        // one exists — otherwise a film row right after a series' last episode reads as one more
+        // row of that series (the bug docs/POLISH.md's "Downloads page duplicate movie header"
+        // entry did not cover, since it only ever looked at a film on its own).
+        if (group.isSeries || group.isMoviesSection) {
+            item(
+                key = "header-${if (group.isMoviesSection) "movies-section" else group.title}",
+                contentType = DownloadsContentType.HEADER,
+            ) {
+                GroupHeader(group = group)
             }
         }
-    }
-
-    pendingDelete?.let { item ->
-        DeleteDownloadDialog(
-            item = item,
-            onDismiss = { pendingDelete = null },
-            onConfirm = {
-                pendingDelete = null
-                onDelete(item)
-            },
-        )
+        items(
+            items = group.items,
+            key = { it.itemId },
+            contentType = { DownloadsContentType.DOWNLOADED_ROW },
+        ) { item ->
+            DownloadedRow(
+                item = item,
+                onDelete = { onDelete(item) },
+                onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
+                inSeriesGroup = group.isSeries,
+                compact = compact,
+            )
+        }
     }
 }
 
@@ -399,55 +617,39 @@ private fun DeleteDownloadDialog(
     )
 }
 
-@Composable
-private fun QueueTab(
+/**
+ * The *Queue* tab's rows — and, on a compact layout only, the bulk-action bar above them.
+ *
+ * The bar belongs to this function rather than to either layout because *where* it goes is settled
+ * by [wide] alone: wide draws it inline in [DownloadsTabRow], to the right of the segmented control
+ * (spec "4d Downloads"), so a second copy here would duplicate every button; compact gives it its
+ * own full-width row at the head of the rows it acts on. Emitting it as the list's own item is what
+ * lets it scroll away with them in [UnifiedScrollLayout].
+ */
+private fun LazyListScope.queueRows(
     state: DownloadsUiState,
     actions: DownloadsActions,
     bulk: QueueBulkActions,
     wide: Boolean,
 ) {
-    if (state.queue.isEmpty()) {
-        // No bar either: with nothing queued there is nothing for any of the three to act on, and a
-        // row of dead buttons over an empty state says less than the empty state alone.
-        EmptyState(message = stringResource(R.string.downloads_empty_queue))
-        return
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // On wide layouts the same bar already sits inline in DownloadsTabRow, to the right of the
-        // segmented control (spec "4d Downloads") — drawing it a second time here would duplicate
-        // every button.
-        if (!wide) {
+    if (!wide) {
+        item(key = QUEUE_ACTIONS_ITEM_KEY, contentType = DownloadsContentType.QUEUE_ACTIONS) {
             QueueActionsBar(state = state, bulk = bulk, modifier = Modifier.fillMaxWidth())
         }
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding =
-                PaddingValues(
-                    top = Dimens.SpaceSmall,
-                    bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
-                ),
-        ) {
-            items(items = state.queue, key = { it.itemId }) { item ->
-                QueueRow(
-                    item = item,
-                    // The ratcheted fraction, falling back to the row's own only for an item the
-                    // ratchet has not seen yet (the very first frame after an enqueue).
-                    progress = state.progress[item.itemId] ?: item.progress,
-                    speedBytesPerSecond = state.speeds[item.itemId],
-                    actions = actions,
-                    compact = !wide,
-                )
-            }
-        }
     }
-
-    if (state.showCancelAllConfirmation) {
-        CancelAllDialog(
-            count = state.queue.size,
-            onDismiss = bulk.onDismissCancelAll,
-            onConfirm = bulk.onConfirmCancelAll,
+    items(
+        items = state.queue,
+        key = { it.itemId },
+        contentType = { DownloadsContentType.QUEUE_ROW },
+    ) { item ->
+        QueueRow(
+            item = item,
+            // The ratcheted fraction, falling back to the row's own only for an item the ratchet
+            // has not seen yet (the very first frame after an enqueue).
+            progress = state.progress[item.itemId] ?: item.progress,
+            speedBytesPerSecond = state.speeds[item.itemId],
+            actions = actions,
+            compact = !wide,
         )
     }
 }
@@ -469,6 +671,38 @@ private val COMPACT_MAX_WIDTH = 480.dp
 
 /** Extracted so the breakpoint is unit-testable without a Compose test harness. */
 internal fun queueRowCompact(maxWidth: Dp): Boolean = maxWidth < COMPACT_MAX_WIDTH
+
+/**
+ * How tall a window has to be before pinning the chrome above an inner-scrolling list is worth
+ * doing at all.
+ *
+ * The wide chrome — screen title, three stat panels, tab row — comes to roughly 260–300dp. Pin that
+ * in a window shorter than this and the list underneath gets less than half the screen; pin it in a
+ * landscape phone (~360–400dp of height, but wide enough that [queueRowCompact] answers `false`)
+ * and the list gets nothing at all, which is exactly the reported defect: the queue could not be
+ * reached on a phone held sideways because nothing on the screen scrolled.
+ *
+ * 480dp is deliberately the *same figure* as [COMPACT_MAX_WIDTH] applied to the other axis, so the
+ * screen still carries one number rather than two (spec "4d Downloads": "do NOT invent a new
+ * breakpoint"). It separates the two cases cleanly with room to spare: a test tablet in landscape
+ * (~1000dp tall) and every tablet in portrait stay pinned; no phone in landscape does.
+ */
+private val PINNED_CHROME_MIN_HEIGHT = 480.dp
+
+/**
+ * Whether the header, summary and tab row are pinned above a list that scrolls inside them (`true`)
+ * or ride along as that list's first item, so the page scrolls as one (`false`).
+ *
+ * Pinning takes *both* axes. Width, because a compact layout has never had the room for it — the
+ * storage card and full-width tabs are the whole top half of a phone. Height, because chrome pinned
+ * in a window shorter than [PINNED_CHROME_MIN_HEIGHT] leaves the list too little to scroll in, or
+ * none. Extracted alongside [queueRowCompact] so both breakpoints stay checkable without a Compose
+ * test harness.
+ */
+internal fun chromePinned(
+    maxWidth: Dp,
+    maxHeight: Dp,
+): Boolean = !queueRowCompact(maxWidth) && maxHeight >= PINNED_CHROME_MIN_HEIGHT
 
 /**
  * The queue-wide actions.
@@ -973,17 +1207,32 @@ private fun SegmentedTab(
 }
 
 /**
- * The two node shapes the *Downloaded* tab's `LazyColumn` draws (audit PERF-08).
+ * Every node shape this screen's lists draw (audit PERF-08).
  *
  * Without a `contentType`, Compose's default (every item shares one type) means scrolling a header
  * into a slot the last recycled node held a row in — or the reverse — cannot reuse the composition
- * at all; it has to throw it away and start over. The queue tab's list is left alone: it draws one
- * row shape only, so it already gets this for free.
+ * at all; it has to throw it away and start over. The queue's rows used to be exempt, being the
+ * only shape in a list of their own; since [UnifiedScrollLayout] puts the chrome, the bulk-action
+ * bar and *either* tab's rows in one list, and switching tabs swaps one row shape for the other in
+ * place, every shape is named here instead.
  */
 private enum class DownloadsContentType {
+    CHROME,
     HEADER,
-    ROW,
+    DOWNLOADED_ROW,
+    QUEUE_ACTIONS,
+    QUEUE_ROW,
+    STATE,
 }
+
+/**
+ * Keys for the items that are not rows. Constants because they must stay stable across a tab switch
+ * within one [UnifiedScrollLayout] list — the chrome in particular, which is the same item before
+ * and after and must not be torn down and rebuilt (and scrolled back to the top) by the change.
+ */
+private const val CHROME_ITEM_KEY = "downloads-chrome"
+private const val QUEUE_ACTIONS_ITEM_KEY = "downloads-queue-actions"
+private const val STATE_ITEM_KEY = "downloads-state"
 
 private fun DownloadsTab.titleRes(): Int =
     when (this) {
@@ -1036,16 +1285,18 @@ private fun DownloadsPreview() {
 }
 
 /**
- * The compact two-tier layout ([queueRowCompact]) at the exact width the device walk found it
- * broken on. `widthDp = 360` puts this right at a common phone's shortest dimension — below
- * `COMPACT_MAX_WIDTH`, so [QueueRow] renders its compact variant here.
+ * A phone in portrait: the compact two-tier layout ([queueRowCompact]) at the exact width the
+ * device walk found it broken on — `widthDp = 360` is a common phone's shortest dimension, below
+ * `COMPACT_MAX_WIDTH`, so [QueueRow] renders its compact variant. Tall enough to clear
+ * `PINNED_CHROME_MIN_HEIGHT` but not wide enough, so [chromePinned] is `false`: storage card, tab
+ * row and rows are one scrolling page.
  */
 @Preview(
-    name = "Downloads — queue (compact, 360dp)",
+    name = "Downloads — queue (phone portrait, 360×740)",
     showBackground = true,
     backgroundColor = 0xFF101010,
     widthDp = 360,
-    heightDp = 800,
+    heightDp = 740,
 )
 @Composable
 private fun DownloadsPreviewCompact() {
@@ -1053,9 +1304,28 @@ private fun DownloadsPreviewCompact() {
 }
 
 /**
- * The wide layout (2026 refresh): the three-panel [WideSummary] in place of [StorageCard], the
- * content-hug segmented tabs with the bulk-action pills inline, and [QueueRow]'s one-tier form.
- * `widthDp = 900` is well past `COMPACT_MAX_WIDTH`, so [queueRowCompact] answers `false` here.
+ * A phone in landscape — the reported defect's own window. Wide enough for the tablet treatment
+ * (the three-panel [WideSummary], one-tier rows, bulk pills inline), but 360dp of height is well
+ * under `PINNED_CHROME_MIN_HEIGHT`, so the chrome is *not* pinned and the summary scrolls up out of
+ * the way to reveal the queue. Pinned, this window showed nothing but chrome.
+ */
+@Preview(
+    name = "Downloads — queue (phone landscape, 800×360)",
+    showBackground = true,
+    backgroundColor = 0xFF101010,
+    widthDp = 800,
+    heightDp = 360,
+)
+@Composable
+private fun DownloadsPreviewPhoneLandscape() {
+    QueuePreview()
+}
+
+/**
+ * The wide *and* tall layout (2026 refresh, unchanged): the three-panel [WideSummary] in place of
+ * [StorageCard], the content-hug segmented tabs with the bulk-action pills inline, and [QueueRow]'s
+ * one-tier form, with all of it pinned above a list that scrolls underneath. `900 × 700` clears
+ * both `COMPACT_MAX_WIDTH` and `PINNED_CHROME_MIN_HEIGHT`, so [chromePinned] answers `true` here.
  */
 @Preview(
     name = "Downloads — queue (wide, 900dp)",

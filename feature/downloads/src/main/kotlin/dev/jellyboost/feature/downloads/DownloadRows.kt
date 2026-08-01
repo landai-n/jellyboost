@@ -1,10 +1,13 @@
 package dev.jellyboost.feature.downloads
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +17,6 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,23 +24,78 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
 
-/** Artwork size for a list row — a small poster, not a card. */
-private val THUMB_SIZE = 48.dp
+/** Artwork corner radius for every row on this screen — the "m-surface card" language's own radius. */
+private val ROW_ART_RADIUS = 8.dp
+
+/** [QueueRow]'s compact-layout artwork size (2026 refresh, spec "4d Downloads"). */
+private val ROW_ART_WIDTH_COMPACT = 64.dp
+private val ROW_ART_HEIGHT_COMPACT = 38.dp
+
+/** [QueueRow]'s wide-layout artwork size, also used uniformly by [DownloadedRow]. */
+private val ROW_ART_WIDTH_WIDE = 76.dp
+private val ROW_ART_HEIGHT_WIDE = 44.dp
+
+/** [QueueRow]'s compact-layout trailing action circle diameter. */
+private val ACTION_CIRCLE_SIZE_COMPACT = 32.dp
+
+/** [QueueRow]'s wide-layout trailing action circle diameter, also used by [DownloadedRow]. */
+private val ACTION_CIRCLE_SIZE_WIDE = 34.dp
+
+/** Half the "m-surface card" list's 10dp inter-card gap — applied top and bottom of every row. */
+private val ROW_GAP_HALF = 5.dp
+
+/** Track alpha behind a queue row's 3dp progress bar — the app's standing "inset progress" alpha. */
+private const val QUEUE_TRACK_ALPHA = 0.22f
+
+private val QueueTitleCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
+private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500)
+private val QueueStatusCompact = TextStyle(fontSize = 11.sp)
+private val QueueStatusWide = TextStyle(fontSize = 12.sp)
+
+/** Shared "card text" title/subtitle styles (spec, "Shared visual language" → Card text). */
+private val CardTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500, lineHeight = 18.sp)
+private val CardSubtitle = TextStyle(fontSize = 12.sp)
 
 /**
- * One finished download: artwork, title, size on disk, delete.
+ * The restyled 2026 "m-surface" card fill shared by every list row and stat panel on this screen —
+ * `Panels` (`m-panel`) without glass translucency: a solid [surfaceColor] fill, set apart from the
+ * page by the same white@6% hairline glass surfaces use rather than by blur. Mirrors
+ * `:feature:detail`'s `EpisodeRow.kt` `episodeCard` precedent (spec, "Panels (`m-panel`)"), at
+ * [Dimens.CardCornerRadius] rather than [Dimens.PanelRadius] — the 4d spec states 12dp explicitly for
+ * this screen's cards.
+ */
+internal fun Modifier.mSurface(
+    surfaceColor: Color,
+    radius: Dp = Dimens.CardCornerRadius,
+): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return this
+        .clip(shape)
+        .background(color = surfaceColor, shape = shape)
+        .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.PanelHairline, shape = shape)
+}
+
+/**
+ * One finished download: artwork, title, size on disk, delete — an "m-surface card" (2026 refresh).
  *
  * @param onPlay the row itself is the play target — tapping anywhere on it starts playback of
  *   [item] from its resume position, the same as the detail page's Play button (see
@@ -62,49 +118,53 @@ internal fun DownloadedRow(
         modifier =
             modifier
                 .fillMaxWidth()
+                .padding(horizontal = Dimens.ScreenPadding, vertical = ROW_GAP_HALF)
+                .mSurface(MaterialTheme.colorScheme.surface)
                 .clickable(onClick = onPlay)
-                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+                .padding(Dimens.SpaceMedium),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RowArtwork(item = item)
+        RowArtwork(item = item, width = ROW_ART_WIDTH_WIDE, height = ROW_ART_HEIGHT_WIDE)
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.rowTitle(inSeriesGroup = inSeriesGroup),
-                style = MaterialTheme.typography.bodyLarge,
+                style = CardTitle,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = listOfNotNull(formatBytes(item.bytesOnDisk), item.transcodedMarker()).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
+                style = CardSubtitle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = stringResource(R.string.downloads_action_delete),
-            )
-        }
+        GlassIconButton(
+            icon = Icons.Filled.Delete,
+            contentDescription = stringResource(R.string.downloads_action_delete),
+            onClick = onDelete,
+            size = ACTION_CIRCLE_SIZE_WIDE,
+        )
     }
 }
 
 /**
- * One pending download: progress, speed, and the four queue actions.
+ * One pending download: progress, speed, and the four queue actions — an "m-surface card" (2026
+ * refresh).
  *
  * @param progress the fraction to draw, which is **not** `item.progress`: it comes through
  *   [DownloadProgressRatchet] so the bar can never run backwards while the projection behind its
  *   denominator settles.
  * @param compact below the `COMPACT_MAX_WIDTH` breakpoint (`DownloadsScreen.kt`), a single row of
- *   [THUMB_SIZE] thumbnail, weighted text column and up to four 48dp [QueueRowActions] buttons
- *   leaves the title under ~90dp — a device-verified defect that crushed titles to ~4 characters
- *   ("Hous…") on a 360dp phone. Compact switches to two tiers: artwork+text get the full row
- *   width, and the actions move to their own end-aligned row below rather than shrinking to fit.
- *   Decided once at the screen level (`DownloadsScreen.kt`'s `BoxWithConstraints`), not per row.
+ *   artwork, weighted text column and up to four action buttons leaves the title under ~90dp — a
+ *   device-verified defect that crushed titles to ~4 characters ("Hous…") on a 360dp phone. Compact
+ *   switches to two tiers: artwork+text get the full row width, and the actions move to their own
+ *   end-aligned row below rather than shrinking to fit; wide keeps them trailing on one row, with
+ *   title and status sharing a baseline instead of stacking (spec "4d Downloads"). Decided once at
+ *   the screen level (`DownloadsScreen.kt`'s `BoxWithConstraints`), not per row.
  */
 @Composable
 internal fun QueueRow(
@@ -115,144 +175,205 @@ internal fun QueueRow(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
 ) {
+    val cardModifier =
+        modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.ScreenPadding, vertical = ROW_GAP_HALF)
+            .mSurface(MaterialTheme.colorScheme.surface)
+            .padding(Dimens.SpaceMedium)
+
     if (compact) {
         Column(
-            modifier =
-                modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+            modifier = cardModifier,
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                RowArtwork(item = item)
+                RowArtwork(item = item, width = ROW_ART_WIDTH_COMPACT, height = ROW_ART_HEIGHT_COMPACT)
                 QueueRowText(
                     item = item,
                     progress = progress,
                     speedBytesPerSecond = speedBytesPerSecond,
+                    compact = true,
                     modifier = Modifier.weight(1f),
                 )
             }
-            QueueRowActions(item = item, actions = actions, modifier = Modifier.align(Alignment.End))
+            QueueRowActions(
+                item = item,
+                actions = actions,
+                size = ACTION_CIRCLE_SIZE_COMPACT,
+                modifier = Modifier.align(Alignment.End),
+            )
         }
     } else {
         Row(
-            modifier =
-                modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+            modifier = cardModifier,
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RowArtwork(item = item)
+            RowArtwork(item = item, width = ROW_ART_WIDTH_WIDE, height = ROW_ART_HEIGHT_WIDE)
             QueueRowText(
                 item = item,
                 progress = progress,
                 speedBytesPerSecond = speedBytesPerSecond,
+                compact = false,
                 modifier = Modifier.weight(1f),
             )
-            QueueRowActions(item = item, actions = actions)
+            QueueRowActions(item = item, actions = actions, size = ACTION_CIRCLE_SIZE_WIDE)
         }
     }
 }
 
-/** The title, progress bar and status line shared by both [QueueRow] layouts. */
+/**
+ * The title, progress bar and status line shared by both [QueueRow] layouts.
+ *
+ * @param compact stacks title, track and status on three lines (spec "4d Downloads", COMPACT). Wide
+ *   instead shares one baseline row between title and status, with the track on its own line below —
+ *   there is room for both on a tablet width, which the phone width the compact layout answers does
+ *   not have.
+ */
 @Composable
 private fun QueueRowText(
     item: DownloadItem,
     progress: Float,
     speedBytesPerSecond: Long?,
+    compact: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val failed = item.status == DownloadStatus.ERROR
+    val statusColor = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+    val trackFillColor = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    val statusText = item.statusLine(speedBytesPerSecond)
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        Text(
-            text = item.rowTitle(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            drawStopIndicator = {},
-        )
-        Text(
-            text = item.statusLine(speedBytesPerSecond),
-            style = MaterialTheme.typography.bodySmall,
-            color =
-                if (item.status == DownloadStatus.ERROR) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (compact) {
+            Text(
+                text = item.rowTitle(),
+                style = QueueTitleCompact,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            QueueTrack(progress = progress, fillColor = trackFillColor)
+            Text(
+                text = statusText,
+                style = QueueStatusCompact,
+                color = statusColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = item.rowTitle(),
+                    style = QueueTitleWide,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                Text(
+                    text = statusText,
+                    style = QueueStatusWide,
+                    color = statusColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            QueueTrack(progress = progress, fillColor = trackFillColor)
+        }
     }
+}
+
+/**
+ * A queue row's 3dp progress track (spec, "Shared visual language" → INSET progress geometry).
+ *
+ * @param fillColor [MaterialTheme.colorScheme.error] for a failed row, so the bar reads as stopped
+ *   partway rather than as still making progress — [MaterialTheme.colorScheme.primary] otherwise.
+ */
+@Composable
+private fun QueueTrack(
+    progress: Float,
+    fillColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier.fillMaxWidth().height(Dimens.InsetProgressHeight),
+        color = fillColor,
+        trackColor = Color.White.copy(alpha = QUEUE_TRACK_ALPHA),
+        drawStopIndicator = {},
+    )
 }
 
 @Composable
 private fun QueueRowActions(
     item: DownloadItem,
     actions: DownloadsActions,
+    size: Dp,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier = modifier) {
-        IconButton(onClick = { actions.onMoveUp(item) }) {
-            Icon(
-                imageVector = Icons.Filled.ArrowUpward,
-                contentDescription = stringResource(R.string.downloads_action_move_up),
-            )
-        }
-        IconButton(onClick = { actions.onMoveDown(item) }) {
-            Icon(
-                imageVector = Icons.Filled.ArrowDownward,
-                contentDescription = stringResource(R.string.downloads_action_move_down),
-            )
-        }
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall)) {
+        GlassIconButton(
+            icon = Icons.Filled.ArrowUpward,
+            contentDescription = stringResource(R.string.downloads_action_move_up),
+            onClick = { actions.onMoveUp(item) },
+            size = size,
+        )
+        GlassIconButton(
+            icon = Icons.Filled.ArrowDownward,
+            contentDescription = stringResource(R.string.downloads_action_move_down),
+            onClick = { actions.onMoveDown(item) },
+            size = size,
+        )
 
         // Paused and failed items both offer "resume": retrying a failure is the same operation,
         // and for an original download the partial file means it costs only the bytes that are
         // missing. The two predicates are shared with the queue's *Resume all* / *Pause all*
-        // (DownloadsUiState.kt) so a row and the bulk button can never disagree about it.
+        // (DownloadsUiState.kt) so a row and the bulk button can never disagree about it. Tinted
+        // primary — the one action circle on the row worth reaching for (spec "4d Downloads").
         if (item.isResumeTarget) {
-            IconButton(onClick = { actions.onResume(item) }) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = stringResource(R.string.downloads_action_resume),
-                )
-            }
+            GlassIconButton(
+                icon = Icons.Filled.PlayArrow,
+                contentDescription = stringResource(R.string.downloads_action_resume),
+                onClick = { actions.onResume(item) },
+                size = size,
+                tint = MaterialTheme.colorScheme.primary,
+            )
         } else if (item.isPauseTarget) {
             // A transcode cannot be resumed — the server ignores `Range` on a file it is still
             // producing — so pausing one would silently discard everything it has downloaded. See
             // [DownloadItem.isPausable]; *Cancel* remains, and says what it actually does.
-            IconButton(onClick = { actions.onPause(item) }) {
-                Icon(
-                    imageVector = Icons.Filled.Pause,
-                    contentDescription = stringResource(R.string.downloads_action_pause),
-                )
-            }
-        }
-
-        IconButton(onClick = { actions.onDelete(item) }) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = stringResource(R.string.downloads_action_cancel),
+            GlassIconButton(
+                icon = Icons.Filled.Pause,
+                contentDescription = stringResource(R.string.downloads_action_pause),
+                onClick = { actions.onPause(item) },
+                size = size,
             )
         }
+
+        GlassIconButton(
+            icon = Icons.Filled.Delete,
+            contentDescription = stringResource(R.string.downloads_action_cancel),
+            onClick = { actions.onDelete(item) },
+            size = size,
+        )
     }
 }
 
 @Composable
 private fun RowArtwork(
     item: DownloadItem,
+    width: Dp,
+    height: Dp,
     modifier: Modifier = Modifier,
 ) {
     JellyfinAsyncImage(
@@ -260,8 +381,8 @@ private fun RowArtwork(
         contentDescription = null,
         modifier =
             modifier
-                .size(THUMB_SIZE)
-                .clip(RoundedCornerShape(Dimens.CardCornerRadius)),
+                .size(width = width, height = height)
+                .clip(RoundedCornerShape(ROW_ART_RADIUS)),
         contentScale = ContentScale.Crop,
     )
 }
@@ -344,8 +465,15 @@ internal fun DownloadItem.etaSeconds(speedBytesPerSecond: Long?): Long? {
     return eta.takeIf { it <= ETA_GUARD_SECONDS }
 }
 
-/** Above this, an ETA is guesswork rather than an estimate — see [DownloadItem.etaSeconds]. */
-private const val ETA_GUARD_SECONDS = 86_400L
+/**
+ * Above this, an ETA is guesswork rather than an estimate — see [DownloadItem.etaSeconds].
+ *
+ * `internal`, not `private`: [DownloadsUiState.queueStats] (`DownloadsUiState.kt`) applies the exact
+ * same ceiling-division-plus-guard shape to an *aggregate* remainder, and reusing this constant is
+ * what keeps a per-row ETA and the wide summary's aggregate one from ever disagreeing about where
+ * "guesswork" starts.
+ */
+internal const val ETA_GUARD_SECONDS = 86_400L
 
 /**
  * [etaSecondsValue] worded to match how well the total behind it is known — the same hedge

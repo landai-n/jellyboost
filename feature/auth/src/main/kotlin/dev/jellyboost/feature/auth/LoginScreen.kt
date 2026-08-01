@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -71,6 +69,9 @@ import java.util.UUID
 
 private val AvatarSize = 88.dp
 
+/** [AvatarSize] on a compact (phone) window — still a clear tap target, just not the hero size. */
+private val AvatarSizeCompact = 64.dp
+
 /**
  * Ring around every public-user avatar: a solid primary ring on the selected profile, a faint
  * neutral one on the rest — per the claude.ai/design "Login (landscape tablet)" card.
@@ -82,6 +83,9 @@ private val AvatarRingGap = 3.dp
 
 /** Horizontal gap between avatars in the picker row. */
 private val AvatarRowSpacing = 32.dp
+
+/** [AvatarRowSpacing] on a compact (phone) window — the smaller avatars need less air between them. */
+private val AvatarRowSpacingCompact = 20.dp
 
 /** Alpha of the unselected avatar ring — a faint neutral edge rather than [GlassDefaults.Hairline]. */
 private const val AVATAR_RING_UNSELECTED_ALPHA = 0.10f
@@ -101,6 +105,9 @@ private val ServerNameStyle =
         fontWeight = FontWeight.W700,
         letterSpacing = (-0.02).em,
     )
+
+/** [ServerNameStyle] on a compact (phone) window — same weight and tracking, smaller. */
+private val ServerNameStyleCompact = ServerNameStyle.copy(fontSize = 26.sp)
 
 /** Name under a public-user avatar. */
 private val AvatarNameStyle = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
@@ -193,7 +200,7 @@ private fun LoginContent(
     modifier: Modifier = Modifier,
 ) {
     AuthScreenScaffold(
-        header = {
+        header = { compact ->
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -205,7 +212,7 @@ private fun LoginContent(
                 )
                 Text(
                     text = state.serverName,
-                    style = ServerNameStyle,
+                    style = if (compact) ServerNameStyleCompact else ServerNameStyle,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
@@ -250,6 +257,7 @@ private fun LoginContent(
                     // so the highlighted profile is simply the one the field currently names.
                     selectedName = state.username,
                     onUserSelected = onPublicUserSelected,
+                    compact = compact,
                 )
             }
         },
@@ -278,8 +286,6 @@ private fun LoginContent(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
     }
 
     state.quickConnect?.let { quickConnect ->
@@ -405,6 +411,7 @@ private fun PublicUsersRow(
     avatarUrlFor: (PublicUserInfo) -> String?,
     selectedName: String,
     onUserSelected: (PublicUserInfo) -> Unit,
+    compact: Boolean,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -422,7 +429,8 @@ private fun PublicUsersRow(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(AvatarRowSpacing),
+                horizontalArrangement =
+                    Arrangement.spacedBy(if (compact) AvatarRowSpacingCompact else AvatarRowSpacing),
             ) {
                 users.forEach { user ->
                     PublicUserAvatar(
@@ -430,6 +438,7 @@ private fun PublicUsersRow(
                         avatarUrl = avatarUrlFor(user),
                         selected = user.name == selectedName,
                         onClick = { onUserSelected(user) },
+                        compact = compact,
                     )
                 }
             }
@@ -453,6 +462,7 @@ private fun PublicUserAvatar(
     avatarUrl: String?,
     selected: Boolean,
     onClick: () -> Unit,
+    compact: Boolean,
 ) {
     val ringColor =
         if (selected) {
@@ -467,7 +477,7 @@ private fun PublicUserAvatar(
     ) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.size(AvatarSize),
+            modifier = Modifier.size(if (compact) AvatarSizeCompact else AvatarSize),
             shape = CircleShape,
             color = Color.Transparent,
         ) {
@@ -645,6 +655,24 @@ private fun LoginPortraitPreview() {
 @Preview(name = "Login — two-pane", showBackground = true, backgroundColor = 0xFF101010, widthDp = 1000, heightDp = 700)
 @Composable
 private fun LoginTwoPanePreview() {
+    JellyfinTheme {
+        LoginContent(
+            state = PreviewLoginState,
+            onUsernameChange = {},
+            onPasswordChange = {},
+            onPublicUserSelected = {},
+            onSignIn = {},
+            onStartQuickConnect = {},
+            onCancelQuickConnect = {},
+            onChangeServer = {},
+        )
+    }
+}
+
+// A typical compact-width phone window (docs/PLAN.md target: ~360x800dp, minus system bars).
+@Preview(name = "Login — phone", showBackground = true, backgroundColor = 0xFF101010, widthDp = 360, heightDp = 740)
+@Composable
+private fun LoginPhonePreview() {
     JellyfinTheme {
         LoginContent(
             state = PreviewLoginState,

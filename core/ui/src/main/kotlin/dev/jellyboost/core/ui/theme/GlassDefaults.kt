@@ -2,6 +2,7 @@ package dev.jellyboost.core.ui.theme
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -105,3 +106,27 @@ fun Modifier.glassSurface(
             .then(backdrop)
             .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
     }
+
+/**
+ * The restyled 2026 "m-surface" card fill (spec, "Panels (`m-panel`)"): a solid [surfaceColor] fill,
+ * set apart from the page by the same white@6% hairline glass surfaces use rather than by blur —
+ * `glassSurface` without the translucency, for cards and stat panels that sit over other cards
+ * rather than over a backdrop image.
+ *
+ * Hoisted from `:feature:downloads`' own private copy (2026 refresh, Phase 5 sweep): SyncPlay's
+ * group/queue rows want the identical fill, and a second private copy in `:player` would drift the
+ * moment either screen's card language moved half a step.
+ *
+ * @param radius [Dimens.CardCornerRadius] by default; callers that need a different rounding — a
+ *   screen's own spec calls for something else — pass their own.
+ */
+fun Modifier.mSurface(
+    surfaceColor: Color,
+    radius: Dp = Dimens.CardCornerRadius,
+): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return this
+        .clip(shape)
+        .background(color = surfaceColor, shape = shape)
+        .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.PanelHairline, shape = shape)
+}

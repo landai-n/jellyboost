@@ -100,6 +100,18 @@ through `getItemsPaged(query, onTotalCount)`; `LibraryView.childCount` comes fro
 of the refresh logged for that count. +14 unit tests (paging source 6, library ViewModel 7,
 item mapper 1).
 
+**Phase 4d (Downloads) landed** on branch `design-refresh-downloads`: header, m-surface
+storage card / m-surface `QueueRow` and `DownloadedRow` cards, a glass segmented
+Downloaded/Queue tab control, glass pill bulk-action buttons, and — on wide layouts
+(`!queueRowCompact`, no new breakpoint) — a three-panel tablet stat summary replacing
+the storage card, backed by a new `DownloadsUiState.queueStats` pure derivation
+(`QueueStats`: item count, remaining bytes, aggregate speed, ceiling-division ETA;
+DECISIONS.md 2026-08-01 "Downloads gets a wide-layout queue summary"). Every row
+action (incl. queue move-down, kept despite the mock dropping it) and both dialogs are
+unchanged. Gate green (ktlint, detekt, unit tests incl. new `DownloadsUiStateTest`,
+`assembleDebug`); `DownloadsScreenTest`/`DownloadRowsTest` pass untouched; not yet
+device-walked. Awaiting merge alongside the other Phase 4 sub-branches.
+
 Phases: 0 governance (this entry) → 1 theme/token layer (`core/ui/theme`: Glass,
 elevation, type extras, Dimens changes, Haze dep) → 2 core components (pills, chips,
 filled fields, card overlays, glass selection bar) → 3 chrome (GlassBottomNav pill

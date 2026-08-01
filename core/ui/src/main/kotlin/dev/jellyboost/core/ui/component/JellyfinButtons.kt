@@ -14,7 +14,9 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -96,6 +98,9 @@ private val PillLabelSmall =
  *   row of bulk actions) rather than at the head of a screen.
  * @param leadingIcon drawn before the label at 18dp (16dp when [small]); `null` leaves a label-only
  *   pill, which is the common case.
+ * @param loading replaces the leading icon with an inline spinner in the disabled content color —
+ *   for the moment between tapping the action and its result (signing in, connecting). The caller
+ *   still disables the button; [loading] only adds the busy glyph.
  */
 @Composable
 fun PrimaryPillButton(
@@ -105,6 +110,7 @@ fun PrimaryPillButton(
     enabled: Boolean = true,
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
+    loading: Boolean = false,
 ) {
     Button(
         onClick = onClick,
@@ -120,7 +126,7 @@ fun PrimaryPillButton(
             ),
         contentPadding = pillContentPadding(small),
     ) {
-        PillContent(text = text, small = small, leadingIcon = leadingIcon)
+        PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
     }
 }
 
@@ -216,16 +222,24 @@ private fun PillContent(
     text: String,
     small: Boolean,
     leadingIcon: ImageVector?,
+    loading: Boolean = false,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(PillIconGap),
     ) {
-        if (leadingIcon != null) {
+        val iconSize = if (small) PillIconSizeSmall else PillIconSize
+        if (loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(iconSize),
+                color = LocalContentColor.current,
+                strokeWidth = 2.dp,
+            )
+        } else if (leadingIcon != null) {
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                modifier = Modifier.size(if (small) PillIconSizeSmall else PillIconSize),
+                modifier = Modifier.size(iconSize),
             )
         }
         Text(

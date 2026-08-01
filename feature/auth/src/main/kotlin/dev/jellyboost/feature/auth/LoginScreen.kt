@@ -346,10 +346,6 @@ private fun LoginFormFields(
         },
     )
 
-    // PrimaryPillButton's fixed (text, leadingIcon) content leaves no slot for the inline spinner
-    // the old M3 `Button` drew while `isSigningIn`; `enabled` already goes false for that state
-    // (`canSignIn`), and the pill's disabled style is the feedback now — see the 2026-refresh
-    // report for feature/auth.
     PrimaryPillButton(
         text = stringResource(R.string.login_sign_in),
         onClick = {
@@ -358,6 +354,7 @@ private fun LoginFormFields(
         },
         modifier = Modifier.fillMaxWidth(),
         enabled = state.canSignIn,
+        loading = state.isSigningIn,
     )
 
     state.error?.let { error -> AuthErrorBlock(message = error) }

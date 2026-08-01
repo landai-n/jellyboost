@@ -145,6 +145,7 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
+                appVersion = BuildConfig.VERSION_NAME,
             )
         }
 

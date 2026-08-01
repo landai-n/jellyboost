@@ -13,3 +13,4 @@ captures/
 .kotlin/
 .claude/state/
 .claude/worktrees/
+*.log

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -42,6 +43,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -420,19 +423,29 @@ internal fun AuthScreenScaffold(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val isTwoPane = maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight
+
             // Drawn under the insets on purpose: the halo bleeding behind the status bar is what
-            // makes it read as part of the background rather than as a banner.
+            // makes it read as part of the background rather than as a banner. Side by side, the
+            // halo hangs over the branding pane instead of the empty centre (claude.ai/design,
+            // "Login (landscape tablet)").
             Box(
                 modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(AuthGlowHeight)
-                        .align(Alignment.TopCenter)
-                        .background(JellyfinGradients.BrandGlow),
+                    if (isTwoPane) {
+                        Modifier
+                            .fillMaxSize()
+                            .background(JellyfinGradients.BrandGlowSide)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .height(AuthGlowHeight)
+                            .align(Alignment.TopCenter)
+                            .background(JellyfinGradients.BrandGlow)
+                    },
             )
 
-            BoxWithConstraints(
+            Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -440,7 +453,7 @@ internal fun AuthScreenScaffold(
                         .imePadding(),
                 contentAlignment = Alignment.TopCenter,
             ) {
-                if (maxWidth >= AuthTwoPaneMinWidth && maxWidth > maxHeight) {
+                if (isTwoPane) {
                     // Capped and centred as a pair: two full-half panes on a wide screen leave a
                     // dead void in the middle and the content stranded at the edges.
                     Row(
@@ -448,12 +461,14 @@ internal fun AuthScreenScaffold(
                             Modifier
                                 .widthIn(max = AuthContentMaxWidth * 2)
                                 .fillMaxHeight(),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
                     ) {
                         AuthPane(
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                             alignment = Alignment.Center,
                             content = header,
                         )
+                        PaneRule()
                         AuthPane(
                             modifier = Modifier.weight(1f).fillMaxHeight(),
                             alignment = Alignment.Center,
@@ -469,6 +484,33 @@ internal fun AuthScreenScaffold(
             }
         }
     }
+}
+
+/** Where the hairline between the two panes starts and stops fading, as a fraction of its run. */
+private const val PANE_RULE_FADE_FRACTION = 0.2f
+
+/** Vertical inset that keeps the pane hairline clear of the window edges. */
+private val PaneRuleVerticalInset = 64.dp
+
+/** Hairline between the branding and form panes, fading out toward both ends. */
+@Composable
+private fun PaneRule() {
+    val outline = MaterialTheme.colorScheme.outline
+    Box(
+        modifier =
+            Modifier
+                .fillMaxHeight()
+                .padding(vertical = PaneRuleVerticalInset)
+                .width(1.dp)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        PANE_RULE_FADE_FRACTION to outline,
+                        1f - PANE_RULE_FADE_FRACTION to outline,
+                        1f to Color.Transparent,
+                    ),
+                ),
+    )
 }
 
 /**

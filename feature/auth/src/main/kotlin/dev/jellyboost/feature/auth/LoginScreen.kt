@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,13 +61,19 @@ import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 
-private val AvatarSize = 80.dp
+private val AvatarSize = 88.dp
 
-/** Gradient ring around every public-user avatar — the brand cue that ties the two screens. */
+/**
+ * Ring around every public-user avatar: the accent gradient on the selected profile (the brand
+ * cue), a neutral outline on the rest — per the claude.ai/design "Login (landscape tablet)" card.
+ */
 private val AvatarRingWidth = 2.dp
 
 /** Breathing room between the ring and the picture it frames, so the ring doesn't crop it. */
 private val AvatarRingGap = 3.dp
+
+/** Horizontal gap between avatars in the picker row. */
+private val AvatarRowSpacing = 32.dp
 
 /**
  * Second screen of the auth flow: sign in to the server ServerSetup resolved, by password or by
@@ -123,9 +131,6 @@ private fun LoginContent(
     onChangeServer: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    var passwordVisible by remember { mutableStateOf(false) }
-
     AuthScreenScaffold(
         header = {
             Column(
@@ -139,7 +144,7 @@ private fun LoginContent(
                 )
                 Text(
                     text = state.serverName,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
@@ -180,97 +185,36 @@ private fun LoginContent(
                 PublicUsersRow(
                     users = state.publicUsers,
                     avatarUrlFor = state::avatarUrlFor,
+                    // Selection is derived, not stored: picking a user pre-fills the username,
+                    // so the highlighted profile is simply the one the field currently names.
+                    selectedName = state.username,
                     onUserSelected = onPublicUserSelected,
                 )
             }
         },
         modifier = modifier,
     ) {
-        Text(
-            text = stringResource(R.string.login_title),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        OutlinedTextField(
-            value = state.username,
-            onValueChange = onUsernameChange,
+        // The whole sign-in form lives on one surface card (claude.ai/design, "Login (landscape
+        // tablet)") — same treatment as ServerSetup's manual-address panel, so the two screens
+        // keep reading as one flow.
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            enabled = !state.isSigningIn,
-            label = { Text(text = stringResource(R.string.login_username_label)) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-        )
-
-        OutlinedTextField(
-            value = state.password,
-            onValueChange = onPasswordChange,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            enabled = !state.isSigningIn,
-            label = { Text(text = stringResource(R.string.login_password_label)) },
-            visualTransformation =
-                if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions =
-                KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            keyboardActions =
-                KeyboardActions(
-                    onDone = {
-                        keyboardController?.hide()
-                        onSignIn()
-                    },
-                ),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector =
-                            if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                        contentDescription =
-                            stringResource(
-                                if (passwordVisible) R.string.login_hide_password else R.string.login_show_password,
-                            ),
-                    )
-                }
-            },
-        )
-
-        Button(
-            onClick = {
-                keyboardController?.hide()
-                onSignIn()
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = state.canSignIn,
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surface,
         ) {
-            if (state.isSigningIn) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
-            }
-            Text(text = stringResource(R.string.login_sign_in))
-        }
-
-        state.error?.let { error -> AuthErrorBlock(message = error) }
-
-        if (state.quickConnectEnabled) {
-            HorizontalDivider()
-            Text(
-                text = stringResource(R.string.login_or),
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            TextButton(
-                onClick = onStartQuickConnect,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isSigningIn,
+            Column(
+                modifier = Modifier.padding(Dimens.SpaceExtraLarge),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
             ) {
-                Text(text = stringResource(R.string.login_quick_connect))
+                LoginFormFields(
+                    state = state,
+                    onUsernameChange = onUsernameChange,
+                    onPasswordChange = onPasswordChange,
+                    onSignIn = onSignIn,
+                    onStartQuickConnect = onStartQuickConnect,
+                    onChangeServer = onChangeServer,
+                )
             }
-        }
-
-        TextButton(onClick = onChangeServer, modifier = Modifier.fillMaxWidth()) {
-            Text(text = stringResource(R.string.login_change_server))
         }
 
         Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
@@ -281,10 +225,123 @@ private fun LoginContent(
     }
 }
 
+/** The contents of the sign-in card: title, credential fields, actions. */
+@Composable
+private fun LoginFormFields(
+    state: LoginUiState,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSignIn: () -> Unit,
+    onStartQuickConnect: () -> Unit,
+    onChangeServer: () -> Unit,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Text(
+        text = stringResource(R.string.login_title),
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+
+    OutlinedTextField(
+        value = state.username,
+        onValueChange = onUsernameChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !state.isSigningIn,
+        label = { Text(text = stringResource(R.string.login_username_label)) },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+    )
+
+    OutlinedTextField(
+        value = state.password,
+        onValueChange = onPasswordChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        enabled = !state.isSigningIn,
+        label = { Text(text = stringResource(R.string.login_password_label)) },
+        visualTransformation =
+            if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions =
+            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+        keyboardActions =
+            KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    onSignIn()
+                },
+            ),
+        trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(
+                    imageVector =
+                        if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription =
+                        stringResource(
+                            if (passwordVisible) R.string.login_hide_password else R.string.login_show_password,
+                        ),
+                )
+            }
+        },
+    )
+
+    Button(
+        onClick = {
+            keyboardController?.hide()
+            onSignIn()
+        },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = state.canSignIn,
+    ) {
+        if (state.isSigningIn) {
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
+        }
+        Text(text = stringResource(R.string.login_sign_in))
+    }
+
+    state.error?.let { error -> AuthErrorBlock(message = error) }
+
+    if (state.quickConnectEnabled) {
+        OrDivider()
+        OutlinedButton(
+            onClick = onStartQuickConnect,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !state.isSigningIn,
+        ) {
+            Text(text = stringResource(R.string.login_quick_connect))
+        }
+    }
+
+    TextButton(onClick = onChangeServer, modifier = Modifier.fillMaxWidth()) {
+        Text(text = stringResource(R.string.login_change_server))
+    }
+}
+
+/** `——— or ———`: a centred label with a hairline fading out to each side. */
+@Composable
+private fun OrDivider() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        HorizontalDivider(modifier = Modifier.weight(1f))
+        Text(
+            text = stringResource(R.string.login_or),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        HorizontalDivider(modifier = Modifier.weight(1f))
+    }
+}
+
 @Composable
 private fun PublicUsersRow(
     users: List<PublicUserInfo>,
     avatarUrlFor: (PublicUserInfo) -> String?,
+    selectedName: String,
     onUserSelected: (PublicUserInfo) -> Unit,
 ) {
     Column(
@@ -303,12 +360,13 @@ private fun PublicUsersRow(
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
+                horizontalArrangement = Arrangement.spacedBy(AvatarRowSpacing),
             ) {
                 users.forEach { user ->
                     PublicUserAvatar(
                         user = user,
                         avatarUrl = avatarUrlFor(user),
+                        selected = user.name == selectedName,
                         onClick = { onUserSelected(user) },
                     )
                 }
@@ -318,7 +376,10 @@ private fun PublicUsersRow(
 }
 
 /**
- * One of the server's public users, in a gradient-ringed circle above their name.
+ * One of the server's public users, in a ringed circle above their name.
+ *
+ * [selected] lights the ring up with the accent gradient and the name in full white; unselected
+ * users get a neutral outline ring and muted name.
  *
  * [avatarUrl] carries the profile picture the server advertises; it is `null` for users who have
  * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
@@ -328,8 +389,12 @@ private fun PublicUsersRow(
 private fun PublicUserAvatar(
     user: PublicUserInfo,
     avatarUrl: String?,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val ringBrush =
+        if (selected) JellyfinGradients.Accent else SolidColor(MaterialTheme.colorScheme.surfaceVariant)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
@@ -344,7 +409,7 @@ private fun PublicUserAvatar(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .border(width = AvatarRingWidth, brush = JellyfinGradients.Accent, shape = CircleShape)
+                        .border(width = AvatarRingWidth, brush = ringBrush, shape = CircleShape)
                         .padding(AvatarRingWidth + AvatarRingGap)
                         .clip(CircleShape),
                 contentAlignment = Alignment.Center,
@@ -373,7 +438,12 @@ private fun PublicUserAvatar(
         Text(
             text = user.name,
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color =
+                if (selected) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
         )
     }
 }

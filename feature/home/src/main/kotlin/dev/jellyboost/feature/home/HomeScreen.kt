@@ -515,7 +515,8 @@ internal fun isWideHome(
  * The mocks' 460dp (portrait) and 400dp (landscape) are what a phone and a tablet get. The ceiling
  * is the guard: at [HERO_MAX_VIEWPORT_FRACTION] of the window, a hero can never take more than
  * three fifths of the screen, so a small or split-screen window still shows what the screen is for —
- * the rows under it — instead of one enormous picture. A 640dp-tall phone lands at 384dp; the test tablet and every ordinary phone are above the ceiling and get the mocks' figure exactly.
+ * the rows under it — instead of one enormous picture. A 640dp-tall phone lands at 384dp; the test
+ * tablet and every ordinary phone are above the ceiling and get the mocks' figure exactly.
  */
 internal fun heroHeight(
     wide: Boolean,

@@ -55,6 +55,27 @@ syncplay, downloads). Screenshot-test frameworks evaluated and rejected for now 
 compileSdk 37.1 blocks Roborazzi/Paparazzi; no disk for an emulator — see DECISIONS).
 Left on the device: HotD S3:E1 stays downloaded (useful for M11's local-in-group DoD item).
 
+## Auth screens redesign + real avatars (2026-08-01 — landed)
+
+User-requested UI polish, within plan scope (PLAN.md M1/M2 already specify
+`getPublicUsers` and `JellyfinAsyncImage`; no DECISIONS entry needed). Merge `30e4a0f`:
+- Branded auth flow: new tight-viewport in-app logo vector
+  (`feature/auth/res/drawable/ic_jellyboost_logo.xml`, geometry from
+  `logo/ic_launcher_foreground.svg`), gradient wordmark + tagline hero on ServerSetup,
+  `JellyfinGradients.BrandGlow` accent halo behind both screens' headers, discovered-server
+  cards (gradient Dns badge + chevron), manual-address entry grouped into a panel,
+  session-lost copy as an icon'd error panel.
+- Login now renders the server's real public-user profile pictures:
+  `publicUserAvatarUrl()` in `LoginViewModel.kt` builds `/Users/{id}/Images/Primary`
+  URLs (trailing-slash tolerant, `maxWidth=168`), rendered via `JellyfinAsyncImage` in a
+  gradient-ringed circle; users without a `primaryImageTag` keep the initial-letter
+  fallback. 4 new LoginViewModel tests (17 total in the class), suite green.
+- Follow-up in flight: the two new strings translated into the 69 locales
+  (`server_setup_tagline`; `auth_logo_description` marked `translatable="false"`).
+- Owed to the device: a quick visual pass of both screens (portrait + landscape —
+  the 420dp halo is tuned portrait-first) and confirming avatars load against the
+  dev server. Debug build already installed on the tablet.
+
 ## Localization (2026-07-31 — landed, not in plan, DECISIONS entry logged)
 
 Full app translation into the 69 locales the official jellyfin-android client ships

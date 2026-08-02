@@ -2,6 +2,7 @@ package dev.jellyboost.player.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -385,7 +388,10 @@ private fun BottomBar(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+                // Each SheetChip already carries an invisible Dimens.MinTouchTarget (48dp) frame
+                // around its 32dp visual (see that composable's KDoc), so any arrangement spacing
+                // here stacks on top of the frames' own gap — 0dp yields 16dp between circles.
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
 
@@ -696,6 +702,16 @@ private fun ScrubberThumb() {
  * and the icon is decorative, so its description stays null; icon-only, there is no text left to read
  * out, so the description moves onto the icon. Either way TalkBack announces "Audio", and the narrow
  * form loses nothing but the pixels.
+ *
+ * Built on `Box`/`Row`, not M3 `Button`, for the same reason as every button in
+ * `core/ui`'s `JellyfinButtons.kt` (see that file's header): `Button` delegates to `Surface`, which
+ * inserts `Modifier.minimumInteractiveComponentSize()` *inside* the caller's modifier chain, so it
+ * reports 48dp regardless of the size the caller asked for — a caller's `.size(32.dp).glassSurface(…)`
+ * clips/blurs/outlines that 48dp node, not the 32dp one, and adjacent chips overlap. The invisible
+ * outer `Box` reserves [Dimens.MinTouchTarget] for touch, the inner one draws the glass at its
+ * declared [CHIP_HEIGHT], and the click target sits inside that inner clip so the ripple is bounded
+ * by the visible shape rather than by the touch frame around it. Do not "simplify" this back to
+ * `Button` — see the JellyfinButtons header for the full story.
  */
 @Composable
 private fun SheetChip(
@@ -704,38 +720,48 @@ private fun SheetChip(
     onClick: () -> Unit,
     showLabel: Boolean = true,
 ) {
-    val colors =
-        ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = Color.White,
-        )
-
     if (!showLabel) {
-        Button(
-            onClick = onClick,
-            modifier = Modifier.size(CHIP_HEIGHT).glassSurface(CircleShape),
-            shape = CircleShape,
-            colors = colors,
-            contentPadding = PaddingValues(0.dp),
-        ) {
-            Icon(imageVector = icon, contentDescription = label, modifier = Modifier.size(CHIP_ICON))
+        Box(modifier = Modifier.size(Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(CHIP_HEIGHT)
+                        .glassSurface(CircleShape)
+                        .clickable(role = Role.Button, onClick = onClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = Color.White,
+                    modifier = Modifier.size(CHIP_ICON),
+                )
+            }
         }
         return
     }
 
-    Button(
-        onClick = onClick,
-        modifier = Modifier.height(CHIP_HEIGHT).glassSurface(CircleShape),
-        shape = CircleShape,
-        colors = colors,
-        contentPadding = PaddingValues(horizontal = CHIP_PADDING),
+    Box(
+        modifier = Modifier.heightIn(min = Dimens.MinTouchTarget),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(CHIP_ICON))
-        Text(
-            text = label,
-            style = CHIP_LABEL_STYLE,
-            modifier = Modifier.padding(start = Dimens.SpaceExtraSmall),
-        )
+        Row(
+            modifier =
+                Modifier
+                    .height(CHIP_HEIGHT)
+                    .glassSurface(CircleShape)
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .padding(horizontal = CHIP_PADDING),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(CHIP_ICON))
+            Text(
+                text = label,
+                style = CHIP_LABEL_STYLE,
+                color = Color.White,
+                modifier = Modifier.padding(start = Dimens.SpaceExtraSmall),
+            )
+        }
     }
 }
 

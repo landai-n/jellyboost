@@ -175,6 +175,21 @@ class PlaybackReporterTest {
             coVerify(exactly = 0) { userDataRepository.setPosition(any(), any()) }
         }
 
+    @Test
+    fun `an invalid snapshot's position reaches neither the server nor the local store`() =
+        runTest {
+            // A cast player whose receiver was stopped from the television answers position zero for
+            // a session that is still alive; writing it would wipe the resume position everywhere
+            // (audit CAST-01).
+            reporter().reportProgress(
+                PlayerFixtures.remoteSource(),
+                PlaybackSnapshot(positionMs = 0L, isPlaying = false, isValid = false),
+            )
+
+            coVerify(exactly = 0) { api.reportPlaybackProgress(any()) }
+            coVerify(exactly = 0) { userDataRepository.setPosition(any(), any()) }
+        }
+
     // ---- stop ---------------------------------------------------------------------------------
 
     @Test
@@ -239,6 +254,26 @@ class PlaybackReporterTest {
             )
 
             coVerify(exactly = 0) { api.stopEncodingProcess(any(), any()) }
+        }
+
+    @Test
+    fun `an invalid final snapshot closes the session without touching the position`() =
+        runTest {
+            // The receiver no longer held the item when the session ended: the stop still lands (and
+            // the encoder still dies), but positionless — the ticker's last valid write is the
+            // honest resume position (audit CAST-01).
+            val info = slot<PlaybackStopInfo>()
+            coEvery { api.reportPlaybackStopped(capture(info)) } just Runs
+
+            reporter().reportStop(
+                PlayerFixtures.remoteSource(playMethod = PlayMethod.TRANSCODE),
+                PlaybackSnapshot(positionMs = 0L, isValid = false),
+            )
+
+            info.captured.positionTicks shouldBe null
+            coVerify(exactly = 1) { api.stopEncodingProcess(any(), any()) }
+            coVerify(exactly = 0) { userDataRepository.setPosition(any(), any()) }
+            coVerify(exactly = 0) { userDataRepository.setPlayed(any(), any()) }
         }
 
     @Test

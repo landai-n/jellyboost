@@ -52,12 +52,12 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
 | `JellyboostCastOptionsProvider` | The framework's configuration, instantiated **reflectively** from the `OPTIONS_PROVIDER_CLASS_NAME` meta-data in `:player`'s manifest (the merger carries it into `:app`). Default receiver id, `setResumeSavedSession(true)`, `NotificationOptions` targeting the launcher activity resolved at runtime (`getLaunchIntentForPackage`, so `:player` needs no dependency on `:app`), and deliberately **no** expanded-controller activity — the app's own player screen is the remote control. |
 | `CastAvailability` | The single door to Google Cast. Owns the process-wide `CastContext`, created once from `MainActivity.onCreate` behind a `GoogleApiAvailability` guard, and publishes `CastDeviceState` (`Unavailable / NoDevices / Available / Connecting / Connected(name)`) — a GMS-free view the UI can observe on a device that has no Cast stack at all. `castDeviceStateOf` is the pure mapping, tested on its own. |
 | `CastSessionMonitor` + `GmsCastSessionMonitor` | "A receiver appeared", "it went away", with no Cast type in the signature — the seam that makes the coordinator unit-testable. Waits for `CastAvailability` before registering, reports an **already-connected** session as a start (the framework does not replay it, and connect-then-play is the everyday case), and folds `onSessionResumed` into the same event. |
-| `CastSessionCoordinator` | `SyncPlayController`-shaped `@Singleton`, started from `JellyboostApplication`: flips `RoutingPlayerHandle`, stops the player being left, publishes `CastStatusHolder`, keeps the progress ticker running on `@DetachedPlayerScope` when no screen is attached, and sends the final stop report (which kills the transcode) when a session ends with nobody watching. |
+| `CastSessionCoordinator` | `SyncPlayController`-shaped `@Singleton`, started from `JellyboostApplication`: flips `RoutingPlayerHandle`, stops the player being left, publishes `CastStatusHolder`, keeps the progress ticker running on `@DetachedPlayerScope` when no screen is attached, and sends the final stop report (which kills the transcode) when a session ends with nobody watching. A start for an already-connected session (a resumed/suspended one, or the monitor's start-time replay) is dropped rather than re-run as a transfer (audit CAST-05); a detaching screen's source is only remembered while a session is live, so a failed cast attempt cannot stop-report a film that was never cast (audit CAST-02); and the cast player is stopped once the session ends, clearing its listener and stale media (audit CAST-08). |
 | `CastStatusHolder` | The one fact the rest of the app needs — `isCasting`, plus the device name — modelled on `SyncPlayStatusHolder`. It is what keeps every `com.google.android.gms` type out of `PlayerViewModel`. |
 | `CastMetadataHolder` | The other direction: what the *television* should say this is. A `PlaybackInfo` response names nothing, so the ViewModel's item fetch publishes title, episode line and poster here, keyed by media id, and `CastPlayerHandle` reads it at prepare. |
 | `CastPlaybackHost` / `CastPlaybackCoordinator` / `NoCastPlaybackCoordinator` | The public attach/detach seam between the coordinator and a screen, plus the two transfer callbacks. Names only `PlaybackMediaSource` and `PlaybackSnapshot`. |
 | `session/RoutingPlayerHandle` | **The Hilt `PlayerHandle` binding.** Delegates to whichever player is live; `events` through `flatMapLatest`, `player` (the video surface) `null` while casting, `stopInactive()` to silence the one being left. With no cast session it is a pass-through with no branch in it — which is what makes "casting changed nothing about playing alone" a property of the code. The cast handle arrives through a `Provider` so a GMS-less device never constructs one. |
-| `CastPlayerHandle` | `PlayerHandle` over media3-cast's `CastPlayer`. No surface and no `PlaybackService` (the framework publishes its own media session and notification). `selectAudioTrack` always `false`; `selectSubtitleTrack` uses `RemoteMediaClient.setActiveMediaTracks` for a side-loaded VTT and `false` otherwise; `supportsPlaybackSpeed` asks the receiver. |
+| `CastPlayerHandle` | `PlayerHandle` over media3-cast's `CastPlayer`. No surface and no `PlaybackService` (the framework publishes its own media session and notification). `selectAudioTrack` always `false`; `selectSubtitleTrack` uses `RemoteMediaClient.setActiveMediaTracks` for a side-loaded VTT — claiming `true` only when the receiver's own `MediaStatus` still offers the track, and logging async rejections (audit CAST-03) — and `false` otherwise; `snapshot()` is only valid while the receiver still holds our item (audit CAST-01); `supportsPlaybackSpeed` asks the receiver. |
 | `CastSpecMapper` | Pure. `PlaybackMediaItemSpec + RemotePlaybackMediaSource + CastMetadata → CastMediaSpec`: the `ApiKey` on every URL the receiver fetches, the content type it will not sniff, and subtitle ids renumbered onto Jellyfin stream indices. All the decisions live here, which is why this is what the tests cover. |
 | `CastMediaSpec` / `CastTrackSpec` / `CastMetadata` | The plain data in between — no GMS type appears in it. |
 | `CastMediaItemConverter` | Mechanical `MediaInfo` / `MediaTrack` / `MediaQueueItem` assembly. Media3's `DefaultMediaItemConverter` ignores `subtitleConfigurations` entirely, which is most of what casting a Jellyfin item is. |
@@ -71,17 +71,31 @@ All in `player/src/main/kotlin/dev/jellyboost/player/cast/` unless stated.
    on every resolve — read fresh each time, because a session can start or end at any point in a
    film. `PlaybackSourceResolver` treats it like `forceRemote`: **the copy on disk is skipped**, since
    a `file://` URI means nothing on the other side of the network (serving the download over a local
-   HTTP server is explicitly out of scope).
+   HTTP server is explicitly out of scope). `PlaybackSessionController.open` re-reads `isCasting`
+   after the resolve returns and, if a session started or ended while it was on the wire,
+   re-negotiates with the corrected flag instead of preparing a stream on the wrong player
+   (audit CAST-04).
 2. **The cast profile.** `PlaybackInfoResolver` sends `CastDeviceProfile.build(maxStreamingBitrate)`
    instead of the `MediaCodecProbe`-derived one: H.264 High ≤ L4.2, ≤ 1080p, AAC/MP3 in `mp4` and
    VP8/VP9 in `webm` direct; anything else an HLS **ts** transcode to H.264 + AAC. Subtitles: WebVTT
    external, everything else burned in.
 3. **URLs the receiver can actually fetch.** Every stream this app opens is authorised by
    `JellyfinAuthInterceptor`'s header; a receiver has its own network stack with nothing of ours in
-   it. `CastSpecMapper` therefore runs the media URL, every subtitle URL and the poster through
+   it. `CastSpecMapper` therefore runs the media URL and every subtitle URL through
    `StreamUrlFactory.withApiKey`, which is idempotent — probed against the dev server, a transcode's
    `TranscodingUrl` and every subtitle `DeliveryUrl` already carry `ApiKey`, while the SDK-built
-   direct-play/direct-stream URLs do not.
+   direct-play/direct-stream URLs do not. The **poster is deliberately not signed** (audit CAST-06):
+   Jellyfin's image endpoints answer without credentials, and every URL handed to the receiver is
+   republished in its `MediaStatus`, so the token goes only where the fetch needs it.
+
+   **Accepted risk — the token in the media and subtitle URLs.** The `ApiKey` those URLs carry is
+   the account's long-lived session token, and any sender on the same network can join the Default
+   Media Receiver's session (`CC1AD845`) and read it out of the published `MediaStatus`; on a plain
+   HTTP server it also crosses the LAN in clear. This is unavoidable with what Jellyfin offers
+   today: the server has no scoped or short-lived stream credential — no signed/expiring URLs, no
+   per-session media keys — and jellyfin-web's own cast sender embeds the same token the same way.
+   Closing it would need server-side support for short-lived, media-scoped stream tokens. Recorded
+   here so the exposure is a decision rather than an accident (audit CAST-06).
 4. **The spec rides inside the `MediaItem`.** media3-cast hands a converter a `MediaItem` and nothing
    else, so `CastMediaSpec` travels as `localConfiguration.tag` and `CastMediaItemConverter` unpacks
    it. Everything decidable was settled one step earlier, in data a JVM test can read.
@@ -125,7 +139,13 @@ only while no host is attached.*
 | Screen backed out of, receiver plays on | `CastSessionCoordinator`, on `@DetachedPlayerScope` | the coordinator, when the session ends |
 | Screen closes while casting | — | **neither**: `releaseSession` skips the stop report *and* `stop()`/`release()`, because a television is not the screen's to end |
 
-`PlaybackReporter` itself is unchanged.
+One guard sits under all three rows (audit CAST-01): a reading taken off the cast player is only
+*valid* while the receiver still holds our item (`PlaybackSnapshot.isValid`). A Stop pressed on the
+television or another sender loading its own media leaves the session alive and `CastPlayer`
+answering zero — or the other app's position; `PlaybackReporter` skips such a progress tick
+entirely, and a stop with an invalid reading still closes the server session and kills the encoder
+but carries no position and writes nothing locally, so the ticker's last valid write stays the
+resume position.
 
 ## What the player screen becomes
 
@@ -194,7 +214,7 @@ own rule is that a rule belongs there only when it was shown to be missing.
 
 | File | What it pins |
 |---|---|
-| `cast/CastSpecMapperTest` | The three things a cast session can get wrong invisibly: a token on the media URL, on every subtitle URL and on the poster (and idempotence where the server already signed one); an `external:<index>` id becoming the Jellyfin stream index the picker speaks, and an unaddressable id dropped rather than invented; the MIME type per play method (mp4 / webm / HLS) and the forced `text/vtt`; runtime, resume position and the live-source case; metadata passing through with its words untouched. |
+| `cast/CastSpecMapperTest` | The three things a cast session can get wrong invisibly: a token on the media URL and on every subtitle URL (and idempotence where the server already signed one) — and **not** on the poster, which needs none (audit CAST-06); an `external:<index>` id becoming the Jellyfin stream index the picker speaks, and an unaddressable id dropped rather than invented; the MIME type per play method (mp4 / webm / HLS) and the forced `text/vtt`; runtime, resume position and the live-source case; metadata passing through with its words untouched. |
 | `cast/CastMetadataHolderTest` | Published metadata read back under its own id, nothing under another's, replacement when the queue moves on, and case-insensitive UUIDs. |
 | `cast/CastDeviceStateTest` | The `CastState` int → `CastDeviceState` table, including the unknown-code case. |
 | `cast/CastSessionCoordinatorTest` | Connect → routing flip + status; disconnect → stop report, `stopTranscoding` and the flip back; the detached ticker starting only when nobody is attached, and stopping when a screen takes over. |

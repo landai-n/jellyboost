@@ -7,6 +7,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
+import com.google.android.gms.common.api.PendingResult
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
@@ -193,15 +194,36 @@ internal class CastPlayerHandle
             castPlayer?.seekTo(positionMs.coerceAtLeast(0L))
         }
 
+        /**
+         * A reading of the receiver, **only while the receiver still holds our item**.
+         *
+         * A cast player mirrors whatever the receiver has: a Stop from the television or the Google
+         * Home app unloads the media without ending the session, and another sender can replace it
+         * outright. In both cases `CastPlayer` keeps answering — at position zero, or at the *other
+         * app's* position — and a ticker that believed it would overwrite this item's resume
+         * position with either (audit CAST-01). The identity check is against the `mediaId` the
+         * outbound converter stamps and, because the framework's round-trip rebuilds items with the
+         * content URL as their id, against [CastMediaSpec.contentId] too. A natural finish is exempt:
+         * the receiver unloads on its own at the end, and that reading is the one that marks the
+         * item watched.
+         */
         override fun snapshot(): PlaybackSnapshot {
-            val current = castPlayer ?: return PlaybackSnapshot()
+            val current = castPlayer ?: return PlaybackSnapshot(isValid = false)
+            val ended = current.playbackState == Player.STATE_ENDED
+            if (!ended && !current.holdsLoadedItem()) return PlaybackSnapshot(isValid = false)
             return PlaybackSnapshot(
                 positionMs = current.currentPosition.coerceAtLeast(0L),
                 durationMs = current.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
                 bufferedMs = current.bufferedPosition.coerceAtLeast(0L),
                 isPlaying = current.isPlaying,
-                hasEnded = current.playbackState == Player.STATE_ENDED,
+                hasEnded = ended,
             )
+        }
+
+        private fun CastPlayer.holdsLoadedItem(): Boolean {
+            val spec = loaded ?: return false
+            val currentId = currentMediaItem?.mediaId ?: return false
+            return currentId == spec.mediaId || currentId == spec.contentId
         }
 
         /**
@@ -229,6 +251,13 @@ internal class CastPlayerHandle
          * them is one the server did not deliver as a file — an image subtitle, or a stream the
          * profile refused — and `false` is what sends the caller back to re-negotiate for a burned-in
          * one.
+         *
+         * `true` is only claimed against what the receiver **reports** holding, not against what
+         * [loaded] remembers: the media on the other end can have been unloaded, replaced by another
+         * sender, or not finished loading, and `setActiveMediaTracks` against any of those is a
+         * silent no-op — the picker would show the track selected while the television draws nothing
+         * (audit CAST-03). A rejection the receiver only announces asynchronously is logged; the
+         * cases it adds beyond this check are the ones a re-negotiation could not fix either.
          */
         override fun selectSubtitleTrack(
             source: PlaybackMediaSource,
@@ -236,13 +265,33 @@ internal class CastPlayerHandle
         ): Boolean {
             val client = remoteMediaClient() ?: return false
             if (jellyfinIndex == null) {
-                client.setActiveMediaTracks(NO_TRACKS)
+                client.setActiveMediaTracks(NO_TRACKS).logRejection("clearing the cast subtitles")
                 return true
             }
             val sideLoaded = loaded?.tracks.orEmpty().any { it.id == jellyfinIndex }
             if (!sideLoaded) return false
-            client.setActiveMediaTracks(longArrayOf(jellyfinIndex.toLong()))
+            val onReceiver =
+                runCatching { client.mediaStatus?.mediaInfo?.mediaTracks }
+                    .getOrNull()
+                    .orEmpty()
+                    .any { it.id == jellyfinIndex.toLong() }
+            if (!onReceiver) {
+                Timber.w("The receiver no longer offers subtitle track %d; re-negotiating", jellyfinIndex)
+                return false
+            }
+            client
+                .setActiveMediaTracks(longArrayOf(jellyfinIndex.toLong()))
+                .logRejection("selecting cast subtitle track $jellyfinIndex")
             return true
+        }
+
+        /** Failures of a fire-and-forget receiver command are at least worth a line in the log. */
+        private fun PendingResult<RemoteMediaClient.MediaChannelResult>.logRejection(what: String) {
+            setResultCallback { result ->
+                if (!result.status.isSuccess) {
+                    Timber.w("The receiver rejected %s: %s", what, result.status)
+                }
+            }
         }
 
         /**

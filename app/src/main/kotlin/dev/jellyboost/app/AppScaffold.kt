@@ -25,6 +25,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,11 +36,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -97,6 +101,13 @@ import kotlinx.coroutines.launch
  * [HazeState] is created here and the nav host is the only `hazeSource` in the app: every glass
  * surface in the chrome samples the page underneath it through `LocalHazeState`. A second source —
  * inside a lazy item, say — would sample a node that scrolls, which is both wrong and expensive.
+ *
+ * The one destination the source is *detached* on is the player. Recording the source is a
+ * full-window offscreen layer capture on every frame, and on the player nothing useful can come of
+ * it: the video is a `SurfaceView` whose pixels are composited by the system and never land in the
+ * recorded layer, so a blur there samples black — which is why the player's own controls draw flat
+ * dark glass instead of `glassSurface` ([JellyfinNavHost] nulls `LocalHazeState` for that subtree).
+ * Detaching the source hands the capture cost back to the screen where GPU headroom matters most.
  */
 @Composable
 internal fun AppScaffold(
@@ -106,6 +117,7 @@ internal fun AppScaffold(
     val navController: NavHostController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = currentDestination.isTopLevel()
+    val onPlayer = currentDestination?.hasRoute<Routes.Player>() == true
 
     // What the chrome shows while it animates away: the destination it was last drawn for. Writing
     // it during composition is idempotent — the same value for the same destination — and it is only
@@ -149,7 +161,12 @@ internal fun AppScaffold(
                 startsSignedIn = startsSignedIn,
                 sessionState = sessionState,
                 navController = navController,
-                modifier = Modifier.fillMaxSize().hazeSource(hazeState),
+                // No source on the player: nothing there samples it and the capture is pure
+                // per-frame cost during playback — see "One backdrop, one source" above.
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .then(if (onPlayer) Modifier else Modifier.hazeSource(hazeState)),
             )
 
             AnimatedVisibility(
@@ -215,7 +232,14 @@ internal fun AppScaffold(
 
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter).snackbarInset(chromePadding),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .snackbarInset(
+                            chromePadding = chromePadding,
+                            navigationBarInset =
+                                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                        ),
             ) { data ->
                 PillSnackbar(snackbarData = data)
             }
@@ -266,11 +290,30 @@ private fun TopChromeScrim(
  *
  * With the floating nav pill up that is the chrome's own bottom padding — the pill's height, its
  * margin and the navigation-bar inset — so the snackbar floats just above it. Everywhere else the
- * frame consumes no insets at all, so the host has to keep itself off the gesture bar on its own.
+ * frame consumes no insets at all, so the host keeps itself off the gesture bar with the
+ * navigation-bar inset it is handed. The two are combined as a *max* read inside [SnackbarInset]'s
+ * `calculateBottomPadding`, i.e. in the layout phase: the chrome padding animates every frame of a
+ * navigation, and reading it here in composition used to re-invalidate the whole scaffold scope
+ * per frame (and made the snackbar dip under the gesture bar mid-animation, then jump back up).
  */
-private fun Modifier.snackbarInset(chromePadding: PaddingValues): Modifier {
-    val bottom = chromePadding.calculateBottomPadding()
-    return if (bottom > 0.dp) padding(bottom = bottom) else navigationBarsPadding()
+private fun Modifier.snackbarInset(
+    chromePadding: PaddingValues,
+    navigationBarInset: Dp,
+): Modifier = padding(SnackbarInset(chromePadding, navigationBarInset))
+
+/** See [snackbarInset]; the deferred read lives in [calculateBottomPadding]. */
+@Stable
+internal class SnackbarInset(
+    private val chromePadding: PaddingValues,
+    private val navigationBarInset: Dp,
+) : PaddingValues {
+    override fun calculateBottomPadding(): Dp = maxOf(chromePadding.calculateBottomPadding(), navigationBarInset)
+
+    override fun calculateTopPadding(): Dp = 0.dp
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
 }
 
 /**
@@ -289,6 +332,15 @@ private fun Modifier.snackbarInset(chromePadding: PaddingValues): Modifier {
  * Both variants add [Dimens.SpaceSmall] of clearance on top of the bar's own height. Reserving
  * *exactly* the bar meant a screen's first row came to rest touching the glass, so any rounding —
  * a shadow, a focus ring, a row whose own top padding was zero — read as an overlap.
+ *
+ * The animated values are **not read here**. This function used to destructure the two
+ * `animateDpAsState`s and rebuild a `PaddingValues` per frame, which invalidated the whole
+ * scaffold scope — the nav host, four `AnimatedVisibility` blocks and the snackbar host — on every
+ * one of the transition's ~18 frames, and published a fresh object through the composition local
+ * on each of them. Instead the two `State`s go into one stable [AnimatedChromePadding], whose
+ * `calculate*` methods read them where `contentPadding` is actually consumed: inside a lazy
+ * layout's measure pass, which is a snapshot-observing scope of its own. The animation then
+ * invalidates layout, not composition.
  */
 @Composable
 private fun chromePadding(
@@ -307,18 +359,38 @@ private fun chromePadding(
     val bottomTarget =
         if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp
 
-    val top by animateDpAsState(
-        targetValue = topTarget,
-        animationSpec = tween(NAV_TRANSITION_MILLIS),
-        label = "chromeTopPadding",
-    )
-    val bottom by animateDpAsState(
-        targetValue = bottomTarget,
-        animationSpec = tween(NAV_TRANSITION_MILLIS),
-        label = "chromeBottomPadding",
-    )
+    val top =
+        animateDpAsState(
+            targetValue = topTarget,
+            animationSpec = tween(NAV_TRANSITION_MILLIS),
+            label = "chromeTopPadding",
+        )
+    val bottom =
+        animateDpAsState(
+            targetValue = bottomTarget,
+            animationSpec = tween(NAV_TRANSITION_MILLIS),
+            label = "chromeBottomPadding",
+        )
 
-    return remember(top, bottom) { PaddingValues(top = top, bottom = bottom) }
+    return remember { AnimatedChromePadding(top = top, bottom = bottom) }
+}
+
+/**
+ * The [PaddingValues] published through [LocalAppChromePadding]: a stable identity whose top and
+ * bottom are read from the two animated states at *use* — see [chromePadding] for why.
+ */
+@Stable
+internal class AnimatedChromePadding(
+    private val top: State<Dp>,
+    private val bottom: State<Dp>,
+) : PaddingValues {
+    override fun calculateTopPadding(): Dp = top.value
+
+    override fun calculateBottomPadding(): Dp = bottom.value
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
 }
 
 /**

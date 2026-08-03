@@ -79,7 +79,10 @@ internal fun HomeHero(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxWidth().height(height)) {
+    // Clipped so nothing the banner draws can ever land on the rows below it: the copy blocks are
+    // height-bounded (each in its own way, see their KDocs), and this is the backstop that turns
+    // that arithmetic into a guarantee at layouts the bounds were not computed for.
+    Box(modifier = modifier.fillMaxWidth().height(height).clipToBounds()) {
         HeroBackdrop(item = item, wide = wide)
 
         if (wide) {
@@ -95,6 +98,7 @@ internal fun HomeHero(
         } else {
             CompactHeroCopy(
                 item = item,
+                heroHeight = height,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.BottomStart),
@@ -130,21 +134,34 @@ private fun HeroBackdrop(
     }
 }
 
-/** Bottom-left lockup: eyebrow, 34sp title, metadata, and two pills that split the width. */
+/**
+ * Bottom-left lockup: eyebrow, 34sp title, metadata, and two pills that split the width.
+ *
+ * Anchored to the banner's *bottom* edge, so taller copy grows up over the artwork rather than
+ * down into the rows — but "up" is only available while the banner is taller than the copy. On a
+ * phone in landscape the 0.6-viewport cap squeezes the banner to ~216dp while the full lockup
+ * wants ~230dp, and the overflow (buttons drawn through the metadata line, or past the banner's
+ * bottom edge into the first content row) is exactly the overlap 8ed17933 fixed on the wide shape.
+ * Below [compactHeroShowsSecondary]'s threshold the lockup therefore drops its two secondary lines
+ * — the eyebrow and the metadata — and keeps what the banner is for: the title and the actions.
+ */
 @Composable
 private fun CompactHeroCopy(
     item: JellyfinItem,
+    heroHeight: Dp,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val showSecondary = compactHeroShowsSecondary(heroHeight)
+
     Column(
         modifier = modifier.fillMaxWidth().padding(CompactCopyPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        HeroEyebrow()
+        if (showSecondary) HeroEyebrow()
         HeroTitle(item = item, expanded = false)
-        HeroMeta(item = item)
+        if (showSecondary) HeroMeta(item = item)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
@@ -179,8 +196,9 @@ private fun CompactHeroCopy(
  * inside the banner whatever the copy says, and `clipToBounds` makes that a guarantee rather than an
  * arithmetic argument.
  *
- * The compact lockup needs none of this: it is anchored to the *bottom* edge, so taller copy grows
- * up over the artwork rather than down into the rows.
+ * The compact lockup handles the same squeeze differently: it is anchored to the *bottom* edge, so
+ * taller copy grows up over the artwork rather than down into the rows — and when the banner is too
+ * short even for that, it sheds its secondary lines instead ([CompactHeroCopy]).
  */
 @Composable
 private fun WideHeroCopy(
@@ -372,6 +390,24 @@ private const val WIDE_SCRIM_END_STOP = 0.70f
 
 /** Gutter of the compact banner's copy — the mocks' 20dp hero padding. */
 private val CompactCopyPadding = 20.dp
+
+/**
+ * Whether a [heroHeight]-tall compact banner has room for the lockup's eyebrow and metadata lines.
+ *
+ * The full lockup's natural height is roughly 230dp — the two 20dp paddings, a two-line 34sp
+ * title, the eyebrow, the metadata line, the 48dp button frame and three 12dp gaps — so a banner
+ * under [CompactSecondaryMinHeight] cannot hold it: a phone in landscape (~360dp of viewport, so a
+ * 216dp banner after [heroHeight]'s 0.6 cap) is the everyday case. Without the two secondary lines
+ * the lockup needs ~176dp and fits. The threshold carries a little slack over the 230dp so a
+ * banner that would fit only at exactly font scale 1.0 does not thrash at the boundary.
+ *
+ * A plain function of the height so the breakpoint is unit-testable without a device, like
+ * [heroHeight] and [isWideHome].
+ */
+internal fun compactHeroShowsSecondary(heroHeight: Dp): Boolean = heroHeight >= CompactSecondaryMinHeight
+
+/** See [compactHeroShowsSecondary]. */
+private val CompactSecondaryMinHeight = 260.dp
 
 /**
  * Where the wide copy block starts on the 400dp banner it was drawn for, clear of the 64dp glass top

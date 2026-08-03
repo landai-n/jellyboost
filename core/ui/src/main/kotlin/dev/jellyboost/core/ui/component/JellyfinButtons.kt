@@ -163,6 +163,10 @@ fun PrimaryPillButton(
  *
  * Same geometry as the primary so the two sit level in a row; a glass fill and a white@12% edge
  * instead of the white one, which is what keeps a pair of buttons from reading as two equal choices.
+ *
+ * @param tint the glass fill, as on [GlassIconButton]'s `surfaceTint`: [GlassDefaults.Fill] for a
+ *   pill inside a screen's own content; a pill floating over raw video (the player's skip-segment
+ *   offer) passes a dark fill instead, since there is no backdrop there to pull down.
  */
 @Composable
 fun GhostPillButton(
@@ -172,6 +176,7 @@ fun GhostPillButton(
     enabled: Boolean = true,
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
+    tint: Color = GlassDefaults.Fill,
 ) {
     PillFrame(
         onClick = onClick,
@@ -180,7 +185,7 @@ fun GhostPillButton(
         // The glass is a *surface* rather than a container colour: the fill is a blurred backdrop
         // sample, not a colour, so it has to be a modifier on the drawn pill and let whatever is
         // underneath show through.
-        surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder),
+        surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder, tint = tint),
         contentPadding = pillContentPadding(small),
         contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
         modifier = modifier,

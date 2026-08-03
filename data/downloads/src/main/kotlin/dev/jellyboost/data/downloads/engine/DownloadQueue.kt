@@ -468,11 +468,18 @@ internal class DownloadQueue
                 if (file.type.essential) {
                     downloadEssential(download, dto, file, progress, fileProjector, listener)
                 } else {
-                    runCatching { downloadOne(download, file, progress, fileProjector, listener) }
-                        .onFailure { error ->
-                            if (error is CancellationException) throw error
-                            Timber.w(error, "Optional file %s failed; item stays playable", file.fileName)
-                        }
+                    // try/catch(Exception), not runCatching: the latter catches Throwable, so an
+                    // OutOfMemoryError from an optional file would be logged as "optional file
+                    // failed" and the drain would carry on in an undefined state (audit DL-12).
+                    try {
+                        downloadOne(download, file, progress, fileProjector, listener)
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (
+                        @Suppress("TooGenericExceptionCaught") error: Exception,
+                    ) {
+                        Timber.w(error, "Optional file %s failed; item stays playable", file.fileName)
+                    }
                 }
             }
             return true
@@ -500,11 +507,16 @@ internal class DownloadQueue
                 // files of its own, and the delete cascade can land between any two of them.
                 if (downloadDao.get(download.itemId) == null) return
 
-                runCatching { downloadOne(download, file, progress, projector = null, listener) }
-                    .onFailure { error ->
-                        if (error is CancellationException) throw error
-                        Timber.w(error, "Audio sidecar %s failed; item keeps its other tracks", file.fileName)
-                    }
+                // try/catch(Exception) for the same reason as the ordinary lane (audit DL-12).
+                try {
+                    downloadOne(download, file, progress, projector = null, listener)
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") error: Exception,
+                ) {
+                    Timber.w(error, "Audio sidecar %s failed; item keeps its other tracks", file.fileName)
+                }
             }
         }
 
@@ -648,17 +660,7 @@ internal class DownloadQueue
             listener: DownloadQueueListener,
         ) {
             val target = storage.resolve(download.directoryName, file.fileName)
-            // The row's path was resolved against the active root by `reconcile` at the start of
-            // this drain; resolving to somewhere else now means the root moved underneath the item
-            // (an SD card ejected or remounted mid-transfer). Writing there anyway would split one
-            // download across two volumes — where neither the sweep, the delete cascade nor
-            // `usedBytes()` can see the half on the inactive root (audit DL-07). Transient on
-            // purpose: the next drain re-reconciles every path against whichever root answers then.
-            if (target.absolutePath != file.path) {
-                throw StorageUnavailableException(
-                    "The downloads root moved mid-item (row has ${file.path}, active root resolves ${target.absolutePath})",
-                )
-            }
+            requireStableRoot(file, target)
             val audio = file.type == DownloadFileType.AUDIO
             if (isWholeFile(file, target)) {
                 // Already on disk and finished by an earlier run — re-entering the item must
@@ -783,6 +785,11 @@ internal class DownloadQueue
             try {
                 extractor.extract(part, target)
             } catch (cancellation: CancellationException) {
+                // A cancelled strip has written part of the m4a; leaving it would occupy disk for
+                // as long as the pause lasts, for a file the next attempt re-creates from its
+                // first byte anyway (its row is still DOWNLOADING, so nothing reads it as whole).
+                // The part file is the fetch's own cancellation clean-up, in [downloadOne].
+                target.delete()
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
@@ -854,6 +861,29 @@ internal class DownloadQueue
             const val MAX_ATTEMPTS = 5
         }
     }
+
+/**
+ * Fails the file when the active storage root no longer resolves to the row's own path.
+ *
+ * The path was resolved against the active root by `DownloadQueue.reconcile` at the start of the
+ * drain; resolving somewhere else now means the root moved underneath the item (an SD card ejected
+ * or remounted mid-transfer). Writing there anyway would split one download across two volumes —
+ * where neither the sweep, the delete cascade nor `usedBytes()` can see the half on the inactive
+ * root (audit DL-07). [StorageUnavailableException] is transient on purpose: the next drain
+ * re-reconciles every path against whichever root answers then. Top-level for detekt's
+ * function-count ceiling on the queue.
+ */
+private fun requireStableRoot(
+    file: DownloadFileEntity,
+    target: File,
+) {
+    if (target.absolutePath != file.path) {
+        throw StorageUnavailableException(
+            "The downloads root moved mid-item " +
+                "(row has ${file.path}, the active root resolves ${target.absolutePath})",
+        )
+    }
+}
 
 /**
  * Running totals across an item's files, so the row's percentage is the *item's* and not the

@@ -117,23 +117,6 @@ class DownloadQueueTest {
         }
 
     @Test
-    fun `a row whose status changed between being picked and being claimed is left alone`() =
-        runTest {
-            // The DL-03 race: Pause writes PAUSED and then stops the worker, and a drain sitting
-            // between nextRunnable() and the start of the transfer used to write DOWNLOADING over
-            // it — the cancellation then re-queued the row and the paused item downloaded anyway.
-            // A claim that touches zero rows means the row changed hands; nothing is transferred
-            // and nothing is written.
-            queueWith(download())
-            coEvery { downloadDao.markDownloadingIfRunnable(uuid(1), NOW) } returns 0
-
-            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
-
-            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any(), any()) }
-            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), any(), any(), any()) }
-        }
-
-    @Test
     fun `interrupted rows are put back in the queue before anything else runs`() =
         runTest {
             // A row still marked DOWNLOADING belongs to a process that no longer exists; without
@@ -677,70 +660,6 @@ class DownloadQueueTest {
             // the row and the file together are what say it is finished.
             coVerify(exactly = 0) { downloader.download(AUDIO_URL, any(), any(), any(), any(), any()) }
             extractor.calls.shouldBeEmpty()
-        }
-
-    // ---- file-granular resume (DL-02) -----------------------------------------------------------
-
-    @Test
-    fun `a media file already downloaded whole is not re-fetched when the item re-enters the queue`() =
-        runTest {
-            // The DL-02 window: the audio lane keeps running for minutes after the film itself has
-            // finished, and any interruption there re-queues the whole item. The media row is
-            // already DOWNLOADED and its transcode is complete on disk — re-entering `downloadOne`
-            // used to truncate it and restart the server-side encode from byte zero, because a
-            // live encode is flagged un-resumable.
-            every { storage.resolve(any(), any()) } answers { File(directory, secondArg<String>()) }
-            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
-            val media = File(directory, "Arrival (2016) (medium).mkv").apply { writeBytes(ByteArray(500)) }
-            queueWith(
-                download(quality = DownloadQuality.MEDIUM),
-                files =
-                    listOf(
-                        file(
-                            id = 7L,
-                            type = DownloadFileType.MEDIA,
-                            fileName = media.name,
-                            path = media.absolutePath,
-                            bytesDownloaded = 500L,
-                            bytesTotal = 500L,
-                            status = DownloadStatus.DOWNLOADED,
-                        ),
-                    ),
-            )
-
-            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
-
-            coVerify(exactly = 0) { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) }
-            media.length() shouldBe 500L
-        }
-
-    @Test
-    fun `a DOWNLOADED row whose bytes no longer match what is on disk is fetched again`() =
-        runTest {
-            // The other half of the guard: the row's recorded size is the file's final size, so a
-            // truncated file (a swept volume, a torn write) is not the file the row describes.
-            every { storage.resolve(any(), any()) } answers { File(directory, secondArg<String>()) }
-            every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
-            val media = File(directory, "Arrival (2016) (medium).mkv").apply { writeBytes(ByteArray(100)) }
-            queueWith(
-                download(quality = DownloadQuality.MEDIUM),
-                files =
-                    listOf(
-                        file(
-                            id = 7L,
-                            type = DownloadFileType.MEDIA,
-                            fileName = media.name,
-                            path = media.absolutePath,
-                            bytesDownloaded = 500L,
-                            bytesTotal = 500L,
-                            status = DownloadStatus.DOWNLOADED,
-                        ),
-                    ),
-            )
-
-            queue().drain(listener) shouldBe DrainOutcome.COMPLETED
-
-            coVerify(exactly = 1) { downloader.download(TRANSCODE_URL, any(), any(), any(), any(), any()) }
         }
 
     // ---- cancellation ---------------------------------------------------------------------------

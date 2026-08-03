@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
@@ -68,12 +68,15 @@ internal fun GlassBottomNav(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = BottomNavMargin)
-                .height(BottomNavHeight)
+                // A *minimum*, not a fixed height: at accessibility font scales the stacked
+                // icon-over-label item outgrows 60dp, and a hard `height` clipped the labels the
+                // bar exists to show. The pill floats, so growing costs nothing but overlap slack.
+                .heightIn(min = BottomNavHeight)
                 .popShadow(CircleShape)
-                // Chrome tint, not the card-level white@6%: the pill floats over whatever the page
-                // happens to have scrolled under it, and an unselected item's muted white label
-                // needs the blur behind it pulled down to stay readable over bright artwork.
-                .glassSurface(shape = CircleShape, tint = GlassDefaults.ChromeFill)
+                // The pill's own darker tint, not ChromeFill: this bar's labels are the smallest
+                // text in the chrome and it sits over full-bleed artwork — see [GlassDefaults
+                // .BottomNavFill] for the arithmetic.
+                .glassSurface(shape = CircleShape, tint = GlassDefaults.BottomNavFill)
                 .padding(horizontal = BarHorizontalPadding),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
@@ -121,6 +124,9 @@ private fun RowScope.BottomNavItem(
             .selectable(selected = selected, onClick = onClick, role = Role.Tab)
 
     if (selected) {
+        // Content on the selected item's white capsule: the app background colour, for full
+        // contrast — the same token `GlassTopNav`'s selected tab uses.
+        val selectedContent = MaterialTheme.colorScheme.background
         Row(
             modifier =
                 base
@@ -132,13 +138,13 @@ private fun RowScope.BottomNavItem(
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
-                tint = SelectedContent,
+                tint = selectedContent,
                 modifier = Modifier.size(ItemIconSize),
             )
             Text(
                 text = label,
                 style = SelectedLabel,
-                color = SelectedContent,
+                color = selectedContent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -150,16 +156,21 @@ private fun RowScope.BottomNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(UnselectedIconGap),
         ) {
+            // Full white, not `onSurfaceVariant`'s white@70%: a 10sp label loses too much of its
+            // contrast to a translucent ink over blurred artwork — even on the darkened
+            // [GlassDefaults.BottomNavFill], the muted white composited under 3:1 on a bright
+            // frame. Unselected still reads as unselected by *shape* (stacked column vs the white
+            // capsule), which is the distinction this bar was designed around.
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = Color.White,
                 modifier = Modifier.size(ItemIconSize),
             )
             Text(
                 text = label,
                 style = UnselectedLabel,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -184,9 +195,6 @@ private val UnselectedHorizontalPadding: Dp = 8.dp
 private val UnselectedVerticalPadding: Dp = 6.dp
 
 private val UnselectedIconGap: Dp = 2.dp
-
-/** Content on the selected item's white capsule: the app background colour, for full contrast. */
-private val SelectedContent = Color(0xFF101010)
 
 private val SelectedLabel =
     TextStyle(

@@ -4,6 +4,8 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
+import dev.jellyboost.player.cast.CastConnection
+import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.resolve.ExoMediaSourceFactory
@@ -126,6 +128,80 @@ class PlaybackSessionControllerTest {
             // The caller has to publish the new source first, or a player event arriving during the
             // first buffer is attributed to the source that was just replaced.
             coVerify(exactly = 0) { reporter.reportStart(any(), any()) }
+        }
+
+    // ---- the cast state changing underneath a resolve (audit CAST-04) ---------------------------
+
+    @Test
+    fun `a cast session starting mid-resolve makes the item re-negotiate for the receiver`() =
+        runTest {
+            val status = CastStatusHolder()
+            val requests = mutableListOf<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(requests)) } coAnswers {
+                // The session starts while the first resolve is on the wire: whatever it negotiated
+                // was profiled for this device's decoders, and preparing it would land on the cast
+                // player the routing handle now points at.
+                status.setConnection(CastConnection.Connected("Living Room TV"))
+                AppResult.Success(source)
+            }
+            val controller =
+                PlaybackSessionController(
+                    resolver = resolver,
+                    mediaSourceFactory = mediaSourceFactory,
+                    playerHandle = playerHandle,
+                    reporter = reporter,
+                    castStatus = status,
+                )
+
+            val result = controller.open(request(), playWhenReady = true)
+
+            result.shouldBeInstanceOf<SessionOpenResult.Opened>()
+            requests.map { it.castTarget } shouldBe listOf(false, true)
+            // One prepare, off the re-negotiated resolve — not one per attempt.
+            playerHandle.prepared.size shouldBe 1
+        }
+
+    @Test
+    fun `a cast session ending mid-resolve brings the negotiation back to this device`() =
+        runTest {
+            val status = CastStatusHolder()
+            status.setConnection(CastConnection.Connected("Living Room TV"))
+            val requests = mutableListOf<PlaybackResolveRequest>()
+            coEvery { resolver.resolve(capture(requests)) } coAnswers {
+                status.setConnection(CastConnection.None)
+                AppResult.Success(source)
+            }
+            val controller =
+                PlaybackSessionController(
+                    resolver = resolver,
+                    mediaSourceFactory = mediaSourceFactory,
+                    playerHandle = playerHandle,
+                    reporter = reporter,
+                    castStatus = status,
+                )
+
+            controller.open(request().copy(castTarget = true), playWhenReady = true)
+
+            requests.map { it.castTarget } shouldBe listOf(true, false)
+        }
+
+    @Test
+    fun `a steady cast state resolves exactly once`() =
+        runTest {
+            val status = CastStatusHolder()
+            status.setConnection(CastConnection.Connected("Living Room TV"))
+            val controller =
+                PlaybackSessionController(
+                    resolver = resolver,
+                    mediaSourceFactory = mediaSourceFactory,
+                    playerHandle = playerHandle,
+                    reporter = reporter,
+                    castStatus = status,
+                )
+
+            controller.open(request().copy(castTarget = true), playWhenReady = true)
+
+            coVerify(exactly = 1) { resolver.resolve(any()) }
         }
 
     private fun request() = PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, startPositionTicks = RESUME_TICKS)

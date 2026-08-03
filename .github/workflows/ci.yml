@@ -45,6 +45,14 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
 
+      # i18n completeness — string/placeholder/plural/escaping parity across every locale file.
+      # Pure Python (stdlib only, python3 ships on the runner) and takes under a second, so it
+      # runs before any toolchain setup and fails fast. This is the same script the i18n pass
+      # used as its completeness gate; without it here, a string added to values/ but not to the
+      # 69 locale files keeps CI green (it did — see the settings About section).
+      - name: i18n completeness
+        run: python3 scripts/validate_i18n.py
+
       # Java toolchain 21 — pinned in gradle/libs.versions.toml (javaToolchain) and set locally by
       # ../env.sh. Temurin is what the toolchain resolver would download anyway; providing it here
       # saves the auto-provisioning round trip.

@@ -63,6 +63,7 @@ import dev.jellyboost.player.syncplay.SyncPlayMessage
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupState
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupSummary
 import java.util.UUID
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The dedicated SyncPlay section (M11 Phase 5, docs/notes/syncplay-m11-plan.md): every group this
@@ -162,7 +163,13 @@ fun SyncPlayGroupsContent(
                 when {
                     state.isLoading -> LoadingState()
                     state.disabled -> EmptyState(message = stringResource(R.string.player_syncplay_groups_disabled))
-                    state.transientError ->
+                    // Full-screen only when there is nothing else worth keeping on screen: with a
+                    // membership standing, the pinned card — this screen's only Leave affordance —
+                    // must survive a single failed 10 s poll, which lands precisely in the flaky
+                    // network the user wants to leave from (audit SP-05). The membership comes
+                    // from the controller, not the poll, so it was never in doubt; the error shows
+                    // inline in [GroupsList] instead.
+                    state.transientError && state.membership == SyncPlayGroupsMembership.None ->
                         ErrorState(message = stringResource(R.string.player_syncplay_groups_error), onRetry = onRetry)
 
                     state.isEmpty -> EmptyState(message = stringResource(R.string.player_syncplay_groups_empty))
@@ -173,6 +180,7 @@ fun SyncPlayGroupsContent(
                             onJoin = onJoin,
                             onLeaveClick = { confirmingLeave = true },
                             onOpenPlayer = onOpenPlayer,
+                            onRetry = onRetry,
                         )
                 }
             }
@@ -273,6 +281,7 @@ private fun GroupsList(
     onJoin: (SyncPlayGroupSummary) -> Unit,
     onLeaveClick: () -> Unit,
     onOpenPlayer: (SyncPlayLaunchRequest) -> Unit,
+    onRetry: () -> Unit,
 ) {
     val membership = state.membership
 
@@ -281,6 +290,10 @@ private fun GroupsList(
         contentPadding = PaddingValues(Dimens.ScreenPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
+        if (state.transientError) {
+            item(key = "poll-error") { PollErrorRow(onRetry = onRetry) }
+        }
+
         when (membership) {
             is SyncPlayGroupsMembership.InGroup ->
                 item(key = "active-group") {
@@ -364,6 +377,38 @@ private fun ActiveGroupCard(
                 small = true,
             )
         }
+    }
+}
+
+/**
+ * A transient poll failure shown inline, above whatever the screen still knows for certain.
+ *
+ * Only rendered while a membership (or a join in flight) keeps [GroupsList] on screen — with
+ * nothing else to show, the full-screen [ErrorState] still takes over. The list of *joinable*
+ * groups is genuinely unknown during the failure, and the empty list under this row says so.
+ */
+@Composable
+private fun PollErrorRow(onRetry: () -> Unit) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .mSurface(MaterialTheme.colorScheme.surface)
+                .padding(Dimens.PanelPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        Text(
+            text = stringResource(R.string.player_syncplay_groups_error),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        GhostPillButton(
+            text = stringResource(CoreUiR.string.state_retry),
+            onClick = onRetry,
+            small = true,
+        )
     }
 }
 

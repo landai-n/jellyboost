@@ -62,7 +62,7 @@ import kotlin.time.Duration.Companion.seconds
  * the group plays. [SdkSyncPlaySocket] is kept next door as the reference implementation of it.
  *
  * **The fix is one rule: nothing but a queue push happens on OkHttp's reader thread.** `onMessage`
- * `trySend`s the raw text into an unbounded [Channel]; a consumer coroutine decodes and routes.
+ * `trySend`s the raw text into a generously bounded [Channel]; a consumer coroutine decodes and routes.
  * There is no conflation anywhere on the path, and no frame can overtake or erase another.
  *
  * Everything else is deliberately the contract the seam already had: the two streams are cold, one
@@ -152,9 +152,13 @@ internal class OkHttpSyncPlaySocket
                 val request = socketRequest()
                 Timber.d("Opening the SyncPlay websocket at %s", request.url)
                 _connectionState.value = SyncPlaySocketState.Connecting
-                // UNLIMITED: the reader thread must never block or drop, whatever the consumer is
-                // doing. This channel is the whole difference from the SDK's conflated state flow.
-                val raw = Channel<String>(Channel.UNLIMITED)
+                // Generously bounded: the reader thread must never block or drop under any
+                // *healthy* load — this queue is the whole difference from the SDK's conflated
+                // state flow — but a consumer wedged on network I/O for minutes must not grow the
+                // heap without limit either (audit SP-19). SyncPlay traffic is a few frames a
+                // second at its busiest, so the cap is minutes of backlog; hitting it is logged
+                // in [listener] rather than absorbed silently.
+                val raw = Channel<String>(RAW_FRAME_BUFFER)
                 val socket = webSockets.newWebSocket(request, listener(opened, raw))
                 launch {
                     // The close cause reaches us through the channel, so the frames queued before
@@ -195,7 +199,9 @@ internal class OkHttpSyncPlaySocket
                     webSocket: WebSocket,
                     text: String,
                 ) {
-                    raw.trySend(text)
+                    if (!raw.trySend(text).isSuccess) {
+                        Timber.w("SyncPlay frame queue full (%d); dropping a frame", RAW_FRAME_BUFFER)
+                    }
                 }
 
                 override fun onClosing(
@@ -341,6 +347,15 @@ internal class OkHttpSyncPlaySocket
 
             val INITIAL_RETRY: Duration = 1.seconds
             val MAX_RETRY: Duration = 10.seconds
+
+            /**
+             * Frames queued between OkHttp's reader thread and the routing coroutine.
+             *
+             * Far beyond any healthy backlog (SyncPlay is a handful of frames per action), but a
+             * ceiling all the same, so a wedged consumer costs bounded memory in this
+             * process-lifetime singleton rather than the heap (audit SP-19).
+             */
+            const val RAW_FRAME_BUFFER = 256
 
             /** Floor on the keep-alive period, in case a server ever announces an absurd timeout. */
             val MIN_KEEP_ALIVE: Duration = 1.seconds

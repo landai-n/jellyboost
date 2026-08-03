@@ -22,7 +22,18 @@ import javax.inject.Inject
 class SyncPlayLaunchViewModel
     @Inject
     constructor(
-        controller: SyncPlayController,
+        private val controller: SyncPlayController,
     ) : ViewModel() {
         val launchRequests: SharedFlow<SyncPlayLaunchRequest> = controller.launchRequests
+
+        /**
+         * Tells the controller its replayed request has been handled.
+         *
+         * The flow replays its last request so one raised with no Activity composed survives until
+         * the next composition (audit SP-12); consuming it is what stops a *handled* request from
+         * re-opening the player on every later recomposition.
+         */
+        fun consume() {
+            controller.consumeLaunchRequest()
+        }
     }

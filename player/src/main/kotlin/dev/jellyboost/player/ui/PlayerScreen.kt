@@ -531,6 +531,7 @@ private fun PlayerMessage.textRes(): Int =
         PlayerMessage.StreamingForTrackChange -> R.string.player_message_track_streaming
         PlayerMessage.TrackUnavailableOffline -> R.string.player_message_track_offline
         PlayerMessage.PlaybackFailed -> R.string.player_message_failed
+        PlayerMessage.ChangeReverted -> R.string.player_message_change_reverted
         PlayerMessage.SyncPlayConnectionLost -> R.string.player_message_syncplay_connection_lost
         PlayerMessage.SyncPlayRejoined -> R.string.player_message_syncplay_rejoined
         PlayerMessage.SyncPlayJoinFailed -> R.string.player_message_syncplay_join_failed

@@ -47,6 +47,7 @@ import dev.jellyboost.player.syncplay.SyncPlayPlaybackHost
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.trickplay.TrickplayResolver
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -247,6 +248,17 @@ class PlayerViewModel
         private var localSource: LocalPlaybackMediaSource? = null
 
         /**
+         * What was playing when the current re-negotiation started; `null` once spent.
+         *
+         * A failed re-resolve is not the end of a session that was fine a second earlier: the
+         * resolve fails *before* `prepare`, so the player is still sitting on this source, and
+         * asking for its terms again beats tearing the whole screen down to an error whose only
+         * action is leaving ([onResolveFailed]). One-shot — the retry itself does not re-arm it —
+         * so a server that is really gone still ends in the error state after one extra attempt.
+         */
+        private var recoverySource: PlaybackMediaSource? = null
+
+        /**
          * `true` while the app believes it can reach the server.
          *
          * Kept in step with [ConnectionStateProvider] for as long as playback lasts, because it
@@ -267,6 +279,18 @@ class PlayerViewModel
 
         private var reportingJob: Job? = null
         private var uiTickerJob: Job? = null
+
+        /**
+         * The one in-flight open or reopen; see [launchSessionOp].
+         *
+         * Tracked so a session operation can wait for its predecessor instead of racing it: two
+         * concurrent resolve → prepare → publish sequences (the error fallback firing while a
+         * picker tap is resolving, or two taps a second apart) each capture their own `previous`,
+         * prepare in either order, and can leave [source] describing a stream the player is not
+         * decoding — with reports keyed on the wrong `playSessionId` and positional track matching
+         * run against the wrong stream list.
+         */
+        private var openJob: Job? = null
 
         /** Guards against reporting the stop twice when the item ends and the screen then closes. */
         private var stopReported = false
@@ -965,7 +989,10 @@ class PlayerViewModel
             message: PlayerMessage? = null,
             endingAt: PlaybackSnapshot? = null,
         ) {
-            viewModelScope.launch {
+            // A fresh open (or a transfer) is a new session: whatever an earlier re-negotiation
+            // stashed to recover to belongs to a stream this one replaces.
+            recoverySource = null
+            launchSessionOp {
                 endingAt?.let { endCurrentSource(it) }
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 // A receiver is loaded exactly once, with whatever it is told at that instant, so a
@@ -1004,7 +1031,10 @@ class PlayerViewModel
                         request.startPositionTicks.takeIf { it > 0L } ?: snapshot.positionTicks,
                 )
 
-            viewModelScope.launch {
+            // What to fall back to if the resolve fails: the player is still prepared on
+            // [previous] at that point, so its terms are worth one retry ([onResolveFailed]).
+            recoverySource = previous
+            launchSessionOp {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val result =
                     sessionController.reopen(
@@ -1014,6 +1044,22 @@ class PlayerViewModel
                     )
                 publish(result, message)
             }
+        }
+
+        /**
+         * Launches one session operation, once the previous one is cancelled and has finished.
+         *
+         * Every open and reopen goes through here so at most one resolve → prepare → publish
+         * sequence is ever in flight ([openJob]); a superseded one is cancelled where it is
+         * suspended — usually the resolve — rather than allowed to finish out of order.
+         */
+        private fun launchSessionOp(block: suspend () -> Unit) {
+            val predecessor = openJob
+            openJob =
+                viewModelScope.launch {
+                    predecessor?.cancelAndJoin()
+                    block()
+                }
         }
 
         /**
@@ -1077,16 +1123,46 @@ class PlayerViewModel
          * ago and the file is still on the device, so the item goes back to playing off it with the
          * same message a refused offline switch gets. The retry is not forced, so it can only
          * resolve locally, and a second failure falls through to the error.
+         *
+         * The second recovery is the streamed mirror of the first (audit PC-01): a re-negotiation
+         * — a subtitle tap, a quality row, a fallback rung — that fails to resolve had a working
+         * session behind it, whose transcode [reopenSession] has by then already stopped, and the
+         * terminal error's only offered action is leaving the player. [recoverySource] holds that
+         * session's terms, and they are re-asked once, from the position playback has reached.
+         * The retry does not re-arm it, so a server that is really gone still ends in the honest
+         * error state after one extra attempt.
          */
         private fun onResolveFailed(error: AppError) {
             val downloaded = localSource
-            if (!forcedRemote || downloaded == null) return fail(error.toMessage())
+            if (forcedRemote && downloaded != null) {
+                Timber.i("Streaming %s for a track change failed; returning to the file on disk", downloaded.itemId)
+                reopenSession(
+                    downloaded.asRequest(forceRemote = false, castTarget = isCasting),
+                    PlayerMessage.TrackUnavailableOffline,
+                )
+                return
+            }
 
-            Timber.i("Streaming %s for a track change failed; returning to the file on disk", downloaded.itemId)
-            reopenSession(
-                downloaded.asRequest(forceRemote = false, castTarget = isCasting),
-                PlayerMessage.TrackUnavailableOffline,
-            )
+            val previous = recoverySource
+            if (previous != null) {
+                recoverySource = null
+                Timber.i("Re-negotiating %s failed; retrying the terms that were playing", previous.itemId)
+                val snapshot = playerHandle.snapshot()
+                launchSessionOp {
+                    publish(
+                        sessionController.open(
+                            previous
+                                .asRequest(forcedRemote, isCasting)
+                                .copy(startPositionTicks = snapshot.positionTicks),
+                            playWhenReady = snapshot.isPlaying,
+                        ),
+                        PlayerMessage.ChangeReverted,
+                    )
+                }
+                return
+            }
+
+            fail(error.toMessage())
         }
 
         /**
@@ -1193,7 +1269,13 @@ class PlayerViewModel
             setReportingActive(false)
             if (stopReported) return
             stopReported = true
-            viewModelScope.launch { reporter.reportStop(current, playerHandle.snapshot().copy(hasEnded = true)) }
+            // The detached scope, not `viewModelScope`: publishing `hasEnded` above is what makes
+            // `PlayerScreen` pop the route on the next frame, which clears this ViewModel and
+            // cancels its scope — a report launched there dies at its first server call, and with
+            // `stopReported` already true the `releaseSession` fallback would never resend it. The
+            // commonest exit path of all, an episode watched to its end, must survive its own
+            // auto-close exactly like a teardown does.
+            reporter.reportStopDetached(current, playerHandle.snapshot().copy(hasEnded = true))
         }
 
         /**

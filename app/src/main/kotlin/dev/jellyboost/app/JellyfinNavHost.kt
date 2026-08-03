@@ -245,6 +245,10 @@ private fun SyncPlayLaunchEffect(navController: NavHostController) {
 
     LaunchedEffect(viewModel) {
         viewModel.launchRequests.collect { request ->
+            // Consumed first, acted-on or ignored alike: the flow replays its last request to
+            // whichever collector comes next (audit SP-12), and both outcomes below are this
+            // effect *handling* it — a replay after either would navigate twice.
+            viewModel.consume()
             if (currentEntry?.destination?.hasRoute<Routes.Player>() == true) {
                 Timber.d("Ignoring a SyncPlay launch request while already on the player")
                 return@collect

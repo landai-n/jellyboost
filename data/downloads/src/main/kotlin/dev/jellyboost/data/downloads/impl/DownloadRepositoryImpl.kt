@@ -287,12 +287,14 @@ internal class DownloadRepositoryImpl
 
         override suspend fun pause(itemId: String): AppResult<Unit> =
             mutate(itemId) { id ->
-                // Read before the write: only the row that is actually transferring needs the
-                // worker cancelled, and stopping it for any other row would cancel an unrelated
-                // in-flight item — for a transcode, that discards every byte transferred so far,
-                // since a live encode restarts from zero (audit DL-06).
-                val interruptsTransfer = downloadDao.isDownloadingAny(listOf(id))
-                downloadDao.setStatus(id, DownloadStatus.PAUSED, clock.instant())
+                // One transaction decides *and* writes. Only the row that is actually transferring
+                // needs the worker cancelled — stopping it for any other row would cancel an
+                // unrelated in-flight transcode from byte zero (audit DL-06) — but a separate
+                // read-then-write left a window for the drain's claim to slip between the two, and
+                // the item the user had just paused downloaded to completion with nobody left to
+                // stop it (audit DL-03; see DownloadDao.demoteRunnable).
+                val interruptsTransfer =
+                    downloadDao.demoteRunnable(listOf(id), DownloadStatus.PAUSED, clock.instant())
                 if (interruptsTransfer) {
                     // Stop first, then restart: cancelling the work is the only way to interrupt a
                     // transfer already in flight. The restart picks up whatever is left.
@@ -312,12 +314,14 @@ internal class DownloadRepositoryImpl
 
         override suspend fun pauseAll(itemIds: List<String>): AppResult<Unit> =
             mutateAll(itemIds) { ids ->
-                // Same read-then-decide as the single pause. This is what keeps the
-                // "Pause all keeps transcodes" promise honest: the batch already excludes the
-                // running transcode, so stopping the worker anyway restarted that very encode from
-                // byte zero — the exact thing the button was designed not to do (audit DL-06).
-                val interruptsTransfer = downloadDao.isDownloadingAny(ids)
-                downloadDao.setStatusIn(ids, DownloadStatus.PAUSED, clock.instant())
+                // Same guarded write as the single pause. This is what keeps the "Pause all keeps
+                // transcodes" promise honest: the batch already excludes the running transcode, so
+                // stopping the worker for it anyway restarted that very encode from byte zero —
+                // the exact thing the button was designed not to do (audit DL-06). And the
+                // decision rides in the same transaction as the write, so a drain claim cannot
+                // land between the two and keep transferring a row just marked PAUSED (DL-03).
+                val interruptsTransfer =
+                    downloadDao.demoteRunnable(ids, DownloadStatus.PAUSED, clock.instant())
                 if (interruptsTransfer) {
                     scheduler.stop()
                     scheduler.ensureRunning()
@@ -340,12 +344,19 @@ internal class DownloadRepositoryImpl
             return withContext(ioDispatcher) {
                 @Suppress("TooGenericExceptionCaught")
                 try {
-                    // Stopping the queue before unlinking files means the downloader cannot be
-                    // holding a handle to something we are about to remove — and `stop()` waits
-                    // for the worker, so that is true by the time the first directory goes. Only
-                    // needed when a deleted row *is* the one transferring: stopping for any other
-                    // row would cancel an unrelated in-flight transcode from zero (audit DL-06).
-                    if (downloadDao.isDownloadingAny(ids)) scheduler.stop()
+                    // Take the targets out of the queue's reach *before* unlinking anything: the
+                    // same transaction flips every QUEUED/DOWNLOADING target to CANCELLED — the
+                    // status a row holds between a cancel and its deletion — and answers whether
+                    // the live transfer was among them. A claim arriving later refuses a CANCELLED
+                    // row, so `stop()` (which waits for the worker) is guaranteed to be behind us
+                    // whenever a target was being written when the first directory goes. Stopping
+                    // is still conditional on that answer: doing it for any other row would cancel
+                    // an unrelated in-flight transcode from byte zero (audit DL-06), and a plain
+                    // read-then-stop left the DL-03 window where a claim landing between the two
+                    // let files be unlinked under a live writer.
+                    if (downloadDao.demoteRunnable(ids, DownloadStatus.CANCELLED, clock.instant())) {
+                        scheduler.stop()
+                    }
                     // One cascade for the whole batch — the per-row loop re-ran the orphan prune
                     // (a full-table metadata read) once per deleted item (audit DL-05).
                     val freed = deleter.deleteAll(ids)
@@ -544,16 +555,16 @@ private data class DownloadShape(
 }
 
 /**
- * Whether the worker is transferring one of [ids] right now — or, with `null`, anything at all.
+ * Whether the worker is transferring anything at all right now.
  *
- * What every queue mutation consults before deciding to stop the worker (audit DL-06): cancelling
- * the work is the only way to interrupt a live transfer, but doing it for a row that is *not*
- * transferring cancels an unrelated in-flight item — and a cancelled transcode restarts from byte
- * zero, since a live encode can never be resumed. Top-level rather than a method for detekt's
- * function-count ceiling on the repository, like [walkTicks].
+ * What [restartOrJoin] consults before restarting the worker (audit DL-06): a restart cancels the
+ * running job, and a cancelled transcode restarts from byte zero, since a live encode can never be
+ * resumed. Pause and delete no longer read this — their answer has to be atomic with the status
+ * write, so they get it from `DownloadDao.demoteRunnable` instead (audit DL-03). Top-level rather
+ * than a method for detekt's function-count ceiling on the repository, like [walkTicks].
  */
-private suspend fun DownloadDao.isDownloadingAny(ids: Collection<UUID>?): Boolean =
-    pending().any { row -> row.status == DownloadStatus.DOWNLOADING && (ids == null || row.itemId in ids) }
+private suspend fun DownloadDao.isDownloadingAnything(): Boolean =
+    pending().any { row -> row.status == DownloadStatus.DOWNLOADING }
 
 /**
  * Brings the queue up for freshly re-queued rows without disturbing a live transfer.
@@ -566,7 +577,7 @@ private suspend fun DownloadDao.isDownloadingAny(ids: Collection<UUID>?): Boolea
  * its own; `ensureRunning` (KEEP) merely covers the race where it finishes in between.
  */
 private suspend fun DownloadScheduler.restartOrJoin(dao: DownloadDao) {
-    if (dao.isDownloadingAny(null)) ensureRunning() else restart()
+    if (dao.isDownloadingAnything()) ensureRunning() else restart()
 }
 
 /**

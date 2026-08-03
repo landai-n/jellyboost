@@ -94,6 +94,14 @@ import kotlin.time.Duration.Companion.minutes
  * and over a moving image it is also the only thing that stays findable at a glance. No control was
  * added, removed or rewired in the restyle; the seek amounts, the picker set, the sheet host and the
  * label threshold are the M9–M12 ones.
+ *
+ * The glass here is *flat* dark glass — [VIDEO_GLASS_FILL] plus the standard hairline — not a Haze
+ * blur. The video is a `SurfaceView` whose pixels are composited by the system and never reach the
+ * recorded backdrop layer, so a blur over it samples nothing and rendered as an opaque `#101010`
+ * disc while still paying a per-frame blur pass ([WaitingForGroupOverlay] in `PlayerScreen`
+ * documents the same reasoning). `JellyfinNavHost` nulls `LocalHazeState` for the player subtree,
+ * which routes every `glassSurface` in it onto the flat-fill fallback; the tints below choose what
+ * that flat fill is.
  */
 @Composable
 internal fun PlayerControls(
@@ -154,6 +162,7 @@ private fun TopBar(
             // Full white rather than the chrome default of white@80%: this button is read against a
             // moving image, not against the app's background.
             tint = Color.White,
+            surfaceTint = VIDEO_GLASS_FILL,
         )
         TitleStack(label = state.title, modifier = Modifier.weight(1f))
         // Only when it is not 1×: a badge that is always there stops being information. Kept beside
@@ -178,6 +187,7 @@ private fun TopBar(
                 modifier = Modifier.size(Dimens.MinTouchTarget),
                 glassContainer = true,
                 size = CHROME_BUTTON,
+                surfaceTint = VIDEO_GLASS_FILL,
             )
         }
     }
@@ -305,7 +315,7 @@ private fun SeekButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier.size(SEEK_BUTTON).glassSurface(CircleShape),
+        modifier = Modifier.size(SEEK_BUTTON).glassSurface(CircleShape, tint = VIDEO_GLASS_FILL),
         shape = CircleShape,
         colors =
             ButtonDefaults.buttonColors(
@@ -726,7 +736,7 @@ private fun SheetChip(
                 modifier =
                     Modifier
                         .size(CHIP_HEIGHT)
-                        .glassSurface(CircleShape)
+                        .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
                         .clickable(role = Role.Button, onClick = onClick),
                 contentAlignment = Alignment.Center,
             ) {
@@ -749,7 +759,7 @@ private fun SheetChip(
             modifier =
                 Modifier
                     .height(CHIP_HEIGHT)
-                    .glassSurface(CircleShape)
+                    .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
                     .clickable(role = Role.Button, onClick = onClick)
                     .padding(horizontal = CHIP_PADDING),
             verticalAlignment = Alignment.CenterVertically,
@@ -791,6 +801,14 @@ private const val SKIP_BACK_MS = 10_000L
 private const val SKIP_FORWARD_MS = 30_000L
 
 private val SCRIM = Color.Black.copy(alpha = 0.35f)
+
+/**
+ * The flat fill of every glass control drawn over the film — the same translucent dark the
+ * `WaitingForGroupOverlay` panel uses, for the reason spelled out in this file's header: there is
+ * no Haze backdrop over a `SurfaceView`, so the fill *is* the surface. Shared with `PlayerScreen`
+ * (the skip-segment pill floats over raw video with no [SCRIM] behind it).
+ */
+internal val VIDEO_GLASS_FILL = Color.Black.copy(alpha = 0.6f)
 
 // --- Top bar -----------------------------------------------------------------------------------
 

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.network.model.SessionState
+import dev.jellyboost.core.ui.theme.LocalHazeState
 import dev.jellyboost.feature.auth.LoginScreen
 import dev.jellyboost.feature.auth.ServerSetupScreen
 import dev.jellyboost.feature.detail.ItemDetailScreen
@@ -173,10 +175,18 @@ internal fun JellyfinNavHost(
         }
 
         composable<Routes.Player> {
-            PlayerScreen(
-                viewModel = hiltViewModel(),
-                onBack = { navController.popBackStack() },
-            )
+            // No backdrop on the player, by construction. `AppScaffold` detaches the `hazeSource`
+            // here (the video is a SurfaceView whose pixels never reach the recorded layer, so a
+            // blur would sample black at a per-frame capture cost), and a Haze effect whose state
+            // has no source draws *nothing* — every glass control would turn transparent. Nulling
+            // the local instead routes the player's glass onto `glassSurface`'s documented
+            // fallback: a flat fill of whatever tint the control asked for.
+            CompositionLocalProvider(LocalHazeState provides null) {
+                PlayerScreen(
+                    viewModel = hiltViewModel(),
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
 
         composable<Routes.SyncPlay> {

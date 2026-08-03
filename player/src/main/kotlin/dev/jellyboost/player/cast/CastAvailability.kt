@@ -44,11 +44,18 @@ class CastAvailability
          * The shared [CastContext], or `null` while unavailable — the sender-side API the later
          * phases (`CastPlayerHandle`, `CastSessionCoordinator`) hang off. Callers outside this
          * package have no business with it; the type is what confines them.
+         *
+         * `@Volatile` for the same reason `CastMetadataHolder`'s field is: today every write and
+         * read happens on the main thread, but that is a convention rather than a checked property
+         * of a `@Singleton`, and a future off-main reader seeing a stale `null` would silently
+         * disable casting (audit CAST-07).
          */
+        @Volatile
         var castContext: CastContext? = null
             private set
 
         /** One attempt per process — a stack that refused to start will not start on a retry. */
+        @Volatile
         private var initializationStarted = false
 
         /**

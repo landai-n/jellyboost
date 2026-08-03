@@ -16,4 +16,12 @@ data class StoredSession(
     val serverId: UUID,
     val userId: UUID,
     val accessToken: String,
-)
+) {
+    /**
+     * Redacts [accessToken] (audit NET-02, same shape as SEC-09's `LoginUiState`): the generated
+     * data-class `toString()` would print the live token the moment an instance reaches a log
+     * line — a `Timber` call that dumps a whole value, or a wrapped exception message, is all it
+     * would take.
+     */
+    override fun toString(): String = "StoredSession(serverId=$serverId, userId=$userId, accessToken=<redacted>)"
+}

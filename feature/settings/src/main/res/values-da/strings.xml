@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Du skal bruge din serveradresse og adgangskode for at logge ind igen.</string>
     <string name="settings_sign_out_delete_downloads">Slet også downloads fra denne enhed</string>
     <string name="settings_cancel">Annuller</string>
+    <string name="settings_section_about">Om appen</string>
+    <string name="settings_version">Appversion</string>
 </resources>

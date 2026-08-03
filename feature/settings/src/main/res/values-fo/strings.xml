@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Tær tørvar ambætaraadressuna og loyniorðið fyri at innrita teg aftur.</string>
     <string name="settings_sign_out_delete_downloads">Strika eisini niðurhal frá hesum tólinum</string>
     <string name="settings_cancel">Avlýs</string>
+    <string name="settings_section_about">Um appina</string>
+    <string name="settings_version">App-útgáva</string>
 </resources>

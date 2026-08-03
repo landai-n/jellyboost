@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">আবার সাইন ইন করতে আপনার সার্ভার ঠিকানা এবং পাসওয়ার্ড প্রয়োজন হবে।</string>
     <string name="settings_sign_out_delete_downloads">এই ডিভাইস থেকে ডাউনলোডও মুছে ফেলুন</string>
     <string name="settings_cancel">বাতিল করুন</string>
+    <string name="settings_section_about">অ্যাপ সম্পর্কে</string>
+    <string name="settings_version">অ্যাপ সংস্করণ</string>
 </resources>

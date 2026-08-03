@@ -52,4 +52,6 @@
     <string name="settings_sign_out_dialog_message">תזדקק לכתובת השרת ולסיסמה שלך כדי להתחבר שוב.</string>
     <string name="settings_sign_out_delete_downloads">מחיקת ההורדות מהמכשיר הזה גם כן</string>
     <string name="settings_cancel">ביטול</string>
+    <string name="settings_section_about">אודות</string>
+    <string name="settings_version">גרסת האפליקציה</string>
 </resources>

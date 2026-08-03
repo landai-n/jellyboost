@@ -51,4 +51,6 @@
     <string name="settings_sign_out_dialog_message">Биће вам потребна адреса сервера и лозинка да се поново пријавите.</string>
     <string name="settings_sign_out_delete_downloads">Такође обриши преузимања са овог уређаја</string>
     <string name="settings_cancel">Откажи</string>
+    <string name="settings_section_about">О апликацији</string>
+    <string name="settings_version">Верзија апликације</string>
 </resources>

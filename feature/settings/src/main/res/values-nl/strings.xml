@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Je hebt je serveradres en wachtwoord nodig om je weer aan te melden.</string>
     <string name="settings_sign_out_delete_downloads">Ook downloads van dit apparaat verwijderen</string>
     <string name="settings_cancel">Annuleren</string>
+    <string name="settings_section_about">Over de app</string>
+    <string name="settings_version">App-versie</string>
 </resources>

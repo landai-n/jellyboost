@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">A visszalépéshez szükséged lesz a szerver címére és a jelszavadra.</string>
     <string name="settings_sign_out_delete_downloads">A letöltések törlése erről az eszközről is</string>
     <string name="settings_cancel">Mégse</string>
+    <string name="settings_section_about">Névjegy</string>
+    <string name="settings_version">Az app verziója</string>
 </resources>

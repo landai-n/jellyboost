@@ -51,4 +51,6 @@
     <string name="settings_sign_out_dialog_message">Lai atkal pieteiktos, jums būs nepieciešama servera adrese un parole.</string>
     <string name="settings_sign_out_delete_downloads">Dzēst arī lejupielādes no šīs ierīces</string>
     <string name="settings_cancel">Atcelt</string>
+    <string name="settings_section_about">Par lietotni</string>
+    <string name="settings_version">Lietotnes versija</string>
 </resources>

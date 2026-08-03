@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -162,6 +163,11 @@ private fun HomeRows(
         val cardWidth = homeThumbCardWidth(maxWidth)
         val wide = isWideHome(maxWidth = maxWidth, maxHeight = maxHeight)
         val hero = state.resume.firstOrNull()
+        // The rest of *Continue watching* once the hero has taken the first card. Dropped once per
+        // resume-list change rather than inline in the lazy builder, which re-runs on every
+        // recomposition and handed `MediaRow` a fresh, never-equal list each time — defeating its
+        // skipping on exactly the row `UserDataEventBus` patches most often.
+        val resumeAfterHero = remember(state.resume) { state.resume.drop(1) }
         val chrome = LocalAppChromePadding.current
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -221,9 +227,11 @@ private fun HomeRows(
                         }
 
                     // The hero *is* the first resume card; the row picks up where it leaves off.
+                    // (`resumeAfterHero` of an empty list is empty, so the no-hero case is the
+                    // same empty row it always was.)
                     HomeSectionType.RESUME ->
                         resumeRow(
-                            items = if (hero != null) state.resume.drop(1) else state.resume,
+                            items = resumeAfterHero,
                             actions = actions,
                             cardWidth = cardWidth,
                         )

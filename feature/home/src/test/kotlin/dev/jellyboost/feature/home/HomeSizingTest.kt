@@ -119,4 +119,24 @@ class HomeSizingTest {
     fun `an absurdly short banner leaves an empty copy band rather than a negative one`() {
         wideHeroCopyHeight(40.dp) shouldBe 0.dp
     }
+
+    // ---- the compact hero's condensed lockup ------------------------------------------------
+
+    @Test
+    fun `a phone-landscape banner drops the compact lockup's secondary lines`() {
+        // A 360dp-tall landscape phone is not the wide shape (too short), so it draws the compact
+        // banner — capped at 216dp, which cannot hold the eyebrow and the metadata line on top of
+        // the title and the buttons.
+        val banner = heroHeight(wide = false, viewportHeight = 360.dp)
+
+        compactHeroShowsSecondary(banner) shouldBe false
+    }
+
+    @Test
+    fun `portrait phone banners keep the full compact lockup`() {
+        // The capped 640dp phone (384dp of banner) and the roomy one (the mocks' 460dp) both fit
+        // the whole lockup.
+        compactHeroShowsSecondary(heroHeight(wide = false, viewportHeight = 640.dp)) shouldBe true
+        compactHeroShowsSecondary(heroHeight(wide = false, viewportHeight = 800.dp)) shouldBe true
+    }
 }

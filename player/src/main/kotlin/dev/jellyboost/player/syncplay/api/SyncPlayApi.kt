@@ -81,9 +81,6 @@ interface SyncPlayApi {
     /** `POST /SyncPlay/Seek`. */
     suspend fun requestSeek(positionTicks: Long)
 
-    /** `POST /SyncPlay/Stop`. */
-    suspend fun requestStop()
-
     /**
      * `POST /SyncPlay/NextItem` — advance the group's queue.
      *

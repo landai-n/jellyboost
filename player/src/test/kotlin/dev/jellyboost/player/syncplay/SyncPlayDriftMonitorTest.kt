@@ -32,7 +32,7 @@ class SyncPlayDriftMonitorTest {
             // Anchor: 60 s at the origin. One second of virtual time later the player should be at
             // 61 000 ms; put it 1 999 ms behind that.
             advanceTimeBy(1_000)
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 - 1_999)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 - 1_999, isPlaying = true)
 
             fixture.monitor.correctOnce(anchor()) shouldBe null
             fixture.player.seekedToMs shouldBe emptyList()
@@ -43,7 +43,7 @@ class SyncPlayDriftMonitorTest {
         runTest {
             val fixture = fixture()
             advanceTimeBy(1_000)
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 - 2_001)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 - 2_001, isPlaying = true)
 
             fixture.monitor.correctOnce(anchor()) shouldBe 61_000L
             fixture.player.seekedToMs shouldBe listOf(61_000L)
@@ -54,7 +54,7 @@ class SyncPlayDriftMonitorTest {
         runTest {
             val fixture = fixture()
             advanceTimeBy(1_000)
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 + 3_000)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 61_000 + 3_000, isPlaying = true)
 
             fixture.monitor.correctOnce(anchor()) shouldBe 61_000L
             fixture.player.seekedToMs shouldBe listOf(61_000L)
@@ -66,7 +66,7 @@ class SyncPlayDriftMonitorTest {
             // The device clock runs 5 s behind the server's, so at device-origin the group is
             // already 5 s past the anchor.
             val fixture = fixture(serverOffsetMillis = 5_000)
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, isPlaying = true)
 
             fixture.monitor.correctOnce(anchor()) shouldBe 65_000L
         }
@@ -76,7 +76,21 @@ class SyncPlayDriftMonitorTest {
         runTest {
             val fixture = fixture()
             advanceTimeBy(30_000)
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, hasEnded = true)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, isPlaying = true, hasEnded = true)
+
+            fixture.monitor.correctOnce(anchor()) shouldBe null
+            fixture.player.seekedToMs shouldBe emptyList()
+        }
+
+    @Test
+    fun `a player paused outside the protocol is left where it stands`() =
+        runTest {
+            val fixture = fixture()
+            // A phone call or a headphone unplug pauses ExoPlayer directly (audio focus), without
+            // any command and without the phase leaving `Playing` — so the monitor keeps ticking
+            // against a frozen frame. Seek-"correcting" it every second for ever was audit SP-04.
+            advanceTimeBy(30_000)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 60_000, isPlaying = false)
 
             fixture.monitor.correctOnce(anchor()) shouldBe null
             fixture.player.seekedToMs shouldBe emptyList()
@@ -87,7 +101,7 @@ class SyncPlayDriftMonitorTest {
         runTest {
             val fixture = fixture()
             // A player that never advances: it falls a second further behind on every tick.
-            fixture.player.snapshot = PlaybackSnapshot(positionMs = 0)
+            fixture.player.snapshot = PlaybackSnapshot(positionMs = 0, isPlaying = true)
             val job = backgroundScope.launch { fixture.monitor.monitor(anchor()) }
             runCurrent()
 

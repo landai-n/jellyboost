@@ -284,6 +284,16 @@ enum class PlayerMessage {
     PlaybackFailed,
 
     /**
+     * A re-negotiation failed to resolve, so the session went back to the terms it was playing.
+     *
+     * Raised by the recovery in `PlayerViewModel.onResolveFailed` (audit PC-01): the tapped
+     * subtitle, track or quality never arrived, but the film did not end over it — it restarted
+     * under the previous terms from where it had got to, and this is what tells the user their
+     * change was lost rather than applied.
+     */
+    ChangeReverted,
+
+    /**
      * The connection dropped while in a group, so the group was left and playback paused.
      *
      * Key decision 10 as amended (docs/notes/syncplay-m11-plan.md): resuming from here plays solo —

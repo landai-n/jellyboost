@@ -469,8 +469,9 @@ internal class PlayerSyncPlayTest : PlayerViewModelFixture() {
             // loaded into *this* session, so popping here would close the player it lands in.
             model.uiState.value.hasEnded shouldBe false
             model.uiState.value.isPlaying shouldBe false
-            // The outgoing item is still reported, exactly as it is solo.
-            coVerify { reporter.reportStop(any(), match { it.hasEnded }) }
+            // The outgoing item is still reported, exactly as it is solo — on the detached scope,
+            // which the solo path also uses now that its auto-close cancels viewModelScope (PC-03).
+            coVerify { reporter.reportStopDetached(any(), match { it.hasEnded }) }
         }
 
     @Test

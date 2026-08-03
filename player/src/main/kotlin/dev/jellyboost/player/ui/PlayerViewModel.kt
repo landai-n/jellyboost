@@ -506,9 +506,14 @@ class PlayerViewModel
          */
         private fun onCastEnded(at: PlaybackSnapshot) {
             val current = source ?: return
-            Timber.i("Bringing %s back to this device at %d ms", current.itemId, at.positionMs)
+            // An invalid snapshot means the receiver no longer held the item when the session ended
+            // (stopped from the television) — its position is meaningless, so the film resumes where
+            // this session started rather than jumping to zero. The stop report handles the same
+            // reading on its own (PlaybackReporter, audit CAST-01).
+            val resumeTicks = if (at.isValid) at.positionTicks else current.startPositionTicks
+            Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
-                current.asRequest(forcedRemote, castTarget = false).copy(startPositionTicks = at.positionTicks),
+                current.asRequest(forcedRemote, castTarget = false).copy(startPositionTicks = resumeTicks),
                 playWhenReady = false,
                 endingAt = at,
             )

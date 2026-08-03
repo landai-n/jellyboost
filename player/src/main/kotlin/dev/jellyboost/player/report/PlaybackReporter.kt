@@ -116,12 +116,21 @@ class PlaybackReporter
          *
          * The local write happens even when the server call fails, is skipped, or could not have
          * been made — an unreachable server must not cost the user their place in the film.
+         *
+         * A tick whose snapshot is not [valid][PlaybackSnapshot.isValid] is skipped entirely: the
+         * player no longer holds this source (a receiver unloaded from the television, or another
+         * sender took it), so its position is some other session's — writing it would reset or
+         * corrupt this item's resume position (audit CAST-01).
          */
         suspend fun reportProgress(
             source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
             if (snapshot.hasEnded) return
+            if (!snapshot.isValid) {
+                Timber.d("Skipping a progress tick for %s: the player no longer holds it", source.itemId)
+                return
+            }
 
             source.serverTarget()?.let { target ->
                 runReport("progress") {
@@ -157,11 +166,22 @@ class PlaybackReporter
          * exactly what leaves a pending row for the sync worker. A transcode additionally has its
          * encoding process killed; skipping that is what leaves stray ffmpeg processes on the
          * server.
+         *
+         * A stop whose snapshot is not [valid][PlaybackSnapshot.isValid] still closes the server
+         * session and kills the encoder — both are about the *session* — but carries no position and
+         * writes nothing locally: the reading is not this source's, and the resume position the
+         * progress ticker last recorded is the honest one (audit CAST-01).
          */
         suspend fun reportStop(
             source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
         ) {
+            if (!snapshot.isValid) {
+                source.serverTarget()?.let { sendStopReport(it, positionTicks = null) }
+                stopTranscoding(source)
+                return
+            }
+
             val positionTicks = if (snapshot.hasEnded) source.runTimeTicks else snapshot.positionTicks
 
             source.serverTarget()?.let { sendStopReport(it, positionTicks) }
@@ -260,7 +280,7 @@ class PlaybackReporter
 
         private suspend fun sendStopReport(
             target: ServerReportTarget,
-            positionTicks: Long,
+            positionTicks: Long?,
         ) = runReport("stop") {
             api.reportPlaybackStopped(
                 PlaybackStopInfo(

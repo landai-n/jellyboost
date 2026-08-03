@@ -18,6 +18,7 @@ import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
 import dev.jellyboost.data.downloads.plan.DownloadUrlFactory
 import dev.jellyboost.data.downloads.storage.DownloadStorage
+import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -73,6 +74,7 @@ class DownloadQueueRetryTest {
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
         coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
+        coEvery { downloadDao.markDownloadingIfRunnable(any(), any()) } returns 1
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
         coEvery { sweeper.sweep() } returns 0L
     }
@@ -108,7 +110,7 @@ class DownloadQueueRetryTest {
 
             queue().drain(listener) shouldBe DrainOutcome.RETRY
 
-            coVerify(exactly = 0) { downloadDao.setStatus(uuid(2), DownloadStatus.DOWNLOADING, any(), any()) }
+            coVerify(exactly = 0) { downloadDao.markDownloadingIfRunnable(uuid(2), any()) }
             coVerify(exactly = 0) { downloadDao.requeueForRetry(uuid(2), any(), any()) }
         }
 
@@ -176,6 +178,55 @@ class DownloadQueueRetryTest {
                 downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, NOW, "This item is no longer on the server.")
             }
             coVerify { downloadDao.setStatus(uuid(2), DownloadStatus.ERROR, NOW, any()) }
+        }
+
+    @Test
+    fun `a storage root that moves mid-item requeues the item instead of splitting it across volumes`() =
+        runTest {
+            // The DL-07 shape: `reconcile` resolved every row's path against the active root at
+            // the start of the drain, and an SD card ejected (or remounted) between two files
+            // silently redirects the rest of the item — and its rows — to another volume, where
+            // neither the sweep nor the delete cascade can see the first half. The item must fail
+            // *transiently* instead: the next drain re-reconciles against whichever root answers.
+            queueWith(download())
+            var resolves = 0
+            every { storage.resolve(any(), any()) } answers {
+                resolves++
+                // Two calls from reconcile (poster, media), one from the poster's own transfer;
+                // the media file's resolve is the first to see the fallback root.
+                val root = if (resolves <= 3) "/tmp/downloads" else "/tmp/fallback"
+                File("$root/${secondArg<String>()}")
+            }
+
+            queue().drain(listener) shouldBe DrainOutcome.RETRY
+
+            coVerify { downloadDao.requeueForRetry(uuid(1), 1, NOW) }
+            coVerify(exactly = 0) { downloadDao.setStatus(uuid(1), DownloadStatus.ERROR, any(), any()) }
+            // The media file was never fetched onto the other volume.
+            coVerify(exactly = 0) {
+                downloader.download("https://server/download", any(), any(), any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `an unavailable storage volume stops the drain instead of failing every row behind it`() =
+        runTest {
+            // The DL-10 shape end to end: no volume mounted (an eject, an MTP session, the seconds
+            // after boot) throws from `prepareItemDirectory`, and the item behind the failing one
+            // must never be touched — one unmounted card used to empty a forty-episode queue into
+            // ERROR within seconds.
+            val first = download(itemId = uuid(1))
+            val second = download(itemId = uuid(2), queuePosition = 1)
+            coEvery { downloadDao.nextRunnable() } returnsMany
+                listOf(withFiles(first), withFiles(second), null)
+            every { storage.prepareItemDirectory(any()) } throws
+                StorageUnavailableException("no volume mounted")
+
+            queue().drain(listener) shouldBe DrainOutcome.RETRY
+
+            coVerify { downloadDao.requeueForRetry(uuid(1), 1, NOW) }
+            coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.ERROR, any(), any()) }
+            coVerify(exactly = 0) { downloadDao.markDownloadingIfRunnable(uuid(2), any()) }
         }
 
     @Test

@@ -23,8 +23,10 @@ import java.util.UUID
  *
  * @property id surrogate key — unlike the item table there is no natural one, since an item can
  *   have many subtitle tracks and many trickplay tiles.
- * @property streamIndex the media stream this file belongs to for [DownloadFileType.SUBTITLE];
- *   `null` for every other type.
+ * @property streamIndex the media stream this file belongs to, for [DownloadFileType.SUBTITLE]
+ *   and [DownloadFileType.AUDIO] (an extra-language sidecar names the source stream it was
+ *   extracted from); `null` for every other type. The unique index below leans on it: two
+ *   sidecars of one item are distinct rows only because their stream indices differ.
  * @property tileIndex which trickplay tile sheet this is; `null` for every other type.
  * @property tileWidth the trickplay resolution the tiles were requested at; the URL cannot be
  *   rebuilt without it.

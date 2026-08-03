@@ -244,6 +244,18 @@ class SeasonSeedingScenarioTest {
         coEvery { downloadDao.setStatus(any(), any(), any(), any()) } answers {
             downloads.computeIfPresent(firstArg()) { _, row -> row.copy(status = secondArg()) }
         }
+        // Modelled clause for clause: the claim only takes while the row is still runnable.
+        coEvery { downloadDao.markDownloadingIfRunnable(any(), any()) } answers {
+            val itemId = firstArg<UUID>()
+            val runnable =
+                downloads[itemId]?.status in setOf(DownloadStatus.QUEUED, DownloadStatus.DOWNLOADING)
+            if (runnable) {
+                downloads.computeIfPresent(itemId) { _, row -> row.copy(status = DownloadStatus.DOWNLOADING) }
+                1
+            } else {
+                0
+            }
+        }
         coEvery { downloadDao.updateProgress(any(), any(), any(), any(), any()) } answers {
             downloads.computeIfPresent(firstArg()) { _, row ->
                 row.copy(bytesDownloaded = secondArg(), bytesTotal = thirdArg(), projectedBytes = arg(3))

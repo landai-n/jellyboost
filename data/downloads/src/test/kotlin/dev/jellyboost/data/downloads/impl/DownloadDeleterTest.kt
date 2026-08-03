@@ -1,12 +1,10 @@
 package dev.jellyboost.data.downloads.impl
 
 import dev.jellyboost.core.common.model.DownloadStatus
-import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
-import dev.jellyboost.core.database.entities.ItemEntity
+import dev.jellyboost.core.database.entities.ItemParentRefs
 import dev.jellyboost.core.database.entities.ItemSource
-import dev.jellyboost.data.downloads.DownloadFixtures.NOW
 import dev.jellyboost.data.downloads.DownloadFixtures.download
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.storage.DownloadStorage
@@ -43,7 +41,7 @@ class DownloadDeleterTest {
         every { storage.deleteItemDirectory(any()) } returns 0L
         coEvery { downloadDao.get(any()) } returns download()
         coEvery { downloadDao.allItemIds() } returns emptyList()
-        coEvery { itemDao.getItems(any()) } returns emptyList()
+        coEvery { itemDao.getParentRefs(any()) } returns emptyList()
         coEvery { itemDao.deleteDownloadsNotIn(capture(kept), any()) } returns 0
     }
 
@@ -129,8 +127,8 @@ class DownloadDeleterTest {
             // uuid(3) is another episode of the same show; its series (10) and season (11) must
             // survive the deletion of uuid(2).
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(3))
-            coEvery { itemDao.getItems(listOf(uuid(3))) } returns
-                listOf(episodeRow(id = uuid(3), seriesId = uuid(10), seasonId = uuid(11)))
+            coEvery { itemDao.getParentRefs(listOf(uuid(3))) } returns
+                listOf(parentRefs(id = uuid(3), seriesId = uuid(10), seasonId = uuid(11)))
 
             deleter().delete(uuid(2))
 
@@ -141,7 +139,7 @@ class DownloadDeleterTest {
     fun `the deleted item is not in the surviving set`() =
         runTest {
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(3))
-            coEvery { itemDao.getItems(any()) } returns listOf(episodeRow(id = uuid(3)))
+            coEvery { itemDao.getParentRefs(any()) } returns listOf(parentRefs(id = uuid(3)))
 
             deleter().delete(uuid(2))
 
@@ -152,12 +150,45 @@ class DownloadDeleterTest {
     fun `a movie's own row is kept while its download exists`() =
         runTest {
             coEvery { downloadDao.allItemIds() } returns listOf(uuid(5))
-            coEvery { itemDao.getItems(listOf(uuid(5))) } returns
-                listOf(episodeRow(id = uuid(5), seriesId = null, seasonId = null))
+            coEvery { itemDao.getParentRefs(listOf(uuid(5))) } returns
+                listOf(parentRefs(id = uuid(5), seriesId = null, seasonId = null))
 
             deleter().delete(uuid(1))
 
             kept.captured shouldContainExactlyInAnyOrder listOf(uuid(5))
+        }
+
+    // ---- the batch cascade (DL-05) --------------------------------------------------------------
+
+    @Test
+    fun `a bulk delete runs the metadata prune once, not once per row`() =
+        runTest {
+            // Cancel all on a 40-row queue used to re-read every surviving download's whole
+            // metadata blob once per deleted row — O(deleted × remaining) blob reads with the UI
+            // waiting on the result.
+            coEvery { downloadDao.get(uuid(1)) } returns download(itemId = uuid(1))
+            coEvery { downloadDao.get(uuid(2)) } returns download(itemId = uuid(2), directoryName = "Dune (2021)")
+            every { storage.deleteItemDirectory("Arrival (2016)") } returns 100L
+            every { storage.deleteItemDirectory("Dune (2021)") } returns 200L
+
+            deleter().deleteAll(listOf(uuid(1), uuid(2))) shouldBe 300L
+
+            coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
+            coVerify(exactly = 1) { downloadDao.delete(uuid(1)) }
+            coVerify(exactly = 1) { downloadDao.delete(uuid(2)) }
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(2)) }
+        }
+
+    @Test
+    fun `a bulk delete with nothing to remove never runs the prune`() =
+        runTest {
+            coEvery { downloadDao.get(any()) } returns null
+
+            deleter().deleteAll(listOf(uuid(1), uuid(2))) shouldBe 0L
+
+            coVerify(exactly = 0) { itemDao.deleteDownloadsNotIn(any(), any()) }
+            coVerify(exactly = 0) { downloadDao.deleteSyncedUserData(any()) }
         }
 
     // ---- user data ------------------------------------------------------------------------------
@@ -176,19 +207,9 @@ class DownloadDeleterTest {
 
     private fun deleter() = DownloadDeleter(downloadDao = downloadDao, itemDao = itemDao, storage = storage)
 
-    private fun episodeRow(
+    private fun parentRefs(
         id: UUID,
         seriesId: UUID? = uuid(10),
         seasonId: UUID? = uuid(11),
-    ) = ItemEntity(
-        id = id,
-        name = "Chestnut",
-        sortName = "Chestnut",
-        type = ItemType.EPISODE,
-        source = ItemSource.DOWNLOAD,
-        cachedAt = NOW,
-        seriesId = seriesId,
-        seasonId = seasonId,
-        dto = "{}",
-    )
+    ) = ItemParentRefs(id = id, parentId = null, seriesId = seriesId, seasonId = seasonId)
 }

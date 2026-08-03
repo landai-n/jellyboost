@@ -7,6 +7,22 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * A storage root that is not usable *right now* — no volume mounted, a directory that could not be
+ * created, or the active root moving underneath a transfer.
+ *
+ * A distinct type because the condition is transient by nature: an ejected SD card, an MTP session
+ * or the seconds after boot before the card mounts all empty `volumes()` for a while and then stop.
+ * As a bare `IllegalStateException` it fell through `toAppError()` to `AppError.Unknown`, which the
+ * failure classifier calls PERMANENT — one unmounted volume then marked every queued row ERROR
+ * within seconds, the exact STAB-01 shape the transient/permanent split exists to prevent
+ * (audit DL-10). `DownloadFailureClassifier` recognises this type as TRANSIENT instead, so the
+ * drain stops, backs off and retries.
+ */
+class StorageUnavailableException(
+    message: String,
+) : IllegalStateException(message)
+
+/**
  * Where downloaded files live, and the only thing in the pipeline that knows it (docs/PLAN.md,
  * "Download pipeline" → Storage).
  *
@@ -86,10 +102,10 @@ class FileDownloadStorage
         override val rootPath: String? get() = root()?.absolutePath
 
         override fun prepareItemDirectory(directoryName: String): File {
-            val root = root() ?: error("No external storage volume is available for downloads")
+            val root = root() ?: throw StorageUnavailableException(NO_VOLUME_MESSAGE)
             val directory = File(root, directoryName)
             if (!directory.exists() && !directory.mkdirs()) {
-                error("Could not create the download directory $directoryName")
+                throw StorageUnavailableException("Could not create the download directory $directoryName")
             }
             return directory
         }
@@ -98,7 +114,7 @@ class FileDownloadStorage
             directoryName: String,
             fileName: String,
         ): File {
-            val root = root() ?: error("No external storage volume is available for downloads")
+            val root = root() ?: throw StorageUnavailableException(NO_VOLUME_MESSAGE)
             return File(File(root, directoryName), fileName)
         }
 
@@ -134,6 +150,10 @@ class FileDownloadStorage
             return runCatching { StatFs(root.absolutePath).availableBytes }
                 .onFailure { Timber.w(it, "Could not stat the downloads volume") }
                 .getOrDefault(0L)
+        }
+
+        private companion object {
+            const val NO_VOLUME_MESSAGE = "No external storage volume is available for downloads"
         }
     }
 

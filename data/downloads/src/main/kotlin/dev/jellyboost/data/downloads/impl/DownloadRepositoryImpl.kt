@@ -247,9 +247,10 @@ internal class DownloadRepositoryImpl
                         // Same order as a single delete: stop the queue before unlinking anything,
                         // so the downloader cannot be holding a handle to a file we remove — and
                         // delete *before* the root moves, or the cascade would look on the new
-                        // volume for files that are on the old one.
+                        // volume for files that are on the old one. Unconditional here on purpose:
+                        // every download is about to go, so whatever is running is a target.
                         scheduler.stop()
-                        existing.forEach { deleter.delete(it) }
+                        deleter.deleteAll(existing)
                     }
 
                     locations.select(volumeId)
@@ -286,11 +287,20 @@ internal class DownloadRepositoryImpl
 
         override suspend fun pause(itemId: String): AppResult<Unit> =
             mutate(itemId) { id ->
-                downloadDao.setStatus(id, DownloadStatus.PAUSED, clock.instant())
-                // Stop first, then restart: the running job may be on *this* item, and the only way
-                // to interrupt it is to cancel the work. The restart picks up whatever is left.
-                scheduler.stop()
-                scheduler.ensureRunning()
+                // One transaction decides *and* writes. Only the row that is actually transferring
+                // needs the worker cancelled — stopping it for any other row would cancel an
+                // unrelated in-flight transcode from byte zero (audit DL-06) — but a separate
+                // read-then-write left a window for the drain's claim to slip between the two, and
+                // the item the user had just paused downloaded to completion with nobody left to
+                // stop it (audit DL-03; see DownloadDao.demoteRunnable).
+                val interruptsTransfer =
+                    downloadDao.demoteRunnable(listOf(id), DownloadStatus.PAUSED, clock.instant())
+                if (interruptsTransfer) {
+                    // Stop first, then restart: cancelling the work is the only way to interrupt a
+                    // transfer already in flight. The restart picks up whatever is left.
+                    scheduler.stop()
+                    scheduler.ensureRunning()
+                }
             }
 
         override suspend fun resume(itemId: String): AppResult<Unit> =
@@ -299,22 +309,29 @@ internal class DownloadRepositoryImpl
                 // A user asking again is a fresh start: a row that spent its retry budget on a
                 // server that was down must not be worth exactly one attempt now that it is back.
                 downloadDao.clearAttempts(id)
-                scheduler.restart()
+                scheduler.restartOrJoin(downloadDao)
             }
 
         override suspend fun pauseAll(itemIds: List<String>): AppResult<Unit> =
             mutateAll(itemIds) { ids ->
-                downloadDao.setStatusIn(ids, DownloadStatus.PAUSED, clock.instant())
-                // Same order as the single pause, once instead of once per row: the running job may
-                // be on any of these, and the restart picks up whatever is left.
-                scheduler.stop()
-                scheduler.ensureRunning()
+                // Same guarded write as the single pause. This is what keeps the "Pause all keeps
+                // transcodes" promise honest: the batch already excludes the running transcode, so
+                // stopping the worker for it anyway restarted that very encode from byte zero —
+                // the exact thing the button was designed not to do (audit DL-06). And the
+                // decision rides in the same transaction as the write, so a drain claim cannot
+                // land between the two and keep transferring a row just marked PAUSED (DL-03).
+                val interruptsTransfer =
+                    downloadDao.demoteRunnable(ids, DownloadStatus.PAUSED, clock.instant())
+                if (interruptsTransfer) {
+                    scheduler.stop()
+                    scheduler.ensureRunning()
+                }
             }
 
         override suspend fun resumeAll(itemIds: List<String>): AppResult<Unit> =
             mutateAll(itemIds) { ids ->
                 downloadDao.requeueForUser(ids, clock.instant())
-                scheduler.restart()
+                scheduler.restartOrJoin(downloadDao)
             }
 
         override suspend fun delete(itemId: String): AppResult<Long> = deleteAll(listOf(itemId))
@@ -327,11 +344,22 @@ internal class DownloadRepositoryImpl
             return withContext(ioDispatcher) {
                 @Suppress("TooGenericExceptionCaught")
                 try {
-                    // Stopping the queue before unlinking files means the downloader cannot be
-                    // holding a handle to something we are about to remove — and `stop()` waits for
-                    // the worker, so that is true by the time the first directory goes.
-                    scheduler.stop()
-                    val freed = ids.sumOf { deleter.delete(it) }
+                    // Take the targets out of the queue's reach *before* unlinking anything: the
+                    // same transaction flips every QUEUED/DOWNLOADING target to CANCELLED — the
+                    // status a row holds between a cancel and its deletion — and answers whether
+                    // the live transfer was among them. A claim arriving later refuses a CANCELLED
+                    // row, so `stop()` (which waits for the worker) is guaranteed to be behind us
+                    // whenever a target was being written when the first directory goes. Stopping
+                    // is still conditional on that answer: doing it for any other row would cancel
+                    // an unrelated in-flight transcode from byte zero (audit DL-06), and a plain
+                    // read-then-stop left the DL-03 window where a claim landing between the two
+                    // let files be unlinked under a live writer.
+                    if (downloadDao.demoteRunnable(ids, DownloadStatus.CANCELLED, clock.instant())) {
+                        scheduler.stop()
+                    }
+                    // One cascade for the whole batch — the per-row loop re-ran the orphan prune
+                    // (a full-table metadata read) once per deleted item (audit DL-05).
+                    val freed = deleter.deleteAll(ids)
                     // Something else may still be queued behind the deleted items.
                     scheduler.ensureRunning()
                     AppResult.Success(freed)
@@ -524,6 +552,32 @@ private data class DownloadShape(
 ) {
     /** Whether some file is being written right now, and so is growing between two walks. */
     val transferring: Boolean get() = rows.any { (_, status) -> status == DownloadStatus.DOWNLOADING }
+}
+
+/**
+ * Whether the worker is transferring anything at all right now.
+ *
+ * What [restartOrJoin] consults before restarting the worker (audit DL-06): a restart cancels the
+ * running job, and a cancelled transcode restarts from byte zero, since a live encode can never be
+ * resumed. Pause and delete no longer read this — their answer has to be atomic with the status
+ * write, so they get it from `DownloadDao.demoteRunnable` instead (audit DL-03). Top-level rather
+ * than a method for detekt's function-count ceiling on the repository, like [walkTicks].
+ */
+private suspend fun DownloadDao.isDownloadingAnything(): Boolean =
+    pending().any { row -> row.status == DownloadStatus.DOWNLOADING }
+
+/**
+ * Brings the queue up for freshly re-queued rows without disturbing a live transfer.
+ *
+ * A `restart()` is only the right move while nothing is downloading: it re-reads the constraints
+ * and breaks the worker out of a retry backoff, which is what a user tapping *Resume* expects. But
+ * it restarts by **cancelling** the running worker — and if that worker is mid-transcode on an
+ * unrelated item, every transferred byte is discarded (audit DL-06). With a live transfer the
+ * worker is already awake and its drain loop picks the re-queued rows up from `nextRunnable()` on
+ * its own; `ensureRunning` (KEEP) merely covers the race where it finishes in between.
+ */
+private suspend fun DownloadScheduler.restartOrJoin(dao: DownloadDao) {
+    if (dao.isDownloadingAnything()) ensureRunning() else restart()
 }
 
 /**

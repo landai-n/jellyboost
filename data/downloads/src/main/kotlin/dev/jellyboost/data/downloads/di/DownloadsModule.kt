@@ -8,8 +8,10 @@ import dagger.hilt.components.SingletonComponent
 import dev.jellyboost.data.downloads.DownloadApi
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.SdkDownloadApi
+import dev.jellyboost.data.downloads.engine.AndroidMeteredConnection
 import dev.jellyboost.data.downloads.engine.AudioSidecarExtractor
 import dev.jellyboost.data.downloads.engine.DownloadHttpClient
+import dev.jellyboost.data.downloads.engine.MeteredConnection
 import dev.jellyboost.data.downloads.engine.TransformerAudioSidecarExtractor
 import dev.jellyboost.data.downloads.impl.DownloadRepositoryImpl
 import dev.jellyboost.data.downloads.plan.DownloadUrlFactory
@@ -55,6 +57,14 @@ internal interface DownloadsModule {
     fun bindStorageVolumeProvider(impl: AndroidStorageVolumeProvider): StorageVolumeProvider
 
     /**
+     * Binds the metered-network question to the platform, for the transfers that run *outside*
+     * the WorkManager constraint (the sidecar top-up — audit DL-04).
+     */
+    @Binds
+    @Singleton
+    fun bindMeteredConnection(impl: AndroidMeteredConnection): MeteredConnection
+
+    /**
      * Binds the audio-sidecar strip stage to Media3's `Transformer`.
      *
      * An interface for the queue's sake: its unit tests must be able to run the whole AUDIO path —
@@ -77,10 +87,20 @@ internal object DownloadHttpModule {
     /**
      * A client of its own, not the SDK's.
      *
-     * Two settings make it a *download* client rather than an API client: no read timeout, because
-     * a healthy multi-gigabyte transfer legitimately holds one response open for an hour; and
-     * redirects followed, because `/Items/{id}/Download` can redirect to a storage backend.
-     * Sharing the SDK's client would mean either of those settings leaking into every API call.
+     * Two settings make it a *download* client rather than an API client: a generous
+     * **between-bytes** read timeout, because a healthy multi-gigabyte transfer legitimately holds
+     * one response open for an hour (OkHttp's `readTimeout` bounds the silence between two reads,
+     * never the call's total duration, so a slow-but-alive transfer is unaffected); and redirects
+     * followed, because `/Items/{id}/Download` can redirect to a storage backend. Sharing the
+     * SDK's client would mean either of those settings leaking into every API call.
+     *
+     * The read timeout used to be `0` — unbounded — which meant a half-open TCP connection (a
+     * Wi-Fi↔mobile handover, a NAT or reverse proxy dropping an idle-looking long transfer, a
+     * server killed mid-stream) parked the copy loop in `input.read()` forever. The worker then
+     * held the process-wide drain lease with a foreground notification at N % and the whole queue
+     * was dead until the process was (audit DL-01). Two minutes of *total silence* from a server
+     * that is supposed to be streaming is a dead connection, not a slow one — even a struggling
+     * transcode emits bytes continuously.
      */
     @Provides
     @Singleton
@@ -89,8 +109,8 @@ internal object DownloadHttpModule {
         OkHttpClient
             .Builder()
             .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(0, TimeUnit.MILLISECONDS)
-            .writeTimeout(0, TimeUnit.MILLISECONDS)
+            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .followRedirects(true)
             .followSslRedirects(true)
             .retryOnConnectionFailure(true)
@@ -113,4 +133,13 @@ internal object DownloadHttpModule {
     ): Call.Factory = client
 
     private const val CONNECT_TIMEOUT_SECONDS = 30L
+
+    /**
+     * The longest silence between two bytes a live transfer is allowed. Internal so the test can
+     * pin that the built client actually carries it — an unbounded read is exactly the DL-01 wedge.
+     */
+    internal const val READ_TIMEOUT_SECONDS = 120L
+
+    /** Downloads send no request bodies; this only bounds a pathological handshake. */
+    internal const val WRITE_TIMEOUT_SECONDS = 30L
 }

@@ -203,6 +203,26 @@ interface DownloadDao {
     )
 
     /**
+     * Claims a row the drain is about to transfer, and says whether the claim took.
+     *
+     * The status test lives in the statement for the same reason [requeueIfDownloading]'s does:
+     * the racer is real. `pause`/`pauseAll` write `PAUSED` *before* stopping the worker, and a
+     * drain sitting between `nextRunnable()` and the start of the transfer used to write
+     * `DOWNLOADING` unconditionally over it — the cancellation then hit `requeueIfDownloading`,
+     * which put the row back to `QUEUED`, and the next drain downloaded the item the user had just
+     * paused (audit DL-03). A return of `0` means the row changed hands (paused, cancelled,
+     * deleted) since it was picked, and the item must be skipped, not transferred.
+     */
+    @Query(
+        "UPDATE downloads SET status = 'DOWNLOADING', errorMessage = NULL, updatedAt = :updatedAt " +
+            "WHERE itemId = :itemId AND status IN ('QUEUED', 'DOWNLOADING')",
+    )
+    suspend fun markDownloadingIfRunnable(
+        itemId: UUID,
+        updatedAt: Instant,
+    ): Int
+
+    /**
      * Moves several downloads to one status in a single statement.
      *
      * What *Pause all* and *Cancel all* are made of. The batching is not a micro-optimisation: a

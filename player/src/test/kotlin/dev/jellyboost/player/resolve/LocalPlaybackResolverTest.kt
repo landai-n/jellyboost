@@ -538,6 +538,73 @@ class LocalPlaybackResolverTest {
         }
 
     @Test
+    fun `an original download withholds an external audio stream — its file is not on this device`() =
+        runTest {
+            // The DL-08 case 1: an `.mka` beside the video is listed in the source's streams with
+            // isExternal = true, but the download fetched only the container — offering the track
+            // routes selection to a server that offline playback exists to do without.
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(
+                        mediaStreams =
+                            listOf(
+                                PlayerFixtures.audioStream(index = 1, displayTitle = "English - AC3"),
+                                PlayerFixtures.audioStream(
+                                    index = 2,
+                                    language = "jpn",
+                                    displayTitle = "Japanese (external)",
+                                    isExternal = true,
+                                ),
+                            ),
+                        defaultAudioStreamIndex = 1,
+                    ),
+                quality = DownloadQuality.ORIGINAL,
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(1)
+            source.audioTracks.none { it.isExternal } shouldBe true
+            // The full source list still names it, for the picker to draw while online.
+            source.allAudioTracks.map { it.index } shouldContainExactly listOf(1, 2)
+        }
+
+    @Test
+    fun `a baked track that happens to be external is not counted as a merge child`() =
+        runTest {
+            // The DL-08 case 2: the encode baked in a track whose *source* stream was external.
+            // Flagging it side-loaded made `TrackSelectionController` count it among the merge
+            // children — every ordinal shifted by one, so the baked language played the first
+            // sidecar's file and the last sidecar pointed at a child that does not exist.
+            downloaded(
+                mediaSource =
+                    PlayerFixtures.mediaSourceInfo(
+                        mediaStreams =
+                            listOf(
+                                PlayerFixtures.audioStream(
+                                    index = 3,
+                                    displayTitle = "French VFF (external)",
+                                    isExternal = true,
+                                ),
+                                PlayerFixtures.audioStream(index = 4, language = "fra", displayTitle = "French VFQ"),
+                            ),
+                        defaultAudioStreamIndex = 3,
+                    ),
+                quality = DownloadQuality.MEDIUM,
+                bakedAudioStreamIndex = 3,
+                audio = listOf(DownloadedAudio(streamIndex = 4, uri = "file:///downloads/audio.4.m4a")),
+            )
+
+            val source = resolver.resolve(request).shouldNotBeNull()
+
+            source.audioTracks.map { it.index } shouldContainExactly listOf(3, 4)
+            // Only the sidecar-backed track is a merge child; the baked one is child 0 unflagged.
+            source.audioTracks.single { it.index == 3 }.isExternal shouldBe false
+            source.audioTracks.single { it.index == 4 }.isExternal shouldBe true
+            source.externalAudio.map { it.index } shouldContainExactly listOf(4)
+        }
+
+    @Test
     fun `a transcoded download with no audio sidecars is untouched`() =
         runTest {
             transcodedFilm(bakedAudioStreamIndex = 5)

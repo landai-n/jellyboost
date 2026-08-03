@@ -174,7 +174,12 @@ class LocalPlaybackResolver
             sidecarIndices: Set<Int>,
         ): List<MediaStream> {
             val audio = filter { it.type == MediaStreamType.AUDIO }
-            if (!downloaded.isTranscoded) return audio
+            // An external audio stream (an `.mka` beside the video on the server) is its own file
+            // and is never in the downloaded container; no sidecar is planned for it either, so
+            // offline it is simply not here — the same rule the subtitle filter applies at the
+            // resolve site. Offering it would put a language in the picker that routes to a server
+            // this mode exists to do without (audit DL-08).
+            if (!downloaded.isTranscoded) return audio.filter { !it.isExternal }
             return listOfNotNull(bakedAudio) + audio.filter { it.index in sidecarIndices }
         }
 
@@ -182,15 +187,20 @@ class LocalPlaybackResolver
          * The playable audio streams as picker entries.
          *
          * Same rule as the subtitles: a track one of the item's own files backs is **side-loaded**
-         * whatever the stream claimed to be, because that is how it reaches ExoPlayer — and
-         * `TrackSelectionController` counts anything not flagged among the container's own audio
-         * groups, of which a transcode has exactly one.
+         * because that is how it reaches ExoPlayer — and `TrackSelectionController` counts
+         * anything not flagged among the container's own audio groups, of which a transcode has
+         * exactly one.
+         *
+         * The sidecar set *alone* decides the flag — deliberately not `MediaStream.isExternal`.
+         * The flag's contract downstream is "this track has a merge child", and a baked track
+         * whose source stream happened to be external has none: flagging it shifted every
+         * merge-child ordinal by one, so selecting the baked language played the first sidecar's
+         * file and the last sidecar resolved to a child that does not exist (audit DL-08).
          */
         private fun List<MediaStream>.toAudioTracks(
             defaultIndex: Int?,
             sidecarIndices: Set<Int>,
-        ): List<PlaybackTrack> =
-            map { it.toTrack(defaultIndex, sideLoaded = it.index in sidecarIndices || it.isExternal) }
+        ): List<PlaybackTrack> = map { it.toTrack(defaultIndex, sideLoaded = it.index in sidecarIndices) }
 
         /**
          * The one audio stream a transcode encoded into the video file, or `null` for an original

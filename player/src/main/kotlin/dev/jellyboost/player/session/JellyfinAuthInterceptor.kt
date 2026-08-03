@@ -1,5 +1,7 @@
 package dev.jellyboost.player.session
 
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.jellyfin.sdk.api.client.ApiClient
@@ -16,8 +18,15 @@ import javax.inject.Singleton
  *
  * The header is rebuilt per request rather than baked into the client because the access token
  * changes over the app's lifetime (sign-in, sign-out, server switch) while this OkHttp client does
- * not. Requests to other hosts — a redirect off-server, say — are left untouched so the token
+ * not. A request is only "ours" when its scheme, host **and** effective port all match the base
+ * URL (audit NET-04) — a different port is a different service, and `http://` on an `https://`
+ * server would put the token on the wire in clear. Anything else is left untouched so the token
  * never leaks.
+ *
+ * Registered as a **network** interceptor (audit NET-05), so the check runs once per hop rather
+ * than once per call: a redirect's target goes through it too, and only earns the header if it is
+ * still our server. As an application interceptor the origin-URL check would never see redirect
+ * targets and the off-server guarantee would rest silently on OkHttp's own header stripping.
  */
 @Singleton
 internal class JellyfinAuthInterceptor
@@ -27,9 +36,9 @@ internal class JellyfinAuthInterceptor
     ) : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
-            val serverHost = apiClient.baseUrl?.toHttpHostOrNull()
+            val serverUrl = apiClient.baseUrl?.toHttpUrlOrNull()
 
-            if (serverHost == null || request.url.host != serverHost) {
+            if (serverUrl == null || !request.url.isSameOrigin(serverUrl)) {
                 return chain.proceed(request)
             }
 
@@ -51,5 +60,6 @@ internal class JellyfinAuthInterceptor
         }
     }
 
-/** Host part of a base URL, or `null` when it is not a URL we can parse. */
-private fun String.toHttpHostOrNull(): String? = runCatching { java.net.URI(this).host }.getOrNull()
+/** Same scheme, host and effective port — `HttpUrl.port` already fills in the scheme default. */
+private fun HttpUrl.isSameOrigin(other: HttpUrl): Boolean =
+    scheme == other.scheme && host == other.host && port == other.port

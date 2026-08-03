@@ -45,4 +45,6 @@
     <string name="settings_sign_out_dialog_message">Bạn sẽ cần địa chỉ máy chủ và mật khẩu để đăng nhập lại.</string>
     <string name="settings_sign_out_delete_downloads">Đồng thời xóa các tải xuống khỏi thiết bị này</string>
     <string name="settings_cancel">Hủy</string>
+    <string name="settings_section_about">Giới thiệu</string>
+    <string name="settings_version">Phiên bản ứng dụng</string>
 </resources>

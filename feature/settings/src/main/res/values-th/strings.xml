@@ -45,4 +45,6 @@
     <string name="settings_sign_out_dialog_message">คุณจะต้องใช้ที่อยู่เซิร์ฟเวอร์และรหัสผ่านเพื่อเข้าสู่ระบบอีกครั้ง</string>
     <string name="settings_sign_out_delete_downloads">ลบดาวน์โหลดออกจากอุปกรณ์นี้ด้วย</string>
     <string name="settings_cancel">ยกเลิก</string>
+    <string name="settings_section_about">เกี่ยวกับ</string>
+    <string name="settings_version">เวอร์ชันแอป</string>
 </resources>

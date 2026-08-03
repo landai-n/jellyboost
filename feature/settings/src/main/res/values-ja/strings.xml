@@ -49,4 +49,6 @@
     <string name="settings_sign_out_dialog_message">再度サインインするには、サーバーアドレスとパスワードが必要です。</string>
     <string name="settings_sign_out_delete_downloads">この端末のダウンロードも削除する</string>
     <string name="settings_cancel">キャンセル</string>
+    <string name="settings_section_about">アプリについて</string>
+    <string name="settings_version">アプリのバージョン</string>
 </resources>

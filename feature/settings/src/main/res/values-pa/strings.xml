@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਤੁਹਾਨੂੰ ਆਪਣੇ ਸਰਵਰ ਪਤੇ ਅਤੇ ਪਾਸਵਰਡ ਦੀ ਲੋੜ ਪਵੇਗੀ।</string>
     <string name="settings_sign_out_delete_downloads">ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਡਾਊਨਲੋਡ ਵੀ ਮਿਟਾਓ</string>
     <string name="settings_cancel">ਰੱਦ ਕਰੋ</string>
+    <string name="settings_section_about">ਐਪ ਬਾਰੇ</string>
+    <string name="settings_version">ਐਪ ਵਰਜਨ</string>
 </resources>

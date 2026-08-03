@@ -51,4 +51,6 @@
     <string name="settings_sign_out_dialog_message">Za ponovnu prijavu trebat će vam adresa poslužitelja i lozinka.</string>
     <string name="settings_sign_out_delete_downloads">Također izbriši preuzimanja s ovog uređaja</string>
     <string name="settings_cancel">Otkaži</string>
+    <string name="settings_section_about">O aplikaciji</string>
+    <string name="settings_version">Verzija aplikacije</string>
 </resources>

@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Do të të duhen adresa e serverit dhe fjalëkalimi për t\'u identifikuar përsëri.</string>
     <string name="settings_sign_out_delete_downloads">Fshi gjithashtu shkarkimet nga kjo pajisje</string>
     <string name="settings_cancel">Anulo</string>
+    <string name="settings_section_about">Rreth aplikacionit</string>
+    <string name="settings_version">Versioni i aplikacionit</string>
 </resources>

@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">You\'ll need your server address and password to sign back in.</string>
     <string name="settings_sign_out_delete_downloads">Also delete downloads from this device</string>
     <string name="settings_cancel">Cancel</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">App version</string>
 </resources>

@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Necesitarás la dirección de tu servidor y tu contraseña para volver a iniciar sesión.</string>
     <string name="settings_sign_out_delete_downloads">Eliminar también las descargas de este dispositivo</string>
     <string name="settings_cancel">Cancelar</string>
+    <string name="settings_section_about">Acerca de</string>
+    <string name="settings_version">Versión de la aplicación</string>
 </resources>

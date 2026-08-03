@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Du wäerts deng Serveradress an däi Passwuert brauchen, fir dech nees unzemellen.</string>
     <string name="settings_sign_out_delete_downloads">Och d\'Downloads vun dësem Apparat läschen</string>
     <string name="settings_cancel">Ofbriechen</string>
+    <string name="settings_section_about">Iwwer d\'App</string>
+    <string name="settings_version">App-Versioun</string>
 </resources>

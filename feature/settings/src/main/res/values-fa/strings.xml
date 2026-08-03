@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">برای ورود دوباره به آدرس سرور و گذرواژه خود نیاز خواهید داشت.</string>
     <string name="settings_sign_out_delete_downloads">دانلودها از این دستگاه هم حذف شوند</string>
     <string name="settings_cancel">لغو</string>
+    <string name="settings_section_about">درباره برنامه</string>
+    <string name="settings_version">نسخه برنامه</string>
 </resources>

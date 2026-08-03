@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">ආපසු පිවිසීමට ඔබට ඔබගේ සේවාදායක ලිපිනය සහ මුරපදය අවශ්‍ය වේ.</string>
     <string name="settings_sign_out_delete_downloads">මෙම උපාංගයෙන් බාගත කිරීම් ද මකන්න</string>
     <string name="settings_cancel">අවලංගු කරන්න</string>
+    <string name="settings_section_about">යෙදුම ගැන</string>
+    <string name="settings_version">යෙදුමේ අනුවාදය</string>
 </resources>

@@ -25,12 +25,18 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import java.util.UUID
 
 /**
- * Unit tests for [ServerReachabilityProbe] — candidate rotation and the per-address time budget.
+ * Unit tests for [ServerReachabilityProbe] — candidate rotation, the per-address time budget, and
+ * the server-identity check.
  *
  * The rotation is the reason a user who walks out of the house does not get an offline app: the
  * LAN address stops answering and the remote address takes over without them noticing.
+ *
+ * The identity check is the reason that rotation is safe (audit NET-01): the shared client keeps
+ * its credentials when re-pointed, so an address is only accepted when the server behind it reports
+ * the signed-in session's server id — never merely because *something* answered there.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerReachabilityProbeTest {
@@ -68,17 +74,17 @@ class ServerReachabilityProbeTest {
 
             probe().isServerReachable() shouldBe false
             // Not "we tried and failed" — there is simply no server to probe.
-            coVerify(exactly = 0) { probeApi.isReachable(any()) }
+            coVerify(exactly = 0) { probeApi.reachableServerId(any()) }
         }
 
     @Test
     fun `tries the address the client is already using first`() =
         runTest {
-            coEvery { probeApi.isReachable(LAN) } returns true
+            coEvery { probeApi.reachableServerId(LAN) } returns SERVER_ID
 
             probe().isServerReachable() shouldBe true
 
-            coVerify(exactly = 0) { probeApi.isReachable(REMOTE) }
+            coVerify(exactly = 0) { probeApi.reachableServerId(REMOTE) }
             // Already pointed there: no reason to touch the client.
             verify(exactly = 0) { apiClientProvider.useAddress(any()) }
         }
@@ -86,8 +92,8 @@ class ServerReachabilityProbeTest {
     @Test
     fun `rotates to the next stored address when the current one is silent`() =
         runTest {
-            coEvery { probeApi.isReachable(LAN) } returns false
-            coEvery { probeApi.isReachable(REMOTE) } returns true
+            coEvery { probeApi.reachableServerId(LAN) } returns null
+            coEvery { probeApi.reachableServerId(REMOTE) } returns SERVER_ID
 
             probe().isServerReachable() shouldBe true
 
@@ -95,14 +101,40 @@ class ServerReachabilityProbeTest {
         }
 
     @Test
-    fun `reports unreachable only after every candidate has been tried`() =
+    fun `never switches to an address that answers as a different server`() =
         runTest {
-            coEvery { probeApi.isReachable(any()) } returns false
+            // The attack NET-01 describes: the user's home LAN address is answered, on some other
+            // network, by a host that is not their server. It must not receive the client (and its
+            // token); the probe must move on as if nothing had answered.
+            coEvery { probeApi.reachableServerId(LAN) } returns IMPOSTOR_ID
+            coEvery { probeApi.reachableServerId(REMOTE) } returns SERVER_ID
+
+            probe().isServerReachable() shouldBe true
+
+            verify(exactly = 0) { apiClientProvider.useAddress(LAN) }
+            verify(exactly = 1) { apiClientProvider.useAddress(REMOTE) }
+        }
+
+    @Test
+    fun `reports unreachable when the only answering host is not our server`() =
+        runTest {
+            coEvery { probeApi.reachableServerId(LAN) } returns IMPOSTOR_ID
+            coEvery { probeApi.reachableServerId(REMOTE) } returns null
 
             probe().isServerReachable() shouldBe false
 
-            coVerify(exactly = 1) { probeApi.isReachable(LAN) }
-            coVerify(exactly = 1) { probeApi.isReachable(REMOTE) }
+            verify(exactly = 0) { apiClientProvider.useAddress(any()) }
+        }
+
+    @Test
+    fun `reports unreachable only after every candidate has been tried`() =
+        runTest {
+            coEvery { probeApi.reachableServerId(any()) } returns null
+
+            probe().isServerReachable() shouldBe false
+
+            coVerify(exactly = 1) { probeApi.reachableServerId(LAN) }
+            coVerify(exactly = 1) { probeApi.reachableServerId(REMOTE) }
             verify(exactly = 0) { apiClientProvider.useAddress(any()) }
         }
 
@@ -111,22 +143,22 @@ class ServerReachabilityProbeTest {
         runTest {
             // `getAddresses` also returns the address the client already uses, so the naive
             // "current + stored" list would probe it twice.
-            coEvery { probeApi.isReachable(any()) } returns false
+            coEvery { probeApi.reachableServerId(any()) } returns null
 
             probe().isServerReachable() shouldBe false
 
-            coVerify(exactly = 1) { probeApi.isReachable(LAN) }
+            coVerify(exactly = 1) { probeApi.reachableServerId(LAN) }
         }
 
     @Test
     fun `gives each address only the probe budget before moving on`() =
         runTest {
             // A silent server: the socket never answers, it just hangs.
-            coEvery { probeApi.isReachable(LAN) } coAnswers {
+            coEvery { probeApi.reachableServerId(LAN) } coAnswers {
                 delay(HANGING_FOREVER_MS)
-                true
+                SERVER_ID
             }
-            coEvery { probeApi.isReachable(REMOTE) } returns true
+            coEvery { probeApi.reachableServerId(REMOTE) } returns SERVER_ID
 
             val start = testScheduler.currentTime
             probe().isServerReachable() shouldBe true
@@ -139,7 +171,7 @@ class ServerReachabilityProbeTest {
     fun `a database failure still lets the current address be probed`() =
         runTest {
             coEvery { serverDao.getAddresses(any()) } throws IOException("database gone")
-            coEvery { probeApi.isReachable(LAN) } returns true
+            coEvery { probeApi.reachableServerId(LAN) } returns SERVER_ID
 
             probe().isServerReachable() shouldBe true
         }
@@ -158,6 +190,9 @@ class ServerReachabilityProbeTest {
     private companion object {
         const val LAN = "http://192.168.1.10:8096"
         const val REMOTE = "https://media.example.com"
+
+        /** A host that answers the probe but is not the server the user signed in to. */
+        val IMPOSTOR_ID: UUID = UUID.fromString("00000000-0000-0000-0000-00000000bad1")
 
         /** Far longer than any budget, but finite so the virtual clock stays sane. */
         const val HANGING_FOREVER_MS = 10 * 60 * 1000L

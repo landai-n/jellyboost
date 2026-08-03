@@ -22,6 +22,12 @@ import javax.inject.Singleton
  * currently configured first and then every other candidate, and re-points the shared `ApiClient`
  * at whichever one answers.
  *
+ * An address only counts as answering when the server behind it reports the signed-in session's
+ * server id (audit NET-01). The stored addresses are routinely private LAN ones that mean a
+ * different machine on a different network — the shared client carries the access token, so
+ * re-pointing it at whatever 200s `/System/Info/Public` would hand the token to any host squatting
+ * that address. A mismatched id is treated exactly like an unreachable address.
+ *
  * Every attempt is capped at [PROBE_TIMEOUT_MS]. That cap is the mechanism behind the M6 definition
  * of done — "server-down (Wi-Fi up) degrades without a 30s hang".
  */
@@ -36,29 +42,40 @@ class ServerReachabilityProbe
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
-         * Probes the known addresses in order and returns `true` as soon as one answers, having
-         * pointed the shared client at it.
+         * Probes the known addresses in order and returns `true` as soon as one answers **as our
+         * server**, having pointed the shared client at it.
          *
          * Returns `false` when nobody is signed in: there is no server to be reachable, and
          * reporting "online" would send the delegating repository down a path with no credentials.
          */
         suspend fun isServerReachable(): Boolean =
             withContext(ioDispatcher) {
-                val candidates = candidateAddresses()
+                val session =
+                    sessionStateHolder.state.value as? SessionState.LoggedIn
+                        ?: return@withContext false
+                val candidates = candidateAddresses(session)
                 if (candidates.isEmpty()) {
                     Timber.d("No server address to probe")
                     return@withContext false
                 }
 
                 for (address in candidates) {
-                    val reachable =
-                        withTimeoutOrNull(PROBE_TIMEOUT_MS) { probeApi.isReachable(address) } == true
-                    if (reachable) {
-                        if (address != apiClientProvider.apiClient.baseUrl) {
-                            Timber.i("Server reachable at %s; switching the client over", address)
-                            apiClientProvider.useAddress(address)
+                    val probedId =
+                        withTimeoutOrNull(PROBE_TIMEOUT_MS) { probeApi.reachableServerId(address) }
+                    when {
+                        probedId == null -> Unit // Nothing (usable) answered; try the next one.
+                        probedId != session.serverId ->
+                            // Somebody answered, but not our server — a different Jellyfin
+                            // instance, or anything at all squatting a reused LAN address.
+                            // Never switch to it.
+                            Timber.w("Host at %s answered as server %s, not ours; skipping it", address, probedId)
+                        else -> {
+                            if (address != apiClientProvider.apiClient.baseUrl) {
+                                Timber.i("Server reachable at %s; switching the client over", address)
+                                apiClientProvider.useAddress(address)
+                            }
+                            return@withContext true
                         }
-                        return@withContext true
                     }
                 }
 
@@ -70,8 +87,7 @@ class ServerReachabilityProbe
          * The addresses to try, in order: the one the client is already using first, then every
          * other address stored for this server. Rotating only matters once the current one failed.
          */
-        private suspend fun candidateAddresses(): List<String> {
-            val session = sessionStateHolder.state.value as? SessionState.LoggedIn ?: return emptyList()
+        private suspend fun candidateAddresses(session: SessionState.LoggedIn): List<String> {
             val stored =
                 runCatching { serverDao.getAddresses(session.serverId).map { it.address } }
                     .onFailure { Timber.w(it, "Could not read the server's addresses") }

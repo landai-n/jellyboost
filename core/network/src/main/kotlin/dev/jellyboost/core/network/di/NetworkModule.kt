@@ -5,9 +5,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.Multibinds
 import dev.jellyboost.core.network.ApiClientProvider
 import dev.jellyboost.core.network.JellyfinApiFacade
 import dev.jellyboost.core.network.SdkJellyfinApiFacade
+import dev.jellyboost.core.network.SignOutHook
 import dev.jellyboost.core.network.connectivity.AndroidConnectivityMonitor
 import dev.jellyboost.core.network.connectivity.ConnectivityMonitor
 import dev.jellyboost.core.network.connectivity.SdkServerProbeApi
@@ -44,6 +46,13 @@ internal interface NetworkModule {
     @Binds
     @Singleton
     fun bindServerProbeApi(impl: SdkServerProbeApi): ServerProbeApi
+
+    /**
+     * Declares the [SignOutHook] set so `SessionRepository` injects an empty set when no other
+     * module contributes one — the contributors live in feature/player modules this one cannot see.
+     */
+    @Multibinds
+    fun signOutHooks(): Set<SignOutHook>
 }
 
 /** Provides the dispatchers and scopes `:core:network` runs its background work on. */

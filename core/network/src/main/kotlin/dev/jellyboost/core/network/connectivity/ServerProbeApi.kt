@@ -4,7 +4,9 @@ import dev.jellyboost.core.network.ApiClientProvider
 import kotlinx.coroutines.CancellationException
 import org.jellyfin.sdk.api.client.HttpClientOptions
 import org.jellyfin.sdk.api.client.extensions.systemApi
+import org.jellyfin.sdk.model.serializer.toUUIDOrNull
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.milliseconds
@@ -15,21 +17,26 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 interface ServerProbeApi {
     /**
-     * `true` when a Jellyfin server answers `getPublicSystemInfo` at [baseUrl] within
-     * [ServerReachabilityProbe.PROBE_TIMEOUT_MS].
+     * The id of the Jellyfin server answering `getPublicSystemInfo` at [baseUrl] within
+     * [ServerReachabilityProbe.PROBE_TIMEOUT_MS], or `null` when nothing usable answers.
+     *
+     * Returning the id rather than a boolean is a security requirement, not a convenience: the
+     * probe's caller re-points the **authenticated** client at whichever address answers, so
+     * "something answered" must never be conflated with "our server answered" — any host on the
+     * current network could 200 this unauthenticated endpoint (audit NET-01).
      *
      * Never throws for an unreachable server — an unreachable server is the expected outcome here,
      * not an error.
      */
-    suspend fun isReachable(baseUrl: String): Boolean
+    suspend fun reachableServerId(baseUrl: String): UUID?
 }
 
 /**
  * [ServerProbeApi] on jellyfin-sdk.
  *
  * `getPublicSystemInfo` is the right probe: it is unauthenticated (so it still answers with an
- * expired token), tiny, and served by the same pipeline real requests use, so a server that answers
- * it is genuinely usable.
+ * expired token), tiny, carries the server's id for the identity check, and is served by the same
+ * pipeline real requests use, so a server that answers it is genuinely usable.
  *
  * A **throwaway** `ApiClient` is created per probe rather than reusing the app's one. Two reasons:
  * probing a candidate address must not re-point the live client before we know it works, and this
@@ -42,21 +49,22 @@ internal class SdkServerProbeApi
     constructor(
         private val apiClientProvider: ApiClientProvider,
     ) : ServerProbeApi {
-        override suspend fun isReachable(baseUrl: String): Boolean =
+        override suspend fun reachableServerId(baseUrl: String): UUID? =
             try {
                 val client =
                     apiClientProvider.jellyfin.createApi(
                         baseUrl = baseUrl,
                         httpClientOptions = PROBE_CLIENT_OPTIONS,
                     )
-                client.systemApi.getPublicSystemInfo().status == HTTP_OK
+                val response = client.systemApi.getPublicSystemInfo()
+                if (response.status == HTTP_OK) response.content.id?.toUUIDOrNull() else null
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Throwable,
             ) {
                 Timber.d("Server probe failed for %s: %s", baseUrl, error.javaClass.simpleName)
-                false
+                null
             }
 
         private companion object {

@@ -144,7 +144,9 @@ internal object PlayerProvidersModule {
     fun provideMediaOkHttpClient(authInterceptor: JellyfinAuthInterceptor): OkHttpClient =
         OkHttpClient
             .Builder()
-            .addInterceptor(authInterceptor)
+            // Network interceptor, not application (audit NET-05): the auth header's same-origin
+            // check must run per hop, so a redirect off-server is inspected — and refused — too.
+            .addNetworkInterceptor(authInterceptor)
             .build()
 
     /**

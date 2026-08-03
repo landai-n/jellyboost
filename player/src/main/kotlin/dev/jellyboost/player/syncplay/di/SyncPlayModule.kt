@@ -5,8 +5,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import dev.jellyboost.core.common.syncplay.SyncPlaySession
+import dev.jellyboost.core.network.SignOutHook
 import dev.jellyboost.player.syncplay.ControllerSyncPlaySession
+import dev.jellyboost.player.syncplay.SyncPlaySignOutHook
 import dev.jellyboost.player.syncplay.api.SdkSyncPlayApi
 import dev.jellyboost.player.syncplay.api.SyncPlayApi
 import dev.jellyboost.player.syncplay.socket.OkHttpSyncPlaySocket
@@ -60,6 +63,14 @@ internal interface SyncPlayModule {
     @Binds
     @Singleton
     fun bindSyncPlaySession(impl: ControllerSyncPlaySession): SyncPlaySession
+
+    /**
+     * Contributes the SyncPlay group leave to `SessionRepository`'s pre-revocation hooks
+     * (audit NET-03): the leave must be sent while the access token still works.
+     */
+    @Binds
+    @IntoSet
+    fun bindSyncPlaySignOutHook(impl: SyncPlaySignOutHook): SignOutHook
 }
 
 /** The scope SyncPlay coordination runs in. */

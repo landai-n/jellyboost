@@ -6,6 +6,7 @@ import dev.jellyboost.core.database.dao.UserDao
 import dev.jellyboost.core.datastore.HomeLayoutStore
 import dev.jellyboost.core.datastore.SecureCredentialStore
 import dev.jellyboost.core.network.model.SessionState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,6 +32,7 @@ class SessionRepository
         private val secureCredentialStore: SecureCredentialStore,
         private val sessionStateHolder: SessionStateHolder,
         private val homeLayoutStore: HomeLayoutStore,
+        private val signOutHooks: Set<@JvmSuppressWildcards SignOutHook>,
     ) {
         /**
          * Current session. Starts at [SessionState.Unknown]; hold the splash screen until it
@@ -75,9 +77,12 @@ class SessionRepository
         fun consumeInvoluntarySignOut(): Boolean = involuntarySignOut.getAndSet(false)
 
         /**
-         * Signs out: tells the server the session ended (best effort — a failure here must not
-         * strand the user in a signed-in UI), wipes [SecureCredentialStore], drops the token
-         * from the API client and reports [SessionState.LoggedOut].
+         * Signs out: runs every [SignOutHook] while the token still works (audit NET-03 — telling
+         * the server the session ended revokes it, so anything that needs a working credential to
+         * say goodbye, like the SyncPlay group leave, must go first), then tells the server the
+         * session ended (best effort — a failure here must not strand the user in a signed-in UI),
+         * wipes [SecureCredentialStore], drops the token from the API client and reports
+         * [SessionState.LoggedOut].
          *
          * Server and user rows stay in Room so the next sign-in on the same server is instant;
          * the plan only requires the credential store to be cleared.
@@ -88,6 +93,18 @@ class SessionRepository
          * fetch keeps failing.
          */
         suspend fun signOut() {
+            signOutHooks.forEach { hook ->
+                try {
+                    hook.onSignOut()
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") error: Throwable,
+                ) {
+                    Timber.w(error, "A sign-out hook failed; signing out regardless")
+                }
+            }
+
             val reported = apiCall { apiFacade.reportSessionEnded() }
             if (reported is AppResult.Failure) {
                 Timber.w("Could not report session end to the server: %s", reported.error)

@@ -111,13 +111,19 @@ class CastSessionCoordinator
          * stop existing, and without it there would be nothing to key a report on — the position
          * still comes from the cast player itself, tick by tick.
          *
+         * Taken **only while a session is live**: every screen detaches through here whether it was
+         * casting or not (`releaseSession` cannot know), and a source remembered from an ordinary
+         * local session would later be "orphaned" by a failed cast attempt — [onCastEnded] would
+         * then report a stop, at position zero, for a film that was never cast, wiping its resume
+         * position (audit CAST-02).
+         *
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the screen that replaced it.
          */
         override fun detachHost(host: CastPlaybackHost) {
             if (this.host !== host) return
             this.host = null
-            detachedSource = host.castSource
+            detachedSource = host.castSource.takeIf { isCasting }
             startTicker()
         }
 
@@ -133,8 +139,18 @@ class CastSessionCoordinator
          * about to open had failed. Stopping it at all is decision 1: two players must not sound at
          * once, and the local media notification has no business surviving a film that has moved to
          * a television.
+         *
+         * A start for a session that is **already** connected is dropped. The framework delivers one
+         * on `onSessionResumed` after a Wi-Fi blip, and the monitor's own start-time replay can add
+         * another; re-running the transfer for either would stop and re-negotiate a stream the
+         * receiver is happily playing — off a cast player that may still answer position zero
+         * (audit CAST-05).
          */
         private fun onCastStarted(deviceName: String?) {
+            if (isCasting) {
+                Timber.d("Cast session already connected; ignoring a repeated start from %s", deviceName)
+                return
+            }
             Timber.i("Cast session started on %s", deviceName ?: "an unnamed receiver")
             val handover = routing.snapshot()
             status.setConnection(CastConnection.Connected(deviceName))
@@ -170,6 +186,11 @@ class CastSessionCoordinator
             }
             detachedSource = null
             routing.setActive(PlaybackTarget.Local)
+            // The receiver is gone, but the cast player is not: left alone it keeps its listener,
+            // its media items and the `loaded` spec a later subtitle selection would match against
+            // (audit CAST-08). Stopping the now-inactive side clears all three; the session itself
+            // is already over, so there is nothing this could interrupt.
+            routing.stopInactive()
             host?.onCastEnded(last)
         }
 

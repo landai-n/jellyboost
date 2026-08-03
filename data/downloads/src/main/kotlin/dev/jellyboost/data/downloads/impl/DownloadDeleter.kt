@@ -41,18 +41,40 @@ class DownloadDeleter
          * @return bytes actually freed on disk — what the Downloads screen reports, and what the
          *   milestone's "delete frees bytes" check measures.
          */
-        suspend fun delete(itemId: UUID): Long {
-            val download = downloadDao.get(itemId) ?: return 0L
+        suspend fun delete(itemId: UUID): Long = deleteAll(listOf(itemId))
 
-            val freed =
-                runCatching { storage.deleteItemDirectory(download.directoryName) }
-                    .onFailure { Timber.w(it, "Could not delete the files of %s", download.itemName) }
-                    .getOrDefault(0L)
+        /**
+         * Removes several downloads, running the metadata prune **once** for the whole batch.
+         *
+         * The batch shape is not a convenience: *Cancel all* used to run the full cascade per row,
+         * and each cascade's prune re-read every surviving download's whole `ItemEntity` — a
+         * multi-tens-of-KB `BaseItemDto` blob apiece — making the operation O(deleted × remaining)
+         * in blob reads, with the UI waiting on it (audit DL-05). Files and rows still go first,
+         * per item, in the same order as ever; only the prune and the user-data sweep are batched
+         * behind them.
+         *
+         * @return total bytes actually freed on disk.
+         */
+        suspend fun deleteAll(itemIds: List<UUID>): Long {
+            var freed = 0L
+            val removed = mutableListOf<UUID>()
 
-            downloadDao.delete(itemId)
-            pruneOrphanedItems()
-            downloadDao.deleteSyncedUserData(itemId)
+            for (itemId in itemIds) {
+                val download = downloadDao.get(itemId) ?: continue
 
+                freed +=
+                    runCatching { storage.deleteItemDirectory(download.directoryName) }
+                        .onFailure { Timber.w(it, "Could not delete the files of %s", download.itemName) }
+                        .getOrDefault(0L)
+
+                downloadDao.delete(itemId)
+                removed += itemId
+            }
+
+            if (removed.isNotEmpty()) {
+                pruneOrphanedItems()
+                removed.forEach { downloadDao.deleteSyncedUserData(it) }
+            }
             return freed
         }
 
@@ -61,9 +83,11 @@ class DownloadDeleter
          *
          * The surviving set is computed rather than guessed: it is the remaining downloads plus,
          * for each of them, its series and season. That is exactly the set the offline read path
-         * walks — an episode's detail page reaches its season, which reaches its series.
+         * walks — an episode's detail page reaches its season, which reaches its series. The walk
+         * reads [ItemDao.getParentRefs], a projection without the `dto` blob: the prune needs only
+         * the links, never the metadata itself (audit DL-05).
          *
-         * Run after *every* delete rather than only on the last one, so a half-cleaned cache cannot
+         * Run after every batch rather than only on the last one, so a half-cleaned cache cannot
          * accumulate over a session of deletions.
          */
         private suspend fun pruneOrphanedItems() {
@@ -75,7 +99,7 @@ class DownloadDeleter
 
             val parents =
                 itemDao
-                    .getItems(remaining)
+                    .getParentRefs(remaining)
                     .flatMap { listOfNotNull(it.seriesId, it.seasonId, it.parentId) }
 
             val keep = (remaining + parents).distinct()

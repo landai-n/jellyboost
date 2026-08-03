@@ -77,6 +77,7 @@ class DownloadRepositoryStorageTest {
         coEvery { scheduler.ensureRunning() } returns Unit
         coEvery { scheduler.restart() } returns Unit
         coEvery { deleter.delete(any()) } returns 0L
+        coEvery { deleter.deleteAll(any()) } returns 0L
         coEvery { downloadDao.pending() } returns emptyList()
         coEvery { downloadDao.get(any()) } returns null
     }
@@ -118,7 +119,7 @@ class DownloadRepositoryStorageTest {
 
             result.shouldBeInstanceOf<AppResult.Success<Unit>>()
             coVerify { locations.select(CARD_ID) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
+            coVerify(exactly = 0) { deleter.deleteAll(any()) }
         }
 
     @Test
@@ -132,7 +133,7 @@ class DownloadRepositoryStorageTest {
 
             result.shouldBeInstanceOf<AppResult.Failure>()
             coVerify(exactly = 0) { locations.select(any()) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
+            coVerify(exactly = 0) { deleter.deleteAll(any()) }
         }
 
     @Test
@@ -147,8 +148,7 @@ class DownloadRepositoryStorageTest {
                 // Stop first so the downloader cannot hold a handle to a file being unlinked, and
                 // delete before the root moves or the cascade looks on the wrong volume for them.
                 scheduler.stop()
-                deleter.delete(uuid(1))
-                deleter.delete(uuid(2))
+                deleter.deleteAll(listOf(uuid(1), uuid(2)))
                 locations.select(CARD_ID)
             }
         }
@@ -165,7 +165,7 @@ class DownloadRepositoryStorageTest {
 
             result.shouldBeInstanceOf<AppResult.Success<Unit>>()
             coVerify { locations.select(PRIMARY_ID) }
-            coVerify(exactly = 0) { deleter.delete(any()) }
+            coVerify(exactly = 0) { deleter.deleteAll(any()) }
         }
 
     @Test

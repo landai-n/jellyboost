@@ -2,6 +2,7 @@ package dev.jellyboost.player.ui
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -44,6 +45,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -124,12 +126,16 @@ fun PlayerScreen(
 
     ImmersiveLandscapeEffect(enabled = !inPictureInPicture)
 
-    // The position poll that drives the seek bar only runs while this screen exists. Playback and
-    // progress reporting are deliberately not tied to it — that is what lets the app be
-    // backgrounded without the film stopping (M9).
-    DisposableEffect(viewModel) {
+    // The position poll that drives the seek bar only runs while this screen is visible — the
+    // lifecycle, not the composition: pressing Home keeps the composable composed for the whole
+    // film, and a 500 ms poll behind a backgrounded screen is exactly the battery burn the
+    // UI/reporting split exists to avoid (audit PC-06). Picture-in-picture keeps the activity
+    // started, so the floating window's position stays live. Playback and progress reporting are
+    // deliberately not tied to this — that is what lets the app be backgrounded without the film
+    // stopping (M9).
+    LifecycleStartEffect(viewModel) {
         viewModel.setScreenVisible(true)
-        onDispose { viewModel.setScreenVisible(false) }
+        onStopOrDispose { viewModel.setScreenVisible(false) }
     }
 
     // Controls get out of the way on their own while something is playing; a paused player keeps
@@ -477,6 +483,13 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         val previousOrientation = activity.requestedOrientation
         val previousDecorFitsSystemWindows = true
+        // The brightness swipe writes a per-window override (`PlayerGestureLayer`), and in a
+        // single-activity app the window outlives the player — nothing undoes the override on its
+        // own, so a film dimmed for the night would leave every other screen dimmed too (audit
+        // PC-02). Captured with the rest of the window state; `BRIGHTNESS_OVERRIDE_NONE` is the
+        // usual "no override" starting value, and restoring it hands the backlight back to the
+        // system.
+        val previousBrightness = window.attributes.screenBrightness
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -487,6 +500,11 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
             controller.show(WindowInsetsCompat.Type.systemBars())
             WindowCompat.setDecorFitsSystemWindows(window, previousDecorFitsSystemWindows)
             activity.requestedOrientation = previousOrientation
+            window.attributes =
+                WindowManager.LayoutParams().apply {
+                    copyFrom(window.attributes)
+                    screenBrightness = previousBrightness
+                }
         }
     }
 }

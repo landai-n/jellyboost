@@ -2,7 +2,8 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -12,9 +13,11 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,13 +53,28 @@ private val SnackbarLabel =
         lineHeight = 18.sp,
     )
 
+private val SnackbarActionLabel =
+    TextStyle(
+        fontSize = 13.sp,
+        fontWeight = FontWeight.W600,
+        lineHeight = 18.sp,
+    )
+
+/** Breathing room the action keeps from the message, and the padding of its own touch area. */
+private val ActionStartGap = 6.dp
+
+private val ActionPadding = 8.dp
+
 /**
- * The refresh's snackbar: a floating pill with the message and nothing else.
+ * The refresh's snackbar: a floating pill with the message and, when the caller asked for one, its
+ * action.
  *
- * Deliberately has no action slot. Every snackbar the app shows today is a *report* — "Marked 4
- * watched", "Added 3 to downloads" — and the refresh drops the Undo affordance the mocks never
- * had, so [SnackbarData.visuals]'s `actionLabel` is not rendered. A future snackbar that genuinely
- * needs a button wants a different component, not a slot here that is empty everywhere.
+ * The action is rendered only when [SnackbarData.visuals] carries an `actionLabel`, as an
+ * accent-coloured word that calls [SnackbarData.performAction] — which is what resumes the host's
+ * suspended `showSnackbar` with `ActionPerformed`. Most of the app's snackbars are plain *reports*
+ * ("Marked 4 watched") and pass no label, so they draw exactly the message-only pill they always
+ * did; the connection-status snackbar is the one that offers something ("Retry", "Leave offline
+ * mode"), and it was silently losing its affordance when this component ignored the label.
  *
  * Pass it to a `SnackbarHost`: `SnackbarHost(hostState) { data -> PillSnackbar(data) }`.
  */
@@ -65,7 +83,9 @@ fun PillSnackbar(
     snackbarData: SnackbarData,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    val actionLabel = snackbarData.visuals.actionLabel
+
+    Row(
         modifier =
             modifier
                 .padding(Dimens.SpaceMedium)
@@ -75,6 +95,7 @@ fun PillSnackbar(
                 .background(color = SnackbarContainer, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                 .padding(horizontal = SnackbarHorizontalPadding, vertical = SnackbarVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = snackbarData.visuals.message,
@@ -83,19 +104,35 @@ fun PillSnackbar(
             textAlign = TextAlign.Center,
             maxLines = SNACKBAR_MAX_LINES,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(weight = 1f, fill = false),
         )
+        if (actionLabel != null) {
+            Text(
+                text = actionLabel,
+                style = SnackbarActionLabel,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                modifier =
+                    Modifier
+                        .padding(start = ActionStartGap)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button) { snackbarData.performAction() }
+                        .padding(ActionPadding),
+            )
+        }
     }
 }
 
 private const val SNACKBAR_MAX_LINES = 2
 
-/** The one piece of [SnackbarData] a preview needs: a message and two callbacks that do nothing. */
+/** The one piece of [SnackbarData] a preview needs: the visuals and two callbacks that do nothing. */
 private class PreviewSnackbarData(
     message: String,
+    actionLabel: String? = null,
 ) : SnackbarData {
     override val visuals: SnackbarVisuals =
         object : SnackbarVisuals {
-            override val actionLabel: String? = null
+            override val actionLabel: String? = actionLabel
             override val duration: SnackbarDuration = SnackbarDuration.Short
             override val message: String = message
             override val withDismissAction: Boolean = false
@@ -111,5 +148,19 @@ private class PreviewSnackbarData(
 private fun PillSnackbarPreview() {
     JellyfinTheme {
         PillSnackbar(snackbarData = PreviewSnackbarData(message = "Added 3 to downloads"))
+    }
+}
+
+@Preview(name = "PillSnackbar action", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)
+@Composable
+private fun PillSnackbarActionPreview() {
+    JellyfinTheme {
+        PillSnackbar(
+            snackbarData =
+                PreviewSnackbarData(
+                    message = "Server unreachable — showing downloads",
+                    actionLabel = "Retry",
+                ),
+        )
     }
 }

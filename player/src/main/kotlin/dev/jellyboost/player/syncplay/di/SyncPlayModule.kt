@@ -18,6 +18,7 @@ import kotlinx.coroutines.SupervisorJob
 import okhttp3.OkHttpClient
 import okhttp3.WebSocket
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -73,6 +74,16 @@ internal object SyncPlayScopeModule {
      * controller's own per-session child job instead, so the singleton scope stays usable for the
      * next group.
      *
+     * **Single-threaded, and that is the controller's synchronization** (audit SP-07/SP-01/SP-08):
+     * `SyncPlayController` and `SyncPlayCommandScheduler` keep a session's bookkeeping in plain
+     * `var`s and mutate it from half a dozen concurrent collectors, which on the default pool is a
+     * data race on every field. `limitedParallelism(1)` serialises every coroutine on this scope —
+     * one at a time, with a happens-before edge between them — so those fields need no locks as
+     * long as *everything* that touches them runs here. The controller's main-thread entry points
+     * (`attachHost`, `detachHost`, `onHostBuffering`, `leaveGroup`, `onAppForegrounded`) hop onto
+     * this scope for exactly that reason; only `PlayerHandle` calls leave it, via the main
+     * dispatcher.
+     *
      * `SupervisorJob` so a failed ping cannot take the websocket collection down with it, and a
      * [CoroutineExceptionHandler] because a supervisor isolates siblings from a failure without
      * *handling* it — an unhandled throw would still reach the default handler and kill the process.
@@ -83,7 +94,7 @@ internal object SyncPlayScopeModule {
     fun provideSyncPlayScope(): CoroutineScope =
         CoroutineScope(
             SupervisorJob() +
-                Dispatchers.Default +
+                Dispatchers.Default.limitedParallelism(1) +
                 CoroutineExceptionHandler { _, error ->
                     Timber.e(error, "Uncaught exception in a SyncPlay-scope coroutine")
                 },
@@ -94,9 +105,16 @@ internal object SyncPlayScopeModule {
      *
      * Its own rather than `@MediaHttpClient`'s: that one exists for long-lived media transfers and
      * carries `JellyfinAuthInterceptor`, which would rewrite the `Authorization` header the socket
-     * builds for itself. Defaults are left alone deliberately — OkHttp does not apply a read
-     * timeout to a websocket's reader, so an idle group is not a dropped connection, and the
-     * server-driven `ForceKeepAlive` cadence is what keeps the session alive.
+     * builds for itself. No read timeout is set deliberately — OkHttp does not apply one to a
+     * websocket's reader, so an idle group is not a dropped connection, and the server-driven
+     * `ForceKeepAlive` cadence is what keeps the *session* alive.
+     *
+     * The [OkHttpClient.pingIntervalMillis] is what keeps the *connection* honest (audit SP-16):
+     * the app-level keep-alive is one-directional and `send` on a half-open TCP connection succeeds
+     * into the send buffer for minutes, so without RFC 6455 pings a NAT timeout or a Wi-Fi↔cellular
+     * handover leaves `connectionState` reading `Connected` for ever. A missed pong fails the
+     * socket, which is what lets `OkHttpSyncPlaySocket`'s reconnect loop and the controller's
+     * `markTrouble` do their jobs.
      *
      * Exposed as [WebSocket.Factory] rather than as the client, so the socket can be tested
      * against a fake without an HTTP stack.
@@ -104,7 +122,14 @@ internal object SyncPlayScopeModule {
     @Provides
     @Singleton
     @SyncPlaySocketClient
-    fun provideSyncPlaySocketFactory(): WebSocket.Factory = OkHttpClient.Builder().build()
+    fun provideSyncPlaySocketFactory(): WebSocket.Factory =
+        OkHttpClient
+            .Builder()
+            .pingInterval(SOCKET_PING_INTERVAL_SECONDS, TimeUnit.SECONDS)
+            .build()
+
+    /** RFC 6455 ping cadence — frequent enough to beat NAT idle timeouts, cheap enough to ignore. */
+    private const val SOCKET_PING_INTERVAL_SECONDS = 30L
 }
 
 /** Marks the OkHttp websocket factory SyncPlay's own socket connects with. */

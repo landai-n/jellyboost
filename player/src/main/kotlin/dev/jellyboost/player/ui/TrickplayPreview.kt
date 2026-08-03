@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,31 @@ internal fun TrickplayPreview(
     height: Dp = TRICKPLAY_PREVIEW_HEIGHT,
 ) {
     val width = height * tiles.aspectRatio
+    val context = LocalPlatformContext.current
+    // Remembered per sheet, not rebuilt per composition: the enclosing scrubber recomposes at
+    // pointer rate during a drag, and rebuilding the request — re-parsing the URL twice for the
+    // cache keys each time — is pure allocation churn on the one interaction where the frame
+    // budget is visibly tight (audit PC-07). Keyed on the sheet URI because every cell of a sheet
+    // shares it; a drag only builds a new request when it crosses into the next sheet.
+    val request =
+        remember(context, thumbnail.uri) {
+            // The cache keys are set explicitly, token-stripped: `thumbnail.uri` carries the access
+            // token as a query parameter (the only URL in the app that does — trickplay is fetched
+            // by Coil, which cannot ride `JellyfinAuthInterceptor`'s header). Coil's default cache
+            // key is the request's data, token and all, which means re-logging in — a fresh token —
+            // silently orphans every tile this item had ever cached, and the fact that today's token
+            // never reaches disk rests on undocumented internals of how Coil derives a *disk* key
+            // from that default, not on a key this app controls (docs/notes/audit-2026-07.md,
+            // SEC-02). Stripping the token here is a no-op for a downloaded item's `file://` URIs,
+            // which never carried one.
+            val cacheKey = thumbnail.uri.withoutAccessToken()
+            ImageRequest
+                .Builder(context)
+                .data(thumbnail.uri)
+                .diskCacheKey(cacheKey)
+                .memoryCacheKey(cacheKey)
+                .build()
+        }
 
     Box(
         modifier =
@@ -52,23 +78,7 @@ internal fun TrickplayPreview(
         AsyncImage(
             // Every cell of a sheet resolves to the same URL, so this is a cache hit for all but
             // the first thumbnail of each sheet — no request, no decode, no flicker.
-            //
-            // The cache keys are set explicitly, token-stripped: `thumbnail.uri` carries the access
-            // token as a query parameter (the only URL in the app that does — trickplay is fetched
-            // by Coil, which cannot ride `JellyfinAuthInterceptor`'s header). Coil's default cache
-            // key is the request's data, token and all, which means re-logging in — a fresh token —
-            // silently orphans every tile this item had ever cached, and the fact that today's token
-            // never reaches disk rests on undocumented internals of how Coil derives a *disk* key
-            // from that default, not on a key this app controls (docs/notes/audit-2026-07.md,
-            // SEC-02). Stripping the token here is a no-op for a downloaded item's `file://` URIs,
-            // which never carried one.
-            model =
-                ImageRequest
-                    .Builder(LocalPlatformContext.current)
-                    .data(thumbnail.uri)
-                    .diskCacheKey(thumbnail.uri.withoutAccessToken())
-                    .memoryCacheKey(thumbnail.uri.withoutAccessToken())
-                    .build(),
+            model = request,
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
             modifier =

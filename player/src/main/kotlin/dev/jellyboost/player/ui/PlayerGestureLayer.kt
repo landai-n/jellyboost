@@ -54,8 +54,8 @@ import kotlin.math.roundToInt
  * The judgement — which half of the screen, which third, how far a swipe has to travel, which edges
  * belong to the system — is [PlayerGestureController]'s and is unit tested. What is left here is
  * the platform plumbing that cannot be: `AudioManager` for volume, the window's `screenBrightness`
- * attribute for brightness (a per-window override, so it dies with the player rather than changing
- * the device setting), and a transient indicator.
+ * attribute for brightness (a per-window override restored by `PlayerScreen`'s immersive effect on
+ * the way out, so it never touches the device setting), and a transient indicator.
  *
  * @param swipesEnabled whether the vertical swipes are offered at all. `false` while casting: both
  *   of them act on *this* device — its media volume, its backlight — and neither means anything
@@ -241,9 +241,10 @@ private fun Activity?.brightnessFraction(): Float {
 /**
  * Sets brightness for this window only.
  *
- * A window attribute rather than `Settings.System`: it needs no permission, and it is undone the
- * moment the player's window goes away — a film watched at full brightness must not leave the phone
- * blinding for everything afterwards.
+ * A window attribute rather than `Settings.System`: it needs no permission and never touches the
+ * device setting. The app is single-activity, so the window itself *outlives* the player —
+ * `ImmersiveLandscapeEffect` in `PlayerScreen` captures the previous override and restores it when
+ * the player leaves (audit PC-02); a film watched dimmed must not leave the whole app dark.
  */
 private fun Activity?.setBrightnessFraction(fraction: Float) {
     val window = this?.window ?: return

@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
+import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import dev.jellyboost.data.toAppError
 
 /** Whether trying the same download again in a minute could plausibly work. */
@@ -29,8 +30,10 @@ internal enum class FailureKind {
  *
  * ### Where the line falls
  * - **Transient** — transport failures of every shape (no route, reset, TLS handshake, read
- *   timeout), and the server statuses that mean "not now": `408`, `429`, and all of `5xx`. A
- *   Jellyfin server restarting answers `502` through its proxy for exactly as long as it takes.
+ *   timeout), the server statuses that mean "not now" (`408`, `429`, and all of `5xx` — a
+ *   Jellyfin server restarting answers `502` through its proxy for exactly as long as it takes),
+ *   and a storage volume that is not usable *right now* ([StorageUnavailableException] — an
+ *   ejected card, an MTP session, the window after boot before the card mounts).
  * - **Permanent** — anything the user or the server has to change first: `401`/`403` (signed out,
  *   or the account may not download), `404`/`410` (gone), the remaining `4xx`, a row whose cached
  *   metadata is missing, and a row that names a folder rather than a file.
@@ -43,6 +46,9 @@ internal object DownloadFailureClassifier {
         when {
             error is MissingMetadataException -> FailureKind.PERMANENT
             error is NotDownloadableException -> FailureKind.PERMANENT
+            // Before the taxonomy: it *is* an IllegalStateException, which would otherwise land in
+            // AppError.Unknown and read as permanent — the DL-10 queue-emptying failure mode.
+            error is StorageUnavailableException -> FailureKind.TRANSIENT
             // Checked before the taxonomy: it is an IOException, which would otherwise read as a
             // transport failure and hide the status the server actually sent.
             error is DownloadHttpException -> forStatus(error.code)

@@ -90,6 +90,7 @@ class DownloadQueueAudioLaneTest {
         every { urls.transcodedVideoUrl(any(), any(), any(), any()) } returns TRANSCODE_URL
         coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
+        coEvery { downloadDao.markDownloadingIfRunnable(any(), any()) } returns 1
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
         coEvery { sweeper.sweep() } returns 0L
         givenLanguages(2)

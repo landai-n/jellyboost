@@ -13,6 +13,7 @@ import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
 import dev.jellyboost.data.downloads.plan.PlannedFile
 import dev.jellyboost.data.downloads.storage.DownloadStorage
+import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
@@ -220,7 +221,15 @@ internal class DownloadQueue
             listener: DownloadQueueListener,
         ): ItemOutcome {
             val download = queued.download
-            downloadDao.setStatus(download.itemId, DownloadStatus.DOWNLOADING, clock.instant())
+            // A guarded claim, not a plain write: `pause`/`pauseAll` write PAUSED before stopping
+            // the worker, and a drain sitting between `nextRunnable()` and this line used to
+            // clobber that with DOWNLOADING — the cancellation then re-queued the row and the item
+            // the user had just paused downloaded anyway (audit DL-03). Zero rows updated means
+            // the row changed hands since it was picked; leave it exactly as its new owner put it.
+            if (downloadDao.markDownloadingIfRunnable(download.itemId, clock.instant()) == 0) {
+                Timber.i("%s changed status before its transfer began; leaving it alone", download.itemName)
+                return ItemOutcome.SUCCEEDED
+            }
 
             return try {
                 val dto = loadDto(download) ?: throw MissingMetadataException(download.itemId)
@@ -639,10 +648,26 @@ internal class DownloadQueue
             listener: DownloadQueueListener,
         ) {
             val target = storage.resolve(download.directoryName, file.fileName)
+            // The row's path was resolved against the active root by `reconcile` at the start of
+            // this drain; resolving to somewhere else now means the root moved underneath the item
+            // (an SD card ejected or remounted mid-transfer). Writing there anyway would split one
+            // download across two volumes — where neither the sweep, the delete cascade nor
+            // `usedBytes()` can see the half on the inactive root (audit DL-07). Transient on
+            // purpose: the next drain re-reconciles every path against whichever root answers then.
+            if (target.absolutePath != file.path) {
+                throw StorageUnavailableException(
+                    "The downloads root moved mid-item (row has ${file.path}, active root resolves ${target.absolutePath})",
+                )
+            }
             val audio = file.type == DownloadFileType.AUDIO
-            if (audio && isWholeSidecar(file, target)) {
-                // Already stripped by an earlier run. Re-fetching it would spend the whole track
-                // again for nothing, since a sidecar's fetch cannot be resumed either.
+            if (isWholeFile(file, target)) {
+                // Already on disk and finished by an earlier run — re-entering the item must
+                // resume at *file* granularity. This matters most for a transcoded media file: an
+                // interruption during the sidecar tail (a lane that runs for minutes after the
+                // film itself finished) re-queues the whole item, and without this guard the
+                // completed multi-gigabyte encode was truncated and re-fetched from byte zero,
+                // because a live encode can never be resumed (audit DL-02). A finished sidecar is
+                // the same case — its fetch cannot be resumed either.
                 progress.update(file.id, target.length(), target.length())
                 publish(download, progress, listener)
                 return
@@ -720,16 +745,26 @@ internal class DownloadQueue
                 (file.type == DownloadFileType.MEDIA || file.type == DownloadFileType.AUDIO)
 
         /**
-         * `true` when this audio row's sidecar is already on disk and finished.
+         * `true` when this row's file is already on disk and finished.
          *
          * The row's status alone is not enough (the file may have been swept, or the volume
          * remounted empty) and the file alone is not either: a strip interrupted halfway leaves an
          * m4a that exists and is not a sidecar. Both, and the row is left where it is.
+         *
+         * The size check is the third leg: a completed row's `bytesTotal` was written as the final
+         * on-disk size (`updateFileProgress(id, written, written)`), so a file that no longer
+         * matches it — truncated, or replaced by something else — is not the file the row
+         * describes and must be fetched again. Rows whose total was never known keep the
+         * existence-plus-non-empty test alone.
          */
-        private fun isWholeSidecar(
+        private fun isWholeFile(
             file: DownloadFileEntity,
             target: File,
-        ): Boolean = file.status == DownloadStatus.DOWNLOADED && target.isFile && target.length() > 0L
+        ): Boolean =
+            file.status == DownloadStatus.DOWNLOADED &&
+                target.isFile &&
+                target.length() > 0L &&
+                (file.bytesTotal <= 0L || target.length() == file.bytesTotal)
 
         /**
          * Strips the fetched mkv into the sidecar the row names, and returns the sidecar's size.

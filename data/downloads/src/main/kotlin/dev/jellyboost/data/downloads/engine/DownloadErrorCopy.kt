@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
+import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import dev.jellyboost.data.toAppError
 
 /**
@@ -27,6 +28,10 @@ internal object DownloadErrorCopy {
         when {
             error is MissingMetadataException -> MISSING_METADATA
             error is NotDownloadableException -> NOT_A_FILE
+            // Before the taxonomy, like the classifier: an unusable volume is transient (the queue
+            // retries it), so the copy must not read as a dead end. It only ever reaches the row
+            // once the retry budget is spent — a volume that stayed gone for all five attempts.
+            error is StorageUnavailableException -> STORAGE
             error is DownloadHttpException -> forStatus(error.code)
             else ->
                 when (val appError = error.toAppError()) {

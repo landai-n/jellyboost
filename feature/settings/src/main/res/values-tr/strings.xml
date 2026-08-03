@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Tekrar giriş yapmak için sunucu adresinize ve şifrenize ihtiyacınız olacak.</string>
     <string name="settings_sign_out_delete_downloads">Bu cihazdaki indirmeleri de sil</string>
     <string name="settings_cancel">İptal</string>
+    <string name="settings_section_about">Hakkında</string>
+    <string name="settings_version">Uygulama sürümü</string>
 </resources>

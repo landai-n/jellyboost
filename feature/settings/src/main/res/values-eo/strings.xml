@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Vi bezonos vian servil-adreson kaj pasvorton por reensaluti.</string>
     <string name="settings_sign_out_delete_downloads">Ankaŭ forigi elŝutojn de ĉi tiu aparato</string>
     <string name="settings_cancel">Nuligi</string>
+    <string name="settings_section_about">Pri la aplikaĵo</string>
+    <string name="settings_version">Versio de la aplikaĵo</string>
 </resources>

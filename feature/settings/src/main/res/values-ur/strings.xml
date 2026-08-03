@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">دوبارہ سائن ان کرنے کے لیے آپ کو اپنے سرور کا پتہ اور پاس ورڈ درکار ہوگا۔</string>
     <string name="settings_sign_out_delete_downloads">اس ڈیوائس سے ڈاؤن لوڈز بھی حذف کریں</string>
     <string name="settings_cancel">منسوخ کریں</string>
+    <string name="settings_section_about">ایپ کے بارے میں</string>
+    <string name="settings_version">ایپ ورژن</string>
 </resources>

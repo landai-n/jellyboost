@@ -52,4 +52,6 @@
     <string name="settings_sign_out_dialog_message">Za ponovno prijavo boste potrebovali naslov strežnika in geslo.</string>
     <string name="settings_sign_out_delete_downloads">Izbriši tudi prenose s te naprave</string>
     <string name="settings_cancel">Prekliči</string>
+    <string name="settings_section_about">O aplikaciji</string>
+    <string name="settings_version">Različica aplikacije</string>
 </resources>

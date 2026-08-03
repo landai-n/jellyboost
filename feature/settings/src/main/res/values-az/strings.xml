@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Yenidən daxil olmaq üçün server ünvanınıza və şifrənizə ehtiyacınız olacaq.</string>
     <string name="settings_sign_out_delete_downloads">Bu cihazdakı yükləmələri də sil</string>
     <string name="settings_cancel">Ləğv et</string>
+    <string name="settings_section_about">Tətbiq haqqında</string>
+    <string name="settings_version">Tətbiq versiyası</string>
 </resources>

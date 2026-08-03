@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Tarvitset palvelimen osoitteen ja salasanan kirjautuaksesi takaisin sisään.</string>
     <string name="settings_sign_out_delete_downloads">Poista myös lataukset tältä laitteelta</string>
     <string name="settings_cancel">Peruuta</string>
+    <string name="settings_section_about">Tietoja</string>
+    <string name="settings_version">Sovelluksen versio</string>
 </resources>

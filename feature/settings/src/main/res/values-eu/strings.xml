@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Zerbitzariaren helbidea eta pasahitza beharko dituzu berriro saioa hasteko.</string>
     <string name="settings_sign_out_delete_downloads">Ezabatu gailu honetako deskargak ere</string>
     <string name="settings_cancel">Utzi</string>
+    <string name="settings_section_about">Aplikazioari buruz</string>
+    <string name="settings_version">Aplikazioaren bertsioa</string>
 </resources>

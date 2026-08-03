@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">తిరిగి సైన్ ఇన్ అవ్వడానికి మీకు మీ సర్వర్ చిరునామా మరియు పాస్‌వర్డ్ అవసరం అవుతుంది.</string>
     <string name="settings_sign_out_delete_downloads">ఈ పరికరం నుండి డౌన్‌లోడ్‌లను కూడా తొలగించండి</string>
     <string name="settings_cancel">రద్దు చేయండి</string>
+    <string name="settings_section_about">యాప్ గురించి</string>
+    <string name="settings_version">యాప్ వెర్షన్</string>
 </resources>

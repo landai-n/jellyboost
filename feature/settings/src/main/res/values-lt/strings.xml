@@ -52,4 +52,6 @@
     <string name="settings_sign_out_dialog_message">Norėdami vėl prisijungti, turėsite žinoti savo serverio adresą ir slaptažodį.</string>
     <string name="settings_sign_out_delete_downloads">Taip pat ištrinti atsisiuntimus iš šio įrenginio</string>
     <string name="settings_cancel">Atšaukti</string>
+    <string name="settings_section_about">Apie programėlę</string>
+    <string name="settings_version">Programėlės versija</string>
 </resources>

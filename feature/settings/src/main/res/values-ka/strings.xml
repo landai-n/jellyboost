@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">ხელახლა შესასვლელად დაგჭირდებათ სერვერის მისამართი და პაროლი.</string>
     <string name="settings_sign_out_delete_downloads">ასევე წაშალეთ გადმოწერები ამ მოწყობილობიდან</string>
     <string name="settings_cancel">გაუქმება</string>
+    <string name="settings_section_about">აპლიკაციის შესახებ</string>
+    <string name="settings_version">აპლიკაციის ვერსია</string>
 </resources>

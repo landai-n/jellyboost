@@ -47,4 +47,6 @@
     <string name="settings_sign_out_dialog_message">Veți avea nevoie de adresa serverului și de parolă pentru a vă autentifica din nou.</string>
     <string name="settings_sign_out_delete_downloads">Șterge și descărcările de pe acest dispozitiv</string>
     <string name="settings_cancel">Anulează</string>
+    <string name="settings_section_about">Despre</string>
+    <string name="settings_version">Versiunea aplicației</string>
 </resources>

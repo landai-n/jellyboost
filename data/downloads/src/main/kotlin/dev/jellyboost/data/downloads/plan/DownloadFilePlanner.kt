@@ -223,10 +223,9 @@ class DownloadFilePlanner
                         (stream.isExternal || quality.isTranscoded)
                 }.map { stream ->
                     val format = SUBTITLE_FORMATS[stream.codec?.lowercase()] ?: DEFAULT_SUBTITLE_FORMAT
-                    val language = stream.language?.takeIf { it.isNotBlank() } ?: UNDEFINED_LANGUAGE
                     PlannedFile(
                         type = DownloadFileType.SUBTITLE,
-                        fileName = "subtitle.${stream.index}.$language.$format",
+                        fileName = "subtitle.${stream.index}.${sidecarLanguage(stream.language)}.$format",
                         url = urls.subtitleUrl(item.id, mediaSourceId, stream.index, format),
                         streamIndex = stream.index,
                     )
@@ -260,7 +259,7 @@ class DownloadFilePlanner
             return streams
                 .filter { stream -> stream.type == MediaStreamType.AUDIO && stream.index != audioStreamIndex }
                 .map { stream ->
-                    val language = stream.language?.takeIf { it.isNotBlank() } ?: UNDEFINED_LANGUAGE
+                    val language = sidecarLanguage(stream.language)
                     PlannedFile(
                         type = DownloadFileType.AUDIO,
                         fileName = "audio.${stream.index}.$language.${DownloadQuality.AUDIO_SIDECAR_CONTAINER}",
@@ -269,6 +268,24 @@ class DownloadFilePlanner
                     )
                 }
         }
+
+        /**
+         * A stream's language tag, made safe to interpolate into a file name.
+         *
+         * `MediaStream.language` is the raw container track tag from ffprobe — controlled by
+         * whoever supplied the media file, not by the server. Interpolated verbatim it reached
+         * `File(root/dir, fileName)` with `FileDownloader` running `mkdirs()` on the parent, so a
+         * tag containing `../` or `/` wrote attacker-influenced bytes *outside* the item directory
+         * — where neither the delete cascade nor the orphan sweep ever collects them (audit
+         * DL-15). Restricted to the alphabet a real language tag uses (letters, digits, `-`),
+         * bounded, and falling back to the server's own "undetermined" code when nothing survives.
+         */
+        private fun sidecarLanguage(raw: String?): String =
+            raw
+                ?.filter { it.isLetterOrDigit() || it == '-' }
+                ?.take(MAX_LANGUAGE_LENGTH)
+                ?.takeIf { it.isNotBlank() }
+                ?: UNDEFINED_LANGUAGE
 
         /**
          * Every trickplay tile sheet of the *largest* resolution the server generated.
@@ -331,5 +348,8 @@ class DownloadFilePlanner
 
             /** ISO 639-2 "undetermined" — what a track with no declared language is filed under. */
             private const val UNDEFINED_LANGUAGE = "und"
+
+            /** Longer than any real BCP-47 tag; short enough that a hostile one cannot ENAMETOOLONG. */
+            private const val MAX_LANGUAGE_LENGTH = 20
         }
     }

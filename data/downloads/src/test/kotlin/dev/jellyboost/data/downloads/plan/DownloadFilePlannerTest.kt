@@ -388,6 +388,53 @@ class DownloadFilePlannerTest {
     }
 
     @Test
+    fun `a hostile language tag cannot name a path outside the item directory`() {
+        // DL-15: `MediaStream.language` is the raw container track tag from ffprobe — whoever
+        // supplies media to the library controls it. Interpolated verbatim, `../` reached
+        // `File(dir, fileName)` with the downloader running mkdirs() on the parent: a write
+        // outside the downloads root that no sweep or delete ever collects.
+        val plan =
+            planner.plan(
+                movie(
+                    streams =
+                        listOf(
+                            subtitleStream(index = 3, language = "../../evil/tag"),
+                            audioStream(index = 5, language = "fra/../../x"),
+                            audioStream(index = 6, language = "eng"),
+                        ),
+                ),
+                DIRECTORY,
+                quality = DownloadQuality.MEDIUM,
+                audioStreamIndex = 6,
+            )
+
+        plan.of(DownloadFileType.SUBTITLE)!!.fileName shouldBe "subtitle.3.eviltag.srt"
+        plan.of(DownloadFileType.AUDIO)!!.fileName shouldBe "audio.5.frax.m4a"
+    }
+
+    @Test
+    fun `an overlong language tag is bounded rather than failing the file name`() {
+        val plan =
+            planner.plan(
+                movie(streams = listOf(subtitleStream(index = 3, language = "x".repeat(500)))),
+                DIRECTORY,
+            )
+
+        plan.of(DownloadFileType.SUBTITLE)!!.fileName shouldBe "subtitle.3.${"x".repeat(20)}.srt"
+    }
+
+    @Test
+    fun `a language tag that sanitises to nothing falls back to und`() {
+        val plan =
+            planner.plan(
+                movie(streams = listOf(subtitleStream(index = 3, language = "../\\..//"))),
+                DIRECTORY,
+            )
+
+        plan.of(DownloadFileType.SUBTITLE)!!.fileName shouldBe "subtitle.3.und.srt"
+    }
+
+    @Test
     fun `an item with no media source plans no subtitles`() {
         val plan = planner.plan(movie(mediaSourceId = null), DIRECTORY)
 

@@ -182,7 +182,10 @@ private fun TopNavTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val contentColor = if (selected) SelectedContent else MaterialTheme.colorScheme.onSurfaceVariant
+    // Selected content on the white fill is the app background colour, via the theme rather than a
+    // repeated literal, so this bar and `GlassBottomNav` cannot drift apart.
+    val contentColor =
+        if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
         modifier =
@@ -236,9 +239,6 @@ private val TabHorizontalPadding: Dp = 16.dp
 private val TabIconGap: Dp = 8.dp
 
 private val TabIconSize: Dp = 18.dp
-
-/** Content on a selected tab's white fill: the app background colour, for full contrast. */
-private val SelectedContent = Color(0xFF101010)
 
 private val TabLabel =
     TextStyle(

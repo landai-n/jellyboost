@@ -76,8 +76,6 @@ sealed interface SyncPlayCall {
         val positionTicks: Long,
     ) : SyncPlayCall
 
-    data object RequestStop : SyncPlayCall
-
     data class RequestNextItem(
         val playlistItemId: UUID,
     ) : SyncPlayCall
@@ -124,7 +122,7 @@ sealed interface SyncPlayCall {
 }
 
 /** A recording [SyncPlayApi]. */
-@Suppress("TooManyFunctions") // Implements the 22-operation facade.
+@Suppress("TooManyFunctions") // Implements the 21-operation facade.
 class FakeSyncPlayApi(
     private val clock: Clock = Clock.systemUTC(),
 ) : SyncPlayApi {
@@ -223,10 +221,6 @@ class FakeSyncPlayApi(
 
     override suspend fun requestSeek(positionTicks: Long) {
         calls += SyncPlayCall.RequestSeek(positionTicks)
-    }
-
-    override suspend fun requestStop() {
-        calls += SyncPlayCall.RequestStop
     }
 
     override suspend fun requestNextItem(playlistItemId: UUID) {
@@ -359,6 +353,9 @@ class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
     /** What [loadItem] answers — `false` is "this item cannot be opened here". */
     var loadSucceeds = true
 
+    /** Thrown by [loadItem] when set — the host's own scope dying mid-load (audit SP-02). */
+    var loadError: Throwable? = null
+
     var snapshot = SyncPlayHostSnapshot(itemId = null, positionTicks = 0L, isPlaying = false)
 
     override suspend fun loadItem(
@@ -366,6 +363,7 @@ class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
         startPositionTicks: Long,
     ): Boolean {
         loaded += itemId to startPositionTicks
+        loadError?.let { throw it }
         if (loadSucceeds) snapshot = snapshot.copy(itemId = itemId, positionTicks = startPositionTicks)
         return loadSucceeds
     }

@@ -60,6 +60,14 @@ class SyncPlayDriftMonitor
                 // At the end of an item the position stops advancing on purpose; "correcting" it
                 // would seek past the end, over and over, until the controller moves the queue on.
                 if (snapshot.hasEnded) return@withContext null
+                // A player that is not running is not drifting — it is paused or stalled for a
+                // reason the protocol owns elsewhere. Seeking it would jump the frozen frame
+                // forward every tick for ever without ever starting playback: a phone call or a
+                // headphone unplug pauses ExoPlayer directly (audio-focus handling), the phase
+                // stays `Playing`, and this monitor used to become a 1 Hz seek loop against the
+                // paused frame (audit SP-04). Once it runs again, the next tick measures the real
+                // gap and closes it.
+                if (!snapshot.isPlaying) return@withContext null
 
                 val elapsedMillis = Duration.between(anchor.at, timeSync.serverNow()).toMillis()
                 val expectedMillis = anchor.positionMs + elapsedMillis

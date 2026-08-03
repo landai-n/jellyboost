@@ -26,6 +26,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -279,6 +280,135 @@ class SyncPlayControllerTest {
             joinWithQueue(fixture)
 
             fixture.messages shouldBe listOf(SyncPlayMessage.ItemUnavailable)
+        }
+
+    @Test
+    fun `a load cancelled from the host's side is not reported unplayable and skips nothing`() =
+        runTest {
+            val fixture = fixture()
+            // The host runs the load on its own scope; a screen dismissed mid-load cancels it from
+            // under the controller (audit SP-02). A cancelled load says nothing about the item —
+            // treating it as unplayable silently advanced the queue for the whole group.
+            fixture.host.loadError = CancellationException("screen going away")
+
+            joinWithQueue(fixture)
+
+            fixture.messages.shouldBeEmpty()
+            fixture.api.callsOf<SyncPlayCall.RequestNextItem>().shouldBeEmpty()
+
+            // The collector survived it, and the slot is still openable once a load can run again.
+            fixture.host.loadError = null
+            fixture.socket.emit(SyncPlayGroupEvent.QueueChanged(queue()))
+            runCurrent()
+            fixture.host.loaded shouldBe listOf(itemId to 0L, itemId to 0L)
+        }
+
+    @Test
+    fun `a queue older than the one already applied is dropped`() =
+        runTest {
+            val fixture = fixture()
+            joinWithQueue(fixture)
+
+            // The group moves on to the second slot...
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(
+                    twoItemQueue(playingIndex = 1).copy(lastUpdate = origin.plusSeconds(10)),
+                ),
+            )
+            runCurrent()
+            fixture.host.loaded shouldBe listOf(itemId to 0L, otherItemId to 0L)
+
+            // ...and a straggler published before that move — most concretely the pre-join stash
+            // replayed after a live update (audit SP-03) — must not drag it back.
+            fixture.socket.emit(
+                SyncPlayGroupEvent.QueueChanged(
+                    twoItemQueue(playingIndex = 0).copy(lastUpdate = origin.plusSeconds(5)),
+                ),
+            )
+            runCurrent()
+
+            fixture.host.loaded shouldBe listOf(itemId to 0L, otherItemId to 0L)
+            (fixture.controller.state.value as SyncPlayState.InGroup).queue?.playingItemIndex shouldBe 1
+        }
+
+    @Test
+    fun `a launch request raised with no collector attached is replayed to the next one`() =
+        runTest {
+            val fixture = fixture(attachHost = false)
+            joinWithQueue(fixture, startTicks = 12_000L.millisToTicks())
+            fixture.launchRequests shouldBe listOf(SyncPlayLaunchRequest(itemId, 12_000L.millisToTicks()))
+
+            // A NavHost composed later — its collector did not exist when the request was raised
+            // (audit SP-12: task swipe or Activity reclaim while the presence service holds the
+            // group), and the request must survive until it does.
+            val replayed = mutableListOf<SyncPlayLaunchRequest>()
+            backgroundScope.launch { fixture.controller.launchRequests.collect { replayed += it } }
+            runCurrent()
+            replayed shouldBe listOf(SyncPlayLaunchRequest(itemId, 12_000L.millisToTicks()))
+
+            // Consuming it is what keeps a handled request from re-navigating on the next
+            // composition.
+            fixture.controller.consumeLaunchRequest()
+            val afterConsume = mutableListOf<SyncPlayLaunchRequest>()
+            backgroundScope.launch { fixture.controller.launchRequests.collect { afterConsume += it } }
+            runCurrent()
+            afterConsume.shouldBeEmpty()
+        }
+
+    @Test
+    fun `a detached member reports buffering and ready from the shared player's position`() =
+        runTest {
+            val fortyMinutesMs = 40 * 60_000L
+            val fixture = fixture()
+            joinPlaying(fixture)
+            fixture.controller.detachHost(fixture.host)
+            runCurrent()
+            // The screen is gone but the shared player plays on, forty minutes into the film.
+            fixture.player.snapshot = fixture.player.snapshot.copy(positionMs = fortyMinutesMs, isPlaying = true)
+            fixture.api.clearCalls()
+
+            blip(fixture)
+            advanceTimeBy(SyncPlayController.SETTLED_READY_FALLBACK_MS + 1)
+            runCurrent()
+
+            // Both reports carry the player's own reading, not zero (audit SP-13): the server
+            // holds the group and schedules its resume off reported positions.
+            fixture.api
+                .callsOf<SyncPlayCall.ReportBuffering>()
+                .single()
+                .positionTicks shouldBe fortyMinutesMs.millisToTicks()
+            fixture.api
+                .callsOf<SyncPlayCall.ReportReady>()
+                .single()
+                .positionTicks shouldBe fortyMinutesMs.millisToTicks()
+        }
+
+    @Test
+    fun `leaving during a rejoin tells the server, and the abandoned rejoin never comes back`() =
+        runTest {
+            val fixture = fixture()
+            fixture.api.groups = listOf(group())
+            joinPlaying(fixture)
+            // The rejoin cannot progress, so the session sits in Rejoining with the loop alive.
+            fixture.api.getGroupsError = java.io.IOException("still down")
+            blipThenDropped(fixture)
+            fixture.controller.state.value
+                .shouldBeInstanceOf<SyncPlayState.Rejoining>()
+            fixture.api.clearCalls()
+
+            fixture.controller.leaveGroup()
+            runCurrent()
+
+            // The leave reached the server even though the rejoin owned the session (audit SP-10)...
+            fixture.api.callsOf<SyncPlayCall.LeaveGroup>() shouldBe listOf(SyncPlayCall.LeaveGroup)
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+
+            // ...and the loop the leave cancelled cannot re-enter the group behind the user's back.
+            fixture.api.getGroupsError = null
+            advanceTimeBy(SyncPlayController.REJOIN_RETRY_DELAY_MS * SyncPlayController.REJOIN_MAX_ATTEMPTS * 2)
+            runCurrent()
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.api.callsOf<SyncPlayCall.JoinGroup>().shouldBeEmpty()
         }
 
     // Intents -------------------------------------------------------------------------------------

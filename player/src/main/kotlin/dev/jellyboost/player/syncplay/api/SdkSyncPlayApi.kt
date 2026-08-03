@@ -145,10 +145,6 @@ internal class SdkSyncPlayApi
             }
         }
 
-        override suspend fun requestStop() {
-            withContext(ioDispatcher) { apiClient.syncPlayApi.syncPlayStop() }
-        }
-
         override suspend fun requestNextItem(playlistItemId: UUID) {
             withContext(ioDispatcher) {
                 apiClient.syncPlayApi.syncPlayNextItem(NextItemRequestDto(playlistItemId = playlistItemId))

@@ -57,7 +57,17 @@ class SyncPlayPresenceService : Service() {
     override fun onCreate() {
         super.onCreate()
         ensureChannel()
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), foregroundServiceType())
+        // The promotion itself can be refused: API 31+ throws
+        // `ForegroundServiceStartNotAllowedException` when the process slipped to the background
+        // between `startForegroundService` and here, and API 34+ for a type/permission mismatch.
+        // Uncaught, either one kills the whole process for a notification (audit SP-17) — the
+        // group costs at most itself, so the service stands down instead.
+        runCatching {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), foregroundServiceType())
+        }.onFailure { error ->
+            Timber.w(error, "Could not promote the SyncPlay presence service; stopping it")
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(

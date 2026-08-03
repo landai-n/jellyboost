@@ -71,6 +71,8 @@ internal class SyncPlayAwareForwardingPlayerTest {
             delegate.seekToNextMediaItem()
             delegate.seekToPrevious()
             delegate.seekToPreviousMediaItem()
+            delegate.stop()
+            delegate.setPlaybackSpeed(any())
         }
     }
 
@@ -193,6 +195,29 @@ internal class SyncPlayAwareForwardingPlayerTest {
         delegateNeverMoved()
     }
 
+    @Test
+    fun `a stop in a group becomes a pause request, never a local stop`() {
+        // A MEDIA_STOP from a headset or car control used to reach the delegate directly (audit
+        // SP-06): this member lost its prepared player while the phase still said Playing, and the
+        // drift monitor then measured against a stopped player — the exact drift the wrapper
+        // exists to prevent, through the one call it forgot.
+        joinGroup()
+
+        player.stop()
+
+        verify(exactly = 1) { controller.requestPause() }
+        delegateNeverMoved()
+    }
+
+    @Test
+    fun `a playback speed change in a group is dropped, the group's timeline runs at 1x`() {
+        joinGroup()
+
+        player.setPlaybackSpeed(1.5f)
+
+        delegateNeverMoved()
+    }
+
     // ---- solo: the wrapper is not there ----------------------------------------------------------
 
     @Test
@@ -209,6 +234,8 @@ internal class SyncPlayAwareForwardingPlayerTest {
         player.seekToNextMediaItem()
         player.seekToPrevious()
         player.seekToPreviousMediaItem()
+        player.stop()
+        player.setPlaybackSpeed(1.5f)
 
         verify(exactly = 1) { delegate.play() }
         verify(exactly = 1) { delegate.pause() }
@@ -222,6 +249,8 @@ internal class SyncPlayAwareForwardingPlayerTest {
         verify(exactly = 1) { delegate.seekToNextMediaItem() }
         verify(exactly = 1) { delegate.seekToPrevious() }
         verify(exactly = 1) { delegate.seekToPreviousMediaItem() }
+        verify(exactly = 1) { delegate.stop() }
+        verify(exactly = 1) { delegate.setPlaybackSpeed(1.5f) }
         verify(exactly = 0) {
             controller.requestPause()
             controller.requestUnpause()

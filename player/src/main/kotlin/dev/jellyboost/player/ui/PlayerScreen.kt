@@ -359,6 +359,9 @@ private fun SkipSegmentButton(
         modifier = modifier,
         small = true,
         leadingIcon = Icons.Filled.SkipNext,
+        // Over raw video, with no controls scrim behind it — the flat dark fill the player's other
+        // glass uses (see `PlayerControls`' header), not the in-content white@6%.
+        tint = VIDEO_GLASS_FILL,
     )
 }
 

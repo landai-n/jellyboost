@@ -50,6 +50,7 @@ internal class ExoPlayerHandle
     constructor(
         @ApplicationContext private val context: Context,
         private val dataSourceFactory: DataSource.Factory,
+        private val serviceState: PlaybackServiceState,
     ) : PlayerHandle {
         private val _events =
             MutableSharedFlow<PlayerEvent>(
@@ -266,8 +267,23 @@ internal class ExoPlayerHandle
          * Deliberately does *not* stop the playback service. [stop] owns that, and the service's own
          * teardown is one of the two callers here — asking it to stop itself from inside `onDestroy`
          * would be a no-op at best.
+         *
+         * ### Deferred while [PlaybackService] is alive (audit PC-04)
+         * The service's `MediaSession` is built *around* this player, and Media3 requires the
+         * session to be released before it. The ViewModel's teardown reaches here synchronously
+         * while the `stopService` it just issued is still a pending main-looper message — so for
+         * that window the live session (its notification, a headset or Assistant controller) would
+         * be poking a released player, and a `startService` racing the pending stop (backing out
+         * and re-entering the player) would leave the session wrapping a dead instance for good.
+         * While the service reports itself running, the release is therefore left to its
+         * `onDestroy`, which clears the flag before calling back in; a session whose service never
+         * managed to start still releases here directly.
          */
         override fun release() {
+            if (serviceState.running.value) {
+                Timber.d("Deferring the player release to the playback service's own teardown")
+                return
+            }
             val player = exoPlayer ?: return
             exoPlayer = null
             player.removeListener(listener)

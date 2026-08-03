@@ -223,27 +223,66 @@ interface DownloadDao {
     ): Int
 
     /**
-     * Moves several downloads to one status in a single statement.
+     * Takes rows out of the queue's reach, and says whether the live transfer was among them.
      *
-     * What *Pause all* and *Cancel all* are made of. The batching is not a micro-optimisation: a
-     * bulk action used to issue one repository mutation per row, and each of those stopped and
-     * restarted the WorkManager job, so a forty-episode queue produced forty stop/start cycles and
-     * as many overlapping drains (docs/notes/audit-2026-07.md, STAB-09). One statement, one
-     * transition, one restart.
+     * One transaction on purpose, and the *only* rule this DAO carries. Pause and delete used to
+     * decide in two DB calls — read "is a target `DOWNLOADING`?", then write the new status — and
+     * the drain's [markDownloadingIfRunnable] claim could land in between: the read saw `QUEUED`
+     * (so the caller chose not to stop the worker), the claim took the row, and the unguarded
+     * write buried the evidence. The item the user had just paused (or was deleting out from
+     * under the worker) then transferred to completion with nothing left to stop it — the same
+     * window as audit DL-03, reopened on the caller's side by the DL-06 stop-elision. Inside a
+     * transaction the claim must land either before (the `DOWNLOADING` leg takes the row and the
+     * caller stops the worker) or after (the claim's own status guard sees [status] and refuses).
+     *
+     * Only `QUEUED` and `DOWNLOADING` rows are touched: they are the two statuses the drain can
+     * pick up, and a finished, failed or already-paused row is not being taken from anyone.
      */
-    @Query("UPDATE downloads SET status = :status, updatedAt = :updatedAt WHERE itemId IN (:itemIds)")
-    suspend fun setStatusIn(
+    @Transaction
+    suspend fun demoteRunnable(
         itemIds: List<UUID>,
         status: DownloadStatus,
         updatedAt: Instant,
+    ): Boolean {
+        val tookLiveTransfer = setStatusIfDownloading(itemIds, status, updatedAt) > 0
+        setStatusIfQueued(itemIds, status, updatedAt)
+        return tookLiveTransfer
+    }
+
+    /** The `DOWNLOADING` leg of [demoteRunnable]; the count is its return value. */
+    @Query(
+        "UPDATE downloads SET status = :status, errorMessage = NULL, updatedAt = :updatedAt " +
+            "WHERE itemId IN (:itemIds) AND status = 'DOWNLOADING'",
     )
+    suspend fun setStatusIfDownloading(
+        itemIds: List<UUID>,
+        status: DownloadStatus,
+        updatedAt: Instant,
+    ): Int
+
+    /** The `QUEUED` leg of [demoteRunnable]. */
+    @Query(
+        "UPDATE downloads SET status = :status, errorMessage = NULL, updatedAt = :updatedAt " +
+            "WHERE itemId IN (:itemIds) AND status = 'QUEUED'",
+    )
+    suspend fun setStatusIfQueued(
+        itemIds: List<UUID>,
+        status: DownloadStatus,
+        updatedAt: Instant,
+    ): Int
 
     /**
      * Puts several rows back in the queue at the user's request — *Resume all*, and *Retry*.
      *
-     * Clearing [DownloadEntity.attemptCount] is the point of having a separate statement from
-     * [setStatusIn]: a row that exhausted its retry budget must get a full one back when the user
-     * asks for it again, or *Retry* would be worth exactly one attempt.
+     * Clearing [DownloadEntity.attemptCount] is the point of having a separate statement from a
+     * plain status write: a row that exhausted its retry budget must get a full one back when the
+     * user asks for it again, or *Retry* would be worth exactly one attempt.
+     *
+     * Like [demoteRunnable]'s legs it is one statement for the whole batch, and that batching is
+     * not a micro-optimisation: a bulk action used to issue one repository mutation per row, and
+     * each of those stopped and restarted the WorkManager job, so a forty-episode queue produced
+     * forty stop/start cycles and as many overlapping drains (docs/notes/audit-2026-07.md,
+     * STAB-09). One statement, one transition, one restart.
      */
     @Query(
         "UPDATE downloads SET status = 'QUEUED', errorMessage = NULL, attemptCount = 0, " +

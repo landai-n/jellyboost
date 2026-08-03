@@ -8,8 +8,10 @@ import dagger.hilt.components.SingletonComponent
 import dev.jellyboost.data.downloads.DownloadApi
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.SdkDownloadApi
+import dev.jellyboost.data.downloads.engine.AndroidMeteredConnection
 import dev.jellyboost.data.downloads.engine.AudioSidecarExtractor
 import dev.jellyboost.data.downloads.engine.DownloadHttpClient
+import dev.jellyboost.data.downloads.engine.MeteredConnection
 import dev.jellyboost.data.downloads.engine.TransformerAudioSidecarExtractor
 import dev.jellyboost.data.downloads.impl.DownloadRepositoryImpl
 import dev.jellyboost.data.downloads.plan.DownloadUrlFactory
@@ -53,6 +55,14 @@ internal interface DownloadsModule {
     @Binds
     @Singleton
     fun bindStorageVolumeProvider(impl: AndroidStorageVolumeProvider): StorageVolumeProvider
+
+    /**
+     * Binds the metered-network question to the platform, for the transfers that run *outside*
+     * the WorkManager constraint (the sidecar top-up — audit DL-04).
+     */
+    @Binds
+    @Singleton
+    fun bindMeteredConnection(impl: AndroidMeteredConnection): MeteredConnection
 
     /**
      * Binds the audio-sidecar strip stage to Media3's `Transformer`.

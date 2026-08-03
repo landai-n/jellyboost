@@ -1437,8 +1437,27 @@ class SyncPlayControllerTest {
         }
 
     @Test
-    fun `signing out leaves the group`() =
+    fun `the sign-out hook leaves the group on the server while the token still works`() =
         runTest {
+            // `SyncPlaySignOutHook` runs this *before* SessionRepository revokes the token
+            // (audit NET-03): the server leave has to travel on a credential that still works.
+            val fixture = fixture()
+            joinWithQueue(fixture)
+            fixture.api.clearCalls()
+
+            fixture.controller.leaveBeforeSignOut()
+            runCurrent()
+
+            fixture.api.callsOf<SyncPlayCall.LeaveGroup>().size shouldBe 1
+            fixture.controller.state.value shouldBe SyncPlayState.Idle
+            fixture.status.inGroup.value shouldBe false
+        }
+
+    @Test
+    fun `the LoggedOut transition tears down locally without chasing a revoked token`() =
+        runTest {
+            // By the time the state flips to LoggedOut the token is revoked; a server leave from
+            // here could only 401 (audit NET-03), so only the local session may be torn down.
             val fixture = fixture()
             joinWithQueue(fixture)
             fixture.api.clearCalls()
@@ -1446,7 +1465,7 @@ class SyncPlayControllerTest {
             fixture.session.value = SessionState.LoggedOut
             runCurrent()
 
-            fixture.api.callsOf<SyncPlayCall.LeaveGroup>().size shouldBe 1
+            fixture.api.callsOf<SyncPlayCall.LeaveGroup>() shouldBe emptyList()
             fixture.controller.state.value shouldBe SyncPlayState.Idle
             fixture.status.inGroup.value shouldBe false
         }

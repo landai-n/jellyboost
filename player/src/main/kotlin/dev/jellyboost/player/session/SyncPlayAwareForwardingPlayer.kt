@@ -34,6 +34,14 @@ import timber.log.Timber
  * | `seekTo`, `seekBack`, `seekForward`, `seekToDefaultPosition` | [SyncPlayController.requestSeek] |
  * | `seekToNext`, `seekToNextMediaItem` | [SyncPlayController.requestNext] |
  * | `seekToPrevious`, `seekToPreviousMediaItem` | [SyncPlayController.requestPrevious] |
+ * | `stop` | [SyncPlayController.requestPause] |
+ * | `setPlaybackSpeed` | dropped |
+ *
+ * A `stop` (a headset's MEDIA_STOP, a car control) means "halt playback"; in a group that is a
+ * pause request — halting only this member is precisely the silent drift this wrapper exists to
+ * prevent, and stopping the whole group's queue is more than one button press should do. A
+ * playback-speed change is dropped for the same reason `PlayerViewModel` refuses it in-app: the
+ * group's timeline runs at 1× and a member at any other rate drifts by construction.
  *
  * A seek to a *different* media item is the one case with nowhere to go: the group's queue is the
  * server's, not this player's timeline, so an index from the session means nothing to it. It is
@@ -56,6 +64,18 @@ internal class SyncPlayAwareForwardingPlayer(
 
     override fun pause() {
         if (inGroup) controller.requestPause() else super.pause()
+    }
+
+    override fun stop() {
+        if (inGroup) controller.requestPause() else super.stop()
+    }
+
+    override fun setPlaybackSpeed(speed: Float) {
+        if (inGroup) {
+            Timber.d("Ignoring a media-session playback-speed change while in a SyncPlay group")
+            return
+        }
+        super.setPlaybackSpeed(speed)
     }
 
     override fun setPlayWhenReady(playWhenReady: Boolean) {

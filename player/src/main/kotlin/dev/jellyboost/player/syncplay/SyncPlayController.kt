@@ -324,6 +324,22 @@ class SyncPlayController
             scope.launch { startSession(existing = group, newGroupName = null) }
         }
 
+        /**
+         * Leaves the group on the server while the access token still works (audit NET-03).
+         *
+         * Called by [SyncPlaySignOutHook] **before** `SessionRepository` revokes the token —
+         * waiting for the [SessionState.LoggedOut] transition would send the leave with a dead
+         * credential, a request guaranteed to 401. The `LoggedOut` transition that follows finds
+         * the session already torn down, so [watchSignOut] has only local memory left to clear.
+         */
+        suspend fun leaveBeforeSignOut() {
+            rejoinTarget = null
+            forgetLoss()
+            if (_state.value is SyncPlayState.Idle) return
+            leaveOnServer()
+            teardown(message = null, pausePlayer = false)
+        }
+
         /** Leaves the group. Playback is left exactly as it is, now solo. */
         fun leaveGroup() {
             // Before the launch, not inside it: this is the one signal that the exit is deliberate,
@@ -844,7 +860,14 @@ class SyncPlayController
             return Duration.between(at, timeSync.serverNow()).toMillis() <= REJOIN_TROUBLE_WINDOW_MS
         }
 
-        /** Signing out ends any membership, in any state, and forgets it for good. */
+        /**
+         * Signing out ends any membership, in any state, and forgets it for good.
+         *
+         * Local teardown only: the server-side leave happens in [leaveBeforeSignOut], which the
+         * sign-out flow runs *before* the token is revoked (audit NET-03) — from here a server
+         * call could only 401. This watcher remains the net under `LoggedOut` transitions that
+         * never ran a hook (a failed restore on app start, where the session is already Idle).
+         */
         private suspend fun watchSignOut() {
             sessionStateHolder.state.collect { session ->
                 if (session !is SessionState.LoggedOut) return@collect
@@ -853,7 +876,6 @@ class SyncPlayController
                 forgetLoss()
                 if (_state.value is SyncPlayState.Idle) return@collect
                 rejoinTarget = null
-                leaveOnServer()
                 teardown(message = null, pausePlayer = false)
             }
         }

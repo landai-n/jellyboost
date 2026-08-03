@@ -20,6 +20,7 @@ import dev.jellyboost.core.network.model.SessionState
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -38,6 +39,7 @@ class SessionRepositoryTest {
     private val secureCredentialStore = mockk<SecureCredentialStore>(relaxed = true)
     private val homeLayoutStore = mockk<HomeLayoutStore>(relaxed = true)
     private val sessionStateHolder = SessionStateHolder()
+    private val signOutHooks = linkedSetOf<SignOutHook>()
 
     private lateinit var repository: SessionRepository
 
@@ -55,6 +57,7 @@ class SessionRepositoryTest {
                 secureCredentialStore = secureCredentialStore,
                 sessionStateHolder = sessionStateHolder,
                 homeLayoutStore = homeLayoutStore,
+                signOutHooks = signOutHooks,
             )
     }
 
@@ -254,6 +257,38 @@ class SessionRepositoryTest {
 
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             coVerify(exactly = 1) { apiClientProvider.clearSession() }
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    // ---- pre-revocation hooks (audit NET-03) ----------------------------------------------------
+
+    @Test
+    @DisplayName("sign-out hooks run before the server revokes the token, so their requests can still authenticate")
+    fun signOutHooksRunBeforeRevocation() =
+        runTest {
+            val hook = mockk<SignOutHook>()
+            coEvery { hook.onSignOut() } returns Unit
+            signOutHooks += hook
+
+            repository.signOut()
+
+            coVerifyOrder {
+                hook.onSignOut()
+                apiFacade.reportSessionEnded()
+            }
+        }
+
+    @Test
+    @DisplayName("a failing sign-out hook never blocks the sign-out itself")
+    fun signOutSurvivesHookFailure() =
+        runTest {
+            val hook = SignOutHook { throw IOException("group leave failed") }
+            signOutHooks += hook
+
+            repository.signOut()
+
+            coVerify(exactly = 1) { apiFacade.reportSessionEnded() }
+            coVerify(exactly = 1) { secureCredentialStore.clear() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }
 }

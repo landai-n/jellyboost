@@ -39,6 +39,30 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## 2026-08 diff audit + fix wave (2026-08-03 — landed, gate green; device re-walk owed)
+
+Second full audit (`docs/notes/audit-2026-08.md`), covering everything since the 2026-07-30
+audit (~165 commits: M10 tail, multi-track sidecars, all of M11 SyncPlay, M12 cast phases
+1–5, i18n, 2026 UI refresh). 10 subsystem auditors + adversarial verification: **70 findings
+→ 0 Critical · 3 High · 28 Medium · 37 Low** (2 refuted). The 3 Highs: downloads
+stalled-socket wedge (no read timeout, uncancelled call), cast resume-position wipe (stale
+`detachedSource`), cast phantom progress (reporting without checking the receiver still
+holds the item).
+
+Fix wave: 7 subsystem branches (Fable), each independently reviewed (1 blocker found and
+reworked — a TOCTOU race in the downloads pause path), merged 2026-08-03; **64 findings
+fixed**, ~10 skipped with logged reasons (design-level or out-of-lane; see the report and
+the fix branches). Highlights: SyncPlay controller/scheduler confined to a
+single-threaded dispatcher (closes the race family), drift monitor no longer seek-loops a
+locally-paused player, queue replays are staleness-guarded, downloads got read timeouts +
+in-transaction stop decisions + stable storage roots, cast transfers keep position/tracks
+and stop reporting after the receiver drops the item, sign-out leaves the group before
+revoking the token (new `SignOutHook` seam), probe re-pointing is identity-checked,
+snackbar actions render, Haze/glass perf cleanups, +~40 new unit tests. Three DECISIONS
+entries logged (CAST-06 unsigned poster, NET-03 sign-out ordering, PlayerViewModel
+`LargeClass` suppression). Full gate green post-merge. **Owed:** a device sanity walk of
+SyncPlay + cast + downloads happy paths on the test tablet.
+
 ## Phone-size polish pass (2026-07-31 — DONE, device-verified both ways)
 
 User-requested, outside M9's tablet-only scope (task-level + per-fix DECISIONS entries).

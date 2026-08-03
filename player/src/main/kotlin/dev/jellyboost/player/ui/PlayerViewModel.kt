@@ -108,7 +108,16 @@ import kotlin.time.Duration.Companion.milliseconds
  * decoder fallback all live on this side of the seam.
  */
 @HiltViewModel
-@Suppress("TooManyFunctions")
+@Suppress(
+    "TooManyFunctions",
+    // The M10 decomposition already moved the machinery out (PlaybackSessionController,
+    // PlaybackReporter, gesture/segment layers, the SyncPlay bridge, the cast coordinator);
+    // what is left is the UI façade wiring those collaborators to one screen, and the 2026-08
+    // audit-fix wave nudged it just past the threshold with per-fix glue. Extracting another
+    // collaborator would publish `source`/session state to it — a larger surface than it saves,
+    // the same trade SyncPlayController documents. Logged in DECISIONS.md (2026-08-03).
+    "LargeClass",
+)
 class PlayerViewModel
     @Inject
     constructor(

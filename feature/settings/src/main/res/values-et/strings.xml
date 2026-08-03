@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Tagasi sisse logimiseks vajad oma serveri aadressi ja parooli.</string>
     <string name="settings_sign_out_delete_downloads">Kustuta ka allalaadimised sellest seadmest</string>
     <string name="settings_cancel">Tühista</string>
+    <string name="settings_section_about">Teave</string>
+    <string name="settings_version">Rakenduse versioon</string>
 </resources>

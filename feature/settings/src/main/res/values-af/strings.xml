@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Jy sal jou bedieneradres en wagwoord nodig hê om weer aan te meld.</string>
     <string name="settings_sign_out_delete_downloads">Skrap ook aflaaie van hierdie toestel</string>
     <string name="settings_cancel">Kanselleer</string>
+    <string name="settings_section_about">Oor die app</string>
+    <string name="settings_version">App-weergawe</string>
 </resources>

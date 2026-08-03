@@ -52,4 +52,6 @@
     <string name="settings_sign_out_dialog_message">Вам знадобляться адреса сервера та пароль, щоб увійти знову.</string>
     <string name="settings_sign_out_delete_downloads">Також видалити завантаження з цього пристрою</string>
     <string name="settings_cancel">Скасувати</string>
+    <string name="settings_section_about">Про застосунок</string>
+    <string name="settings_version">Версія застосунку</string>
 </resources>

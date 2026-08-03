@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">އަލުން ސައިން އިންވުމަށް ތިޔަ ސަރވަރ އެޑްރެހާއި ޕާސްވޯޑް ބޭނުންވާނެއެވެ.</string>
     <string name="settings_sign_out_delete_downloads">މި ޑިވައިސްއިން ޑައުންލޯޑްތައްވެސް ފޮހެލާ</string>
     <string name="settings_cancel">ކެންސަލްކުރޭ</string>
+    <string name="settings_section_about">އެޕާ ބެހޭ</string>
+    <string name="settings_version">އެޕް ވަރޝަން</string>
 </resources>

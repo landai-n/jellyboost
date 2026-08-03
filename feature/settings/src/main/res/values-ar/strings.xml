@@ -54,4 +54,6 @@
     <string name="settings_sign_out_dialog_message">ستحتاج إلى عنوان خادمك وكلمة المرور لتسجيل الدخول مرة أخرى.</string>
     <string name="settings_sign_out_delete_downloads">حذف التنزيلات من هذا الجهاز أيضًا</string>
     <string name="settings_cancel">إلغاء</string>
+    <string name="settings_section_about">حول التطبيق</string>
+    <string name="settings_version">إصدار التطبيق</string>
 </resources>

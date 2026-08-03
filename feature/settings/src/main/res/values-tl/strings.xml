@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Kakailanganin mo ang address ng server at password mo para makapag-sign in ulit.</string>
     <string name="settings_sign_out_delete_downloads">Tanggalin din ang mga download sa device na ito</string>
     <string name="settings_cancel">Kanselahin</string>
+    <string name="settings_section_about">Tungkol sa app</string>
+    <string name="settings_version">Bersyon ng app</string>
 </resources>

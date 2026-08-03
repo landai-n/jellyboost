@@ -49,4 +49,6 @@
     <string name="settings_sign_out_dialog_message">你需要伺服器地址同密碼先可以再登入。</string>
     <string name="settings_sign_out_delete_downloads">同時刪除呢部裝置上嘅下載內容</string>
     <string name="settings_cancel">取消</string>
+    <string name="settings_section_about">關於</string>
+    <string name="settings_version">應用程式版本</string>
 </resources>

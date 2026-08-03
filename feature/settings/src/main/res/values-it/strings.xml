@@ -46,4 +46,6 @@
     <string name="settings_sign_out_dialog_message">Ti serviranno l\'indirizzo del server e la password per accedere di nuovo.</string>
     <string name="settings_sign_out_delete_downloads">Elimina anche i download da questo dispositivo</string>
     <string name="settings_cancel">Annulla</string>
+    <string name="settings_section_about">Informazioni</string>
+    <string name="settings_version">Versione dell\'app</string>
 </resources>

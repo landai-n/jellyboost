@@ -52,4 +52,6 @@
     <string name="settings_sign_out_dialog_message">Pro opětovné přihlášení budete potřebovat adresu serveru a heslo.</string>
     <string name="settings_sign_out_delete_downloads">Také smazat stahování z tohoto zařízení</string>
     <string name="settings_cancel">Zrušit</string>
+    <string name="settings_section_about">O aplikaci</string>
+    <string name="settings_version">Verze aplikace</string>
 </resources>

@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Дахин нэвтрэхийн тулд танд серверийн хаяг болон нууц үг хэрэгтэй болно.</string>
     <string name="settings_sign_out_delete_downloads">Энэ төхөөрөмж дэх татсан файлуудыг мөн устгах</string>
     <string name="settings_cancel">Цуцлах</string>
+    <string name="settings_section_about">Аппын тухай</string>
+    <string name="settings_version">Аппын хувилбар</string>
 </resources>

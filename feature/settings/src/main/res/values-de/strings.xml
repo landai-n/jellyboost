@@ -50,4 +50,6 @@
     <string name="settings_sign_out_dialog_message">Du benötigst deine Serveradresse und dein Passwort, um dich wieder anzumelden.</string>
     <string name="settings_sign_out_delete_downloads">Auch Downloads von diesem Gerät löschen</string>
     <string name="settings_cancel">Abbrechen</string>
+    <string name="settings_section_about">Über die App</string>
+    <string name="settings_version">App-Version</string>
 </resources>

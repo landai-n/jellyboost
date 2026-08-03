@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.entities.DownloadedItemKey
 import dev.jellyboost.core.database.entities.ItemCacheKey
 import dev.jellyboost.core.database.entities.ItemEntity
+import dev.jellyboost.core.database.entities.ItemParentRefs
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.LatestDownloadKey
 import java.time.Instant
@@ -46,6 +47,16 @@ interface ItemDao {
     /** Several items regardless of source, in no particular order. */
     @Query("SELECT * FROM items WHERE id IN (:ids)")
     suspend fun getItems(ids: List<UUID>): List<ItemEntity>
+
+    /**
+     * The parent links of the given items, without their `dto` blobs.
+     *
+     * What the delete cascade's orphan prune walks: it needs only each surviving download's
+     * series/season/folder ids, and reading them through [getItems] materialised every survivor's
+     * multi-kilobyte blob once per deleted item (audit DL-05).
+     */
+    @Query("SELECT id, parentId, seriesId, seasonId FROM items WHERE id IN (:ids)")
+    suspend fun getParentRefs(ids: List<UUID>): List<ItemParentRefs>
 
     /**
      * The offline library grid's whole result set, in sort order, as the columns a **filter** is

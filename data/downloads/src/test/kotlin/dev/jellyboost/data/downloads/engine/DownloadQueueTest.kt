@@ -97,6 +97,7 @@ class DownloadQueueTest {
         every { urls.imageUrl(any(), any(), any(), any()) } returns "https://server/image"
         coEvery { downloader.download(any(), any(), any(), any(), any(), any()) } returns 100L
         coEvery { sessionGate.ensureSession() } returns true
+        coEvery { downloadDao.markDownloadingIfRunnable(any(), any()) } returns 1
         // Nothing to seed from unless a test says otherwise.
         coEvery { seeder.seedFor(any(), any(), any(), any(), any()) } returns null
         coEvery { sweeper.sweep() } returns 0L
@@ -111,7 +112,7 @@ class DownloadQueueTest {
 
             queue().drain(listener) shouldBe DrainOutcome.COMPLETED
 
-            coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADING, NOW, null) }
+            coVerify { downloadDao.markDownloadingIfRunnable(uuid(1), NOW) }
             coVerify { downloadDao.setStatus(uuid(1), DownloadStatus.DOWNLOADED, NOW, null) }
         }
 

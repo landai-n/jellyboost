@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
+import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
@@ -83,6 +84,17 @@ class DownloadFailureClassifierTest {
     fun `a row that can never succeed is permanent, however many times it is tried`() {
         DownloadFailureClassifier.classify(MissingMetadataException(uuid(1))) shouldBe FailureKind.PERMANENT
         DownloadFailureClassifier.classify(NotDownloadableException(uuid(11))) shouldBe FailureKind.PERMANENT
+    }
+
+    @Test
+    fun `an unavailable storage volume is transient — it is an eject, an MTP session, or a boot`() {
+        // The DL-10 shape: `Environment.getExternalStorageState` != MEDIA_MOUNTED empties the
+        // volume list for exactly as long as the condition lasts. As a bare IllegalStateException
+        // this fell to AppError.Unknown → PERMANENT, and one unmounted card marked a forty-episode
+        // queue ERROR within seconds — the STAB-01 cascade, reproduced for a condition that is
+        // transient by nature.
+        DownloadFailureClassifier.classify(StorageUnavailableException("no volume mounted")) shouldBe
+            FailureKind.TRANSIENT
     }
 
     @Test

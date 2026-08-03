@@ -6,12 +6,14 @@ import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadWithFiles
+import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
 import dev.jellyboost.data.downloads.plan.PlannedFile
 import dev.jellyboost.data.downloads.storage.DownloadStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
 import timber.log.Timber
 import java.io.File
@@ -41,6 +43,11 @@ import javax.inject.Singleton
  * missing optional files directly and leaves the row `DOWNLOADED` throughout.
  *
  * ### What it will and will not do
+ * - Nothing at all on a metered connection while the user has asked for Wi-Fi-only downloads. The
+ *   preference is normally WorkManager's `UNMETERED` constraint on the queue worker, but this
+ *   class fetches on the application scope where no constraint applies — it must enforce the rule
+ *   itself or silently spend mobile data on every connectivity edge (audit DL-04). The gap it
+ *   leaves closes for free: the next unmetered stretch runs the same pass.
  * - Only rows that are [DownloadStatus.DOWNLOADED]. Anything still in the queue is the queue's, and
  *   the two must not write the same file rows at once.
  * - Only [DownloadFileType.SUBTITLE] entries of the plan. Artwork and trickplay tiles are not what
@@ -61,6 +68,8 @@ class SubtitleSidecarTopUp
         private val planner: DownloadFilePlanner,
         private val storage: DownloadStorage,
         private val downloader: FileDownloader,
+        private val preferences: AppPreferences,
+        private val metered: MeteredConnection,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
         /**
@@ -71,6 +80,12 @@ class SubtitleSidecarTopUp
          * @return how many sidecar files were actually fetched, for the log line and the tests.
          */
         suspend fun topUp(items: List<BaseItemDto>): Int {
+            if (items.isEmpty()) return 0
+            if (preferences.downloadOverWifiOnly.first() && metered.isMetered()) {
+                Timber.i("Skipping the sidecar top-up: downloads are Wi-Fi-only and this connection is metered")
+                return 0
+            }
+
             var fetched = 0
             for (item in items) {
                 fetched += topUpOne(item)

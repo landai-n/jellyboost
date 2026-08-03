@@ -91,9 +91,28 @@ class DownloadRepositoryImplTest {
         coEvery { scheduler.ensureRunning() } returns Unit
         coEvery { scheduler.restart() } returns Unit
         coEvery { deleter.delete(any()) } returns 0L
+        coEvery { deleter.deleteAll(any()) } returns 0L
         coEvery { downloadDao.pending() } returns emptyList()
         coEvery { downloadDao.get(any()) } returns null
+        // The demote transaction answers "was the live transfer among the rows I took?"; most
+        // tests act on rows the worker is not on, so the default answer is no.
+        coEvery { downloadDao.demoteRunnable(any(), any(), any()) } returns false
         givenCachedItems()
+    }
+
+    /** Makes [ids] the rows the worker is transferring right now, as `pending()` reports them. */
+    private fun givenTransferring(vararg ids: java.util.UUID) {
+        coEvery { downloadDao.pending() } returns
+            ids.map { download(itemId = it, status = DownloadStatus.DOWNLOADING) }
+    }
+
+    /**
+     * Makes the demote transaction report that [ids]' batch included the row being transferred —
+     * the answer `pause`/`delete` act on *instead of* a separate read, so that no drain claim can
+     * land between deciding and writing (DL-03).
+     */
+    private fun givenDemoteTakesLiveTransfer(ids: List<java.util.UUID>) {
+        coEvery { downloadDao.demoteRunnable(ids, any(), NOW) } returns true
     }
 
     /**
@@ -478,17 +497,45 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
-    fun `pausing marks the row and interrupts the running job`() =
+    fun `pausing the item that is transferring interrupts the running job`() =
         runTest {
+            givenDemoteTakesLiveTransfer(listOf(uuid(1)))
+
             repository().pause(uuid(1).toString())
 
             coVerifyOrder {
-                downloadDao.setStatus(uuid(1), DownloadStatus.PAUSED, NOW, null)
+                downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.PAUSED, NOW)
                 // Cancelling the work is the only way to interrupt a transfer that is already in
                 // flight; the restart then picks up whatever is left.
                 scheduler.stop()
                 scheduler.ensureRunning()
             }
+        }
+
+    @Test
+    fun `pausing a row that is not transferring leaves the running transfer alone`() =
+        runTest {
+            // The DL-06 finding: stopping the worker for a row it is not even on cancels whatever
+            // it *is* on — and a cancelled transcode restarts from byte zero, throwing away every
+            // byte a multi-gigabyte encode had transferred.
+            repository().pause(uuid(1).toString())
+
+            coVerify(exactly = 1) { downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.PAUSED, NOW) }
+            coVerify(exactly = 0) { scheduler.stop() }
+        }
+
+    @Test
+    fun `pausing decides and writes in one transaction, not a read then a write`() =
+        runTest {
+            // The DL-06 rework's blocker: a separate "is it transferring?" read before an
+            // unguarded PAUSED write let the drain's claim land between the two — the read said
+            // no (so the worker was never stopped), the claim took the row, and the item the user
+            // had just paused downloaded to completion (DL-03's window, reopened). The stop
+            // decision must come back from the very transaction that writes PAUSED.
+            repository().pause(uuid(1).toString())
+
+            coVerify(exactly = 0) { downloadDao.pending() }
+            coVerify(exactly = 0) { downloadDao.setStatus(any(), any(), any(), any()) }
         }
 
     @Test
@@ -498,9 +545,11 @@ class DownloadRepositoryImplTest {
             // leave exactly one status behind — `DownloadQueue` is what used to add a second one
             // when it saw the cancellation — and the queue must be brought back up with
             // `ensureRunning`, so items behind the paused one keep draining.
+            givenDemoteTakesLiveTransfer(listOf(uuid(1)))
+
             repository().pause(uuid(1).toString())
 
-            coVerify(exactly = 1) { downloadDao.setStatus(uuid(1), DownloadStatus.PAUSED, NOW, null) }
+            coVerify(exactly = 1) { downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.PAUSED, NOW) }
             coVerify(exactly = 0) { downloadDao.setStatus(any(), DownloadStatus.QUEUED, any(), any()) }
             coVerify(exactly = 1) { scheduler.ensureRunning() }
         }
@@ -517,6 +566,19 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
+    fun `resuming while another item is transferring joins the live drain instead of restarting it`() =
+        runTest {
+            // A restart cancels the running worker; mid-transcode that discards the transfer so
+            // far (DL-06). The live drain picks the re-queued row up from nextRunnable() itself.
+            givenTransferring(uuid(9))
+
+            repository().resume(uuid(1).toString())
+
+            coVerify(exactly = 0) { scheduler.restart() }
+            coVerify(exactly = 1) { scheduler.ensureRunning() }
+        }
+
+    @Test
     fun `resuming gives the row its full retry budget back`() =
         runTest {
             // Otherwise *Retry* on a row that exhausted its attempts against a server that was down
@@ -527,16 +589,20 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
-    fun `deleting stops the queue before unlinking files`() =
+    fun `deleting the transferring item stops the queue before unlinking files`() =
         runTest {
-            coEvery { deleter.delete(uuid(1)) } returns 2_100_000_000L
+            givenDemoteTakesLiveTransfer(listOf(uuid(1)))
+            coEvery { deleter.deleteAll(listOf(uuid(1))) } returns 2_100_000_000L
 
             repository().delete(uuid(1).toString()) shouldBe AppResult.Success(2_100_000_000L)
 
-            // The downloader must not be holding a handle to a file we are about to remove.
+            // The downloader must not be holding a handle to a file we are about to remove — and
+            // the row is flipped out of the queue's reach in the same transaction that says the
+            // worker was on it, so a drain claim cannot slip in after the decision (DL-03).
             coVerifyOrder {
+                downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.CANCELLED, NOW)
                 scheduler.stop()
-                deleter.delete(uuid(1))
+                deleter.deleteAll(listOf(uuid(1)))
                 scheduler.ensureRunning()
             }
         }
@@ -547,37 +613,41 @@ class DownloadRepositoryImplTest {
             // *Cancel* in the Queue tab, *Delete* in the Downloaded list and *Cancel* on the
             // notification are one operation; this pins that an in-flight item is no exception —
             // its files must not survive the row.
-            coEvery { downloadDao.get(uuid(1)) } returns download(status = DownloadStatus.DOWNLOADING)
-            coEvery { deleter.delete(uuid(1)) } returns 1_400_000_000L
+            givenDemoteTakesLiveTransfer(listOf(uuid(1)))
+            coEvery { deleter.deleteAll(listOf(uuid(1))) } returns 1_400_000_000L
 
             repository().delete(uuid(1).toString()) shouldBe AppResult.Success(1_400_000_000L)
 
             coVerifyOrder {
                 // Stop first: the transfer must not be holding a handle to a file we unlink.
                 scheduler.stop()
-                deleter.delete(uuid(1))
+                deleter.deleteAll(listOf(uuid(1)))
                 // Something else may still be queued behind the cancelled item.
                 scheduler.ensureRunning()
             }
         }
 
     @Test
-    fun `cancelling a merely queued item runs the cascade too`() =
+    fun `cancelling a merely queued item runs the cascade without touching the live transfer`() =
         runTest {
             // A queued item can still have bytes on disk: it was interrupted mid-transfer and put
-            // back in the queue, which is precisely the resume case.
-            coEvery { downloadDao.get(uuid(1)) } returns download(status = DownloadStatus.QUEUED)
-            coEvery { deleter.delete(uuid(1)) } returns 900_000L
+            // back in the queue, which is precisely the resume case. The worker, though, is on
+            // some *other* row — stopping it here would cancel an unrelated transcode (DL-06).
+            coEvery { deleter.deleteAll(listOf(uuid(1))) } returns 900_000L
 
             repository().delete(uuid(1).toString()) shouldBe AppResult.Success(900_000L)
 
-            coVerify(exactly = 1) { deleter.delete(uuid(1)) }
+            // The row is still taken out of the queue's reach before the unlink: CANCELLED is
+            // what makes a drain claim arriving *after* this decision refuse the row (DL-03).
+            coVerify(exactly = 1) { downloadDao.demoteRunnable(listOf(uuid(1)), DownloadStatus.CANCELLED, NOW) }
+            coVerify(exactly = 1) { deleter.deleteAll(listOf(uuid(1))) }
+            coVerify(exactly = 0) { scheduler.stop() }
         }
 
     @Test
     fun `a failing delete is a Storage failure, not an exception`() =
         runTest {
-            coEvery { deleter.delete(any()) } throws IllegalStateException("volume ejected")
+            coEvery { deleter.deleteAll(any()) } throws IllegalStateException("volume ejected")
 
             val result = repository().delete(uuid(1).toString())
 
@@ -593,18 +663,19 @@ class DownloadRepositoryImplTest {
             // directory for every file it opens: a delete that runs while the transfer is still
             // alive gets its directory put straight back by a `mkdirs()` and written into until the
             // next `ensureActive()`. Those bytes are then invisible to the UI forever.
+            givenDemoteTakesLiveTransfer(listOf(uuid(1)))
             val stopped = CompletableDeferred<Unit>()
             coEvery { scheduler.stop() } coAnswers { stopped.await() }
 
             val repository = repository(ioDispatcher = StandardTestDispatcher(testScheduler))
             val delete = async { repository.delete(uuid(1).toString()) }
             runCurrent()
-            coVerify(exactly = 0) { deleter.delete(any()) }
+            coVerify(exactly = 0) { deleter.deleteAll(any()) }
 
             stopped.complete(Unit)
             delete.await()
 
-            coVerify(exactly = 1) { deleter.delete(uuid(1)) }
+            coVerify(exactly = 1) { deleter.deleteAll(listOf(uuid(1))) }
         }
 
     // ---- bulk actions (STAB-09) ------------------------------------------------------------------
@@ -616,17 +687,35 @@ class DownloadRepositoryImplTest {
             // cycle per row, so a forty-episode queue produced forty overlapping drains — each of
             // them running `requeueInterrupted` over rows another drain was still writing.
             val ids = listOf(uuid(1), uuid(2), uuid(3))
+            givenDemoteTakesLiveTransfer(ids)
 
             repository().pauseAll(ids.map(java.util.UUID::toString)) shouldBe AppResult.Success(Unit)
 
             coVerifyOrder {
-                downloadDao.setStatusIn(ids, DownloadStatus.PAUSED, NOW)
+                downloadDao.demoteRunnable(ids, DownloadStatus.PAUSED, NOW)
                 scheduler.stop()
                 scheduler.ensureRunning()
             }
             coVerify(exactly = 1) { scheduler.stop() }
             coVerify(exactly = 1) { scheduler.ensureRunning() }
             coVerify(exactly = 0) { downloadDao.setStatus(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `pause all keeps the transcode it deliberately excluded from the batch`() =
+        runTest {
+            // The DL-06 headline: the snackbar says "1 transcode keeps downloading", and the batch
+            // the UI passes here excludes it — so the worker must not be stopped, or the encode is
+            // cancelled anyway and restarts from byte zero when the queue comes back up. The
+            // demote transaction reports the live transfer untouched, and that answer — atomic
+            // with the PAUSED write itself, unlike the read it replaces (DL-03) — is what spares
+            // the worker.
+            val pausable = listOf(uuid(1), uuid(2))
+
+            repository().pauseAll(pausable.map(java.util.UUID::toString)) shouldBe AppResult.Success(Unit)
+
+            coVerify(exactly = 1) { downloadDao.demoteRunnable(pausable, DownloadStatus.PAUSED, NOW) }
+            coVerify(exactly = 0) { scheduler.stop() }
         }
 
     @Test
@@ -646,18 +735,31 @@ class DownloadRepositoryImplTest {
         }
 
     @Test
+    fun `resuming everything while a transfer is live joins it rather than restarting it`() =
+        runTest {
+            givenTransferring(uuid(9))
+            val ids = listOf(uuid(1), uuid(2))
+
+            repository().resumeAll(ids.map(java.util.UUID::toString)) shouldBe AppResult.Success(Unit)
+
+            coVerify(exactly = 0) { scheduler.restart() }
+            coVerify(exactly = 1) { scheduler.ensureRunning() }
+        }
+
+    @Test
     fun `cancelling everything stops the queue once and starts it once`() =
         runTest {
-            coEvery { deleter.delete(uuid(1)) } returns 100L
-            coEvery { deleter.delete(uuid(2)) } returns 200L
+            val ids = listOf(uuid(1), uuid(2))
+            givenDemoteTakesLiveTransfer(ids)
+            coEvery { deleter.deleteAll(ids) } returns 300L
 
-            repository().deleteAll(listOf(uuid(1), uuid(2)).map(java.util.UUID::toString)) shouldBe
+            repository().deleteAll(ids.map(java.util.UUID::toString)) shouldBe
                 AppResult.Success(300L)
 
             coVerifyOrder {
+                downloadDao.demoteRunnable(ids, DownloadStatus.CANCELLED, NOW)
                 scheduler.stop()
-                deleter.delete(uuid(1))
-                deleter.delete(uuid(2))
+                deleter.deleteAll(ids)
                 scheduler.ensureRunning()
             }
             coVerify(exactly = 1) { scheduler.stop() }
@@ -672,9 +774,10 @@ class DownloadRepositoryImplTest {
             repository().resumeAll(emptyList()) shouldBe AppResult.Success(Unit)
             repository().deleteAll(emptyList()) shouldBe AppResult.Success(0L)
 
+            coVerify(exactly = 0) { downloadDao.demoteRunnable(any(), any(), any()) }
             coVerify(exactly = 0) { scheduler.stop() }
             coVerify(exactly = 0) { scheduler.restart() }
-            coVerify(exactly = 0) { deleter.delete(any()) }
+            coVerify(exactly = 0) { deleter.deleteAll(any()) }
         }
 
     @Test
@@ -683,14 +786,14 @@ class DownloadRepositoryImplTest {
             val result = repository().pauseAll(listOf(uuid(1).toString(), "not-a-uuid"))
 
             result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.NotFound>()
-            coVerify(exactly = 0) { downloadDao.setStatusIn(any(), any(), any()) }
+            coVerify(exactly = 0) { downloadDao.demoteRunnable(any(), any(), any()) }
             coVerify(exactly = 0) { scheduler.stop() }
         }
 
     @Test
     fun `a failing bulk delete is a Storage failure, not an exception`() =
         runTest {
-            coEvery { deleter.delete(any()) } throws IllegalStateException("volume ejected")
+            coEvery { deleter.deleteAll(any()) } throws IllegalStateException("volume ejected")
 
             val result = repository().deleteAll(listOf(uuid(1).toString()))
 

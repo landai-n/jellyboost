@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadWithFiles
+import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.data.downloads.DownloadFixtures
 import dev.jellyboost.data.downloads.DownloadFixtures.download
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
@@ -25,6 +26,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.jellyfin.sdk.model.api.ImageType
@@ -52,6 +54,9 @@ class SubtitleSidecarTopUpTest {
     private val storage = mockk<DownloadStorage>()
     private val downloader = mockk<FileDownloader>()
     private val planner = DownloadFilePlanner(FakeUrls)
+    private val preferences =
+        mockk<AppPreferences> { every { downloadOverWifiOnly } returns flowOf(false) }
+    private var meteredNow = false
 
     private val inserted = mutableListOf<DownloadFileEntity>()
     private val updated = mutableListOf<DownloadFileEntity>()
@@ -63,6 +68,8 @@ class SubtitleSidecarTopUpTest {
             planner = planner,
             storage = storage,
             downloader = downloader,
+            preferences = preferences,
+            metered = { meteredNow },
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 
@@ -95,6 +102,43 @@ class SubtitleSidecarTopUpTest {
                     subtitleStream(index = 7, language = "fra", external = false),
                 ),
         )
+
+    // ---- the Wi-Fi-only rule (DL-04) --------------------------------------------------------------
+
+    @Test
+    fun `a Wi-Fi-only user gets no top-up over a metered connection`() =
+        runTest {
+            // This class runs on the application scope, not inside the constrained worker — the
+            // UNMETERED constraint that normally *is* the Wi-Fi-only preference does not apply
+            // here, so it must enforce the rule itself (audit DL-04).
+            every { preferences.downloadOverWifiOnly } returns flowOf(true)
+            meteredNow = true
+            given(files = listOf(mediaFile()))
+
+            topUp().topUp(listOf(elementaire())) shouldBe 0
+
+            coVerify(exactly = 0) { downloader.download(any(), any(), any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `a Wi-Fi-only user is still topped up on an unmetered connection`() =
+        runTest {
+            every { preferences.downloadOverWifiOnly } returns flowOf(true)
+            meteredNow = false
+            given(files = listOf(mediaFile()))
+
+            topUp().topUp(listOf(elementaire())) shouldBe 2
+        }
+
+    @Test
+    fun `a user without the preference is topped up whatever the connection is`() =
+        runTest {
+            every { preferences.downloadOverWifiOnly } returns flowOf(false)
+            meteredNow = true
+            given(files = listOf(mediaFile()))
+
+            topUp().topUp(listOf(elementaire())) shouldBe 2
+        }
 
     // ---- what it fetches --------------------------------------------------------------------------
 

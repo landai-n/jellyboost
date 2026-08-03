@@ -1,7 +1,10 @@
 package dev.jellyboost.data.downloads.engine
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -14,6 +17,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.RandomAccessFile
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.coroutineContext
@@ -91,6 +95,11 @@ fun interface MediaChunkSink {
  * ### Cancellation
  * Cancelling the coroutine cancels the OkHttp call and stops the write loop, leaving the partial
  * file in place — that is precisely what makes it resumable. Nothing here ever deletes a file.
+ *
+ * The call is cancelled during the **body** as well as while awaiting the headers: the copy loop's
+ * blocking `read` cannot be reached by coroutine cancellation on its own, so a watcher coroutine
+ * holds the [Call] and cancels it the moment the download's job is — which fails the blocked read
+ * immediately instead of waiting out the socket (audit DL-01).
  */
 @Singleton
 class FileDownloader
@@ -128,29 +137,32 @@ class FileDownloader
                 val existing = if (target.exists()) target.length() else 0L
                 val resumeFrom = if (transcoded) 0L else existing
 
-                val response = execute(url, resumeFrom)
-                response.use {
-                    when (response.code) {
-                        HTTP_RANGE_NOT_SATISFIABLE -> {
-                            // Already complete. Report the final size so the caller can close the
-                            // file out instead of retrying it forever.
-                            onProgress.onProgress(existing, existing)
-                            return@withContext existing
+                val call = newCall(url, resumeFrom)
+                val response = awaitUsableResponse(call, url)
+                cancellingCall(call) {
+                    response.use {
+                        when (response.code) {
+                            HTTP_RANGE_NOT_SATISFIABLE -> {
+                                // Already complete. Report the final size so the caller can close
+                                // the file out instead of retrying it forever.
+                                onProgress.onProgress(existing, existing)
+                                existing
+                            }
+
+                            HTTP_PARTIAL -> writeBody(response, target, resumeFrom, chunkSink, onProgress)
+
+                            HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
+
+                            else -> throw DownloadHttpException(response.code, url)
                         }
-
-                        HTTP_PARTIAL -> writeBody(response, target, resumeFrom, chunkSink, onProgress)
-
-                        HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
-
-                        else -> throw DownloadHttpException(response.code, url)
                     }
                 }
             }
 
-        private suspend fun execute(
+        private fun newCall(
             url: String,
             rangeStart: Long,
-        ): Response {
+        ): Call {
             val request =
                 Request
                     .Builder()
@@ -158,8 +170,14 @@ class FileDownloader
                     .header("Authorization", authorizationHeader())
                     .apply { if (rangeStart > 0L) header("Range", "bytes=$rangeStart-") }
                     .build()
+            return callFactory.newCall(request)
+        }
 
-            val response = callFactory.newCall(request).await()
+        private suspend fun awaitUsableResponse(
+            call: Call,
+            url: String,
+        ): Response {
+            val response = call.await()
 
             // 416 is a success for our purposes (the file is already whole), so it is checked by
             // the caller rather than rejected here.
@@ -170,6 +188,39 @@ class FileDownloader
             }
             return response
         }
+
+        /**
+         * Runs [block] with a watcher that cancels [call] if this coroutine is cancelled first.
+         *
+         * The `await()` continuation's own `invokeOnCancellation` has already resumed by the time
+         * the body is being read, so without this nothing holds the call during `writeBody` — a
+         * pause, a stop or a delete could only wait for the socket to fail on its own, which a
+         * half-open connection never does (audit DL-01). The blocked `read` then throws an
+         * `IOException` that [copy] converts back into the cancellation it really is.
+         */
+        private suspend fun <T> cancellingCall(
+            call: Call,
+            block: suspend () -> T,
+        ): T =
+            coroutineScope {
+                val finished = AtomicBoolean(false)
+                val watcher =
+                    launch {
+                        try {
+                            awaitCancellation()
+                        } finally {
+                            // Cancelled by the `finally` below when the body simply ended; only a
+                            // cancellation arriving *while the transfer is live* touches the call.
+                            if (!finished.get()) call.cancel()
+                        }
+                    }
+                try {
+                    block()
+                } finally {
+                    finished.set(true)
+                    watcher.cancel()
+                }
+            }
 
         /**
          * Streams the body into [target].
@@ -228,7 +279,16 @@ class FileDownloader
 
             while (true) {
                 coroutineContext.ensureActive()
-                val read = input.read(buffer)
+                val read =
+                    try {
+                        input.read(buffer)
+                    } catch (error: IOException) {
+                        // A cancelled coroutine cancels the OkHttp call (see [cancellingCall]),
+                        // and the blocked read then fails with an IOException. The caller asked
+                        // for a cancellation, not a failure — let the cancellation win.
+                        coroutineContext.ensureActive()
+                        throw error
+                    }
                 if (read == -1) break
                 output.write(buffer, 0, read)
                 // After the write, never before: the tap must not be able to affect the file.

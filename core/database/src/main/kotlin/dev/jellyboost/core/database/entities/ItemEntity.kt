@@ -106,6 +106,21 @@ data class ItemCacheKey(
 )
 
 /**
+ * One item reduced to the rows the offline read path walks *up* through — its series, season and
+ * containing folder.
+ *
+ * A projection rather than [ItemEntity] because its one consumer, the delete cascade's orphan
+ * prune, only needs the parent links: `SELECT *` materialised every surviving download's
+ * multi-kilobyte `dto` blob once per pruned item (audit DL-05).
+ */
+data class ItemParentRefs(
+    val id: UUID,
+    val parentId: UUID?,
+    val seriesId: UUID?,
+    val seasonId: UUID?,
+)
+
+/**
  * One downloaded row reduced to what a library-grid **filter** is decided from.
  *
  * A projection rather than whole rows because the offline grid has to filter the *whole* result set

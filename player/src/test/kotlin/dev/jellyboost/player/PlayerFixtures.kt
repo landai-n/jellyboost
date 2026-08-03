@@ -82,11 +82,13 @@ internal object PlayerFixtures {
         playSessionId: String? = PLAY_SESSION_ID,
     ): PlaybackInfoResponse = PlaybackInfoResponse(mediaSources = sources, playSessionId = playSessionId)
 
+    @Suppress("LongParameterList")
     fun audioStream(
         index: Int,
         language: String? = "eng",
         codec: String = "ac3",
         displayTitle: String = "English - AC3",
+        isExternal: Boolean = false,
     ): MediaStream =
         MediaStream(
             type = MediaStreamType.AUDIO,
@@ -98,7 +100,7 @@ internal object PlayerFixtures {
             isDefault = false,
             isForced = false,
             isHearingImpaired = false,
-            isExternal = false,
+            isExternal = isExternal,
             isTextSubtitleStream = false,
             supportsExternalStream = false,
         )

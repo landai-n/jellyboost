@@ -132,7 +132,10 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             model.uiState.value.hasEnded shouldBe true
-            coVerify(exactly = 1) { reporter.reportStop(source, match { it.hasEnded }) }
+            // The detached scope, not viewModelScope: publishing `hasEnded` makes the screen pop
+            // the route on the next frame, which cancels viewModelScope before a report launched
+            // there could reach the server (audit PC-03).
+            coVerify(exactly = 1) { reporter.reportStopDetached(source, match { it.hasEnded }) }
         }
 
     @Test
@@ -145,7 +148,8 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
 
             model.releaseSession()
 
-            coVerify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+            // Once from the end of the item; the teardown must not add a second.
+            coVerify(exactly = 1) { reporter.reportStopDetached(any(), any()) }
         }
 
     // ---- decoder fallback ---------------------------------------------------------------------

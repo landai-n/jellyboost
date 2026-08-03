@@ -164,6 +164,11 @@ class PlaybackService :
      * through it. Releasing the player is then safe and, unlike the ViewModel's own teardown, always
      * reached — the service is stopped from `ExoPlayerHandle.stop()` and by a swipe-away, including
      * the cases where no player screen is left to clear.
+     *
+     * The running flag is cleared *before* the player release, not after: while it is set,
+     * `ExoPlayerHandle.release()` defers to this teardown (audit PC-04 — the ViewModel must not
+     * release a player the live session still wraps), so clearing it last would make this very
+     * call the one that gets deferred.
      */
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")
@@ -173,8 +178,8 @@ class PlaybackService :
             session.release()
         }
         mediaSession = null
-        playerHandle.release()
         serviceState.setRunning(false)
+        playerHandle.release()
         super.onDestroy()
     }
 }

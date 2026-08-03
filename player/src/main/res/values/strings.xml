@@ -35,6 +35,7 @@
     <string name="player_message_track_streaming">That track isn\'t in the download — streaming it from your server.</string>
     <string name="player_message_track_offline">That track isn\'t in the downloaded file.</string>
     <string name="player_message_failed">Playback failed.</string>
+    <string name="player_message_change_reverted">Couldn\'t apply that change — continuing as before.</string>
 
     <!-- M11 SyncPlay: the group as the player screen shows it. -->
     <string name="player_syncplay_group">Group</string>

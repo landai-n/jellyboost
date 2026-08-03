@@ -125,6 +125,18 @@ class CastSessionCoordinatorTest {
     }
 
     @Test
+    fun `a local session's detach leaves no orphan for a later failed cast attempt to report`() {
+        // Watch locally, back out, then try to cast and fail: the coordinator must not remember the
+        // local film as "what the receiver was playing" and stop-report it at zero (audit CAST-02).
+        coordinator.attachHost(host)
+        coordinator.detachHost(host)
+
+        framework.onSessionEnded() // a start failure surfaces as an end, with no start before it
+
+        verify(exactly = 0) { reporter.reportStopDetached(any(), any()) }
+    }
+
+    @Test
     fun `a host with nothing open leaves nothing to report`() {
         every { reporter.startReporting(any(), any(), any()) } returns Job()
         framework.onSessionStarted("Living Room TV")
@@ -202,6 +214,17 @@ class CastSessionCoordinatorTest {
         routing.activeHandle.value shouldBe cast
     }
 
+    @Test
+    fun `the cast player is silenced once the session ends`() {
+        // Left alone it keeps its listener, media items and the stale `loaded` spec for the life of
+        // the process (audit CAST-08).
+        framework.onSessionStarted("Living Room TV")
+
+        framework.onSessionEnded()
+
+        cast.stopped shouldBe true
+    }
+
     // ---- what the attached screen is told, and when (M12 Phase 3) --------------------------------
 
     /** A host that records the two transfer edges, which the Phase 2 one had no use for. */
@@ -234,6 +257,19 @@ class CastSessionCoordinatorTest {
 
         // A screen that took its own snapshot would be asking a cast player that has not started.
         recording.started shouldBe listOf("Living Room TV" to onThePhone)
+    }
+
+    @Test
+    fun `a repeated start for a live session does not re-run the transfer`() {
+        // The framework reports a resumed (suspended) session as a start; re-running the transfer
+        // would reload the receiver off a cast player that may still answer zero (audit CAST-05).
+        val recording = RecordingHost(source)
+        coordinator.attachHost(recording)
+        framework.onSessionStarted("Living Room TV")
+
+        framework.onSessionStarted("Living Room TV")
+
+        recording.started.size shouldBe 1
     }
 
     @Test

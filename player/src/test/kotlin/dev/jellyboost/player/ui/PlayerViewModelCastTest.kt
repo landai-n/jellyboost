@@ -107,6 +107,10 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
                     mediaSourceFactory = mediaSourceFactory,
                     playerHandle = routing,
                     reporter = reporter,
+                    // The same holder the coordinator writes and the ViewModel reads: the controller
+                    // re-checks it at prepare time (audit CAST-04), and a private never-casting
+                    // default would make it re-resolve every cast open.
+                    castStatus = castStatus,
                 ),
             playerHandle = routing,
             reporter = reporter,

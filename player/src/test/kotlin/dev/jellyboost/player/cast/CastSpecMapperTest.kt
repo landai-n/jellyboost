@@ -212,24 +212,21 @@ class CastSpecMapperTest {
     }
 
     @Test
-    fun `the poster is signed like every other URL the receiver fetches`() {
-        // A third URL the television opens itself, so it lives under the same rule as the media and
-        // the subtitles rather than under an exception. The words beside it are strings and are not
-        // touched.
+    fun `the poster is not signed — the token goes only where the fetch needs it`() {
+        // Image endpoints answer without credentials (probed 2026-07-31), and everything handed to
+        // the receiver is republished in its MediaStatus for any sender on the network to read
+        // (audit CAST-06). The words beside it are strings and are not touched.
         val metadata = CastMetadata(title = "Arrival", subtitle = "2016", posterUrl = "https://server/p.jpg")
 
         val spec = mapper.map(itemSpec(), directPlay(), metadata)
 
-        spec.metadata shouldBe metadata.copy(posterUrl = "https://server/p.jpg?ApiKey=$TOKEN")
+        spec.metadata shouldBe metadata
     }
 
     @Test
-    fun `a poster that is already signed is left alone, and an item without one stays without`() {
-        val poster = "https://server/p.jpg?ApiKey=$TOKEN"
-        val signed = mapper.map(itemSpec(), directPlay(), CastMetadata(posterUrl = poster))
+    fun `an item without a poster stays without one`() {
         val none = mapper.map(itemSpec(), directPlay(), CastMetadata(title = "Arrival"))
 
-        signed.metadata.posterUrl shouldBe poster
         // Not the empty string, and not a URL with a token and no path: an item with no artwork
         // leaves the receiver on its own idle backdrop, which is what it is for.
         none.metadata.posterUrl shouldBe null

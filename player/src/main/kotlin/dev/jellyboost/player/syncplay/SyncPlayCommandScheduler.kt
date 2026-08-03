@@ -131,14 +131,20 @@ class SyncPlayCommandScheduler
                     val localWhen = timeSync.toLocalTime(command.whenInstant)
                     val waitMillis = Duration.between(clock.instant(), localWhen).toMillis()
                     if (waitMillis > 0L) delay(waitMillis)
-                    withContext(mainDispatcher) {
-                        // Only ours to clear: a schedule() that overtook us already wrote its own.
-                        if (pendingScheduled === taken) pendingScheduled = null
-                        lastApplied = taken
-                        val result = apply(command, localWhen)
-                        _applied.tryEmit(result)
-                    }
-                    pending = null
+                    // Bookkeeping on the scheduler's own single-threaded scope, never on main:
+                    // schedule() reads these fields from this thread, so the dedupe and staleness
+                    // checks always see them coherently (audit SP-01). Written *before* the main
+                    // hop, deliberately — a command superseded mid-apply stays remembered, and its
+                    // superseder is what corrects the player either way; the reverse order would
+                    // let an applied command go unrecorded and its verbatim re-send re-applied.
+                    if (pendingScheduled === taken) pendingScheduled = null
+                    lastApplied = taken
+                    val result = withContext(mainDispatcher) { apply(command, localWhen) }
+                    _applied.tryEmit(result)
+                    // Guarded by identity, unlike before (audit SP-01): a completion racing a
+                    // schedule() that already replaced this job must not orphan the replacement's
+                    // cancellation handle.
+                    if (pending === coroutineContext[Job]) pending = null
                 }
         }
 

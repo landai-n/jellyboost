@@ -151,6 +151,33 @@ class SyncPlayCommandSchedulerTest {
         }
 
     @Test
+    fun `a command pending after an earlier one applied is still replaceable`() =
+        runTest {
+            // Pins the pending bookkeeping (audit SP-01): a completed apply must clear only its
+            // *own* handle — clearing unconditionally orphaned the next pending command's
+            // cancellation, and the superseded command survived to fire at its instant.
+            val fixture = fixture()
+            fixture.scheduler.schedule(command(SyncPlayCommandType.Unpause, atMillis = 500, positionMs = 0))
+            advanceTimeBy(500)
+            runCurrent()
+            fixture.player.playCount shouldBe 1
+
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Pause, atMillis = 5_000, positionMs = 30_000, emittedAtMillis = 400),
+            )
+            runCurrent()
+            fixture.scheduler.schedule(
+                command(SyncPlayCommandType.Seek, atMillis = 2_000, positionMs = 45_000, emittedAtMillis = 450),
+            )
+            advanceTimeBy(10_000)
+            runCurrent()
+
+            // The pause was superseded and never fires; only the seek reaches the player.
+            fixture.player.pauseCount shouldBe 0
+            fixture.player.seekedToMs shouldBe listOf(45_000L)
+        }
+
+    @Test
     fun `a cancelled schedule applies nothing`() =
         runTest {
             val fixture = fixture()

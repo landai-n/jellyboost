@@ -6,11 +6,16 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import okhttp3.Call
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -21,6 +26,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.model.ClientInfo
 import org.jellyfin.sdk.model.DeviceInfo
+import okio.buffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -267,6 +273,50 @@ class FileDownloaderTest {
         }
 
     @Test
+    fun `cancelling while a body read is blocked cancels the OkHttp call itself`() =
+        runTest {
+            // The DL-01 wedge: once the headers have arrived, the `await()` continuation has
+            // resumed and its `invokeOnCancellation` can no longer reach the call. A half-open
+            // socket then blocks `input.read()` forever, coroutine cancellation cannot interrupt
+            // it, and the drain lease is held for the rest of the process. The fix holds the call
+            // for the whole body, so cancelling the coroutine fails the blocked read immediately.
+            // Without it this test times out rather than merely failing.
+            val calls = mutableListOf<Call>()
+            val firstBytesServed = CompletableDeferred<Unit>()
+            val body = BlockingBody(firstBytesServed) { calls.single().isCanceled() }
+            val client =
+                OkHttpClient
+                    .Builder()
+                    .addInterceptor(
+                        Interceptor { chain ->
+                            Response
+                                .Builder()
+                                .request(chain.request())
+                                .protocol(Protocol.HTTP_1_1)
+                                .code(200)
+                                .message("OK")
+                                .body(body)
+                                .build()
+                        },
+                    ).build()
+            val factory = Call.Factory { request -> client.newCall(request).also { calls += it } }
+            val downloader = FileDownloader(factory, apiClient)
+            val target = file("movie.mkv")
+
+            val job =
+                launch(Dispatchers.IO) {
+                    downloader.download(URL, target, Dispatchers.IO) { _, _ -> }
+                }
+            withContext(Dispatchers.Default) { firstBytesServed.await() }
+
+            job.cancelAndJoin()
+
+            calls.single().isCanceled() shouldBe true
+            // The bytes that made it stay: a cancelled transfer is a resumable one.
+            target.exists() shouldBe true
+        }
+
+    @Test
     fun `cancelling leaves the partial file on disk`() =
         runTest {
             val target = file("movie.mkv")
@@ -372,4 +422,49 @@ private class UnknownLengthBody(
     override fun contentType(): okhttp3.MediaType? = null
 
     override fun source(): okio.BufferedSource = okio.Buffer().write(bytes)
+}
+
+/**
+ * A body that serves one chunk and then behaves like a half-open TCP connection: the next read
+ * blocks indefinitely, unblocking (with the `IOException` a torn-down socket raises) only once the
+ * call has been cancelled — which is exactly what OkHttp's `Call.cancel()` does to a blocked read.
+ */
+private class BlockingBody(
+    private val firstBytesServed: CompletableDeferred<Unit>,
+    private val cancelled: () -> Boolean,
+) : okhttp3.ResponseBody() {
+    override fun contentLength(): Long = -1L
+
+    override fun contentType(): okhttp3.MediaType? = null
+
+    override fun source(): okio.BufferedSource {
+        val raw =
+            object : okio.Source {
+                private var served = false
+
+                override fun read(
+                    sink: okio.Buffer,
+                    byteCount: Long,
+                ): Long {
+                    if (!served) {
+                        served = true
+                        val chunk = ByteArray(1024)
+                        sink.write(chunk)
+                        return chunk.size.toLong()
+                    }
+                    firstBytesServed.complete(Unit)
+                    while (!cancelled()) Thread.sleep(POLL_MILLIS)
+                    throw java.io.IOException("socket closed by cancel")
+                }
+
+                override fun timeout(): okio.Timeout = okio.Timeout.NONE
+
+                override fun close() = Unit
+            }
+        return raw.buffer()
+    }
+
+    private companion object {
+        const val POLL_MILLIS = 5L
+    }
 }

@@ -3,9 +3,9 @@ package dev.jellyboost.core.ui.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -63,6 +63,19 @@ object GlassDefaults {
     val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.45f)
 
     /**
+     * The floating bottom pill's fill — a step darker again than [ChromeFill].
+     *
+     * The pill carries the smallest text in the app's chrome (10sp unselected tab labels) and,
+     * unlike the top bars, it parks permanently over the brightest part of every screen: Home's
+     * full-bleed hero and the poster grids. The top chrome's scrim cannot help it — a scrim behind
+     * a glass surface is not part of the sampled backdrop (see `TopChromeScrim`'s KDoc), so the
+     * only lever that darkens what the labels sit on is the tint itself. At 45% a bright frame of
+     * artwork still composited the labels to roughly 2.5:1; 72% (the mid stop of the top scrim,
+     * for coherence) pulls a worst-case backdrop down far enough that full-white labels read.
+     */
+    val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
+
+    /**
      * The Haze style every glass surface blurs with.
      *
      * `backgroundColor` is the app background rather than transparent: Haze composites the blurred
@@ -98,6 +111,13 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  * only inside the shape; the border comes last so the hairline is drawn *over* the fill rather
  * than under it, which at a 9% alpha is the difference between a visible edge and none.
  *
+ * A `@Composable` modifier factory rather than `composed {}` (which it originally was, purely to
+ * read [LocalHazeState]): `composed` modifiers compare equal to nothing, so every recomposition of
+ * a caller re-materialised the whole chain and lazy layouts could never reuse the node — measurable
+ * on the hot paths this is applied to (every library tile, the downloads bulk bar, the player
+ * controls). The factory reads the composition local at the call site and returns plain node-backed
+ * elements (`clip`/`hazeEffect`/`background`/`border`), which diff and reuse normally.
+ *
  * @param borderColor the edge to draw. Defaults to [GlassDefaults.Hairline], which is what every
  *   floating surface uses; a ghost *button* is the exception and passes
  *   [GlassDefaults.GhostBorder], because a control the user is meant to press has to read as an
@@ -108,23 +128,23 @@ val LocalHazeState = compositionLocalOf<HazeState?> { null }
  *   inside a screen's own content; chrome that floats over arbitrary artwork passes
  *   [GlassDefaults.ChromeFill] instead, for the reason spelled out there.
  */
+@Composable
 fun Modifier.glassSurface(
     shape: Shape,
     borderColor: Color = GlassDefaults.Hairline,
     tint: Color = GlassDefaults.Fill,
-): Modifier =
-    composed {
-        val hazeState = LocalHazeState.current
-        val backdrop =
-            if (hazeState != null) {
-                Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint))
-            } else {
-                Modifier.background(color = tint, shape = shape)
-            }
-        clip(shape)
-            .then(backdrop)
-            .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
-    }
+): Modifier {
+    val hazeState = LocalHazeState.current
+    val backdrop =
+        if (hazeState != null) {
+            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint))
+        } else {
+            Modifier.background(color = tint, shape = shape)
+        }
+    return clip(shape)
+        .then(backdrop)
+        .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
+}
 
 /**
  * The restyled 2026 "m-surface" card fill (spec, "Panels (`m-panel`)"): a solid [surfaceColor] fill,

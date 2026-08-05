@@ -76,10 +76,11 @@ followed by a five-wave remediation, all merged and `/verify`-green:
 - **TalkBack device walk** (user-run): chrome traversal order on both layouts, player
   controls-reveal → seek → Display sheet, Quick Connect dialog, user picker, a live
   download row, hero + pills at font scale 2.0, player scrim over a bright frame.
-- **i18n sweep**: the waves added ~14 English-only strings across 6 modules — 45
-  `MissingTranslation` warnings against the repo's 69-locale standard (listed in
-  `config/lint/lint.xml`); wants its own localization pass, then re-promote
-  `MissingTranslation` to error.
+- ~~**i18n sweep**~~ — DONE 2026-08-05 (`30d4561e`, `d8e93ecb`): all 45 keys translated
+  into all 69 locales (3105 entries, per-locale terminology/register, CLDR-correct
+  plurals), the deprecated SyncPlay queue string trio retired (210 entries), and
+  `MissingTranslation` promoted back to **error** in `config/lint/lint.xml` —
+  `:app:lintDebug` green with 0 findings for it.
 - Deferred design decisions from the audit: glass `Fill` token contrast floor,
   shared `SectionTitle` component (headings are hand-rolled per screen).
 

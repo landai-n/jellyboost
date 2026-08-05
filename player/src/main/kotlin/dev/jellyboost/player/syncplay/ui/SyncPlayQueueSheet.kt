@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -231,6 +232,10 @@ private fun QueueRow(
             Color.Transparent
         }
     val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
+    // Every row's three buttons used to announce the same three words, so a queue of ten episodes
+    // was thirty identical "Move up" stops with nothing to tell them apart (audit A11Y-P-18). The
+    // title is what distinguishes them, and it is already here.
+    val title = row.title ?: stringResource(R.string.player_syncplay_queue_item_loading)
 
     Row(
         modifier =
@@ -238,8 +243,11 @@ private fun QueueRow(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(Dimens.CardCornerRadius))
                 .background(background)
-                .clickable(onClick = onPlay)
-                .padding(Dimens.SpaceExtraSmall),
+                .clickable(
+                    role = Role.Button,
+                    onClickLabel = stringResource(R.string.player_syncplay_queue_play),
+                    onClick = onPlay,
+                ).padding(Dimens.SpaceExtraSmall),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
@@ -261,7 +269,7 @@ private fun QueueRow(
             Text(
                 // Until the item is fetched the row still has to say *something*, so the queue's
                 // shape is readable before the last round trip lands.
-                text = row.title ?: stringResource(R.string.player_syncplay_queue_item_loading),
+                text = title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -289,19 +297,19 @@ private fun QueueRow(
         IconButton(onClick = onMoveUp, enabled = canMoveUp) {
             Icon(
                 imageVector = Icons.Outlined.ArrowUpward,
-                contentDescription = stringResource(R.string.player_syncplay_queue_move_up),
+                contentDescription = stringResource(R.string.player_syncplay_queue_move_up_item, title),
             )
         }
         IconButton(onClick = onMoveDown, enabled = canMoveDown) {
             Icon(
                 imageVector = Icons.Outlined.ArrowDownward,
-                contentDescription = stringResource(R.string.player_syncplay_queue_move_down),
+                contentDescription = stringResource(R.string.player_syncplay_queue_move_down_item, title),
             )
         }
         IconButton(onClick = onRemove) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
-                contentDescription = stringResource(R.string.player_syncplay_queue_remove),
+                contentDescription = stringResource(R.string.player_syncplay_queue_remove_item, title),
             )
         }
     }

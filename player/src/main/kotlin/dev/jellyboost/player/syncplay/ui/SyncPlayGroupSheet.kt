@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.component.GhostPillButton
@@ -128,8 +131,20 @@ private fun GroupSheetContent(
 
         HorizontalDivider()
 
+        // The settings rows' pattern, which this row should have used from the start (audit
+        // A11Y-P-19): the whole row is the switch — one node, "Shuffle queue, on", the full width as
+        // its target — and the control inside it is inert so it contributes nothing of its own. An
+        // unlabelled Switch beside a Text is two stops, the second of them nameless.
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = Dimens.MinTouchTarget)
+                    .toggleable(
+                        value = state.isShuffled,
+                        role = Role.Switch,
+                        onValueChange = onSetShuffle,
+                    ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -137,7 +152,7 @@ private fun GroupSheetContent(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f),
             )
-            Switch(checked = state.isShuffled, onCheckedChange = onSetShuffle)
+            Switch(checked = state.isShuffled, onCheckedChange = null)
         }
 
         Text(

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,8 +51,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -209,7 +217,9 @@ private fun TitleStack(
 ) {
     val (title, subtitle) = remember(label) { label.asTitleAndSubtitle() }
 
-    Column(modifier = modifier) {
+    // One node, not two (audit A11Y-P-14): "The Original" and "Star Trek · S1 E10" are one answer to
+    // "what am I watching", and as separate stops the second reads as an orphan.
+    Column(modifier = modifier.semantics(mergeDescendants = true) { }) {
         Text(
             text = title,
             style = TITLE_STYLE,
@@ -234,18 +244,23 @@ private fun TitleStack(
  *
  * Primary-tinted rather than glass: these two say something *about the stream* rather than offering
  * an action, and the refresh reserves glass for surfaces the user can press.
+ *
+ * The uppercasing is this composable's, and stops here (audit A11Y-P-15): an uppercased *string*
+ * reaches text-to-speech as one, and "TRANSCODING 1080P" is read out letter by letter by some
+ * engines. The pill draws the shouted form and describes the sentence-case one.
  */
 @Composable
 private fun TagPill(text: String) {
     val primary = MaterialTheme.colorScheme.primary
 
     Text(
-        text = text,
+        text = text.uppercase(Locale.getDefault()),
         style = TAG_STYLE,
         color = TAG_TEXT,
         maxLines = 1,
         modifier =
             Modifier
+                .semantics { contentDescription = text }
                 .clip(CircleShape)
                 .background(primary.copy(alpha = TAG_FILL_ALPHA))
                 .border(
@@ -257,7 +272,7 @@ private fun TagPill(text: String) {
 }
 
 /**
- * The method tag's words: "TRANSCODING 1080P", or just the method.
+ * The method tag's words: "Transcoding 1080p", or just the method — drawn uppercased by [TagPill].
  *
  * The height is [PlayerUiState.videoHeight] — the size the decoder reports for the video that is
  * actually on screen, which for a transcode is what the server chose to send. It is already on the
@@ -271,13 +286,11 @@ private fun playbackMethodTag(
     videoHeight: Int,
 ): String {
     val label = stringResource(method.labelRes())
-    val text =
-        if (videoHeight > 0) {
-            stringResource(R.string.player_method_tag_height, label, videoHeight)
-        } else {
-            label
-        }
-    return text.uppercase(Locale.getDefault())
+    return if (videoHeight > 0) {
+        stringResource(R.string.player_method_tag_height, label, videoHeight)
+    } else {
+        label
+    }
 }
 
 @Composable
@@ -392,8 +405,10 @@ private fun BottomBar(
         // One subcomposition for the whole picker row, not one per button: the question — is there
         // room for words next to the icons? — is about the row's total width, and every button in it
         // has to answer it the same way.
+        val values = sheetChipValues(state)
+
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-            val showLabels = showSheetButtonLabels(maxWidth)
+            val showLabels = showSheetButtonLabels(maxWidth, LocalDensity.current.fontScale)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -411,6 +426,7 @@ private fun BottomBar(
                         onClick = { onOpenSheet(PlayerSheet.AUDIO) },
                         icon = Icons.Outlined.MusicNote,
                         showLabel = showLabels,
+                        value = values.audio,
                     )
                 }
                 if (state.subtitleTracks.isNotEmpty()) {
@@ -419,6 +435,7 @@ private fun BottomBar(
                         onClick = { onOpenSheet(PlayerSheet.SUBTITLES) },
                         icon = Icons.Outlined.ClosedCaption,
                         showLabel = showLabels,
+                        value = values.subtitles,
                     )
                 }
                 // No per-member playback rate exists in SyncPlay: playing faster than the group is
@@ -434,6 +451,7 @@ private fun BottomBar(
                         onClick = { onOpenSheet(PlayerSheet.SPEED) },
                         icon = Icons.Outlined.Speed,
                         showLabel = showLabels,
+                        value = values.speed,
                     )
                 }
                 // Watching with other people is worth a permanent control, not a badge: it is where the
@@ -444,6 +462,7 @@ private fun BottomBar(
                         onClick = actions.onOpenGroupSheet,
                         icon = Icons.Outlined.Groups,
                         showLabel = showLabels,
+                        value = values.group,
                     )
                 }
                 // A control of its own rather than a row inside the group sheet: what the group watches
@@ -456,6 +475,18 @@ private fun BottomBar(
                         onClick = actions.onOpenQueueSheet,
                         icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
                         showLabel = showLabels,
+                        value = values.queue,
+                    )
+                }
+                // Brightness and volume as controls rather than as gestures (audit CR-8). Offered
+                // under exactly the condition the swipes are: both act on *this* device, and while a
+                // television has the film neither means anything.
+                if (!state.cast.isCasting) {
+                    SheetChip(
+                        label = stringResource(R.string.player_display),
+                        onClick = actions.onOpenDisplaySheet,
+                        icon = Icons.Outlined.Tune,
+                        showLabel = showLabels,
                     )
                 }
                 // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
@@ -465,6 +496,7 @@ private fun BottomBar(
                         onClick = { onOpenSheet(PlayerSheet.QUALITY) },
                         icon = Icons.Outlined.HighQuality,
                         showLabel = showLabels,
+                        value = values.quality,
                     )
                 }
             }
@@ -473,8 +505,52 @@ private fun BottomBar(
 }
 
 /**
+ * What each picker is currently set to (audit A11Y-P-09).
+ *
+ * The chips announce "Audio", "Subtitles", "Quality" — which track, which language, which cap? The
+ * answer becomes each chip's `stateDescription`, so a picker says what it is doing without anyone
+ * having to open it, exactly as the settings rows do.
+ *
+ * Assembled in one place rather than at the six call sites so that the bottom bar keeps its shape:
+ * the row is already a stack of conditionals, and six more `firstOrNull { … } ?: …` in it would bury
+ * the layout.
+ */
+private class SheetChipValues(
+    val audio: String?,
+    val subtitles: String,
+    val speed: String,
+    val quality: String,
+    val group: String,
+    val queue: String,
+)
+
+@Composable
+private fun sheetChipValues(state: PlayerUiState): SheetChipValues {
+    val subtitlesOff = stringResource(R.string.player_subtitles_off)
+    val quality = stringResource(state.quality.labelRes())
+    val queue =
+        pluralStringResource(
+            R.plurals.player_syncplay_queue_count,
+            state.syncPlay.queueSize,
+            state.syncPlay.queueSize,
+        )
+
+    return SheetChipValues(
+        audio = state.audioTracks.firstOrNull { it.index == state.selectedAudioIndex }?.label,
+        subtitles =
+            state.subtitleTracks.firstOrNull { it.index == state.selectedSubtitleIndex }?.label
+                ?: subtitlesOff,
+        speed = state.speed.label,
+        quality = quality,
+        group = state.syncPlay.groupName,
+        queue = queue,
+    )
+}
+
+/**
  * Whether the bottom bar's pickers have room to say what they are, given [maxWidth] — the width the
- * picker row itself was handed, inside the bar's padding.
+ * picker row itself was handed, inside the bar's padding — and [fontScale], the system text scale
+ * those words are drawn at.
  *
  * A device sweep put the fullest bar — five pickers plus the clock — at near-zero slack once its row
  * drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first, and then the last
@@ -483,12 +559,23 @@ private fun BottomBar(
  * landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled exactly as before.
  *
  * The 2026 refresh's chips are *narrower* than the text buttons that sweep measured, so the
- * threshold is now conservative where it used to be tight. It is deliberately unchanged: it is the
- * same devices either side of it, and moving a pinned number for extra slack buys nothing.
+ * threshold is now conservative where it used to be tight. The dp number is deliberately unchanged:
+ * it is the same devices either side of it, and moving a pinned number for extra slack buys nothing.
+ *
+ * What *has* changed is that the words are no longer assumed to be 12sp (audit A11Y-P-10). A width
+ * sweep measured at the default text size says nothing about the same row at 1.5× or 2×, where every
+ * label is half again or twice as wide and the last picker clips off the end — the very failure the
+ * threshold exists to prevent. Scaling the threshold by [fontScale] asks the honest question: is
+ * there room for these words *at the size they will actually be drawn*. Below 1× the threshold is
+ * not lowered (`coerceAtLeast(1f)`): a small-text user gains nothing from labels that were already
+ * judged too tight, and the sweep's number is a floor rather than a ratio.
  *
  * Pure and `internal` so the threshold is a unit test rather than a screenshot.
  */
-internal fun showSheetButtonLabels(maxWidth: Dp): Boolean = maxWidth >= LABELLED_BUTTONS_MIN_WIDTH
+internal fun showSheetButtonLabels(
+    maxWidth: Dp,
+    fontScale: Float,
+): Boolean = maxWidth >= LABELLED_BUTTONS_MIN_WIDTH * fontScale.coerceAtLeast(1f)
 
 /**
  * The top bar's single label, split back into the title and the episode line it was joined from.
@@ -535,8 +622,15 @@ private fun Clock(
     val elapsedSeconds = current.positionMs.coerceAtLeast(0L) / MILLIS_PER_SECOND
     val elapsedText = remember(elapsedSeconds) { (elapsedSeconds * MILLIS_PER_SECOND).asClock() }
     val totalText = remember(durationMs) { durationMs.asClock() }
+    val spoken = spokenPosition(positionMs = elapsedSeconds * MILLIS_PER_SECOND, durationMs = durationMs)
 
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        // One node saying "12 minutes 34 seconds of 45 minutes" (audit A11Y-P-13). Two nodes reading
+        // "12:34" and "/ 45:00" is two stops for one fact, and "12:34" reaches a speech engine as
+        // "twelve thirty-four" — a time of day, not a position in a film.
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = spoken },
+    ) {
         Text(
             text = elapsedText,
             style = CLOCK_STYLE,
@@ -611,7 +705,14 @@ private fun Scrubber(
                         .offset {
                             IntOffset(
                                 x = (maxWidth * fraction - previewWidth / 2).coerceIn(0.dp, slack).roundToPx(),
-                                y = -(TRICKPLAY_PREVIEW_HEIGHT + PREVIEW_GAP + PREVIEW_LABEL_HEIGHT).roundToPx(),
+                                // The label's height is text, so it grows with the system text scale
+                                // (audit A11Y-P-11): at 2× a fixed 18dp allowance left the preview
+                                // sitting half on top of the very clock it is captioned with.
+                                y =
+                                    -(
+                                        TRICKPLAY_PREVIEW_HEIGHT + PREVIEW_GAP +
+                                            PREVIEW_LABEL_HEIGHT * fontScale
+                                    ).roundToPx(),
                             )
                         },
             ) {
@@ -631,6 +732,7 @@ private fun Scrubber(
                 scrubFraction?.let { committed -> onSeekTo((committed * durationMs).toLong()) }
                 scrubFraction = null
             },
+            modifier = scrubberSemantics(positionMs = current.positionMs, durationMs = durationMs, onSeekTo = onSeekTo),
             thumb = { ScrubberThumb() },
             track = {
                 ScrubberTrack(
@@ -641,6 +743,147 @@ private fun Scrubber(
         )
     }
 }
+
+/**
+ * What the seek bar is, where it is, and the two moves that mean something in a film.
+ *
+ * The M3 `Slider` underneath already exposes a range and commits a seek on `setProgress`, which is
+ * the hard half and was done right. What it had was no name at all and a percentage for a position
+ * ("34 percent"), and one TalkBack adjust of a `0f..1f` slider with no steps is about six minutes on
+ * a feature film (audit A11Y-P-04/05).
+ *
+ * So: a name, a `stateDescription` in *time* rather than percent, and two custom actions carrying
+ * the transport's own −10s/+30s — the same numbers, the same words, as the buttons above the bar.
+ * The fractional adjust stays exactly as it was for anyone who wants a coarse jump.
+ *
+ * The actions are keyed to the whole second the position is in, not to the raw twice-a-second tick:
+ * the list would otherwise be rebuilt for a position that reads the same, which is the same argument
+ * [Clock] makes about its own text.
+ */
+@Composable
+private fun scrubberSemantics(
+    positionMs: Long,
+    durationMs: Long,
+    onSeekTo: (Long) -> Unit,
+): Modifier {
+    val seekLabel = stringResource(R.string.player_seek)
+    val backLabel = stringResource(R.string.player_rewind)
+    val forwardLabel = stringResource(R.string.player_forward)
+    val second = positionMs.coerceAtLeast(0L) / MILLIS_PER_SECOND
+    val spoken = spokenPosition(positionMs = second * MILLIS_PER_SECOND, durationMs = durationMs)
+
+    val actions =
+        remember(second, durationMs, backLabel, forwardLabel, onSeekTo) {
+            val from = second * MILLIS_PER_SECOND
+            listOf(
+                CustomAccessibilityAction(backLabel) {
+                    onSeekTo(seekTargetMs(from, -SKIP_BACK_MS, durationMs))
+                    true
+                },
+                CustomAccessibilityAction(forwardLabel) {
+                    onSeekTo(seekTargetMs(from, SKIP_FORWARD_MS, durationMs))
+                    true
+                },
+            )
+        }
+
+    return Modifier.semantics {
+        contentDescription = seekLabel
+        stateDescription = spoken
+        customActions = actions
+    }
+}
+
+/**
+ * Where a relative seek lands, clamped to the item.
+ *
+ * Pure, because "skip back 10 seconds" from 4 seconds in must be 0 rather than −6, and "skip forward
+ * 30" near the end must be the end rather than past it — arithmetic worth a test rather than a
+ * playthrough. A duration of `0` means "not known yet", where there is no upper bound to clamp to.
+ */
+internal fun seekTargetMs(
+    positionMs: Long,
+    deltaMs: Long,
+    durationMs: Long,
+): Long = (positionMs + deltaMs).coerceIn(0L, if (durationMs > 0L) durationMs else Long.MAX_VALUE)
+
+/** "12 minutes 34 seconds of 45 minutes" — the clock and the seek bar say the same sentence. */
+@Composable
+private fun spokenPosition(
+    positionMs: Long,
+    durationMs: Long,
+): String =
+    stringResource(
+        R.string.player_position_of_duration,
+        spokenTime(positionMs),
+        spokenTime(durationMs),
+    )
+
+/** One duration, in words a speech engine reads as a length rather than as a time of day. */
+@Composable
+private fun spokenTime(millis: Long): String {
+    val parts = millis.asSpokenTimeParts()
+    val words = ArrayList<String>(parts.size)
+    for (part in parts) {
+        val value = part.value.toInt()
+        words += pluralStringResource(part.unit.pluralRes(), value, value)
+    }
+    return words.joinToString(" ")
+}
+
+internal enum class SpokenTimeUnit {
+    HOURS,
+    MINUTES,
+    SECONDS,
+}
+
+internal data class SpokenTimePart(
+    val unit: SpokenTimeUnit,
+    val value: Long,
+)
+
+/**
+ * Which units a duration is worth speaking, and how many of each.
+ *
+ * The rule, and the reason it is pure and tested: **only two units, and never a zero that carries no
+ * information.** "1 hour 3 minutes" is a position in a film; "1 hour 3 minutes 12 seconds" is a
+ * stopwatch reading nobody asked for, and it is spoken every time the clock is traversed. Below an
+ * hour the seconds matter (they are the difference between the start of a scene and the middle of
+ * one), so minutes and seconds are both spoken — except an exact number of minutes, which drops the
+ * "0 seconds". A position under a minute is spoken in seconds alone, including "0 seconds" at the
+ * very start, because a film that has not begun still has to say where it is.
+ */
+internal fun Long.asSpokenTimeParts(): List<SpokenTimePart> {
+    val duration = coerceAtLeast(0L).milliseconds
+    val hours = duration.inWholeHours
+    val minutes = duration.inWholeMinutes % MINUTES_PER_HOUR
+    val seconds = duration.inWholeSeconds % SECONDS_PER_MINUTE
+
+    return when {
+        hours > 0L ->
+            listOf(
+                SpokenTimePart(SpokenTimeUnit.HOURS, hours),
+                SpokenTimePart(SpokenTimeUnit.MINUTES, minutes),
+            )
+
+        minutes > 0L && seconds > 0L ->
+            listOf(
+                SpokenTimePart(SpokenTimeUnit.MINUTES, minutes),
+                SpokenTimePart(SpokenTimeUnit.SECONDS, seconds),
+            )
+
+        minutes > 0L -> listOf(SpokenTimePart(SpokenTimeUnit.MINUTES, minutes))
+
+        else -> listOf(SpokenTimePart(SpokenTimeUnit.SECONDS, seconds))
+    }
+}
+
+private fun SpokenTimeUnit.pluralRes(): Int =
+    when (this) {
+        SpokenTimeUnit.HOURS -> R.plurals.player_spoken_hours
+        SpokenTimeUnit.MINUTES -> R.plurals.player_spoken_minutes
+        SpokenTimeUnit.SECONDS -> R.plurals.player_spoken_seconds
+    }
 
 /**
  * The seek bar's three layers: the whole length, how much of it is in the buffer, and how much has
@@ -729,7 +972,13 @@ private fun SheetChip(
     icon: ImageVector,
     onClick: () -> Unit,
     showLabel: Boolean = true,
+    value: String? = null,
 ) {
+    // The chip's *state*, in the settings rows' pattern: "Audio, English" rather than "Audio", so a
+    // picker says what it is set to without being opened (audit A11Y-P-09). `null` where there is no
+    // current value to speak — the label is then the whole truth.
+    val state = if (value == null) Modifier else Modifier.semantics { stateDescription = value }
+
     if (!showLabel) {
         Box(modifier = Modifier.size(Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
             Box(
@@ -737,7 +986,8 @@ private fun SheetChip(
                     Modifier
                         .size(CHIP_HEIGHT)
                         .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
-                        .clickable(role = Role.Button, onClick = onClick),
+                        .clickable(role = Role.Button, onClick = onClick)
+                        .then(state),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -765,6 +1015,7 @@ private fun SheetChip(
                     .heightIn(min = CHIP_HEIGHT)
                     .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
                     .clickable(role = Role.Button, onClick = onClick)
+                    .then(state)
                     .padding(horizontal = CHIP_PADDING),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -801,8 +1052,15 @@ internal fun Long.asClock(): String {
 private const val MINUTES_PER_HOUR = 60L
 private const val SECONDS_PER_MINUTE = 60L
 private const val MILLIS_PER_SECOND = 1_000L
-private const val SKIP_BACK_MS = 10_000L
-private const val SKIP_FORWARD_MS = 30_000L
+
+/**
+ * How far the transport's two seek circles move, and — since the accessibility pass — how far the
+ * keyboard's arrow keys (`PlayerScreen`) and the seek bar's custom actions move too. One pair of
+ * numbers for all three, so the button that says "skip forward 30 seconds" and the action that says
+ * the same words cannot drift apart.
+ */
+internal const val SKIP_BACK_MS = 10_000L
+internal const val SKIP_FORWARD_MS = 30_000L
 
 /**
  * The flat wash the whole control layer sits on.

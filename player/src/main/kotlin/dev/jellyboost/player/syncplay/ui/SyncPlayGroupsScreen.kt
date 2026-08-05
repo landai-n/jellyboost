@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -440,7 +441,9 @@ private fun GroupRow(
             Modifier
                 .fillMaxWidth()
                 .mSurface(MaterialTheme.colorScheme.surface)
-                .clickable(enabled = enabled, onClick = onClick)
+                // Role, so the row announces as something that can be pressed rather than as three
+                // fragments of text that happen to react to a tap (audit A11Y-ROLE-01).
+                .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
                 .padding(Dimens.PanelPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {

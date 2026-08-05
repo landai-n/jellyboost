@@ -36,8 +36,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.player.R
 import dev.jellyboost.player.gesture.GestureConfig
 import dev.jellyboost.player.gesture.PlayerGestureController
 import dev.jellyboost.player.gesture.SwipeTarget
@@ -141,10 +148,24 @@ internal fun PlayerGestureLayer(
             }
         }
 
+    // The tap surface has to be a real accessibility node, not only a `pointerInput` (accessibility
+    // audit 2026-08-05, CR-1): touch exploration consumes taps, so without an `onClick` action a
+    // TalkBack user whose controls had auto-hidden could never bring them back — the film would
+    // play on with no reachable transport at all. The raw gesture detector stays for touch; this
+    // adds the node TalkBack, Switch Access and every other action-driven service need.
+    val revealLabel = stringResource(R.string.player_show_controls)
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
+                .semantics {
+                    contentDescription = revealLabel
+                    onClick(label = revealLabel) {
+                        onToggleControls()
+                        true
+                    }
+                }
                 // Asks the system not to steal touches that start near the edges; the controller
                 // additionally ignores them, because this is only a request below API 29.
                 .systemGestureExclusion()
@@ -167,15 +188,34 @@ private data class GestureIndicator(
     val value: Float,
 )
 
+/**
+ * The transient "volume 60%" / "brightness 40%" panel a swipe raises.
+ *
+ * Labelled rather than semantics-cleared (accessibility audit 2026-08-05, A11Y-P-16): the panel *is*
+ * the feedback for a gesture that otherwise changes nothing on screen, so as a polite live region it
+ * doubles as the announcement of what the swipe just did. The bar and the glyph inside it stay
+ * unlabelled and are merged into this one node — three announcements for one gesture would be worse
+ * than none.
+ */
 @Composable
 private fun GestureIndicatorOverlay(
     indicator: GestureIndicator,
     modifier: Modifier = Modifier,
 ) {
+    val percent = (indicator.value * PERCENT).roundToInt()
+    val spoken =
+        when (indicator.target) {
+            SwipeTarget.VOLUME -> stringResource(R.string.player_volume_percent, percent)
+            SwipeTarget.BRIGHTNESS -> stringResource(R.string.player_brightness_percent, percent)
+        }
+
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(Dimens.SpaceLarge))
+                .semantics(mergeDescendants = true) {
+                    contentDescription = spoken
+                    liveRegion = LiveRegionMode.Polite
+                }.clip(RoundedCornerShape(Dimens.SpaceLarge))
                 .background(Color.Black.copy(alpha = OVERLAY_ALPHA))
                 .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
@@ -198,20 +238,27 @@ private fun GestureIndicatorOverlay(
             trackColor = Color.White.copy(alpha = TRACK_ALPHA),
         )
         Text(
-            text = "${(indicator.value * PERCENT).roundToInt()}%",
+            text = "$percent%",
             color = Color.White,
         )
     }
 }
 
-/** Current media volume as `0f..1f`, or `0f` when there is no audio service to ask. */
-private fun AudioManager?.volumeFraction(): Float {
+/**
+ * Current media volume as `0f..1f`, or `0f` when there is no audio service to ask.
+ *
+ * `internal` since the accessibility pass: the Display sheet (`PlayerSheets`) is the non-gesture way
+ * to the same two levels (audit CR-8), and it has to move *the same* volume and *the same* window
+ * brightness the swipes do — a second implementation would be a second set of rounding rules and a
+ * second place for the brightness override to leak out of.
+ */
+internal fun AudioManager?.volumeFraction(): Float {
     val manager = this ?: return 0f
     val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     return if (max <= 0) 0f else manager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max
 }
 
-private fun AudioManager?.setVolumeFraction(fraction: Float) {
+internal fun AudioManager?.setVolumeFraction(fraction: Float) {
     val manager = this ?: return
     val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     manager.setStreamVolume(AudioManager.STREAM_MUSIC, (fraction * max).roundToInt().coerceIn(0, max), 0)
@@ -224,7 +271,7 @@ private fun AudioManager?.setVolumeFraction(fraction: Float) {
  * not a brightness — starting a swipe from it would jump the screen to full dark. The system
  * setting is read once to seed the gesture instead.
  */
-private fun Activity?.brightnessFraction(): Float {
+internal fun Activity?.brightnessFraction(): Float {
     val activity = this ?: return DEFAULT_BRIGHTNESS
     val attribute = activity.window.attributes.screenBrightness
     if (attribute in 0f..1f) return attribute
@@ -246,7 +293,7 @@ private fun Activity?.brightnessFraction(): Float {
  * `ImmersiveLandscapeEffect` in `PlayerScreen` captures the previous override and restores it when
  * the player leaves (audit PC-02); a film watched dimmed must not leave the whole app dark.
  */
-private fun Activity?.setBrightnessFraction(fraction: Float) {
+internal fun Activity?.setBrightnessFraction(fraction: Float) {
     val window = this?.window ?: return
     window.attributes =
         WindowManager.LayoutParams().apply {
@@ -265,7 +312,10 @@ private val INDICATOR_BAR_WIDTH = 140.dp
 private const val INDICATOR_LINGER_MS = 900L
 private const val OVERLAY_ALPHA = 0.6f
 private const val TRACK_ALPHA = 0.3f
-private const val PERCENT = 100f
+
+/** Shared with the Display sheet, so a swipe and a slider report the same level the same way. */
+internal const val PERCENT = 100f
+
 private const val DEFAULT_BRIGHTNESS = 0.5f
 private const val SYSTEM_BRIGHTNESS_MAX = 255f
 

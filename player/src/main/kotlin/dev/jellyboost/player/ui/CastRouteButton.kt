@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -73,9 +74,27 @@ fun CastRouteButton(
 
     if (state == CastDeviceState.Unavailable) return
     val hasReceivers = state != CastDeviceState.NoDevices
+    // "Cast to a device" is a lie once a device has it (audit A11Y-P-17): the button's *state* is the
+    // one thing a user who cannot see the filled glyph has no other way to learn, and it is also the
+    // answer to "why is nothing playing here". The connected name reuses the same sentence the
+    // casting backdrop draws, so the screen and the button say the same thing.
+    val connected = state as? CastDeviceState.Connected
+    val description =
+        if (connected == null) {
+            stringResource(R.string.player_cast)
+        } else {
+            stringResource(
+                R.string.player_casting_to,
+                connected.deviceName ?: stringResource(R.string.player_cast_device_unnamed),
+            )
+        }
 
     if (!glassContainer) {
-        MediaRouteButtonHost(visible = hasReceivers, modifier = modifier.size(CastButtonSize))
+        MediaRouteButtonHost(
+            visible = hasReceivers,
+            description = description,
+            modifier = modifier.size(CastButtonSize),
+        )
         return
     }
 
@@ -93,7 +112,11 @@ fun CastRouteButton(
                     ),
             contentAlignment = Alignment.Center,
         ) {
-            MediaRouteButtonHost(visible = hasReceivers, modifier = Modifier.size(size))
+            MediaRouteButtonHost(
+                visible = hasReceivers,
+                description = description,
+                modifier = Modifier.size(size),
+            )
         }
     }
 }
@@ -111,10 +134,14 @@ fun CastRouteButton(
  *
  * @param visible `View.VISIBLE` vs `View.INVISIBLE` — never `GONE`, and never conditional
  *   composition: the attached view is what keeps route discovery running (see [CastRouteButton]).
+ * @param description what the button says it does *right now*. Applied in `update` rather than in
+ *   `factory` because it changes with the session, and a description set once would go on claiming
+ *   the film is here long after it left.
  */
 @Composable
 private fun MediaRouteButtonHost(
     visible: Boolean,
+    description: String,
     modifier: Modifier = Modifier,
 ) {
     AndroidView(
@@ -122,11 +149,11 @@ private fun MediaRouteButtonHost(
         factory = { context ->
             val themed = ContextThemeWrapper(context, R.style.Theme_Jellyboost_Cast)
             MediaRouteButton(themed).apply {
-                contentDescription = context.getString(R.string.player_cast)
                 CastButtonFactory.setUpMediaRouteButton(themed, this)
             }
         },
         update = { view ->
+            view.contentDescription = description
             view.visibility = if (visible) View.VISIBLE else View.INVISIBLE
         },
     )

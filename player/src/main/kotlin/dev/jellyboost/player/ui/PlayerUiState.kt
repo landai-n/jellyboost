@@ -359,6 +359,15 @@ data class PlayerActions(
     val onSelectSpeed: (PlaybackSpeed) -> Unit,
     val onSkipSegment: () -> Unit,
     val onBack: () -> Unit,
+    /**
+     * Opens the brightness/volume sheet — the non-gesture way to both (accessibility audit
+     * 2026-08-05, CR-8).
+     *
+     * Hosted by `PlayerScreen` rather than by the control bar, like the two SyncPlay sheets and for
+     * the same reason: the bar composes itself out four seconds after it appears, and a panel that
+     * vanishes mid-adjustment would be no alternative at all for the users this exists for.
+     */
+    val onOpenDisplaySheet: () -> Unit = {},
     /** Opens the group sheet; only ever reachable while [PlayerSyncPlayState.inGroup] (M11). */
     val onOpenGroupSheet: () -> Unit = {},
     /** Opens the group queue sheet; only reachable once the group actually has a queue (M11). */

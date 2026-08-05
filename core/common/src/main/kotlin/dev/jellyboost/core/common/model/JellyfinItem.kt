@@ -76,6 +76,17 @@ data class JellyfinItem(
     val artists: List<String> = emptyList(),
     /** Navigable references to the performing artists, for tapping through to an artist page. */
     val artistRefs: List<ArtistRef> = emptyList(),
+    /**
+     * The media file's container (`flac`, `mp3`, `m4a` …), when the server named one.
+     *
+     * Added in M13 Phase 3 for one purpose: the music queue streams through `/Audio/{id}/universal`,
+     * which decides direct-play-versus-transcode server side from the container list the client
+     * sends, and answers with bytes rather than with a description of what it decided. This is the
+     * only fact the client has to infer the `PlayMethod` its reports carry, and inferring it here
+     * is what avoids a `PlaybackInfo` round trip per track — the property the whole queue design
+     * rests on (`MusicStreamResolver`). `null` on anything the server did not describe.
+     */
+    val container: String? = null,
 ) {
     /**
      * Headline shown on a card: episodes lead with the series they belong to, everything else

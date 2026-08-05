@@ -1469,6 +1469,10 @@ internal class PlayerViewModel
             // After the stop report is handed over, never before: it is the one that closes the
             // group's view of a downloaded item, and it reads the minted id on its way out.
             syncPlay.onSessionClosed()
+            // …and after it too: video's claim on the shared player carries a relinquish that
+            // would close this same session, and disowning the claim before the report was handed
+            // over would leave nothing to close it at all (M13, key decision 3).
+            sessionController.endVideoSession()
             _videoPlayer.value = null
             if (isCasting) return
             playerHandle.stop()

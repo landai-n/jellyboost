@@ -279,13 +279,19 @@ internal class ExoPlayerHandle
          * notification; playback itself runs off the shared [ExoPlayer] and is unaffected. The next
          * [prepare] — a quality change, a track switch, a fallback retry, or simply the next item —
          * tries again from wherever the app is by then.
+         *
+         * `internal` rather than private since M13: the music queue prepares through its own
+         * `MusicPlayerPort` rather than through [prepare], and it needs the *same* service with the
+         * same best-effort start — a second `startService` call site elsewhere would be a copy of
+         * everything this method's documentation is about. Reachable only inside `:player`.
          */
-        private fun startPlaybackService() {
+        internal fun startPlaybackService() {
             runCatching { context.startService(Intent(context, PlaybackService::class.java)) }
                 .onFailure { Timber.w(it, "Could not start the playback service; continuing without it") }
         }
 
-        private fun stopPlaybackService() {
+        /** Stops the media session service; `internal` for the same reason [startPlaybackService] is. */
+        internal fun stopPlaybackService() {
             context.stopService(Intent(context, PlaybackService::class.java))
         }
     }

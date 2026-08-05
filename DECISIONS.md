@@ -3938,3 +3938,57 @@ Seeded from the approved plan; listed for traceability, no divergence:
   for the domain layer for a stronger reason (online/offline parity); doing it here to dodge a
   lint threshold would be the same mistake for a weaker one. Revisit if either class grows again
   for an unrelated reason.
+
+## 2026-08-06 — M13 Phase 3: seven implementation-time decisions on the music queue core
+- **Scope:** `core/common/.../music/MusicController.kt`, `core/common/.../model/JellyfinItem.kt`,
+  `player/.../music/*`, `player/.../api/AudioStreamUrlFactory.kt` (+`Sdk…`),
+  `player/.../session/PlaybackHandover.kt`, `player/.../session/PlaybackService.kt`,
+  `player/.../report/PlaybackReporter.kt`, `app/.../MusicPlaybackViewModel.kt`.
+- **Plan said:** `docs/notes/music-m13-plan.md`, key decisions 1–4, 7, 9 and the Phase 3 section.
+- **Done instead:** seven deviations from the letter of the plan, each small.
+  1. **`AudioStreamUrlFactory` is its own seam**, not `StreamUrlFactory.audioUniversalUrl(...)`.
+     `StreamUrlFactory` is implemented by three *anonymous test doubles* in existing player tests;
+     an abstract member on it would force an edit to three files the Phase 3 regression gate
+     ("every existing player test passes unchanged") exists to keep untouched. The split is also
+     honest on its own terms: every other method on that interface names a `/Videos` endpoint.
+  2. **`MusicQueueSpecFactory` produces a pure `MusicQueueEntry`, not a Media3 `MediaItem`**; the
+     conversion lives in `ExoMusicPlayerAdapter`. Exactly the `PlaybackMediaItemSpec` →
+     `session/MediaItems.kt` split the video path already makes, and what lets the queue's
+     notification metadata be asserted in a plain JVM test instead of on a device.
+  3. **`JellyfinItem` gains `container: String?`** (populated by `ItemMapper` from `dto.container`
+     falling back to `mediaSources[0].container`). The universal endpoint answers with bytes rather
+     than with a description of what it decided, so this is the only fact the client has to infer
+     the reported `PlayMethod` without a `PlaybackInfo` round trip per track. An unknown container
+     is reported as direct play: the direct set covers essentially every container a music library
+     holds, so a missing field is far likelier than an exotic codec.
+  4. **The queue running out leaves the state `Active` and paused on the last track**, not `Idle`.
+     Spotify-shaped, and it is what leaves the Phase 4 mini-player something to press play on; only
+     `stop()` returns to `Idle`. Play on an exhausted queue restarts it from the top, mirroring
+     Media3's own play-button handling for an ended player.
+  5. **Shuffle is a parameter of `play(queue, startIndex, shuffled)`**, not `play` followed by
+     `setShuffle(true)`: the two-step version starts the first track in queue order and only then
+     reshuffles, so a "Shuffle" button would play the album's opening track every single time.
+  6. **Refusals and failures are a `Flow<MusicMessage>` on `MusicController`** rather than a
+     boolean alone (`play` returns both). A refusal is a one-shot fact about an attempt, not state,
+     and the screen that asked is often gone by the time the answer arrives — so it is collected at
+     `AppScaffold`'s level into the existing chrome snackbar, alongside `SyncPlayLaunchEffect`.
+  7. **The Media3 1.9.0 custom layout was kept, not dropped.** The plan pre-authorised dropping
+     shuffle/repeat to in-app only if 1.9.0's notification turned out hostile. Read against the
+     `media3-session` 1.9.0 artifact it is not: `MediaSession.setMediaButtonPreferences` exists,
+     `DefaultMediaNotificationProvider.getMediaButtons(session, playerCommands,
+     mediaButtonPreferences, showPauseButton)` consumes it, and `CommandButton` ships
+     `ICON_SHUFFLE_ON/OFF` and `ICON_REPEAT_OFF/ALL/ONE`, so no drawable of ours is involved. The
+     buttons carry **custom session commands** rather than `COMMAND_SET_SHUFFLE_MODE`/
+     `COMMAND_SET_REPEAT_MODE` on purpose: a player command would flip the mode behind the
+     controller's back, so `PlaybackOrder.SHUFFLE` would never reach the server and the queue state
+     the mini-player draws would go stale. Whether the system actually renders both buttons is
+     still a device-verification item.
+- **Reason:** each is the smallest change that keeps an existing invariant true — the regression
+  gate (1), off-device testability (2, 3), the plan's own "no round trip per track" property (3),
+  music-player convention (4, 5), the M12 message-surface precedent (6), and one-owner-of-the-mode
+  (7). Two further notes for the record: `ExoPlayerHandle.startPlaybackService()`/
+  `stopPlaybackService()` became `internal` (from private) rather than being duplicated — the music
+  adapter needs the *same* best-effort API 26 background-start handling — and
+  `PlaybackSessionController` gained a defaulted `PlaybackHandover` plus a non-suspending
+  `endVideoSession()` called from `PlayerViewModel.releaseSession()`, without which video's
+  relinquish would stay armed and re-report a stop for a session closed hours earlier.

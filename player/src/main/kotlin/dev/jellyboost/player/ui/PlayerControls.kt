@@ -801,8 +801,15 @@ internal fun Long.asClock(): String {
 private const val MINUTES_PER_HOUR = 60L
 private const val SECONDS_PER_MINUTE = 60L
 private const val MILLIS_PER_SECOND = 1_000L
-private const val SKIP_BACK_MS = 10_000L
-private const val SKIP_FORWARD_MS = 30_000L
+
+/**
+ * How far the transport's two seek circles move, and — since the accessibility pass — how far the
+ * keyboard's arrow keys (`PlayerScreen`) and the seek bar's custom actions move too. One pair of
+ * numbers for all three, so the button that says "skip forward 30 seconds" and the action that says
+ * the same words cannot drift apart.
+ */
+internal const val SKIP_BACK_MS = 10_000L
+internal const val SKIP_FORWARD_MS = 30_000L
 
 /**
  * The flat wash the whole control layer sits on.

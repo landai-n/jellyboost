@@ -8,6 +8,16 @@
     <string name="player_rewind">Skip back 10 seconds</string>
     <string name="player_forward">Skip forward 30 seconds</string>
 
+    <!--
+      The tap surface over the video. It is the only way back to the controls once they have hidden,
+      so it carries a real accessibility action rather than a bare touch gesture (audit CR-1).
+    -->
+    <string name="player_show_controls">Show player controls</string>
+
+    <!-- The swipe indicator, which doubles as the announcement of what the swipe just changed. -->
+    <string name="player_volume_percent">Volume %1$d percent</string>
+    <string name="player_brightness_percent">Brightness %1$d percent</string>
+
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitles</string>
     <string name="player_subtitles_off">Off</string>

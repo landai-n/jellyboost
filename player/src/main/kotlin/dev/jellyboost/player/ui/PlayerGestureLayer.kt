@@ -36,8 +36,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
+import dev.jellyboost.player.R
 import dev.jellyboost.player.gesture.GestureConfig
 import dev.jellyboost.player.gesture.PlayerGestureController
 import dev.jellyboost.player.gesture.SwipeTarget
@@ -141,10 +148,24 @@ internal fun PlayerGestureLayer(
             }
         }
 
+    // The tap surface has to be a real accessibility node, not only a `pointerInput` (accessibility
+    // audit 2026-08-05, CR-1): touch exploration consumes taps, so without an `onClick` action a
+    // TalkBack user whose controls had auto-hidden could never bring them back — the film would
+    // play on with no reachable transport at all. The raw gesture detector stays for touch; this
+    // adds the node TalkBack, Switch Access and every other action-driven service need.
+    val revealLabel = stringResource(R.string.player_show_controls)
+
     Box(
         modifier =
             modifier
                 .fillMaxSize()
+                .semantics {
+                    contentDescription = revealLabel
+                    onClick(label = revealLabel) {
+                        onToggleControls()
+                        true
+                    }
+                }
                 // Asks the system not to steal touches that start near the edges; the controller
                 // additionally ignores them, because this is only a request below API 29.
                 .systemGestureExclusion()
@@ -167,15 +188,34 @@ private data class GestureIndicator(
     val value: Float,
 )
 
+/**
+ * The transient "volume 60%" / "brightness 40%" panel a swipe raises.
+ *
+ * Labelled rather than semantics-cleared (accessibility audit 2026-08-05, A11Y-P-16): the panel *is*
+ * the feedback for a gesture that otherwise changes nothing on screen, so as a polite live region it
+ * doubles as the announcement of what the swipe just did. The bar and the glyph inside it stay
+ * unlabelled and are merged into this one node — three announcements for one gesture would be worse
+ * than none.
+ */
 @Composable
 private fun GestureIndicatorOverlay(
     indicator: GestureIndicator,
     modifier: Modifier = Modifier,
 ) {
+    val percent = (indicator.value * PERCENT).roundToInt()
+    val spoken =
+        when (indicator.target) {
+            SwipeTarget.VOLUME -> stringResource(R.string.player_volume_percent, percent)
+            SwipeTarget.BRIGHTNESS -> stringResource(R.string.player_brightness_percent, percent)
+        }
+
     Row(
         modifier =
             modifier
-                .clip(RoundedCornerShape(Dimens.SpaceLarge))
+                .semantics(mergeDescendants = true) {
+                    contentDescription = spoken
+                    liveRegion = LiveRegionMode.Polite
+                }.clip(RoundedCornerShape(Dimens.SpaceLarge))
                 .background(Color.Black.copy(alpha = OVERLAY_ALPHA))
                 .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
@@ -198,7 +238,7 @@ private fun GestureIndicatorOverlay(
             trackColor = Color.White.copy(alpha = TRACK_ALPHA),
         )
         Text(
-            text = "${(indicator.value * PERCENT).roundToInt()}%",
+            text = "$percent%",
             color = Color.White,
         )
     }

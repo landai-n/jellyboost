@@ -35,7 +35,9 @@ offline-capable; sign-out returns to ServerSetup.
   - `SessionRepository` — `sessionState: StateFlow<SessionState>`; `restoreSession()`
     (purely local: `SecureCredentialStore` + Room, no network); `signOut()` (best-effort
     `reportSessionEnded`, wipe credential store, keep token-free Room rows — see
-    DECISIONS.md).
+    DECISIONS.md). The goodbye is capped at `SERVER_GOODBYE_TIMEOUT` (5 s) and the whole
+    teardown runs in `@ApplicationScope`, so an unreachable server costs seconds rather
+    than the sign-out, and a caller that goes away mid-call cannot cancel it.
   - `JellyfinApiFacade` / `SdkJellyfinApiFacade` — one-method-per-SDK-call seam so
     repositories are unit-testable with MockK.
 - `:core:datastore` — `SecureCredentialStore` / `EncryptedSecureCredentialStore`

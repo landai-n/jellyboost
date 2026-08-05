@@ -167,6 +167,9 @@ fun PrimaryPillButton(
  * @param tint the glass fill, as on [GlassIconButton]'s `surfaceTint`: [GlassDefaults.Fill] for a
  *   pill inside a screen's own content; a pill floating over raw video (the player's skip-segment
  *   offer) passes a dark fill instead, since there is no backdrop there to pull down.
+ * @param loading as on [PrimaryPillButton]: swaps the leading icon for an inline spinner while the
+ *   action is in flight (Settings' sign-out, waiting on the server). The caller still disables the
+ *   button.
  */
 @Composable
 fun GhostPillButton(
@@ -177,6 +180,7 @@ fun GhostPillButton(
     small: Boolean = false,
     leadingIcon: ImageVector? = null,
     tint: Color = GlassDefaults.Fill,
+    loading: Boolean = false,
 ) {
     PillFrame(
         onClick = onClick,
@@ -190,7 +194,7 @@ fun GhostPillButton(
         contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
         modifier = modifier,
     ) {
-        PillContent(text = text, small = small, leadingIcon = leadingIcon)
+        PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
     }
 }
 

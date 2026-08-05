@@ -337,7 +337,12 @@ Full app translation into the 69 locales the official jellyfin-android client sh
 - 2026-08-05: the CI i18n gate caught `player_message_change_reverted` (added in
   `2b1703b1`) missing from every locale — translated into all 69 player locales,
   validator back to 0 problems. Reminder: any new user-visible string needs the same
-  69-locale sweep in the same change, or CI on `main` goes red.
+  69-locale sweep in the same change, or CI on `main` goes red. The re-run then
+  surfaced a second, unrelated red: `FileDownloaderTest`'s "cancelling leaves the
+  partial file on disk" was racy (cancel via a `var job` read from OkHttp's dispatcher
+  thread; a fast runner streamed the whole body before the var was assigned) — made
+  deterministic with the same deferred + `awaitCancellation` + `cancelAndJoin` pattern
+  as the DL-01 test, assertions unchanged.
 - Known follow-ups: `feature/auth`'s `auth_app_name` could also be `translatable="false"`
   (currently carries a literal "Jellyboost" entry in every locale); dv (Divehi) and fo
   (Faroese) are the lowest-confidence locales.

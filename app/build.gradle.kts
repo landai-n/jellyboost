@@ -169,6 +169,7 @@ dependencies {
     implementation(projects.feature.home)
     implementation(projects.feature.library)
     implementation(projects.feature.detail)
+    implementation(projects.feature.music)
     implementation(projects.feature.search)
     implementation(projects.feature.downloads)
     implementation(projects.feature.settings)

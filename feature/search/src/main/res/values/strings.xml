@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="search_field_label">Search movies, shows and episodes</string>
+    <string name="search_field_label">Search movies, shows, episodes and music</string>
     <string name="search_clear">Clear</string>
 
     <!-- Result sections -->
     <string name="search_section_movies">Movies</string>
     <string name="search_section_series">Shows</string>
     <string name="search_section_episodes">Episodes</string>
+    <!-- M13 Phase 2 — music sections -->
+    <string name="search_section_artists">Artists</string>
+    <string name="search_section_albums">Albums</string>
+    <string name="search_section_songs">Songs</string>
+    <string name="search_section_playlists">Playlists</string>
 
     <!-- States -->
     <!-- Shown under the field once a search has matched something, and announced when it changes:

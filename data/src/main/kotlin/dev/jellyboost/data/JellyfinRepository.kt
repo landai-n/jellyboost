@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.Flow
  */
 interface JellyfinRepository {
     /**
-     * The current user's libraries, filtered to the kinds v1 supports (movies and TV shows).
+     * The current user's libraries, filtered to the kinds the app supports (movies, TV shows, and
+     * music since M13 Phase 2 — [dev.jellyboost.core.common.model.CollectionKind.SUPPORTED]).
      *
      * Backs the home screen's *My Media* row and the Libraries tab.
      */
@@ -133,6 +134,9 @@ interface JellyfinRepository {
          * constant is the one piece of them that was public for a reason.
          */
         const val ONLINE_CALL_TIMEOUT_MS = 10_000L
+
+        /** Row size for [getArtistTopTracks] when the caller does not ask for a different one. */
+        const val DEFAULT_TOP_TRACKS_LIMIT = 50
     }
 
     // ---- M3 — library & search ---------------------------------------------------------------
@@ -177,6 +181,60 @@ interface JellyfinRepository {
         parentId: String?,
         itemTypes: List<ItemType>,
     ): AppResult<FilterFacets>
+
+    // ---- M13 Phase 2 — music -------------------------------------------------------------------
+
+    /**
+     * A music album's tracks, in disc/track order.
+     *
+     * Online: items parented under [albumId], narrowed to [ItemType.AUDIO] and sorted
+     * `ParentIndexNumber, IndexNumber, SortName` — disc, then track, then a stable tiebreak for
+     * tracks that share both numbers. Offline:
+     * [dev.jellyboost.core.database.dao.ItemDao.tracksOfAlbum], the M13 Phase 1 query-only column.
+     */
+    suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>>
+
+    /**
+     * An artist's albums, newest first.
+     *
+     * Online: items whose album artist is [artistId], narrowed to [ItemType.MUSIC_ALBUM] and sorted
+     * `ProductionYear desc, PremiereDate desc, SortName` — release year first, then the exact date
+     * for albums that share a year, then a stable alphabetical tiebreak. Offline:
+     * [dev.jellyboost.core.database.dao.ItemDao.albumsOfArtist].
+     */
+    suspend fun getArtistAlbums(artistId: String): AppResult<List<JellyfinItem>>
+
+    /**
+     * An artist's most-played tracks, capped at [limit].
+     *
+     * Online: items credited to [artistId] (`artistIds`), narrowed to [ItemType.AUDIO] and sorted by
+     * play count descending — the server's own listening history.
+     *
+     * Offline there is no per-track play-count query and no honest way to rank a handful of
+     * downloaded songs as "top" anything, so this answers with this device's downloaded tracks of
+     * the artist (every [getArtistAlbums] album, expanded through
+     * [dev.jellyboost.core.database.dao.ItemDao.tracksOfAlbum]), ordered by whatever local play count
+     * this device happens to have recorded. It is a documented approximation, not the server's
+     * ranking — see [OfflineJellyfinRepository.getArtistTopTracks].
+     */
+    suspend fun getArtistTopTracks(
+        artistId: String,
+        limit: Int = DEFAULT_TOP_TRACKS_LIMIT,
+    ): AppResult<List<JellyfinItem>>
+
+    /**
+     * A playlist's tracks, in playlist order.
+     *
+     * Online: `PlaylistsApi.getPlaylistItems` — the dedicated `/Playlists/{id}/Items` endpoint,
+     * which (unlike a generic `parentId` items query) is guaranteed to preserve the order the
+     * playlist was built in.
+     *
+     * Offline: always empty. Room has no playlist-membership table — a playlist's members are only
+     * ever known from the server's own ordering, and nothing about a downloaded track records which
+     * playlist(s) it belongs to — so there is no honest non-empty answer before M13 Phase 5 gives
+     * playlists their own offline model (docs/notes/music-m13-plan.md, Phase 5).
+     */
+    suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>>
 }
 
 // ---- M4 — item detail ------------------------------------------------------------------------

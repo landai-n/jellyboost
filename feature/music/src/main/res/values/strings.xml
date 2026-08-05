@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Errors (precedent: :feature:library / :feature:search) -->
+    <string name="music_error_network">Can\'t reach your server. Check your connection and try again.</string>
+    <string name="music_error_unauthorized">Your session expired. Sign in again to continue.</string>
+    <string name="music_error_not_found">That item is no longer on the server.</string>
+    <string name="music_error_server_with_code">The server returned an error (%1$d).</string>
+    <string name="music_error_server">The server returned an error.</string>
+    <string name="music_error_storage">Couldn\'t read local data.</string>
+    <string name="music_error_unknown">Something went wrong loading this.</string>
+
+    <!-- MusicLibraryScreen -->
+    <string name="music_library_back">Back</string>
+    <string name="music_library_home">Home</string>
+    <string name="music_library_tab_albums">Albums</string>
+    <string name="music_library_tab_artists">Artists</string>
+    <string name="music_library_tab_playlists">Playlists</string>
+    <string name="music_library_empty_albums">No albums here yet</string>
+    <string name="music_library_empty_artists">No artists here yet</string>
+    <string name="music_library_empty_playlists">No playlists here yet</string>
+
+    <!-- TrackRow -->
+    <string name="music_track_favorite_add">Add to favorites</string>
+    <string name="music_track_favorite_remove">Remove from favorites</string>
+
+    <!-- AlbumDetailScreen -->
+    <string name="music_album_empty">This album isn\'t available</string>
+    <string name="music_album_back">Back</string>
+    <string name="music_album_home">Home</string>
+    <string name="music_album_no_tracks">No tracks found</string>
+    <string name="music_album_disc_number">Disc %1$d</string>
+    <string name="music_album_remove_favorite">Remove from favorites</string>
+    <string name="music_album_add_favorite">Add to favorites</string>
+    <string name="music_album_play">Play</string>
+    <string name="music_album_shuffle">Shuffle</string>
+    <string name="music_album_playback_coming_soon">Playback is coming in a future update</string>
+
+    <!-- ArtistDetailScreen -->
+    <string name="music_artist_empty">This artist isn\'t available</string>
+    <string name="music_artist_back">Back</string>
+    <string name="music_artist_home">Home</string>
+    <string name="music_artist_section_albums">Albums</string>
+    <string name="music_artist_section_top_tracks">Top tracks</string>
+    <string name="music_artist_top_tracks_show_more">Show more</string>
+    <string name="music_artist_remove_favorite">Remove from favorites</string>
+    <string name="music_artist_add_favorite">Add to favorites</string>
+
+    <!-- PlaylistDetailScreen -->
+    <string name="music_playlist_empty">This playlist isn\'t available</string>
+    <string name="music_playlist_back">Back</string>
+    <string name="music_playlist_home">Home</string>
+    <string name="music_playlist_no_tracks">No tracks to show — playlists aren\'t available offline yet</string>
+    <plurals name="music_playlist_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+</resources>

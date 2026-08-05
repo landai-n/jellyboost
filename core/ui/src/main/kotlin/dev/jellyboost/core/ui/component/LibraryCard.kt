@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material3.Icon
@@ -72,6 +73,7 @@ private val TileSubtitle =
 fun libraryIcon(kind: CollectionKind): ImageVector =
     when (kind) {
         CollectionKind.TVSHOWS -> Icons.Outlined.Tv
+        CollectionKind.MUSIC -> Icons.Outlined.LibraryMusic
         else -> Icons.Outlined.Movie
     }
 

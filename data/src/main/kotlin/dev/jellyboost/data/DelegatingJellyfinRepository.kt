@@ -102,6 +102,23 @@ internal class DelegatingJellyfinRepository
         ): AppResult<FilterFacets> =
             delegate({ getFilterFacets(parentId, itemTypes) }, { getFilterFacets(parentId, itemTypes) })
 
+        // ---- M13 Phase 2 — music -------------------------------------------------------------
+
+        override suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>> =
+            delegate({ getAlbumTracks(albumId) }, { getAlbumTracks(albumId) })
+
+        override suspend fun getArtistAlbums(artistId: String): AppResult<List<JellyfinItem>> =
+            delegate({ getArtistAlbums(artistId) }, { getArtistAlbums(artistId) })
+
+        override suspend fun getArtistTopTracks(
+            artistId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> =
+            delegate({ getArtistTopTracks(artistId, limit) }, { getArtistTopTracks(artistId, limit) })
+
+        override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
+            delegate({ getPlaylistItems(playlistId) }, { getPlaylistItems(playlistId) })
+
         /**
          * The paged grid is a stream, so the choice is re-made whenever the connection changes
          * rather than once at subscription: losing the network mid-scroll swaps the grid over to

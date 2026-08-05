@@ -18,6 +18,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navOptions
 import dev.jellyboost.core.common.Routes
+import dev.jellyboost.core.common.model.CollectionKind
+import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.theme.LocalHazeState
 import dev.jellyboost.feature.auth.LoginScreen
@@ -28,6 +32,10 @@ import dev.jellyboost.feature.home.HomeActions
 import dev.jellyboost.feature.home.HomeScreen
 import dev.jellyboost.feature.library.LibraryGridScreen
 import dev.jellyboost.feature.library.libraries.LibrariesScreen
+import dev.jellyboost.feature.music.AlbumDetailScreen
+import dev.jellyboost.feature.music.ArtistDetailScreen
+import dev.jellyboost.feature.music.MusicLibraryScreen
+import dev.jellyboost.feature.music.PlaylistDetailScreen
 import dev.jellyboost.feature.search.SearchScreen
 import dev.jellyboost.feature.settings.SettingsScreen
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupsScreen
@@ -105,15 +113,13 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 actions =
                     HomeActions(
-                        onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                        onItemClick = { item -> navController.navigateToItem(item) },
                         onPlay = { itemId, startPositionTicks ->
                             navController.navigate(
                                 Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
                             )
                         },
-                        onLibraryClick = { library ->
-                            navController.navigate(Routes.LibraryGrid(library.id, library.name))
-                        },
+                        onLibraryClick = { library -> navController.navigateToLibrary(library) },
                         // A tab switch, not a push: the Downloads chip lands on the Downloads tab
                         // exactly as its button in the nav bar does, back stack and all.
                         onOpenDownloads = { navController.navigateToTab(Routes.Downloads) },
@@ -124,16 +130,14 @@ internal fun JellyfinNavHost(
         composable<Routes.Libraries> {
             LibrariesScreen(
                 viewModel = hiltViewModel(),
-                onLibraryClick = { library ->
-                    navController.navigate(Routes.LibraryGrid(library.id, library.name))
-                },
+                onLibraryClick = { library -> navController.navigateToLibrary(library) },
             )
         }
 
         composable<Routes.Search> {
             SearchScreen(
                 viewModel = hiltViewModel(),
-                onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                onItemClick = { item -> navController.navigateToItem(item) },
             )
         }
 
@@ -160,7 +164,7 @@ internal fun JellyfinNavHost(
         composable<Routes.LibraryGrid> {
             LibraryGridScreen(
                 viewModel = hiltViewModel(),
-                onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                onItemClick = { item -> navController.navigateToItem(item) },
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -169,12 +173,56 @@ internal fun JellyfinNavHost(
         composable<Routes.ItemDetail> {
             ItemDetailScreen(
                 viewModel = hiltViewModel(),
-                onItemClick = { item -> navController.navigate(Routes.ItemDetail(item.id)) },
+                onItemClick = { item -> navController.navigateToItem(item) },
                 onPlay = { itemId, startPositionTicks ->
                     navController.navigate(
                         Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
                     )
                 },
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+            )
+        }
+
+        // M13 Phase 2 — music
+        composable<Routes.MusicLibrary> {
+            MusicLibraryScreen(
+                viewModel = hiltViewModel(),
+                onAlbumClick = { item -> navController.navigateToItem(item) },
+                onArtistClick = { item -> navController.navigateToItem(item) },
+                onPlaylistClick = { item -> navController.navigateToItem(item) },
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+            )
+        }
+
+        composable<Routes.AlbumDetail> {
+            AlbumDetailScreen(
+                viewModel = hiltViewModel(),
+                onArtistClick = { item -> navController.navigateToItem(item) },
+                // No queue exists yet — filled in by M13 Phase 3 (`MusicController`); see the
+                // screen's own KDoc.
+                onPlay = { _, _ -> },
+                onShuffle = { _ -> },
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+            )
+        }
+
+        composable<Routes.ArtistDetail> {
+            ArtistDetailScreen(
+                viewModel = hiltViewModel(),
+                onAlbumClick = { item -> navController.navigateToItem(item) },
+                onTrackClick = { _, _ -> },
+                onBack = { navController.popBackStack() },
+                onHome = { navController.navigateHome() },
+            )
+        }
+
+        composable<Routes.PlaylistDetail> {
+            PlaylistDetailScreen(
+                viewModel = hiltViewModel(),
+                onTrackClick = { _, _ -> },
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -278,5 +326,38 @@ private fun NavController.navigateClearingBackStack(route: Any) {
     navigate(route) {
         popUpTo(graph.id) { inclusive = true }
         launchSingleTop = true
+    }
+}
+
+/**
+ * A library tile was tapped — the one fork between the movie/TV library grid and M13's music
+ * library screen (docs/notes/music-m13-plan.md, Phase 2 spec item 6).
+ */
+private fun NavController.navigateToLibrary(library: LibraryView) {
+    if (library.collectionType == CollectionKind.MUSIC) {
+        navigate(Routes.MusicLibrary(library.id, library.name))
+    } else {
+        navigate(Routes.LibraryGrid(library.id, library.name))
+    }
+}
+
+/**
+ * The one place an item click becomes a destination, for every screen that can now hand this a
+ * music item as easily as a movie or a series (Home, the library grid, item detail's own related
+ * rows, search) — M13 Phase 2 spec item 6: "item clicks branch on type: MUSIC_ALBUM → AlbumDetail,
+ * MUSIC_ARTIST → ArtistDetail, PLAYLIST → PlaylistDetail, AUDIO → its album's detail if albumId
+ * present else no-op for now."
+ *
+ * A track with no `albumId` at all (a lone upload, a malformed server response) does nothing
+ * rather than opening a broken album page — there is nowhere useful for a tap on it to go before
+ * M13 Phase 3 gives a track its own now-playing destination.
+ */
+private fun NavController.navigateToItem(item: JellyfinItem) {
+    when (item.type) {
+        ItemType.MUSIC_ALBUM -> navigate(Routes.AlbumDetail(item.id))
+        ItemType.MUSIC_ARTIST -> navigate(Routes.ArtistDetail(item.id))
+        ItemType.PLAYLIST -> navigate(Routes.PlaylistDetail(item.id))
+        ItemType.AUDIO -> item.albumId?.let { albumId -> navigate(Routes.AlbumDetail(albumId)) }
+        else -> navigate(Routes.ItemDetail(item.id))
     }
 }

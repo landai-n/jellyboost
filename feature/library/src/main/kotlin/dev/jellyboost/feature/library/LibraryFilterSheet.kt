@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.FilterOptions
@@ -91,9 +93,13 @@ private fun FilterSheetContent(
                 .padding(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
+        // The sheet's own title, and each section below it, are headings: a sheet of a hundred
+        // genre chips is exactly the list a heading-jump exists to get past (accessibility audit
+        // 2026-08-05, A11Y-10).
         Text(
             text = stringResource(R.string.library_filters_title),
             style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.semantics { heading() },
         )
 
         FilterSection(title = stringResource(R.string.library_filters_played)) {
@@ -169,6 +175,7 @@ private fun FilterSection(
             text = title,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.semantics { heading() },
         )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),

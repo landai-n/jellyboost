@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,13 +70,29 @@ internal fun CastRail(
     }
 }
 
+/**
+ * One face in the rail — and **one** node for a screen reader.
+ *
+ * Unmerged it was two stops per person, a name and then a role floating free of whoever plays it
+ * ("Dolores Abernathy" is not a fact on its own), so a twelve-strong rail was twenty-four swipes to
+ * get past (accessibility audit 2026-08-05, A11Y-21). Merged, each person is one stop that says
+ * both, in the words the credit would be written in. The column is not clickable and gains no role:
+ * a person page is not in v1 scope, and the rail is a list of facts.
+ */
 @Composable
 private fun CastMember(
     person: Person,
     modifier: Modifier = Modifier,
 ) {
+    val role = person.role?.takeIf { it.isNotBlank() }
+    val description =
+        role?.let { stringResource(R.string.detail_cast_member_as, person.name, it) } ?: person.name
+
     Column(
-        modifier = modifier.width(CastColumnWidth),
+        modifier =
+            modifier
+                .width(CastColumnWidth)
+                .semantics(mergeDescendants = true) { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
@@ -92,9 +110,9 @@ private fun CastMember(
             maxLines = CAST_TEXT_LINES,
             overflow = TextOverflow.Ellipsis,
         )
-        person.role?.takeIf { it.isNotBlank() }?.let { role ->
+        role?.let {
             Text(
-                text = role,
+                text = it,
                 style = CastRoleStyle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

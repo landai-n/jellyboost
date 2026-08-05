@@ -271,6 +271,11 @@ private fun AppOverflowMenu(
             )
             DropdownMenuItem(
                 text = { Text(text = stringResource(R.string.home_settings)) },
+                // The row above says what it is through the `Role.Switch` its trailing control
+                // carries; this one had nothing at all. `DropdownMenuItem`'s own `clickable` sets no
+                // role, so it is declared here — first in the chain, and therefore the one that wins
+                // (accessibility audit 2026-08-05, ROLE-01).
+                modifier = Modifier.semantics { role = Role.Button },
                 leadingIcon = {
                     Icon(imageVector = Icons.Filled.Settings, contentDescription = null)
                 },

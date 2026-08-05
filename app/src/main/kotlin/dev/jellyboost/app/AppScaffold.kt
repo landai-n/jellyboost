@@ -35,6 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -102,6 +105,24 @@ import kotlinx.coroutines.launch
  * surface in the chrome samples the page underneath it through `LocalHazeState`. A second source —
  * inside a lazy item, say — would sample a node that scrolls, which is both wrong and expensive.
  *
+ * ### The order a screen reader reads it in
+ * Everything above is a *sibling* of the nav host drawn over it, which is precisely the arrangement
+ * accessibility traversal has no way to guess: overlapping siblings with no reading order declared
+ * are sorted geometrically, and chrome that covers the page from both ends came out interleaved with
+ * — or after — the whole of the page's content (accessibility audit 2026-08-05, F9). Each piece
+ * therefore declares itself a traversal group and says where it belongs:
+ *
+ * - **top chrome** ([GlassTopNav] on wide, [AppActionCluster] on compact) — [CHROME_TOP_INDEX],
+ * - **the page** ([JellyfinNavHost]) — a group of its own at the default index,
+ * - **the bottom pill** ([GlassBottomNav]) — [CHROME_BOTTOM_INDEX].
+ *
+ * so TalkBack reads top chrome → page → bottom nav, which is what the window looks like. Grouping is
+ * what makes the indices bite: a `traversalIndex` orders a node against its *peers*, and without
+ * `isTraversalGroup` the chrome's own buttons would be sorted against the page's rows individually
+ * instead of moving as one block. The scrim and the snackbar host are deliberately left out — the
+ * scrim is a gradient with no semantics at all, and the snackbar is announced when it appears rather
+ * than traversed to.
+ *
  * The one destination the source is *detached* on is the player. Recording the source is a
  * full-window offscreen layer capture on every frame, and on the player nothing useful can come of
  * it: the video is a `SurfaceView` whose pixels are composited by the system and never land in the
@@ -166,6 +187,9 @@ internal fun AppScaffold(
                 modifier =
                     Modifier
                         .fillMaxSize()
+                        // The page is one traversal block, read between the two pieces of chrome —
+                        // see "The order a screen reader reads it in" above.
+                        .semantics { isTraversalGroup = true }
                         .then(if (onPlayer) Modifier else Modifier.hazeSource(hazeState)),
             )
 
@@ -184,7 +208,7 @@ internal fun AppScaffold(
                 visible = isTopLevel && !bottomNav,
                 enter = slideInVertically { -it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
                 exit = slideOutVertically { -it } + fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = Modifier.align(Alignment.TopCenter).topChromeTraversal(),
             ) {
                 GlassTopNav(
                     currentDestination = barDestination,
@@ -202,7 +226,7 @@ internal fun AppScaffold(
                 visible = isTopLevel && bottomNav,
                 enter = fadeIn(tween(NAV_TRANSITION_MILLIS)),
                 exit = fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
-                modifier = Modifier.align(Alignment.TopEnd),
+                modifier = Modifier.align(Alignment.TopEnd).topChromeTraversal(),
             ) {
                 AppActionCluster(
                     connectionState = connectionState,
@@ -222,7 +246,12 @@ internal fun AppScaffold(
                     Modifier
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
-                        .padding(bottom = BottomNavMargin),
+                        .padding(bottom = BottomNavMargin)
+                        // Last, as it is drawn: the pill is the bottom of the window.
+                        .semantics {
+                            isTraversalGroup = true
+                            traversalIndex = CHROME_BOTTOM_INDEX
+                        },
             ) {
                 GlassBottomNav(
                     currentDestination = barDestination,
@@ -246,6 +275,24 @@ internal fun AppScaffold(
         }
     }
 }
+
+/**
+ * What both pieces of top chrome declare: one block, read before the page under it.
+ *
+ * The two are never on screen together — [GlassTopNav] is the wide layout's, [AppActionCluster] the
+ * compact one's — so they share an index rather than being ordered against each other.
+ */
+private fun Modifier.topChromeTraversal(): Modifier =
+    semantics {
+        isTraversalGroup = true
+        traversalIndex = CHROME_TOP_INDEX
+    }
+
+/** Before the page, whose own group sits at the default 0. */
+private const val CHROME_TOP_INDEX = -1f
+
+/** After the page — see [AppScaffold]'s "The order a screen reader reads it in". */
+private const val CHROME_BOTTOM_INDEX = 1f
 
 /**
  * How much faster than the page cross-fade the chrome leaves.

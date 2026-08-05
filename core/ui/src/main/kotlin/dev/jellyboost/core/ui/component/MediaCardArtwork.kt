@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,12 +31,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -65,15 +70,23 @@ internal fun Modifier.cardWidth(width: Dp): Modifier = if (width.isSpecified) th
  * The haptic is here rather than in the two screens because it is a property of the gesture, not of
  * the list: a long press that selects something with no tactile confirmation reads as a press that
  * did nothing until the eye finds the bar that appeared at the other end of the screen.
+ *
+ * The long press is *labelled* — "Select" — which is what puts it in TalkBack's actions menu. An
+ * unlabelled long press is a gesture only a sighted user can discover, and batch selection is the
+ * one mode of this app that has no other way in (accessibility audit 2026-08-05, A11Y-19).
  */
 @Composable
 fun Modifier.selectableCardClick(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
+    role: Role? = Role.Button,
 ): Modifier {
     val haptics = LocalHapticFeedback.current
+    val longClickLabel = stringResource(R.string.selection_enter)
     return this.combinedClickable(
         onClick = onClick,
+        role = role,
+        onLongClickLabel = onLongClick?.let { longClickLabel },
         onLongClick =
             onLongClick?.let { longClick ->
                 {
@@ -104,6 +117,54 @@ internal val CardTitleGap = 10.dp
 
 /** Gap between that title and its subtitle — tight, so the two read as one block. */
 internal val CardSubtitleGap = 2.dp
+
+/**
+ * Font scale past which a card title is allowed a second line.
+ *
+ * 1.3 is where a 14sp title in a 130–232dp card stops fitting a useful number of characters on one:
+ * below it the design's single line holds a real title, above it "The Bicameral…" becomes "The
+ * Bic…" and the card stops distinguishing itself from its neighbour (audit SCALE-03).
+ */
+private const val TITLE_RELAX_SCALE = 1.3f
+
+/** How many lines a card title gets at [fontScale] — one, or two once text is large. */
+internal fun cardTitleMaxLines(fontScale: Float): Int = if (fontScale > TITLE_RELAX_SCALE) 2 else 1
+
+/**
+ * The title and subtitle every card draws under its artwork.
+ *
+ * Shared by [PosterCard] and [ThumbCard] because the two blocks were identical, and because both
+ * halves of it — the scale-aware line count and the silence — are rules that must not drift apart:
+ * the card's merged node speaks the untruncated title itself (see [mediaCardSemantics]), so these
+ * two texts are pictures of words rather than words, and are cleared for the screen reader.
+ */
+@Composable
+internal fun CardTitleBlock(
+    title: String,
+    subtitle: String?,
+) {
+    val maxLines = cardTitleMaxLines(LocalDensity.current.fontScale)
+    Spacer(modifier = Modifier.height(CardTitleGap))
+    Text(
+        text = title,
+        style = CardTitleStyle,
+        color = MaterialTheme.colorScheme.onBackground,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.clearAndSetSemantics {},
+    )
+    if (subtitle != null) {
+        Spacer(modifier = Modifier.height(CardSubtitleGap))
+        Text(
+            text = subtitle,
+            style = CardSubtitleStyle,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
+    }
+}
 
 /** Text inside every overlay badge drawn on artwork — small, heavy and slightly tracked out. */
 private val OverlayBadgeLabel =
@@ -193,6 +254,11 @@ internal fun formatRatingBadge(
  *   *number* comes from `JellyfinItem.remainingMinutes`; the wording is a caller's string resource,
  *   which is why this is a `String` and not an `Int`.
  * @param ratingBadge community rating for the bottom-left badge — see [formatRatingBadge].
+ * @param contentDescription label for the artwork itself. Both cards pass `null`: the card they sit
+ *   in is one merged semantics node carrying an authored description of the whole item (see
+ *   [mediaCardSemantics]), and an image description would be concatenated onto it rather than
+ *   replace it. Every overlay this draws is silenced for the same reason — the badges are drawn
+ *   facts, and the card's sentence is where those facts are spoken.
  */
 @Composable
 internal fun MediaCardArtwork(
@@ -276,7 +342,7 @@ private fun BoxScope.CardOverlays(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        DownloadBadge(state = downloadState)
+        DownloadBadge(state = downloadState, decorative = true)
         // Hidden mid-episode (the progress bar already says "not finished"), and hidden in
         // selection mode, where a second primary circle with a check in it would be a puzzle.
         if (played && progress == null && selected == null) {
@@ -326,6 +392,7 @@ private fun BoxScope.TopStartOverlay(
         SelectionIndicator(
             selected = selected,
             modifier = Modifier.align(Alignment.TopStart).padding(CornerIndicatorInset),
+            decorative = true,
         )
     } else if (topStartBadge != null) {
         Text(
@@ -333,9 +400,13 @@ private fun BoxScope.TopStartOverlay(
             style = OverlayBadgeLabel,
             color = Color.White,
             maxLines = 1,
+            // Clipped inside artwork with no room to spare: without this the last glyph is cut in
+            // half at ≥1.5× font scale rather than trailing off (audit SCALE-05).
+            overflow = TextOverflow.Ellipsis,
             modifier =
                 Modifier
                     .align(Alignment.TopStart)
+                    .clearAndSetSemantics {}
                     .padding(Dimens.OverlayInset)
                     .background(color = TopBadgeScrim, shape = RoundedCornerShape(BadgeRadius))
                     .padding(horizontal = TopBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
@@ -354,14 +425,21 @@ private fun TimeChip(
         style = OverlayBadgeLabel,
         color = Color.White,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier =
             modifier
+                .clearAndSetSemantics {}
                 .background(color = TimeChipScrim, shape = RoundedCornerShape(BadgeRadius))
                 .padding(horizontal = CornerBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
     )
 }
 
-/** The bottom-left star + score badge, shown on library grids. */
+/**
+ * The bottom-left star + score badge, shown on library grids.
+ *
+ * Silent: the card's own description says "Rating 8.0 out of 10", which is the number *and* the
+ * scale it is on — a bare "8.0" announced from a badge is a number out of nowhere (audit m1).
+ */
 @Composable
 private fun RatingBadge(
     rating: Float,
@@ -370,6 +448,7 @@ private fun RatingBadge(
     Row(
         modifier =
             modifier
+                .clearAndSetSemantics {}
                 .background(color = RatingScrim, shape = RoundedCornerShape(BadgeRadius))
                 .padding(horizontal = CornerBadgeHorizontalPadding, vertical = BadgeVerticalPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -386,6 +465,7 @@ private fun RatingBadge(
             style = OverlayBadgeLabel,
             color = Color.White,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -395,6 +475,12 @@ private fun RatingBadge(
  *
  * A hand-rolled pair of boxes rather than a `LinearProgressIndicator`: at 3dp with a 2dp radius and
  * neither stop indicator nor gap, nothing that component provides survives being configured away.
+ *
+ * It carries no `progressBarRangeInfo` of its own (which is what the audit's A11Y-03 sketched):
+ * inside a card the bar is not a control, it is one fact among six, and a separate progress node
+ * would be a second stop announcing "45 percent" with nothing to say what is 45% done. The card's
+ * merged description says "45% watched" instead, and the bar is explicitly silenced so the two
+ * cannot both speak.
  */
 @Composable
 private fun InsetProgressBar(
@@ -405,6 +491,7 @@ private fun InsetProgressBar(
     Box(
         modifier =
             modifier
+                .clearAndSetSemantics {}
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.OverlayInset)
                 .padding(bottom = Dimens.SpaceSmall)
@@ -422,7 +509,12 @@ private fun InsetProgressBar(
     }
 }
 
-/** The solid primary disc with a dark tick that marks an item as watched. */
+/**
+ * The solid primary disc with a dark tick that marks an item as watched.
+ *
+ * Silent, like every overlay on a card: "Watched" is part of the card's own sentence, and a tick
+ * that also announced itself would put the word in twice.
+ */
 @Composable
 private fun WatchedIndicator(modifier: Modifier = Modifier) {
     Box(
@@ -434,7 +526,7 @@ private fun WatchedIndicator(modifier: Modifier = Modifier) {
     ) {
         Icon(
             imageVector = Icons.Filled.Check,
-            contentDescription = stringResource(R.string.media_card_watched),
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(IndicatorGlyphSize),
         )
@@ -447,19 +539,21 @@ private fun WatchedIndicator(modifier: Modifier = Modifier) {
  * Both states are drawn, not just the selected one: an unselected card in a selection-mode grid has
  * to say that it *could* be selected, otherwise the mode looks like it applies to one card only.
  *
- * The unselected ring has no glyph to hang a `contentDescription` off, so it labels itself through
- * `semantics` instead — a card that reads out its title and nothing about its selection state is a
- * card a screen-reader user cannot batch-edit.
+ * @param decorative `true` inside a card, whose own node now carries real `selected` semantics and
+ *   a spoken state (see [mediaCardSemantics]) — a state a screen reader can *announce as a toggle*
+ *   rather than a description that ends in the word "Selected". `false` leaves the indicator
+ *   labelling itself, for a caller that draws one outside a selectable node.
  */
 @Composable
 internal fun SelectionIndicator(
     selected: Boolean,
     modifier: Modifier = Modifier,
+    decorative: Boolean = false,
 ) {
     val description =
         stringResource(
             if (selected) R.string.selection_item_selected else R.string.selection_item_not_selected,
-        )
+        ).takeUnless { decorative }
     if (selected) {
         Box(
             modifier =
@@ -485,7 +579,7 @@ internal fun SelectionIndicator(
                         width = IndicatorRingWidth,
                         color = Color.White.copy(alpha = UNSELECTED_INDICATOR_ALPHA),
                         shape = CircleShape,
-                    ).semantics { this.contentDescription = description },
+                    ).semantics { description?.let { this.contentDescription = it } },
         )
     }
 }

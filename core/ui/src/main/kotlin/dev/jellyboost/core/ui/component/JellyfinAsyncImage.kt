@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jellyboost.core.ui.theme.JellyfinGradients
@@ -55,7 +57,20 @@ fun JellyfinAsyncImage(
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     Box(
-        modifier = modifier.background(JellyfinGradients.ImagePlaceholder),
+        modifier =
+            modifier
+                .background(JellyfinGradients.ImagePlaceholder)
+                // The label belongs to the *slot*, not to the bitmap that may or may not fill it:
+                // an item with no artwork used to be an unlabelled box, so anywhere no text follows
+                // the image — a cast rail, a queue row — the person simply was not there
+                // (accessibility audit 2026-08-05, M2).
+                .then(
+                    if (url.isNullOrBlank() && contentDescription != null) {
+                        Modifier.semantics { this.contentDescription = contentDescription }
+                    } else {
+                        Modifier
+                    },
+                ),
         contentAlignment = Alignment.Center,
     ) {
         if (url.isNullOrBlank()) {

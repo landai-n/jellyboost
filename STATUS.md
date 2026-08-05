@@ -23,10 +23,21 @@ browse tree is a small follow-up. Music libraries surface as library tiles (no
 dedicated bottom-nav tab — user decision). Detailed phase plan:
 `docs/notes/music-m13-plan.md`; governance entry: DECISIONS 2026-08-05.
 
-- **Phase 0 (governance docs)** — landed with this entry.
-- Phases 1–6: domain/DB → browse UI → queue + background playback →
-  NowPlaying/mini-player/Continue Listening → music downloads → Instant Mix +
-  lyrics + docs. Work happens on the `worktree-music-m13` branch.
+- **Phase 0 (governance docs)** — landed (`00d7204b`).
+- **Phase 1 (domain + mappers + DB v9)** — landed (`30962715`): ItemType music
+  kinds, JellyfinItem music fields + ArtistRef, CollectionKind.MUSIC (not yet
+  SUPPORTED), ItemEntity v9 albumId/albumArtistId + tracksOfAlbum/
+  albumsOfArtist DAO queries. Gate green, +9 tests, no behaviour change.
+- **Phase 2 (browse UI + repository surface)** — landed (`bead1d10`): new
+  `:feature:music` (MusicLibrary tabs / AlbumDetail / ArtistDetail /
+  PlaylistDetail + TrackRow), AlbumCard/ArtistCard, MUSIC joins SUPPORTED,
+  per-kind library counts, repository music members ×3 (playlists via
+  /Playlists/{id}/Items; offline playlists empty until Phase 5; offline top
+  tracks a documented approximation), sectioned music search, nav wiring
+  (play/shuffle stubbed for Phase 3). Gate green.
+- **Phase 3 (queue + background playback)** — IN PROGRESS.
+- Phases 4–6: NowPlaying/mini-player/Continue Listening → music downloads →
+  Instant Mix + lyrics + docs. Work happens on the `worktree-music-m13` branch.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`
   only after M11 and M12 close (their precedent).
 

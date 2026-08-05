@@ -161,14 +161,20 @@ fun SettingsContent(
                 HorizontalDivider()
                 ConnectivitySection(state = state, actions = actions)
                 HorizontalDivider()
-                AccountSection(account = state.account, onSignOutClick = { confirmingSignOut = true })
+                AccountSection(
+                    account = state.account,
+                    signingOut = state.signingOut,
+                    // Once the sign-out is away there is nothing left to confirm: it cannot be
+                    // cancelled, and a second one would delete the downloads twice.
+                    onSignOutClick = { if (!state.signingOut) confirmingSignOut = true },
+                )
                 HorizontalDivider()
                 AboutSection(appVersion = appVersion)
             }
         }
     }
 
-    if (confirmingSignOut) {
+    if (confirmingSignOut && !state.signingOut) {
         SignOutDialog(
             onDismiss = { confirmingSignOut = false },
             onConfirm = { deleteDownloads ->
@@ -484,9 +490,18 @@ private fun ConnectivitySection(
     }
 }
 
+/**
+ * User, server and the sign-out button.
+ *
+ * While a sign-out is in flight the button holds a spinner and stops taking taps: telling an
+ * unreachable server the session ended is capped at seconds rather than instant
+ * (`SessionRepository.SERVER_GOODBYE_TIMEOUT`), and a button that answers nothing for that long
+ * reads as broken. It never comes back — the sign-out completing navigates off this screen.
+ */
 @Composable
 private fun AccountSection(
     account: AccountInfo?,
+    signingOut: Boolean,
     onSignOutClick: () -> Unit,
 ) {
     SettingsSection(title = stringResource(R.string.settings_section_account)) {
@@ -503,6 +518,8 @@ private fun AccountSection(
         GhostPillButton(
             text = stringResource(R.string.settings_sign_out),
             onClick = onSignOutClick,
+            enabled = !signingOut,
+            loading = signingOut,
             modifier =
                 Modifier
                     .padding(

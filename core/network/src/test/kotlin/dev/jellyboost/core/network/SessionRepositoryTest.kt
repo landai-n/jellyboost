@@ -24,8 +24,16 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import java.io.IOException
@@ -41,25 +49,32 @@ class SessionRepositoryTest {
     private val sessionStateHolder = SessionStateHolder()
     private val signOutHooks = linkedSetOf<SignOutHook>()
 
-    private lateinit var repository: SessionRepository
-
     private val storedSession =
         StoredSession(serverId = SERVER_ID, userId = USER_ID, accessToken = ACCESS_TOKEN)
 
-    @BeforeEach
-    fun setUp() {
-        repository =
-            SessionRepository(
-                apiFacade = apiFacade,
-                apiClientProvider = apiClientProvider,
-                serverDao = serverDao,
-                userDao = userDao,
-                secureCredentialStore = secureCredentialStore,
-                sessionStateHolder = sessionStateHolder,
-                homeLayoutStore = homeLayoutStore,
-                signOutHooks = signOutHooks,
-            )
-    }
+    /**
+     * The repository under test, built per test rather than in a `@BeforeEach` because it now needs
+     * a scope, and the only scope on the test's clock is the one `runTest` is holding.
+     *
+     * That scope stands in for `@ApplicationScope`: a plain [SupervisorJob] on the test scheduler,
+     * belonging to no coroutine, which is what the real one is — nothing cancels it short of the
+     * process ending (`NetworkModule.provideApplicationScope`). Deliberately *not* `runTest`'s
+     * `backgroundScope`: work launched there is invisible to [advanceUntilIdle], which drains
+     * foreground tasks only, and a sign-out that outlives its caller is precisely what these tests
+     * have to be able to step through.
+     */
+    private fun TestScope.repository() =
+        SessionRepository(
+            apiFacade = apiFacade,
+            apiClientProvider = apiClientProvider,
+            serverDao = serverDao,
+            userDao = userDao,
+            secureCredentialStore = secureCredentialStore,
+            sessionStateHolder = sessionStateHolder,
+            homeLayoutStore = homeLayoutStore,
+            signOutHooks = signOutHooks,
+            appScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
+        )
 
     private fun givenCompleteDatabaseRows() {
         every { secureCredentialStore.consumeLostSession() } returns false
@@ -73,14 +88,16 @@ class SessionRepositoryTest {
 
     @Test
     @DisplayName("session state starts Unknown so the splash screen can wait for the restore")
-    fun startsUnknown() {
-        repository.sessionState.value shouldBe SessionState.Unknown
-    }
+    fun startsUnknown() =
+        runTest {
+            repository().sessionState.value shouldBe SessionState.Unknown
+        }
 
     @Test
     @DisplayName("a stored session with matching rows restores as LoggedIn, without any network call")
     fun restoresStoredSession() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns storedSession
             givenCompleteDatabaseRows()
 
@@ -108,6 +125,7 @@ class SessionRepositoryTest {
     @DisplayName("an empty credential store restores as LoggedOut and touches nothing")
     fun restoreWithoutStoredSession() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns null
 
             repository.restoreSession()
@@ -121,6 +139,7 @@ class SessionRepositoryTest {
     @DisplayName("a stored token whose database rows are gone is discarded")
     fun restoreWithMissingDatabaseRows() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns storedSession
             coEvery { serverDao.getServer(SERVER_ID) } returns null
             coEvery { serverDao.getAddresses(SERVER_ID) } returns emptyList()
@@ -137,6 +156,7 @@ class SessionRepositoryTest {
     @DisplayName("a stored session with a user row but no address is discarded")
     fun restoreWithMissingAddress() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns storedSession
             coEvery { serverDao.getServer(SERVER_ID) } returns
                 ServerEntity(id = SERVER_ID, name = SERVER_NAME, version = SERVER_VERSION)
@@ -156,6 +176,7 @@ class SessionRepositoryTest {
     @DisplayName("a first run is not reported as a session the user lost")
     fun firstRunIsNotALoss() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns null
 
             repository.restoreSession()
@@ -167,6 +188,7 @@ class SessionRepositoryTest {
     @DisplayName("a credential store that had to wipe itself is reported as an involuntary sign-out")
     fun wipedStoreIsAnInvoluntarySignOut() =
         runTest {
+            val repository = repository()
             // The store answers `null` after recreating an undecryptable file, which is exactly
             // what a first run answers — so it says separately that it destroyed something.
             coEvery { secureCredentialStore.read() } returns null
@@ -182,6 +204,7 @@ class SessionRepositoryTest {
     @DisplayName("a transient storage failure signs this run out and says so")
     fun transientFailureIsAnInvoluntarySignOut() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } throws IOException("volume busy")
 
             repository.restoreSession()
@@ -196,6 +219,7 @@ class SessionRepositoryTest {
     @DisplayName("a stored token whose rows are gone is reported as an involuntary sign-out")
     fun missingRowsAreAnInvoluntarySignOut() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } returns storedSession
             coEvery { serverDao.getServer(SERVER_ID) } returns null
 
@@ -208,6 +232,7 @@ class SessionRepositoryTest {
     @DisplayName("the involuntary-sign-out flag is one-shot")
     fun involuntarySignOutIsConsumed() =
         runTest {
+            val repository = repository()
             coEvery { secureCredentialStore.read() } throws IOException("volume busy")
 
             repository.restoreSession()
@@ -221,6 +246,7 @@ class SessionRepositoryTest {
     @DisplayName("signing out is not an involuntary sign-out")
     fun signOutIsVoluntary() =
         runTest {
+            val repository = repository()
             repository.signOut()
 
             repository.consumeInvoluntarySignOut() shouldBe false
@@ -230,6 +256,7 @@ class SessionRepositoryTest {
     @DisplayName("signing out clears the credential store and the API client")
     fun signOutClearsEverything() =
         runTest {
+            val repository = repository()
             repository.signOut()
 
             coVerify(exactly = 1) { apiFacade.reportSessionEnded() }
@@ -242,6 +269,7 @@ class SessionRepositoryTest {
     @DisplayName("signing out clears the home layout cache, so the next user cannot see the last one's (audit ARCH-12)")
     fun signOutClearsTheHomeLayoutCache() =
         runTest {
+            val repository = repository()
             repository.signOut()
 
             verify(exactly = 1) { homeLayoutStore.clear() }
@@ -251,6 +279,7 @@ class SessionRepositoryTest {
     @DisplayName("signing out still completes when the server cannot be told about it")
     fun signOutSurvivesServerFailure() =
         runTest {
+            val repository = repository()
             coEvery { apiFacade.reportSessionEnded() } throws IOException("offline")
 
             repository.signOut()
@@ -266,6 +295,7 @@ class SessionRepositoryTest {
     @DisplayName("sign-out hooks run before the server revokes the token, so their requests can still authenticate")
     fun signOutHooksRunBeforeRevocation() =
         runTest {
+            val repository = repository()
             val hook = mockk<SignOutHook>()
             coEvery { hook.onSignOut() } returns Unit
             signOutHooks += hook
@@ -282,12 +312,73 @@ class SessionRepositoryTest {
     @DisplayName("a failing sign-out hook never blocks the sign-out itself")
     fun signOutSurvivesHookFailure() =
         runTest {
+            val repository = repository()
             val hook = SignOutHook { throw IOException("group leave failed") }
             signOutHooks += hook
 
             repository.signOut()
 
             coVerify(exactly = 1) { apiFacade.reportSessionEnded() }
+            coVerify(exactly = 1) { secureCredentialStore.clear() }
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    // ---- a sign-out the caller cannot lose ------------------------------------------------------
+
+    @Test
+    @DisplayName("a caller that goes away mid-goodbye does not take the sign-out with it")
+    fun signOutSurvivesCallerCancellation() =
+        runTest {
+            val repository = repository()
+            val goodbyeStarted = CompletableDeferred<Unit>()
+            val serverAnswers = CompletableDeferred<Unit>()
+            coEvery { apiFacade.reportSessionEnded() } coAnswers {
+                goodbyeStarted.complete(Unit)
+                serverAnswers.await()
+            }
+
+            // The Settings screen asking, and being popped while the request is still in flight.
+            val caller = launch { repository.signOut() }
+            goodbyeStarted.await()
+            caller.cancel()
+            serverAnswers.complete(Unit)
+            advanceUntilIdle()
+
+            // Cancelling the *caller* used to cancel the teardown between revoking the token and
+            // clearing the credentials, leaving the user signed in against a dead session.
+            coVerify(exactly = 1) { secureCredentialStore.clear() }
+            coVerify(exactly = 1) { apiClientProvider.clearSession() }
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    @Test
+    @DisplayName("a server that never answers costs the sign-out the goodbye timeout, not the session")
+    fun signOutGivesUpOnAnUnreachableServer() =
+        runTest {
+            val repository = repository()
+            // An unreachable host: the request neither answers nor fails, it just hangs.
+            coEvery { apiFacade.reportSessionEnded() } coAnswers { awaitCancellation() }
+
+            val startedAt = currentTime
+            repository.signOut()
+
+            currentTime - startedAt shouldBe SessionRepository.SERVER_GOODBYE_TIMEOUT.inWholeMilliseconds
+            coVerify(exactly = 1) { secureCredentialStore.clear() }
+            coVerify(exactly = 1) { apiClientProvider.clearSession() }
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    @Test
+    @DisplayName("a sign-out hook that hangs is cut short rather than allowed to strand the user")
+    fun signOutGivesUpOnAHangingHook() =
+        runTest {
+            val repository = repository()
+            // The SyncPlay group leave against the same unreachable server (audit NET-03/SP-10).
+            signOutHooks += SignOutHook { awaitCancellation() }
+
+            repository.signOut()
+
+            currentTime shouldBe SessionRepository.SERVER_GOODBYE_TIMEOUT.inWholeMilliseconds
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
         }

@@ -8,9 +8,12 @@ import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
+import dev.jellyboost.core.network.di.ApplicationScope
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.downloads.DownloadRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -37,7 +40,16 @@ class SettingsViewModel
         private val appPreferences: AppPreferences,
         private val sessionRepository: SessionRepository,
         private val downloads: DownloadRepository,
+        @ApplicationScope private val appScope: CoroutineScope,
     ) : ViewModel() {
+        /**
+         * Whether a sign-out is in flight.
+         *
+         * Never reset once set: the only way out of that state is the session flipping to
+         * `LoggedOut`, which navigates the user off this screen entirely (see [signOut]).
+         */
+        private val signingOut = MutableStateFlow(false)
+
         /** The single source of truth for [SettingsScreen]. */
         val uiState: StateFlow<SettingsUiState> =
             combine(
@@ -45,7 +57,8 @@ class SettingsViewModel
                 downloads.observeStorage(),
                 downloads.observeStorageLocations(),
                 sessionRepository.sessionState,
-            ) { prefs, storage, locations, session ->
+                signingOut,
+            ) { prefs, storage, locations, session, signingOut ->
                 SettingsUiState(
                     introSkipMode = prefs.introSkipMode,
                     outroSkipMode = prefs.outroSkipMode,
@@ -56,6 +69,7 @@ class SettingsViewModel
                     storage = storage,
                     storageLocations = locations,
                     account = session.toAccountInfo(),
+                    signingOut = signingOut,
                 )
             }.catch { error ->
                 // `stateIn` rethrows into `viewModelScope`, and a ViewModel scope has no handler —
@@ -139,9 +153,21 @@ class SettingsViewModel
          * Nothing here navigates. `SessionRepository.signOut()` flips `sessionState` to
          * `LoggedOut`, and `:app`'s `LogoutRedirectEffect` takes it from there — which is also what
          * makes a server-driven logout land in the same place as this button.
+         *
+         * The work runs in the **application** scope rather than [viewModelScope], because none of
+         * it is this screen's to abandon. Signing out with an unreachable server waits on a network
+         * goodbye (capped in `SessionRepository`, but still seconds long), and a user who backs out
+         * of Settings during that wait used to clear this ViewModel, cancel the coroutine somewhere
+         * between the deletes and the credential wipe, and stay quietly signed in. The state a
+         * sign-out leaves behind must be reached whether or not the screen that asked for it is
+         * still on screen.
          */
         fun signOut(deleteDownloads: Boolean) {
-            viewModelScope.launch {
+            // Never lowered again: the sign-out is now unstoppable, and its completion takes the
+            // user off this screen (`LogoutRedirectEffect`), so there is no "back to normal" state
+            // for this screen to return to.
+            signingOut.value = true
+            appScope.launch {
                 if (deleteDownloads) deleteEveryDownload()
                 sessionRepository.signOut()
             }
@@ -162,7 +188,7 @@ class SettingsViewModel
         /**
          * The six preference keys as one value.
          *
-         * `combine` tops out at five typed flows, and the state needs nine sources; folding the
+         * `combine` tops out at five typed flows, and the state needs ten sources; folding the
          * preferences into one intermediate keeps the outer `combine` typed rather than dropping to
          * the `Array<Any?>` overload and casting each element back. The sixth key is folded in by a
          * second `combine` over the first for the same reason — one more nested call is cheaper to

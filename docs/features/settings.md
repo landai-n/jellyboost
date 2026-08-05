@@ -121,6 +121,27 @@ per-item call already runs the full delete cascade (files, rows, orphaned parent
 A snapshot rather than a subscription, because collecting a live `Flow` while deleting the rows it
 reports is a loop waiting to happen.
 
+### A sign-out the screen cannot lose
+
+Both steps run in the **application** scope, not `viewModelScope`. `SessionRepository.signOut()`
+tells the server the session ended, and against an *unreachable* server that request sat on OkHttp's
+timeouts for 6–30 s with nothing on screen to say so. A user who backed out of Settings during that
+silent wait cleared this ViewModel, which cancelled the coroutine somewhere between the deletes and
+the credential wipe — and left them quietly signed in against a dead session. The state a sign-out
+leaves behind is not this screen's to abandon, so the screen only *starts* the work.
+
+`SessionRepository.signOut()` is immune to its caller for the same reason: it runs its body as a job
+in the application scope and merely joins it, so a caller that goes away abandons the join while the
+teardown runs to completion. The goodbye itself — every `SignOutHook` plus `reportSessionEnded` —
+shares one `SERVER_GOODBYE_TIMEOUT` (5 s) budget, after which the local teardown proceeds regardless
+and the expiry is logged. A cut-short SyncPlay group leave is caught by
+`SyncPlayController.watchSignOut`, which acts on the `LoggedOut` transition (audit NET-03/SP-10).
+
+While the sign-out is in flight `SettingsUiState.signingOut` is true: the button holds an inline
+spinner and stops taking taps, and the confirm dialog will not reopen. It is never lowered — the
+session flipping to `LoggedOut` navigates the user off this screen, so the only thing lowering it
+could do is flash an enabled button on the way out.
+
 Nothing here navigates. `signOut()` flips `sessionState` to `LoggedOut` and `:app`'s
 `LogoutRedirectEffect` sends the user to `Routes.ServerSetup` with the back stack cleared — which is
 what makes this button and a future 401-driven logout land in the same place.
@@ -192,7 +213,8 @@ later, it is a `SessionRepository` change first.
 
 | Suite | Covers |
 |---|---|
-| `SettingsViewModelTest` | each of the six preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out |
+| `SettingsViewModelTest` | each of the six preferences read back from the store and written through by its setter; a preference changed upstream reaching an open screen; the storage volumes reaching the state and a card removed while the screen is open; a switch passing the user's agreement through, and a refused switch leaving the state alone; `LoggedIn` vs `LoggedOut` account info; delete-then-sign-out ordering (`coVerifyOrder`); no deletes when the box is unchecked; a failed delete still signing out; a screen popped mid-sign-out (`viewModelScope` cancelled) still deleting and signing out; the busy flag going up on the first ask and staying up |
+| `SessionRepositoryTest` | (`:core:network`) a caller cancelled mid-goodbye still clearing the credentials and reaching `LoggedOut`; a server that never answers costing the sign-out `SERVER_GOODBYE_TIMEOUT` rather than the session; a hook that hangs being cut short the same way |
 
 `SettingsContent` is stateless and takes a `SettingsUiState` plus a `SettingsActions` bundle, so the
 `@Preview` renders the full screen — every section, a live storage figure, a signed-in account —

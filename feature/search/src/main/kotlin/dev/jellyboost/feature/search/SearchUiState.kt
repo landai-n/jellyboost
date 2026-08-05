@@ -24,9 +24,21 @@ data class SearchUiState(
     val episodes: List<JellyfinItem> = emptyList(),
     val error: AppError? = null,
 ) {
+    /**
+     * How many items the current results hold, across all three sections.
+     *
+     * Derived rather than stored: it is the size of three lists this state already carries, and a
+     * separate field would be one more thing every `copy` has to remember to keep true. It exists
+     * because the screen has to *say* it — results arriving is the whole outcome of a search, and
+     * until the 2026-08-05 accessibility audit (A11Y-09) it happened in complete silence, with the
+     * user's focus still in the field and nothing announcing that the page below had filled up.
+     */
+    val resultCount: Int
+        get() = movies.size + series.size + episodes.size
+
     /** `true` when the search ran and matched nothing. */
     val hasNoResults: Boolean
-        get() = movies.isEmpty() && series.isEmpty() && episodes.isEmpty()
+        get() = resultCount == 0
 }
 
 /**

@@ -9,6 +9,13 @@
     <string name="search_section_episodes">Episodes</string>
 
     <!-- States -->
+    <!-- Shown under the field once a search has matched something, and announced when it changes:
+         results appear below a field the user is still typing in, so the count is the only thing
+         that says the page filled up (accessibility audit 2026-08-05, A11Y-09). -->
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d result</item>
+        <item quantity="other">%1$d results</item>
+    </plurals>
     <string name="search_prompt">Type to search your libraries.</string>
     <string name="search_no_results">Nothing matched “%1$s”.</string>
 

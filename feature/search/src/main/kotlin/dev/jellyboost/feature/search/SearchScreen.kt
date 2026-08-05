@@ -1,6 +1,7 @@
 package dev.jellyboost.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -98,7 +105,9 @@ fun SearchContent(
 
         when {
             state.error != null ->
-                ErrorState(message = state.error.toMessage(), onRetry = onRetry)
+                Announced(message = state.error.toMessage(), merge = false) {
+                    ErrorState(message = state.error.toMessage(), onRetry = onRetry)
+                }
 
             state.isSearching && state.hasNoResults -> LoadingState()
 
@@ -109,13 +118,77 @@ fun SearchContent(
                 )
 
             state.hasSearched && state.hasNoResults ->
-                EmptyState(
-                    message = stringResource(R.string.search_no_results, state.submittedQuery),
-                    icon = Icons.Outlined.SearchOff,
-                )
+                Announced(message = stringResource(R.string.search_no_results, state.submittedQuery)) {
+                    EmptyState(
+                        message = stringResource(R.string.search_no_results, state.submittedQuery),
+                        icon = Icons.Outlined.SearchOff,
+                    )
+                }
 
-            else -> SearchResults(state = state, onItemClick = onItemClick)
+            else -> {
+                ResultCountLine(count = state.resultCount)
+                SearchResults(state = state, onItemClick = onItemClick)
+            }
         }
+    }
+}
+
+/**
+ * How many things the search found, under the field.
+ *
+ * A polite live region, and the reason this composable exists: results appear *below* a field the
+ * user is still typing in, so the one thing a search actually produces used to happen in complete
+ * silence — no count, no "found something", nothing (accessibility audit 2026-08-05, A11Y-09). It
+ * is a real line of visible text rather than an invisible announcer because a zero-sized node is a
+ * node TalkBack can never come back to, and because the count is worth showing anyway: the sections
+ * below are capped at [SearchViewModel.SEARCH_LIMIT] between them and each one only says its own
+ * type.
+ *
+ * Polite, not assertive: it arrives while the user is typing, and interrupting each keystroke's
+ * echo with a running total is worse than saying nothing.
+ */
+@Composable
+private fun ResultCountLine(count: Int) {
+    Text(
+        text = pluralStringResource(R.plurals.search_result_count, count, count),
+        modifier =
+            Modifier
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceExtraSmall)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * Wraps a state view in a polite live region, so replacing the results with it is announced.
+ *
+ * `:core:ui`'s `EmptyState`/`ErrorState` draw a screenful of content with no idea why they are on
+ * screen; the announcement belongs to the caller that knows (here: a search that came back empty,
+ * or a request that failed). Whether the message is *reached* by a screen reader was never the
+ * problem — it is that swapping one full-screen body for another says nothing at all, and the user
+ * is still in the field above with no reason to go looking.
+ *
+ * @param merge folds the whole state view into one node, which is right when it is only an icon and
+ *   a sentence. Pass `false` for a view carrying an action: merging would take the button's own
+ *   stop with it, and the description set here carries the words instead.
+ */
+@Composable
+private fun Announced(
+    message: String,
+    merge: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .semantics(mergeDescendants = merge) {
+                    if (!merge) contentDescription = message
+                    liveRegion = LiveRegionMode.Polite
+                },
+    ) {
+        content()
     }
 }
 

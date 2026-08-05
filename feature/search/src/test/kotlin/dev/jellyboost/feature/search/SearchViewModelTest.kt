@@ -216,6 +216,9 @@ class SearchViewModelTest {
             state.submittedQuery shouldBe "west"
             state.hasSearched shouldBe true
             state.isSearching shouldBe false
+            // The count the screen announces spans all three sections, not just the biggest one
+            // (accessibility audit 2026-08-05, A11Y-09).
+            state.resultCount shouldBe 4
         }
 
     @Test
@@ -229,7 +232,28 @@ class SearchViewModelTest {
             val state = viewModel.uiState.value
             state.hasSearched shouldBe true
             state.hasNoResults shouldBe true
+            state.resultCount shouldBe 0
             state.error.shouldBeNull()
+        }
+
+    @Test
+    fun `clearing the field takes the announced result count back to zero`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns
+                AppResult.Success(listOf(movie("m1", "Westward"), series("s1", "Westworld")))
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("west")
+            advanceUntilIdle()
+            viewModel.uiState.value.resultCount shouldBe 2
+
+            viewModel.clearQuery()
+            advanceUntilIdle()
+
+            // Nothing to announce, and `hasSearched` back to false so the screen shows its prompt
+            // rather than a "0 results" line over an empty page.
+            viewModel.uiState.value.resultCount shouldBe 0
+            viewModel.uiState.value.hasSearched shouldBe false
         }
 
     @Test
@@ -265,6 +289,8 @@ class SearchViewModelTest {
             state.error.shouldBeInstanceOf<AppError.Network>()
             state.isSearching shouldBe false
             state.hasNoResults shouldBe true
+            // A failure announces the failure, never a stale count from the search before it.
+            state.resultCount shouldBe 0
         }
 
     @Test

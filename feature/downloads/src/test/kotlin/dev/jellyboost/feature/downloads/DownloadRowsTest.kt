@@ -300,6 +300,30 @@ class DownloadRowsTest {
         film.rowTitle(inSeriesGroup = true) shouldBe "Dune"
     }
 
+    // ---- the percentage a queue row announces (accessibility audit 2026-08-05, F7) ---------------
+
+    @Test
+    fun `a fraction becomes the whole percentage a screen reader says`() {
+        percentOf(0f) shouldBe 0
+        percentOf(0.452f) shouldBe 45
+        percentOf(1f) shouldBe 100
+    }
+
+    @Test
+    fun `the percentage rounds rather than truncating`() {
+        // 0.455 is 45.5%, which is nearer 46 than 45 — a truncating cast would say 45 all the way
+        // to 46%, so a row would sit on the same number for twice as long as any other.
+        percentOf(0.455f) shouldBe 46
+    }
+
+    @Test
+    fun `a fraction past its own total is clamped, never announced above a hundred`() {
+        // Reachable: the ratcheted fraction is computed against a *projected* total, and a
+        // projection that comes in low leaves bytes-on-disk over it for a frame.
+        percentOf(1.4f) shouldBe 100
+        percentOf(-0.2f) shouldBe 0
+    }
+
     @Suppress("LongParameterList")
     private fun film(
         bytesDownloaded: Long = 0L,

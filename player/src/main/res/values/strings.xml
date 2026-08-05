@@ -24,6 +24,27 @@
     -->
     <string name="player_buffering">Buffering</string>
 
+    <!--
+      The seek bar's name, and the sentence the clock and the seek bar both speak: %1$s is the
+      position, %2$s the duration, each already in words ("12 minutes 34 seconds of 45 minutes").
+      Spoken rather than "12:34", which a speech engine reads as a time of day.
+    -->
+    <string name="player_seek">Seek</string>
+    <string name="player_position_of_duration">%1$s of %2$s</string>
+
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitles</string>
     <string name="player_subtitles_off">Off</string>

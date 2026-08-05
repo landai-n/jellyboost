@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
@@ -129,6 +130,11 @@ private fun OptionDialog(
                                 .fillMaxWidth()
                                 .selectable(
                                     selected = option.selected,
+                                    // The row *is* the radio button — the control inside it is inert
+                                    // (`onClick = null`), so without the role the whole picker
+                                    // announces as unlabelled taps rather than as a choice among
+                                    // choices (audit A11Y-P-12).
+                                    role = Role.RadioButton,
                                     onClick = {
                                         onSelect(option.key)
                                         onDismiss()
@@ -155,7 +161,8 @@ private fun OptionDialog(
 private fun PlaybackTrack.asOption(selected: Boolean): Option =
     Option(key = index, label = label.ifBlank { language.orEmpty() }, selected = selected)
 
-private fun PlaybackQuality.labelRes(): Int =
+/** Shared with the bottom bar's quality chip, which speaks the current cap as its state. */
+internal fun PlaybackQuality.labelRes(): Int =
     when (this) {
         PlaybackQuality.AUTO -> R.string.player_quality_auto
         PlaybackQuality.HIGH -> R.string.player_quality_high

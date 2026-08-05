@@ -39,6 +39,50 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Accessibility audit + full remediation (2026-08-05 — landed, gate green; TalkBack walk owed)
+
+Full-app a11y audit (report: `docs/audits/accessibility-audit-2026-08-05.md`, ~90 findings)
+followed by a five-wave remediation, all merged and `/verify`-green:
+1. **Wave 1** (`b1194be8`) — contrast tokens raised with computed WCAG ratios (player scrim
+   0.35→0.62, ChromeFill 0.45→0.72, outline/borders/disabled alphas), `height→heightIn` on
+   text-bearing rows, pill `requiredHeightIn` floor (DECISIONS 2026-08-05), honest
+   "Close player" error label. Compose 1.11 already honours animator-duration-scale
+   (verified from artifacts — documented in `JellyfinTheme`, no provider added).
+2. **Wave 3** (`95040389`) — player: controls reachable under TalkBack (auto-hide suppressed
+   during touch exploration, labelled tap-to-reveal), Display sheet = non-gesture
+   brightness/volume, keyboard map (space/arrows/Esc/media keys), seek bar spoken-time
+   semantics + ±10 s/30 s custom actions, buffering finally rendered + announced,
+   SyncPlay/cast controls named, `SCREEN_ORIENTATION_USER` (DECISIONS 2026-08-05).
+3. **Wave 2** (`3f97cf86`) — design system: text fields carry name/error/password/autofill,
+   cards are ONE authored node (`MediaCardFacts`, tested), chips selectable in 48dp frames,
+   loading/error states announce, headings on section titles.
+4. **Wave 4a+4b** (`8f0b51b2` + prior merge) — flows and structure: auth announces
+   (Quick Connect code spoken as one grouped string, user picker = radio group), search
+   announces its count, downloads rows are coherent nodes, settings groups speak their
+   caption, chrome traversal groups (top −1 / content 0 / bottom +1), home hero is
+   font-scale-aware (`HomeSizingTest` +9), detail facts read as sentences.
+5. **Wave 5** (`e2b046f0`..`32a1de77`) — **quality gate now includes a11y** (user directive):
+   `:app:lintDebug` with `abortOnError=true` + `config/lint/lint.xml`
+   (ContentDescription/ClickableViewAccessibility/KeyboardInaccessibleWidget/LabelFor as
+   errors; ~2 s no-op, 8–20 s incremental); wired into `/verify`, CLAUDE.md, and the
+   pre-commit/stop hooks' freshness gate. First `androidTest` source sets in the repo:
+   **26 instrumented a11y tests, 26/26 green on the test tablet (~40 s)** pinning merged
+   cards, traversal, live regions, gesture-layer semantics (one documented ATF suppression:
+   `SpeakableTextPresentCheck` on `AndroidComposeView` only). `connectedDebugAndroidTest`
+   added to the `/milestone` DoD. Plus `readOnly` fields, announcing state views,
+   `ActionPillChip`.
+
+**Owed:**
+- **TalkBack device walk** (user-run): chrome traversal order on both layouts, player
+  controls-reveal → seek → Display sheet, Quick Connect dialog, user picker, a live
+  download row, hero + pills at font scale 2.0, player scrim over a bright frame.
+- **i18n sweep**: the waves added ~14 English-only strings across 6 modules — 45
+  `MissingTranslation` warnings against the repo's 69-locale standard (listed in
+  `config/lint/lint.xml`); wants its own localization pass, then re-promote
+  `MissingTranslation` to error.
+- Deferred design decisions from the audit: glass `Fill` token contrast floor,
+  shared `SectionTitle` component (headings are hand-rolled per screen).
+
 ## 2026-08 diff audit + fix wave (2026-08-03 — landed, gate green; device re-walk owed)
 
 Second full audit (`docs/notes/audit-2026-08.md`), covering everything since the 2026-07-30

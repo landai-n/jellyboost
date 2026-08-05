@@ -25,6 +25,10 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
         compileSdk = libs.intVersion("androidCompileSdk")
         compileSdkMinor = libs.intVersion("androidCompileSdkMinor")
         defaultConfig.minSdk = libs.intVersion("androidMinSdk")
+        // Every module, not only `:app`: the instrumented accessibility suite lives in the module
+        // that owns the component it holds still, and a library with no runner declared has no
+        // `connectedDebugAndroidTest` to run (accessibility audit 2026-08-05, CR-7).
+        defaultConfig.testInstrumentationRunner = ANDROID_JUNIT_RUNNER
 
         with(compileOptions) {
             sourceCompatibility = JavaVersion.VERSION_17
@@ -70,6 +74,9 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
 
 /** The one lint severity config, shared by every Android module. Relative to the root project. */
 private const val LINT_CONFIG_PATH = "config/lint/lint.xml"
+
+/** JUnit 4, because the on-device instrumentation runner has no JUnit Platform to launch. */
+private const val ANDROID_JUNIT_RUNNER = "androidx.test.runner.AndroidJUnitRunner"
 
 /** Pins the Kotlin bytecode target for every Kotlin compilation in this project. */
 internal fun Project.configureKotlinJvmTarget() {

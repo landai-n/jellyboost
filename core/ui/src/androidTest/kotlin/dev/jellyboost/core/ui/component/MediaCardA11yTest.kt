@@ -1,0 +1,171 @@
+package dev.jellyboost.core.ui.component
+
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.ui.R
+import dev.jellyboost.core.ui.a11y.AccessibilityChecks
+import dev.jellyboost.core.ui.theme.JellyfinTheme
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * The merged card node, held still on a device (accessibility audit 2026-08-05, CR-6).
+ *
+ * This is the wave-2 fix whose whole value is what a screen reader *does not* say: the artwork's
+ * description, the title's own node, the subtitle's, and every badge's, all collapsed into one
+ * authored sentence. A JVM test can pin the sentence — `MediaCardFactsTest` does — but only a
+ * composed tree can show that the card is one stop rather than six, which is the half of CR-6 that
+ * a careless `Modifier` change would silently undo.
+ */
+@RunWith(AndroidJUnit4::class)
+class MediaCardA11yTest {
+    @get:Rule
+    val rule = createAndroidComposeRule<ComponentActivity>()
+
+    private val checks by lazy { AccessibilityChecks(rule) }
+
+    @Before
+    fun enableAccessibilityChecks() {
+        checks.install()
+    }
+
+    @Test
+    fun posterCardIsOneNodeThatNamesItsTypeAndTitle() {
+        rule.setContent {
+            JellyfinTheme {
+                PosterCard(item = MOVIE, onClick = {})
+            }
+        }
+
+        val movie = rule.activity.getString(R.string.media_card_type_movie)
+        assertEquals("$movie, $MOVIE_TITLE, 2016", rule.onlyCardDescription())
+        rule.onAllNodes(hasClickAction()).assertCountEquals(1)
+        // The visible title is `clearAndSetSemantics`-ed, so it contributes no second stop of its
+        // own. If this starts failing, the card announces its title twice.
+        rule.onAllNodesWithText(MOVIE_TITLE).assertCountEquals(0)
+        checks.assertClean()
+    }
+
+    @Test
+    fun theCardDescriptionCarriesTheTitleTheVisibleLineTruncates() {
+        rule.setContent {
+            JellyfinTheme {
+                PosterCard(item = MOVIE.copy(name = LONG_TITLE), onClick = {})
+            }
+        }
+
+        // `maxLines = 1` cuts the drawn title after a few words; the sentence must not be cut with
+        // it, because the artwork description that used to carry the full name is gone (SCALE-04).
+        assertEquals(true, rule.onlyCardDescription().contains(LONG_TITLE))
+    }
+
+    @Test
+    fun aStartedEpisodeSaysItsTypeItsNumberAndHowFarIn() {
+        rule.setContent {
+            JellyfinTheme {
+                PosterCard(item = EPISODE, onClick = {})
+            }
+        }
+
+        val episode = rule.activity.getString(R.string.media_card_type_episode)
+        val progress = rule.activity.getString(R.string.media_card_progress, HALF_PERCENT)
+        assertEquals("$episode, $SERIES_TITLE, S1:E4 · $EPISODE_TITLE, $progress", rule.onlyCardDescription())
+        checks.assertClean()
+    }
+
+    @Test
+    fun selectionModeIsRealSelectedSemanticsAndNotAWordInTheSentence() {
+        rule.setContent {
+            JellyfinTheme {
+                PosterCard(item = MOVIE, onClick = {}, onLongClick = {}, selected = true)
+            }
+        }
+
+        val node = rule.onNode(hasClickAction()).fetchSemanticsNode()
+        assertEquals(true, node.config[SemanticsProperties.Selected])
+        assertEquals(
+            rule.activity.getString(R.string.selection_item_selected),
+            node.config[SemanticsProperties.StateDescription],
+        )
+        // Selection is state, not prose: the sentence is the same one an unselected card says.
+        val movie = rule.activity.getString(R.string.media_card_type_movie)
+        assertEquals("$movie, $MOVIE_TITLE, 2016", node.config[SemanticsProperties.ContentDescription].single())
+    }
+
+    @Test
+    fun aThumbCardInsideAClickableRowIsNotASecondStop() {
+        rule.setContent {
+            JellyfinTheme {
+                Box(modifier = mediaCardSemantics(description = "the row")) {
+                    // How `EpisodeRow` composes it: the row owns the tap, the artwork owns nothing.
+                    ThumbCard(item = EPISODE, onClick = null, showTitle = false)
+                }
+            }
+        }
+
+        rule.onAllNodes(hasClickAction()).assertCountEquals(0)
+        assertEquals("the row", rule.onlyCardDescription())
+    }
+
+    /**
+     * The description of the one node the tree is supposed to contain — and a failure with a
+     * readable message when it is not one node.
+     */
+    private fun SemanticsNodeInteractionsProvider.onlyCardDescription(): String {
+        val nodes = onAllNodes(hasCardDescription()).fetchSemanticsNodes()
+        assertEquals("expected exactly one described card node", 1, nodes.size)
+        return nodes.single().config[SemanticsProperties.ContentDescription].single()
+    }
+
+    private fun hasCardDescription() =
+        SemanticsMatcher("has a contentDescription") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription)?.isNotEmpty() == true
+        }
+
+    private companion object {
+        const val MOVIE_TITLE = "Arrival"
+        const val SERIES_TITLE = "Westworld"
+        const val EPISODE_TITLE = "Dissonance Theory"
+        const val LONG_TITLE = "The Assassination of Jesse James by the Coward Robert Ford"
+
+        /** Half of a two-hour runtime, in Jellyfin's 100-nanosecond ticks. */
+        const val RUNTIME_TICKS = 72_000_000_000L
+        const val HALF_POSITION_TICKS = 36_000_000_000L
+        const val HALF_PERCENT = 50
+
+        val MOVIE =
+            JellyfinItem(
+                id = "movie-1",
+                name = MOVIE_TITLE,
+                type = ItemType.MOVIE,
+                productionYear = 2016,
+            )
+
+        val EPISODE =
+            JellyfinItem(
+                id = "episode-1",
+                name = EPISODE_TITLE,
+                type = ItemType.EPISODE,
+                seriesName = SERIES_TITLE,
+                parentIndexNumber = 1,
+                indexNumber = 4,
+                runTimeTicks = RUNTIME_TICKS,
+                userData = UserData(playbackPositionTicks = HALF_POSITION_TICKS),
+            )
+    }
+}

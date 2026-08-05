@@ -187,9 +187,7 @@ internal fun AppScaffold(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        // The page is one traversal block, read between the two pieces of chrome —
-                        // see "The order a screen reader reads it in" above.
-                        .semantics { isTraversalGroup = true }
+                        .pageTraversal()
                         .then(if (onPlayer) Modifier else Modifier.hazeSource(hazeState)),
             )
 
@@ -247,11 +245,7 @@ internal fun AppScaffold(
                         .align(Alignment.BottomCenter)
                         .navigationBarsPadding()
                         .padding(bottom = BottomNavMargin)
-                        // Last, as it is drawn: the pill is the bottom of the window.
-                        .semantics {
-                            isTraversalGroup = true
-                            traversalIndex = CHROME_BOTTOM_INDEX
-                        },
+                        .bottomChromeTraversal(),
             ) {
                 GlassBottomNav(
                     currentDestination = barDestination,
@@ -281,18 +275,38 @@ internal fun AppScaffold(
  *
  * The two are never on screen together — [GlassTopNav] is the wide layout's, [AppActionCluster] the
  * compact one's — so they share an index rather than being ordered against each other.
+ *
+ * `internal`, with the two below it, so the instrumented suite can hold the three indices in the
+ * right order without composing the whole signed-in app (`app/src/androidTest`).
  */
-private fun Modifier.topChromeTraversal(): Modifier =
+internal fun Modifier.topChromeTraversal(): Modifier =
     semantics {
         isTraversalGroup = true
         traversalIndex = CHROME_TOP_INDEX
     }
 
-/** Before the page, whose own group sits at the default 0. */
-private const val CHROME_TOP_INDEX = -1f
+/** The page: one block of its own, read between the two pieces of chrome. */
+internal fun Modifier.pageTraversal(): Modifier =
+    semantics {
+        isTraversalGroup = true
+        traversalIndex = PAGE_INDEX
+    }
+
+/** The bottom pill: last, as it is drawn — it is the bottom of the window. */
+internal fun Modifier.bottomChromeTraversal(): Modifier =
+    semantics {
+        isTraversalGroup = true
+        traversalIndex = CHROME_BOTTOM_INDEX
+    }
+
+/** Before the page. */
+internal const val CHROME_TOP_INDEX = -1f
+
+/** Compose's own default, stated rather than left implicit so the three read as one scale. */
+internal const val PAGE_INDEX = 0f
 
 /** After the page — see [AppScaffold]'s "The order a screen reader reads it in". */
-private const val CHROME_BOTTOM_INDEX = 1f
+internal const val CHROME_BOTTOM_INDEX = 1f
 
 /**
  * How much faster than the page cross-fade the chrome leaves.

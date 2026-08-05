@@ -28,7 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -161,6 +165,7 @@ fun PrimaryPillButton(
             ),
         contentPadding = pillContentPadding(small),
         contentColor = if (enabled) PrimaryPillContent else PrimaryPillDisabledContent,
+        stateDescription = busyStateDescription(loading),
         modifier = modifier,
     ) {
         PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
@@ -201,6 +206,7 @@ fun GhostPillButton(
         surface = Modifier.glassSurface(shape = CircleShape, borderColor = GlassDefaults.GhostBorder, tint = tint),
         contentPadding = pillContentPadding(small),
         contentColor = if (enabled) GhostPillContent else GhostPillDisabledContent,
+        stateDescription = busyStateDescription(loading),
         modifier = modifier,
     ) {
         PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
@@ -236,11 +242,17 @@ fun GlassIconButton(
         Box(
             // The click target sits *inside* the glass so the ripple is clipped to the circle the
             // user can see, rather than to the invisible frame around it.
+            //
+            // `mergeDescendants` is not about this button's own glyph (there is only one): a
+            // semantics node that merges its descendants is not itself swallowed by an ancestor
+            // that merges, so the Play button inside an episode row — a row that is now one merged
+            // node — survives as its own stop with its own action (audit A11Y-05).
             modifier =
                 Modifier
                     .size(size)
                     .glassSurface(shape = CircleShape, tint = surfaceTint)
-                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+                    .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                    .semantics(mergeDescendants = true) {},
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -288,6 +300,7 @@ private fun PillFrame(
     surface: Modifier,
     contentPadding: PaddingValues,
     contentColor: Color,
+    stateDescription: String? = null,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -304,6 +317,7 @@ private fun PillFrame(
                     .clip(CircleShape)
                     .then(surface)
                     .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+                    .semantics { stateDescription?.let { this.stateDescription = it } }
                     .padding(contentPadding),
             horizontalArrangement = Arrangement.spacedBy(PillIconGap, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
@@ -312,6 +326,17 @@ private fun PillFrame(
         }
     }
 }
+
+/**
+ * What a pill says about itself while its action is in flight.
+ *
+ * The busy pill is disabled — that is what stops a second tap — and a disabled control with a
+ * spinner in it announced only "disabled", which is the one thing that does not explain the wait
+ * (accessibility audit 2026-08-05, M8). "Busy" is a *state*, not a name, so it goes in
+ * `stateDescription` and leaves the label ("Sign in") intact.
+ */
+@Composable
+private fun busyStateDescription(loading: Boolean): String? = stringResource(R.string.state_busy).takeIf { loading }
 
 private fun pillContentPadding(small: Boolean): PaddingValues =
     PaddingValues(horizontal = if (small) PillHorizontalPaddingSmall else PillHorizontalPadding)

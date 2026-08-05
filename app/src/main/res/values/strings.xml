@@ -32,4 +32,10 @@
     <string name="music_track_unavailable">Couldn\'t play “%1$s” — it was skipped.</string>
     <string name="music_queue_unavailable">Couldn\'t play any of those tracks.</string>
     <string name="music_playback_failed">Playback failed for “%1$s”.</string>
+
+    <!-- MiniPlayer (M13 Phase 4) -->
+    <string name="mini_player_play">Play</string>
+    <string name="mini_player_pause">Pause</string>
+    <string name="mini_player_next">Next</string>
+    <string name="mini_player_open_now_playing">Open now playing</string>
 </resources>

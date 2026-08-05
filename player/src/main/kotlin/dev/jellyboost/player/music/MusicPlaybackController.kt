@@ -123,7 +123,8 @@ internal class MusicPlaybackController
             queue: List<JellyfinItem>,
             startIndex: Int,
             shuffled: Boolean,
-        ): Boolean = scope.async { startQueue(queue, startIndex, shuffled) }.await()
+            startPositionMs: Long,
+        ): Boolean = scope.async { startQueue(queue, startIndex, shuffled, startPositionMs) }.await()
 
         override fun togglePlayPause() {
             launchOnSession {
@@ -222,6 +223,7 @@ internal class MusicPlaybackController
             queue: List<JellyfinItem>,
             startIndex: Int,
             shuffled: Boolean,
+            startPositionMs: Long = 0L,
         ): Boolean {
             if (syncPlay.inGroup.value) {
                 Timber.i("Refusing to start music: this device is in a SyncPlay group")
@@ -268,10 +270,10 @@ internal class MusicPlaybackController
             onPlayer {
                 setShuffleEnabled(shuffled)
                 setRepeatMode(repeatMode)
-                setQueue(entries, start, startPositionMs = 0L, playWhenReady = true)
+                setQueue(entries, start, startPositionMs = startPositionMs, playWhenReady = true)
             }
-            publish(index = start, isPlaying = true, positionMs = 0L, durationMs = 0L)
-            openSessionFor(start, positionTicks = 0L, isPaused = false)
+            publish(index = start, isPlaying = true, positionMs = startPositionMs, durationMs = 0L)
+            openSessionFor(start, positionTicks = startPositionMs.millisToTicks(), isPaused = false)
             startTicker()
             return true
         }

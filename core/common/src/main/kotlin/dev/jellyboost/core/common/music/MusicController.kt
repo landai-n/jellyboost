@@ -45,6 +45,11 @@ interface MusicController {
      *
      * @param shuffled `true` starts the queue in shuffle order — what a "Shuffle" button means,
      *   as opposed to setting the mode on a queue that is already playing.
+     * @param startPositionMs where playback starts within the entry at [startIndex], in
+     *   milliseconds. `0` for every ordinary track tap; Home's *Continue Listening* row is the one
+     *   caller that resumes mid-track, from `JellyfinItem.userData.playbackPositionTicks` (M13
+     *   Phase 4). Ignored for every entry but the first — a queue has one start position, not one
+     *   per track.
      * @return `true` when the queue was handed to the player; `false` when the attempt was refused
      *   or nothing in it could be resolved, in which case a [MusicMessage] explains why.
      */
@@ -52,6 +57,7 @@ interface MusicController {
         queue: List<JellyfinItem>,
         startIndex: Int = 0,
         shuffled: Boolean = false,
+        startPositionMs: Long = 0L,
     ): Boolean
 
     /** Pauses if playing, resumes if paused. A no-op while [MusicPlaybackState.Idle]. */

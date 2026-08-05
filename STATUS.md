@@ -51,8 +51,29 @@ dedicated bottom-nav tab — user decision). Detailed phase plan:
   suite passes unchanged. Open device checks: audio focus across the attributes
   flip, notification shuffle/repeat rendering, dashboard `PlayMethod` for
   flac-vs-transcode, and clean single sessions across video⇄music handoffs.
-- Phases 4–6: NowPlaying/mini-player/Continue Listening → music downloads →
-  Instant Mix + lyrics + docs. Work happens on the `worktree-music-m13` branch.
+- **Phase 4 (NowPlaying, mini-player, Continue Listening)** — code landed, device
+  DoD owed. `Routes.NowPlaying` + `NowPlayingScreen` (`:feature:music`'s new
+  `nowplaying/` subpackage): portrait artwork/title/artist/album/seek/transport/
+  favourite/queue-button, ≥560dp two-pane (artwork left, controls + inline queue
+  list right); `QueueSheet` (jump/remove/up-down-reorder/close, mirrors
+  `SyncPlayQueueSheet`'s shape); `NowPlayingViewModel` injects `MusicController`
+  directly (no `:player` dependency) plus `UserDataRepository` for the favourite
+  overlay. `MiniPlayer` in `:app`: docked glass bar (artwork/title-marquee/
+  play-pause/next/thin progress line), visible on top-level destinations while a
+  queue is active and off Player/NowPlaying, its height folded into
+  `chromePadding`'s bottom target the same way the nav pill's is.
+  `MusicController.play` gained a defaulted `startPositionMs` parameter, wired
+  through the port's pre-existing `setQueue(startPositionMs)`; Home's *Continue Listening* row
+  (`getResumeAudioItems` ×3 + DAO query) resumes a track through it via
+  `MusicPlaybackViewModel.playResumed`. Fixed in passing: `AlbumDetailScreen`'s
+  Play/Shuffle buttons were left disabled since Phase 3 despite a working queue.
+  Gate green (ktlint/detekt/unit tests/`:app:lintDebug`/`assembleDebug`), +30
+  tests across `:feature:music`, `:app`, `:player`, `:data`, `:feature:home`. Open device
+  checks: mini-player docking in both nav layouts and both orientations, queue
+  sheet reorder/remove/jump on the tablet, NowPlaying two-pane at tablet widths,
+  Continue Listening resume-at-position online and offline.
+- Phases 5–6: music downloads → Instant Mix + lyrics + docs. Work happens on the
+  `worktree-music-m13` branch.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`
   only after M11 and M12 close (their precedent).
 

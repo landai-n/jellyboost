@@ -564,6 +564,34 @@ class OnlineJellyfinRepositoryTest {
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
+    // ---- getResumeAudioItems (M13 Phase 4) --------------------------------------------------
+
+    @Test
+    fun `getResumeAudioItems mirrors getResumeItems but narrows mediaTypes to audio`() =
+        runTest {
+            val request = slot<GetResumeItemsRequest>()
+            coEvery { itemsApi.getResumeItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees")))
+
+            val result = repository.getResumeAudioItems(limit = 8)
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly
+                listOf("Fake Plastic Trees")
+            request.captured.limit shouldBe 8
+            request.captured.enableUserData shouldBe true
+            request.captured.mediaTypes shouldContainExactly listOf(MediaType.AUDIO)
+        }
+
+    @Test
+    fun `getResumeAudioItems maps an IO failure onto Network`() =
+        runTest {
+            coEvery { itemsApi.getResumeItems(any<GetResumeItemsRequest>()) } throws IOException("socket closed")
+
+            val result = repository.getResumeAudioItems()
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
+        }
+
     // ---- helpers ----------------------------------------------------------------------------
 
     private fun queryResponse(items: List<BaseItemDto>) =

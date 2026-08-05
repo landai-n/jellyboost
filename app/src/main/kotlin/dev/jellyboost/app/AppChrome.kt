@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import dev.jellyboost.core.common.Routes
+import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.ui.theme.Dimens
 
 // The shape of the app's chrome: which of the two navigation layouts a window gets, how tall each
@@ -143,3 +144,21 @@ internal fun NavDestination?.isSelected(tab: TopLevelTab): Boolean =
 
 /** The four destinations the chrome can switch between; it is hidden everywhere else. */
 internal fun NavDestination?.isTopLevel(): Boolean = TopLevelTab.entries.any { isSelected(it) }
+
+/**
+ * Whether [MiniPlayer] belongs on screen right now (M13 Phase 4, docs/notes/music-m13-plan.md).
+ *
+ * A queue must be loaded, and the user must not already be looking at it: [Routes.Player] shows the
+ * mini-player would-be duplicate transport for a *video* session mid-handover (key decision 3 —
+ * the queue survives as a paused snapshot while video borrows the player, and a mini-player for it
+ * during that window would invite a tap that fights the video controls for the same player), and
+ * [Routes.NowPlaying] is this exact bar's own full-screen view, one tap away.
+ *
+ * A plain function of the two booleans `AppScaffold` already computes for [Routes.Player] rather
+ * than of a `NavDestination`, so it is unit-testable without constructing one.
+ */
+internal fun showsMiniPlayer(
+    musicState: MusicPlaybackState,
+    onPlayer: Boolean,
+    onNowPlaying: Boolean,
+): Boolean = musicState is MusicPlaybackState.Active && !onPlayer && !onNowPlaying

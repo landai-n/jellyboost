@@ -81,9 +81,6 @@ object Routes {
     )
 
     // M13 Phase 2 — music
-    //
-    // NowPlaying is not here yet: it is Phase 4's, once `MusicController` exists for it to observe
-    // (docs/notes/music-m13-plan.md, Phase 2/4 split).
 
     /** A music library's Albums/Artists/Playlists tabs — the destination a `MUSIC` tile opens. */
     @Serializable
@@ -107,4 +104,15 @@ object Routes {
     data class PlaylistDetail(
         val playlistId: String,
     )
+
+    /**
+     * The full-screen now-playing surface (M13 Phase 4): artwork, transport, seek, queue.
+     *
+     * No arguments — unlike [Player], which names an item and a media source, this destination is
+     * a *view* onto the one process-wide [dev.jellyboost.core.common.music.MusicController.state]
+     * rather than something opened for a particular item. Reached from `:app`'s mini-player (a tap
+     * on its body) and from a queue button on the browse screens' transport rows.
+     */
+    @Serializable
+    data object NowPlaying
 }

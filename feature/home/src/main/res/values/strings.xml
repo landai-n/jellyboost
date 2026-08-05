@@ -8,6 +8,11 @@
     <string name="home_section_my_media">My Media</string>
     <string name="home_section_continue_watching">Continue Watching</string>
     <string name="home_section_next_up">Next Up</string>
+    <!-- Continue Listening — the music counterpart to Continue Watching (M13 Phase 4). Not yet
+         localized into the other 68 locales this module otherwise carries, matching every other
+         M13 string added so far (:feature:music, :app's music_* strings) — a recorded gap, not a
+         regression. -->
+    <string name="home_section_continue_listening">Continue Listening</string>
     <!-- %1$s is a library name, e.g. "Latest Movies" -->
     <string name="home_section_latest">Latest %1$s</string>
 

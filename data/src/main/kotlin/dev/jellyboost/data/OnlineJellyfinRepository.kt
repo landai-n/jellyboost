@@ -72,7 +72,8 @@ import javax.inject.Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — the interface is the
     // implementation's whole surface, and M13 Phase 2's four music members (docs/notes/
-    // music-m13-plan.md) pushed this class from 17 to 21. Splitting it would mean two
+    // music-m13-plan.md) pushed this class from 17 to 21; Phase 4's `getResumeAudioItems` to 22.
+    // Splitting it would mean two
     // repositories implementing one interface, which is the parallel-model the plan's
     // "extend, don't parallel" rule (decision 5) rules out for the domain layer and would be
     // worse here, for the same reason. Logged in DECISIONS.md.
@@ -506,6 +507,29 @@ internal class OnlineJellyfinRepository
             }
 
         // ---- end M13 Phase 2 ------------------------------------------------------------------
+
+        // ---- M13 Phase 4 — Continue Listening ---------------------------------------------------
+
+        override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.itemsApi.getResumeItems(
+                        GetResumeItemsRequest(
+                            limit = limit,
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                            enableTotalRecordCount = false,
+                            // [getResumeItems]'s own mirror image: audio rather than video.
+                            mediaTypes = listOf(MediaType.AUDIO),
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
+        // ---- end M13 Phase 4 ------------------------------------------------------------------
 
         /**
          * Runs an SDK call off the caller's dispatcher.

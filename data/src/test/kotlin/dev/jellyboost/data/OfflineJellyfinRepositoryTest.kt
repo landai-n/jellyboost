@@ -712,6 +712,33 @@ class OfflineJellyfinRepositoryTest {
             coVerify(exactly = 0) { itemDao.getItem(any()) }
         }
 
+    // ---- M13 Phase 4 — Continue Listening ---------------------------------------------------------
+
+    @Test
+    fun `getResumeAudioItems lists downloaded tracks this device has a resume position for`() =
+        runTest {
+            val track = audioDto(uuid(90), "Fake Plastic Trees")
+            coEvery { itemDao.resumeDownloadedAudio(ItemSource.DOWNLOAD, USER_ID, ItemType.AUDIO, 12) } returns
+                listOf(entity(track))
+            coEvery { userDataDao.getUserDataFor(listOf(uuid(90)), USER_ID) } returns
+                listOf(userData(uuid(90), positionTicks = 30_000_000L))
+
+            val items = repository.getResumeAudioItems(limit = 12).getOrNull()!!
+
+            items.single().name shouldBe "Fake Plastic Trees"
+            items.single().userData.playbackPositionTicks shouldBe 30_000_000L
+        }
+
+    @Test
+    fun `getResumeAudioItems is empty with no signed-in user`() =
+        runTest {
+            every { sessionRepository.sessionState } returns MutableStateFlow(SessionState.LoggedOut)
+
+            repository.getResumeAudioItems(limit = 12).getOrNull()!!.shouldBeEmpty()
+
+            coVerify(exactly = 0) { itemDao.resumeDownloadedAudio(any(), any(), any(), any()) }
+        }
+
     // ---- failure modes ------------------------------------------------------------------------
 
     @Test

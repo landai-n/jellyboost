@@ -29,8 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -169,6 +171,9 @@ private fun HomeRows(
         // skipping on exactly the row `UserDataEventBus` patches most often.
         val resumeAfterHero = remember(state.resume) { state.resume.drop(1) }
         val chrome = LocalAppChromePadding.current
+        // The banner is measured here and its copy is laid out inside it, so both have to be
+        // answering the same question — see [heroHeight].
+        val fontScale = LocalDensity.current.fontScale
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding =
@@ -183,7 +188,7 @@ private fun HomeRows(
                     HomeHero(
                         item = hero,
                         wide = wide,
-                        height = heroHeight(wide = wide, viewportHeight = maxHeight),
+                        height = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale),
                         onResume = { actions.onPlay(hero.id, hero.userData.playbackPositionTicks) },
                         onDetails = { actions.onItemClick(hero) },
                         // The rows below a wide banner come to rest inside its faded bottom edge —
@@ -360,7 +365,10 @@ private fun QuickAccessChip(
                 .heightIn(min = QuickAccessChipHeight)
                 .background(color = GlassDefaults.Fill, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
-                .clickable(onClick = onClick)
+                // A chip is a navigation target, and said so to the eye alone: without the role a
+                // screen reader announced the library's name with nothing to say it was tappable
+                // (accessibility audit 2026-08-05, ROLE-01).
+                .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = QuickAccessChipPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
@@ -521,27 +529,50 @@ internal fun isWideHome(
 ): Boolean = maxWidth >= COMPACT_MAX_WIDTH && maxHeight >= WIDE_MIN_HEIGHT
 
 /**
- * How tall the hero banner is in a [viewportHeight]-tall window.
+ * How tall the hero banner is in a [viewportHeight]-tall window, at the user's [fontScale].
  *
  * The mocks' 460dp (portrait) and 400dp (landscape) are what a phone and a tablet get. The ceiling
- * is the guard: at [HERO_MAX_VIEWPORT_FRACTION] of the window, a hero can never take more than
- * three fifths of the screen, so a small or split-screen window still shows what the screen is for —
- * the rows under it — instead of one enormous picture. A 640dp-tall phone lands at 384dp; the test
- * tablet and every ordinary phone are above the ceiling and get the mocks' figure exactly.
+ * is the guard: at [heroMaxViewportFraction] of the window, a hero can never take most of the
+ * screen, so a small or split-screen window still shows what the screen is for — the rows under it
+ * — instead of one enormous picture. A 640dp-tall phone lands at 384dp; the test tablet and every
+ * ordinary phone are above the ceiling and get the mocks' figure exactly.
+ *
+ * Both numbers move with the font scale, and only upwards. The banner grows by exactly what its
+ * lockup's *text* grew by ([CompactLockupText] / [WideLockupText]), because the copy inside a
+ * fixed-height box is the one thing the mocks' dp figures cannot describe — a 2.0× device asking a
+ * 460dp banner to hold 615dp of lockup is how the hero came to clip its own buttons (accessibility
+ * audit 2026-08-05, A11Y-16). The ceiling relaxes with it, or the growth would be capped away on
+ * exactly the devices that need it; the copy still sheds (`compactHeroShowsSecondary`,
+ * `wideHeroShowsSecondary`) when even the taller banner is not enough.
  */
 internal fun heroHeight(
     wide: Boolean,
     viewportHeight: Dp,
-): Dp =
-    (if (wide) WIDE_HERO_HEIGHT else COMPACT_HERO_HEIGHT)
-        .coerceAtMost(viewportHeight * HERO_MAX_VIEWPORT_FRACTION)
+    fontScale: Float = 1f,
+): Dp {
+    val base = if (wide) WIDE_HERO_HEIGHT else COMPACT_HERO_HEIGHT
+    val lockupText = if (wide) WideLockupText else CompactLockupText
+    val growth = textGrowth(fontScale)
+    // The ceiling is three fifths at font scale 1.0, exactly as it was, rising to
+    // HERO_MAX_VIEWPORT_FRACTION_LARGE by 2.0×. The guard is about leaving room for the rows below,
+    // and at 2.0× those rows are twice as tall too — holding the hero to the same fraction there
+    // buys a glimpse of one row at the price of a play button drawn outside its banner, which is
+    // not a trade the guard was written to make.
+    val fraction =
+        HERO_MAX_VIEWPORT_FRACTION +
+            (HERO_MAX_VIEWPORT_FRACTION_LARGE - HERO_MAX_VIEWPORT_FRACTION) * growth.coerceAtMost(1f)
+    return (base + lockupText * growth).coerceAtMost(viewportHeight * fraction)
+}
 
 private val COMPACT_HERO_HEIGHT = 460.dp
 
 private val WIDE_HERO_HEIGHT = 400.dp
 
-/** Share of the window the hero may occupy at most — see [heroHeight]. */
+/** Share of the window the hero may occupy at most at font scale 1.0 — see [heroHeight]. */
 private const val HERO_MAX_VIEWPORT_FRACTION = 0.6f
+
+/** …and at 2.0×, where the copy inside the banner is what the window is short of. */
+private const val HERO_MAX_VIEWPORT_FRACTION_LARGE = 0.75f
 
 /** Height of a quick-access chip: taller than a filter chip, since it is a navigation target. */
 private val QuickAccessChipHeight = 38.dp

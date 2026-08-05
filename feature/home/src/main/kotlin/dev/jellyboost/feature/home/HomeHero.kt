@@ -27,8 +27,11 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -79,6 +82,11 @@ internal fun HomeHero(
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The user's font scale is read once, here, and handed to whichever lockup is drawn: how much
+    // copy fits in a fixed-height banner is a question about text, and every threshold below
+    // answers it in dp (see "how much room a lockup needs" at the bottom of this file).
+    val fontScale = LocalDensity.current.fontScale
+
     // Clipped so nothing the banner draws can ever land on the rows below it: the copy blocks are
     // height-bounded (each in its own way, see their KDocs), and this is the backstop that turns
     // that arithmetic into a guarantee at layouts the bounds were not computed for.
@@ -91,6 +99,7 @@ internal fun HomeHero(
             WideHeroCopy(
                 item = item,
                 heroHeight = height,
+                fontScale = fontScale,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.TopStart),
@@ -99,6 +108,7 @@ internal fun HomeHero(
             CompactHeroCopy(
                 item = item,
                 heroHeight = height,
+                fontScale = fontScale,
                 onResume = onResume,
                 onDetails = onDetails,
                 modifier = Modifier.align(Alignment.BottomStart),
@@ -144,23 +154,29 @@ private fun HeroBackdrop(
  * bottom edge into the first content row) is exactly the overlap 8ed17933 fixed on the wide shape.
  * Below [compactHeroShowsSecondary]'s threshold the lockup therefore drops its two secondary lines
  * — the eyebrow and the metadata — and keeps what the banner is for: the title and the actions.
+ * Below [compactHeroTitleMaxLines]'s, the title gives up its second line too.
  */
 @Composable
 private fun CompactHeroCopy(
     item: JellyfinItem,
     heroHeight: Dp,
+    fontScale: Float,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showSecondary = compactHeroShowsSecondary(heroHeight)
+    val showSecondary = compactHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale)
 
     Column(
         modifier = modifier.fillMaxWidth().padding(CompactCopyPadding),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         if (showSecondary) HeroEyebrow()
-        HeroTitle(item = item, expanded = false)
+        HeroTitle(
+            item = item,
+            expanded = false,
+            maxLines = compactHeroTitleMaxLines(heroHeight = heroHeight, fontScale = fontScale),
+        )
         if (showSecondary) HeroMeta(item = item)
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -204,10 +220,13 @@ private fun CompactHeroCopy(
 private fun WideHeroCopy(
     item: JellyfinItem,
     heroHeight: Dp,
+    fontScale: Float,
     onResume: () -> Unit,
     onDetails: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val showSecondary = wideHeroShowsSecondary(heroHeight = heroHeight, fontScale = fontScale)
+
     Column(
         modifier =
             modifier
@@ -218,9 +237,13 @@ private fun WideHeroCopy(
                 .widthIn(max = WideCopyMaxWidth),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        HeroEyebrow()
-        HeroTitle(item = item, expanded = true)
-        HeroMeta(item = item)
+        if (showSecondary) HeroEyebrow()
+        HeroTitle(
+            item = item,
+            expanded = true,
+            maxLines = wideHeroTitleMaxLines(heroHeight = heroHeight, fontScale = fontScale),
+        )
+        if (showSecondary) HeroMeta(item = item)
         item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
             Text(
                 text = overview,
@@ -269,20 +292,27 @@ private fun HeroEyebrow(modifier: Modifier = Modifier) {
     }
 }
 
-/** The series a resume episode belongs to, or the item's own name — `JellyfinItem.displayTitle`. */
+/**
+ * The series a resume episode belongs to, or the item's own name — `JellyfinItem.displayTitle`.
+ *
+ * @param maxLines normally [TITLE_MAX_LINES]; one on a banner too short for two at the user's font
+ *   scale (see [compactHeroTitleMaxLines]). The full title is spoken whatever is drawn.
+ */
 @Composable
 private fun HeroTitle(
     item: JellyfinItem,
     expanded: Boolean,
+    maxLines: Int,
     modifier: Modifier = Modifier,
 ) {
+    val title = item.displayTitle
     Text(
-        text = item.displayTitle,
+        text = title,
         style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
         color = Color.White,
-        maxLines = TITLE_MAX_LINES,
+        maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
+        modifier = modifier.semantics { contentDescription = title },
     )
 }
 
@@ -292,6 +322,12 @@ private fun HeroTitle(
  *
  * A `FlowRow` because a long episode label plus a certificate plus the time left does not fit on one
  * line of a 360dp phone, and a clipped metadata line reads as a bug.
+ *
+ * To a screen reader it is **one** node, not three: read separately the line was "S1:E10", then
+ * "TV-MA" — a bare certificate with nothing saying what it certifies — then "22 min left", three
+ * stops before the buttons the banner exists for (accessibility audit 2026-08-05, A11Y-21). Merged,
+ * it is one sentence, and the certificate is qualified in words the way the badge's outline
+ * qualifies it visually.
  */
 @Composable
 private fun HeroMeta(
@@ -301,25 +337,31 @@ private fun HeroMeta(
     val remaining = item.remainingMinutes
     if (item.episodeLabel == null && item.officialRating == null && remaining == null) return
 
+    val certificate = item.officialRating
+    val ratedText = certificate?.let { stringResource(R.string.home_hero_rated, it) }
+    val remainingText = remaining?.let { pluralStringResource(R.plurals.home_minutes_left, it, it) }
+    val description =
+        listOfNotNull(item.episodeLabel, ratedText, remainingText).joinToString(META_DESCRIPTION_SEPARATOR)
+
     FlowRow(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(MetaGap),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
         item.episodeLabel?.let { label ->
             HeroMetaText(text = label, modifier = Modifier.align(Alignment.CenterVertically))
         }
-        item.officialRating?.let { certificate ->
-            MPillBadge(text = certificate, modifier = Modifier.align(Alignment.CenterVertically))
+        certificate?.let {
+            MPillBadge(text = it, modifier = Modifier.align(Alignment.CenterVertically))
         }
-        remaining?.let { minutes ->
-            HeroMetaText(
-                text = pluralStringResource(R.plurals.home_minutes_left, minutes, minutes),
-                modifier = Modifier.align(Alignment.CenterVertically),
-            )
+        remainingText?.let {
+            HeroMetaText(text = it, modifier = Modifier.align(Alignment.CenterVertically))
         }
     }
 }
+
+/** A comma and a space — a pause in every screen reader, where the row draws a gap. */
+private const val META_DESCRIPTION_SEPARATOR = ", "
 
 @Composable
 private fun HeroMetaText(
@@ -391,23 +433,125 @@ private const val WIDE_SCRIM_END_STOP = 0.70f
 /** Gutter of the compact banner's copy — the mocks' 20dp hero padding. */
 private val CompactCopyPadding = 20.dp
 
+// ---- how much room a lockup needs, and how that changes with the user's font scale -------------
+//
+// Every threshold below was calibrated in dp against a device at font scale 1.0, which made all of
+// them silently wrong for anyone who has turned text up: the banner is a fixed-height box, the copy
+// inside it is `sp`, and the two were being compared as if only one of them existed. At 1.5–2.0×
+// the compact lockup kept its eyebrow and metadata line while no longer fitting, and the wide one
+// drew its buttons straight through `clipToBounds` (accessibility audit 2026-08-05, A11Y-16).
+//
+// Each lockup is therefore modelled as two numbers: the dp that never move (paddings, the gaps
+// between blocks) and the part that is *text*, which is what `fontScale` stretches. The pill
+// buttons count as text — their height is a floor, not a cap, so a label taller than the capsule
+// grows it (DECISIONS.md 2026-08-05, "pill buttons get a minimum height"). Only the growth is
+// applied, so every threshold is unchanged to the pixel at font scale 1.0.
+
+/** How much taller than its calibrated size text is at [fontScale]; never negative. */
+internal fun textGrowth(fontScale: Float): Float = (fontScale - 1f).coerceAtLeast(0f)
+
+/**
+ * The text in the compact lockup: a two-line 34sp title (38sp of line height each), the eyebrow,
+ * the metadata line and the 48dp button frame.
+ */
+internal val CompactLockupText = 155.dp
+
+/** The same, once the eyebrow and the metadata line have been shed — title plus buttons. */
+private val CompactCondensedLockupText = 124.dp
+
+/**
+ * The text in the wide lockup: a two-line 44sp title (48sp of line height each), the eyebrow, the
+ * metadata line and the button frame. The overview is not in here — it is the one weighted child,
+ * and it gives up its room before anything else does ([WideHeroCopy]).
+ */
+internal val WideLockupText = 175.dp
+
+/** The same, condensed to the title and the buttons. */
+private val WideCondensedLockupText = 144.dp
+
 /**
  * Whether a [heroHeight]-tall compact banner has room for the lockup's eyebrow and metadata lines.
  *
  * The full lockup's natural height is roughly 230dp — the two 20dp paddings, a two-line 34sp
  * title, the eyebrow, the metadata line, the 48dp button frame and three 12dp gaps — so a banner
  * under [CompactSecondaryMinHeight] cannot hold it: a phone in landscape (~360dp of viewport, so a
- * 216dp banner after [heroHeight]'s 0.6 cap) is the everyday case. Without the two secondary lines
- * the lockup needs ~176dp and fits. The threshold carries a little slack over the 230dp so a
- * banner that would fit only at exactly font scale 1.0 does not thrash at the boundary.
+ * 216dp banner after [heroHeight]'s cap) is the everyday case. Without the two secondary lines the
+ * lockup needs ~176dp and fits. The threshold carries a little slack over the 230dp so a banner
+ * that would fit only at exactly font scale 1.0 does not thrash at the boundary.
+ *
+ * [fontScale] moves the threshold by exactly what the lockup's *text* grew by, so the calibrated
+ * 260dp is what a default-scale device still sees, and a 2.0× device — whose lockup really is
+ * ~155dp taller — sheds the two lines rather than drawing them over the title.
  *
  * A plain function of the height so the breakpoint is unit-testable without a device, like
  * [heroHeight] and [isWideHome].
  */
-internal fun compactHeroShowsSecondary(heroHeight: Dp): Boolean = heroHeight >= CompactSecondaryMinHeight
+internal fun compactHeroShowsSecondary(
+    heroHeight: Dp,
+    fontScale: Float = 1f,
+): Boolean = heroHeight >= CompactSecondaryMinHeight + CompactLockupText * textGrowth(fontScale)
 
 /** See [compactHeroShowsSecondary]. */
 private val CompactSecondaryMinHeight = 260.dp
+
+/**
+ * Whether the wide banner's copy band has room for the same two secondary lines.
+ *
+ * The wide lockup had no shedding at all: it is inset from the top and bounded below by the rail
+ * the rows overlap into (DECISIONS.md 2026-08-01), with the overview as the only elastic child, so
+ * once the overview had given up all of its room the eyebrow, title, metadata and buttons simply
+ * overflowed the band and `clipToBounds` cut the buttons off. Shedding the same two lines the
+ * compact shape sheds is what keeps the *actions* inside the banner at large font scales — which is
+ * the intent that entry recorded, applied to the axis it did not consider.
+ *
+ * [WideSecondaryMinBand] is the full lockup at font scale 1.0: three 12dp gaps over the text in
+ * [WideLockupText]. The mocks' 400dp banner has a 248dp band and the shortest banner the height cap
+ * produces has 218dp, so at default scale nothing sheds — this is a large-font path only.
+ */
+internal fun wideHeroShowsSecondary(
+    heroHeight: Dp,
+    fontScale: Float = 1f,
+): Boolean = wideHeroCopyHeight(heroHeight) >= WideSecondaryMinBand + WideLockupText * textGrowth(fontScale)
+
+/** See [wideHeroShowsSecondary]: the three inter-block gaps plus [WideLockupText]. */
+private val WideSecondaryMinBand = 36.dp + WideLockupText
+
+/**
+ * How many lines the compact banner's title may take.
+ *
+ * The last resort, below shedding: when even the condensed lockup — title plus buttons, the two
+ * things the banner exists for — cannot fit at this font scale, the title gives up its second line
+ * rather than the buttons being clipped. A phone in landscape at 2.0× is the shape that gets here.
+ *
+ * [CompactCondensedMinHeight] is that lockup at font scale 1.0: two 20dp paddings, one 12dp gap and
+ * [CompactCondensedLockupText].
+ */
+internal fun compactHeroTitleMaxLines(
+    heroHeight: Dp,
+    fontScale: Float = 1f,
+): Int =
+    if (heroHeight >= CompactCondensedMinHeight + CompactCondensedLockupText * textGrowth(fontScale)) {
+        TITLE_MAX_LINES
+    } else {
+        1
+    }
+
+/** See [compactHeroTitleMaxLines]. */
+private val CompactCondensedMinHeight = 52.dp + CompactCondensedLockupText
+
+/** [compactHeroTitleMaxLines] for the wide shape, measured against the copy band. */
+internal fun wideHeroTitleMaxLines(
+    heroHeight: Dp,
+    fontScale: Float = 1f,
+): Int =
+    if (wideHeroCopyHeight(heroHeight) >= WideCondensedMinBand + WideCondensedLockupText * textGrowth(fontScale)) {
+        TITLE_MAX_LINES
+    } else {
+        1
+    }
+
+/** See [wideHeroTitleMaxLines]: one 12dp gap over [WideCondensedLockupText]. */
+private val WideCondensedMinBand = 12.dp + WideCondensedLockupText
 
 /**
  * Where the wide copy block starts on the 400dp banner it was drawn for, clear of the 64dp glass top

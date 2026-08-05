@@ -758,7 +758,11 @@ private fun SheetChip(
         Row(
             modifier =
                 Modifier
-                    .height(CHIP_HEIGHT)
+                    // A *minimum*, not a fixed height: [CHIP_HEIGHT] is 32dp around a 12sp label,
+                    // which at accessibility font scales is taller than the capsule — a hard
+                    // `height` clipped the very word the labelled form exists to show. The chip
+                    // floats inside a 48dp touch frame, so growing costs the row nothing.
+                    .heightIn(min = CHIP_HEIGHT)
                     .glassSurface(CircleShape, tint = VIDEO_GLASS_FILL)
                     .clickable(role = Role.Button, onClick = onClick)
                     .padding(horizontal = CHIP_PADDING),

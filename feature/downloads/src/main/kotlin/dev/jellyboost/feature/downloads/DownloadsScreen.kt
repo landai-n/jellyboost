@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -1187,7 +1188,10 @@ private fun SegmentedTab(
     Box(
         modifier =
             modifier
-                .height(Dimens.PillHeightSmall)
+                // Minimum, not fixed (see `GlassBottomNav`): 36dp around a 13sp label leaves under
+                // 4dp of slack, so at accessibility font scales a hard `height` clipped the tab's
+                // own word. The segmented control sizes to its tabs, so growing is free.
+                .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
                 .background(color = if (selected) Color.White else Color.Transparent, shape = CircleShape)

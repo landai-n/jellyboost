@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredHeightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -257,15 +257,28 @@ fun GlassIconButton(
 private const val DISABLED_GLYPH_FACTOR = 0.45f
 
 /**
- * The frame both pills are drawn in: the visual at exactly [height], centred inside an invisible
+ * The frame both pills are drawn in: the visual at [height] or taller, centred inside an invisible
  * interactive area at least [Dimens.MinTouchTarget] tall.
  *
  * `propagateMinConstraints` is what keeps the two honest about width. A caller's `fillMaxWidth()`
  * or `weight(1f)` arrives as a *minimum* width on this box, and propagating it means the drawn pill
  * fills the same width the caller asked for instead of hugging its label in the middle of an empty
  * frame; a caller that constrains nothing propagates a zero minimum, and the pill hugs its content
- * as it always did. `requiredHeight` then overrides the propagated minimum *height* — that one is
- * the 48dp frame's, not the pill's, and the pill must stay at the height the design specifies.
+ * as it always did.
+ *
+ * [height] is a **floor, not a cap** (DECISIONS.md 2026-08-05, accessibility audit SCALE-02). It
+ * used to be `requiredHeight`, which pins both ends of the range, and at accessibility font scales
+ * ≥1.5 that vertically clipped the label inside every primary and ghost button in the app — a
+ * button you cannot read defeats the design the fixed height was protecting (WCAG 1.4.4). At
+ * fontScale 1.0 nothing moves: the content is shorter than [height], so the pill still draws at
+ * exactly the size the design specifies.
+ *
+ * It is `requiredHeightIn(min = …)` rather than the more obvious `defaultMinSize(minHeight = …)`
+ * because of the `propagateMinConstraints` above: the box's own 48dp minimum reaches this row as a
+ * non-zero `minHeight`, and `defaultMinSize` applies only when the incoming minimum is zero — it
+ * would silently do nothing here and every pill would draw at the 48dp touch frame's height
+ * instead of its own 44dp/36dp. `requiredHeightIn` replaces the incoming height range with
+ * `[height, ∞)`, which is precisely "the design height, or taller if the text needs it".
  */
 @Composable
 private fun PillFrame(
@@ -286,7 +299,7 @@ private fun PillFrame(
         Row(
             modifier =
                 Modifier
-                    .requiredHeight(height)
+                    .requiredHeightIn(min = height)
                     .defaultMinSize(minWidth = Dimens.MinTouchTarget)
                     .clip(CircleShape)
                     .then(surface)

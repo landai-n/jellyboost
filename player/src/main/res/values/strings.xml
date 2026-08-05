@@ -18,6 +18,12 @@
     <string name="player_volume_percent">Volume %1$d percent</string>
     <string name="player_brightness_percent">Brightness %1$d percent</string>
 
+    <!--
+      The mid-playback rebuffer spinner's label. `isBuffering` had no UI at all before the
+      accessibility pass: a stall showed a frozen frame and said nothing (audit CR-3).
+    -->
+    <string name="player_buffering">Buffering</string>
+
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitles</string>
     <string name="player_subtitles_off">Off</string>

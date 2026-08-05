@@ -48,7 +48,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -216,7 +220,12 @@ fun PlayerScreen(
             state.errorMessage != null ->
                 ErrorState(
                     message = requireNotNull(state.errorMessage),
-                    modifier = Modifier.align(Alignment.Center),
+                    // Assertive: the film has stopped and the only thing left on the screen is this
+                    // panel, so it is worth interrupting whatever is being read (audit CR-3).
+                    modifier =
+                        Modifier
+                            .align(Alignment.Center)
+                            .semantics { liveRegion = LiveRegionMode.Assertive },
                     onRetry = onBack,
                     // Named for what it does, not for what an error screen's button usually does:
                     // there is nothing to retry here — the session is gone and the only way out is
@@ -248,6 +257,8 @@ fun PlayerScreen(
             )
         }
 
+        BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
+
         state.skippableSegment?.let { segment ->
             SkipSegmentButton(
                 kind = segment.kind,
@@ -255,7 +266,11 @@ fun PlayerScreen(
                 modifier =
                     Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING),
+                        .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING)
+                        // The offer is time-boxed — it is gone once the segment is — so a user who
+                        // is not looking at the screen has to be *told* it exists, not left to find
+                        // it by traversal (audit CR-3). Polite: it is an offer, not an emergency.
+                        .semantics { liveRegion = LiveRegionMode.Polite },
             )
         }
 
@@ -349,6 +364,11 @@ private fun WaitingForGroupOverlay(
     Column(
         modifier =
             modifier
+                // One node, announced when it appears: "nothing is happening and it is not your
+                // fault" is exactly the sort of thing a user who cannot see the frozen frame needs
+                // said (audit CR-3). Merged so the participant list arrives with the message rather
+                // than as a second stop.
+                .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }
                 .background(color = OVERLAY_SCRIM, shape = RoundedCornerShape(Dimens.PanelRadius))
                 .border(
                     width = GlassDefaults.HairlineWidth,
@@ -372,6 +392,46 @@ private fun WaitingForGroupOverlay(
             )
         }
     }
+}
+
+/**
+ * The mid-playback rebuffer spinner — and, until now, the player's biggest silence.
+ *
+ * [PlayerUiState.isBuffering] has been computed since M9 and had **no UI consumer at all** (audit
+ * CR-3): a stream that stalled mid-film showed a frozen frame, an unchanged clock and no spinner, so
+ * the app was indistinguishable from a crash whether or not the user could see it. This draws the
+ * missing spinner and announces it politely.
+ *
+ * The gating is what keeps it honest rather than flickery:
+ * - not while the session is still opening ([PlayerUiState.isReady]) — `LoadingState` is already
+ *   centred there, and two spinners on top of each other say less than one;
+ * - not while the group is waiting, for the same reason: [WaitingForGroupOverlay] is a better answer
+ *   to the same frozen frame, and it names the reason;
+ * - not while a receiver has the film, where "buffering" is a statement about a decoder three metres
+ *   away that this device cannot see.
+ */
+@Composable
+private fun BufferingIndicator(
+    state: PlayerUiState,
+    modifier: Modifier = Modifier,
+) {
+    val visible =
+        state.isBuffering &&
+            state.isReady &&
+            !state.syncPlay.isWaitingForGroup &&
+            !state.cast.isCasting
+    if (!visible) return
+
+    val label = stringResource(R.string.player_buffering)
+
+    CircularProgressIndicator(
+        color = Color.White,
+        modifier =
+            modifier.semantics {
+                contentDescription = label
+                liveRegion = LiveRegionMode.Polite
+            },
+    )
 }
 
 /**

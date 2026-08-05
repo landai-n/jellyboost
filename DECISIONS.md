@@ -3857,3 +3857,61 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Reason:** DUP-3 and DUP-10 are the same failure in two places — a thing that travels together being spelled out at every stop, so that adding to it means editing every stop and forgetting one is silent. PERF-26 and the `ChromeAwarePadding` hoist are both explicitly-logged residue from earlier waves in this audit's remediation, and closing them is cheaper than carrying them.
 - **Tests:** none weakened, deleted or changed in expectation. `DownloadsScreenTest`'s four `ChromeAwarePadding` cases now exercise the `:core:ui` class through a one-line import change and assert exactly what they asserted before — which is the useful property, since it is the same class. No new test for `playerEventListener`: it is a pure translation table whose only branch (`forwardVideoSize`) is asserted by the type system at both call sites, and Media3's `Player.Listener` cannot be driven off a device. No new test for the bundles: they are value types with no logic.
 - **Honest residue:** `CastAvailability.initialize` now posts through a raw `Handler(Looper.getMainLooper())` rather than a coroutine dispatcher, because the class has no scope injected and adding one for a single post would be a wider change than the fix. Device verification is owed for the cast path: the probe → post → `getSharedInstance` sequence is three thread hops where there was one, and only a real device with Play services exercises it.
+
+## 2026-08-05 — M13 Music milestone approved (beyond plan v1 scope)
+- **Scope:** new milestone M13 in `docs/PLAN.md`; future module `:feature:music`; future
+  packages `player/.../music/` and `data/.../music/`; music additions to `ItemType`,
+  `JellyfinItem`, `CollectionKind`, `ItemEntity` (DB v9), `Routes`, the download
+  planner/enqueuer, and an `:app`-chrome mini-player. Detailed phase plan:
+  `docs/notes/music-m13-plan.md` (M13 summary appended to `docs/PLAN.md`).
+- **Plan said:** "**v1 scope:** Movies & TV shows only. Extras: Quick Connect login.
+  NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI, transcoded
+  downloads, Android TV." Music was explicitly deferred with a don't-preclude note; no
+  milestone owned it.
+- **Done instead:** user-approved (AskUserQuestion, 2026-08-05) addition of
+  **M13 — Music** as a post-M12 milestone: artist/album/playlist browsing, background
+  playback with notification/lock-screen controls, local queue with shuffle/repeat, music
+  search, offline music downloads, Instant Mix, synced lyrics. Playlist *editing* out
+  (view-only); Android Auto out but designed-for (MediaLibraryService-compatible session
+  layer); music libraries surface as library tiles, no dedicated bottom-nav tab (user
+  decision). Only this governance entry + PLAN/STATUS/plan-note docs land now.
+- **Reason:** user request ("plan a full featured music integration, to allow using it
+  like Spotify or YouTube Music"). The infrastructure M5–M12 built (MediaSessionService
+  with working background playback, audio-capable device profiles, type-agnostic
+  reporting, file-type-agnostic downloads) makes music an extension, not a rework.
+- **Key pre-logged design decisions** (recorded now so implementation divergences are
+  measurable against them):
+  1. *Queue is ExoPlayer's native playlist, orchestrated by a `@Singleton`
+     `MusicPlaybackController`* on its own scope (SyncPlayController precedent) — the
+     MediaSession then derives notification/lock-screen prev/next from real playlist
+     commands, and the session timeline stays MediaLibraryService/Android-Auto-shaped.
+     `PlayerHandle` is untouched (a queue there means three implementations and drags
+     Cast into scope); a new internal `MusicPlayerPort` seam over the shared
+     `ExoPlayerHandle` adds playlist ops + a `MediaItemTransition` event.
+  2. *Streaming via `/Audio/{id}/universal`, resolved locally by a pure
+     `MusicStreamResolver`* — deterministic URLs let a whole album load as one
+     `setMediaItems` without N PlaybackInfo round-trips, and the server's audio
+     transcode comes back as HLS, sidestepping the video resolver's HLS-only
+     `transcodeTarget()` gate and the mp3/HTTP audio TranscodingProfile.
+     ARCHITECTURE.md's "/Videos not /Audio" rule concerned `audioStreamIndex` on
+     multi-stream video sidecars; a music track has one audio stream.
+  3. *Video ⇄ music share the one process-wide player through an explicit
+     `PlaybackHandover` arbiter* — invariant: exactly one stop report per session,
+     issued by the owner at handover, before the new owner prepares (M12
+     coordinator-invariant precedent, unit-tested the same way). The music queue
+     survives interruption as a paused snapshot.
+  4. *Data model extends `JellyfinItem`/`ItemEntity`; no parallel music model* — the
+     "UI never sees DTO/Entity, online and offline produce identical domain models"
+     contract stays intact. DB v9 adds two nullable indexed query columns
+     (`albumId`, `albumArtistId`); track/disc numbers reuse
+     `indexNumber`/`parentIndexNumber`.
+  5. *Music downloads are originals-only* — no `DownloadQuality` for audio (the
+     machinery is video-bitrate-shaped and audio files are small); album art is the
+     one extra file; audio transcode downloads are an explicit deferred item.
+  6. *SyncPlay ⊕ music mutually exclusive; music never casts in M13* (plays locally;
+     `CastDeviceProfile` is video-only) — both refusals surfaced with messages,
+     casting music recorded as deferred.
+  7. *Reporting reuses `PlaybackReporter`* — the hard-coded `repeatMode`/
+     `playbackOrder` become defaulted parameters (video path and its tests compile
+     unchanged) plus a light `MusicReportTarget` path with per-track start/stop on
+     queue transitions and the same local user-data write-through.

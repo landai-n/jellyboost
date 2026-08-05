@@ -55,8 +55,14 @@ private val ROW_ART_HEIGHT_WIDE = 44.dp
 /** Half the "m-surface card" list's 10dp inter-card gap — applied top and bottom of every row. */
 private val ROW_GAP_HALF = 5.dp
 
-/** Track alpha behind a queue row's 3dp progress bar — the app's standing "inset progress" alpha. */
-private const val QUEUE_TRACK_ALPHA = 0.22f
+/**
+ * Track alpha behind a queue row's 3dp progress bar — the app's standing "inset progress" alpha.
+ *
+ * 0.40, raised from 0.22 by the 2026-08-05 accessibility audit: the track is what makes the filled
+ * part of the bar *mean* a fraction, so under WCAG 1.4.11 it owes 3:1 against the row behind it.
+ * White@22% was 1.97:1 on `#101010`; white@40% is 3.82:1 there and 3.75:1 on a card's `#202020`.
+ */
+private const val QUEUE_TRACK_ALPHA = 0.40f
 
 private val QueueTitleCompact = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.W500)
 private val QueueTitleWide = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.W500)

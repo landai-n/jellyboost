@@ -45,8 +45,18 @@ object GlassDefaults {
     /** Edge of a form / feedback panel — a touch fainter than [Hairline], as panels are large. */
     val PanelHairline: Color = Color.White.copy(alpha = 0.06f)
 
-    /** Border of a ghost (outlined, unfilled) button, which has no fill to define its shape. */
-    val GhostBorder: Color = Color.White.copy(alpha = 0.12f)
+    /**
+     * Border of a ghost (outlined, unfilled) button, which has no fill to define its shape.
+     *
+     * The one hairline in the set that is not decoration: it is the *entire* visual boundary of a
+     * control the user is meant to press, so WCAG 1.4.11 asks 3:1 of it against the page. On
+     * `#101010` white needs α ≥ 0.333 for that; at the original 0.12 the edge was 1.38:1 — visible
+     * on an OLED in a dark room and nowhere else (accessibility audit 2026-08-05). 0.40 gives
+     * 3.82:1, keeping a little margin for the ghost pills that sit on `#202020` (3.75:1) rather
+     * than on the background. [Hairline] and the rest stay where they are: those draw seams on
+     * surfaces that already have a fill, and are not the only thing saying where a control is.
+     */
+    val GhostBorder: Color = Color.White.copy(alpha = 0.40f)
 
     /**
      * The fill of a *chrome* surface — the top nav's tab capsule, the app-wide action circles, the
@@ -55,15 +65,23 @@ object GlassDefaults {
      * Chrome floats over whatever the user is looking at, which on this app's screens is very often
      * a bright frame of artwork, and [Fill]'s white@6% over a blurred bright backdrop leaves a white
      * glyph sitting on a near-white surface. A *dark* tint is the only thing that makes the blur
-     * subtractive: the backdrop still shows through at 55%, but it is pulled far enough down that
-     * white content on top of it keeps its contrast whatever is behind. In-content glass — overlay
-     * badges on card artwork, metadata pills — keeps [Fill], because those already sit on artwork
-     * the card itself has scrimmed (DECISIONS.md 2026-08-01, chrome readability).
+     * subtractive: the backdrop still shows through, but it is pulled far enough down that white
+     * content on top of it keeps its contrast whatever is behind. In-content glass — overlay badges
+     * on card artwork, metadata pills — keeps [Fill], because those already sit on artwork the card
+     * itself has scrimmed (DECISIONS.md 2026-08-01, chrome readability).
+     *
+     * The alpha is [BottomNavFill]'s, and for the identical reason (accessibility audit 2026-08-05):
+     * at 45% a worst-case backdrop — a white frame — composited to rgb(147), where a white top-nav
+     * label is 3.05:1, short of the 4.5:1 body text owes. At 72% the same backdrop composites to
+     * rgb(83) and the label reads 7.70:1. The bottom pill had that arithmetic in its KDoc since the
+     * refresh; the top chrome, which carries an unselected tab's `onSurfaceVariant` label — white at
+     * 70%, dimmer still, and 2.29:1 at the old value — never got the same fix. That label is now
+     * 4.77:1. Both bars darken by the same amount, which is also what keeps them one system.
      */
-    val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.45f)
+    val ChromeFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 
     /**
-     * The floating bottom pill's fill — a step darker again than [ChromeFill].
+     * The floating bottom pill's fill.
      *
      * The pill carries the smallest text in the app's chrome (10sp unselected tab labels) and,
      * unlike the top bars, it parks permanently over the brightest part of every screen: Home's
@@ -71,7 +89,14 @@ object GlassDefaults {
      * a glass surface is not part of the sampled backdrop (see `TopChromeScrim`'s KDoc), so the
      * only lever that darkens what the labels sit on is the tint itself. At 45% a bright frame of
      * artwork still composited the labels to roughly 2.5:1; 72% (the mid stop of the top scrim,
-     * for coherence) pulls a worst-case backdrop down far enough that full-white labels read.
+     * for coherence) pulls a worst-case backdrop down far enough that full-white labels read
+     * (7.70:1 over a white one).
+     *
+     * This was the first token in the set sized by that arithmetic and, until the 2026-08-05
+     * accessibility audit, the only one — [ChromeFill] has since been brought to the same value for
+     * the same reason, so the two are now equal by argument rather than by coincidence. Kept as a
+     * separate token because they are separate design decisions: if the top bars ever gain a real
+     * scrim of their own, this one still cannot have it.
      */
     val BottomNavFill: Color = JellyfinColors.Background.copy(alpha = 0.72f)
 

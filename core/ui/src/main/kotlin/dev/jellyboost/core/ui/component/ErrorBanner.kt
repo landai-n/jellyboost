@@ -17,6 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,6 +65,12 @@ private val BannerLabel =
  * stale list it failed to replace — so it never offers a retry of its own; the screen it belongs to
  * already has one.
  *
+ * It announces itself. A banner appears *because* something the user just did failed, and a failure
+ * nobody is told about is a screen that silently did nothing (accessibility audit 2026-08-05,
+ * CR-3/M4) — so the whole banner is one node, marked assertive, which is the one live-region level
+ * that interrupts. Assertive rather than polite precisely because the user is mid-flow: they are
+ * about to retype a password into a form that has already rejected it.
+ *
  * @param message already translated by the caller; `:core:ui` never sees the failure taxonomy.
  */
 @Composable
@@ -75,6 +84,7 @@ fun ErrorBanner(
         modifier =
             modifier
                 .fillMaxWidth()
+                .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Assertive }
                 .background(
                     color = MaterialTheme.colorScheme.error.copy(alpha = BANNER_FILL_ALPHA),
                     shape = shape,

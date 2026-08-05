@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,17 +90,29 @@ fun <T> MediaRow(
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+                // A section title is a heading, which is what makes TalkBack's heading-jump work:
+                // without it, reaching the fourth row of the home screen means swiping through
+                // three rows of cards (accessibility audit 2026-08-05, M9/A11Y-10). The full title
+                // is also spoken, whatever the visible line had room for.
+                modifier =
+                    Modifier.weight(1f, fill = false).semantics {
+                        heading()
+                        contentDescription = title
+                    },
             )
             if (onSeeAll != null) {
                 // Muted rather than accent-coloured: a row that shouts "See all" competes with the
                 // artwork it is introducing, and every row in the app carries one.
+                val seeAllDescription = stringResource(R.string.media_row_see_all_section, title)
                 TextButton(
                     onClick = onSeeAll,
                     colors =
                         ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         ),
+                    // Every row carries one of these, so a screen of them was a list of identical
+                    // "See all" stops with nothing saying all of *what* (audit A11Y-11).
+                    modifier = Modifier.semantics { contentDescription = seeAllDescription },
                 ) {
                     Text(text = stringResource(R.string.media_row_see_all), style = JellyfinTypeExtras.SeeAll)
                 }

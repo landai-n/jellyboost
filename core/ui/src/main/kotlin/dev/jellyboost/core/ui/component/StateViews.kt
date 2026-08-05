@@ -25,6 +25,10 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,16 +68,31 @@ private val DashLength = 6.dp
 
 private val DashGap = 5.dp
 
-/** Centred spinner shown while a screen loads its first page of data. */
+/**
+ * Centred spinner shown while a screen loads its first page of data.
+ *
+ * It says so: a spinning ring is a picture of waiting, and before the 2026-08-05 accessibility
+ * audit a screen that replaced its content with one announced nothing at all — the previous
+ * screen's node vanished and TalkBack landed on an empty page (audit CR-3/M4). The label makes the
+ * spinner a stop with words, and the polite live region announces it when it appears without
+ * interrupting whatever is being read.
+ */
 @Composable
 fun LoadingState(modifier: Modifier = Modifier) {
+    val loading = stringResource(R.string.state_loading)
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(SpinnerSize),
+            modifier =
+                Modifier
+                    .size(SpinnerSize)
+                    .semantics {
+                        contentDescription = loading
+                        liveRegion = LiveRegionMode.Polite
+                    },
             color = MaterialTheme.colorScheme.primary,
             strokeWidth = SpinnerStroke,
             trackColor = SpinnerTrack,

@@ -517,6 +517,12 @@ private fun CreateGroupDialog(
                 onValueChange = { name = it },
                 singleLine = true,
                 placeholder = { Text(text = stringResource(R.string.player_syncplay_groups_create_hint)) },
+                // The field's name, not just its hint: a placeholder is gone the moment the user
+                // types, and this field then announced as a bare edit box holding whatever it
+                // holds. The dialog's own title is a separate node and does not name it
+                // (accessibility audit 2026-08-05, CR-2). No error state exists here — the confirm
+                // button is simply disabled until the name is non-blank — so no `errorMessage`.
+                labelText = stringResource(R.string.player_syncplay_groups_create_hint),
                 modifier = Modifier.fillMaxWidth(),
             )
         },

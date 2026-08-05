@@ -16,6 +16,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -128,7 +130,10 @@ private fun LibrariesGrid(
                             JellyfinTypeExtras.ScreenTitle
                         },
                     color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(bottom = Dimens.SpaceExtraSmall),
+                    // The tab's own heading: it rides in the grid rather than in a bar, so it is
+                    // also the only thing that says which screen this is (audit A11Y-10).
+                    modifier =
+                        Modifier.padding(bottom = Dimens.SpaceExtraSmall).semantics { heading() },
                 )
             }
 

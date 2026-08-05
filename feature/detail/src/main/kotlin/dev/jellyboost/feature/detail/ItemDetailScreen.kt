@@ -42,6 +42,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -548,7 +551,14 @@ private enum class DetailContentType {
     EPISODE,
 }
 
-/** A section heading on this screen, in the refresh's row-title type (spec, "Sections"). */
+/**
+ * A section heading on this screen, in the refresh's row-title type (spec, "Sections").
+ *
+ * A heading to a screen reader as well as to the eye: `MediaRow`'s own titles became headings in
+ * this audit's wave 2, and the two blocks this file titles itself — the episode list and the cast
+ * rail — are exactly the ones a heading-jump has to be able to land on to skip a season's worth of
+ * rows (accessibility audit 2026-08-05, A11Y-10).
+ */
 @Composable
 internal fun DetailSectionTitle(
     text: String,
@@ -560,7 +570,11 @@ internal fun DetailSectionTitle(
         color = MaterialTheme.colorScheme.onBackground,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = modifier.padding(horizontal = DetailEdgePadding),
+        modifier =
+            modifier.padding(horizontal = DetailEdgePadding).semantics {
+                heading()
+                contentDescription = text
+            },
     )
 }
 

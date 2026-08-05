@@ -51,6 +51,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -290,6 +294,13 @@ private fun LibraryHeader(
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                // The screen's own heading — where a heading-jump lands, and the full library name
+                // whatever the one ellipsized line had room for (audit A11Y-10).
+                modifier =
+                    Modifier.semantics {
+                        heading()
+                        contentDescription = title
+                    },
             )
             if (totalCount != null) {
                 Text(
@@ -429,7 +440,9 @@ private fun SortLabelAction(
         Row(
             modifier =
                 Modifier
-                    .clickable { onExpandedChange(true) }
+                    // A glyph and a word that open a menu: the compact layout's version of this is
+                    // a `GlassIconButton` and has always said so; this one said nothing (ROLE-01).
+                    .clickable(role = Role.Button) { onExpandedChange(true) }
                     .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SortLabelGap),

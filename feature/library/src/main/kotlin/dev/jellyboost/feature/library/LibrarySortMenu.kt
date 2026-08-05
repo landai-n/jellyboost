@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import dev.jellyboost.core.common.model.SortBy
 import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.ui.theme.Dimens
@@ -26,6 +28,12 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
  *
  * Picking the key that is already active flips the direction, which is how jellyfin-web's sort
  * control behaves; the explicit direction row underneath makes that discoverable.
+ *
+ * Which key is active was drawn as a leading tick and nothing else — the icon carries no
+ * description, so the menu announced six identically-shaped options with no way to tell which one
+ * the grid is already sorted by (accessibility audit 2026-08-05, A11Y-13). Each option now carries
+ * real `selected` semantics, which is the same fact the tick draws, said in the voice a screen
+ * reader already has for it. The tick stays exactly as it was.
  */
 @Composable
 internal fun LibrarySortMenu(
@@ -54,14 +62,20 @@ internal fun LibrarySortMenu(
         )
 
         LIBRARY_SORT_OPTIONS.forEach { option ->
+            val isActive = option == sortBy
             DropdownMenuItem(
                 text = { Text(text = stringResource(option.labelRes())) },
+                // On the item's own modifier rather than on the tick: the row's `clickable` merges
+                // its descendants, so a state declared on the icon would sit under the node
+                // TalkBack focuses instead of on it (the same reasoning `AppActions`' offline
+                // switch records, from the other direction).
+                modifier = Modifier.semantics { selected = isActive },
                 onClick = {
                     onSelectSort(option)
                     onDismiss()
                 },
                 leadingIcon = {
-                    if (option == sortBy) {
+                    if (isActive) {
                         Icon(imageVector = Icons.Filled.Check, contentDescription = null)
                     }
                 },

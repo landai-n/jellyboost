@@ -49,8 +49,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -310,12 +313,21 @@ private fun TitleLockup(
             )
         }
 
+        val title = item.displayTitle
         Text(
-            text = item.displayTitle,
+            text = title,
             style = if (expanded) JellyfinTypeExtras.HeroTitleExpanded else JellyfinTypeExtras.HeroTitleCompact,
             color = Color.White,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
+            // The page's own heading, which is what makes TalkBack's heading-jump land somewhere
+            // useful on a screen whose first stop is otherwise a backdrop (audit A11Y-10). The full
+            // title is spoken whatever the two ellipsized lines had room for.
+            modifier =
+                Modifier.semantics {
+                    heading()
+                    contentDescription = title
+                },
         )
 
         item.subtitleLine()?.let { subtitle ->
@@ -344,6 +356,12 @@ private fun TitleLockup(
  * [DownloadState.Downloaded], so a season mid-download (whose aggregate state is not yet
  * `Downloaded`) keeps showing the server's figure rather than a partial sum, and a fully-downloaded
  * container — which has no download row, and so no bytes, of its own — falls back to it too.
+ *
+ * To a screen reader the row is **one** node. Read as drawn it was four or five disconnected
+ * fragments — "8.6", "2016", "TV-MA" — none of which says what it is a number *of* (accessibility
+ * audit 2026-08-05, A11Y-21). The merged sentence qualifies the two that need it in words, the way
+ * the star glyph and the badge outline qualify them to the eye: "Rating 8.6, 2016, rated TV-MA,
+ * 4 seasons".
  */
 @Composable
 private fun MetaRow(
@@ -355,8 +373,16 @@ private fun MetaRow(
     val facts = item.metaFacts(downloadState = downloadState, downloadedBytes = downloadedBytes)
     if (item.communityRating == null && item.officialRating == null && facts.isEmpty()) return
 
+    val description =
+        metaRowDescription(
+            rating = item.communityRating?.let { stringResource(R.string.detail_meta_rating, formatRating(it)) },
+            year = item.productionYear?.toString(),
+            certificate = item.officialRating?.let { stringResource(R.string.detail_meta_rated, it) },
+            facts = facts,
+        )
+
     FlowRow(
-        modifier = modifier,
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(MetaGap),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
@@ -377,6 +403,33 @@ private fun MetaRow(
         }
     }
 }
+
+/**
+ * The metadata row as one sentence, in the order the row draws it.
+ *
+ * A plain function, so what it drops and how it punctuates are held still by a JVM test rather than
+ * by a device: blanks are dropped (a server that answers `""` for a certificate must not produce a
+ * dangling "rated"), and the parts are separated by a comma rather than the interpunct the row
+ * draws — `·` is either read out as "dot" or swallowed entirely, where a comma is a pause in every
+ * screen reader.
+ *
+ * @param rating the community rating, already qualified ("Rating 8.6") and formatted.
+ * @param certificate the age certificate, already qualified ("rated TV-MA").
+ * @param facts the same plain-text facts the row's last element joins with [SEPARATOR] — season
+ *   count or runtime, size, time left — each of which already says what it is.
+ */
+internal fun metaRowDescription(
+    rating: String?,
+    year: String?,
+    certificate: String?,
+    facts: List<String>,
+): String =
+    (listOf(rating, year, certificate) + facts)
+        .mapNotNull { part -> part?.trim()?.takeIf { it.isNotEmpty() } }
+        .joinToString(DESCRIPTION_SEPARATOR)
+
+/** A comma and a space, where the row draws a gap or an interpunct — see [metaRowDescription]. */
+internal const val DESCRIPTION_SEPARATOR = ", "
 
 /** The starred community rating — the one part of the metadata line the refresh draws in colour. */
 @Composable
@@ -603,6 +656,12 @@ private fun playLabel(
  * again) on tap. A paragraph that already fits is not made tappable — a ripple on inert text
  * would promise interaction it doesn't have. `rememberSaveable` keeps an expanded paragraph
  * expanded across rotation and process death, matching how scroll position survives.
+ *
+ * Non-visually the affordance used to be invisible: a clickable paragraph with no state and no
+ * label, announced as five ellipsized lines that could be activated for reasons unknown
+ * (accessibility audit 2026-08-05, A11Y-12). It now says which of the two states it is in, and
+ * names what a tap does — TalkBack reads the click label in place of its own "double tap to
+ * activate", so "Read full overview" is the whole of the promise.
  */
 @Composable
 private fun ExpandableOverview(
@@ -612,6 +671,10 @@ private fun ExpandableOverview(
     var expanded by rememberSaveable { mutableStateOf(false) }
     var overflowing by remember { mutableStateOf(false) }
     val toggleable = overflowing || expanded
+    val expandedState =
+        stringResource(if (expanded) R.string.detail_overview_expanded else R.string.detail_overview_collapsed)
+    val clickLabel =
+        stringResource(if (expanded) R.string.detail_overview_collapse else R.string.detail_overview_expand)
     Text(
         text = text,
         style = OverviewStyle,
@@ -624,7 +687,13 @@ private fun ExpandableOverview(
                 .widthIn(max = TEXT_MAX_WIDTH)
                 .animateContentSize()
                 .then(
-                    if (toggleable) Modifier.clickable { expanded = !expanded } else Modifier,
+                    if (toggleable) {
+                        Modifier
+                            .semantics { stateDescription = expandedState }
+                            .clickable(onClickLabel = clickLabel) { expanded = !expanded }
+                    } else {
+                        Modifier
+                    },
                 ),
     )
 }
@@ -715,7 +784,9 @@ private fun DownloadButton(
                 modifier
                     .size(Dimens.PillHeight)
                     .glassSurface(CircleShape)
-                    .clickable(onClick = onClick)
+                    // The one action row control that is not a `GlassIconButton`, and the only one
+                    // that had no role: a progress ring you can tap is a button (ROLE-01).
+                    .clickable(role = Role.Button, onClick = onClick)
                     .semantics { contentDescription = label },
             contentAlignment = Alignment.Center,
         ) {

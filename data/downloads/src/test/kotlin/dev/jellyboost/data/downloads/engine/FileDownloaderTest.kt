@@ -9,7 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -322,14 +322,23 @@ class FileDownloaderTest {
             val target = file("movie.mkv")
             val downloader = downloader(respondWith = ok(ByteArray(FileDownloader.BUFFER_BYTES * 4)))
 
-            var job: Job? = null
-            job =
-                launch(UnconfinedTestDispatcher(testScheduler)) {
-                    downloader.download(URL, target, UnconfinedTestDispatcher(testScheduler)) { bytes, _ ->
-                        if (bytes >= FileDownloader.BUFFER_BYTES) job?.cancel()
+            // The callback parks the copy loop after the first 64 KB window, so the cancel below
+            // always lands mid-body. Cancelling through a `var job` from inside the callback was
+            // racy: the loop runs on OkHttp's dispatcher thread, which could stream the whole
+            // four-window body before the test thread had even assigned the var.
+            val firstWindowWritten = CompletableDeferred<Unit>()
+            val job =
+                launch(Dispatchers.IO) {
+                    downloader.download(URL, target, Dispatchers.IO) { bytes, _ ->
+                        if (bytes >= FileDownloader.BUFFER_BYTES) {
+                            firstWindowWritten.complete(Unit)
+                            awaitCancellation()
+                        }
                     }
                 }
-            job.join()
+            withContext(Dispatchers.Default) { firstWindowWritten.await() }
+
+            job.cancelAndJoin()
 
             // Nothing in the engine ever deletes a file — that is exactly what makes it resumable.
             target.exists() shouldBe true

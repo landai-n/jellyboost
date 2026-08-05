@@ -112,6 +112,10 @@ fun PlayerScreen(
     // controls getting out of the way while the user is reading the participant list (M11).
     var groupSheetVisible by remember { mutableStateOf(false) }
     var queueSheetVisible by remember { mutableStateOf(false) }
+    // Hoisted for the same reason, and one more: it is the accessible alternative to the brightness
+    // and volume swipes (audit CR-8), so of all the panels this is the one that must not disappear
+    // while it is being used.
+    var displaySheetVisible by remember { mutableStateOf(false) }
     // Rebuilt per composition, these method references are that many new unstable lambdas, and every
     // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
@@ -127,6 +131,7 @@ fun PlayerScreen(
                 onSelectSpeed = viewModel::selectSpeed,
                 onSkipSegment = viewModel::skipCurrentSegment,
                 onBack = onBack,
+                onOpenDisplaySheet = { displaySheetVisible = true },
                 onOpenGroupSheet = { groupSheetVisible = true },
                 onOpenQueueSheet = { queueSheetVisible = true },
                 onSetGroupShuffle = viewModel::setGroupShuffle,
@@ -283,6 +288,8 @@ fun PlayerScreen(
     // Outside the video `Box`, so it is not covered by the controls and not drawn in the floating
     // window; never in picture-in-picture, where it would be wider than the window itself.
     if (!inPictureInPicture) {
+        DisplaySheetHost(visible = displaySheetVisible, onDismiss = { displaySheetVisible = false })
+
         GroupSheetHost(
             visible = groupSheetVisible,
             syncPlay = state.syncPlay,
@@ -296,6 +303,17 @@ fun PlayerScreen(
             onDismiss = { queueSheetVisible = false },
         )
     }
+}
+
+/** Draws the brightness/volume sheet, or nothing. */
+@Composable
+private fun DisplaySheetHost(
+    visible: Boolean,
+    onDismiss: () -> Unit,
+) {
+    if (!visible) return
+
+    PlayerDisplayDialog(onDismiss = onDismiss)
 }
 
 /**

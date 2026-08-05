@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.HighQuality
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -475,6 +476,17 @@ private fun BottomBar(
                         icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
                         showLabel = showLabels,
                         value = values.queue,
+                    )
+                }
+                // Brightness and volume as controls rather than as gestures (audit CR-8). Offered
+                // under exactly the condition the swipes are: both act on *this* device, and while a
+                // television has the film neither means anything.
+                if (!state.cast.isCasting) {
+                    SheetChip(
+                        label = stringResource(R.string.player_display),
+                        onClick = actions.onOpenDisplaySheet,
+                        icon = Icons.Outlined.Tune,
+                        showLabel = showLabels,
                     )
                 }
                 // A downloaded file has no streaming bitrate to cap, so the picker would be inert.

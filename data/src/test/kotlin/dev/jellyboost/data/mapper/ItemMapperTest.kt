@@ -189,10 +189,10 @@ class ItemMapperTest {
     }
 
     @Test
-    fun `maps CollectionType MUSIC onto CollectionKind MUSIC, still outside what a library query keeps`() {
+    fun `maps CollectionType MUSIC onto CollectionKind MUSIC, now inside what a library query keeps`() {
         CollectionType.MUSIC.toCollectionKind() shouldBe CollectionKind.MUSIC
-        // Recognised, but Phase 2 is what puts it in front of the user (docs/notes/music-m13-plan.md).
-        (CollectionKind.MUSIC in CollectionKind.SUPPORTED) shouldBe false
+        // Joined SUPPORTED in M13 Phase 2, alongside :feature:music (docs/notes/music-m13-plan.md).
+        (CollectionKind.MUSIC in CollectionKind.SUPPORTED) shouldBe true
     }
 
     @Test
@@ -345,7 +345,7 @@ class ItemMapperTest {
     }
 
     @Test
-    fun `keeps only movie and tv libraries when mapping user views`() {
+    fun `keeps movie, tv and music libraries when mapping user views`() {
         val views =
             listOf(
                 library(UUID.randomUUID(), "Movies", CollectionType.MOVIES),
@@ -357,9 +357,9 @@ class ItemMapperTest {
 
         val mapped = mapper.toLibraryViews(views)
 
-        mapped.map { it.name } shouldContainExactly listOf("Movies", "Shows")
+        mapped.map { it.name } shouldContainExactly listOf("Movies", "Shows", "Music")
         mapped.map { it.collectionType } shouldContainExactly
-            listOf(CollectionKind.MOVIES, CollectionKind.TVSHOWS)
+            listOf(CollectionKind.MOVIES, CollectionKind.TVSHOWS, CollectionKind.MUSIC)
     }
 
     @Test

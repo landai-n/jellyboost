@@ -79,4 +79,32 @@ object Routes {
         val libraryId: String,
         val libraryName: String,
     )
+
+    // M13 Phase 2 — music
+    //
+    // NowPlaying is not here yet: it is Phase 4's, once `MusicController` exists for it to observe
+    // (docs/notes/music-m13-plan.md, Phase 2/4 split).
+
+    /** A music library's Albums/Artists/Playlists tabs — the destination a `MUSIC` tile opens. */
+    @Serializable
+    data class MusicLibrary(
+        val libraryId: String,
+        val libraryName: String,
+    )
+
+    @Serializable
+    data class AlbumDetail(
+        val albumId: String,
+    )
+
+    @Serializable
+    data class ArtistDetail(
+        val artistId: String,
+    )
+
+    /** View-only (docs/notes/music-m13-plan.md — playlist *editing* is out of M13's scope). */
+    @Serializable
+    data class PlaylistDetail(
+        val playlistId: String,
+    )
 }

@@ -30,11 +30,13 @@ import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.exception.TimeoutException
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.libraryApi
+import org.jellyfin.sdk.api.client.extensions.playlistsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.api.operations.ItemsApi
 import org.jellyfin.sdk.api.operations.LibraryApi
+import org.jellyfin.sdk.api.operations.PlaylistsApi
 import org.jellyfin.sdk.api.operations.TvShowsApi
 import org.jellyfin.sdk.api.operations.UserLibraryApi
 import org.jellyfin.sdk.api.operations.UserViewsApi
@@ -43,11 +45,14 @@ import org.jellyfin.sdk.model.api.BaseItemDtoQueryResult
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.MediaType
+import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
+import org.jellyfin.sdk.model.api.request.GetPlaylistItemsRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
 import org.jellyfin.sdk.model.api.request.GetSeasonsRequest
 import org.jellyfin.sdk.model.api.request.GetSimilarItemsRequest
@@ -72,6 +77,7 @@ class OnlineJellyfinRepositoryTest {
     private val tvShowsApi = mockk<TvShowsApi>()
     private val userLibraryApi = mockk<UserLibraryApi>()
     private val libraryApi = mockk<LibraryApi>()
+    private val playlistsApi = mockk<PlaylistsApi>()
     private val browseCache = mockk<BrowseCacheWriter>(relaxed = true)
 
     private val repository =
@@ -92,6 +98,7 @@ class OnlineJellyfinRepositoryTest {
         every { apiClient.tvShowsApi } returns tvShowsApi
         every { apiClient.userLibraryApi } returns userLibraryApi
         every { apiClient.libraryApi } returns libraryApi
+        every { apiClient.playlistsApi } returns playlistsApi
     }
 
     @AfterEach
@@ -102,7 +109,7 @@ class OnlineJellyfinRepositoryTest {
     // ---- getUserViews -----------------------------------------------------------------------
 
     @Test
-    fun `getUserViews returns only movie and tv libraries as domain models`() =
+    fun `getUserViews returns movie, tv and music libraries as domain models`() =
         runTest {
             coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
                 queryResponse(
@@ -110,6 +117,8 @@ class OnlineJellyfinRepositoryTest {
                         libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES),
                         libraryDto(UUID.randomUUID(), "Shows", CollectionType.TVSHOWS),
                         libraryDto(UUID.randomUUID(), "Music", CollectionType.MUSIC),
+                        // Still outside app scope — unlike music, never joined SUPPORTED.
+                        libraryDto(UUID.randomUUID(), "Photos", CollectionType.PHOTOS),
                     ),
                 )
             coEvery { itemsApi.getItems(any<GetItemsRequest>()) } returns countResponse(0)
@@ -118,9 +127,9 @@ class OnlineJellyfinRepositoryTest {
 
             result.shouldBeInstanceOf<AppResult.Success<*>>()
             val libraries = (result as AppResult.Success).value
-            libraries.map { it.name } shouldContainExactly listOf("Movies", "Shows")
+            libraries.map { it.name } shouldContainExactly listOf("Movies", "Shows", "Music")
             libraries.map { it.collectionType } shouldContainExactly
-                listOf(CollectionKind.MOVIES, CollectionKind.TVSHOWS)
+                listOf(CollectionKind.MOVIES, CollectionKind.TVSHOWS, CollectionKind.MUSIC)
         }
 
     @Test
@@ -174,8 +183,9 @@ class OnlineJellyfinRepositoryTest {
     @Test
     fun `getUserViews asks for no counts when there are no supported libraries`() =
         runTest {
+            // Music joined SUPPORTED in M13 Phase 2 — photos is what stays outside it.
             coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
-                queryResponse(listOf(libraryDto(UUID.randomUUID(), "Music", CollectionType.MUSIC)))
+                queryResponse(listOf(libraryDto(UUID.randomUUID(), "Photos", CollectionType.PHOTOS)))
 
             (repository.getUserViews() as AppResult.Success).value.shouldBeEmpty()
 
@@ -444,6 +454,112 @@ class OnlineJellyfinRepositoryTest {
             coEvery { libraryApi.getSimilarItems(any<GetSimilarItemsRequest>()) } throws IOException("reset")
 
             val result = repository.getSimilarItems(moviesLibraryId.toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
+        }
+
+    // ---- M13 Phase 2: music -------------------------------------------------------------------
+
+    @Test
+    fun `a music library's count asks only for albums, unlike a movie or TV library`() =
+        runTest {
+            val musicLibraryId = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc")
+            coEvery { userViewsApi.getUserViews(any(), any(), any(), any()) } returns
+                queryResponse(
+                    listOf(
+                        libraryDto(moviesLibraryId, "Movies", CollectionType.MOVIES),
+                        libraryDto(musicLibraryId, "Music", CollectionType.MUSIC),
+                    ),
+                )
+            val requests = mutableListOf<GetItemsRequest>()
+            coEvery { itemsApi.getItems(capture(requests)) } returns countResponse(0)
+
+            val libraries = (repository.getUserViews() as AppResult.Success).value
+
+            libraries.map { it.collectionType } shouldContainExactly listOf(CollectionKind.MOVIES, CollectionKind.MUSIC)
+            // The movie library still asks for exactly [MOVIE, SERIES] — pinned above and
+            // untouched by M13 Phase 2 (docs/notes/music-m13-plan.md item 2).
+            requests.first().includeItemTypes shouldContainExactly listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
+            requests.last().includeItemTypes shouldContainExactly listOf(BaseItemKind.MUSIC_ALBUM)
+        }
+
+    @Test
+    fun `getAlbumTracks asks for the album's audio children in disc-track order`() =
+        runTest {
+            val albumId = UUID.randomUUID()
+            val request = slot<GetItemsRequest>()
+            coEvery { itemsApi.getItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.AUDIO, "Fake Plastic Trees")))
+
+            val result = repository.getAlbumTracks(albumId.toString())
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Fake Plastic Trees")
+            request.captured.parentId shouldBe albumId
+            request.captured.includeItemTypes shouldContainExactly listOf(BaseItemKind.AUDIO)
+            request.captured.recursive shouldBe true
+            request.captured.sortBy shouldContainExactly
+                listOf(ItemSortBy.PARENT_INDEX_NUMBER, ItemSortBy.INDEX_NUMBER, ItemSortBy.SORT_NAME)
+        }
+
+    @Test
+    fun `getArtistAlbums asks by albumArtistIds, newest first`() =
+        runTest {
+            val artistId = UUID.randomUUID()
+            val request = slot<GetItemsRequest>()
+            coEvery { itemsApi.getItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.MUSIC_ALBUM, "The Bends")))
+
+            val result = repository.getArtistAlbums(artistId.toString())
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("The Bends")
+            request.captured.albumArtistIds shouldContainExactly listOf(artistId)
+            request.captured.includeItemTypes shouldContainExactly listOf(BaseItemKind.MUSIC_ALBUM)
+            request.captured.recursive shouldBe true
+            request.captured.sortBy shouldContainExactly
+                listOf(ItemSortBy.PRODUCTION_YEAR, ItemSortBy.PREMIERE_DATE, ItemSortBy.SORT_NAME)
+            request.captured.sortOrder shouldContainExactly
+                listOf(SortOrder.DESCENDING, SortOrder.DESCENDING, SortOrder.ASCENDING)
+        }
+
+    @Test
+    fun `getArtistTopTracks asks by artistIds, sorted by play count and capped at the limit`() =
+        runTest {
+            val artistId = UUID.randomUUID()
+            val request = slot<GetItemsRequest>()
+            coEvery { itemsApi.getItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.AUDIO, "Creep")))
+
+            val result = repository.getArtistTopTracks(artistId.toString(), limit = 10)
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Creep")
+            request.captured.artistIds shouldContainExactly listOf(artistId)
+            request.captured.includeItemTypes shouldContainExactly listOf(BaseItemKind.AUDIO)
+            request.captured.sortBy shouldContainExactly listOf(ItemSortBy.PLAY_COUNT)
+            request.captured.sortOrder shouldContainExactly listOf(SortOrder.DESCENDING)
+            request.captured.limit shouldBe 10
+        }
+
+    @Test
+    fun `getPlaylistItems goes through the dedicated playlists endpoint, preserving order`() =
+        runTest {
+            val playlistId = UUID.randomUUID()
+            val request = slot<GetPlaylistItemsRequest>()
+            coEvery { playlistsApi.getPlaylistItems(capture(request)) } returns
+                queryResponse(listOf(itemDto(BaseItemKind.AUDIO, "Track 2"), itemDto(BaseItemKind.AUDIO, "Track 1")))
+
+            val result = repository.getPlaylistItems(playlistId.toString())
+
+            // Server order preserved exactly as returned — no client-side re-sort.
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Track 2", "Track 1")
+            request.captured.playlistId shouldBe playlistId
+        }
+
+    @Test
+    fun `getAlbumTracks maps a transport failure onto Network`() =
+        runTest {
+            coEvery { itemsApi.getItems(any<GetItemsRequest>()) } throws IOException("reset")
+
+            val result = repository.getAlbumTracks(UUID.randomUUID().toString())
 
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }

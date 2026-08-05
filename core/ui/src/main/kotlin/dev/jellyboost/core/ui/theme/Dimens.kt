@@ -110,3 +110,6 @@ const val POSTER_ASPECT_RATIO: Float = 2f / 3f
 
 /** Thumbnail / backdrop artwork aspect ratio (width / height). */
 const val THUMB_ASPECT_RATIO: Float = 16f / 9f
+
+/** Square artwork aspect ratio — album and artist art (M13), Jellyfin's music image shape. */
+const val SQUARE_ASPECT_RATIO: Float = 1f

@@ -89,8 +89,8 @@ internal class ItemMapper
         /**
          * Maps a `getUserViews` entry into a [LibraryView].
          *
-         * Returns `null` for libraries outside v1 scope (music, live TV, photos …) so callers can
-         * simply `mapNotNull`.
+         * Returns `null` for libraries outside app scope (live TV, photos … — music joined
+         * [CollectionKind.SUPPORTED] in M13 Phase 2) so callers can simply `mapNotNull`.
          *
          * [LibraryView.itemCount] is always left unset here: the only count `getUserViews` carries
          * is `ChildCount`, which counts a collection folder's *direct children* (its media folders),
@@ -213,8 +213,6 @@ internal fun CollectionType?.toCollectionKind(): CollectionKind =
     when (this) {
         CollectionType.MOVIES -> CollectionKind.MOVIES
         CollectionType.TVSHOWS -> CollectionKind.TVSHOWS
-        // Recognised from M13 Phase 1, but CollectionKind.MUSIC is not in SUPPORTED yet — see its
-        // KDoc — so toLibraryView still drops it before it reaches the DB or UI.
         CollectionType.MUSIC -> CollectionKind.MUSIC
         else -> CollectionKind.OTHER
     }

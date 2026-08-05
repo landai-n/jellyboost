@@ -159,7 +159,7 @@ class SearchViewModelTest {
     // ---- the request ------------------------------------------------------------------------
 
     @Test
-    fun `asks for the three types the plan lists, capped at fifty`() =
+    fun `asks for the video and M13 music types, capped at fifty`() =
         runTest(dispatcher) {
             val viewModel = startedViewModel()
 
@@ -168,7 +168,15 @@ class SearchViewModelTest {
 
             val query = queries.single()
             query.itemTypes shouldContainExactly
-                listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+                listOf(
+                    ItemType.MOVIE,
+                    ItemType.SERIES,
+                    ItemType.EPISODE,
+                    ItemType.MUSIC_ARTIST,
+                    ItemType.MUSIC_ALBUM,
+                    ItemType.AUDIO,
+                    ItemType.PLAYLIST,
+                )
             query.recursive shouldBe true
             query.limit shouldBe 50
         }
@@ -213,6 +221,31 @@ class SearchViewModelTest {
             // The count the screen announces spans all three sections, not just the biggest one
             // (accessibility audit 2026-08-05, A11Y-09).
             state.resultCount shouldBe 4
+        }
+
+    @Test
+    fun `splits one response into the four M13 music sections too`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItems(any()) } returns
+                AppResult.Success(
+                    listOf(
+                        artist("ar1", "Radiohead"),
+                        album("al1", "The Bends"),
+                        song("so1", "Fake Plastic Trees"),
+                        playlist("pl1", "Road Trip"),
+                    ),
+                )
+            val viewModel = startedViewModel()
+
+            viewModel.onQueryChange("radiohead")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            state.artists.map { it.name } shouldContainExactly listOf("Radiohead")
+            state.albums.map { it.name } shouldContainExactly listOf("The Bends")
+            state.songs.map { it.name } shouldContainExactly listOf("Fake Plastic Trees")
+            state.playlists.map { it.name } shouldContainExactly listOf("Road Trip")
+            state.hasNoResults shouldBe false
         }
 
     @Test
@@ -427,6 +460,26 @@ class SearchViewModelTest {
         id: String,
         name: String,
     ) = JellyfinItem(id = id, name = name, type = ItemType.EPISODE, seriesName = "Westworld")
+
+    private fun artist(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.MUSIC_ARTIST)
+
+    private fun album(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.MUSIC_ALBUM)
+
+    private fun song(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.AUDIO)
+
+    private fun playlist(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.PLAYLIST)
 
     private companion object {
         /** Fast typing: well inside the debounce window. */

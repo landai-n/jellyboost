@@ -23,6 +23,8 @@ import dev.jellyboost.data.cache.CacheFixtures.MOVIES_LIBRARY
 import dev.jellyboost.data.cache.CacheFixtures.NOW
 import dev.jellyboost.data.cache.CacheFixtures.SHOWS_LIBRARY
 import dev.jellyboost.data.cache.CacheFixtures.USER_ID
+import dev.jellyboost.data.cache.CacheFixtures.albumDto
+import dev.jellyboost.data.cache.CacheFixtures.audioDto
 import dev.jellyboost.data.cache.CacheFixtures.entity
 import dev.jellyboost.data.cache.CacheFixtures.episodeDto
 import dev.jellyboost.data.cache.CacheFixtures.mapper
@@ -33,6 +35,7 @@ import dev.jellyboost.data.cache.CacheFixtures.userData
 import dev.jellyboost.data.cache.CacheFixtures.uuid
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -638,6 +641,75 @@ class OfflineJellyfinRepositoryTest {
     fun `similar items are always empty offline`() =
         runTest {
             repository.getSimilarItems(uuid(1).toString(), limit = 12).getOrNull()!!.shouldBeEmpty()
+        }
+
+    // ---- M13 Phase 2 — music --------------------------------------------------------------------
+
+    @Test
+    fun `getAlbumTracks reads the downloaded tracks of that album`() =
+        runTest {
+            val albumId = uuid(30)
+            coEvery { itemDao.tracksOfAlbum(ItemSource.DOWNLOAD, albumId, ItemType.AUDIO) } returns
+                listOf(entity(audioDto(uuid(31), "Track 1", albumId = albumId, trackNumber = 1)))
+
+            repository.getAlbumTracks(albumId.toString()).getOrNull()!! shouldHaveNames listOf("Track 1")
+        }
+
+    @Test
+    fun `getAlbumTracks is empty for a malformed album id`() =
+        runTest {
+            repository.getAlbumTracks("not-a-uuid").getOrNull()!!.shouldBeEmpty()
+        }
+
+    @Test
+    fun `getArtistAlbums reads the downloaded albums of that artist`() =
+        runTest {
+            val artistId = uuid(40)
+            coEvery { itemDao.albumsOfArtist(ItemSource.DOWNLOAD, artistId, ItemType.MUSIC_ALBUM) } returns
+                listOf(entity(albumDto(uuid(41), "The Bends", albumArtistId = artistId)))
+
+            repository.getArtistAlbums(artistId.toString()).getOrNull()!! shouldHaveNames listOf("The Bends")
+        }
+
+    @Test
+    fun `getArtistTopTracks walks every downloaded album and ranks tracks by their cached play count`() =
+        runTest {
+            val artistId = uuid(50)
+            val albumOne = uuid(51)
+            val albumTwo = uuid(52)
+            coEvery { itemDao.albumsOfArtist(ItemSource.DOWNLOAD, artistId, ItemType.MUSIC_ALBUM) } returns
+                listOf(entity(albumDto(albumOne, "Album One")), entity(albumDto(albumTwo, "Album Two")))
+            coEvery { itemDao.tracksOfAlbum(ItemSource.DOWNLOAD, albumOne, ItemType.AUDIO) } returns
+                listOf(entity(audioDto(uuid(60), "Quiet Track", albumId = albumOne, playCount = 1)))
+            coEvery { itemDao.tracksOfAlbum(ItemSource.DOWNLOAD, albumTwo, ItemType.AUDIO) } returns
+                listOf(entity(audioDto(uuid(61), "Loud Track", albumId = albumTwo, playCount = 9)))
+
+            val tracks = repository.getArtistTopTracks(artistId.toString(), limit = 10).getOrNull()!!
+
+            // The track with the higher recorded play count leads, whichever album it came from.
+            // No local `user_data` row exists for either (the default stub answers empty), so each
+            // track's cached blob is what carries the count read here.
+            tracks.map { it.name } shouldContainExactly listOf("Loud Track", "Quiet Track")
+        }
+
+    @Test
+    fun `getArtistTopTracks honours the limit`() =
+        runTest {
+            val artistId = uuid(70)
+            coEvery { itemDao.albumsOfArtist(ItemSource.DOWNLOAD, artistId, ItemType.MUSIC_ALBUM) } returns
+                listOf(entity(albumDto(uuid(71), "Album")))
+            coEvery { itemDao.tracksOfAlbum(ItemSource.DOWNLOAD, uuid(71), ItemType.AUDIO) } returns
+                (1..5).map { entity(audioDto(uuid(80 + it), "Track $it", albumId = uuid(71))) }
+
+            repository.getArtistTopTracks(artistId.toString(), limit = 2).getOrNull()!! shouldHaveSize 2
+        }
+
+    @Test
+    fun `getPlaylistItems is always empty offline — no playlist-membership relation exists yet`() =
+        runTest {
+            repository.getPlaylistItems(uuid(1).toString()).getOrNull()!!.shouldBeEmpty()
+
+            coVerify(exactly = 0) { itemDao.getItem(any()) }
         }
 
     // ---- failure modes ------------------------------------------------------------------------

@@ -33,9 +33,8 @@ enum class CollectionKind {
     TVSHOWS,
 
     /**
-     * A music library. Recognised from M13 Phase 1 onward but deliberately **not** in [SUPPORTED]
-     * yet — it joins in M13 Phase 2, once there is a music UI for it to open onto
-     * (docs/notes/music-m13-plan.md).
+     * A music library. Joined [SUPPORTED] in M13 Phase 2, alongside `:feature:music` — the UI it
+     * opens onto (docs/notes/music-m13-plan.md).
      */
     MUSIC,
 
@@ -44,7 +43,7 @@ enum class CollectionKind {
     ;
 
     companion object {
-        /** The kinds v1 surfaces to the user. */
-        val SUPPORTED: Set<CollectionKind> = setOf(MOVIES, TVSHOWS)
+        /** The kinds the app surfaces to the user. */
+        val SUPPORTED: Set<CollectionKind> = setOf(MOVIES, TVSHOWS, MUSIC)
     }
 }

@@ -16,6 +16,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.SortOrder
+import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
@@ -65,6 +66,12 @@ import javax.inject.Singleton
  * lists are empty on a real device — the behaviour is pinned by unit tests that seed Room instead.
  */
 @Singleton
+@Suppress(
+    // One member per [JellyfinRepository] method, by construction — same rationale as
+    // `OnlineJellyfinRepository`'s identical suppression. M13 Phase 2's four music members
+    // (docs/notes/music-m13-plan.md) pushed this class from 19 to 23. Logged in DECISIONS.md.
+    "TooManyFunctions",
+)
 internal class OfflineJellyfinRepository
     @Inject
     constructor(
@@ -357,6 +364,65 @@ internal class OfflineJellyfinRepository
             id: String,
             limit: Int,
         ): AppResult<List<JellyfinItem>> = AppResult.Success(emptyList())
+
+        // ---- M13 Phase 2 — music --------------------------------------------------------------
+
+        override suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val album = albumId.toUuidOrNull() ?: return@onIo emptyList()
+                itemDao
+                    .tracksOfAlbum(ItemSource.DOWNLOAD, album, ItemType.AUDIO)
+                    .withLocalUserData(currentUserId())
+            }
+
+        override suspend fun getArtistAlbums(artistId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val artist = artistId.toUuidOrNull() ?: return@onIo emptyList()
+                itemDao
+                    .albumsOfArtist(ItemSource.DOWNLOAD, artist, ItemType.MUSIC_ALBUM)
+                    .withLocalUserData(currentUserId())
+            }
+
+        /**
+         * Offline "top tracks": this device's downloaded tracks of the artist, ranked by whatever
+         * play count each track's cached blob or local user-data carries.
+         *
+         * There is no per-track play-count query and asking a handful of downloaded songs for the
+         * server's actual top tracks would not be honest, so this walks every downloaded album of
+         * the artist ([ItemDao.albumsOfArtist]), reads each one's downloaded tracks
+         * ([ItemDao.tracksOfAlbum]), and sorts what it finds by [UserData.playCount] — a documented
+         * local approximation, not the server's ranking (see
+         * [JellyfinRepository.getArtistTopTracks]'s KDoc).
+         *
+         * One caveat worth recording: [UserData.playCount] on a track this device has *locally*
+         * written user data for (a favourite toggle, a played flag) reads `0` rather than the
+         * server's cached count — `UserDataMapper` deliberately does not persist `playCount` locally
+         * (docs/PLAN.md) — so a track this device interacted with can rank below one it never
+         * touched. Acceptable for an offline approximation; not worth a schema change here.
+         */
+        override suspend fun getArtistTopTracks(
+            artistId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> =
+            onIo {
+                val artist = artistId.toUuidOrNull() ?: return@onIo emptyList()
+                val albums = itemDao.albumsOfArtist(ItemSource.DOWNLOAD, artist, ItemType.MUSIC_ALBUM)
+                val tracks =
+                    albums.flatMap { album -> itemDao.tracksOfAlbum(ItemSource.DOWNLOAD, album.id, ItemType.AUDIO) }
+                tracks
+                    .withLocalUserData(currentUserId())
+                    .sortedByDescending { it.userData.playCount }
+                    .take(limit)
+            }
+
+        /**
+         * Always empty offline — see [JellyfinRepository.getPlaylistItems]'s KDoc: Room has no
+         * playlist-membership relation, so there is no set of downloaded tracks that can honestly be
+         * called "this playlist's members" before M13 Phase 5 gives playlists their own offline
+         * model.
+         */
+        override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
+            AppResult.Success(emptyList())
 
         // ---- helpers -------------------------------------------------------------------------
 

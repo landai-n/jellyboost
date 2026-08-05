@@ -13,6 +13,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.NameGuidPair
+import org.jellyfin.sdk.model.api.UserItemDataDto
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -138,6 +140,70 @@ internal object CacheFixtures {
             parentId = seriesId,
             indexNumber = seasonNumber,
         )
+
+    // ---- M13 Phase 2 — music fixtures ------------------------------------------------------
+
+    fun audioDto(
+        id: UUID,
+        name: String,
+        albumId: UUID? = null,
+        albumArtistId: UUID? = null,
+        discNumber: Int? = null,
+        trackNumber: Int? = null,
+        parentId: UUID? = albumId,
+        /** Cached on the DTO's own `userData`, the way a server response actually carries it. */
+        playCount: Int = 0,
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.AUDIO,
+            name = name,
+            albumId = albumId,
+            albumArtists = albumArtistId?.let { listOf(NameGuidPair(id = it, name = "Artist")) },
+            parentIndexNumber = discNumber,
+            indexNumber = trackNumber,
+            parentId = parentId,
+            runTimeTicks = 200_000_000L,
+            // UserItemDataDto's constructor has no defaults of its own (unlike BaseItemDto's), so
+            // every field is spelled out here — the same shape ItemMapperTest's own fixture uses.
+            userData =
+                if (playCount > 0) {
+                    UserItemDataDto(
+                        rating = null,
+                        playedPercentage = null,
+                        unplayedItemCount = null,
+                        playbackPositionTicks = 0L,
+                        playCount = playCount,
+                        isFavorite = false,
+                        likes = null,
+                        lastPlayedDate = null,
+                        played = false,
+                        key = id.toString(),
+                        itemId = id,
+                    )
+                } else {
+                    null
+                },
+        )
+
+    fun albumDto(
+        id: UUID,
+        name: String,
+        albumArtistId: UUID? = null,
+        productionYear: Int? = null,
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.MUSIC_ALBUM,
+            name = name,
+            albumArtists = albumArtistId?.let { listOf(NameGuidPair(id = it, name = "Artist")) },
+            productionYear = productionYear,
+        )
+
+    fun artistDto(
+        id: UUID,
+        name: String,
+    ): BaseItemDto = BaseItemDto(id = id, type = BaseItemKind.MUSIC_ARTIST, name = name)
 
     fun entity(
         dto: BaseItemDto,

@@ -1,6 +1,7 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
@@ -576,15 +577,29 @@ class BrowseCacheWriterTest {
             writer().writeViews(
                 listOf(
                     library(MOVIES_LIBRARY, "Films", CollectionType.MOVIES),
-                    library(uuid(50), "Musique", CollectionType.MUSIC),
+                    // Still outside app scope — unlike music (M13 Phase 2), photos never joined
+                    // `CollectionKind.SUPPORTED`.
+                    library(uuid(50), "Photos", CollectionType.PHOTOS),
                     library(uuid(51), "Séries", CollectionType.TVSHOWS),
                 ),
             )
 
             rows.captured.map { it.name } shouldContainExactly listOf("Films", "Séries")
             // The index is the *response* position, so the offline list matches the online one even
-            // though the music library in between was dropped.
+            // though the photos library in between was dropped.
             rows.captured.map { it.sortIndex } shouldContainExactly listOf(0, 2)
+        }
+
+    @Test
+    fun `music libraries are cached too, since M13 Phase 2`() =
+        runTest {
+            val rows = slot<List<LibraryViewEntity>>()
+            coEvery { libraryViewDao.upsert(capture(rows)) } just Runs
+
+            writer().writeViews(listOf(library(uuid(52), "Musique", CollectionType.MUSIC)))
+
+            rows.captured.map { it.name } shouldContainExactly listOf("Musique")
+            rows.captured.single().collectionType shouldBe CollectionKind.MUSIC.name
         }
 
     @Test
@@ -598,7 +613,8 @@ class BrowseCacheWriterTest {
     @Test
     fun `never wipes the cached libraries when nothing supported came back`() =
         runTest {
-            writer().writeViews(listOf(library(uuid(50), "Musique", CollectionType.MUSIC)))
+            // Photos — never joined `CollectionKind.SUPPORTED` (unlike music, M13 Phase 2).
+            writer().writeViews(listOf(library(uuid(50), "Photos", CollectionType.PHOTOS)))
 
             coVerify(exactly = 0) { libraryViewDao.deleteExcept(any()) }
             coVerify(exactly = 0) { libraryViewDao.upsert(any()) }

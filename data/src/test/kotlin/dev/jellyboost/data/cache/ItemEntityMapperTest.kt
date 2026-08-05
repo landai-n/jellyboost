@@ -315,13 +315,15 @@ class ItemEntityMapperTest {
     }
 
     @Test
-    fun `refuses to cache a library kind v1 does not support`() {
+    fun `refuses to cache a library kind the app does not support`() {
+        // Music joined SUPPORTED in M13 Phase 2 (docs/notes/music-m13-plan.md) — photos is what
+        // stays outside it, so this is still a live case for the guard being tested.
         val dto =
             BaseItemDto(
                 id = uuid(20),
                 type = BaseItemKind.COLLECTION_FOLDER,
-                name = "Musique",
-                collectionType = org.jellyfin.sdk.model.api.CollectionType.MUSIC,
+                name = "Photos",
+                collectionType = org.jellyfin.sdk.model.api.CollectionType.PHOTOS,
             )
 
         mapper.toEntity(dto, sortIndex = 0, cachedAt = NOW).shouldBeNull()

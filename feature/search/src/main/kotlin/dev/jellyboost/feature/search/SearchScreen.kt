@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.search
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,11 +32,16 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.ui.component.AlbumCard
+import dev.jellyboost.core.ui.component.ArtistCard
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.FieldLabel
@@ -49,6 +55,7 @@ import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.theme.ChromeAwarePadding
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
 
 /**
@@ -305,6 +312,54 @@ private fun SearchResults(
                 ) { item -> ThumbCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
+
+        // M13 Phase 2 — music sections, in the same order the milestone plan lists them.
+        if (state.artists.isNotEmpty()) {
+            item(key = SECTION_ARTISTS, contentType = ROW_ARTISTS) {
+                MediaRow(
+                    title = stringResource(R.string.search_section_artists),
+                    items = state.artists,
+                    key = JellyfinItem::id,
+                    contentType = CARD_ARTIST,
+                ) { item -> ArtistCard(item = item, onClick = { onItemClick(item) }) }
+            }
+        }
+
+        if (state.albums.isNotEmpty()) {
+            item(key = SECTION_ALBUMS, contentType = ROW_ALBUMS) {
+                MediaRow(
+                    title = stringResource(R.string.search_section_albums),
+                    items = state.albums,
+                    key = JellyfinItem::id,
+                    contentType = CARD_ALBUM,
+                ) { item -> AlbumCard(item = item, onClick = { onItemClick(item) }) }
+            }
+        }
+
+        if (state.songs.isNotEmpty()) {
+            item(key = SECTION_SONGS, contentType = SECTION_SONGS) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.search_section_songs),
+                        style = JellyfinTypeExtras.SectionTitle,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(horizontal = Dimens.ScreenPadding),
+                    )
+                    state.songs.forEach { song -> SongRow(song = song, onClick = { onItemClick(song) }) }
+                }
+            }
+        }
+
+        if (state.playlists.isNotEmpty()) {
+            item(key = SECTION_PLAYLISTS, contentType = ROW_POSTERS) {
+                MediaRow(
+                    title = stringResource(R.string.search_section_playlists),
+                    items = state.playlists,
+                    key = JellyfinItem::id,
+                    contentType = POSTER_CARD_CONTENT_TYPE,
+                ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
+            }
+        }
     }
 }
 
@@ -329,14 +384,62 @@ private fun listContentPadding(): PaddingValues {
     }
 }
 
+/**
+ * A song search result: a compact list row rather than a card. `:feature:search` cannot reuse
+ * `:feature:music`'s `TrackRow` — features never depend on each other (docs/PLAN.md, "Project
+ * skeleton") — so this is a small local equivalent, without the download badge / favourite affordances
+ * a track's own screen offers.
+ */
+@Composable
+private fun SongRow(
+    song: JellyfinItem,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
+    ) {
+        Text(
+            text = song.name,
+            style = SongTitleStyle,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        song.displaySubtitle?.let { subtitle ->
+            Text(
+                text = subtitle,
+                style = SongSubtitleStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private val SongTitleStyle = TextStyle(fontSize = 14.sp)
+private val SongSubtitleStyle = TextStyle(fontSize = 12.sp)
+
 private const val SECTION_MOVIES = "section-movies"
 private const val SECTION_SERIES = "section-series"
 private const val SECTION_EPISODES = "section-episodes"
+private const val SECTION_ARTISTS = "section-artists"
+private const val SECTION_ALBUMS = "section-albums"
+private const val SECTION_SONGS = "section-songs"
+private const val SECTION_PLAYLISTS = "section-playlists"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
 // The card types (poster/thumb) come from `:core:ui`, beside the cards they describe (DUP-15).
 private const val ROW_POSTERS = "row-posters"
 private const val ROW_THUMBS = "row-thumbs"
+private const val ROW_ARTISTS = "row-artists"
+private const val ROW_ALBUMS = "row-albums"
+private const val CARD_ARTIST = "card-artist"
+private const val CARD_ALBUM = "card-album"
 
 @Preview(name = "Search", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 800)
 @Composable

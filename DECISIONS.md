@@ -3915,3 +3915,26 @@ Seeded from the approved plan; listed for traceability, no divergence:
      `playbackOrder` become defaulted parameters (video path and its tests compile
      unchanged) plus a light `MusicReportTarget` path with per-track start/stop on
      queue transitions and the same local user-data write-through.
+
+## 2026-08-05 — Online/OfflineJellyfinRepository carry a justified `TooManyFunctions` suppression
+- **Scope:** `data/src/main/kotlin/dev/jellyboost/data/OnlineJellyfinRepository.kt`,
+  `data/src/main/kotlin/dev/jellyboost/data/OfflineJellyfinRepository.kt`.
+- **Plan said:** nothing directly; `config/detekt/detekt.yml`'s own comment already anticipates
+  this ("Repositories and DAOs legitimately grow large") but pins `thresholdInClasses: 20`.
+- **Done instead:** M13 Phase 2 added the four music repository members
+  (`getAlbumTracks`/`getArtistAlbums`/`getArtistTopTracks`/`getPlaylistItems`,
+  docs/notes/music-m13-plan.md item 8) to `JellyfinRepository`, taking `OnlineJellyfinRepository`
+  from 17 to 21 members and `OfflineJellyfinRepository` from 19 to 23 — both past the 20-function
+  ceiling. Rather than raise the global threshold (which would weaken the gate for every class in
+  the tree, not just these two), each class now carries a targeted `@Suppress("TooManyFunctions")`
+  with an in-code rationale, mirroring `PlayerViewModel`'s `LargeClass` precedent (2026-08-03).
+  `DelegatingJellyfinRepository` grew by the same four members but stayed under the threshold, and
+  the `JellyfinRepository` interface itself (17 members) is still well under
+  `thresholdInInterfaces: 20`, so neither needed a suppression.
+- **Reason:** one member per interface method is not incidental bloat — it is the shape a
+  `JellyfinRepository` implementation is required to have, and it grows in lockstep with the
+  interface by construction. Splitting either class would mean two repositories jointly
+  implementing one interface, the parallel-model shape decision 5 (docs/PLAN.md) already rules out
+  for the domain layer for a stronger reason (online/offline parity); doing it here to dodge a
+  lint threshold would be the same mistake for a weaker one. Revisit if either class grows again
+  for an unrelated reason.

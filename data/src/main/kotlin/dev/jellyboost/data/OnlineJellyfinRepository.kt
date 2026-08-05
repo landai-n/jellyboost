@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.map
+import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
@@ -29,16 +30,20 @@ import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.filterApi
 import org.jellyfin.sdk.api.client.extensions.itemsApi
 import org.jellyfin.sdk.api.client.extensions.libraryApi
+import org.jellyfin.sdk.api.client.extensions.playlistsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.MediaType
+import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.jellyfin.sdk.model.api.request.GetLatestMediaRequest
 import org.jellyfin.sdk.model.api.request.GetNextUpRequest
+import org.jellyfin.sdk.model.api.request.GetPlaylistItemsRequest
 import org.jellyfin.sdk.model.api.request.GetResumeItemsRequest
 import org.jellyfin.sdk.model.api.request.GetSeasonsRequest
 import org.jellyfin.sdk.model.api.request.GetSimilarItemsRequest
@@ -64,6 +69,15 @@ import javax.inject.Singleton
  * class still behaves like a pure network reader from the caller's point of view.
  */
 @Singleton
+@Suppress(
+    // One member per [JellyfinRepository] method, by construction — the interface is the
+    // implementation's whole surface, and M13 Phase 2's four music members (docs/notes/
+    // music-m13-plan.md) pushed this class from 17 to 21. Splitting it would mean two
+    // repositories implementing one interface, which is the parallel-model the plan's
+    // "extend, don't parallel" rule (decision 5) rules out for the domain layer and would be
+    // worse here, for the same reason. Logged in DECISIONS.md.
+    "TooManyFunctions",
+)
 internal class OnlineJellyfinRepository
     @Inject
     constructor(
@@ -76,11 +90,12 @@ internal class OnlineJellyfinRepository
             onIo {
                 val response = apiClient.userViewsApi.getUserViews(includeHidden = false)
                 browseCache.cacheViews(response.content.items)
-                // The mapper drops everything outside v1 scope (music, live TV, photos, …).
+                // The mapper drops everything outside app scope (live TV, photos, … — music
+                // joined `CollectionKind.SUPPORTED` in M13 Phase 2).
                 val views = mapper.toLibraryViews(response.content.items)
                 coroutineScope {
                     views
-                        .map { view -> async { view.copy(itemCount = itemCountOrNull(view.id)) } }
+                        .map { view -> async { view.copy(itemCount = itemCountOrNull(view.id, view.collectionType)) } }
                         .awaitAll()
                 }
             }
@@ -106,13 +121,16 @@ internal class OnlineJellyfinRepository
          * would be a far worse trade than a tile that draws its name alone. Cancellation is the one
          * exception, re-thrown so a cancelled home load does not linger.
          */
-        private suspend fun itemCountOrNull(libraryId: String): Int? =
+        private suspend fun itemCountOrNull(
+            libraryId: String,
+            kind: CollectionKind,
+        ): Int? =
             try {
                 apiClient.itemsApi
                     .getItems(
                         GetItemsRequest(
                             parentId = UUID.fromString(libraryId),
-                            includeItemTypes = LIBRARY_COUNT_TYPES,
+                            includeItemTypes = kind.countItemTypes(),
                             recursive = true,
                             limit = 0,
                             enableTotalRecordCount = true,
@@ -129,6 +147,10 @@ internal class OnlineJellyfinRepository
                 Timber.w(throwable, "Library item count failed for %s; the tile drops its subtitle", libraryId)
                 null
             }
+
+        /** Which [BaseItemKind]s [itemCountOrNull] asks for, by the library's own kind. */
+        private fun CollectionKind.countItemTypes(): List<BaseItemKind> =
+            if (this == CollectionKind.MUSIC) MUSIC_LIBRARY_COUNT_TYPES else LIBRARY_COUNT_TYPES
 
         override suspend fun getResumeItems(limit: Int): AppResult<List<JellyfinItem>> =
             onIo {
@@ -391,6 +413,100 @@ internal class OnlineJellyfinRepository
 
         // ---- end M4 -------------------------------------------------------------------------
 
+        // ---- M13 Phase 2 — music --------------------------------------------------------------
+
+        override suspend fun getAlbumTracks(albumId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.itemsApi.getItems(
+                        GetItemsRequest(
+                            parentId = UUID.fromString(albumId),
+                            includeItemTypes = listOf(BaseItemKind.AUDIO),
+                            recursive = true,
+                            // Disc, then track, then a stable alphabetical tiebreak.
+                            sortBy =
+                                listOf(ItemSortBy.PARENT_INDEX_NUMBER, ItemSortBy.INDEX_NUMBER, ItemSortBy.SORT_NAME),
+                            sortOrder = listOf(SortOrder.ASCENDING),
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
+        override suspend fun getArtistAlbums(artistId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.itemsApi.getItems(
+                        GetItemsRequest(
+                            albumArtistIds = listOf(UUID.fromString(artistId)),
+                            includeItemTypes = listOf(BaseItemKind.MUSIC_ALBUM),
+                            recursive = true,
+                            sortBy =
+                                listOf(ItemSortBy.PRODUCTION_YEAR, ItemSortBy.PREMIERE_DATE, ItemSortBy.SORT_NAME),
+                            // Index-matched to sortBy: newest year, newest exact date, A→Z tiebreak.
+                            sortOrder = listOf(SortOrder.DESCENDING, SortOrder.DESCENDING, SortOrder.ASCENDING),
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
+        override suspend fun getArtistTopTracks(
+            artistId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.itemsApi.getItems(
+                        GetItemsRequest(
+                            artistIds = listOf(UUID.fromString(artistId)),
+                            includeItemTypes = listOf(BaseItemKind.AUDIO),
+                            recursive = true,
+                            sortBy = listOf(ItemSortBy.PLAY_COUNT),
+                            sortOrder = listOf(SortOrder.DESCENDING),
+                            limit = limit,
+                            fields = CARD_FIELDS,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
+        /**
+         * `/Playlists/{id}/Items` rather than a `parentId` items query: the plan's Phase 2 note
+         * flags that a generic items query is not guaranteed to preserve playlist order, while the
+         * dedicated endpoint is built exactly for that (docs/notes/music-m13-plan.md, Phase 2).
+         */
+        override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
+            onIo {
+                val response =
+                    apiClient.playlistsApi.getPlaylistItems(
+                        GetPlaylistItemsRequest(
+                            playlistId = UUID.fromString(playlistId),
+                            fields = CARD_FIELDS,
+                            enableImages = true,
+                            enableImageTypes = CARD_IMAGE_TYPES,
+                            imageTypeLimit = 1,
+                            enableUserData = true,
+                        ),
+                    )
+                browseCache.cacheItems(response.content.items)
+                mapper.toDomain(response.content.items)
+            }
+
+        // ---- end M13 Phase 2 ------------------------------------------------------------------
+
         /**
          * Runs an SDK call off the caller's dispatcher.
          *
@@ -412,22 +528,26 @@ internal class OnlineJellyfinRepository
             val CARD_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP, ImageType.THUMB)
 
             /**
-             * The item kinds a library tile's count counts.
+             * The item kinds a movie or TV library tile's count counts.
              *
              * Projected from [ItemType.LIBRARY_TILE_TYPES] (DUP-11) via the same [toBaseItemKind]
              * `:data` already maps query types through, rather than a second hand-written
              * `BaseItemKind` pair: the grid a tile opens must not report a different total than the
              * tile did, and `:data` cannot depend on `:feature:library` to share its list directly.
              *
-             * **Not yet extended with `AUDIO`/`MUSIC_ALBUM`** (M13 Phase 1 scope note,
-             * docs/notes/music-m13-plan.md item 8): `CollectionKind.MUSIC` is not in
-             * [dev.jellyboost.core.common.model.CollectionKind.SUPPORTED] yet, so this is never
-             * called for a music library in Phase 1 — nothing here needs the two extra kinds until
-             * Phase 2 flips that switch, and `OnlineJellyfinRepositoryTest` pins the exact
-             * `includeItemTypes` a movie/TV count request sends. Phase 2 extends
-             * [ItemType.LIBRARY_TILE_TYPES] alongside the `SUPPORTED` flip.
+             * **Unchanged by M13 Phase 2** — pinned by `OnlineJellyfinRepositoryTest`'s "counts each
+             * library's titles instead of trusting ChildCount", which asserts a movie *and* a TV
+             * library's count request both send exactly `[MOVIE, SERIES]`. Music libraries get their
+             * own list instead of extending this one — see [countItemTypes].
              */
             val LIBRARY_COUNT_TYPES = ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() }
+
+            /**
+             * The item kind a music library tile's count counts: its albums, the top-level
+             * browsable unit a music library shows — same role [LIBRARY_COUNT_TYPES] plays for a
+             * movie or TV library (M13 Phase 2, docs/notes/music-m13-plan.md item 2).
+             */
+            val MUSIC_LIBRARY_COUNT_TYPES = listOf(BaseItemKind.MUSIC_ALBUM)
 
             /** jellyfin-web's default "Days in Next Up" user setting. */
             const val NEXT_UP_WINDOW_DAYS = 365L

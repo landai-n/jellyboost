@@ -3,11 +3,9 @@ package dev.jellyboost.feature.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
-import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
@@ -109,17 +107,7 @@ class SearchViewModel
 
         private suspend fun search(term: String) {
             if (term.isEmpty()) {
-                _uiState.update {
-                    it.copy(
-                        submittedQuery = "",
-                        isSearching = false,
-                        hasSearched = false,
-                        movies = emptyList(),
-                        series = emptyList(),
-                        episodes = emptyList(),
-                        error = null,
-                    )
-                }
+                _uiState.update { it.cleared() }
                 return
             }
 
@@ -135,35 +123,8 @@ class SearchViewModel
                     ),
                 )
 
-            _uiState.update { state ->
-                when (result) {
-                    is AppResult.Success ->
-                        state
-                            .copy(
-                                submittedQuery = term,
-                                isSearching = false,
-                                hasSearched = true,
-                                movies = result.value.ofType(ItemType.MOVIE),
-                                series = result.value.ofType(ItemType.SERIES),
-                                episodes = result.value.ofType(ItemType.EPISODE),
-                                error = null,
-                            ).withDownloadStates(downloadStates)
-
-                    is AppResult.Failure ->
-                        state.copy(
-                            submittedQuery = term,
-                            isSearching = false,
-                            hasSearched = true,
-                            movies = emptyList(),
-                            series = emptyList(),
-                            episodes = emptyList(),
-                            error = result.error,
-                        )
-                }
-            }
+            _uiState.update { state -> state.withSearchResult(term, result).withDownloadStates(downloadStates) }
         }
-
-        private fun List<JellyfinItem>.ofType(type: ItemType) = filter { it.type == type }
 
         companion object {
             /** Debounce from docs/PLAN.md, "Screens" → Search. */
@@ -172,7 +133,19 @@ class SearchViewModel
             /** Result cap from docs/PLAN.md, "Screens" → Search. */
             const val SEARCH_LIMIT = 50
 
-            /** v1 searches movies, shows and episodes — the types this client can play or open. */
-            val SEARCH_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
+            /**
+             * Every type this client can open from a search result: movies, shows and episodes
+             * (v1), plus M13 Phase 2's four music kinds (docs/notes/music-m13-plan.md).
+             */
+            val SEARCH_ITEM_TYPES =
+                listOf(
+                    ItemType.MOVIE,
+                    ItemType.SERIES,
+                    ItemType.EPISODE,
+                    ItemType.MUSIC_ARTIST,
+                    ItemType.MUSIC_ALBUM,
+                    ItemType.AUDIO,
+                    ItemType.PLAYLIST,
+                )
         }
     }

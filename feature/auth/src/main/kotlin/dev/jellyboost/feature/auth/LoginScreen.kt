@@ -320,7 +320,9 @@ private fun LoginFormFields(
         singleLine = true,
         enabled = !state.isSigningIn,
         label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        // Autocorrect off for the same reason as the server address field: an IME "fixing" an
+        // account name produces a sign-in failure the user cannot see the cause of.
+        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
     )
 
     JellyfinTextField(

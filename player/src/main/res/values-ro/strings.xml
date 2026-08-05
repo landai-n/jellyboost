@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Acea pistă nu se află în descărcare — se redă în flux de pe serverul dvs.</string>
     <string name="player_message_track_offline">Acea pistă nu se află în fișierul descărcat.</string>
     <string name="player_message_failed">Redarea a eșuat.</string>
+    <string name="player_message_change_reverted">Modificarea nu a putut fi aplicată — se continuă ca înainte.</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Se așteaptă grupul…</string>
     <string name="player_syncplay_shuffle">Amestecă coada</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">ಆ ಟ್ರ್ಯಾಕ್ ಡೌನ್‌ಲೋಡ್‌ನಲ್ಲಿ ಇಲ್ಲ — ನಿಮ್ಮ ಸರ್ವರ್‌ನಿಂದ ಅದನ್ನು ಸ್ಟ್ರೀಮ್ ಮಾಡಲಾಗುತ್ತಿದೆ.</string>
     <string name="player_message_track_offline">ಆ ಟ್ರ್ಯಾಕ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಫೈಲ್‌ನಲ್ಲಿ ಇಲ್ಲ.</string>
     <string name="player_message_failed">ಪ್ಲೇಬ್ಯಾಕ್ ವಿಫಲವಾಗಿದೆ.</string>
+    <string name="player_message_change_reverted">ಆ ಬದಲಾವಣೆಯನ್ನು ಅನ್ವಯಿಸಲಾಗಲಿಲ್ಲ — ಮೊದಲಿನಂತೆ ಮುಂದುವರಿಯುತ್ತಿದೆ.</string>
 
     <string name="player_syncplay_group">ಗುಂಪು</string>
     <string name="player_syncplay_waiting">ಗುಂಪಿಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ…</string>

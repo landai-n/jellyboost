@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Tiu trako ne estas en la elŝuto — fluigante ĝin de via servilo.</string>
     <string name="player_message_track_offline">Tiu trako ne estas en la elŝutita dosiero.</string>
     <string name="player_message_failed">Ludado malsukcesis.</string>
+    <string name="player_message_change_reverted">Ne eblis apliki tiun ŝanĝon — daŭrigas kiel antaŭe.</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Atendante la grupon…</string>
     <string name="player_syncplay_shuffle">Miksi atendovicon</string>

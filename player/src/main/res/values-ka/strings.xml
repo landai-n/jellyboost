@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">ეს ტრეკი გადმოწერაში არ არის — მიმდინარეობს სტრიმინგი თქვენი სერვერიდან.</string>
     <string name="player_message_track_offline">ეს ტრეკი გადმოწერილ ფაილში არ არის.</string>
     <string name="player_message_failed">დაკვრა ვერ მოხერხდა.</string>
+    <string name="player_message_change_reverted">ცვლილების გამოყენება ვერ მოხერხდა — გრძელდება როგორც აქამდე.</string>
     <string name="player_syncplay_group">ჯგუფი</string>
     <string name="player_syncplay_waiting">ჯგუფის მოლოდინში…</string>
     <string name="player_syncplay_shuffle">რიგის არევა</string>

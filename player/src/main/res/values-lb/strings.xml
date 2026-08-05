@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Dëse Titel ass net am Download – hie gëtt vun dengem Server gestreamt.</string>
     <string name="player_message_track_offline">Dëse Titel ass net am erofgeluedene Fichier.</string>
     <string name="player_message_failed">D\'Widderginn ass feelgeschloen.</string>
+    <string name="player_message_change_reverted">D\'Ännerung konnt net iwwerholl ginn — et geet weider wéi virdrun.</string>
 
     <string name="player_syncplay_group">Grupp</string>
     <string name="player_syncplay_waiting">Waart op d\'Grupp…</string>

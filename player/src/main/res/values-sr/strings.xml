@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Та нумера није у преузетом садржају — стримује се са вашег сервера.</string>
     <string name="player_message_track_offline">Та нумера није у преузетом фајлу.</string>
     <string name="player_message_failed">Репродукција није успела.</string>
+    <string name="player_message_change_reverted">Промена није могла да се примени — наставља се као раније.</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чекање на групу…</string>

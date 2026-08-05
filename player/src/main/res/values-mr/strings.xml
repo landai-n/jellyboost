@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">तो ट्रॅक डाउनलोडमध्ये नाही — आपल्या सर्व्हरवरून स्ट्रीम करत आहे.</string>
     <string name="player_message_track_offline">तो ट्रॅक डाउनलोड केलेल्या फाइलमध्ये नाही.</string>
     <string name="player_message_failed">प्लेबॅक अयशस्वी झाला.</string>
+    <string name="player_message_change_reverted">तो बदल लागू करता आला नाही — पूर्वीप्रमाणेच सुरू आहे.</string>
 
     <string name="player_syncplay_group">गट</string>
     <string name="player_syncplay_waiting">गटाची वाट पाहत आहे…</string>

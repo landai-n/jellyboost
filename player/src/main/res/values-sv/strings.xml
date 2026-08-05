@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Det spåret finns inte i nedladdningen – strömmar det från din server.</string>
     <string name="player_message_track_offline">Det spåret finns inte i den nedladdade filen.</string>
     <string name="player_message_failed">Uppspelningen misslyckades.</string>
+    <string name="player_message_change_reverted">Ändringen kunde inte tillämpas — fortsätter som förut.</string>
 
     <string name="player_syncplay_group">Grupp</string>
     <string name="player_syncplay_waiting">Väntar på grupp…</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Tej ścieżki nie ma w pobranym pliku — przesyłanie strumieniowe z serwera.</string>
     <string name="player_message_track_offline">Tej ścieżki nie ma w pobranym pliku.</string>
     <string name="player_message_failed">Odtwarzanie nie powiodło się.</string>
+    <string name="player_message_change_reverted">Nie udało się zastosować tej zmiany — odtwarzanie trwa jak wcześniej.</string>
 
     <string name="player_syncplay_group">Grupa</string>
     <string name="player_syncplay_waiting">Oczekiwanie na grupę…</string>

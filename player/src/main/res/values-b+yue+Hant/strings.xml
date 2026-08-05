@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">呢條音軌唔喺下載內容入面——由伺服器度串流緊。</string>
     <string name="player_message_track_offline">呢條音軌唔喺已下載嘅檔案入面。</string>
     <string name="player_message_failed">播放失敗。</string>
+    <string name="player_message_change_reverted">套用唔到嗰個變更 — 照舊繼續。</string>
 
     <string name="player_syncplay_group">群組</string>
     <string name="player_syncplay_waiting">等緊群組…</string>

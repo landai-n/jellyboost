@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Таа песна не е во преземањето — се стримува од вашиот сервер.</string>
     <string name="player_message_track_offline">Таа песна не е во преземената датотека.</string>
     <string name="player_message_failed">Репродукцијата не успеа.</string>
+    <string name="player_message_change_reverted">Промената не можеше да се примени — продолжуваме како порано.</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чекање на групата…</string>

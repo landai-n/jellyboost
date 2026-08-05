@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">މި ޓްރެކް ޑައުންލޯޑްގައި ނެތް — ތިޔަ ސަރވަރއިން ސްޓްރީމްކުރަނީ.</string>
     <string name="player_message_track_offline">މި ޓްރެކް ޑައުންލޯޑްކޮށްފައިވާ ފައިލްގައި ނެތް.</string>
     <string name="player_message_failed">ޕްލޭބެކް ފެއިލްވެއްޖެ.</string>
+    <string name="player_message_change_reverted">އެ ބަދަލު ނުގެނެވުނު — ކުރިން އޮތް ގޮތަށް ކުރިއަށް ދަނީ.</string>
 
     <string name="player_syncplay_group">ގްރޫޕް</string>
     <string name="player_syncplay_waiting">ގްރޫޕަށް އިންތިޒާރުކުރަނީ…</string>

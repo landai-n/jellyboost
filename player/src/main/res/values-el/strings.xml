@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Αυτό το κομμάτι δεν βρίσκεται στη λήψη — μεταδίδεται από τον διακομιστή σας.</string>
     <string name="player_message_track_offline">Αυτό το κομμάτι δεν βρίσκεται στο ληφθέν αρχείο.</string>
     <string name="player_message_failed">Η αναπαραγωγή απέτυχε.</string>
+    <string name="player_message_change_reverted">Δεν ήταν δυνατή η εφαρμογή της αλλαγής — συνεχίζουμε όπως πριν.</string>
 
     <string name="player_syncplay_group">Ομάδα</string>
     <string name="player_syncplay_waiting">Αναμονή ομάδας…</string>

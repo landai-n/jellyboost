@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Гэтай дарожкі няма ў спампоўцы — трансліруецца з вашага сервера.</string>
     <string name="player_message_track_offline">Гэтай дарожкі няма ў спампаваным файле.</string>
     <string name="player_message_failed">Прайграванне не ўдалося.</string>
+    <string name="player_message_change_reverted">Не ўдалося прымяніць гэту змену — працягваем як раней.</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чаканне групы…</string>

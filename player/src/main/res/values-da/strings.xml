@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Det spor er ikke i downloaden – streamer det fra din server.</string>
     <string name="player_message_track_offline">Det spor er ikke i den downloadede fil.</string>
     <string name="player_message_failed">Afspilning mislykkedes.</string>
+    <string name="player_message_change_reverted">Ændringen kunne ikke anvendes — fortsætter som før.</string>
 
     <string name="player_syncplay_group">Gruppe</string>
     <string name="player_syncplay_waiting">Venter på gruppe…</string>

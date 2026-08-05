@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">该轨道不在下载内容中——正在从服务器进行串流播放。</string>
     <string name="player_message_track_offline">该轨道不在已下载的文件中。</string>
     <string name="player_message_failed">播放失败。</string>
+    <string name="player_message_change_reverted">无法应用该更改 — 将按原样继续。</string>
 
     <string name="player_syncplay_group">群组</string>
     <string name="player_syncplay_waiting">正在等待群组…</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Táto stopa nie je súčasťou stiahnutia — streamuje sa zo servera.</string>
     <string name="player_message_track_offline">Táto stopa nie je súčasťou stiahnutého súboru.</string>
     <string name="player_message_failed">Prehrávanie zlyhalo.</string>
+    <string name="player_message_change_reverted">Zmenu sa nepodarilo použiť — pokračuje sa ako predtým.</string>
 
     <string name="player_syncplay_group">Skupina</string>
     <string name="player_syncplay_waiting">Čaká sa na skupinu…</string>

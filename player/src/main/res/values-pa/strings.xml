@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">ਉਹ ਟਰੈਕ ਡਾਊਨਲੋਡ ਵਿੱਚ ਨਹੀਂ ਹੈ — ਇਸਨੂੰ ਤੁਹਾਡੇ ਸਰਵਰ ਤੋਂ ਸਟ੍ਰੀਮ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ।</string>
     <string name="player_message_track_offline">ਉਹ ਟਰੈਕ ਡਾਊਨਲੋਡ ਕੀਤੀ ਫਾਈਲ ਵਿੱਚ ਨਹੀਂ ਹੈ।</string>
     <string name="player_message_failed">ਪਲੇਬੈਕ ਅਸਫਲ ਰਿਹਾ।</string>
+    <string name="player_message_change_reverted">ਉਹ ਤਬਦੀਲੀ ਲਾਗੂ ਨਹੀਂ ਹੋ ਸਕੀ — ਪਹਿਲਾਂ ਵਾਂਗ ਜਾਰੀ ਹੈ।</string>
 
     <string name="player_syncplay_group">ਗਰੁੱਪ</string>
     <string name="player_syncplay_waiting">ਗਰੁੱਪ ਦੀ ਉਡੀਕ ਹੋ ਰਹੀ ਹੈ…</string>

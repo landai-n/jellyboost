@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Tato stopa není součástí stažené verze — streamuje se ze serveru.</string>
     <string name="player_message_track_offline">Tato stopa není součástí staženého souboru.</string>
     <string name="player_message_failed">Přehrávání se nezdařilo.</string>
+    <string name="player_message_change_reverted">Změnu se nepodařilo použít — pokračuje se jako dřív.</string>
 
     <string name="player_syncplay_group">Skupina</string>
     <string name="player_syncplay_waiting">Čeká se na skupinu…</string>

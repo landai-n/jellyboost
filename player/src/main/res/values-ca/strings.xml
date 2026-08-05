@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Aquesta pista no és a la baixada — es transmet des del teu servidor.</string>
     <string name="player_message_track_offline">Aquesta pista no és al fitxer baixat.</string>
     <string name="player_message_failed">Error de reproducció.</string>
+    <string name="player_message_change_reverted">No s\'ha pogut aplicar aquest canvi — es continua com abans.</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Esperant el grup…</string>
     <string name="player_syncplay_shuffle">Aleatoritza la cua</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">そのトラックはダウンロードに含まれていないため、サーバーからストリーミングしています。</string>
     <string name="player_message_track_offline">そのトラックはダウンロード済みファイルに含まれていません。</string>
     <string name="player_message_failed">再生に失敗しました。</string>
+    <string name="player_message_change_reverted">変更を適用できませんでした — これまでどおり続行します。</string>
 
     <string name="player_syncplay_group">グループ</string>
     <string name="player_syncplay_waiting">グループを待っています…</string>

@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Bu trek yükləmədə yoxdur — serverinizdən yayımlanır.</string>
     <string name="player_message_track_offline">Bu trek yüklənmiş faylda yoxdur.</string>
     <string name="player_message_failed">Oxutma uğursuz oldu.</string>
+    <string name="player_message_change_reverted">Bu dəyişikliyi tətbiq etmək mümkün olmadı — əvvəlki kimi davam edilir.</string>
     <string name="player_syncplay_group">Qrup</string>
     <string name="player_syncplay_waiting">Qrup gözlənilir…</string>
     <string name="player_syncplay_shuffle">Növbəni qarışdır</string>

@@ -395,9 +395,13 @@ private fun ManualAddressSection(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 enabled = !state.isConnecting,
+                isError = state.error != null,
                 // "Server address" — was the panel's own heading; now the field's own caption.
                 label = { Text(text = stringResource(R.string.server_setup_manual_title).uppercase()) },
+                // Sentence case, not the caption's uppercase: this one is spoken, not read.
+                labelText = stringResource(R.string.server_setup_manual_title),
                 placeholder = { Text(text = stringResource(R.string.server_setup_address_placeholder)) },
+                errorMessage = state.error?.let { authErrorText(it) },
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Uri,

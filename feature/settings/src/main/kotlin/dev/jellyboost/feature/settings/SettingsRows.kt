@@ -18,6 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.theme.Dimens
@@ -61,12 +65,19 @@ internal fun SettingsSection(
             style = JellyfinTypeExtras.SectionTitle,
             color = MaterialTheme.colorScheme.primary,
             modifier =
-                Modifier.padding(
-                    start = Dimens.ScreenPadding,
-                    end = Dimens.ScreenPadding,
-                    top = Dimens.SpaceLarge,
-                    bottom = Dimens.SpaceSmall,
-                ),
+                Modifier
+                    .padding(
+                        start = Dimens.ScreenPadding,
+                        end = Dimens.ScreenPadding,
+                        top = Dimens.SpaceLarge,
+                        bottom = Dimens.SpaceSmall,
+                    )
+                    // Settings is the longest scrolling list in the app and these five words are
+                    // its only wayfinding. Marked as headings they are also TalkBack's, which had
+                    // no heading anywhere in the app to jump between (accessibility audit
+                    // 2026-08-05, A11Y-10) — reaching "Account" meant swiping past every playback
+                    // and download preference above it.
+                    .semantics { heading() },
         )
         content()
     }
@@ -103,21 +114,38 @@ internal fun SettingsSwitchRow(
  * [supportingText] is for a fact about the option the label cannot carry — how much room is left on
  * a volume, say. It is not a place for explanation: a group whose options need explaining wants the
  * caveat under the group, the way the download-quality picker does it.
+ *
+ * @param groupLabel the name of the [SettingsChoiceGroup] this row belongs to, folded into what a
+ *   screen reader says. Required, not optional, because the alternative is what the 2026-08-05
+ *   accessibility audit found (F12): three "Off / Show button / Auto" rows and three more of them
+ *   further down, with the two words that tell them apart — "Skip intro", "Skip outro" — in a
+ *   caption above that belonged to nothing. A user landing on a row (from a heading jump, from a
+ *   rotation, from anywhere but a linear swipe through the whole screen) had no way to know which
+ *   preference they were about to change. The group's caption is muted in turn, so it is said once
+ *   per row rather than once more on its own.
+ * @param actionHint what activating this row *does*, when that is not simply "select it". Rides in
+ *   the description because `Modifier.selectable` has no `onClickLabel` — see the storage picker's
+ *   recovery row (audit F13), where re-picking the option already in force is the way out of a
+ *   missing-volume state and looks, visually, like a row that is already selected.
  */
 @Composable
 internal fun SettingsChoiceRow(
+    groupLabel: String,
     label: String,
     selected: Boolean,
     onSelect: () -> Unit,
     modifier: Modifier = Modifier,
     supportingText: String? = null,
+    actionHint: String? = null,
 ) {
+    val description = choiceRowDescription(groupLabel, label, supportingText, actionHint)
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
                 .heightIn(min = SettingsRowMinHeight)
                 .selectable(selected = selected, onClick = onSelect, role = Role.RadioButton)
+                .semantics { contentDescription = description }
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceExtraSmall),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
@@ -126,6 +154,23 @@ internal fun SettingsChoiceRow(
         RadioButton(selected = selected, onClick = null)
     }
 }
+
+/**
+ * Everything a choice row says, in the order it says it.
+ *
+ * Comma-joined rather than assembled from a format string: the pieces are independently optional,
+ * and the separator is a pause for a speech engine rather than copy anyone reads. `Role.RadioButton`
+ * and the selected state are appended by the platform after this, and the group's "2 of 3" by the
+ * enclosing `selectableGroup()`.
+ *
+ * A pure function so the wording is checkable without a Compose harness.
+ */
+internal fun choiceRowDescription(
+    groupLabel: String,
+    label: String,
+    supportingText: String?,
+    actionHint: String?,
+): String = listOfNotNull(groupLabel, label, supportingText, actionHint).joinToString(", ")
 
 /**
  * A labelled group of mutually exclusive [SettingsChoiceRow]s.
@@ -138,6 +183,12 @@ internal fun SettingsChoiceRow(
  * draws, so "Skip intro" read as one more tappable row sitting above three others and nothing said
  * otherwise until you pressed it (POLISH.md). It stays quieter than [SettingsSection]'s
  * `titleSmall`-in-primary heading, which is the level above it.
+ *
+ * The caption is drawn but not *spoken*: every row inside carries [label] in its own description
+ * (`SettingsChoiceRow`'s `groupLabel`), which is the only association a screen reader can actually
+ * rely on — a caption above a group is, semantically, a sentence next to some radio buttons
+ * (accessibility audit 2026-08-05, F12). Muting it here is the same trade `JellyfinTextField` makes
+ * with its own field caption: said once, on the thing it names, rather than twice.
  */
 @Composable
 internal fun SettingsChoiceGroup(
@@ -151,18 +202,25 @@ internal fun SettingsChoiceGroup(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier =
-                Modifier.padding(
-                    start = Dimens.ScreenPadding,
-                    end = Dimens.ScreenPadding,
-                    top = Dimens.SpaceMedium,
-                    bottom = Dimens.SpaceExtraSmall,
-                ),
+                Modifier
+                    .padding(
+                        start = Dimens.ScreenPadding,
+                        end = Dimens.ScreenPadding,
+                        top = Dimens.SpaceMedium,
+                        bottom = Dimens.SpaceExtraSmall,
+                    ).clearAndSetSemantics {},
         )
         Column(modifier = Modifier.selectableGroup(), content = content)
     }
 }
 
-/** A row that only reports something — a name, a server, a storage figure. */
+/**
+ * A row that only reports something — a name, a server, a storage figure.
+ *
+ * One node, like every other row on this screen: a caption and the fact it captions are not two
+ * pieces of information, and read as two stops they arrive as "Version" … "0.1.0-debug" with a
+ * swipe in between (accessibility audit 2026-08-05, F11).
+ */
 @Composable
 internal fun SettingsInfoRow(
     label: String,
@@ -174,6 +232,7 @@ internal fun SettingsInfoRow(
             modifier
                 .fillMaxWidth()
                 .heightIn(min = SettingsRowMinHeight)
+                .semantics(mergeDescendants = true) {}
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         verticalArrangement = Arrangement.Center,
     ) {

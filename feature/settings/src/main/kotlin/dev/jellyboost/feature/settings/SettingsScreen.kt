@@ -33,7 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -259,6 +262,9 @@ private fun SkipModeGroup(
     SettingsChoiceGroup(label = label) {
         SegmentSkipMode.entries.forEach { mode ->
             SettingsChoiceRow(
+                // "Skip intro" and "Skip outro" draw the same three options; the group name is the
+                // only thing telling one set apart from the other (audit F12).
+                groupLabel = label,
                 label = stringResource(mode.labelRes()),
                 selected = mode == selected,
                 onSelect = { onSelect(mode) },
@@ -312,28 +318,44 @@ private fun StorageLocationGroup(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             modifier =
-                Modifier.padding(
-                    start = Dimens.ScreenPadding,
-                    end = Dimens.ScreenPadding,
-                    bottom = Dimens.SpaceSmall,
-                ),
+                Modifier
+                    .padding(
+                        start = Dimens.ScreenPadding,
+                        end = Dimens.ScreenPadding,
+                        bottom = Dimens.SpaceSmall,
+                    )
+                    // Assertive: this appears because the volume the user chose is *gone* and
+                    // downloads are landing somewhere else, which is the kind of thing a screen
+                    // should say rather than wait to be found (audit 2026-08-05, F13). It also
+                    // appears on arrival, not in response to a tap, so nothing else on the screen
+                    // would ever draw attention to it.
+                    .semantics { liveRegion = LiveRegionMode.Assertive },
         )
     }
 
-    SettingsChoiceGroup(label = stringResource(R.string.settings_storage_picker)) {
+    val pickerLabel = stringResource(R.string.settings_storage_picker)
+    // What tapping the row that is *already* selected actually does when the chosen volume is
+    // missing: it stores the fallback as the choice, so downloads stop being a fallback and the
+    // warning above goes away. Nothing on screen says that — the row simply looks selected — so the
+    // affordance existed only for someone who could see it was the odd one out (audit F13).
+    val recoveryHint = stringResource(R.string.settings_storage_use_this_hint)
+
+    SettingsChoiceGroup(label = pickerLabel) {
         locations.volumes.forEach { volume ->
+            val isActive = volume.id == locations.activeVolumeId
             SettingsChoiceRow(
+                groupLabel = pickerLabel,
                 label = volume.label(),
                 supportingText =
                     stringResource(R.string.settings_storage_volume_free, formatBytes(volume.availableBytes)),
-                selected = volume.id == locations.activeVolumeId,
+                actionHint = recoveryHint.takeIf { isActive && locations.selectedVolumeMissing },
+                selected = isActive,
                 onSelect = {
                     when {
                         // Tapping the row that is already in force normally does nothing. The
                         // exception is a stale choice: with the card out, this is how the user says
                         // "just use this one" — the files are already here, so nothing is deleted.
-                        volume.id == locations.activeVolumeId ->
-                            if (locations.selectedVolumeMissing) onSelect(volume.id, false)
+                        isActive -> if (locations.selectedVolumeMissing) onSelect(volume.id, false)
 
                         locations.downloadCount > 0 -> pendingVolumeId = volume.id
                         else -> onSelect(volume.id, false)
@@ -421,9 +443,11 @@ private fun DownloadQualityGroup(
     selected: DownloadQuality,
     onSelect: (DownloadQuality) -> Unit,
 ) {
-    SettingsChoiceGroup(label = stringResource(R.string.settings_quality)) {
+    val groupLabel = stringResource(R.string.settings_quality)
+    SettingsChoiceGroup(label = groupLabel) {
         DownloadQuality.entries.forEach { quality ->
             SettingsChoiceRow(
+                groupLabel = groupLabel,
                 label = stringResource(quality.labelRes()),
                 selected = quality == selected,
                 onSelect = { onSelect(quality) },

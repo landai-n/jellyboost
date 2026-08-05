@@ -58,7 +58,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -534,6 +539,9 @@ private fun DownloadsHeader(
     ) {
         Text(
             text = stringResource(R.string.downloads_screen_title),
+            // A heading, so TalkBack's heading-jump has somewhere to land on this screen at all
+            // (accessibility audit 2026-08-05, A11Y-10 — there was not one in the app).
+            modifier = Modifier.semantics { heading() },
             style = if (wide) JellyfinTypeExtras.ScreenTitleLarge else JellyfinTypeExtras.ScreenTitle,
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -832,7 +840,11 @@ private fun GroupHeader(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall),
+                .padding(horizontal = Dimens.PanelPadding, vertical = Dimens.SpaceSmall)
+                // One node, and a heading: the show's name and the room it takes are two halves of
+                // one fact, and a *Downloaded* tab holding six series is six headings to jump
+                // between rather than a wall of rows (accessibility audit 2026-08-05, A11Y-10).
+                .semantics(mergeDescendants = true) { heading() },
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -888,7 +900,10 @@ private fun StorageCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        UsageBar(fraction = usageFraction(usedBytes, total))
+        UsageBar(
+            fraction = usageFraction(usedBytes, total),
+            label = stringResource(R.string.downloads_usage_storage_label),
+        )
         Row(
             modifier =
                 Modifier
@@ -975,7 +990,10 @@ private fun OnDeviceStatPanel(
     StatPanel(modifier = modifier) {
         StatEyebrow(text = stringResource(R.string.downloads_stat_on_device))
         Text(text = formatBytes(usedBytes), style = StatValue, color = MaterialTheme.colorScheme.onBackground)
-        UsageBar(fraction = usageFraction(usedBytes, total))
+        UsageBar(
+            fraction = usageFraction(usedBytes, total),
+            label = stringResource(R.string.downloads_usage_storage_label),
+        )
         Text(
             text =
                 stringResource(
@@ -1008,7 +1026,7 @@ private fun QueueStatPanel(
             style = StatValueSmall,
             color = MaterialTheme.colorScheme.onBackground,
         )
-        UsageBar(fraction = progress)
+        UsageBar(fraction = progress, label = stringResource(R.string.downloads_usage_queue_label))
         // Hidden while idle: a speed/ETA line reading "0 B/s" would look like a stall rather than
         // the truth, which is that nothing is asking the network for anything right now.
         if (!stats.isIdle) {
@@ -1101,25 +1119,38 @@ private fun usageFraction(
  * reasoning `core/ui`'s `MediaCardArtwork.InsetProgressBar` states for its own bar: at this height
  * and radius nothing the stock component provides (stop indicator, gap, stroke-cap rounding)
  * survives being configured away.
+ *
+ * Hand-rolled meant it had no semantics at all — a `Box` inside a `Box`, invisible to a screen
+ * reader (accessibility audit 2026-08-05, F14). It now reports [ProgressBarRangeInfo], which is what
+ * makes a screen reader say a percentage, and takes a [label] because that percentage is unusable
+ * without one: the three panels on a wide layout each draw one of these, and "23 percent" of
+ * *what* is the whole question. Labelled rather than cleared as decoration — the two storage bars
+ * sit beside a used figure and a free figure, but the fraction between them is the thing the bar
+ * exists to show, and the queue's bar shows a fraction stated nowhere else on the panel.
  */
 @Composable
 private fun UsageBar(
     fraction: Float,
+    label: String,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(UsageBarRadius)
+    val clamped = fraction.coerceIn(0f, 1f)
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
                 .height(UsageBarHeight)
-                .clip(shape)
+                .semantics {
+                    contentDescription = label
+                    progressBarRangeInfo = ProgressBarRangeInfo(current = clamped, range = 0f..1f)
+                }.clip(shape)
                 .background(UsageBarTrackColor),
     ) {
         Box(
             modifier =
                 Modifier
-                    .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                    .fillMaxWidth(clamped)
                     .fillMaxHeight()
                     .background(color = MaterialTheme.colorScheme.primary, shape = shape),
         )

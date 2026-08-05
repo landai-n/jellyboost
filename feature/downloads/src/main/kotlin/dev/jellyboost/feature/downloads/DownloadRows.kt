@@ -25,6 +25,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +43,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
+import kotlin.math.roundToInt
 
 /** Artwork corner radius for every row on this screen — the "m-surface card" language's own radius. */
 private val ROW_ART_RADIUS = 8.dp
@@ -103,8 +107,14 @@ internal fun DownloadedRow(
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.PanelPadding, vertical = ROW_GAP_HALF)
                 .mSurface(MaterialTheme.colorScheme.surface)
-                .clickable(onClick = onPlay)
-                .padding(Dimens.SpaceMedium),
+                // Named and typed (accessibility audit 2026-08-05, F8): the row's primary action
+                // used to be a role-less `clickable`, so the one thing tapping a downloaded film
+                // does — play it, from where it was left — announced as nothing at all.
+                .clickable(
+                    onClickLabel = stringResource(R.string.downloads_action_play),
+                    role = Role.Button,
+                    onClick = onPlay,
+                ).padding(Dimens.SpaceMedium),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -216,6 +226,18 @@ internal fun QueueRow(
 /**
  * The title, progress bar and status line shared by both [QueueRow] layouts.
  *
+ * To a screen reader this whole column is **one** node carrying one authored sentence: the item,
+ * how far along it is, and what it is doing (accessibility audit 2026-08-05, F7). Before that it was
+ * three unrelated stops — a truncated title, a bare "45 percent" from the raw
+ * `LinearProgressIndicator`, and a status line — with nothing tying the percentage to the download
+ * it belonged to, which in a queue of five rows is a percentage that means nothing at all.
+ * `clearAndSetSemantics` rather than a merge because the visible title is `maxLines = 1` and the
+ * description has to carry the *whole* one, and because it takes the progress bar's own node out in
+ * the same stroke — the number is in the sentence now.
+ *
+ * The row's four action buttons are siblings of this column, not descendants, so each keeps its own
+ * stop and its own label.
+ *
  * @param compact stacks title, track and status on three lines (spec "4d Downloads", COMPACT). Wide
  *   instead shares one baseline row between title and status, with the track on its own line below —
  *   there is room for both on a tablet width, which the phone width the compact layout answers does
@@ -233,9 +255,16 @@ private fun QueueRowText(
     val statusColor = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
     val trackFillColor = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     val statusText = item.statusLine(speedBytesPerSecond)
+    val description =
+        stringResource(
+            R.string.downloads_queue_row_description,
+            item.rowTitle(),
+            percentOf(progress),
+            statusText,
+        )
 
     Column(
-        modifier = modifier,
+        modifier = modifier.clearAndSetSemantics { contentDescription = description },
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
         if (compact) {
@@ -373,6 +402,19 @@ private fun RowArtwork(
         contentScale = ContentScale.Crop,
     )
 }
+
+/**
+ * A `0f..1f` fraction as the whole percentage a screen reader says out loud.
+ *
+ * Rounded rather than truncated, and clamped, because the fraction reaching a row is the *ratcheted*
+ * one ([DownloadProgressRatchet]) computed against a projected total that can briefly exceed 1 —
+ * announcing "101 percent" would read as a bug in the number rather than in the projection.
+ *
+ * `internal` so the rounding is checkable without a Compose harness.
+ */
+internal fun percentOf(fraction: Float): Int = (fraction.coerceIn(0f, 1f) * PERCENT_SCALE).roundToInt()
+
+private const val PERCENT_SCALE = 100
 
 /**
  * `Westworld · Chestnut` for an episode, the plain title otherwise.

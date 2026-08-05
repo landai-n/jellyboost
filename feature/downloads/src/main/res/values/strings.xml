@@ -37,7 +37,20 @@
     <!-- "NETWORK" panel's caption, shown only while Wi‑Fi-only is on. -->
     <string name="downloads_stat_network_helper">Paused automatically on cellular</string>
 
+    <!-- Screen-reader labels for the two hand-rolled usage bars, which draw a fraction and no text.
+         "23 percent" of what is the question the label answers. -->
+    <string name="downloads_usage_storage_label">Storage used</string>
+    <string name="downloads_usage_queue_label">Queue progress</string>
+
+    <!-- A queue row as a screen reader hears it: one sentence tying the item to its progress and
+         its status, instead of a truncated title, a bare percentage and a status line as three
+         unrelated stops (accessibility audit 2026-08-05, F7). %1$s title, %2$d percent complete,
+         %3$s the status line the row shows. -->
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+
     <!-- Row actions -->
+    <!-- Names what tapping a finished download does; spoken as "double tap to play". -->
+    <string name="downloads_action_play">Play</string>
     <string name="downloads_action_delete">Delete download</string>
     <string name="downloads_action_cancel">Cancel download</string>
     <string name="downloads_action_pause">Pause download</string>

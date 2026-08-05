@@ -33,14 +33,25 @@ A milestone is **NOT finished** if any DoD item fails — do not fudge this.
      for each one explicitly.
    - If anything fails, fix it (or `/diverge` if the DoD item itself is wrong) and re-walk
      the failed checks — do not mark the milestone finished with an outstanding failure.
-3. Run `/verify` — must be fully green.
-4. Update `STATUS.md` (move milestone's items from Next to Done, set the next milestone's
+3. Run the **instrumented accessibility suite** on the connected device — it is not part of
+   `/verify` (which must stay device-free) and this is where it is owed:
+
+   ```bash
+   adb shell input keyevent KEYCODE_WAKEUP   # the OEM ROM refuses installs with the screen off
+   source "../env.sh" && ./gradlew connectedDebugAndroidTest
+   ```
+
+   These are the ATF + Compose-semantics tests that hold the 2026-08-05 accessibility audit's
+   fixes in place (merged card nodes, live regions, chrome traversal order, the player's
+   controls-reveal action). A failure here is a DoD failure — fix it, don't skip it.
+4. Run `/verify` — must be fully green.
+5. Update `STATUS.md` (move milestone's items from Next to Done, set the next milestone's
    name/DoD as the new current milestone or note it's pending) and any relevant
    `docs/features/*.md` / `docs/ARCHITECTURE.md`.
-5. Commit: `chore: complete M<N>` (small, scoped to the doc/status updates plus anything
+6. Commit: `chore: complete M<N>` (small, scoped to the doc/status updates plus anything
    still uncommitted from the milestone's work — prefer that the milestone's actual code
    already landed via prior `/checkpoint`s).
-6. Tag: `git tag m<N>`.
+7. Tag: `git tag m<N>`.
 
 ## Notes
 

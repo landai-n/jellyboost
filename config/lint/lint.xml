@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Android Lint severities for every module (wired in from build-logic's `configureKotlinAndroid`,
+  so there is exactly one of these files and no module can quietly hold a different opinion).
+
+  The project runs lint with `abortOnError = true`, which means *this file decides what fails the
+  build*: an issue at `error` (or `fatal`) stops it, an issue at `warning` or below is reported and
+  ignored. The split it draws is deliberate — accessibility regressions fail, the rest is advisory
+  (accessibility audit 2026-08-05, CR-7 / A11Y-LINT-01).
+-->
+<lint>
+
+    <!--
+      ## The gate: accessibility findings are errors.
+
+      These are the checks a regression in this area would trip. They are all View/XML-shaped,
+      which in a 100%-Compose app means they normally find nothing — that is the point. They are a
+      tripwire for the day someone adds an XML layout, an `AndroidView` with a touch listener, or a
+      `MediaRouteButton`-style platform widget, and reaches for the shortcut that leaves it
+      unlabelled or unreachable. What they cannot see — Compose semantics, merged card nodes, live
+      regions, traversal order — is held by the instrumented suite instead
+      (`*/src/androidTest`, run with `connectedDebugAndroidTest`).
+    -->
+    <!-- An ImageView/ImageButton with no contentDescription — the oldest a11y bug there is. -->
+    <issue id="ContentDescription" severity="error" />
+    <!-- setOnTouchListener without performClick: a control no accessibility service can press. -->
+    <issue id="ClickableViewAccessibility" severity="error" />
+    <!--
+      Touch target size is *not* here. `TouchTargetSizeCheck` is an Accessibility Test Framework
+      check, not an Android Lint issue — lint rejects the id outright (and `UnknownIssueId` below
+      makes that a build failure rather than a silent no-op). ATF runs it against the live Compose
+      semantics tree in the instrumented suite, which is also the only place it could see a
+      `Modifier.size()` anyway. See `core/ui/src/androidTest`.
+    -->
+    <!-- android:clickable without android:focusable — unreachable by keyboard or d-pad. -->
+    <issue id="KeyboardInaccessibleWidget" severity="error" />
+    <!-- An EditText with no labelFor: a field that announces its value and nothing else (CR-2). -->
+    <issue id="LabelFor" severity="error" />
+
+    <!--
+      A typo in an id above would silently disable the check it was meant to switch on, so an
+      unrecognised id is itself a build failure.
+    -->
+    <issue id="UnknownIssueId" severity="error" />
+
+    <!--
+      ## Advisory: the families that already fail today, demoted so the gate stays a11y-shaped.
+
+      Before this file, lint ran with `abortOnError = false` and *nothing* it found could fail the
+      build. Turning that on to make the accessibility checks bite would also have made these 293
+      pre-existing findings fatal, which is a different project's worth of work. Demoting them to
+      `warning` leaves their enforcement exactly where it has always been — visible in the report,
+      not blocking — while everything else lint calls an error now blocks.
+
+      A baseline file was the alternative and was rejected: it would freeze 293 findings into a
+      generated XML blob that has to be regenerated every time a string is added, and it would hide
+      them from the report rather than leave them in it.
+
+      Each entry below is a real thing to fix one day, with its count at the time of writing.
+    -->
+    <!-- 200×. The 69 translated locales are missing plural quantities English does not have. -->
+    <issue id="MissingQuantity" severity="warning" />
+    <!-- 40×. Same corpus: a 'one' bucket that covers 0 and 1 without a %d in the string. -->
+    <issue id="ImpliedQuantity" severity="warning" />
+    <!--
+      45×. The strings the accessibility waves added (2026-08-05) exist in English only; the rest
+      of the app is translated into all 69 locales. Tracked as follow-up work, not as a11y work.
+    -->
+    <issue id="MissingTranslation" severity="warning" />
+    <!-- 7×. Media3's @UnstableApi surface, used deliberately in the DI modules and the player. -->
+    <issue id="UnsafeOptInUsageError" severity="warning" />
+
+    <!--
+      The one pre-existing error that was fixed rather than demoted: `NonObservableLocale` in
+      `PlayerControls.TagPill`. Its id could not be listed here in any case — it ships with the
+      Compose lint checks, so the modules that have no Compose on their classpath would have
+      reported it as an unknown id, which this file makes fatal.
+    -->
+
+</lint>

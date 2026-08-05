@@ -15,7 +15,11 @@ scope, and milestones.
 
 ## Build environment
 - Always `source "../env.sh"` first (sets JAVA_HOME=openjdk@21, ANDROID_HOME).
-- Build: `./gradlew assembleDebug` • Quality: `./gradlew ktlintCheck detekt testDebugUnitTest`
+- Build: `./gradlew assembleDebug`
+- Quality: `./gradlew ktlintCheck detekt testDebugUnitTest :app:lintDebug`
+  (`:app:lintDebug` is the accessibility gate — severities in `config/lint/lint.xml`.)
+- Instrumented a11y suite (device only, milestone DoD — not part of `/verify`):
+  `./gradlew connectedDebugAndroidTest`.
 - Install: `./gradlew installDebug` (device/emulator via adb).
 
 ## Test device

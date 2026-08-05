@@ -83,6 +83,10 @@ internal fun JellyfinNavHost(
     LogoutRedirectEffect(navController = navController, sessionState = sessionState)
     SyncPlayLaunchEffect(navController = navController)
 
+    // Hoisted to the graph's level rather than resolved per destination: three music screens
+    // share these two verbs, and the queue behind them is one process-wide singleton anyway.
+    val music: MusicPlaybackViewModel = hiltViewModel()
+
     NavHost(
         navController = navController,
         startDestination = if (startsSignedIn) Routes.Home else Routes.ServerSetup,
@@ -200,10 +204,8 @@ internal fun JellyfinNavHost(
             AlbumDetailScreen(
                 viewModel = hiltViewModel(),
                 onArtistClick = { item -> navController.navigateToItem(item) },
-                // No queue exists yet — filled in by M13 Phase 3 (`MusicController`); see the
-                // screen's own KDoc.
-                onPlay = { _, _ -> },
-                onShuffle = { _ -> },
+                onPlay = music::play,
+                onShuffle = music::shuffle,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -213,7 +215,7 @@ internal fun JellyfinNavHost(
             ArtistDetailScreen(
                 viewModel = hiltViewModel(),
                 onAlbumClick = { item -> navController.navigateToItem(item) },
-                onTrackClick = { _, _ -> },
+                onTrackClick = music::play,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -222,7 +224,7 @@ internal fun JellyfinNavHost(
         composable<Routes.PlaylistDetail> {
             PlaylistDetailScreen(
                 viewModel = hiltViewModel(),
-                onTrackClick = { _, _ -> },
+                onTrackClick = music::play,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )

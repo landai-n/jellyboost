@@ -1,0 +1,117 @@
+package dev.jellyboost.player.music
+
+import dev.jellyboost.core.common.music.MusicRepeatMode
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+
+/**
+ * A [MusicPlayerPort] that records what it was told and emits what a test wants it to.
+ *
+ * The whole reason the port exists: everything below it is Media3, which cannot be constructed off
+ * a device, while everything the controller does — the ordering of stop and start reports around a
+ * transition, the shuffle and repeat vocabulary, the handover snapshot — is plain sequencing that
+ * deserves a plain test.
+ */
+internal class FakeMusicPlayerPort : MusicPlayerPort {
+    private val _events =
+        MutableSharedFlow<MusicPlayerEvent>(
+            extraBufferCapacity = 32,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    override val events: Flow<MusicPlayerEvent> = _events
+
+    /** Every call, in order, as a readable transcript. */
+    val calls = mutableListOf<String>()
+
+    var queue: List<MusicQueueEntry> = emptyList()
+        private set
+    var shuffleEnabled: Boolean = false
+        private set
+    var repeatMode: MusicRepeatMode = MusicRepeatMode.OFF
+        private set
+    var released = false
+        private set
+    var stopped = false
+        private set
+
+    /** What [snapshot] answers; a test moves it to stand in for the player advancing. */
+    var currentSnapshot = MusicPortSnapshot()
+
+    suspend fun emit(event: MusicPlayerEvent) {
+        _events.emit(event)
+    }
+
+    override fun setQueue(
+        entries: List<MusicQueueEntry>,
+        startIndex: Int,
+        startPositionMs: Long,
+        playWhenReady: Boolean,
+    ) {
+        calls += "setQueue(${entries.size}, $startIndex, $startPositionMs, $playWhenReady)"
+        queue = entries
+        released = false
+        currentSnapshot = currentSnapshot.copy(currentItemIndex = startIndex, positionMs = startPositionMs)
+    }
+
+    override fun play() {
+        calls += "play"
+    }
+
+    override fun pause() {
+        calls += "pause"
+    }
+
+    override fun seekTo(positionMs: Long) {
+        calls += "seekTo($positionMs)"
+    }
+
+    override fun next() {
+        calls += "next"
+    }
+
+    override fun previous() {
+        calls += "previous"
+    }
+
+    override fun seekToItem(index: Int) {
+        calls += "seekToItem($index)"
+    }
+
+    override fun removeItem(index: Int) {
+        calls += "removeItem($index)"
+        queue = queue.toMutableList().apply { removeAt(index) }
+    }
+
+    override fun moveItem(
+        from: Int,
+        to: Int,
+    ) {
+        calls += "moveItem($from, $to)"
+        queue = queue.toMutableList().apply { add(to, removeAt(from)) }
+    }
+
+    override fun setShuffleEnabled(enabled: Boolean) {
+        calls += "setShuffleEnabled($enabled)"
+        shuffleEnabled = enabled
+    }
+
+    override fun setRepeatMode(mode: MusicRepeatMode) {
+        calls += "setRepeatMode($mode)"
+        repeatMode = mode
+    }
+
+    override fun snapshot(): MusicPortSnapshot = currentSnapshot
+
+    override fun release() {
+        calls += "release"
+        released = true
+    }
+
+    override fun stopAndRelease() {
+        calls += "stopAndRelease"
+        released = true
+        stopped = true
+    }
+}

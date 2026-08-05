@@ -35,7 +35,22 @@ dedicated bottom-nav tab — user decision). Detailed phase plan:
   /Playlists/{id}/Items; offline playlists empty until Phase 5; offline top
   tracks a documented approximation), sectioned music search, nav wiring
   (play/shuffle stubbed for Phase 3). Gate green.
-- **Phase 3 (queue + background playback)** — IN PROGRESS.
+- **Phase 3 (queue + background playback)** — code landed, device DoD owed.
+  `MusicController`/`MusicPlaybackState` in `:core:common`; `MusicPlayerPort` +
+  `ExoMusicPlayerAdapter` over the shared ExoPlayer's native playlist (audio
+  attributes flip to MUSIC on claim, MOVIE on release; service start/stop reused
+  from `ExoPlayerHandle`); `MusicStreamResolver` + `AudioStreamUrlFactory`
+  (`/Audio/{id}/universal`, HLS/ts/aac, 384 kbps, one play session per entry,
+  downloads first); `MusicQueueSpecFactory`; `MusicPlaybackController`
+  (`@MusicSessionScope`, one server session per track, 1 s state ticks / 10 s
+  progress reports, SyncPlay refusal); `PlaybackHandover` wired into
+  `PlaybackSessionController.open` and `PlayerViewModel.releaseSession`;
+  `PlaybackReporter` music path + defaulted repeat/order; `MusicSessionCallback`
+  shuffle/repeat buttons on the media session; browse play/shuffle/track-tap
+  wired through `MusicPlaybackViewModel`. Gate green; the whole existing player
+  suite passes unchanged. Open device checks: audio focus across the attributes
+  flip, notification shuffle/repeat rendering, dashboard `PlayMethod` for
+  flac-vs-transcode, and clean single sessions across video⇄music handoffs.
 - Phases 4–6: NowPlaying/mini-player/Continue Listening → music downloads →
   Instant Mix + lyrics + docs. Work happens on the `worktree-music-m13` branch.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`

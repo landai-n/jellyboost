@@ -26,4 +26,10 @@
     <!-- Home top-bar SyncPlay action (M11 Phase 5) -->
     <string name="syncplay_groups_action">SyncPlay groups</string>
     <string name="syncplay_groups_action_active">SyncPlay groups — you\'re in a group</string>
+
+    <!-- Music queue notices (M13 Phase 3), shown in the app chrome's snackbar. -->
+    <string name="music_refused_in_group">Leave the SyncPlay group to play music on this device.</string>
+    <string name="music_track_unavailable">Couldn\'t play “%1$s” — it was skipped.</string>
+    <string name="music_queue_unavailable">Couldn\'t play any of those tracks.</string>
+    <string name="music_playback_failed">Playback failed for “%1$s”.</string>
 </resources>

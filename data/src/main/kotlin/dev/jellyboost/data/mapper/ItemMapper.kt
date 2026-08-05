@@ -81,6 +81,9 @@ internal class ItemMapper
                 // A track's own `artistItems` first; an album has none of its own, so it falls
                 // back to its `albumArtists` (docs/notes/music-m13-plan.md, decision 5).
                 artistRefs = (dto.artistItems?.takeIf { it.isNotEmpty() } ?: dto.albumArtists).toArtistRefs(),
+                // The item's own container first; a `PlaybackInfo`-shaped response leaves it null
+                // and describes the container on the media source instead.
+                container = dto.container ?: dto.mediaSources?.firstOrNull()?.container,
             )
 
         /** Maps a list of items, preserving server order (the rows are already sorted server-side). */

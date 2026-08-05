@@ -24,6 +24,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -51,6 +53,7 @@ import androidx.navigation.compose.rememberNavController
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.jellyboost.core.common.Routes
+import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
@@ -163,6 +166,8 @@ internal fun AppScaffold(
             onRetry = connectionViewModel::refresh,
             onLeaveOfflineMode = { connectionViewModel.setForceOffline(false) },
         )
+
+    MusicMessageEffect(snackbarHostState = snackbarHostState)
 
     // Coming back to the app is the other moment the plan wants a reachability probe: the network
     // may well have changed while we were not listening (docs/PLAN.md, "Connectivity").
@@ -318,6 +323,37 @@ internal const val CHROME_BOTTOM_INDEX = 1f
  * content jump under the fade.
  */
 private const val CHROME_EXIT_DIVISOR = 2
+
+/**
+ * Shows the music queue's one-shot notices in the chrome's snackbar (M13 Phase 3).
+ *
+ * At the scaffold's level, alongside [LogoutRedirectEffect] and `SyncPlayLaunchEffect`, and for the
+ * same reason: a refusal or an unplayable track is a fact about a `@Singleton` that no destination
+ * owns — the album screen that asked for the queue is very often gone by the time the answer comes
+ * back. The flow is hot and unreplayed, so a message emitted while the app was not composing is
+ * simply dropped rather than surfacing later out of context.
+ */
+@Composable
+private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
+    val viewModel: MusicPlaybackViewModel = hiltViewModel()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            val text =
+                when (message) {
+                    MusicMessage.RefusedInSyncPlayGroup -> context.getString(R.string.music_refused_in_group)
+                    is MusicMessage.TrackUnavailable ->
+                        context.getString(R.string.music_track_unavailable, message.itemName)
+
+                    MusicMessage.QueueUnavailable -> context.getString(R.string.music_queue_unavailable)
+                    is MusicMessage.PlaybackFailed ->
+                        context.getString(R.string.music_playback_failed, message.itemName)
+                }
+            snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
+        }
+    }
+}
 
 /**
  * The band of darkened background the top chrome is read against.

@@ -51,6 +51,17 @@ internal class PlaybackSessionController
          * always injects the singleton the coordinator writes.
          */
         private val castStatus: CastStatusHolder = CastStatusHolder(),
+        /**
+         * The video⇄music arbiter (M13, key decision 3).
+         *
+         * This is where video *actually starts* — the one place every open, transfer and
+         * re-negotiation funnels through on its way to `prepare` — so it is where the claim
+         * belongs. Defaulted for the same reason [castStatus] is: it holds nothing and depends on
+         * nothing, so a test constructs the pre-M13 behaviour exactly (no other owner ever exists,
+         * so no relinquish ever runs); Hilt always passes the singleton the music controller
+         * shares.
+         */
+        private val handover: PlaybackHandover = PlaybackHandover(),
     ) {
         /**
          * Resolves [request] and hands the result to the player.
@@ -94,6 +105,16 @@ internal class PlaybackSessionController
 
             val spec = mediaSourceFactory.create(resolved) ?: return SessionOpenResult.UnsupportedSource
 
+            // Immediately before `prepare`, and it suspends until whatever held the player has
+            // finished closing its own server session — a music queue's stop report lands before
+            // this film's start report, which is the whole point (key decision 3). Claiming for a
+            // kind that already owns the player only replaces the callback, so a re-negotiation
+            // does not report itself stopped.
+            handover.claim(PlaybackKind.VIDEO) {
+                reporter.reportStop(resolved, playerHandle.snapshot())
+                playerHandle.stop()
+            }
+
             // The source travels alongside the spec: a cast receiver has to be told more about the
             // negotiation than its URL says, and this is the one place both are in hand
             // (`PlayerHandle.prepare`, M12 Phase 2). Locally the overload drops it.
@@ -120,6 +141,22 @@ internal class PlaybackSessionController
         ): SessionOpenResult {
             reporter.stopTranscoding(previous)
             return open(request, playWhenReady)
+        }
+
+        /**
+         * The video session ended on its own terms, so nobody should close it on video's behalf
+         * later (M13).
+         *
+         * Called from `PlayerViewModel`'s teardown, which has already issued the stop report on
+         * the detached scope. Without it the relinquish registered by [open] would still be armed,
+         * and the next music `play()` — minutes or hours later — would re-report a stop for a
+         * session that has been closed since the user left the player screen.
+         *
+         * Non-suspending because the teardown is not a coroutine; see
+         * [PlaybackHandover.releaseNow] for what it does when a handover is already in flight.
+         */
+        fun endVideoSession() {
+            handover.releaseNow(PlaybackKind.VIDEO)
         }
 
         private companion object {

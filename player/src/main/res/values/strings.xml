@@ -85,6 +85,17 @@
     <string name="player_message_failed">Playback failed.</string>
     <string name="player_message_change_reverted">Couldn\'t apply that change — continuing as before.</string>
 
+    <!--
+      M13 music: the two mode buttons the media notification and the lock screen draw. They are
+      content descriptions for icon-only system buttons, so each says what the button *does now*
+      rather than naming the mode it is in.
+    -->
+    <string name="music_notification_shuffle_on">Turn shuffle off</string>
+    <string name="music_notification_shuffle_off">Turn shuffle on</string>
+    <string name="music_notification_repeat_off">Repeat off</string>
+    <string name="music_notification_repeat_all">Repeating the queue</string>
+    <string name="music_notification_repeat_one">Repeating this track</string>
+
     <!-- M11 SyncPlay: the group as the player screen shows it. -->
     <string name="player_syncplay_group">Group</string>
     <string name="player_syncplay_waiting">Waiting for group…</string>

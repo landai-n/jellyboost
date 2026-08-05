@@ -83,10 +83,18 @@ internal class PlaybackReporter
          */
         private val syncPlay: SyncPlayStatusHolder = SyncPlayStatusHolder(),
     ) {
-        /** Playback started (or restarted after a re-resolve). */
+        /**
+         * Playback started (or restarted after a re-resolve).
+         *
+         * [repeatMode] and [playbackOrder] are defaulted to what a film always is, so the video
+         * path and every test of it read exactly as they did before M13; the music queue passes
+         * its own (docs/notes/music-m13-plan.md, key decision 9).
+         */
         suspend fun reportStart(
             source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
+            repeatMode: RepeatMode = RepeatMode.REPEAT_NONE,
+            playbackOrder: PlaybackOrder = PlaybackOrder.DEFAULT,
         ) {
             val target = source.serverTarget() ?: return
 
@@ -104,8 +112,8 @@ internal class PlaybackReporter
                         isMuted = false,
                         canSeek = true,
                         positionTicks = target.startPositionTicks,
-                        repeatMode = RepeatMode.REPEAT_NONE,
-                        playbackOrder = PlaybackOrder.DEFAULT,
+                        repeatMode = repeatMode,
+                        playbackOrder = playbackOrder,
                     ),
                 )
             }
@@ -125,6 +133,8 @@ internal class PlaybackReporter
         suspend fun reportProgress(
             source: PlaybackMediaSource,
             snapshot: PlaybackSnapshot,
+            repeatMode: RepeatMode = RepeatMode.REPEAT_NONE,
+            playbackOrder: PlaybackOrder = PlaybackOrder.DEFAULT,
         ) {
             if (snapshot.hasEnded) return
             if (!snapshot.isValid) {
@@ -147,8 +157,8 @@ internal class PlaybackReporter
                             isMuted = false,
                             canSeek = true,
                             positionTicks = snapshot.positionTicks,
-                            repeatMode = RepeatMode.REPEAT_NONE,
-                            playbackOrder = PlaybackOrder.DEFAULT,
+                            repeatMode = repeatMode,
+                            playbackOrder = playbackOrder,
                         ),
                     )
                 }
@@ -282,6 +292,140 @@ internal class PlaybackReporter
                 }
             }
 
+        /**
+         * A music track started (M13).
+         *
+         * A parallel entry point rather than a `PlaybackMediaSource` because a queue entry is a
+         * genuinely different thing: it carries no track selections, no live stream and no resume
+         * negotiation, and it *does* carry the queue's repeat and shuffle modes, which a film
+         * never has. The plumbing underneath is the same — the private [ServerReportTarget] and
+         * [runReport] — so the two paths cannot drift apart in what they send.
+         */
+        suspend fun reportMusicStart(
+            target: MusicReportTarget,
+            positionTicks: Long,
+            isPaused: Boolean,
+            repeatMode: RepeatMode,
+            playbackOrder: PlaybackOrder,
+        ) {
+            val server = target.serverTarget(positionTicks) ?: return
+            runReport("music start") {
+                api.reportPlaybackStart(
+                    PlaybackStartInfo(
+                        itemId = server.itemId,
+                        playMethod = server.playMethod.toSdk(),
+                        playSessionId = server.playSessionId,
+                        mediaSourceId = server.mediaSourceId,
+                        isPaused = isPaused,
+                        isMuted = false,
+                        canSeek = true,
+                        positionTicks = positionTicks,
+                        repeatMode = repeatMode,
+                        playbackOrder = playbackOrder,
+                    ),
+                )
+            }
+        }
+
+        /**
+         * One music progress tick.
+         *
+         * The local write-through is unconditional, exactly as it is for video: it is what makes
+         * "Continue Listening" resume at the right place whether the track was streamed, played
+         * from a download, or played in airplane mode.
+         */
+        suspend fun reportMusicProgress(
+            target: MusicReportTarget,
+            positionTicks: Long,
+            isPaused: Boolean,
+            repeatMode: RepeatMode,
+            playbackOrder: PlaybackOrder,
+        ) {
+            target.serverTarget(positionTicks)?.let { server ->
+                runReport("music progress") {
+                    api.reportPlaybackProgress(
+                        PlaybackProgressInfo(
+                            itemId = server.itemId,
+                            playMethod = server.playMethod.toSdk(),
+                            playSessionId = server.playSessionId,
+                            mediaSourceId = server.mediaSourceId,
+                            isPaused = isPaused,
+                            isMuted = false,
+                            canSeek = true,
+                            positionTicks = positionTicks,
+                            repeatMode = repeatMode,
+                            playbackOrder = playbackOrder,
+                        ),
+                    )
+                }
+            }
+            userDataRepository.setPosition(target.itemId.toString(), positionTicks)
+        }
+
+        /**
+         * A music track stopped — skipped away from, or played to the end.
+         *
+         * Symmetrical with [reportStop]: a track that *finished* is marked played and reported at
+         * its full runtime, and one that was left mid-way keeps its position. Jellyfin marks audio
+         * played on the server's own stop handling; the local write is what makes the two agree
+         * offline, and it is the only thing that happens there.
+         */
+        suspend fun reportMusicStop(
+            target: MusicReportTarget,
+            positionTicks: Long,
+            hasEnded: Boolean,
+        ) {
+            val reportedTicks = if (hasEnded) target.runTimeTicks else positionTicks
+            target.serverTarget(reportedTicks)?.let { sendStopReport(it, reportedTicks) }
+            stopMusicTranscoding(target)
+            if (hasEnded) {
+                userDataRepository.setPlayed(target.itemId.toString(), played = true)
+            } else {
+                userDataRepository.setPosition(target.itemId.toString(), reportedTicks)
+            }
+        }
+
+        /** Kills the encoder behind a transcoded queue entry; a no-op for anything else. */
+        private suspend fun stopMusicTranscoding(target: MusicReportTarget) {
+            if (target.playMethod != PlayMethod.TRANSCODE) return
+            val playSessionId = target.playSessionId ?: return
+            val deviceId = api.deviceId
+            if (deviceId == null) {
+                Timber.w("No device id; cannot stop the encoding process for %s", playSessionId)
+                return
+            }
+            runReport("music stopEncoding") {
+                api.stopEncodingProcess(deviceId = deviceId, playSessionId = playSessionId)
+            }
+        }
+
+        /**
+         * The queue entry as a server session, or `null` when there is none to tell.
+         *
+         * The same two rules the video path applies, for the same reasons: a downloaded track has
+         * no play session (nothing was negotiated, so there is nothing to key one on), and offline
+         * every call would burn a connect timeout per tick. A music queue is never in a SyncPlay
+         * group — M13 refuses that combination outright — so the M11 exception has no analogue
+         * here.
+         */
+        private fun MusicReportTarget.serverTarget(positionTicks: Long): ServerReportTarget? {
+            if (playSessionId == null) return null
+            if (!connectionState.state.value.isOnline) {
+                Timber.d("Offline; skipping the server report for track %s", itemId)
+                return null
+            }
+            return ServerReportTarget(
+                itemId = itemId,
+                mediaSourceId = mediaSourceId,
+                playMethod = playMethod,
+                playSessionId = playSessionId,
+                liveStreamId = null,
+                selectedAudioIndex = null,
+                selectedSubtitleIndex = null,
+                startPositionTicks = positionTicks,
+            )
+        }
+
         private suspend fun sendStopReport(
             target: ServerReportTarget,
             positionTicks: Long?,
@@ -366,12 +510,33 @@ internal class PlaybackReporter
     }
 
 /**
+ * One music queue entry, as the server needs to hear about it (M13).
+ *
+ * Deliberately not a `PlaybackMediaSource`: that type carries a resolved *film* — track lists,
+ * external subtitles, a live stream id, trickplay — none of which a track has, and half of which
+ * would have to be filled with lies. This is the eight fields the three music reports need.
+ *
+ * @param playSessionId `null` for a downloaded track; nothing is reported for it and there is no
+ *   encoder to stop, which is exactly M8's rule for a local file played alone.
+ * @param runTimeTicks the position a *completed* track's stop report carries. Taken from the item
+ *   rather than from the player, because an HLS transcode's duration is an estimate until its last
+ *   segment lands.
+ */
+data class MusicReportTarget(
+    val itemId: UUID,
+    val mediaSourceId: String,
+    val playMethod: PlayMethod,
+    val playSessionId: String?,
+    val runTimeTicks: Long,
+)
+
+/**
  * One playback session as the server sees it, whatever the bytes came from.
  *
  * It is what M8's `RemotePlaybackMediaSource?` narrowing became once a *local* source could also be
  * worth reporting (M11, key decision 9): the same six fields fill a start, a progress and a stop
  * report, and building them here is what keeps those three bodies identical for a stream and for a
- * downloaded file being watched with a group.
+ * downloaded file being watched with a group. Since M13 a music queue entry maps onto it too.
  *
  * @param playSessionId nullable, which the SDK's DTOs already allow. A stream always has one; a
  *   local file has whatever the mint produced, and `null` when the mint failed — the server keys

@@ -8,8 +8,15 @@ import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import dagger.hilt.android.AndroidEntryPoint
+import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.player.R
+import dev.jellyboost.player.music.MusicSessionCallback
 import dev.jellyboost.player.syncplay.SyncPlayController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -65,7 +72,29 @@ internal class PlaybackService :
     @Inject
     internal lateinit var syncPlayController: SyncPlayController
 
+    /**
+     * The shuffle/repeat buttons and the commands behind them (M13).
+     *
+     * Given to the session unconditionally, video sessions included: with nothing musical loaded
+     * it contributes an empty button list and two commands nobody sends, so the film's
+     * notification is byte-for-byte what it was.
+     */
+    @Inject
+    internal lateinit var musicSessionCallback: MusicSessionCallback
+
+    /** The music queue's state, which is what those buttons are drawn from. */
+    @Inject
+    internal lateinit var musicController: MusicController
+
     private var mediaSession: MediaSession? = null
+
+    /**
+     * Follows [musicController] for as long as the service is up.
+     *
+     * `Main` because `setMediaButtonPreferences` is a session call and Media3 requires the
+     * session's own thread; cancelled in [onDestroy] before the session is released.
+     */
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onCreate() {
         super.onCreate()
@@ -76,9 +105,17 @@ internal class PlaybackService :
         val session =
             MediaSession
                 .Builder(this, sessionPlayer)
+                .setCallback(musicSessionCallback)
                 .apply { launchIntent()?.let(::setSessionActivity) }
                 .build()
         mediaSession = session
+        // The mode buttons follow the queue rather than being set once: the icons *are* the state
+        // (shuffle on/off, the three repeat icons), so every change has to reach the notification.
+        serviceScope.launch {
+            musicController.state.collect { state ->
+                session.setMediaButtonPreferences(musicSessionCallback.buttonsFor(state))
+            }
+        }
         // Media3's default provider ships its own generic small icon; the status bar shows only that
         // icon, so without this the media notification is the one surface that does not identify the
         // app. Everything else about the default notification is what this service wants.
@@ -172,6 +209,8 @@ internal class PlaybackService :
      */
     override fun onDestroy() {
         Timber.d("Releasing the playback media session")
+        // Before the session is released: the collector below writes to it.
+        serviceScope.cancel()
         clearListener()
         mediaSession?.let { session ->
             removeSession(session)

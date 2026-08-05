@@ -201,6 +201,38 @@ class LoginViewModelTest {
         }
 
     @Test
+    @DisplayName("the credential fields are inert while a sign-in is in flight")
+    fun credentialsCannotChangeMidSignIn() =
+        runTest {
+            // The screen keeps both fields *enabled* through the exchange so a TalkBack user does
+            // not lose accessibility focus the instant they press Sign in (audit 2026-08-05, F17).
+            // The guard that makes that safe lives here: what is in flight stays what is on screen.
+            coEvery { authRepository.loginWithPassword(SERVER, USER_NAME, PASSWORD) } coAnswers {
+                delay(POLL_INTERVAL_MILLIS)
+                AppResult.Failure(AppError.Unauthorized())
+            }
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.onUsernameChange(USER_NAME)
+            viewModel.onPasswordChange(PASSWORD)
+            viewModel.signIn()
+            viewModel.uiState.value.isSigningIn shouldBe true
+
+            viewModel.onUsernameChange("someone-else")
+            viewModel.onPasswordChange("another-password")
+            viewModel.onPublicUserSelected(PUBLIC_USER)
+
+            viewModel.uiState.value.username shouldBe USER_NAME
+            viewModel.uiState.value.password shouldBe PASSWORD
+            advanceUntilIdle()
+
+            // And they take edits again the moment the exchange has answered.
+            viewModel.onUsernameChange("someone-else")
+            viewModel.uiState.value.username shouldBe "someone-else"
+        }
+
+    @Test
     @DisplayName("LoginUiState.toString() never prints the password (audit SEC-09)")
     fun toStringRedactsThePassword() =
         runTest {

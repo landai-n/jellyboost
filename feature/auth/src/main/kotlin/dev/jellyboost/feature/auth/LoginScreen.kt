@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -45,6 +47,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -228,12 +236,24 @@ private fun LoginContent(
             }
 
             if (state.isLoadingContext) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text(
-                    text = stringResource(R.string.login_loading),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // Bar and caption as one polite live region (accessibility audit 2026-08-05, F4):
+                // the screen arrives already loading, and until this the only sign of it was a
+                // moving bar. The inner spacing repeats the enclosing pane's own gap, so grouping
+                // the two into one node leaves the layout exactly where it was.
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+                ) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Text(
+                        text = stringResource(R.string.login_loading),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
 
             state.loginDisclaimer?.let { disclaimer ->
@@ -324,7 +344,11 @@ private fun LoginFormFields(
         onValueChange = onUsernameChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        enabled = !state.isSigningIn,
+        // Both credential fields stay enabled while the exchange runs (accessibility audit
+        // 2026-08-05, F17): disabling the field a TalkBack user is standing on destroys its node,
+        // dropping accessibility focus to the top of the screen at the exact moment the user wants
+        // to hear what happened. `LoginViewModel` ignores edits while `isSigningIn`, so "enabled"
+        // does not mean "mutable" — what is in flight is what was in the fields when it started.
         isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
         labelText = stringResource(R.string.login_username_label),
@@ -340,7 +364,7 @@ private fun LoginFormFields(
         onValueChange = onPasswordChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        enabled = !state.isSigningIn,
+        // Enabled through the sign-in for the same reason the username field is — see above.
         isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_password_label).uppercase()) },
         labelText = stringResource(R.string.login_password_label),
@@ -446,7 +470,10 @@ private fun PublicUsersRow(
         // row takes the full width and scrolls instead.
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                // `selectableGroup()` is what turns N independent circles into one set of radio
+                // buttons, so TalkBack can say "2 of 3" and a user knows how many profiles there
+                // are without swiping to the end (accessibility audit 2026-08-05, F6).
+                modifier = Modifier.horizontalScroll(rememberScrollState()).selectableGroup(),
                 horizontalArrangement =
                     Arrangement.spacedBy(if (compact) AvatarRowSpacingCompact else AvatarRowSpacing),
             ) {
@@ -473,6 +500,14 @@ private fun PublicUsersRow(
  * [avatarUrl] carries the profile picture the server advertises; it is `null` for users who have
  * none (`primaryImageTag == null`), and those keep the initial-letter circle instead of showing an
  * empty hole.
+ *
+ * The **whole column** is the selectable, not the circle inside it (accessibility audit 2026-08-05,
+ * F6). Two things were wrong with the circle owning the click: selection was conveyed by ring colour
+ * alone, with nothing in the semantics saying which profile was in force; and the name — the only
+ * place the user's actual name is written — sat outside the clickable's merged node, so a user
+ * without a profile picture announced as the one letter drawn in their fallback circle. "C", not
+ * "claude". `Role.RadioButton` inside the row's `selectableGroup()` gives the name, the state and
+ * the position in the set, all on one stop.
  */
 @Composable
 private fun PublicUserAvatar(
@@ -490,11 +525,11 @@ private fun PublicUserAvatar(
         }
 
     Column(
+        modifier = Modifier.selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         Surface(
-            onClick = onClick,
             modifier = Modifier.size(if (compact) AvatarSizeCompact else AvatarSize),
             shape = CircleShape,
             color = Color.Transparent,
@@ -515,6 +550,9 @@ private fun PublicUserAvatar(
                     ) {
                         Text(
                             text = user.name.take(1).uppercase(),
+                            // Muted: the initial is a drawing of the name, and the name itself is
+                            // right below inside the same merged node. Spoken, it was the whole bug.
+                            modifier = Modifier.clearAndSetSemantics {},
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onPrimary,
                         )
@@ -522,7 +560,9 @@ private fun PublicUserAvatar(
                 } else {
                     JellyfinAsyncImage(
                         url = avatarUrl,
-                        contentDescription = user.name,
+                        // Decorative now: the name Text below is part of this node's merged
+                        // description, so describing the picture too says the name twice.
+                        contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         placeholderIcon = null,
                     )
@@ -578,6 +618,13 @@ private fun QuickConnectDialog(
                 QuickConnectCodeRow(code = state.code)
                 if (state.isWaiting) {
                     Row(
+                        // Polite live region: the dialog opens on the code, and this line appears
+                        // (and later disappears, when the code is approved and the token exchange
+                        // starts) with nothing else on screen changing (audit 2026-08-05, F4).
+                        modifier =
+                            Modifier.semantics(mergeDescendants = true) {
+                                liveRegion = LiveRegionMode.Polite
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
                     ) {
@@ -606,18 +653,38 @@ private fun QuickConnectDialog(
  * The boxes narrow below [QuickConnectDigitWidth] when the dialog can't fit them all — a phone-width
  * `AlertDialog` is narrower than six full boxes — because a code the user has to scroll to read
  * defeats the point of showing it.
+ *
+ * To a screen reader it is **one** node, not one per box: six separate stops each holding a bare
+ * glyph is a code you have to assemble yourself from six swipes, with nothing saying what the digits
+ * are for (accessibility audit 2026-08-05, F3). The single description names it and spells the code
+ * out character by character — [spacedOutCode] — because a TTS engine reads "482913" as "four
+ * hundred and eighty-two thousand nine hundred and thirteen", which is not a code anybody can type.
  */
 @Composable
 private fun QuickConnectCodeRow(code: String) {
+    val description = stringResource(R.string.login_quick_connect_code_description, spacedOutCode(code))
     BoxWithConstraints(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         val count = code.length.coerceAtLeast(1)
         val fitWidth = (maxWidth - QuickConnectDigitGap * (count - 1)) / count
         val digitWidth = minOf(QuickConnectDigitWidth, fitWidth)
-        Row(horizontalArrangement = Arrangement.spacedBy(QuickConnectDigitGap)) {
+        Row(
+            modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+            horizontalArrangement = Arrangement.spacedBy(QuickConnectDigitGap),
+        ) {
             code.forEach { digit -> QuickConnectDigitBox(digit = digit, width = digitWidth) }
         }
     }
 }
+
+/**
+ * `"482913"` → `"4 8 2 9 1 3"`: the code as characters to be read one at a time.
+ *
+ * Spaces rather than any other separator because that is what every TTS engine already treats as a
+ * pause; a comma or hyphen would be spoken as itself in some locales. Whitespace inside the code is
+ * dropped rather than doubled — the server hands back a bare alphanumeric code, but a code with a
+ * stray space in it would otherwise be announced with a hole in the middle of it.
+ */
+internal fun spacedOutCode(code: String): String = code.filterNot { it.isWhitespace() }.toList().joinToString(" ")
 
 @Composable
 private fun QuickConnectDigitBox(

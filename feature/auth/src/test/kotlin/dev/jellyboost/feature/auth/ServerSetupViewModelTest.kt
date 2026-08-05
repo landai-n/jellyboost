@@ -205,6 +205,46 @@ class ServerSetupViewModelTest {
         }
 
     @Test
+    @DisplayName("the address field is inert while a probe is in flight")
+    fun addressCannotChangeMidProbe() =
+        runTest {
+            // The screen keeps the field *enabled* through the probe so a TalkBack user does not
+            // lose accessibility focus the instant they press Connect (audit 2026-08-05, F17);
+            // this is what makes "enabled" safe — the state cannot drift away from the address
+            // being resolved.
+            coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } coAnswers {
+                delay(PROBE_MILLIS)
+                AppResult.Success(RESOLVED)
+            }
+            val viewModel = viewModel()
+
+            viewModel.connectTo(ADDRESS)
+            viewModel.uiState.value.isConnecting shouldBe true
+
+            viewModel.onAddressChange("something.else")
+
+            viewModel.uiState.value.address shouldBe ADDRESS
+            advanceUntilIdle()
+        }
+
+    @Test
+    @DisplayName("the address field takes edits again once the probe has answered")
+    fun addressChangesAgainAfterTheProbe() =
+        runTest {
+            coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
+                AppResult.Failure(AppError.ServerResolution())
+            val viewModel = viewModel()
+
+            viewModel.connectTo(ADDRESS)
+            advanceUntilIdle()
+            viewModel.onAddressChange("something.else")
+
+            viewModel.uiState.value.address shouldBe "something.else"
+            // Editing after a failure also clears the failure, as it always did.
+            viewModel.uiState.value.error shouldBe null
+        }
+
+    @Test
     @DisplayName("a blank address never reaches the repository")
     fun blankAddressIsIgnored() =
         runTest {

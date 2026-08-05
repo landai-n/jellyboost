@@ -12,10 +12,28 @@
     <string name="badge_download_queued">Queued for download</string>
     <string name="badge_download_paused">Download paused</string>
     <string name="badge_download_failed">Download failed</string>
+    <!-- The in-flight badge is a ring with no glyph, so its percentage is spoken. -->
+    <string name="badge_downloading_progress">Downloading, %1$d%%</string>
 
     <!-- Media rows and cards -->
     <string name="media_row_see_all">See all</string>
+    <!-- Every row on a screen has a "See all"; this is what tells them apart out loud. -->
+    <string name="media_row_see_all_section">See all of %1$s</string>
     <string name="media_card_watched">Watched</string>
+
+    <!--
+      What a card announces before its title, so a list of results says what kind of thing each one
+      is. Containers ("folder") are deliberately absent: naming them says nothing a user needs.
+    -->
+    <string name="media_card_type_movie">Movie</string>
+    <string name="media_card_type_series">Series</string>
+    <string name="media_card_type_season">Season</string>
+    <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_library">Library</string>
+    <!-- Resume progress, which the card otherwise conveys only as a 3dp bar. -->
+    <string name="media_card_progress">%1$d%% watched</string>
+    <!-- A bare "8.0" is a number out of nowhere; the scale is half the fact. -->
+    <string name="media_card_rating">Rating %1$s out of 10</string>
 
     <!--
       How many items a library (or a filtered library grid) holds. One resource rather than one per
@@ -29,6 +47,10 @@
 
     <!-- Loading / empty / error states -->
     <string name="state_retry">Retry</string>
+    <!-- Spoken by the spinner a screen waits behind, which is otherwise silent. -->
+    <string name="state_loading">Loading</string>
+    <!-- Spoken state of a button whose action is in flight. -->
+    <string name="state_busy">Busy</string>
 
     <!-- Contextual action bar -->
     <plurals name="selection_count">
@@ -44,6 +66,8 @@
     <!-- Per-item indicator -->
     <string name="selection_item_selected">Selected</string>
     <string name="selection_item_not_selected">Not selected</string>
+    <!-- What a long press on a card does — announced as the gesture's label, not performed blind. -->
+    <string name="selection_enter">Select</string>
 
     <!-- Batch summaries -->
     <plurals name="selection_result_watched">

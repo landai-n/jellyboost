@@ -2,15 +2,12 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tv
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import dev.jellyboost.core.common.model.DownloadState
@@ -28,9 +25,18 @@ import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
  * Falls back through thumb → backdrop → primary artwork so a row never degrades into placeholders
  * just because a server has no dedicated thumb image.
  *
+ * Like [PosterCard], a clickable card is **one** merged semantics node with an authored description
+ * of the item — see [mediaCardSemantics].
+ *
+ * @param onClick what a tap does — or `null` when the card is *inside* something already clickable,
+ *   which is how `EpisodeRow` uses it. A nested clickable card was a second traversal stop offering
+ *   the row's own action, the first of the two announcing nothing but a title (accessibility audit
+ *   2026-08-05, A11Y-05); `null` draws exactly the same artwork with no click target and no
+ *   semantics at all, leaving the row to be the single node it should always have been.
  * @param width fixed card width, as a row of cards needs; [Dp.Unspecified] fills the available
  *   width instead, which is what an adaptive grid cell wants.
- * @param onLongClick offered by lists that support batch selection; `null` everywhere else.
+ * @param onLongClick offered by lists that support batch selection; `null` everywhere else. Ignored
+ *   when [onClick] is `null` — a card that does not answer a tap cannot claim a long press.
  * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork].
  * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. Formatted by the caller,
  *   which is the screen that owns the string resources ("S1 · E10", "22m left").
@@ -38,7 +44,7 @@ import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
 @Composable
 fun ThumbCard(
     item: JellyfinItem,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     width: Dp = Dimens.ThumbWidth,
     showTitle: Boolean = true,
@@ -48,21 +54,33 @@ fun ThumbCard(
     timeChipText: String? = null,
     ratingBadge: Float? = null,
 ) {
+    val description =
+        mediaCardDescription(
+            item = item,
+            badge = topStartBadge,
+            timeChipText = timeChipText,
+            ratingBadge = ratingBadge,
+        )
     Column(
         modifier =
             modifier
                 .cardWidth(width)
                 .then(
-                    if (onLongClick == null) {
-                        Modifier.clickable(onClick = onClick)
-                    } else {
-                        Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
+                    when {
+                        onClick == null -> Modifier.clearAndSetSemantics {}
+                        onLongClick == null ->
+                            mediaCardSemantics(description = description, selected = selected)
+                                .clickable(role = Role.Button, onClick = onClick)
+
+                        else ->
+                            mediaCardSemantics(description = description, selected = selected)
+                                .selectableCardClick(onClick = onClick, onLongClick = onLongClick)
                     },
                 ),
     ) {
         MediaCardArtwork(
             imageUrl = item.thumbImageUrl ?: item.backdropImageUrl ?: item.primaryImageUrl,
-            contentDescription = item.displayTitle,
+            contentDescription = null,
             aspectRatio = THUMB_ASPECT_RATIO,
             downloadState = item.downloadState,
             played = item.userData.played,
@@ -75,24 +93,7 @@ fun ThumbCard(
         )
 
         if (showTitle) {
-            Spacer(modifier = Modifier.height(CardTitleGap))
-            Text(
-                text = item.displayTitle,
-                style = CardTitleStyle,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            item.displaySubtitle?.let { subtitle ->
-                Spacer(modifier = Modifier.height(CardSubtitleGap))
-                Text(
-                    text = subtitle,
-                    style = CardSubtitleStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
         }
     }
 }

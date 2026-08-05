@@ -2,15 +2,11 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Movie
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import dev.jellyboost.core.common.model.DownloadState
@@ -41,6 +37,10 @@ import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
  * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. The card does not derive
  *   these from [item]: they are already-formatted strings, and formatting them takes string
  *   resources that belong to the screen showing the card rather than to `:core:ui`.
+ *
+ * The whole card is **one** semantics node with an authored description — type, untruncated title,
+ * subtitle, progress, rating, download and watched state — plus real `selected` semantics in
+ * selection mode. See [mediaCardSemantics] for why everything inside it is silenced.
  */
 @Composable
 fun PosterCard(
@@ -55,13 +55,21 @@ fun PosterCard(
     timeChipText: String? = null,
     ratingBadge: Float? = null,
 ) {
+    val description =
+        mediaCardDescription(
+            item = item,
+            badge = topStartBadge,
+            timeChipText = timeChipText,
+            ratingBadge = ratingBadge,
+        )
     Column(
         modifier =
             modifier
                 .cardWidth(width)
+                .then(mediaCardSemantics(description = description, selected = selected))
                 .then(
                     if (onLongClick == null) {
-                        Modifier.clickable(onClick = onClick)
+                        Modifier.clickable(role = Role.Button, onClick = onClick)
                     } else {
                         Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
                     },
@@ -69,7 +77,7 @@ fun PosterCard(
     ) {
         MediaCardArtwork(
             imageUrl = item.primaryImageUrl,
-            contentDescription = item.displayTitle,
+            contentDescription = null,
             aspectRatio = POSTER_ASPECT_RATIO,
             downloadState = item.downloadState,
             played = item.userData.played,
@@ -82,24 +90,7 @@ fun PosterCard(
         )
 
         if (showTitle) {
-            Spacer(modifier = Modifier.height(CardTitleGap))
-            Text(
-                text = item.displayTitle,
-                style = CardTitleStyle,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            item.displaySubtitle?.let { subtitle ->
-                Spacer(modifier = Modifier.height(CardSubtitleGap))
-                Text(
-                    text = subtitle,
-                    style = CardSubtitleStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
         }
     }
 }

@@ -22,6 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -97,13 +101,26 @@ fun SelectionAppBar(
             contentDescription = stringResource(R.string.selection_close),
             onClick = { onIntent(SelectionIntent.Clear) },
         )
+        val countLabel = pluralStringResource(R.plurals.selection_count, count, count)
         Text(
-            text = pluralStringResource(R.plurals.selection_count, count, count),
+            text = countLabel,
             style = SelectionCountLabel,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).padding(horizontal = Dimens.SpaceSmall),
+            // The count is the one thing this bar exists to report, and every tap on a card
+            // changes it. A polite live region is what turns "4 selected" from something you have
+            // to go and look for into something you are told (audit M5/A11Y-16); the description
+            // is the untruncated string, because at narrow widths the visible one ellipsizes to
+            // "4 sel…".
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .padding(horizontal = Dimens.SpaceSmall)
+                    .semantics {
+                        contentDescription = countLabel
+                        liveRegion = LiveRegionMode.Polite
+                    },
         )
         if (showSelectAll) {
             GlassIconButton(

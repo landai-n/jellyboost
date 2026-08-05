@@ -800,7 +800,19 @@ private const val MILLIS_PER_SECOND = 1_000L
 private const val SKIP_BACK_MS = 10_000L
 private const val SKIP_FORWARD_MS = 30_000L
 
-private val SCRIM = Color.Black.copy(alpha = 0.35f)
+/**
+ * The flat wash the whole control layer sits on.
+ *
+ * Sized by contrast, not by taste (accessibility audit 2026-08-05, CR-5). The worst case a scrim
+ * over video has to survive is a *white* frame, and black@35% only pulls that down to rgb(166),
+ * where the title read at 2.44:1 and the seek track at 1.23:1 — both under WCAG 1.4.3/1.4.11.
+ * Black@62% composites the same frame to rgb(97), where full-white text is 6.20:1 and every dimmed
+ * token below is sized against that one number. It is also the value the file's own
+ * [VIDEO_GLASS_FILL] already used for exactly this reason, so the wash and the glass on it now
+ * agree. A darker wash costs a little of the film while the controls are up; the controls are only
+ * up for four seconds at a time.
+ */
+private val SCRIM = Color.Black.copy(alpha = 0.62f)
 
 /**
  * The flat fill of every glass control drawn over the film — the same translucent dark the
@@ -819,7 +831,15 @@ private val TITLE_STYLE = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.W6
 
 private val SUBTITLE_STYLE = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500)
 
-private const val SUBTITLE_ALPHA = 0.7f
+/**
+ * How far the subtitle line is held off full white.
+ *
+ * The floor is contrast, not hierarchy: over [SCRIM]'s worst-case composite of rgb(97), white needs
+ * α ≥ 0.775 to clear 4.5:1 for 12sp text. 0.85 gives 5.03:1 with a little margin, and still reads a
+ * step behind the title (which is full white at 6.20:1). At the old 0.7-over-black@35% pairing this
+ * line was 1.92:1.
+ */
+private const val SUBTITLE_ALPHA = 0.85f
 
 /**
  * The tag's text colour, `#7FD8F5`.
@@ -868,13 +888,30 @@ private val CLOCK_STYLE =
         fontFeatureSettings = "tnum",
     )
 
-private const val CLOCK_DIM_ALPHA = 0.6f
+/**
+ * The clock's dim half — the total duration, against the full-white elapsed time.
+ *
+ * Same arithmetic as [SUBTITLE_ALPHA]: 12sp text needs 4.5:1, [SCRIM]'s worst case is rgb(97), so
+ * white needs α ≥ 0.775; 0.85 gives 5.03:1. The old 0.6 was 1.77:1 over the old scrim. The dim/full
+ * pairing survives because the *elapsed* half is full white — the difference is smaller than it was,
+ * which is the price of a number a viewer can actually read.
+ */
+private const val CLOCK_DIM_ALPHA = 0.85f
 
 private val TRACK_HEIGHT = 5.dp
 
-private val TRACK_COLOR = Color.White.copy(alpha = 0.2f)
+/**
+ * The scrubber's three bands are a UI component's own boundaries, so WCAG 1.4.11 asks 3:1 of each
+ * against what it sits on — over [SCRIM]'s worst-case rgb(97) composite, white needs α ≥ 0.527.
+ *
+ * The unplayed track at 0.55 is 3.12:1 and the buffered band at 0.80 is 4.67:1; against the old
+ * black@35% wash the same two were 1.23:1 and 1.38:1. The gap between them widened rather than
+ * narrowed while both were raised — 1.50:1 band-to-band, up from 1.12:1 — so "how much is in the
+ * buffer" is still legible at a glance, which is the whole reason the middle band exists.
+ */
+private val TRACK_COLOR = Color.White.copy(alpha = 0.55f)
 
-private val BUFFERED_COLOR = Color.White.copy(alpha = 0.32f)
+private val BUFFERED_COLOR = Color.White.copy(alpha = 0.8f)
 
 private val THUMB_SIZE = 14.dp
 

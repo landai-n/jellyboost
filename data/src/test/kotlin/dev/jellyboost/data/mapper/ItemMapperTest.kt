@@ -1,5 +1,6 @@
 package dev.jellyboost.data.mapper
 
+import dev.jellyboost.core.common.model.ArtistRef
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.PersonKind
@@ -102,7 +103,96 @@ class ItemMapperTest {
         typeOf(BaseItemKind.COLLECTION_FOLDER) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.USER_VIEW) shouldBe ItemType.COLLECTION_FOLDER
         typeOf(BaseItemKind.FOLDER) shouldBe ItemType.FOLDER
-        typeOf(BaseItemKind.AUDIO) shouldBe ItemType.UNKNOWN
+        // M13: the four music kinds get real mappings instead of collapsing into UNKNOWN.
+        typeOf(BaseItemKind.AUDIO) shouldBe ItemType.AUDIO
+        typeOf(BaseItemKind.MUSIC_ALBUM) shouldBe ItemType.MUSIC_ALBUM
+        typeOf(BaseItemKind.MUSIC_ARTIST) shouldBe ItemType.MUSIC_ARTIST
+        typeOf(BaseItemKind.PLAYLIST) shouldBe ItemType.PLAYLIST
+        // Audiobooks are out of M13's scope and still fold into UNKNOWN.
+        typeOf(BaseItemKind.AUDIO_BOOK) shouldBe ItemType.UNKNOWN
+    }
+
+    // ---- M13 Phase 1: music fields -------------------------------------------------------------
+
+    @Test
+    fun `maps a track's album and artist fields`() {
+        val artistId = UUID.fromString("55555555-5555-5555-5555-555555555555")
+        val albumArtistId = UUID.fromString("66666666-6666-6666-6666-666666666666")
+        val albumId = UUID.fromString("77777777-7777-7777-7777-777777777777")
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.AUDIO,
+                name = "Comfortably Numb",
+                album = "The Wall",
+                albumId = albumId,
+                albumArtist = "Pink Floyd",
+                artists = listOf("Pink Floyd"),
+                artistItems = listOf(NameGuidPair(name = "Pink Floyd", id = artistId)),
+                albumArtists = listOf(NameGuidPair(name = "Pink Floyd", id = albumArtistId)),
+                indexNumber = 6,
+                parentIndexNumber = 2,
+            )
+
+        val item = mapper.toDomain(dto)
+
+        item.type shouldBe ItemType.AUDIO
+        item.album shouldBe "The Wall"
+        item.albumId shouldBe albumId.toString()
+        item.albumArtist shouldBe "Pink Floyd"
+        item.artists shouldContainExactly listOf("Pink Floyd")
+        item.artistRefs shouldContainExactly listOf(ArtistRef(id = artistId.toString(), name = "Pink Floyd"))
+        // Track/disc numbers reuse the existing episode fields rather than new ones.
+        item.indexNumber shouldBe 6
+        item.parentIndexNumber shouldBe 2
+    }
+
+    @Test
+    fun `falls back to the album artists for a track's artist refs when it names none of its own`() {
+        val albumArtistId = UUID.fromString("88888888-8888-8888-8888-888888888888")
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.AUDIO,
+                artistItems = emptyList(),
+                albumArtists = listOf(NameGuidPair(name = "Pink Floyd", id = albumArtistId)),
+            )
+
+        mapper.toDomain(dto).artistRefs shouldContainExactly
+            listOf(ArtistRef(id = albumArtistId.toString(), name = "Pink Floyd"))
+    }
+
+    @Test
+    fun `an album's artist refs come from its own album artists`() {
+        val albumArtistId = UUID.fromString("99999999-9999-9999-9999-999999999998")
+        val dto =
+            BaseItemDto(
+                id = movieId,
+                type = BaseItemKind.MUSIC_ALBUM,
+                name = "The Wall",
+                albumArtists = listOf(NameGuidPair(name = "Pink Floyd", id = albumArtistId)),
+            )
+
+        mapper.toDomain(dto).artistRefs shouldContainExactly
+            listOf(ArtistRef(id = albumArtistId.toString(), name = "Pink Floyd"))
+    }
+
+    @Test
+    fun `leaves the music fields at their defaults for a non-music item`() {
+        val item = mapper.toDomain(BaseItemDto(id = movieId, type = BaseItemKind.MOVIE))
+
+        item.album.shouldBeNull()
+        item.albumId.shouldBeNull()
+        item.albumArtist.shouldBeNull()
+        item.artists.shouldBeEmpty()
+        item.artistRefs.shouldBeEmpty()
+    }
+
+    @Test
+    fun `maps CollectionType MUSIC onto CollectionKind MUSIC, still outside what a library query keeps`() {
+        CollectionType.MUSIC.toCollectionKind() shouldBe CollectionKind.MUSIC
+        // Recognised, but Phase 2 is what puts it in front of the user (docs/notes/music-m13-plan.md).
+        (CollectionKind.MUSIC in CollectionKind.SUPPORTED) shouldBe false
     }
 
     @Test

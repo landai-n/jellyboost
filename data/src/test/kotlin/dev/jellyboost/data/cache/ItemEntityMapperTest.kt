@@ -95,6 +95,60 @@ class ItemEntityMapperTest {
         row.seriesName shouldBe "Game of Thrones"
     }
 
+    // ---- M13 Phase 1: music query columns --------------------------------------------------------
+
+    @Test
+    fun `stores a track's album and album-artist ids as query-only columns`() {
+        val albumId = uuid(30)
+        val albumArtistId = uuid(31)
+        val dto =
+            BaseItemDto(
+                id = uuid(32),
+                type = BaseItemKind.AUDIO,
+                name = "Comfortably Numb",
+                albumId = albumId,
+                albumArtists = listOf(NameGuidPair(name = "Pink Floyd", id = albumArtistId)),
+            )
+
+        val row = mapper.toEntity(dto, ItemSource.DOWNLOAD, NOW)
+
+        row.albumId shouldBe albumId
+        row.albumArtistId shouldBe albumArtistId
+    }
+
+    @Test
+    fun `leaves the music query columns null for a non-music item`() {
+        val row = mapper.toEntity(movieDto(movieId, "Arrival"), ItemSource.DOWNLOAD, NOW)
+
+        row.albumId.shouldBeNull()
+        row.albumArtistId.shouldBeNull()
+    }
+
+    @Test
+    fun `a restored track carries the same album fields the online mapper would produce`() {
+        val albumId = uuid(33)
+        val albumArtistId = uuid(34)
+        val dto =
+            BaseItemDto(
+                id = uuid(35),
+                type = BaseItemKind.AUDIO,
+                name = "Comfortably Numb",
+                album = "The Wall",
+                albumId = albumId,
+                albumArtist = "Pink Floyd",
+                artists = listOf("Pink Floyd"),
+                albumArtists = listOf(NameGuidPair(name = "Pink Floyd", id = albumArtistId)),
+            )
+
+        val restored = mapper.toDomainOrNull(mapper.toEntity(dto, ItemSource.DOWNLOAD, NOW))
+
+        restored.shouldNotBeNull()
+        restored shouldBe ItemMapper(FakeImageUrlFactory()).toDomain(dto)
+        restored.album shouldBe "The Wall"
+        restored.albumId shouldBe albumId.toString()
+        restored.albumArtist shouldBe "Pink Floyd"
+    }
+
     // ---- structured columns -------------------------------------------------------------------
 
     @Test

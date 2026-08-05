@@ -87,6 +87,8 @@ class ItemEntityMapper
                 thumbImageTag = dto.imageTags?.get(ImageType.THUMB),
                 logoImageTag = dto.imageTags?.get(ImageType.LOGO),
                 primaryImageAspectRatio = dto.primaryImageAspectRatio,
+                albumId = dto.albumId,
+                albumArtistId = dto.albumArtists?.firstOrNull()?.id,
                 dto = json.encodeToString(BaseItemDto.serializer(), dto),
             )
 

@@ -24,9 +24,12 @@ data class JellyfinItem(
     val communityRating: Float? = null,
     val officialRating: String? = null,
     val genres: List<String> = emptyList(),
-    /** Episode number within its season, or a movie's position in a box set. */
+    /**
+     * Episode number within its season, or a movie's position in a box set. Doubles as a track's
+     * position within its disc (M13) — Jellyfin numbers tracks the same way it numbers episodes.
+     */
     val indexNumber: Int? = null,
-    /** Season number for an episode. */
+    /** Season number for an episode. Doubles as a track's disc number (M13). */
     val parentIndexNumber: Int? = null,
     val seriesId: String? = null,
     val seriesName: String? = null,
@@ -63,6 +66,16 @@ data class JellyfinItem(
      * opened right now. The offline repository sets this instead of throwing.
      */
     val available: Boolean = true,
+    /** The album a track belongs to. Music only (M13). */
+    val album: String? = null,
+    /** Id of the album a track belongs to. Music only (M13). */
+    val albumId: String? = null,
+    /** The album's artist, as display text. Music only (M13). */
+    val albumArtist: String? = null,
+    /** Every performing artist, as display text — a track or album may credit more than one. */
+    val artists: List<String> = emptyList(),
+    /** Navigable references to the performing artists, for tapping through to an artist page. */
+    val artistRefs: List<ArtistRef> = emptyList(),
 ) {
     /**
      * Headline shown on a card: episodes lead with the series they belong to, everything else
@@ -73,6 +86,7 @@ data class JellyfinItem(
 
     /**
      * Second line on a card: `S1:E4 · Episode title` for episodes, the production year otherwise.
+     * A track's subtitle is its performing artists (M13); an album's is `albumArtist · year`.
      *
      * **Not the drawing surfaces' form — see [episodeLabel] for what still reads this and why.**
      */
@@ -81,6 +95,9 @@ data class JellyfinItem(
             when (type) {
                 ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(Separators.DOT).ifEmpty { null }
                 ItemType.SEASON -> seriesName
+                ItemType.AUDIO -> artists.joinToString(", ").ifEmpty { null }
+                ItemType.MUSIC_ALBUM ->
+                    listOfNotNull(albumArtist, productionYear?.toString()).joinToString(" · ").ifEmpty { null }
                 else -> productionYear?.toString()
             }
 

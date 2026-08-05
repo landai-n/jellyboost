@@ -86,6 +86,8 @@ enum class ItemSource {
         Index(value = ["parentId"]),
         Index(value = ["seriesId"]),
         Index(value = ["seasonId"]),
+        Index(value = ["albumId"]),
+        Index(value = ["albumArtistId"]),
     ],
 )
 data class ItemEntity(
@@ -115,6 +117,14 @@ data class ItemEntity(
     val thumbImageTag: String? = null,
     val logoImageTag: String? = null,
     val primaryImageAspectRatio: Double? = null,
+    /**
+     * The album a track belongs to (M13). Query-only, like [albumArtistId] below: it exists so an
+     * offline "tracks of this album, in order" query can filter and sort in SQL, but a domain item
+     * still rebuilds from [dto] like everything else — there is no shortcut back the other way.
+     */
+    val albumId: UUID? = null,
+    /** The id of a track's album's artist, or an album's own artist (M13). Query-only, see [albumId]. */
+    val albumArtistId: UUID? = null,
     /** The complete `BaseItemDto` as JSON — the only thing a domain item is rebuilt from. */
     val dto: String,
 )

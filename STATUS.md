@@ -63,6 +63,20 @@ entries logged (CAST-06 unsigned poster, NET-03 sign-out ordering, PlayerViewMod
 `LargeClass` suppression). Full gate green post-merge. **Owed:** a device sanity walk of
 SyncPlay + cast + downloads happy paths on the test tablet.
 
+## Sign-out vs unreachable server (2026-08-05 — landed, gate green)
+
+User-reported: the Settings "Disconnect" button did nothing when the server was
+unreachable. Two compounding defects: the sign-out ran in `viewModelScope`, so popping
+Settings during the silent 6–30 s OkHttp wait on `reportSessionEnded` cancelled it between
+token revocation and the credential wipe (user stayed signed in against a dead session);
+and nothing capped or surfaced that wait. Fixed: `SessionRepository.signOut()` runs as an
+`@ApplicationScope` job the caller merely joins, the server goodbye (hooks + session-ended
+report) is capped at `SERVER_GOODBYE_TIMEOUT` (5 s), the ViewModel launches the
+delete-downloads prelude + sign-out in the same app scope, and the sign-out pill shows a
+spinner and stops taking taps while in flight. +5 unit tests (caller-cancellation,
+hung-server, hung-hook, popped-screen, busy-flag). Docs: features/settings.md ("A sign-out
+the screen cannot lose"), features/auth.md, ARCHITECTURE.md.
+
 ## Phone-size polish pass (2026-07-31 — DONE, device-verified both ways)
 
 User-requested, outside M9's tablet-only scope (task-level + per-fix DECISIONS entries).

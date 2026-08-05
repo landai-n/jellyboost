@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.settings
 
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
@@ -20,11 +21,15 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -355,6 +360,50 @@ class SettingsViewModelTest {
             }
         }
 
+    /**
+     * The bug this is here to keep fixed: sign-out used to run in `viewModelScope`, and the network
+     * goodbye inside it takes seconds against an unreachable server. Leaving Settings during that
+     * wait cleared the ViewModel, cancelled the coroutine somewhere between the deletes and the
+     * credential wipe, and left the user signed in with nothing on screen to say so.
+     *
+     * Cancelling `viewModelScope` is what "the screen was popped" looks like from here, and the
+     * dispatcher is `Standard`, so nothing has run yet when it happens.
+     */
+    @Test
+    fun `a screen popped mid sign-out does not take the sign-out with it`() =
+        runTest(dispatcher) {
+            items.value = listOf(item("1"))
+            val model = viewModel()
+
+            model.signOut(deleteDownloads = true)
+            model.viewModelScope.cancel()
+            advanceUntilIdle()
+
+            coVerifyOrder {
+                downloads.delete("1")
+                sessionRepository.signOut()
+            }
+        }
+
+    @Test
+    fun `the sign-out button reports itself busy as soon as it is asked, and stays that way`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+
+            model.uiState.test {
+                awaitItem().signingOut shouldBe false
+
+                model.signOut(deleteDownloads = false)
+
+                awaitItem().signingOut shouldBe true
+                // Never lowered again: the session flipping to LoggedOut navigates off this screen,
+                // so putting the button back would only ever flash an enabled control on the way out.
+                advanceUntilIdle()
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     // ---- a collapsed projection (audit STAB-10) --------------------------------------------------
 
     /**
@@ -404,11 +453,19 @@ class SettingsViewModelTest {
 
     // ---- helpers ----------------------------------------------------------------------------------
 
-    private fun viewModel() =
+    /**
+     * The ViewModel under test.
+     *
+     * Its `@ApplicationScope` stand-in is a [SupervisorJob] on the suite's scheduler that belongs to
+     * no coroutine — nothing cancels it, which is the entire point of sign-out no longer using
+     * `viewModelScope`. Not `runTest`'s `backgroundScope`, whose work `advanceUntilIdle` skips.
+     */
+    private fun TestScope.viewModel() =
         SettingsViewModel(
             appPreferences = appPreferences,
             sessionRepository = sessionRepository,
             downloads = downloads,
+            appScope = CoroutineScope(StandardTestDispatcher(testScheduler) + SupervisorJob()),
         )
 
     private fun volumeOption(id: String) =

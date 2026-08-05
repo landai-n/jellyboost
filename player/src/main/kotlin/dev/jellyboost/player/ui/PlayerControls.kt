@@ -51,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -252,9 +253,14 @@ private fun TitleStack(
 @Composable
 private fun TagPill(text: String) {
     val primary = MaterialTheme.colorScheme.primary
+    // From the configuration rather than `Locale.getDefault()`: the latter is read once and never
+    // observed, so a pill composed before the user switches the app's language would keep casing
+    // its word by the old locale's rules — which for Turkish is the difference between "TITLE" and
+    // "TİTLE". Lint calls this `NonObservableLocale`; it is an error in this project.
+    val locale = LocalConfiguration.current.locales[0]
 
     Text(
-        text = text.uppercase(Locale.getDefault()),
+        text = text.uppercase(locale),
         style = TAG_STYLE,
         color = TAG_TEXT,
         maxLines = 1,

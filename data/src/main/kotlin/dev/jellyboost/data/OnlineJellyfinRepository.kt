@@ -418,6 +418,14 @@ internal class OnlineJellyfinRepository
              * `:data` already maps query types through, rather than a second hand-written
              * `BaseItemKind` pair: the grid a tile opens must not report a different total than the
              * tile did, and `:data` cannot depend on `:feature:library` to share its list directly.
+             *
+             * **Not yet extended with `AUDIO`/`MUSIC_ALBUM`** (M13 Phase 1 scope note,
+             * docs/notes/music-m13-plan.md item 8): `CollectionKind.MUSIC` is not in
+             * [dev.jellyboost.core.common.model.CollectionKind.SUPPORTED] yet, so this is never
+             * called for a music library in Phase 1 — nothing here needs the two extra kinds until
+             * Phase 2 flips that switch, and `OnlineJellyfinRepositoryTest` pins the exact
+             * `includeItemTypes` a movie/TV count request sends. Phase 2 extends
+             * [ItemType.LIBRARY_TILE_TYPES] alongside the `SUPPORTED` flip.
              */
             val LIBRARY_COUNT_TYPES = ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() }
 

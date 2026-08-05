@@ -32,7 +32,14 @@ enum class CollectionKind {
     MOVIES,
     TVSHOWS,
 
-    /** Music, live TV, photos, … — recognised but not shown in v1. */
+    /**
+     * A music library. Recognised from M13 Phase 1 onward but deliberately **not** in [SUPPORTED]
+     * yet — it joins in M13 Phase 2, once there is a music UI for it to open onto
+     * (docs/notes/music-m13-plan.md).
+     */
+    MUSIC,
+
+    /** Live TV, photos, … — recognised but not shown in v1. */
     OTHER,
     ;
 

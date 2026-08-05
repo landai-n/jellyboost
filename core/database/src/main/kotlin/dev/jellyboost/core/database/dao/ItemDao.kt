@@ -270,6 +270,47 @@ interface ItemDao {
         episodeType: ItemType,
     ): List<ItemEntity>
 
+    // ---- M13 Phase 1 — music query columns ------------------------------------------------------
+
+    /**
+     * A downloaded album's tracks, in disc/track order.
+     *
+     * Matches [episodesOfSeason]'s shape: `albumId` is the M13 query-only column
+     * ([dev.jellyboost.core.database.entities.ItemEntity.albumId]), and disc-then-track is the
+     * same `parentIndexNumber`/`indexNumber` pair an episode's season/episode numbers reuse.
+     */
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE source = :source AND type = :audioType AND albumId = :albumId
+        ORDER BY parentIndexNumber ASC, indexNumber ASC, sortName COLLATE NOCASE ASC
+        """,
+    )
+    suspend fun tracksOfAlbum(
+        source: ItemSource,
+        albumId: UUID,
+        audioType: ItemType,
+    ): List<ItemEntity>
+
+    /**
+     * A downloaded artist's albums, newest first.
+     *
+     * `albumArtistId` is the M13 query-only column
+     * ([dev.jellyboost.core.database.entities.ItemEntity.albumArtistId]).
+     */
+    @Query(
+        """
+        SELECT * FROM items
+        WHERE source = :source AND type = :albumType AND albumArtistId = :artistId
+        ORDER BY productionYear DESC, sortName COLLATE NOCASE ASC
+        """,
+    )
+    suspend fun albumsOfArtist(
+        source: ItemSource,
+        artistId: UUID,
+        albumType: ItemType,
+    ): List<ItemEntity>
+
     /**
      * Every downloaded row of the given types, as the three columns the offline filter sheet's
      * facets are built from — and nothing else.

@@ -61,6 +61,10 @@ internal fun ItemType.toBaseItemKind(): BaseItemKind? =
         ItemType.SERIES -> BaseItemKind.SERIES
         ItemType.SEASON -> BaseItemKind.SEASON
         ItemType.EPISODE -> BaseItemKind.EPISODE
+        ItemType.AUDIO -> BaseItemKind.AUDIO
+        ItemType.MUSIC_ALBUM -> BaseItemKind.MUSIC_ALBUM
+        ItemType.MUSIC_ARTIST -> BaseItemKind.MUSIC_ARTIST
+        ItemType.PLAYLIST -> BaseItemKind.PLAYLIST
         ItemType.COLLECTION_FOLDER -> BaseItemKind.COLLECTION_FOLDER
         ItemType.FOLDER -> BaseItemKind.FOLDER
         ItemType.UNKNOWN -> null

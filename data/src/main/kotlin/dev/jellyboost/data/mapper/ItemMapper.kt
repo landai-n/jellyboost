@@ -1,5 +1,6 @@
 package dev.jellyboost.data.mapper
 
+import dev.jellyboost.core.common.model.ArtistRef
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
@@ -13,6 +14,7 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.BaseItemPerson
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ImageType
+import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -70,6 +72,15 @@ internal class ItemMapper
                 people = dto.people.orEmpty().map { it.toDomain() },
                 sizeBytes = dto.mediaSources?.firstOrNull()?.size,
                 userData = dto.userData.toDomain(),
+                // Music fields (M13). A non-music item simply carries none of these on its DTO,
+                // which maps straight onto the domain defaults.
+                album = dto.album,
+                albumId = dto.albumId?.toString(),
+                albumArtist = dto.albumArtists?.firstOrNull()?.name,
+                artists = dto.artists.orEmpty(),
+                // A track's own `artistItems` first; an album has none of its own, so it falls
+                // back to its `albumArtists` (docs/notes/music-m13-plan.md, decision 5).
+                artistRefs = (dto.artistItems?.takeIf { it.isNotEmpty() } ?: dto.albumArtists).toArtistRefs(),
             )
 
         /** Maps a list of items, preserving server order (the rows are already sorted server-side). */
@@ -169,9 +180,21 @@ internal fun BaseItemKind.toItemType(): ItemType =
         BaseItemKind.SERIES -> ItemType.SERIES
         BaseItemKind.SEASON -> ItemType.SEASON
         BaseItemKind.EPISODE -> ItemType.EPISODE
+        BaseItemKind.AUDIO -> ItemType.AUDIO
+        BaseItemKind.MUSIC_ALBUM -> ItemType.MUSIC_ALBUM
+        BaseItemKind.MUSIC_ARTIST -> ItemType.MUSIC_ARTIST
+        BaseItemKind.PLAYLIST -> ItemType.PLAYLIST
         BaseItemKind.COLLECTION_FOLDER, BaseItemKind.USER_VIEW -> ItemType.COLLECTION_FOLDER
         BaseItemKind.FOLDER -> ItemType.FOLDER
+        // AUDIO_BOOK stays UNKNOWN: audiobooks are out of M13's scope (docs/notes/music-m13-plan.md).
         else -> ItemType.UNKNOWN
+    }
+
+/** Maps `NameGuidPair`s (`artistItems`/`albumArtists`) onto navigable [ArtistRef]s. */
+private fun List<NameGuidPair>?.toArtistRefs(): List<ArtistRef> =
+    this.orEmpty().mapNotNull { pair ->
+        val name = pair.name?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+        ArtistRef(id = pair.id.toString(), name = name)
     }
 
 private fun SdkPersonKind?.toPersonKind(): PersonKind =
@@ -185,10 +208,14 @@ private fun SdkPersonKind?.toPersonKind(): PersonKind =
         else -> PersonKind.OTHER
     }
 
-private fun CollectionType?.toCollectionKind(): CollectionKind =
+/** Internal so it is directly unit-testable, matching [toItemType]. */
+internal fun CollectionType?.toCollectionKind(): CollectionKind =
     when (this) {
         CollectionType.MOVIES -> CollectionKind.MOVIES
         CollectionType.TVSHOWS -> CollectionKind.TVSHOWS
+        // Recognised from M13 Phase 1, but CollectionKind.MUSIC is not in SUPPORTED yet — see its
+        // KDoc — so toLibraryView still drops it before it reaches the DB or UI.
+        CollectionType.MUSIC -> CollectionKind.MUSIC
         else -> CollectionKind.OTHER
     }
 

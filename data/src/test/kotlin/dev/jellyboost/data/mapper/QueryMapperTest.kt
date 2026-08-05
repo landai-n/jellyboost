@@ -139,6 +139,14 @@ class QueryMapperTest {
     }
 
     @Test
+    fun `maps the four M13 music item types`() {
+        ItemType.AUDIO.toBaseItemKind() shouldBe BaseItemKind.AUDIO
+        ItemType.MUSIC_ALBUM.toBaseItemKind() shouldBe BaseItemKind.MUSIC_ALBUM
+        ItemType.MUSIC_ARTIST.toBaseItemKind() shouldBe BaseItemKind.MUSIC_ARTIST
+        ItemType.PLAYLIST.toBaseItemKind() shouldBe BaseItemKind.PLAYLIST
+    }
+
+    @Test
     fun `maps the sort direction`() {
         SortOrder.ASCENDING.toSdk() shouldBe SdkSortOrder.ASCENDING
         SortOrder.DESCENDING.toSdk() shouldBe SdkSortOrder.DESCENDING

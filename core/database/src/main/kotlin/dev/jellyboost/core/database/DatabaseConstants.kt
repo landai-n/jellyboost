@@ -26,6 +26,8 @@ object DatabaseConstants {
      *   served (`source`, `cachedAt`, `sortName`); `downloads` gains `(seriesName, quality)`. By
      *   `@AutoMigration(8, 9)` — see `ItemEntity` for the query plans (audit 2026-08-08,
      *   PERF-3/4/23/24).
+     * - v10 — M13 music query columns (`items.albumId`, `items.albumArtistId`, both nullable and
+     *   indexed), by `@AutoMigration(9, 10)`.
      */
-    const val DATABASE_VERSION = 9
+    const val DATABASE_VERSION = 10
 }

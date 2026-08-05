@@ -244,14 +244,21 @@ private fun GestureIndicatorOverlay(
     }
 }
 
-/** Current media volume as `0f..1f`, or `0f` when there is no audio service to ask. */
-private fun AudioManager?.volumeFraction(): Float {
+/**
+ * Current media volume as `0f..1f`, or `0f` when there is no audio service to ask.
+ *
+ * `internal` since the accessibility pass: the Display sheet (`PlayerSheets`) is the non-gesture way
+ * to the same two levels (audit CR-8), and it has to move *the same* volume and *the same* window
+ * brightness the swipes do — a second implementation would be a second set of rounding rules and a
+ * second place for the brightness override to leak out of.
+ */
+internal fun AudioManager?.volumeFraction(): Float {
     val manager = this ?: return 0f
     val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     return if (max <= 0) 0f else manager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / max
 }
 
-private fun AudioManager?.setVolumeFraction(fraction: Float) {
+internal fun AudioManager?.setVolumeFraction(fraction: Float) {
     val manager = this ?: return
     val max = manager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     manager.setStreamVolume(AudioManager.STREAM_MUSIC, (fraction * max).roundToInt().coerceIn(0, max), 0)
@@ -264,7 +271,7 @@ private fun AudioManager?.setVolumeFraction(fraction: Float) {
  * not a brightness — starting a swipe from it would jump the screen to full dark. The system
  * setting is read once to seed the gesture instead.
  */
-private fun Activity?.brightnessFraction(): Float {
+internal fun Activity?.brightnessFraction(): Float {
     val activity = this ?: return DEFAULT_BRIGHTNESS
     val attribute = activity.window.attributes.screenBrightness
     if (attribute in 0f..1f) return attribute
@@ -286,7 +293,7 @@ private fun Activity?.brightnessFraction(): Float {
  * `ImmersiveLandscapeEffect` in `PlayerScreen` captures the previous override and restores it when
  * the player leaves (audit PC-02); a film watched dimmed must not leave the whole app dark.
  */
-private fun Activity?.setBrightnessFraction(fraction: Float) {
+internal fun Activity?.setBrightnessFraction(fraction: Float) {
     val window = this?.window ?: return
     window.attributes =
         WindowManager.LayoutParams().apply {
@@ -305,7 +312,10 @@ private val INDICATOR_BAR_WIDTH = 140.dp
 private const val INDICATOR_LINGER_MS = 900L
 private const val OVERLAY_ALPHA = 0.6f
 private const val TRACK_ALPHA = 0.3f
-private const val PERCENT = 100f
+
+/** Shared with the Display sheet, so a swipe and a slider report the same level the same way. */
+internal const val PERCENT = 100f
+
 private const val DEFAULT_BRIGHTNESS = 0.5f
 private const val SYSTEM_BRIGHTNESS_MAX = 255f
 

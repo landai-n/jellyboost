@@ -51,6 +51,16 @@
     <string name="player_quality">Quality</string>
     <string name="player_speed">Speed</string>
 
+    <!--
+      The Display sheet: brightness and volume as controls rather than as vertical swipes, which
+      touch exploration, a switch device and a keyboard all have no way to perform (audit CR-8).
+    -->
+    <string name="player_display">Display</string>
+    <string name="player_brightness">Brightness</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d percent</string>
+    <string name="player_done">Done</string>
+
     <string name="player_skip_intro">Skip intro</string>
     <string name="player_skip_outro">Skip outro</string>
 

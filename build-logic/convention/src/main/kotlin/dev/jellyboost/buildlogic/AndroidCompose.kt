@@ -17,7 +17,14 @@ internal fun Project.configureAndroidCompose(commonExtension: CommonExtension) {
         add("implementation", bom)
         add("implementation", libs.findBundle("compose").get())
         add("androidTestImplementation", bom)
+        // The instrumented accessibility suite (accessibility audit 2026-08-05, CR-7): Compose's
+        // own test rule, plus the Accessibility Test Framework it runs against the semantics tree.
+        add("androidTestImplementation", libs.findBundle("compose-ui-test").get())
         add("debugImplementation", libs.findLibrary("androidx-compose-ui-tooling").get())
+        // Debug, not androidTest: this artifact contributes the bare `ComponentActivity` that
+        // `createAndroidComposeRule` launches, and a manifest entry has to be in the app under
+        // test rather than in the test APK.
+        add("debugImplementation", libs.findLibrary("androidx-compose-ui-test-manifest").get())
     }
 
     configureComposeCompilerMetrics()

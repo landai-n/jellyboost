@@ -1,0 +1,98 @@
+package dev.jellyboost.core.ui.component
+
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.jellyboost.core.ui.R
+import dev.jellyboost.core.ui.a11y.AccessibilityChecks
+import dev.jellyboost.core.ui.theme.JellyfinTheme
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * The states that used to be silent (accessibility audit 2026-08-05, CR-3).
+ *
+ * A screen swapping its content for a spinner, an error or an empty panel destroys the node a
+ * screen-reader user was standing on. Before the audit nothing announced the replacement, so the
+ * reader simply landed nowhere. These pin that the announcement exists, that its urgency is the one
+ * the caller asked for, and — the part that is easy to break by moving one modifier — that the
+ * Retry button stays a node of its own rather than being swallowed into the sentence.
+ */
+@RunWith(AndroidJUnit4::class)
+class StateViewsA11yTest {
+    @get:Rule
+    val rule = createAndroidComposeRule<ComponentActivity>()
+
+    private val checks by lazy { AccessibilityChecks(rule) }
+
+    @Before
+    fun enableAccessibilityChecks() {
+        checks.install()
+    }
+
+    @Test
+    fun theLoadingSpinnerIsAPoliteLiveRegionWithAName() {
+        rule.setContent { JellyfinTheme { LoadingState() } }
+
+        val loading = rule.activity.getString(R.string.state_loading)
+        val node = rule.onNodeWithContentDescription(loading).fetchSemanticsNode()
+        assertEquals(LiveRegionMode.Polite, node.config[SemanticsProperties.LiveRegion])
+        checks.assertClean()
+    }
+
+    @Test
+    fun anErrorStateAnnouncesAssertivelyWhenAskedTo() {
+        rule.setContent {
+            JellyfinTheme {
+                ErrorState(message = MESSAGE, onRetry = {}, announce = LiveRegionMode.Assertive)
+            }
+        }
+
+        val node = rule.onNodeWithText(MESSAGE).fetchSemanticsNode()
+        assertEquals(LiveRegionMode.Assertive, node.config[SemanticsProperties.LiveRegion])
+    }
+
+    @Test
+    fun aStateViewStaysSilentByDefault() {
+        // The default matters: search draws its own announcement in wave 4a, and a state view that
+        // announced unconditionally would make that screen say the same sentence twice.
+        rule.setContent { JellyfinTheme { EmptyState(message = MESSAGE) } }
+
+        val node = rule.onNodeWithText(MESSAGE).fetchSemanticsNode()
+        assertNull(node.config.getOrNull(SemanticsProperties.LiveRegion))
+    }
+
+    @Test
+    fun theRetryButtonIsItsOwnNodeOutsideTheAnnouncement() {
+        rule.setContent {
+            JellyfinTheme {
+                ErrorState(message = MESSAGE, onRetry = {}, announce = LiveRegionMode.Assertive)
+            }
+        }
+
+        val retry = rule.activity.getString(R.string.state_retry)
+        rule.onNodeWithText(retry).assertIsDisplayed()
+        rule.onNode(hasClickAction()).assertIsDisplayed()
+        // The message node carries the live region and no click action of its own — if the panel
+        // had taken the live region instead, this text node would have swallowed the button.
+        val message = rule.onNodeWithText(MESSAGE).fetchSemanticsNode().config
+        assertNull(message.getOrNull(SemanticsActions.OnClick))
+        checks.assertClean()
+    }
+
+    private companion object {
+        const val MESSAGE = "Could not reach the server."
+    }
+}

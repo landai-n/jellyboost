@@ -180,6 +180,14 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    // The instrumented accessibility suite (accessibility audit 2026-08-05, CR-7). Repeated here
+    // rather than inherited because `:app` applies the Compose plugin directly instead of through
+    // the convention that gives every other Compose module these — same reason the Compose
+    // compiler-metrics block above is duplicated.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.bundles.compose.ui.test)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     implementation(libs.androidx.activity.compose)
     // M12 Chromecast, both for the cast button and for it alone (DECISIONS.md 2026-07-31):
     // MediaRouter's chooser dialog is a DialogFragment hosted by the activity — hence

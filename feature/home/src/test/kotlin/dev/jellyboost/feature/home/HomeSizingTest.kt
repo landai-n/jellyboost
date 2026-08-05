@@ -139,4 +139,125 @@ class HomeSizingTest {
         compactHeroShowsSecondary(heroHeight(wide = false, viewportHeight = 640.dp)) shouldBe true
         compactHeroShowsSecondary(heroHeight(wide = false, viewportHeight = 800.dp)) shouldBe true
     }
+
+    // ---- accessibility font scales (audit A11Y-16) -------------------------------------------
+    //
+    // Every threshold above was calibrated at font scale 1.0 and compared dp against text; these
+    // pin that the default scale is unchanged to the pixel *and* that a banner asked to hold twice
+    // as much text either grows or sheds, rather than clipping the copy and the buttons.
+
+    @Test
+    fun `nothing about the default font scale changed`() {
+        listOf(360.dp, 640.dp, 800.dp, 1138.dp).forEach { viewport ->
+            heroHeight(wide = false, viewportHeight = viewport, fontScale = 1f) shouldBe
+                heroHeight(wide = false, viewportHeight = viewport)
+            heroHeight(wide = true, viewportHeight = viewport, fontScale = 1f) shouldBe
+                heroHeight(wide = true, viewportHeight = viewport)
+        }
+        // The one boundary the compact shed was calibrated on, held exactly.
+        compactHeroShowsSecondary(260.dp, fontScale = 1f) shouldBe true
+        compactHeroShowsSecondary(259.dp, fontScale = 1f) shouldBe false
+    }
+
+    @Test
+    fun `a font scale below one never shrinks the banner`() {
+        // Android does not offer one today, and a hero smaller than the mocks' is nobody's fix.
+        heroHeight(wide = false, viewportHeight = 800.dp, fontScale = 0.85f) shouldBe 460.dp
+        compactHeroShowsSecondary(260.dp, fontScale = 0.85f) shouldBe true
+    }
+
+    @Test
+    fun `a roomy phone grows its banner with the text in it`() {
+        // 460dp of banner plus the 155dp its lockup's text gains at 2.0x, under the relaxed
+        // ceiling (0.75 x 800 = 600dp).
+        heroHeight(wide = false, viewportHeight = 800.dp, fontScale = 2f).value shouldBe
+            (600f plusOrMinus TOLERANCE)
+        heroHeight(wide = false, viewportHeight = 800.dp, fontScale = 1.5f).value shouldBe
+            (537.5f plusOrMinus TOLERANCE)
+    }
+
+    @Test
+    fun `a grown banner still holds the whole compact lockup at 2x`() {
+        val banner = heroHeight(wide = false, viewportHeight = 800.dp, fontScale = 2f)
+
+        compactHeroShowsSecondary(banner, fontScale = 2f) shouldBe true
+        compactHeroTitleMaxLines(banner, fontScale = 2f) shouldBe 2
+    }
+
+    @Test
+    fun `a phone in landscape at 2x sheds the secondary lines and the title's second line`() {
+        // 360dp of viewport: even the relaxed ceiling only affords a 270dp banner, and the
+        // condensed lockup with a two-line 34sp title wants 300dp at 2.0x.
+        val banner = heroHeight(wide = false, viewportHeight = 360.dp, fontScale = 2f)
+
+        banner.value shouldBe (270f plusOrMinus TOLERANCE)
+        compactHeroShowsSecondary(banner, fontScale = 2f) shouldBe false
+        compactHeroTitleMaxLines(banner, fontScale = 2f) shouldBe 1
+        // …and at the default scale that same window keeps both lines of the title.
+        compactHeroTitleMaxLines(heroHeight(wide = false, viewportHeight = 360.dp)) shouldBe 2
+    }
+
+    @Test
+    fun `the wide hero keeps everything at the default scale, at every banner height it is drawn at`() {
+        // The mocks' 400dp banner and everything the height cap produces on a window tall enough
+        // to be the wide shape at all (>= 560dp of viewport, so >= 360dp of banner).
+        listOf(360.dp, 400.dp, 460.dp).forEach { banner ->
+            wideHeroShowsSecondary(banner) shouldBe true
+            wideHeroTitleMaxLines(banner) shouldBe 2
+        }
+    }
+
+    @Test
+    fun `the shortest wide banner there is sheds its secondary lines instead of clipping a button`() {
+        // A 560dp-tall window is the shortest `isWideHome` accepts, and its 336dp banner leaves a
+        // 200dp copy band — 10dp short of the 211dp the full lockup wants at font scale 1.0, which
+        // until now was 10dp taken out of the bottom of the resume button by `clipToBounds`. This
+        // is the one place the wide shape's new shedding bites at the default font scale.
+        val banner = heroHeight(wide = true, viewportHeight = 560.dp)
+
+        banner.value shouldBe (336f plusOrMinus TOLERANCE)
+        wideHeroShowsSecondary(banner) shouldBe false
+        wideHeroTitleMaxLines(banner) shouldBe 2
+    }
+
+    @Test
+    fun `a tablet in portrait grows the wide banner enough to keep the whole lockup at 2x`() {
+        val banner = heroHeight(wide = true, viewportHeight = 1138.dp, fontScale = 2f)
+
+        banner.value shouldBe (575f plusOrMinus TOLERANCE)
+        wideHeroShowsSecondary(banner, fontScale = 2f) shouldBe true
+        wideHeroTitleMaxLines(banner, fontScale = 2f) shouldBe 2
+    }
+
+    @Test
+    fun `a tablet in landscape at 2x sheds the wide lockup's secondary lines rather than its buttons`() {
+        // 711dp of viewport caps the banner at 533dp, whose copy band is 381dp — short of the
+        // 386dp the full lockup wants at 2.0x, and comfortably over the 300dp the condensed one
+        // needs. Shedding is what keeps the resume button inside the banner (DECISIONS.md
+        // 2026-08-01, "the wide hero's copy is height-bounded").
+        val banner = heroHeight(wide = true, viewportHeight = 711.dp, fontScale = 2f)
+
+        wideHeroShowsSecondary(banner, fontScale = 2f) shouldBe false
+        wideHeroTitleMaxLines(banner, fontScale = 2f) shouldBe 2
+        (wideHeroCopyHeight(banner).value >= WIDE_CONDENSED_LOCKUP_AT_2X) shouldBe true
+    }
+
+    @Test
+    fun `the copy band still stops short of the rail at every font scale`() {
+        // The invariant of the 2026-08-01 entry, re-checked on the axis that entry did not have:
+        // whatever the scale, the band the copy is laid out in ends before the rows below rise
+        // into the banner.
+        listOf(1f, 1.3f, 1.5f, 2f).forEach { scale ->
+            listOf(360.dp, 640.dp, 800.dp, 1138.dp).forEach { viewport ->
+                val banner = heroHeight(wide = true, viewportHeight = viewport, fontScale = scale)
+                val band = wideHeroCopyHeight(banner)
+
+                (band + wideHeroCopyTopInset(banner) + HeroRailOverlap).value shouldBe
+                    (banner.value plusOrMinus TOLERANCE)
+            }
+        }
+    }
 }
+
+/** The wide condensed lockup — a two-line 44sp title, the buttons and one gap — at font scale 2.0. */
+private const val WIDE_CONDENSED_LOCKUP_AT_2X = 300f

@@ -872,8 +872,13 @@ private val RatingStarSize = 13.dp
 
 private val DownloadRingWidth = 2.dp
 
-/** Track of the resume bar — the same white@22% the cards' inset progress uses. */
-private const val PROGRESS_TRACK_ALPHA = 0.22f
+/**
+ * Track of the resume bar — the same white@40% the cards' inset progress uses.
+ *
+ * Raised from 22% by the 2026-08-05 accessibility audit: an unfilled track is what gives the filled
+ * part a scale, so WCAG 1.4.11 asks 3:1 of it. 1.97:1 → 3.82:1 on `#101010`.
+ */
+private const val PROGRESS_TRACK_ALPHA = 0.40f
 
 private val RatingStyle =
     TextStyle(

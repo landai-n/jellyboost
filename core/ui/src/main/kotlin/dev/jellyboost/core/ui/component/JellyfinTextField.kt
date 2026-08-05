@@ -43,8 +43,15 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 /** Fill of the field's well — barely there, so the border does the work of drawing the box. */
 private val FieldFill = Color.White.copy(alpha = 0.04f)
 
-/** The border once the field has the user's attention (focused) or their data (non-empty). */
-private val FieldActiveBorder = Color.White.copy(alpha = 0.22f)
+/**
+ * The border once the field has the user's attention (focused) or their data (non-empty).
+ *
+ * This is the app's only focus affordance, which makes it a UI component boundary owing 3:1 under
+ * WCAG 1.4.11 (and, on the focused path, 2.4.7). At 0.22 it was 1.97:1 on `#101010` — a border you
+ * had to already know was there (accessibility audit 2026-08-05). 0.42 gives 4.09:1 on the
+ * background and 3.99:1 on `#202020`, and stays clearly a step under the [FieldFill]'s text.
+ */
+private val FieldActiveBorder = Color.White.copy(alpha = 0.42f)
 
 private val FieldPlaceholder = Color.White.copy(alpha = 0.48f)
 

@@ -550,15 +550,33 @@ private fun PlayerMessage.textRes(): Int =
 /** Enough contrast for white text over a bright frame, without blacking the video out. */
 private val OVERLAY_SCRIM = Color.Black.copy(alpha = 0.6f)
 
-/** Dims the casting artwork so it reads as a still, not as a paused frame. */
-private val BACKDROP_SCRIM = Color.Black.copy(alpha = 0.45f)
+/**
+ * Dims the casting artwork so it reads as a still, not as a paused frame — and buys the controls
+ * over it their contrast.
+ *
+ * 0.62 rather than the original 0.45 (accessibility audit 2026-08-05): the artwork here is whatever
+ * the item's poster happens to be, and against a bright one black@45% composited to rgb(140), where
+ * the white "Casting to …" label and the transport over it read 3.35:1 — short of 4.5:1. Black@62%
+ * takes the same worst case to rgb(97) and 6.20:1, and is the same number `PlayerControls.SCRIM`
+ * now uses, so the two washes the player can draw over a bright image agree.
+ */
+private val BACKDROP_SCRIM = Color.Black.copy(alpha = 0.62f)
 
 /** Clears the transport row's 64 dp play button, whatever the viewport's height. */
 private val CAST_LABEL_OFFSET = 88.dp
 
 private val CAST_LABEL_ICON = 20.dp
 
-private const val DIM_ALPHA = 0.7f
+/**
+ * The participant list under the SyncPlay waiting message, held off full white.
+ *
+ * [OVERLAY_SCRIM] stays at 0.6 — it is the panel's fill, shares its value with
+ * `PlayerControls.VIDEO_GLASS_FILL`, and full-white text on it already reads at 5.74:1 over the
+ * worst case (a white video frame, composited to rgb(102)); darkening the panel instead would have
+ * split that pairing for one secondary line. What was wrong is this alpha: over that same rgb(102)
+ * white needs α ≥ 0.821 for 4.5:1, and 0.7 gave 3.76:1. 0.85 gives 4.69:1.
+ */
+private const val DIM_ALPHA = 0.85f
 
 /** Leaves room for the controls bar so a snackbar never covers the seek bar. */
 private val SNACKBAR_PADDING = 96.dp

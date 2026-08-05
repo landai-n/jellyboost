@@ -155,8 +155,15 @@ private const val UNSELECTED_INDICATOR_ALPHA = 0.85f
 /** Tint over selected artwork — enough to read as "picked", not so much that the image is gone. */
 private const val SELECTED_TINT_ALPHA = 0.22f
 
-/** Track of the inset progress bar. */
-private const val PROGRESS_TRACK_ALPHA = 0.22f
+/**
+ * Track of the inset progress bar.
+ *
+ * 0.40, raised from 0.22 by the 2026-08-05 accessibility audit. This bar is the whole point of the
+ * Continue Watching row — "how far in am I" is unreadable if the unfilled half is not there — so
+ * under WCAG 1.4.11 it owes 3:1 against what it sits on. White@22% was 1.79:1 over the darkest
+ * artwork it can land on; white@40% is 3.66:1 there, 3.82:1 on the `#101010` background.
+ */
+private const val PROGRESS_TRACK_ALPHA = 0.40f
 
 /**
  * Formats a community rating for the corner badge: one decimal place, always.

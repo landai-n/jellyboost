@@ -80,12 +80,21 @@ private val PrimaryPillContent = Color(0xFF101010)
 /** Disabled primary fill — present enough to hold the button's shape, too faint to invite a tap. */
 private val PrimaryPillDisabledContainer = Color.White.copy(alpha = 0.07f)
 
-private val PrimaryPillDisabledContent = Color.White.copy(alpha = 0.35f)
+/**
+ * Disabled content, on both pills.
+ *
+ * A disabled control still has to say *what* it is — a busy primary pill is the only thing on an
+ * auth screen telling the user what is happening — so its label is text with a 4.5:1 obligation,
+ * not decoration. At 0.35 it was 3.20:1 on `#101010`; 0.48 is 5.00:1 there and 4.78:1 on `#202020`
+ * (accessibility audit 2026-08-05). Still visibly a disabled label: [PrimaryPillDisabledContainer]
+ * is what says "you cannot press this", and it is untouched.
+ */
+private val PrimaryPillDisabledContent = Color.White.copy(alpha = 0.48f)
 
 /** Content colour of a ghost pill and its disabled counterpart. */
 private val GhostPillContent = Color.White
 
-private val GhostPillDisabledContent = Color.White.copy(alpha = 0.35f)
+private val GhostPillDisabledContent = Color.White.copy(alpha = 0.48f)
 
 /** Default tint of a [GlassIconButton]'s glyph — white, held just off full strength. */
 val GlassIconTint: Color = Color.White.copy(alpha = 0.8f)

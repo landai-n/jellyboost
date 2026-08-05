@@ -12,7 +12,7 @@ device walk, and expect its downloads and database not to carry over. Full gate 
 the rename: ktlint + detekt + unit tests + `assembleDebug` + `assembleRelease` all green,
 baseline profile still compiles into the release APK (`assets/dexopt/baseline.prof`).
 
-## Planned milestone: M13 — Music (approved 2026-08-05; Phase 0 landed, implementation starting)
+## Planned milestone: M13 — Music (approved 2026-08-05; Phases 0–4 landed, Phase 5 in progress)
 
 Third user-approved scope extension (after M11/M12): a full music experience —
 artist/album/playlist browsing, background playback with notification/lock-screen
@@ -72,7 +72,10 @@ dedicated bottom-nav tab — user decision). Detailed phase plan:
   checks: mini-player docking in both nav layouts and both orientations, queue
   sheet reorder/remove/jump on the tablet, NowPlaying two-pane at tablet widths,
   Continue Listening resume-at-position online and offline.
-- Phases 5–6: music downloads → Instant Mix + lyrics + docs. Work happens on the
+- **Phase 5 (music downloads + offline parity)** — IN PROGRESS. Note: the dev
+  server was unreachable from the workstation on 2026-08-06, so live
+  verification of `/Items/{id}/Download` for audio originals is an owed check.
+- Phase 6: Instant Mix + lyrics + hardening + docs. Work happens on the
   `worktree-music-m13` branch.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`
   only after M11 and M12 close (their precedent).

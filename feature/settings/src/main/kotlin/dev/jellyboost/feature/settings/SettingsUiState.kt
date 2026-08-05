@@ -28,6 +28,14 @@ data class SettingsUiState(
     val storageLocations: StorageLocations = StorageLocations(),
     /** Who is signed in; `null` when the session is absent or still restoring. */
     val account: AccountInfo? = null,
+    /**
+     * Whether a sign-out is in flight.
+     *
+     * The one piece of transient state on the screen, and it only ever goes up: telling an
+     * unreachable server the session ended takes seconds, and without it the sign-out button looks
+     * like it did nothing. It is never lowered because the sign-out completing navigates away.
+     */
+    val signingOut: Boolean = false,
 )
 
 /**

@@ -323,7 +323,9 @@ depending on both `core:network` and `core:datastore` directly at M9 (`DECISIONS
 this is the same shape applied to a screen instead of the player.
 
 Sign-out itself needed no new plumbing: `SettingsViewModel` calls `SessionRepository.signOut()`
-directly, and the pre-existing `LogoutRedirectEffect` in `JellyfinNavHost` (watching
+directly — from `@ApplicationScope` rather than `viewModelScope`, because leaving the screen must
+not cancel a teardown that is half done (see docs/features/settings.md, *"A sign-out the screen
+cannot lose"*) — and the pre-existing `LogoutRedirectEffect` in `JellyfinNavHost` (watching
 `SessionRepository.sessionState`) already redirects to `Routes.ServerSetup` on any transition to
 `SessionState.LoggedOut`, regardless of what triggered it. The `onSignOut` callback that used to
 thread `MainActivity → JellyboostApp → AppScaffold → JellyfinNavHost → HomeRoute` is gone.

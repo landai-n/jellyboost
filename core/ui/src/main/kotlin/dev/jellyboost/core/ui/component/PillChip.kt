@@ -2,12 +2,13 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,8 +62,16 @@ private val MPillVerticalPadding = 2.dp
  * inversion, which `FilterChipDefaults` expresses only as a container tint plus a leading tick —
  * and the tick is exactly what the mocks drop.
  *
- * @param enabled `false` leaves the chip visible but inert, which is how the detail screen shows
- *   genres: they look like the filters they will one day be, and do nothing today.
+ * The chip is `selectable`, not merely `clickable`: on/off is the *whole* point of a filter, and a
+ * plain click node made the library rail's state invisible to a screen reader — eleven chips that
+ * all announced their own label and nothing else (accessibility audit 2026-08-05, A11Y-06/M3). It
+ * also sits inside an invisible [Dimens.MinTouchTarget] frame, the same pattern the pill buttons
+ * use: the drawn capsule keeps its 32dp design height and the target around it is 48dp (A11Y-07).
+ *
+ * A chip that is *never* interactive is [InfoPillChip], not this with `enabled = false`.
+ *
+ * @param enabled `false` for a filter that cannot be applied right now — it announces itself as
+ *   disabled, which is true. It is the wrong tool for a label that was never a control.
  */
 @Composable
 fun PillChip(
@@ -71,11 +81,84 @@ fun PillChip(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    ChipFrame(modifier = modifier) {
+        ChipSurface(
+            text = text,
+            selected = selected,
+            contentAlpha = if (enabled) 1f else DISABLED_CHIP_ALPHA,
+            interaction =
+                Modifier.selectable(
+                    selected = selected,
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                ),
+        )
+    }
+}
+
+/**
+ * The same pill, drawn for information only — the detail screen's genres.
+ *
+ * Its own component rather than `PillChip(enabled = false)` because the two states a screen reader
+ * hears are not the same thing: a disabled chip announces "disabled", which invites the user to
+ * wonder what they did wrong, when the truth is that a genre on a detail page is a *label* and was
+ * never going to do anything (accessibility audit 2026-08-05, A11Y-14/M3). This one carries no
+ * click node, no role and no state — just its word.
+ */
+@Composable
+fun InfoPillChip(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    ChipSurface(
+        text = text,
+        selected = false,
+        contentAlpha = DISABLED_CHIP_ALPHA,
+        modifier = modifier,
+    )
+}
+
+/**
+ * The invisible 48dp-tall box a tappable chip is centred in.
+ *
+ * Height only: a chip's width is its label plus 28dp of padding, which clears the minimum on
+ * anything longer than two characters, and forcing a minimum width would visibly change a row of
+ * short filters. See `JellyfinButtons.kt`'s header for why the frame is outside the drawn surface.
+ */
+@Composable
+private fun ChipFrame(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = modifier.heightIn(min = Dimens.MinTouchTarget),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
+}
+
+/**
+ * The capsule itself — identical whether or not anything can be done to it.
+ *
+ * @param interaction the click node, when there is one. It goes *inside* the clip and the fill so
+ *   the ripple is the capsule the user sees rather than the box around it, which is why it is a
+ *   parameter here instead of something the caller stacks onto [modifier].
+ */
+@Composable
+private fun ChipSurface(
+    text: String,
+    selected: Boolean,
+    contentAlpha: Float,
+    modifier: Modifier = Modifier,
+    interaction: Modifier = Modifier,
+) {
     val contentColor =
-        when {
-            selected -> ChipSelectedContent
-            enabled -> MaterialTheme.colorScheme.onSurfaceVariant
-            else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = DISABLED_CHIP_ALPHA)
+        if (selected) {
+            ChipSelectedContent
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
         }
     Box(
         modifier =
@@ -89,7 +172,7 @@ fun PillChip(
                             .background(color = ChipFill, shape = CircleShape)
                             .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                     },
-                ).clickable(enabled = enabled, onClick = onClick)
+                ).then(interaction)
                 .defaultMinSize(minHeight = Dimens.PillHeightSmall)
                 .padding(horizontal = ChipHorizontalPadding, vertical = ChipVerticalPadding),
         contentAlignment = Alignment.Center,
@@ -141,7 +224,7 @@ private fun PillChipPreview() {
         ) {
             PillChip(text = "Unwatched", selected = true, onClick = {})
             PillChip(text = "Favourites", selected = false, onClick = {})
-            PillChip(text = "Sci-Fi", selected = false, onClick = {}, enabled = false)
+            InfoPillChip(text = "Sci-Fi")
             MPillBadge(text = "TV-MA")
         }
     }

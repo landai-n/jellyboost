@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD kartica</string>
     <string name="settings_storage_volume_free">%1$s prosto</string>
     <string name="settings_storage_missing">Izbrana shramba trenutno ni na voljo, zato se prenosi shranjujejo na spodaj izbrano mesto.</string>
+    <string name="settings_storage_use_this_hint">Izberite to mesto, da prenosi ostanejo tukaj</string>
     <string name="settings_storage_switch_title">Premakni prenose?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Prenosov še ni mogoče premakniti med mesti, zato bo tisti, ki je že na tej napravi, izbrisan. Znova ga lahko prenesete na novo mesto.</item>

@@ -10,6 +10,7 @@
     <string name="home_hero_resume">ازسرگیری</string>
     <string name="home_hero_play">پخش</string>
     <string name="home_hero_details">جزئیات</string>
+    <string name="home_hero_rated">رده سنی %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d دقیقه مانده</item>
         <item quantity="other">%1$d دقیقه مانده</item>

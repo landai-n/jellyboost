@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Настави</string>
     <string name="home_hero_play">Пусти</string>
     <string name="home_hero_details">Детаљи</string>
+    <string name="home_hero_rated">Узрасна ознака %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Још %1$d минут</item>
         <item quantity="few">Још %1$d минута</item>

@@ -10,6 +10,7 @@
     <string name="home_hero_resume">继续播放</string>
     <string name="home_hero_play">播放</string>
     <string name="home_hero_details">详情</string>
+    <string name="home_hero_rated">分级 %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="other">剩余 %1$d 分钟</item>
     </plurals>

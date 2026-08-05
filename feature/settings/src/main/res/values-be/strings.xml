@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-карта</string>
     <string name="settings_storage_volume_free">%1$s вольна</string>
     <string name="settings_storage_missing">Абранае вамі сховішча зараз недаступнае, таму спампоўкі накіроўваюцца ў месца, выбранае ніжэй.</string>
+    <string name="settings_storage_use_this_hint">Абярыце гэта месца, каб спампоўкі заставаліся тут</string>
     <string name="settings_storage_switch_title">Перамясціць спампоўкі?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Спампоўкі пакуль нельга перамяшчаць паміж месцамі, таму %1$d, ужо наяўная на гэтай прыладзе, будзе выдалена. Вы зможаце спампаваць яе зноў у новае месца.</item>

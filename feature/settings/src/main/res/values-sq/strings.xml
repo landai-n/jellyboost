@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">Kartë SD</string>
     <string name="settings_storage_volume_free">%1$s të lira</string>
     <string name="settings_storage_missing">Hapësira që zgjodhe nuk është e disponueshme tani, prandaj shkarkimet po shkojnë te vendndodhja e zgjedhur më poshtë.</string>
+    <string name="settings_storage_use_this_hint">Zgjidh këtë vend që shkarkimet të mbeten këtu</string>
     <string name="settings_storage_switch_title">Të zhvendosen shkarkimet?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Shkarkimet nuk mund të zhvendosen ende mes vendndodhjeve, prandaj ai që është tashmë në këtë pajisje do të fshihet. Mund ta shkarkosh përsëri te vendndodhja e re.</item>

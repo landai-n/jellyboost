@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-Karte</string>
     <string name="settings_storage_volume_free">%1$s frei</string>
     <string name="settings_storage_missing">Der von dir gewählte Speicher ist gerade nicht verfügbar, daher werden Downloads am unten ausgewählten Ort gespeichert.</string>
+    <string name="settings_storage_use_this_hint">Wähle diesen Ort, damit Downloads hier bleiben</string>
     <string name="settings_storage_switch_title">Downloads verschieben?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Downloads können noch nicht zwischen Speicherorten verschoben werden, daher wird der bereits auf diesem Gerät vorhandene gelöscht. Du kannst ihn erneut an den neuen Ort herunterladen.</item>

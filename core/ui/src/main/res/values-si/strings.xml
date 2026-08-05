@@ -4,13 +4,24 @@
     <string name="badge_download_queued">බාගත කිරීම සඳහා පෝලිමේ ඇත</string>
     <string name="badge_download_paused">බාගත කිරීම විරාම කර ඇත</string>
     <string name="badge_download_failed">බාගත කිරීම අසාර්ථක විය</string>
+    <string name="badge_downloading_progress">බාගත වෙමින්, %1$d%%</string>
     <string name="media_row_see_all">සියල්ල බලන්න</string>
+    <string name="media_row_see_all_section">%1$s හි සියල්ල බලන්න</string>
     <string name="media_card_watched">නරඹා ඇත</string>
+    <string name="media_card_type_movie">චිත්‍රපටය</string>
+    <string name="media_card_type_series">කතා මාලාව</string>
+    <string name="media_card_type_season">වාරය</string>
+    <string name="media_card_type_episode">කථාංගය</string>
+    <string name="media_card_type_library">පුස්තකාලය</string>
+    <string name="media_card_progress">%1$d%% නරඹා ඇත</string>
+    <string name="media_card_rating">ශ්‍රේණිගත කිරීම 10 න් %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d අයිතමය</item>
         <item quantity="other">%1$d අයිතම</item>
     </plurals>
     <string name="state_retry">යළි උත්සාහ කරන්න</string>
+    <string name="state_loading">පූරණය වෙමින්</string>
+    <string name="state_busy">ක්‍රියාත්මක වෙමින්</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d ක් තෝරා ඇත</item>
         <item quantity="other">%1$d ක් තෝරා ඇත</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">බාගත කරන්න</string>
     <string name="selection_item_selected">තෝරා ඇත</string>
     <string name="selection_item_not_selected">තෝරා නැත</string>
+    <string name="selection_enter">තෝරන්න</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d ක් නරඹන ලද ලෙස සලකුණු කරන ලදී</item>
         <item quantity="other">%1$d ක් නරඹන ලද ලෙස සලකුණු කරන ලදී</item>

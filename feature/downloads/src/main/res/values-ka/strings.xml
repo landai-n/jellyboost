@@ -17,6 +17,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">დარჩენილია დაახლოებით %1$s</string>
     <string name="downloads_stat_network_helper">მობილურ მონაცემებზე ავტომატურად ჩერდება</string>
+    <string name="downloads_usage_storage_label">გამოყენებული მეხსიერება</string>
+    <string name="downloads_usage_queue_label">რიგის მიმდინარეობა</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">დაკვრა</string>
     <string name="downloads_action_delete">გადმოწერის წაშლა</string>
     <string name="downloads_action_cancel">გადმოწერის გაუქმება</string>
     <string name="downloads_action_pause">გადმოწერის შეჩერება</string>

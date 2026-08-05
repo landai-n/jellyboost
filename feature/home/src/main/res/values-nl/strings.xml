@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Doorgaan</string>
     <string name="home_hero_play">Afspelen</string>
     <string name="home_hero_details">Details</string>
+    <string name="home_hero_rated">Kijkwijzer %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Nog %1$d minuut</item>
         <item quantity="other">Nog %1$d minuten</item>

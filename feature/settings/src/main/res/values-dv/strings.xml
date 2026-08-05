@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD ކާޑް</string>
     <string name="settings_storage_volume_free">%1$s ހުސް</string>
     <string name="settings_storage_missing">ތިޔަ ހޮވި ސްޓޯރޭޖް މިހާރު ނުލިބޭ، ވީމާ ޑައުންލޯޑްތައް ތިރީގައި ހޮވާފައިވާ ތަނަށް ދާނެއެވެ.</string>
+    <string name="settings_storage_use_this_hint">ޑައުންލޯޑްތައް މިތާ ބެހެއްޓުމަށް މިތަން ހޮވާ</string>
     <string name="settings_storage_switch_title">ޑައުންލޯޑްތައް ބަދަލުކުރަންހޭ؟</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">ޑައުންލޯޑްތައް ތަންތަނުގެ މެދުގައި އަދި ބަދަލެއް ނުކުރެވޭނެ، ވީމާ މި ޑިވައިސްގައި މިހާރު ހުރި ޑައުންލޯޑް ފޮހެލެވޭނެއެވެ. އާ ތަނަށް އަލުން ޑައުންލޯޑްކުރެވިދާނެއެވެ.</item>

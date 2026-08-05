@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Allalaadimise järjekorras</string>
     <string name="badge_download_paused">Allalaadimine peatatud</string>
     <string name="badge_download_failed">Allalaadimine ebaõnnestus</string>
+    <string name="badge_downloading_progress">Allalaadimine, %1$d%%</string>
 
     <string name="media_row_see_all">Vaata kõiki</string>
+    <string name="media_row_see_all_section">Vaata kõiki jaotises %1$s</string>
     <string name="media_card_watched">Vaadatud</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Sari</string>
+    <string name="media_card_type_season">Hooaeg</string>
+    <string name="media_card_type_episode">Osa</string>
+    <string name="media_card_type_library">Kogu</string>
+    <string name="media_card_progress">%1$d%% vaadatud</string>
+    <string name="media_card_rating">Hinnang %1$s 10-st</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d üksus</item>
         <item quantity="other">%1$d üksust</item>
     </plurals>
     <string name="state_retry">Proovi uuesti</string>
+    <string name="state_loading">Laadimine</string>
+    <string name="state_busy">Töös</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valitud</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Valitud</string>
     <string name="selection_item_not_selected">Valimata</string>
+    <string name="selection_enter">Vali</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d märgitud vaadatuks</item>

@@ -5,12 +5,38 @@
     <string name="player_pause">Pauziraj</string>
     <string name="player_rewind">Vrati se 10 sekundi</string>
     <string name="player_forward">Preskoči 30 sekundi</string>
+    <string name="player_show_controls">Prikaži kontrole reproduktora</string>
+    <string name="player_volume_percent">Glasnoća %1$d posto</string>
+    <string name="player_brightness_percent">Svjetlina %1$d posto</string>
+    <string name="player_buffering">Punjenje međuspremnika</string>
+    <string name="player_seek">Pomicanje kroz snimku</string>
+    <string name="player_position_of_duration">%1$s od %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d sat</item>
+        <item quantity="few">%d sata</item>
+        <item quantity="other">%d sati</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuta</item>
+        <item quantity="few">%d minute</item>
+        <item quantity="other">%d minuta</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="few">%d sekunde</item>
+        <item quantity="other">%d sekundi</item>
+    </plurals>
 
     <string name="player_audio">Zvuk</string>
     <string name="player_subtitles">Titlovi</string>
     <string name="player_subtitles_off">Isključeno</string>
     <string name="player_quality">Kvaliteta</string>
     <string name="player_speed">Brzina</string>
+    <string name="player_display">Zaslon</string>
+    <string name="player_brightness">Svjetlina</string>
+    <string name="player_volume">Glasnoća</string>
+    <string name="player_percent">%1$d posto</string>
+    <string name="player_done">Gotovo</string>
 
     <string name="player_skip_intro">Preskoči uvod</string>
     <string name="player_skip_outro">Preskoči odjavnu špicu</string>
@@ -61,9 +87,10 @@
     <string name="player_syncplay_queue_playing">Trenutno se reproducira</string>
     <string name="player_syncplay_queue_next">Sljedeća stavka</string>
     <string name="player_syncplay_queue_previous">Prethodna stavka</string>
-    <string name="player_syncplay_queue_move_up">Pomakni gore</string>
-    <string name="player_syncplay_queue_move_down">Pomakni dolje</string>
-    <string name="player_syncplay_queue_remove">Ukloni iz reda čekanja</string>
+    <string name="player_syncplay_queue_move_up_item">Pomakni %1$s gore</string>
+    <string name="player_syncplay_queue_move_down_item">Pomakni %1$s dolje</string>
+    <string name="player_syncplay_queue_remove_item">Ukloni %1$s iz reda čekanja</string>
+    <string name="player_syncplay_queue_play">Reproduciraj</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d stavka u redu čekanja</item>

@@ -30,6 +30,7 @@
     <string name="login_quick_connect">క్విక్ కనెక్ట్ ఉపయోగించండి</string>
     <string name="login_quick_connect_title">క్విక్ కనెక్ట్</string>
     <string name="login_quick_connect_instructions">మీరు ఇప్పటికే సైన్ ఇన్ అయి ఉన్న పరికరంలో Jellyfin తెరిచి, క్విక్ కనెక్ట్‌కు వెళ్లి ఈ కోడ్‌ను నమోదు చేయండి.</string>
+    <string name="login_quick_connect_code_description">మీ కోడ్ %1$s</string>
     <string name="login_quick_connect_waiting">ఆమోదం కోసం వేచి ఉంది…</string>
     <string name="login_quick_connect_cancel">రద్దు చేయండి</string>
 

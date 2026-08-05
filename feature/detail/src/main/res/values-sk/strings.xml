@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Epizóda %1$d</string>
+    <string name="detail_meta_rating">Hodnotenie %1$s</string>
+    <string name="detail_meta_rated">prístupnosť %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Zostáva %1$d min</string>
     <string name="detail_size_on_device">%1$s v zariadení</string>
     <string name="detail_directed_by">Réžia: %1$s</string>
+    <string name="detail_cast_member_as">%1$s ako %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d séria</item>
         <item quantity="few">%1$d série</item>
@@ -45,6 +48,10 @@
         <item quantity="many">%1$d epizód</item>
         <item quantity="other">%1$d epizód</item>
     </plurals>
+    <string name="detail_overview_collapsed">Zbalené</string>
+    <string name="detail_overview_expanded">Rozbalené</string>
+    <string name="detail_overview_expand">Prečítať celý popis</string>
+    <string name="detail_overview_collapse">Zbaliť popis</string>
 
     <string name="detail_empty">Táto položka už nie je dostupná.</string>
     <string name="detail_message_download_queued">Pridané do stiahnutí.</string>

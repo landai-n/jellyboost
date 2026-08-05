@@ -4,13 +4,24 @@
     <string name="badge_download_queued">In coda per il download</string>
     <string name="badge_download_paused">Download in pausa</string>
     <string name="badge_download_failed">Download non riuscito</string>
+    <string name="badge_downloading_progress">Download in corso, %1$d%%</string>
     <string name="media_row_see_all">Vedi tutti</string>
+    <string name="media_row_see_all_section">Vedi tutti in %1$s</string>
     <string name="media_card_watched">Visto</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serie</string>
+    <string name="media_card_type_season">Stagione</string>
+    <string name="media_card_type_episode">Episodio</string>
+    <string name="media_card_type_library">Libreria</string>
+    <string name="media_card_progress">%1$d%% visto</string>
+    <string name="media_card_rating">Valutazione %1$s su 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d elemento</item>
         <item quantity="other">%1$d elementi</item>
     </plurals>
     <string name="state_retry">Riprova</string>
+    <string name="state_loading">Caricamento</string>
+    <string name="state_busy">Operazione in corso</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d selezionato</item>
         <item quantity="other">%1$d selezionati</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">Scarica</string>
     <string name="selection_item_selected">Selezionato</string>
     <string name="selection_item_not_selected">Non selezionato</string>
+    <string name="selection_enter">Seleziona</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d segnato come visto</item>
         <item quantity="other">%1$d segnati come visti</item>

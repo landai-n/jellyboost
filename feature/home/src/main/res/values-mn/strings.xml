@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Үргэлжлүүлэх</string>
     <string name="home_hero_play">Тоглуулах</string>
     <string name="home_hero_details">Дэлгэрэнгүй</string>
+    <string name="home_hero_rated">Насны ангилал %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d минут үлдсэн</item>
         <item quantity="other">%1$d минут үлдсэн</item>

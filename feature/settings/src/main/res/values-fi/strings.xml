@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kortti</string>
     <string name="settings_storage_volume_free">%1$s vapaana</string>
     <string name="settings_storage_missing">Valitsemasi tallennustila ei ole juuri nyt käytettävissä, joten lataukset menevät alla valittuun sijaintiin.</string>
+    <string name="settings_storage_use_this_hint">Valitse tämä, niin lataukset pysyvät täällä</string>
     <string name="settings_storage_switch_title">Siirretäänkö lataukset?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Latauksia ei voi vielä siirtää sijaintien välillä, joten tällä laitteella jo oleva lataus poistetaan. Voit ladata sen uudelleen uuteen sijaintiin.</item>

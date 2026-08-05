@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Cartão SD</string>
     <string name="settings_storage_volume_free">%1$s livres</string>
     <string name="settings_storage_missing">O armazenamento que escolheu não está disponível neste momento, pelo que as transferências vão para o local selecionado abaixo.</string>
+    <string name="settings_storage_use_this_hint">Escolha este local para manter aqui as transferências</string>
     <string name="settings_storage_switch_title">Mover transferências?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">As transferências ainda não podem ser movidas entre locais, pelo que a que já está neste dispositivo será eliminada. Pode transferi-la novamente para o novo local.</item>

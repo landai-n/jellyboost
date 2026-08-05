@@ -17,6 +17,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">දළ වශයෙන් %1$s ඉතිරිය</string>
     <string name="downloads_stat_network_helper">ජංගම දත්ත මත ස්වයංක්‍රීයව විරාම වේ</string>
+    <string name="downloads_usage_storage_label">භාවිත කළ ආචයනය</string>
+    <string name="downloads_usage_queue_label">පෝලිමේ ප්‍රගතිය</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">වාදනය කරන්න</string>
     <string name="downloads_action_delete">බාගත කිරීම මකන්න</string>
     <string name="downloads_action_cancel">බාගත කිරීම අවලංගු කරන්න</string>
     <string name="downloads_action_pause">බාගත කිරීම විරාම කරන්න</string>

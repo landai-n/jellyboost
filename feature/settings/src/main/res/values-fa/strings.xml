@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">کارت SD</string>
     <string name="settings_storage_volume_free">%1$s آزاد</string>
     <string name="settings_storage_missing">حافظه‌ای که انتخاب کردید اکنون در دسترس نیست، بنابراین دانلودها به محل انتخاب‌شده زیر می‌روند.</string>
+    <string name="settings_storage_use_this_hint">برای نگه‌داشتن دانلودها در همین‌جا این مورد را انتخاب کنید</string>
     <string name="settings_storage_switch_title">دانلودها منتقل شوند؟</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">دانلودها هنوز نمی‌توانند بین مکان‌ها منتقل شوند، بنابراین موردی که از قبل روی این دستگاه است حذف خواهد شد. می‌توانید دوباره آن را در مکان جدید دانلود کنید.</item>

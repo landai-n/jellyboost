@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD ಕಾರ್ಡ್</string>
     <string name="settings_storage_volume_free">%1$s ಖಾಲಿ ಇದೆ</string>
     <string name="settings_storage_missing">ನೀವು ಆಯ್ಕೆ ಮಾಡಿದ ಸಂಗ್ರಹಣೆ ಈಗ ಲಭ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳು ಕೆಳಗೆ ಆಯ್ಕೆಮಾಡಿದ ಸ್ಥಳಕ್ಕೆ ಹೋಗುತ್ತಿವೆ.</string>
+    <string name="settings_storage_use_this_hint">ಡೌನ್‌ಲೋಡ್‌ಗಳು ಇಲ್ಲೇ ಉಳಿಯಲು ಇದನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
     <string name="settings_storage_switch_title">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಸರಿಸುವುದೇ?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಇನ್ನೂ ಸ್ಥಳಗಳ ನಡುವೆ ಸರಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ, ಆದ್ದರಿಂದ ಈ ಸಾಧನದಲ್ಲಿ ಈಗಾಗಲೇ ಇರುವುದನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. ನೀವು ಅದನ್ನು ಹೊಸ ಸ್ಥಳಕ್ಕೆ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</item>

@@ -12,6 +12,7 @@
     <string name="home_hero_resume">फिर से शुरू करें</string>
     <string name="home_hero_play">चलाएँ</string>
     <string name="home_hero_details">विवरण</string>
+    <string name="home_hero_rated">आयु रेटिंग %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d मिनट शेष</item>
         <item quantity="other">%1$d मिनट शेष</item>

@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD картичка</string>
     <string name="settings_storage_volume_free">%1$s слободно</string>
     <string name="settings_storage_missing">Складиштето што го избравте моментално не е достапно, па преземањата одат на локацијата избрана подолу.</string>
+    <string name="settings_storage_use_this_hint">Изберете го ова место за преземањата да останат тука</string>
     <string name="settings_storage_switch_title">Да се преместат преземањата?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Преземањата сè уште не можат да се преместуваат меѓу локации, па она што веќе е на овој уред ќе биде избришано. Можете повторно да го преземете на новата локација.</item>

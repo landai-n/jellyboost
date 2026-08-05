@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD ბარათი</string>
     <string name="settings_storage_volume_free">%1$s თავისუფალი</string>
     <string name="settings_storage_missing">თქვენ მიერ არჩეული მეხსიერება ამჟამად ხელმისაწვდომი არ არის, ამიტომ გადმოწერები გადადის ქვემოთ არჩეულ ადგილას.</string>
+    <string name="settings_storage_use_this_hint">აირჩიეთ ეს, რომ გადმოწერილი ფაილები აქ დარჩეს</string>
     <string name="settings_storage_switch_title">გადავიტანოთ გადმოწერები?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">გადმოწერების ადგილებს შორის გადატანა ჯერ არ არის შესაძლებელი, ამიტომ ეს მოწყობილობაზე უკვე არსებული წაიშლება. შეგიძლიათ ისევ გადმოწეროთ ახალ ადგილას.</item>

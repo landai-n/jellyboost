@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmoj</string>
     <string name="search_section_series">Serioj</string>
     <string name="search_section_episodes">Epizodoj</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d rezulto</item>
+        <item quantity="other">%1$d rezultoj</item>
+    </plurals>
     <string name="search_prompt">Tajpu por serĉi en viaj bibliotekoj.</string>
     <string name="search_no_results">Nenio kongruis kun “%1$s”.</string>
     <string name="search_error_network">Ne eblas atingi vian servilon. Kontrolu vian konekton kaj reprovu.</string>

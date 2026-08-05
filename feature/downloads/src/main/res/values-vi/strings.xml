@@ -16,6 +16,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Còn khoảng %1$s</string>
     <string name="downloads_stat_network_helper">Tự động tạm dừng khi dùng dữ liệu di động</string>
+    <string name="downloads_usage_storage_label">Bộ nhớ đã dùng</string>
+    <string name="downloads_usage_queue_label">Tiến độ hàng đợi</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Phát</string>
     <string name="downloads_action_delete">Xóa tải xuống</string>
     <string name="downloads_action_cancel">Hủy tải xuống</string>
     <string name="downloads_action_pause">Tạm dừng tải xuống</string>

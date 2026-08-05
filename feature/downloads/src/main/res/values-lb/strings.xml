@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Nach ongeféier %1$s</string>
     <string name="downloads_stat_network_helper">Gëtt automatesch pauséiert bei mobille Daten</string>
+    <string name="downloads_usage_storage_label">Benotzte Späicherplaz</string>
+    <string name="downloads_usage_queue_label">Fortschrëtt vun der Warteschlaang</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Ofspillen</string>
 
     <string name="downloads_action_delete">Download läschen</string>
     <string name="downloads_action_cancel">Download ofbriechen</string>

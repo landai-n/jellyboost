@@ -5,11 +5,31 @@
     <string name="player_pause">Jeda</string>
     <string name="player_rewind">Mundur 10 detik</string>
     <string name="player_forward">Maju 30 detik</string>
+    <string name="player_show_controls">Tampilkan kontrol pemutar</string>
+    <string name="player_volume_percent">Volume %1$d persen</string>
+    <string name="player_brightness_percent">Kecerahan %1$d persen</string>
+    <string name="player_buffering">Menyangga</string>
+    <string name="player_seek">Geser posisi</string>
+    <string name="player_position_of_duration">%1$s dari %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d jam</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d menit</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d detik</item>
+    </plurals>
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitel</string>
     <string name="player_subtitles_off">Nonaktif</string>
     <string name="player_quality">Kualitas</string>
     <string name="player_speed">Kecepatan</string>
+    <string name="player_display">Tampilan</string>
+    <string name="player_brightness">Kecerahan</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d persen</string>
+    <string name="player_done">Selesai</string>
     <string name="player_skip_intro">Lewati intro</string>
     <string name="player_skip_outro">Lewati outro</string>
     <string name="player_quality_auto">Otomatis</string>
@@ -49,9 +69,10 @@
     <string name="player_syncplay_queue_playing">Sedang diputar</string>
     <string name="player_syncplay_queue_next">Item berikutnya</string>
     <string name="player_syncplay_queue_previous">Item sebelumnya</string>
-    <string name="player_syncplay_queue_move_up">Naikkan</string>
-    <string name="player_syncplay_queue_move_down">Turunkan</string>
-    <string name="player_syncplay_queue_remove">Hapus dari antrean</string>
+    <string name="player_syncplay_queue_move_up_item">Naikkan %1$s</string>
+    <string name="player_syncplay_queue_move_down_item">Turunkan %1$s</string>
+    <string name="player_syncplay_queue_remove_item">Hapus %1$s dari antrean</string>
+    <string name="player_syncplay_queue_play">Putar</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d item diantrekan</item>
     </plurals>

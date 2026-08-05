@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Hervat</string>
     <string name="home_hero_play">Speel</string>
     <string name="home_hero_details">Besonderhede</string>
+    <string name="home_hero_rated">Gegradeer %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minuut oor</item>
         <item quantity="other">%1$d minute oor</item>

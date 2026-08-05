@@ -6,6 +6,10 @@
     <string name="search_section_movies">Flieks</string>
     <string name="search_section_series">Reekse</string>
     <string name="search_section_episodes">Episodes</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultaat</item>
+        <item quantity="other">%1$d resultate</item>
+    </plurals>
 
     <string name="search_prompt">Tik om jou biblioteke te deursoek.</string>
     <string name="search_no_results">Niks het by “%1$s” gepas nie.</string>

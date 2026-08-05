@@ -5,12 +5,41 @@
     <string name="player_pause">Пауза</string>
     <string name="player_rewind">Назад на 10 секунд</string>
     <string name="player_forward">Вперёд на 30 секунд</string>
+    <string name="player_show_controls">Показать элементы управления плеером</string>
+    <string name="player_volume_percent">Громкость %1$d процентов</string>
+    <string name="player_brightness_percent">Яркость %1$d процентов</string>
+    <string name="player_buffering">Буферизация</string>
+    <string name="player_seek">Перемотка</string>
+    <string name="player_position_of_duration">%1$s из %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часа</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d минута</item>
+        <item quantity="few">%d минуты</item>
+        <item quantity="many">%d минут</item>
+        <item quantity="other">%d минуты</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунды</item>
+    </plurals>
 
     <string name="player_audio">Аудио</string>
     <string name="player_subtitles">Субтитры</string>
     <string name="player_subtitles_off">Выкл.</string>
     <string name="player_quality">Качество</string>
     <string name="player_speed">Скорость</string>
+    <string name="player_display">Изображение</string>
+    <string name="player_brightness">Яркость</string>
+    <string name="player_volume">Громкость</string>
+    <string name="player_percent">%1$d процентов</string>
+    <string name="player_done">Готово</string>
 
     <string name="player_skip_intro">Пропустить заставку</string>
     <string name="player_skip_outro">Пропустить титры</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Сейчас играет</string>
     <string name="player_syncplay_queue_next">Следующий элемент</string>
     <string name="player_syncplay_queue_previous">Предыдущий элемент</string>
-    <string name="player_syncplay_queue_move_up">Сдвинуть вверх</string>
-    <string name="player_syncplay_queue_move_down">Сдвинуть вниз</string>
-    <string name="player_syncplay_queue_remove">Удалить из очереди</string>
+    <string name="player_syncplay_queue_move_up_item">Сдвинуть %1$s вверх</string>
+    <string name="player_syncplay_queue_move_down_item">Сдвинуть %1$s вниз</string>
+    <string name="player_syncplay_queue_remove_item">Удалить %1$s из очереди</string>
+    <string name="player_syncplay_queue_play">Воспроизвести</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент в очереди</item>

@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmak</string>
     <string name="search_section_series">Telesailak</string>
     <string name="search_section_episodes">Atalak</string>
+    <plurals name="search_result_count">
+        <item quantity="one">Emaitza %1$d</item>
+        <item quantity="other">%1$d emaitza</item>
+    </plurals>
     <string name="search_prompt">Idatzi zure liburutegietan bilatzeko.</string>
     <string name="search_no_results">Ez da ezer aurkitu “%1$s”(r)ekin bat.</string>
     <string name="search_error_network">Ezin da zure zerbitzaria erdietsi. Egiaztatu zure konexioa eta saiatu berriro.</string>

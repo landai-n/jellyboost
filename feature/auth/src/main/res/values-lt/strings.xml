@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Naudoti Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Atidarykite Jellyfin įrenginyje, kuriame jau esate prisijungę, eikite į Quick Connect ir įveskite šį kodą.</string>
+    <string name="login_quick_connect_code_description">Jūsų kodas yra %1$s</string>
     <string name="login_quick_connect_waiting">Laukiama patvirtinimo…</string>
     <string name="login_quick_connect_cancel">Atšaukti</string>
 

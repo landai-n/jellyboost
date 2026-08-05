@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmar</string>
     <string name="search_section_series">Seriur</string>
     <string name="search_section_episodes">Partar</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d úrslit</item>
+        <item quantity="other">%1$d úrslit</item>
+    </plurals>
 
     <string name="search_prompt">Skriva fyri at leita í savnunum.</string>
     <string name="search_no_results">Einki passaði við “%1$s”.</string>

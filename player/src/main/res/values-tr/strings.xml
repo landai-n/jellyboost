@@ -5,11 +5,34 @@
     <string name="player_pause">Duraklat</string>
     <string name="player_rewind">10 saniye geri sar</string>
     <string name="player_forward">30 saniye ileri sar</string>
+    <string name="player_show_controls">Oynatıcı denetimlerini göster</string>
+    <string name="player_volume_percent">Ses yüzde %1$d</string>
+    <string name="player_brightness_percent">Parlaklık yüzde %1$d</string>
+    <string name="player_buffering">Arabelleğe alınıyor</string>
+    <string name="player_seek">Zamanda gezinme</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d saat</item>
+        <item quantity="other">%d saat</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d dakika</item>
+        <item quantity="other">%d dakika</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d saniye</item>
+        <item quantity="other">%d saniye</item>
+    </plurals>
     <string name="player_audio">Ses</string>
     <string name="player_subtitles">Altyazı</string>
     <string name="player_subtitles_off">Kapalı</string>
     <string name="player_quality">Kalite</string>
     <string name="player_speed">Hız</string>
+    <string name="player_display">Görüntü</string>
+    <string name="player_brightness">Parlaklık</string>
+    <string name="player_volume">Ses</string>
+    <string name="player_percent">Yüzde %1$d</string>
+    <string name="player_done">Bitti</string>
     <string name="player_skip_intro">Girişi atla</string>
     <string name="player_skip_outro">Kapanışı atla</string>
     <string name="player_quality_auto">Otomatik</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">Şu anda oynatılıyor</string>
     <string name="player_syncplay_queue_next">Sonraki öğe</string>
     <string name="player_syncplay_queue_previous">Önceki öğe</string>
-    <string name="player_syncplay_queue_move_up">Yukarı taşı</string>
-    <string name="player_syncplay_queue_move_down">Aşağı taşı</string>
-    <string name="player_syncplay_queue_remove">Kuyruktan kaldır</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s ögesini yukarı taşı</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s ögesini aşağı taşı</string>
+    <string name="player_syncplay_queue_remove_item">%1$s ögesini kuyruktan kaldır</string>
+    <string name="player_syncplay_queue_play">Oynat</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d öğe kuyruğa eklendi</item>
         <item quantity="other">%d öğe kuyruğa eklendi</item>

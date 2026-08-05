@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Continuă</string>
     <string name="home_hero_play">Redă</string>
     <string name="home_hero_details">Detalii</string>
+    <string name="home_hero_rated">Clasificare %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minut rămas</item>
         <item quantity="few">%1$d minute rămase</item>

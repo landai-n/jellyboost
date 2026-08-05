@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Выкарыстаць Хуткае падключэнне</string>
     <string name="login_quick_connect_title">Хуткае падключэнне</string>
     <string name="login_quick_connect_instructions">Адкрыйце Jellyfin на прыладзе, дзе вы ўжо ўвайшлі, перайдзіце ў Хуткае падключэнне і ўвядзіце гэты код.</string>
+    <string name="login_quick_connect_code_description">Ваш код: %1$s</string>
     <string name="login_quick_connect_waiting">Чаканне пацвярджэння…</string>
     <string name="login_quick_connect_cancel">Скасаваць</string>
 

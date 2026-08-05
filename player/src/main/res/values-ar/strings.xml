@@ -5,12 +5,47 @@
     <string name="player_pause">إيقاف مؤقت</string>
     <string name="player_rewind">الرجوع 10 ثوانٍ</string>
     <string name="player_forward">التقدّم 30 ثانية</string>
+    <string name="player_show_controls">إظهار عناصر تحكم المشغّل</string>
+    <string name="player_volume_percent">مستوى الصوت %1$d بالمئة</string>
+    <string name="player_brightness_percent">السطوع %1$d بالمئة</string>
+    <string name="player_buffering">جارٍ التخزين المؤقت</string>
+    <string name="player_seek">التقديم والترجيع</string>
+    <string name="player_position_of_duration">%1$s من %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="zero">لا ساعات</item>
+        <item quantity="one">ساعة واحدة</item>
+        <item quantity="two">ساعتان</item>
+        <item quantity="few">%d ساعات</item>
+        <item quantity="many">%d ساعة</item>
+        <item quantity="other">%d ساعة</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="zero">لا دقائق</item>
+        <item quantity="one">دقيقة واحدة</item>
+        <item quantity="two">دقيقتان</item>
+        <item quantity="few">%d دقائق</item>
+        <item quantity="many">%d دقيقة</item>
+        <item quantity="other">%d دقيقة</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="zero">لا ثوانٍ</item>
+        <item quantity="one">ثانية واحدة</item>
+        <item quantity="two">ثانيتان</item>
+        <item quantity="few">%d ثوانٍ</item>
+        <item quantity="many">%d ثانية</item>
+        <item quantity="other">%d ثانية</item>
+    </plurals>
 
     <string name="player_audio">الصوت</string>
     <string name="player_subtitles">الترجمة</string>
     <string name="player_subtitles_off">إيقاف</string>
     <string name="player_quality">الجودة</string>
     <string name="player_speed">السرعة</string>
+    <string name="player_display">العرض</string>
+    <string name="player_brightness">السطوع</string>
+    <string name="player_volume">مستوى الصوت</string>
+    <string name="player_percent">%1$d بالمئة</string>
+    <string name="player_done">تم</string>
 
     <string name="player_skip_intro">تخطي المقدمة</string>
     <string name="player_skip_outro">تخطي الخاتمة</string>
@@ -64,9 +99,10 @@
     <string name="player_syncplay_queue_playing">قيد التشغيل الآن</string>
     <string name="player_syncplay_queue_next">العنصر التالي</string>
     <string name="player_syncplay_queue_previous">العنصر السابق</string>
-    <string name="player_syncplay_queue_move_up">تحريك للأعلى</string>
-    <string name="player_syncplay_queue_move_down">تحريك للأسفل</string>
-    <string name="player_syncplay_queue_remove">إزالة من قائمة الانتظار</string>
+    <string name="player_syncplay_queue_move_up_item">تحريك %1$s للأعلى</string>
+    <string name="player_syncplay_queue_move_down_item">تحريك %1$s للأسفل</string>
+    <string name="player_syncplay_queue_remove_item">إزالة %1$s من قائمة الانتظار</string>
+    <string name="player_syncplay_queue_play">تشغيل</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="zero">لا عناصر في قائمة الانتظار</item>

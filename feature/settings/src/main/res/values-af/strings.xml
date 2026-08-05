@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kaart</string>
     <string name="settings_storage_volume_free">%1$s beskikbaar</string>
     <string name="settings_storage_missing">Die berging wat jy gekies het, is nou nie beskikbaar nie, so aflaaie gaan na die plek hieronder gekies.</string>
+    <string name="settings_storage_use_this_hint">Kies hierdie een om aflaaie hier te hou</string>
     <string name="settings_storage_switch_title">Skuif aflaaie?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Aflaaie kan nog nie tussen plekke geskuif word nie, so die een wat reeds op hierdie toestel is, sal geskrap word. Jy kan dit weer na die nuwe plek aflaai.</item>

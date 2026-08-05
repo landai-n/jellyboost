@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episodi %1$d</string>
+    <string name="detail_meta_rating">Valoració %1$s</string>
+    <string name="detail_meta_rated">classificada %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min restants</string>
     <string name="detail_size_on_device">%1$s al dispositiu</string>
     <string name="detail_directed_by">Dirigida per %1$s</string>
+    <string name="detail_cast_member_as">%1$s com a %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d temporada</item>
         <item quantity="other">%1$d temporades</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d episodi</item>
         <item quantity="other">%1$d episodis</item>
     </plurals>
+    <string name="detail_overview_collapsed">Replegada</string>
+    <string name="detail_overview_expanded">Desplegada</string>
+    <string name="detail_overview_expand">Llegeix la sinopsi completa</string>
+    <string name="detail_overview_collapse">Replega la sinopsi</string>
     <string name="detail_empty">Aquest element ja no està disponible.</string>
     <string name="detail_message_download_queued">Afegit a les baixades.</string>
     <string name="detail_message_download_failed">No s\'ha pogut iniciar aquesta baixada.</string>

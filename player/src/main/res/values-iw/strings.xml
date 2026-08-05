@@ -5,12 +5,38 @@
     <string name="player_pause">השהיה</string>
     <string name="player_rewind">10 שניות אחורה</string>
     <string name="player_forward">30 שניות קדימה</string>
+    <string name="player_show_controls">הצגת פקדי הנגן</string>
+    <string name="player_volume_percent">עוצמת קול %1$d אחוז</string>
+    <string name="player_brightness_percent">בהירות %1$d אחוז</string>
+    <string name="player_buffering">טוען לאחסון זמני</string>
+    <string name="player_seek">מעבר בזמן</string>
+    <string name="player_position_of_duration">%1$s מתוך %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">שעה אחת</item>
+        <item quantity="two">שעתיים</item>
+        <item quantity="other">%d שעות</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">דקה אחת</item>
+        <item quantity="two">שתי דקות</item>
+        <item quantity="other">%d דקות</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">שנייה אחת</item>
+        <item quantity="two">שתי שניות</item>
+        <item quantity="other">%d שניות</item>
+    </plurals>
 
     <string name="player_audio">שמע</string>
     <string name="player_subtitles">כתוביות</string>
     <string name="player_subtitles_off">כבוי</string>
     <string name="player_quality">איכות</string>
     <string name="player_speed">מהירות</string>
+    <string name="player_display">תצוגה</string>
+    <string name="player_brightness">בהירות</string>
+    <string name="player_volume">עוצמת קול</string>
+    <string name="player_percent">%1$d אחוז</string>
+    <string name="player_done">סיום</string>
 
     <string name="player_skip_intro">דילוג על הפתיח</string>
     <string name="player_skip_outro">דילוג על הסיום</string>
@@ -62,9 +88,10 @@
     <string name="player_syncplay_queue_playing">מתנגן כעת</string>
     <string name="player_syncplay_queue_next">הפריט הבא</string>
     <string name="player_syncplay_queue_previous">הפריט הקודם</string>
-    <string name="player_syncplay_queue_move_up">הזזה למעלה</string>
-    <string name="player_syncplay_queue_move_down">הזזה למטה</string>
-    <string name="player_syncplay_queue_remove">הסרה מהתור</string>
+    <string name="player_syncplay_queue_move_up_item">הזזת %1$s למעלה</string>
+    <string name="player_syncplay_queue_move_down_item">הזזת %1$s למטה</string>
+    <string name="player_syncplay_queue_remove_item">הסרת %1$s מהתור</string>
+    <string name="player_syncplay_queue_play">הפעלה</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">פריט אחד בתור</item>

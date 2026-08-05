@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Carte SD</string>
     <string name="settings_storage_volume_free">%1$s libres</string>
     <string name="settings_storage_missing">Le stockage choisi n\'est pas disponible pour le moment, donc les téléchargements iront vers l\'emplacement sélectionné ci-dessous.</string>
+    <string name="settings_storage_use_this_hint">Choisissez cet emplacement pour y conserver les téléchargements</string>
     <string name="settings_storage_switch_title">Déplacer les téléchargements ?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Les téléchargements ne peuvent pas encore être déplacés entre emplacements, donc celui déjà présent sur cet appareil sera supprimé. Vous pourrez le retélécharger vers le nouvel emplacement.</item>

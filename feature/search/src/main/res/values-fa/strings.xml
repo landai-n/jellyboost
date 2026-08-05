@@ -6,6 +6,10 @@
     <string name="search_section_movies">فیلم‌ها</string>
     <string name="search_section_series">سریال‌ها</string>
     <string name="search_section_episodes">قسمت‌ها</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d نتیجه</item>
+        <item quantity="other">%1$d نتیجه</item>
+    </plurals>
 
     <string name="search_prompt">برای جستجو در کتابخانه‌های خود تایپ کنید.</string>
     <string name="search_no_results">چیزی با «%1$s» مطابقت نداشت.</string>

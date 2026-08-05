@@ -4,9 +4,18 @@
     <string name="badge_download_queued">У чарзе на спампоўку</string>
     <string name="badge_download_paused">Спампоўка прыпынена</string>
     <string name="badge_download_failed">Спампоўка не ўдалася</string>
+    <string name="badge_downloading_progress">Спампоўваецца, %1$d%%</string>
 
     <string name="media_row_see_all">Паказаць усё</string>
+    <string name="media_row_see_all_section">Паказаць усё ў раздзеле «%1$s»</string>
     <string name="media_card_watched">Прагледжана</string>
+    <string name="media_card_type_movie">Фільм</string>
+    <string name="media_card_type_series">Серыял</string>
+    <string name="media_card_type_season">Сезон</string>
+    <string name="media_card_type_episode">Эпізод</string>
+    <string name="media_card_type_library">Бібліятэка</string>
+    <string name="media_card_progress">Прагледжана %1$d%%</string>
+    <string name="media_card_rating">Ацэнка %1$s з 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d элемент</item>
         <item quantity="few">%1$d элементы</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d элементаў</item>
     </plurals>
     <string name="state_retry">Паўтарыць</string>
+    <string name="state_loading">Загрузка</string>
+    <string name="state_busy">Выконваецца</string>
 
     <plurals name="selection_count">
         <item quantity="one">Выбраны %1$d элемент</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">Выбрана</string>
     <string name="selection_item_not_selected">Не выбрана</string>
+    <string name="selection_enter">Выбраць</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Пазначана %1$d элемент прагледжаным</item>

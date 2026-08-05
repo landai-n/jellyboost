@@ -5,12 +5,38 @@
     <string name="player_pause">Паузирај</string>
     <string name="player_rewind">Врати се 10 секунди</string>
     <string name="player_forward">Премотај 30 секунди унапред</string>
+    <string name="player_show_controls">Прикажи контроле плејера</string>
+    <string name="player_volume_percent">Јачина звука %1$d одсто</string>
+    <string name="player_brightness_percent">Осветљеност %1$d одсто</string>
+    <string name="player_buffering">Баферовање</string>
+    <string name="player_seek">Кретање кроз снимак</string>
+    <string name="player_position_of_duration">%1$s од %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d сат</item>
+        <item quantity="few">%d сата</item>
+        <item quantity="other">%d сати</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d минут</item>
+        <item quantity="few">%d минута</item>
+        <item quantity="other">%d минута</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунде</item>
+        <item quantity="other">%d секунди</item>
+    </plurals>
 
     <string name="player_audio">Звук</string>
     <string name="player_subtitles">Титлови</string>
     <string name="player_subtitles_off">Искључено</string>
     <string name="player_quality">Квалитет</string>
     <string name="player_speed">Брзина</string>
+    <string name="player_display">Приказ</string>
+    <string name="player_brightness">Осветљеност</string>
+    <string name="player_volume">Јачина звука</string>
+    <string name="player_percent">%1$d одсто</string>
+    <string name="player_done">Готово</string>
 
     <string name="player_skip_intro">Прескочи уводну шпицу</string>
     <string name="player_skip_outro">Прескочи одјавну шпицу</string>
@@ -61,9 +87,10 @@
     <string name="player_syncplay_queue_playing">Тренутно се репродукује</string>
     <string name="player_syncplay_queue_next">Следећа ставка</string>
     <string name="player_syncplay_queue_previous">Претходна ставка</string>
-    <string name="player_syncplay_queue_move_up">Помери навише</string>
-    <string name="player_syncplay_queue_move_down">Помери наниже</string>
-    <string name="player_syncplay_queue_remove">Уклони из реда чекања</string>
+    <string name="player_syncplay_queue_move_up_item">Помери %1$s навише</string>
+    <string name="player_syncplay_queue_move_down_item">Помери %1$s наниже</string>
+    <string name="player_syncplay_queue_remove_item">Уклони %1$s из реда чекања</string>
+    <string name="player_syncplay_queue_play">Пусти</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ставка у реду чекања</item>

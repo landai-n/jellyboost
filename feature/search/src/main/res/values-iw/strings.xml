@@ -6,6 +6,11 @@
     <string name="search_section_movies">סרטים</string>
     <string name="search_section_series">סדרות</string>
     <string name="search_section_episodes">פרקים</string>
+    <plurals name="search_result_count">
+        <item quantity="one">תוצאה אחת</item>
+        <item quantity="two">שתי תוצאות</item>
+        <item quantity="other">%1$d תוצאות</item>
+    </plurals>
 
     <string name="search_prompt">הקלד כדי לחפש בספריות שלך.</string>
     <string name="search_no_results">לא נמצאה התאמה עבור ״%1$s״.</string>

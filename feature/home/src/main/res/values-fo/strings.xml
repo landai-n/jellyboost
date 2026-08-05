@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Halda áfram</string>
     <string name="home_hero_play">Spæl</string>
     <string name="home_hero_details">Frágreiðing</string>
+    <string name="home_hero_rated">Aldursmark %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minuttur eftir</item>
         <item quantity="other">%1$d minuttir eftir</item>

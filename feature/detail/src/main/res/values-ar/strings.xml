@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">الحلقة %1$d</string>
+    <string name="detail_meta_rating">التقييم %1$s</string>
+    <string name="detail_meta_rated">مصنّف %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d د</string>
     <string name="detail_remaining_minutes">%1$d د متبقية</string>
     <string name="detail_size_on_device">%1$s على الجهاز</string>
     <string name="detail_directed_by">إخراج %1$s</string>
+    <string name="detail_cast_member_as">%1$s في دور %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="zero">لا مواسم</item>
         <item quantity="one">موسم واحد</item>
@@ -49,6 +52,10 @@
         <item quantity="many">%1$d حلقة</item>
         <item quantity="other">%1$d حلقة</item>
     </plurals>
+    <string name="detail_overview_collapsed">مطوية</string>
+    <string name="detail_overview_expanded">موسّعة</string>
+    <string name="detail_overview_expand">قراءة النبذة كاملة</string>
+    <string name="detail_overview_collapse">طي النبذة</string>
 
     <string name="detail_empty">هذا العنصر لم يعد متوفرًا.</string>
     <string name="detail_message_download_queued">تمت الإضافة إلى التنزيلات.</string>

@@ -4,9 +4,18 @@
     <string name="badge_download_queued">Ve frontě ke stažení</string>
     <string name="badge_download_paused">Stahování pozastaveno</string>
     <string name="badge_download_failed">Stahování se nezdařilo</string>
+    <string name="badge_downloading_progress">Stahování, %1$d%%</string>
 
     <string name="media_row_see_all">Zobrazit vše</string>
+    <string name="media_row_see_all_section">Zobrazit vše ze sekce %1$s</string>
     <string name="media_card_watched">Zhlédnuto</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Seriál</string>
+    <string name="media_card_type_season">Řada</string>
+    <string name="media_card_type_episode">Epizoda</string>
+    <string name="media_card_type_library">Knihovna</string>
+    <string name="media_card_progress">Zhlédnuto %1$d%%</string>
+    <string name="media_card_rating">Hodnocení %1$s z 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d položka</item>
         <item quantity="few">%1$d položky</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d položek</item>
     </plurals>
     <string name="state_retry">Zkusit znovu</string>
+    <string name="state_loading">Načítání</string>
+    <string name="state_busy">Pracuje se</string>
 
     <plurals name="selection_count">
         <item quantity="one">Vybrána %1$d položka</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">Vybráno</string>
     <string name="selection_item_not_selected">Nevybráno</string>
+    <string name="selection_enter">Vybrat</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Označena %1$d položka jako zhlédnutá</item>

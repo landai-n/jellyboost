@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Nadaljuj</string>
     <string name="home_hero_play">Predvajaj</string>
     <string name="home_hero_details">Podrobnosti</string>
+    <string name="home_hero_rated">Starostna oznaka %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Še %1$d minuta</item>
         <item quantity="two">Še %1$d minuti</item>

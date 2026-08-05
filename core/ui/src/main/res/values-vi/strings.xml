@@ -4,12 +4,23 @@
     <string name="badge_download_queued">Đang chờ tải xuống</string>
     <string name="badge_download_paused">Đã tạm dừng tải xuống</string>
     <string name="badge_download_failed">Tải xuống thất bại</string>
+    <string name="badge_downloading_progress">Đang tải xuống, %1$d%%</string>
     <string name="media_row_see_all">Xem tất cả</string>
+    <string name="media_row_see_all_section">Xem tất cả trong %1$s</string>
     <string name="media_card_watched">Đã xem</string>
+    <string name="media_card_type_movie">Phim</string>
+    <string name="media_card_type_series">Phim bộ</string>
+    <string name="media_card_type_season">Mùa</string>
+    <string name="media_card_type_episode">Tập</string>
+    <string name="media_card_type_library">Thư viện</string>
+    <string name="media_card_progress">Đã xem %1$d%%</string>
+    <string name="media_card_rating">Đánh giá %1$s trên 10</string>
     <plurals name="library_item_count">
         <item quantity="other">%1$d mục</item>
     </plurals>
     <string name="state_retry">Thử lại</string>
+    <string name="state_loading">Đang tải</string>
+    <string name="state_busy">Đang xử lý</string>
     <plurals name="selection_count">
         <item quantity="other">Đã chọn %1$d</item>
     </plurals>
@@ -20,6 +31,7 @@
     <string name="selection_download">Tải xuống</string>
     <string name="selection_item_selected">Đã chọn</string>
     <string name="selection_item_not_selected">Chưa chọn</string>
+    <string name="selection_enter">Chọn</string>
     <plurals name="selection_result_watched">
         <item quantity="other">Đã đánh dấu %1$d mục là đã xem</item>
     </plurals>

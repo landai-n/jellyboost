@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">எபிசோட் %1$d</string>
+    <string name="detail_meta_rating">மதிப்பீடு %1$s</string>
+    <string name="detail_meta_rated">வயது தரம் %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d நிமி</string>
     <string name="detail_remaining_minutes">%1$d நிமிடம் மீதம்</string>
     <string name="detail_size_on_device">%1$s சாதனத்தில்</string>
     <string name="detail_directed_by">இயக்கியவர் %1$s</string>
+    <string name="detail_cast_member_as">%2$s ஆக %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d சீசன்</item>
         <item quantity="other">%1$d சீசன்கள்</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d எபிசோட்</item>
         <item quantity="other">%1$d எபிசோடுகள்</item>
     </plurals>
+    <string name="detail_overview_collapsed">சுருக்கப்பட்டது</string>
+    <string name="detail_overview_expanded">விரிவாக்கப்பட்டது</string>
+    <string name="detail_overview_expand">முழு சுருக்கத்தையும் படிக்க</string>
+    <string name="detail_overview_collapse">சுருக்கத்தைச் சுருக்கு</string>
 
     <string name="detail_empty">இந்த உருப்படி இனி கிடைக்கவில்லை.</string>
     <string name="detail_message_download_queued">பதிவிறக்கங்களில் சேர்க்கப்பட்டது.</string>

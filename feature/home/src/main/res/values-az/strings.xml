@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Davam et</string>
     <string name="home_hero_play">Oynat</string>
     <string name="home_hero_details">Ətraflı</string>
+    <string name="home_hero_rated">%1$s reytinqli</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d dəqiqə qalıb</item>
         <item quantity="other">%1$d dəqiqə qalıb</item>

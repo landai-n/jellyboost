@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">ಸಂಚಿಕೆ %1$d</string>
+    <string name="detail_meta_rating">ರೇಟಿಂಗ್ %1$s</string>
+    <string name="detail_meta_rated">ವಯಸ್ಸಿನ ಮಾನದಂಡ %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d ನಿಮಿಷ</string>
     <string name="detail_remaining_minutes">%1$d ನಿಮಿಷ ಬಾಕಿ</string>
     <string name="detail_size_on_device">ಸಾಧನದಲ್ಲಿ %1$s</string>
     <string name="detail_directed_by">%1$s ನಿರ್ದೇಶಿಸಿದ್ದಾರೆ</string>
+    <string name="detail_cast_member_as">%2$s ಪಾತ್ರದಲ್ಲಿ %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d ಸೀಸನ್</item>
         <item quantity="other">%1$d ಸೀಸನ್‌ಗಳು</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d ಸಂಚಿಕೆ</item>
         <item quantity="other">%1$d ಸಂಚಿಕೆಗಳು</item>
     </plurals>
+    <string name="detail_overview_collapsed">ಸಂಕುಚಿತಗೊಂಡಿದೆ</string>
+    <string name="detail_overview_expanded">ವಿಸ್ತರಿಸಲಾಗಿದೆ</string>
+    <string name="detail_overview_expand">ಪೂರ್ಣ ಸಾರಾಂಶ ಓದಿ</string>
+    <string name="detail_overview_collapse">ಸಾರಾಂಶವನ್ನು ಸಂಕುಚಿಸಿ</string>
 
     <string name="detail_empty">ಈ ಐಟಂ ಇನ್ನು ಲಭ್ಯವಿಲ್ಲ.</string>
     <string name="detail_message_download_queued">ಡೌನ್‌ಲೋಡ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ.</string>

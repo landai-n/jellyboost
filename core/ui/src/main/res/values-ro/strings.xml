@@ -4,14 +4,25 @@
     <string name="badge_download_queued">În așteptare pentru descărcare</string>
     <string name="badge_download_paused">Descărcare în pauză</string>
     <string name="badge_download_failed">Descărcare eșuată</string>
+    <string name="badge_downloading_progress">Se descarcă, %1$d%%</string>
     <string name="media_row_see_all">Vezi tot</string>
+    <string name="media_row_see_all_section">Vezi tot din %1$s</string>
     <string name="media_card_watched">Vizionat</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serial</string>
+    <string name="media_card_type_season">Sezon</string>
+    <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_library">Bibliotecă</string>
+    <string name="media_card_progress">Vizionat %1$d%%</string>
+    <string name="media_card_rating">Notă %1$s din 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d element</item>
         <item quantity="few">%1$d elemente</item>
         <item quantity="other">%1$d de elemente</item>
     </plurals>
     <string name="state_retry">Reîncearcă</string>
+    <string name="state_loading">Se încarcă</string>
+    <string name="state_busy">În curs</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d selectat</item>
         <item quantity="few">%1$d selectate</item>
@@ -24,6 +35,7 @@
     <string name="selection_download">Descarcă</string>
     <string name="selection_item_selected">Selectat</string>
     <string name="selection_item_not_selected">Neselectat</string>
+    <string name="selection_enter">Selectează</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d marcat ca vizionat</item>
         <item quantity="few">%1$d marcate ca vizionate</item>

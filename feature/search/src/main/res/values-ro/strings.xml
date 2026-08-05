@@ -5,6 +5,11 @@
     <string name="search_section_movies">Filme</string>
     <string name="search_section_series">Seriale</string>
     <string name="search_section_episodes">Episoade</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d rezultat</item>
+        <item quantity="few">%1$d rezultate</item>
+        <item quantity="other">%1$d de rezultate</item>
+    </plurals>
     <string name="search_prompt">Tastați pentru a căuta în bibliotecile dvs.</string>
     <string name="search_no_results">Niciun rezultat pentru „%1$s”.</string>
     <string name="search_error_network">Serverul nu poate fi contactat. Verificați conexiunea și încercați din nou.</string>

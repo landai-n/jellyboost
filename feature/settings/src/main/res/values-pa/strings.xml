@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD ਕਾਰਡ</string>
     <string name="settings_storage_volume_free">%1$s ਖਾਲੀ</string>
     <string name="settings_storage_missing">ਤੁਹਾਡੇ ਵੱਲੋਂ ਚੁਣੀ ਗਈ ਸਟੋਰੇਜ ਇਸ ਵੇਲੇ ਉਪਲਬਧ ਨਹੀਂ ਹੈ, ਇਸ ਲਈ ਡਾਊਨਲੋਡ ਹੇਠਾਂ ਚੁਣੇ ਗਏ ਟਿਕਾਣੇ ਉੱਤੇ ਜਾ ਰਹੇ ਹਨ।</string>
+    <string name="settings_storage_use_this_hint">ਡਾਊਨਲੋਡ ਇੱਥੇ ਹੀ ਰੱਖਣ ਲਈ ਇਹ ਚੁਣੋ</string>
     <string name="settings_storage_switch_title">ਡਾਊਨਲੋਡ ਭੇਜੀਏ?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">ਡਾਊਨਲੋਡ ਹਾਲੇ ਟਿਕਾਣਿਆਂ ਵਿਚਕਾਰ ਭੇਜੇ ਨਹੀਂ ਜਾ ਸਕਦੇ, ਇਸ ਲਈ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਇੱਕ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ। ਤੁਸੀਂ ਇਸਨੂੰ ਨਵੇਂ ਟਿਕਾਣੇ ਉੱਤੇ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</item>

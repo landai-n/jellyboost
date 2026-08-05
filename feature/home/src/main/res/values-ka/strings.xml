@@ -9,6 +9,7 @@
     <string name="home_hero_resume">გაგრძელება</string>
     <string name="home_hero_play">დაკვრა</string>
     <string name="home_hero_details">დეტალები</string>
+    <string name="home_hero_rated">ასაკობრივი კატეგორია %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">დარჩენილია %1$d წუთი</item>
         <item quantity="other">დარჩენილია %1$d წუთი</item>

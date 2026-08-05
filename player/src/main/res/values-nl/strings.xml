@@ -5,12 +5,35 @@
     <string name="player_pause">Pauzeren</string>
     <string name="player_rewind">10 seconden terugspoelen</string>
     <string name="player_forward">30 seconden vooruitspoelen</string>
+    <string name="player_show_controls">Bediening van de speler tonen</string>
+    <string name="player_volume_percent">Volume %1$d procent</string>
+    <string name="player_brightness_percent">Helderheid %1$d procent</string>
+    <string name="player_buffering">Bufferen</string>
+    <string name="player_seek">Door de video schuiven</string>
+    <string name="player_position_of_duration">%1$s van %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuut</item>
+        <item quantity="other">%d minuten</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d seconde</item>
+        <item quantity="other">%d seconden</item>
+    </plurals>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Ondertitels</string>
     <string name="player_subtitles_off">Uit</string>
     <string name="player_quality">Kwaliteit</string>
     <string name="player_speed">Snelheid</string>
+    <string name="player_display">Weergave</string>
+    <string name="player_brightness">Helderheid</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d procent</string>
+    <string name="player_done">Klaar</string>
 
     <string name="player_skip_intro">Intro overslaan</string>
     <string name="player_skip_outro">Outro overslaan</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Speelt nu</string>
     <string name="player_syncplay_queue_next">Volgend item</string>
     <string name="player_syncplay_queue_previous">Vorig item</string>
-    <string name="player_syncplay_queue_move_up">Omhoog</string>
-    <string name="player_syncplay_queue_move_down">Omlaag</string>
-    <string name="player_syncplay_queue_remove">Verwijderen uit wachtrij</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s omhoog verplaatsen</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s omlaag verplaatsen</string>
+    <string name="player_syncplay_queue_remove_item">%1$s uit de wachtrij verwijderen</string>
+    <string name="player_syncplay_queue_play">Afspelen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item in de wachtrij</item>

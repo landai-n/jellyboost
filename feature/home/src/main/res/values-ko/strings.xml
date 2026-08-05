@@ -10,6 +10,7 @@
     <string name="home_hero_resume">이어서 재생</string>
     <string name="home_hero_play">재생</string>
     <string name="home_hero_details">세부정보</string>
+    <string name="home_hero_rated">시청 등급 %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="other">%1$d분 남음</item>
     </plurals>

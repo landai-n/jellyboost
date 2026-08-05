@@ -5,12 +5,35 @@
     <string name="player_pause">Paus</string>
     <string name="player_rewind">10 Sekonnen zréckspréngen</string>
     <string name="player_forward">30 Sekonnen no vir sprangen</string>
+    <string name="player_show_controls">Steierung vum Player weisen</string>
+    <string name="player_volume_percent">Lautstäerkt %1$d Prozent</string>
+    <string name="player_brightness_percent">Helegkeet %1$d Prozent</string>
+    <string name="player_buffering">Gëtt gepuffert</string>
+    <string name="player_seek">Am Film sprangen</string>
+    <string name="player_position_of_duration">%1$s vun %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d Stonn</item>
+        <item quantity="other">%d Stonnen</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d Minutt</item>
+        <item quantity="other">%d Minutten</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d Sekonn</item>
+        <item quantity="other">%d Sekonnen</item>
+    </plurals>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Ënnertitelen</string>
     <string name="player_subtitles_off">Aus</string>
     <string name="player_quality">Qualitéit</string>
     <string name="player_speed">Vitesse</string>
+    <string name="player_display">Uweisung</string>
+    <string name="player_brightness">Helegkeet</string>
+    <string name="player_volume">Lautstäerkt</string>
+    <string name="player_percent">%1$d Prozent</string>
+    <string name="player_done">Fäerdeg</string>
 
     <string name="player_skip_intro">Intro iwwersprangen</string>
     <string name="player_skip_outro">Outro iwwersprangen</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Spillt elo</string>
     <string name="player_syncplay_queue_next">Nächst Element</string>
     <string name="player_syncplay_queue_previous">Vireregt Element</string>
-    <string name="player_syncplay_queue_move_up">No uewen</string>
-    <string name="player_syncplay_queue_move_down">No ënnen</string>
-    <string name="player_syncplay_queue_remove">Aus der Warteschlaang ewechhuelen</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s no uewen réckelen</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s no ënnen réckelen</string>
+    <string name="player_syncplay_queue_remove_item">%1$s aus der Warteschlaang ewechhuelen</string>
+    <string name="player_syncplay_queue_play">Ofspillen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d Element an der Warteschlaang</item>

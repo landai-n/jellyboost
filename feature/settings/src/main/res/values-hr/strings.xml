@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD kartica</string>
     <string name="settings_storage_volume_free">%1$s slobodno</string>
     <string name="settings_storage_missing">Odabrana pohrana trenutno nije dostupna, pa se preuzimanja spremaju na lokaciju odabranu ispod.</string>
+    <string name="settings_storage_use_this_hint">Odaberite ovo mjesto da preuzimanja ostanu ovdje</string>
     <string name="settings_storage_switch_title">Premjestiti preuzimanja?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Preuzimanja se još ne mogu premjestiti između lokacija, pa će stavka koja je već na ovom uređaju biti izbrisana. Možete je ponovno preuzeti na novu lokaciju.</item>

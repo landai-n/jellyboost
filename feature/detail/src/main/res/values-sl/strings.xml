@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Epizoda %1$d</string>
+    <string name="detail_meta_rating">Ocena %1$s</string>
+    <string name="detail_meta_rated">starostna oznaka %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Še %1$d min</string>
     <string name="detail_size_on_device">%1$s na napravi</string>
     <string name="detail_directed_by">Režija: %1$s</string>
+    <string name="detail_cast_member_as">%1$s kot %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezona</item>
         <item quantity="two">%1$d sezoni</item>
@@ -45,6 +48,10 @@
         <item quantity="few">%1$d epizode</item>
         <item quantity="other">%1$d epizod</item>
     </plurals>
+    <string name="detail_overview_collapsed">Strnjeno</string>
+    <string name="detail_overview_expanded">Razširjeno</string>
+    <string name="detail_overview_expand">Preberi celoten opis</string>
+    <string name="detail_overview_collapse">Strni opis</string>
 
     <string name="detail_empty">Ta predmet ni več na voljo.</string>
     <string name="detail_message_download_queued">Dodano med prenose.</string>

@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD карта</string>
     <string name="settings_storage_volume_free">%1$s бос</string>
     <string name="settings_storage_missing">Сіз таңдаған жад қазір қолжетімді емес, сондықтан жүктеулер төменде таңдалған орынға жіберіледі.</string>
+    <string name="settings_storage_use_this_hint">Жүктемелер осында сақталуы үшін осыны таңдаңыз</string>
     <string name="settings_storage_switch_title">Жүктеулерді жылжыту керек пе?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Жүктеулерді орындар арасында жылжыту әлі мүмкін емес, сондықтан осы құрылғыдағысы жойылады. Оны жаңа орынға қайта жүктеп алуға болады.</item>

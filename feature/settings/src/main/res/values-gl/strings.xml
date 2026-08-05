@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Tarxeta SD</string>
     <string name="settings_storage_volume_free">%1$s libres</string>
     <string name="settings_storage_missing">O almacenamento que escolliches non está dispoñible agora mesmo, así que as descargas van para o lugar seleccionado embaixo.</string>
+    <string name="settings_storage_use_this_hint">Escolle este lugar para manter aquí as descargas</string>
     <string name="settings_storage_switch_title">Mover descargas?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">As descargas aínda non se poden mover entre lugares, así que a que xa está neste dispositivo eliminarase. Podes descargala de novo no novo lugar.</item>

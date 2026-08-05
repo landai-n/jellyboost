@@ -21,6 +21,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">בערך %1$s נותרו</string>
     <string name="downloads_stat_network_helper">מושהה אוטומטית בנתונים סלולריים</string>
+    <string name="downloads_usage_storage_label">אחסון בשימוש</string>
+    <string name="downloads_usage_queue_label">התקדמות התור</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">הפעלה</string>
 
     <string name="downloads_action_delete">מחיקת הורדה</string>
     <string name="downloads_action_cancel">ביטול הורדה</string>

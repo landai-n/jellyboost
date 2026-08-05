@@ -4,9 +4,18 @@
     <string name="badge_download_queued">У черзі на завантаження</string>
     <string name="badge_download_paused">Завантаження призупинено</string>
     <string name="badge_download_failed">Помилка завантаження</string>
+    <string name="badge_downloading_progress">Завантаження, %1$d%%</string>
 
     <string name="media_row_see_all">Показати всі</string>
+    <string name="media_row_see_all_section">Показати все в розділі «%1$s»</string>
     <string name="media_card_watched">Переглянуто</string>
+    <string name="media_card_type_movie">Фільм</string>
+    <string name="media_card_type_series">Серіал</string>
+    <string name="media_card_type_season">Сезон</string>
+    <string name="media_card_type_episode">Епізод</string>
+    <string name="media_card_type_library">Медіатека</string>
+    <string name="media_card_progress">Переглянуто %1$d%%</string>
+    <string name="media_card_rating">Оцінка %1$s з 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d елемент</item>
         <item quantity="few">%1$d елементи</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d елементів</item>
     </plurals>
     <string name="state_retry">Повторити</string>
+    <string name="state_loading">Завантаження</string>
+    <string name="state_busy">Виконується</string>
 
     <plurals name="selection_count">
         <item quantity="one">Вибрано %1$d елемент</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">Вибрано</string>
     <string name="selection_item_not_selected">Не вибрано</string>
+    <string name="selection_enter">Вибрати</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Позначено %1$d переглянутим</item>

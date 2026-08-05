@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Épisode %1$d</string>
+    <string name="detail_meta_rating">Note %1$s</string>
+    <string name="detail_meta_rated">classé %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min restantes</string>
     <string name="detail_size_on_device">%1$s sur l\'appareil</string>
     <string name="detail_directed_by">Réalisé par %1$s</string>
+    <string name="detail_cast_member_as">%1$s dans le rôle de %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d saison</item>
         <item quantity="other">%1$d saisons</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d épisode</item>
         <item quantity="other">%1$d épisodes</item>
     </plurals>
+    <string name="detail_overview_collapsed">Réduit</string>
+    <string name="detail_overview_expanded">Développé</string>
+    <string name="detail_overview_expand">Lire le résumé complet</string>
+    <string name="detail_overview_collapse">Réduire le résumé</string>
     <string name="detail_empty">Cet élément n\'est plus disponible.</string>
     <string name="detail_message_download_queued">Ajouté aux téléchargements.</string>
     <string name="detail_message_download_failed">Impossible de démarrer ce téléchargement.</string>

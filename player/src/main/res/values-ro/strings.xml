@@ -5,11 +5,37 @@
     <string name="player_pause">Pauză</string>
     <string name="player_rewind">Derulează înapoi 10 secunde</string>
     <string name="player_forward">Derulează înainte 30 de secunde</string>
+    <string name="player_show_controls">Afișează comenzile playerului</string>
+    <string name="player_volume_percent">Volum %1$d la sută</string>
+    <string name="player_brightness_percent">Luminozitate %1$d la sută</string>
+    <string name="player_buffering">Se încarcă în memoria tampon</string>
+    <string name="player_seek">Deplasare în timp</string>
+    <string name="player_position_of_duration">%1$s din %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d oră</item>
+        <item quantity="few">%d ore</item>
+        <item quantity="other">%d de ore</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minut</item>
+        <item quantity="few">%d minute</item>
+        <item quantity="other">%d de minute</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d secundă</item>
+        <item quantity="few">%d secunde</item>
+        <item quantity="other">%d de secunde</item>
+    </plurals>
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitrări</string>
     <string name="player_subtitles_off">Dezactivate</string>
     <string name="player_quality">Calitate</string>
     <string name="player_speed">Viteză</string>
+    <string name="player_display">Imagine</string>
+    <string name="player_brightness">Luminozitate</string>
+    <string name="player_volume">Volum</string>
+    <string name="player_percent">%1$d la sută</string>
+    <string name="player_done">Gata</string>
     <string name="player_skip_intro">Sari peste genericul de început</string>
     <string name="player_skip_outro">Sari peste genericul de final</string>
     <string name="player_quality_auto">Automată</string>
@@ -51,9 +77,10 @@
     <string name="player_syncplay_queue_playing">Se redă acum</string>
     <string name="player_syncplay_queue_next">Elementul următor</string>
     <string name="player_syncplay_queue_previous">Elementul anterior</string>
-    <string name="player_syncplay_queue_move_up">Mută mai sus</string>
-    <string name="player_syncplay_queue_move_down">Mută mai jos</string>
-    <string name="player_syncplay_queue_remove">Elimină din coadă</string>
+    <string name="player_syncplay_queue_move_up_item">Mută %1$s mai sus</string>
+    <string name="player_syncplay_queue_move_down_item">Mută %1$s mai jos</string>
+    <string name="player_syncplay_queue_remove_item">Elimină %1$s din coadă</string>
+    <string name="player_syncplay_queue_play">Redă</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element în coadă</item>
         <item quantity="few">%d elemente în coadă</item>

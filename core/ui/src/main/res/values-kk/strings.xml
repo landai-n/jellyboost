@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Жүктеу кезегінде</string>
     <string name="badge_download_paused">Жүктеу кідіртілді</string>
     <string name="badge_download_failed">Жүктеу сәтсіз аяқталды</string>
+    <string name="badge_downloading_progress">Жүктелуде, %1$d%%</string>
 
     <string name="media_row_see_all">Барлығын көру</string>
+    <string name="media_row_see_all_section">%1$s бөліміндегі барлығын көру</string>
     <string name="media_card_watched">Қаралды</string>
+    <string name="media_card_type_movie">Фильм</string>
+    <string name="media_card_type_series">Сериал</string>
+    <string name="media_card_type_season">Маусым</string>
+    <string name="media_card_type_episode">Бөлім</string>
+    <string name="media_card_type_library">Кітапхана</string>
+    <string name="media_card_progress">%1$d%% қаралды</string>
+    <string name="media_card_rating">Рейтинг 10-нан %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d элемент</item>
         <item quantity="other">%1$d элемент</item>
     </plurals>
     <string name="state_retry">Қайталау</string>
+    <string name="state_loading">Жүктелуде</string>
+    <string name="state_busy">Орындалуда</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d таңдалды</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Таңдалды</string>
     <string name="selection_item_not_selected">Таңдалмады</string>
+    <string name="selection_enter">Таңдау</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d элемент қаралды деп белгіленді</item>

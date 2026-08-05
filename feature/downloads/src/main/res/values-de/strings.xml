@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Noch etwa %1$s</string>
     <string name="downloads_stat_network_helper">Bei mobilen Daten automatisch pausiert</string>
+    <string name="downloads_usage_storage_label">Belegter Speicher</string>
+    <string name="downloads_usage_queue_label">Fortschritt der Warteschlange</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Abspielen</string>
 
     <string name="downloads_action_delete">Download löschen</string>
     <string name="downloads_action_cancel">Download abbrechen</string>

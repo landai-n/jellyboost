@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Gebruik Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Maak Jellyfin oop op \'n toestel waar jy reeds aangemeld is, gaan na Quick Connect en voer hierdie kode in.</string>
+    <string name="login_quick_connect_code_description">Jou kode is %1$s</string>
     <string name="login_quick_connect_waiting">Wag vir goedkeuring…</string>
     <string name="login_quick_connect_cancel">Kanselleer</string>
 

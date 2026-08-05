@@ -5,11 +5,34 @@
     <string name="player_pause">Pausatu</string>
     <string name="player_rewind">Atzera egin 10 segundo</string>
     <string name="player_forward">Aurrera egin 30 segundo</string>
+    <string name="player_show_controls">Erakutsi erreproduzigailuaren kontrolak</string>
+    <string name="player_volume_percent">Bolumena ehuneko %1$d</string>
+    <string name="player_brightness_percent">Distira ehuneko %1$d</string>
+    <string name="player_buffering">Bufferatzen</string>
+    <string name="player_seek">Aurreratu edo atzeratu</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">Ordu %d</item>
+        <item quantity="other">%d ordu</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">Minutu %d</item>
+        <item quantity="other">%d minutu</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">Segundo %d</item>
+        <item quantity="other">%d segundo</item>
+    </plurals>
     <string name="player_audio">Audioa</string>
     <string name="player_subtitles">Azpitituluak</string>
     <string name="player_subtitles_off">Itzalita</string>
     <string name="player_quality">Kalitatea</string>
     <string name="player_speed">Abiadura</string>
+    <string name="player_display">Pantaila</string>
+    <string name="player_brightness">Distira</string>
+    <string name="player_volume">Bolumena</string>
+    <string name="player_percent">Ehuneko %1$d</string>
+    <string name="player_done">Eginda</string>
     <string name="player_skip_intro">Saltatu sarrera</string>
     <string name="player_skip_outro">Saltatu amaiera</string>
     <string name="player_quality_auto">Automatikoa</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">Orain erreproduzitzen</string>
     <string name="player_syncplay_queue_next">Hurrengo elementua</string>
     <string name="player_syncplay_queue_previous">Aurreko elementua</string>
-    <string name="player_syncplay_queue_move_up">Igo</string>
-    <string name="player_syncplay_queue_move_down">Jaitsi</string>
-    <string name="player_syncplay_queue_remove">Kendu ilaratik</string>
+    <string name="player_syncplay_queue_move_up_item">Igo %1$s</string>
+    <string name="player_syncplay_queue_move_down_item">Jaitsi %1$s</string>
+    <string name="player_syncplay_queue_remove_item">Kendu %1$s ilaratik</string>
+    <string name="player_syncplay_queue_play">Erreproduzitu</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">Elementu %d ilaran</item>
         <item quantity="other">%d elementu ilaran</item>

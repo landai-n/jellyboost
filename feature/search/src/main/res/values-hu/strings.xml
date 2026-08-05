@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmek</string>
     <string name="search_section_series">Sorozatok</string>
     <string name="search_section_episodes">Epizódok</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d találat</item>
+        <item quantity="other">%1$d találat</item>
+    </plurals>
 
     <string name="search_prompt">Kezdj el gépelni a könyvtáraid átkereséséhez.</string>
     <string name="search_no_results">Nincs találat erre: „%1$s”.</string>

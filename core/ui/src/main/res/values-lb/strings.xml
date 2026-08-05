@@ -4,14 +4,25 @@
     <string name="badge_download_queued">An der Downloadwarteschlaang</string>
     <string name="badge_download_paused">Download pauséiert</string>
     <string name="badge_download_failed">Download feelgeschloen</string>
+    <string name="badge_downloading_progress">Gëtt erofgelueden, %1$d%%</string>
 
     <string name="media_row_see_all">Alles weisen</string>
+    <string name="media_row_see_all_section">Alles aus %1$s weisen</string>
     <string name="media_card_watched">Gekuckt</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serie</string>
+    <string name="media_card_type_season">Staffel</string>
+    <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_library">Bibliothéik</string>
+    <string name="media_card_progress">%1$d%% gekuckt</string>
+    <string name="media_card_rating">Bewäertung %1$s vun 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d Element</item>
         <item quantity="other">%1$d Elementer</item>
     </plurals>
     <string name="state_retry">Nach eng Kéier probéieren</string>
+    <string name="state_loading">Gëtt gelueden</string>
+    <string name="state_busy">Leeft</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ausgewielt</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Ausgewielt</string>
     <string name="selection_item_not_selected">Net ausgewielt</string>
+    <string name="selection_enter">Auswielen</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d als gekuckt markéiert</item>

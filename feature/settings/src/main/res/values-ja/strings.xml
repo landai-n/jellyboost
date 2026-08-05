@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SDカード</string>
     <string name="settings_storage_volume_free">空き %1$s</string>
     <string name="settings_storage_missing">選択した保存先は現在使用できないため、ダウンロードは以下で選択した場所に保存されます。</string>
+    <string name="settings_storage_use_this_hint">ダウンロードをここに保存し続けるには、これを選びます</string>
     <string name="settings_storage_switch_title">ダウンロードを移動しますか？</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">ダウンロードはまだ別の場所へ移動できないため、この端末にすでにある %1$d 件は削除されます。新しい場所に再度ダウンロードできます。</item>

@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Cartão SD</string>
     <string name="settings_storage_volume_free">%1$s livres</string>
     <string name="settings_storage_missing">O armazenamento que você escolheu não está disponível agora, então os downloads vão para o local selecionado abaixo.</string>
+    <string name="settings_storage_use_this_hint">Escolha este local para manter os downloads aqui</string>
     <string name="settings_storage_switch_title">Mover downloads?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Downloads ainda não podem ser movidos entre locais, então o que já está neste dispositivo será excluído. Você pode baixá-lo novamente no novo local.</item>

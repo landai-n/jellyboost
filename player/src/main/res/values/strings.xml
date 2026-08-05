@@ -125,15 +125,6 @@
     <string name="player_syncplay_queue_playing">Playing now</string>
     <string name="player_syncplay_queue_next">Next item</string>
     <string name="player_syncplay_queue_previous">Previous item</string>
-    <!--
-      The bare forms. No longer drawn — the queue rows use the item-named ones below — but kept
-      because all 69 locale folders carry translations of these three keys, and deleting the base
-      strings would orphan every one of them. A later localization pass should translate the
-      `_item` forms and then retire these together with their translations.
-    -->
-    <string name="player_syncplay_queue_move_up">Move up</string>
-    <string name="player_syncplay_queue_move_down">Move down</string>
-    <string name="player_syncplay_queue_remove">Remove from queue</string>
 
     <!--
       The queue row's three actions, each named for the item it acts on (%1$s is its title). A queue

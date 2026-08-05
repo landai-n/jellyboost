@@ -5,12 +5,35 @@
     <string name="player_pause">Pouseer</string>
     <string name="player_rewind">Spring 10 sekondes terug</string>
     <string name="player_forward">Spring 30 sekondes vorentoe</string>
+    <string name="player_show_controls">Wys spelerkontroles</string>
+    <string name="player_volume_percent">Volume %1$d persent</string>
+    <string name="player_brightness_percent">Helderheid %1$d persent</string>
+    <string name="player_buffering">Buffer tans</string>
+    <string name="player_seek">Soek</string>
+    <string name="player_position_of_duration">%1$s van %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d uur</item>
+        <item quantity="other">%d uur</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuut</item>
+        <item quantity="other">%d minute</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekonde</item>
+        <item quantity="other">%d sekondes</item>
+    </plurals>
 
     <string name="player_audio">Oudio</string>
     <string name="player_subtitles">Onderskrifte</string>
     <string name="player_subtitles_off">Af</string>
     <string name="player_quality">Gehalte</string>
     <string name="player_speed">Spoed</string>
+    <string name="player_display">Skerm</string>
+    <string name="player_brightness">Helderheid</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d persent</string>
+    <string name="player_done">Klaar</string>
 
     <string name="player_skip_intro">Slaan intro oor</string>
     <string name="player_skip_outro">Slaan uittrede oor</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Speel tans</string>
     <string name="player_syncplay_queue_next">Volgende item</string>
     <string name="player_syncplay_queue_previous">Vorige item</string>
-    <string name="player_syncplay_queue_move_up">Skuif op</string>
-    <string name="player_syncplay_queue_move_down">Skuif af</string>
-    <string name="player_syncplay_queue_remove">Verwyder uit wagtou</string>
+    <string name="player_syncplay_queue_move_up_item">Skuif %1$s op</string>
+    <string name="player_syncplay_queue_move_down_item">Skuif %1$s af</string>
+    <string name="player_syncplay_queue_remove_item">Verwyder %1$s uit die wagtou</string>
+    <string name="player_syncplay_queue_play">Speel</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item in wagtou</item>

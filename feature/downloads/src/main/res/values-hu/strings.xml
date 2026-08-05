@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">körülbelül %1$s van hátra</string>
     <string name="downloads_stat_network_helper">Mobiladat használatakor automatikusan szünetel</string>
+    <string name="downloads_usage_storage_label">Felhasznált tárhely</string>
+    <string name="downloads_usage_queue_label">A sor haladása</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Lejátszás</string>
 
     <string name="downloads_action_delete">Letöltés törlése</string>
     <string name="downloads_action_cancel">Letöltés megszakítása</string>

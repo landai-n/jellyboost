@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">%1$d. atala</string>
+    <string name="detail_meta_rating">Balorazioa %1$s</string>
+    <string name="detail_meta_rated">adin-sailkapena %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min falta</string>
     <string name="detail_size_on_device">%1$s gailuan</string>
     <string name="detail_directed_by">Zuzendaria: %1$s</string>
+    <string name="detail_cast_member_as">%1$s, %2$s gisa</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d denboraldi</item>
         <item quantity="other">%1$d denboraldi</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d atal</item>
         <item quantity="other">%1$d atal</item>
     </plurals>
+    <string name="detail_overview_collapsed">Tolestuta</string>
+    <string name="detail_overview_expanded">Zabalduta</string>
+    <string name="detail_overview_expand">Irakurri laburpen osoa</string>
+    <string name="detail_overview_collapse">Tolestu laburpena</string>
     <string name="detail_empty">Elementu hau ez dago jada erabilgarri.</string>
     <string name="detail_message_download_queued">Deskargetara gehituta.</string>
     <string name="detail_message_download_failed">Ezin izan da deskarga hori hasi.</string>

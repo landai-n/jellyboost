@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kaart</string>
     <string name="settings_storage_volume_free">%1$s vrij</string>
     <string name="settings_storage_missing">De opslag die je koos is momenteel niet beschikbaar, dus downloads gaan naar de hieronder geselecteerde locatie.</string>
+    <string name="settings_storage_use_this_hint">Kies deze locatie om downloads hier te houden</string>
     <string name="settings_storage_switch_title">Downloads verplaatsen?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Downloads kunnen nog niet tussen locaties worden verplaatst, dus de download die al op dit apparaat staat wordt verwijderd. Je kunt hem opnieuw downloaden naar de nieuwe locatie.</item>

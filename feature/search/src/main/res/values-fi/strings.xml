@@ -6,6 +6,10 @@
     <string name="search_section_movies">Elokuvat</string>
     <string name="search_section_series">Sarjat</string>
     <string name="search_section_episodes">Jaksot</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d tulos</item>
+        <item quantity="other">%1$d tulosta</item>
+    </plurals>
 
     <string name="search_prompt">Kirjoita hakeaksesi kirjastoistasi.</string>
     <string name="search_no_results">Ei osumia haulle ”%1$s”.</string>

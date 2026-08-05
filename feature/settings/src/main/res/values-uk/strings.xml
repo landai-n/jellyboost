@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-карта</string>
     <string name="settings_storage_volume_free">%1$s вільно</string>
     <string name="settings_storage_missing">Обране вами сховище зараз недоступне, тому завантаження виконуються в місце, вибране нижче.</string>
+    <string name="settings_storage_use_this_hint">Виберіть це місце, щоб завантаження залишалися тут</string>
     <string name="settings_storage_switch_title">Перемістити завантаження?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Завантаження поки не можна переміщати між сховищами, тому те, що вже є на цьому пристрої, буде видалено. Ви зможете завантажити його знову в нове місце.</item>

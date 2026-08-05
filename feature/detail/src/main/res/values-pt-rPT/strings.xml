@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episódio %1$d</string>
+    <string name="detail_meta_rating">Classificação %1$s</string>
+    <string name="detail_meta_rated">faixa etária %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Faltam %1$d min</string>
     <string name="detail_size_on_device">%1$s no dispositivo</string>
     <string name="detail_directed_by">Realizado por %1$s</string>
+    <string name="detail_cast_member_as">%1$s no papel de %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d temporada</item>
         <item quantity="other">%1$d temporadas</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d episódio</item>
         <item quantity="other">%1$d episódios</item>
     </plurals>
+    <string name="detail_overview_collapsed">Recolhida</string>
+    <string name="detail_overview_expanded">Expandida</string>
+    <string name="detail_overview_expand">Ler a sinopse completa</string>
+    <string name="detail_overview_collapse">Recolher a sinopse</string>
     <string name="detail_empty">Este item já não está disponível.</string>
     <string name="detail_message_download_queued">Adicionado às transferências.</string>
     <string name="detail_message_download_failed">Não foi possível iniciar essa transferência.</string>

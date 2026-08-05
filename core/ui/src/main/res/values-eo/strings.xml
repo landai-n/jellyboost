@@ -4,13 +4,24 @@
     <string name="badge_download_queued">En atendo por elŝuto</string>
     <string name="badge_download_paused">Elŝuto paŭzigita</string>
     <string name="badge_download_failed">Elŝuto malsukcesis</string>
+    <string name="badge_downloading_progress">Elŝutante, %1$d%%</string>
     <string name="media_row_see_all">Vidi ĉiujn</string>
+    <string name="media_row_see_all_section">Vidi ĉiujn el %1$s</string>
     <string name="media_card_watched">Spektita</string>
+    <string name="media_card_type_movie">Filmo</string>
+    <string name="media_card_type_series">Serio</string>
+    <string name="media_card_type_season">Sezono</string>
+    <string name="media_card_type_episode">Epizodo</string>
+    <string name="media_card_type_library">Biblioteko</string>
+    <string name="media_card_progress">%1$d%% spektita</string>
+    <string name="media_card_rating">Takso %1$s el 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d ero</item>
         <item quantity="other">%1$d eroj</item>
     </plurals>
     <string name="state_retry">Reprovi</string>
+    <string name="state_loading">Ŝargante</string>
+    <string name="state_busy">Okupata</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d elektita</item>
         <item quantity="other">%1$d elektitaj</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">Elŝuti</string>
     <string name="selection_item_selected">Elektita</string>
     <string name="selection_item_not_selected">Ne elektita</string>
+    <string name="selection_enter">Elekti</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d markita kiel spektita</item>
         <item quantity="other">%1$d markitaj kiel spektitaj</item>

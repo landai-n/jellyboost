@@ -5,11 +5,34 @@
     <string name="player_pause">থামান</string>
     <string name="player_rewind">10 সেকেন্ড পিছনে যান</string>
     <string name="player_forward">30 সেকেন্ড সামনে যান</string>
+    <string name="player_show_controls">প্লেয়ারের নিয়ন্ত্রণ দেখান</string>
+    <string name="player_volume_percent">ভলিউম %1$d শতাংশ</string>
+    <string name="player_brightness_percent">উজ্জ্বলতা %1$d শতাংশ</string>
+    <string name="player_buffering">বাফার হচ্ছে</string>
+    <string name="player_seek">সময় বদলান</string>
+    <string name="player_position_of_duration">%2$s এর মধ্যে %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ঘণ্টা</item>
+        <item quantity="other">%d ঘণ্টা</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d মিনিট</item>
+        <item quantity="other">%d মিনিট</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d সেকেন্ড</item>
+        <item quantity="other">%d সেকেন্ড</item>
+    </plurals>
     <string name="player_audio">অডিও</string>
     <string name="player_subtitles">সাবটাইটেল</string>
     <string name="player_subtitles_off">বন্ধ</string>
     <string name="player_quality">মান</string>
     <string name="player_speed">গতি</string>
+    <string name="player_display">ডিসপ্লে</string>
+    <string name="player_brightness">উজ্জ্বলতা</string>
+    <string name="player_volume">ভলিউম</string>
+    <string name="player_percent">%1$d শতাংশ</string>
+    <string name="player_done">সম্পন্ন</string>
     <string name="player_skip_intro">ইন্ট্রো এড়িয়ে যান</string>
     <string name="player_skip_outro">আউট্রো এড়িয়ে যান</string>
     <string name="player_quality_auto">স্বয়ংক্রিয়</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">এখন চলছে</string>
     <string name="player_syncplay_queue_next">পরবর্তী আইটেম</string>
     <string name="player_syncplay_queue_previous">পূর্ববর্তী আইটেম</string>
-    <string name="player_syncplay_queue_move_up">উপরে নিন</string>
-    <string name="player_syncplay_queue_move_down">নিচে নিন</string>
-    <string name="player_syncplay_queue_remove">সারি থেকে সরান</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s উপরে নিন</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s নিচে নিন</string>
+    <string name="player_syncplay_queue_remove_item">%1$s সারি থেকে সরান</string>
+    <string name="player_syncplay_queue_play">চালান</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d আইটেম সারিবদ্ধ</item>
         <item quantity="other">%d আইটেম সারিবদ্ধ</item>

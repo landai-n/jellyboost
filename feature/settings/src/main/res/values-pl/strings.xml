@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">Karta SD</string>
     <string name="settings_storage_volume_free">%1$s wolnego miejsca</string>
     <string name="settings_storage_missing">Wybrana pamięć jest teraz niedostępna, więc pobrania trafiają do lokalizacji wybranej poniżej.</string>
+    <string name="settings_storage_use_this_hint">Wybierz to miejsce, aby pobrane pliki zostały tutaj</string>
     <string name="settings_storage_switch_title">Przenieść pobrania?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Pobrań nie można jeszcze przenosić między lokalizacjami, dlatego pobranie już zapisane na tym urządzeniu zostanie usunięte. Możesz pobrać je ponownie do nowej lokalizacji.</item>

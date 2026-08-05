@@ -4,13 +4,24 @@
     <string name="badge_download_queued">已加入下載佇列</string>
     <string name="badge_download_paused">下載已暫停</string>
     <string name="badge_download_failed">下載失敗</string>
+    <string name="badge_downloading_progress">正在下載，%1$d%%</string>
 
     <string name="media_row_see_all">查看全部</string>
+    <string name="media_row_see_all_section">查看%1$s的全部內容</string>
     <string name="media_card_watched">已觀看</string>
+    <string name="media_card_type_movie">電影</string>
+    <string name="media_card_type_series">劇集</string>
+    <string name="media_card_type_season">季</string>
+    <string name="media_card_type_episode">集</string>
+    <string name="media_card_type_library">媒體庫</string>
+    <string name="media_card_progress">已觀看 %1$d%%</string>
+    <string name="media_card_rating">評分 %1$s，滿分 10 分</string>
     <plurals name="library_item_count">
         <item quantity="other">%1$d 項</item>
     </plurals>
     <string name="state_retry">重試</string>
+    <string name="state_loading">正在載入</string>
+    <string name="state_busy">正在處理</string>
 
     <plurals name="selection_count">
         <item quantity="other">已選擇 %1$d 項</item>
@@ -23,6 +34,7 @@
 
     <string name="selection_item_selected">已選擇</string>
     <string name="selection_item_not_selected">未選擇</string>
+    <string name="selection_enter">選擇</string>
 
     <plurals name="selection_result_watched">
         <item quantity="other">已將 %1$d 項標記為已觀看</item>

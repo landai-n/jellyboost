@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Utilitza la connexió ràpida</string>
     <string name="login_quick_connect_title">Connexió ràpida</string>
     <string name="login_quick_connect_instructions">Obre Jellyfin en un dispositiu on ja tinguis la sessió iniciada, ves a Connexió ràpida i introdueix aquest codi.</string>
+    <string name="login_quick_connect_code_description">El teu codi és %1$s</string>
     <string name="login_quick_connect_waiting">Esperant aprovació…</string>
     <string name="login_quick_connect_cancel">Cancel·la</string>
     <plurals name="auth_error_candidates_tried">

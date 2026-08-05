@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">%1$d. epizód</string>
+    <string name="detail_meta_rating">Értékelés %1$s</string>
+    <string name="detail_meta_rated">korhatár %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d perc</string>
     <string name="detail_remaining_minutes">%1$d perc van hátra</string>
     <string name="detail_size_on_device">%1$s az eszközön</string>
     <string name="detail_directed_by">Rendezte: %1$s</string>
+    <string name="detail_cast_member_as">%1$s mint %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d évad</item>
         <item quantity="other">%1$d évad</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d epizód</item>
         <item quantity="other">%1$d epizód</item>
     </plurals>
+    <string name="detail_overview_collapsed">Összecsukva</string>
+    <string name="detail_overview_expanded">Kibontva</string>
+    <string name="detail_overview_expand">Teljes leírás elolvasása</string>
+    <string name="detail_overview_collapse">Leírás összecsukása</string>
 
     <string name="detail_empty">Ez a tartalom már nem érhető el.</string>
     <string name="detail_message_download_queued">Hozzáadva a letöltésekhez.</string>

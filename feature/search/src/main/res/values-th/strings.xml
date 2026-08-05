@@ -5,6 +5,9 @@
     <string name="search_section_movies">ภาพยนตร์</string>
     <string name="search_section_series">ซีรีส์</string>
     <string name="search_section_episodes">ตอนทั้งหมด</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d รายการ</item>
+    </plurals>
     <string name="search_prompt">พิมพ์เพื่อค้นหาในคลังของคุณ</string>
     <string name="search_no_results">ไม่พบรายการที่ตรงกับ “%1$s”</string>
     <string name="search_error_network">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของคุณได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>

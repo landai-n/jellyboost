@@ -4,14 +4,25 @@
     <string name="badge_download_queued">In wagry vir aflaai</string>
     <string name="badge_download_paused">Aflaai gepouseer</string>
     <string name="badge_download_failed">Aflaai het misluk</string>
+    <string name="badge_downloading_progress">Laai tans af, %1$d%%</string>
 
     <string name="media_row_see_all">Sien almal</string>
+    <string name="media_row_see_all_section">Sien almal in %1$s</string>
     <string name="media_card_watched">Gekyk</string>
+    <string name="media_card_type_movie">Rolprent</string>
+    <string name="media_card_type_series">Reeks</string>
+    <string name="media_card_type_season">Seisoen</string>
+    <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_library">Biblioteek</string>
+    <string name="media_card_progress">%1$d%% gekyk</string>
+    <string name="media_card_rating">Gradering %1$s uit 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
     </plurals>
     <string name="state_retry">Probeer weer</string>
+    <string name="state_loading">Laai tans</string>
+    <string name="state_busy">Besig</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d gekies</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Gekies</string>
     <string name="selection_item_not_selected">Nie gekies nie</string>
+    <string name="selection_enter">Kies</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d gemerk as gekyk</item>

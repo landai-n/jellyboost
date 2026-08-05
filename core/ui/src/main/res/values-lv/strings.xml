@@ -4,15 +4,26 @@
     <string name="badge_download_queued">Rindā lejupielādei</string>
     <string name="badge_download_paused">Lejupielāde pauzēta</string>
     <string name="badge_download_failed">Lejupielāde neizdevās</string>
+    <string name="badge_downloading_progress">Notiek lejupielāde, %1$d%%</string>
 
     <string name="media_row_see_all">Skatīt visu</string>
+    <string name="media_row_see_all_section">Skatīt visu sadaļā %1$s</string>
     <string name="media_card_watched">Skatīts</string>
+    <string name="media_card_type_movie">Filma</string>
+    <string name="media_card_type_series">Seriāls</string>
+    <string name="media_card_type_season">Sezona</string>
+    <string name="media_card_type_episode">Sērija</string>
+    <string name="media_card_type_library">Bibliotēka</string>
+    <string name="media_card_progress">Noskatīts %1$d%%</string>
+    <string name="media_card_rating">Vērtējums %1$s no 10</string>
     <plurals name="library_item_count">
         <item quantity="zero">%1$d vienumu</item>
         <item quantity="one">%1$d vienums</item>
         <item quantity="other">%1$d vienumi</item>
     </plurals>
     <string name="state_retry">Mēģināt vēlreiz</string>
+    <string name="state_loading">Ielādē</string>
+    <string name="state_busy">Notiek darbība</string>
 
     <plurals name="selection_count">
         <item quantity="zero">%1$d atlasīti</item>
@@ -27,6 +38,7 @@
 
     <string name="selection_item_selected">Atlasīts</string>
     <string name="selection_item_not_selected">Nav atlasīts</string>
+    <string name="selection_enter">Atlasīt</string>
 
     <plurals name="selection_result_watched">
         <item quantity="zero">Atzīmēti %1$d kā skatīti</item>

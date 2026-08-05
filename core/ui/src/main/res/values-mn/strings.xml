@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Татахаар дараалалд орсон</string>
     <string name="badge_download_paused">Татаж авалт түр зогссон</string>
     <string name="badge_download_failed">Татаж авалт амжилтгүй боллоо</string>
+    <string name="badge_downloading_progress">Татаж байна, %1$d%%</string>
 
     <string name="media_row_see_all">Бүгдийг харах</string>
+    <string name="media_row_see_all_section">%1$s хэсгийн бүгдийг харах</string>
     <string name="media_card_watched">Үзсэн</string>
+    <string name="media_card_type_movie">Кино</string>
+    <string name="media_card_type_series">Цуврал</string>
+    <string name="media_card_type_season">Улирал</string>
+    <string name="media_card_type_episode">Анги</string>
+    <string name="media_card_type_library">Сан</string>
+    <string name="media_card_progress">%1$d%% үзсэн</string>
+    <string name="media_card_rating">Үнэлгээ 10-аас %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d зүйл</item>
         <item quantity="other">%1$d зүйл</item>
     </plurals>
     <string name="state_retry">Дахин оролдох</string>
+    <string name="state_loading">Ачаалж байна</string>
+    <string name="state_busy">Гүйцэтгэж байна</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d зүйл сонгогдсон</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Сонгогдсон</string>
     <string name="selection_item_not_selected">Сонгогдоогүй</string>
+    <string name="selection_enter">Сонгох</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d зүйлийг үзсэн гэж тэмдэглэлээ</item>

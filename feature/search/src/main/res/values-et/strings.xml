@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmid</string>
     <string name="search_section_series">Sarjad</string>
     <string name="search_section_episodes">Osad</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d tulemus</item>
+        <item quantity="other">%1$d tulemust</item>
+    </plurals>
 
     <string name="search_prompt">Kirjuta, et otsida oma teekidest.</string>
     <string name="search_no_results">Päringule „%1$s” ei leitud vasteid.</string>

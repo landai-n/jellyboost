@@ -5,12 +5,35 @@
     <string name="player_pause">މެދުކަނޑާލާ</string>
     <string name="player_rewind">10 ސިކުންތު ފަހަތަށް</string>
     <string name="player_forward">30 ސިކުންތު ކުރިއަށް</string>
+    <string name="player_show_controls">ޕްލޭޔަރ ކޮންޓްރޯލްތައް ދައްކާ</string>
+    <string name="player_volume_percent">އަޑު %1$d އިންސައްތަ</string>
+    <string name="player_brightness_percent">އަލިކަން %1$d އިންސައްތަ</string>
+    <string name="player_buffering">ބަފަރކުރަނީ</string>
+    <string name="player_seek">ވަގުތު ބަދަލުކުރުން</string>
+    <string name="player_position_of_duration">%2$s ގެ %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ގަޑިއިރު</item>
+        <item quantity="other">%d ގަޑިއިރު</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d މިނިޓް</item>
+        <item quantity="other">%d މިނިޓް</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d ސިކުންތު</item>
+        <item quantity="other">%d ސިކުންތު</item>
+    </plurals>
 
     <string name="player_audio">އޯޑިއޯ</string>
     <string name="player_subtitles">ސަބްޓައިޓަލް</string>
     <string name="player_subtitles_off">އޮފް</string>
     <string name="player_quality">ކޮލިޓީ</string>
     <string name="player_speed">ސްޕީޑް</string>
+    <string name="player_display">ޑިސްޕްލޭ</string>
+    <string name="player_brightness">އަލިކަން</string>
+    <string name="player_volume">އަޑު</string>
+    <string name="player_percent">%1$d އިންސައްތަ</string>
+    <string name="player_done">ނިމިއްޖެ</string>
 
     <string name="player_skip_intro">އިންޓްރޯ ސްކިޕްކުރޭ</string>
     <string name="player_skip_outro">އައުޓްރޯ ސްކިޕްކުރޭ</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">މިހާރު ޕްލޭވަނީ</string>
     <string name="player_syncplay_queue_next">ދެން އޮތް އައިޓަމް</string>
     <string name="player_syncplay_queue_previous">ކުރީ އައިޓަމް</string>
-    <string name="player_syncplay_queue_move_up">މައްޗަށް ޖައްސާ</string>
-    <string name="player_syncplay_queue_move_down">ދަށަށް ޖައްސާ</string>
-    <string name="player_syncplay_queue_remove">ކިއޫއިން ނަގާ</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s މައްޗަށް ޖައްސާ</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s ދަށަށް ޖައްސާ</string>
+    <string name="player_syncplay_queue_remove_item">%1$s ކިއޫއިން ނަގާ</string>
+    <string name="player_syncplay_queue_play">ޕްލޭ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d އައިޓަމް ކިއޫގައި</item>

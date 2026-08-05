@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Letöltésre várakozik</string>
     <string name="badge_download_paused">Letöltés szüneteltetve</string>
     <string name="badge_download_failed">A letöltés sikertelen</string>
+    <string name="badge_downloading_progress">Letöltés, %1$d%%</string>
 
     <string name="media_row_see_all">Összes megtekintése</string>
+    <string name="media_row_see_all_section">%1$s összes elemének megtekintése</string>
     <string name="media_card_watched">Megnézve</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Sorozat</string>
+    <string name="media_card_type_season">Évad</string>
+    <string name="media_card_type_episode">Epizód</string>
+    <string name="media_card_type_library">Könyvtár</string>
+    <string name="media_card_progress">%1$d%% megnézve</string>
+    <string name="media_card_rating">Értékelés: %1$s a 10-ből</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d elem</item>
         <item quantity="other">%1$d elem</item>
     </plurals>
     <string name="state_retry">Újra</string>
+    <string name="state_loading">Betöltés</string>
+    <string name="state_busy">Folyamatban</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d kiválasztva</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Kiválasztva</string>
     <string name="selection_item_not_selected">Nincs kiválasztva</string>
+    <string name="selection_enter">Kijelölés</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d elem megnézettként megjelölve</item>

@@ -5,12 +5,41 @@
     <string name="player_pause">Premor</string>
     <string name="player_rewind">Preskoči 10 sekund nazaj</string>
     <string name="player_forward">Preskoči 30 sekund naprej</string>
+    <string name="player_show_controls">Prikaži kontrolnike predvajalnika</string>
+    <string name="player_volume_percent">Glasnost %1$d odstotkov</string>
+    <string name="player_brightness_percent">Svetlost %1$d odstotkov</string>
+    <string name="player_buffering">Predpomnjenje</string>
+    <string name="player_seek">Premikanje po posnetku</string>
+    <string name="player_position_of_duration">%1$s od %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ura</item>
+        <item quantity="two">%d uri</item>
+        <item quantity="few">%d ure</item>
+        <item quantity="other">%d ur</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuta</item>
+        <item quantity="two">%d minuti</item>
+        <item quantity="few">%d minute</item>
+        <item quantity="other">%d minut</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="two">%d sekundi</item>
+        <item quantity="few">%d sekunde</item>
+        <item quantity="other">%d sekund</item>
+    </plurals>
 
     <string name="player_audio">Zvok</string>
     <string name="player_subtitles">Podnapisi</string>
     <string name="player_subtitles_off">Izklopljeno</string>
     <string name="player_quality">Kakovost</string>
     <string name="player_speed">Hitrost</string>
+    <string name="player_display">Zaslon</string>
+    <string name="player_brightness">Svetlost</string>
+    <string name="player_volume">Glasnost</string>
+    <string name="player_percent">%1$d odstotkov</string>
+    <string name="player_done">Končano</string>
 
     <string name="player_skip_intro">Preskoči uvod</string>
     <string name="player_skip_outro">Preskoči zaključek</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Trenutno predvajano</string>
     <string name="player_syncplay_queue_next">Naslednji predmet</string>
     <string name="player_syncplay_queue_previous">Prejšnji predmet</string>
-    <string name="player_syncplay_queue_move_up">Pomakni navzgor</string>
-    <string name="player_syncplay_queue_move_down">Pomakni navzdol</string>
-    <string name="player_syncplay_queue_remove">Odstrani iz čakalne vrste</string>
+    <string name="player_syncplay_queue_move_up_item">Pomakni %1$s navzgor</string>
+    <string name="player_syncplay_queue_move_down_item">Pomakni %1$s navzdol</string>
+    <string name="player_syncplay_queue_remove_item">Odstrani %1$s iz čakalne vrste</string>
+    <string name="player_syncplay_queue_play">Predvajaj</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d predmet v čakalni vrsti</item>

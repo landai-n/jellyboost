@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Епизода %1$d</string>
+    <string name="detail_meta_rating">Оцена %1$s</string>
+    <string name="detail_meta_rated">узрасна ознака %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d мин</string>
     <string name="detail_remaining_minutes">Још %1$d мин</string>
     <string name="detail_size_on_device">%1$s на уређају</string>
     <string name="detail_directed_by">Режија: %1$s</string>
+    <string name="detail_cast_member_as">%1$s као %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d сезона</item>
         <item quantity="few">%1$d сезоне</item>
@@ -43,6 +46,10 @@
         <item quantity="few">%1$d епизоде</item>
         <item quantity="other">%1$d епизода</item>
     </plurals>
+    <string name="detail_overview_collapsed">Скупљено</string>
+    <string name="detail_overview_expanded">Проширено</string>
+    <string name="detail_overview_expand">Прочитај цео опис</string>
+    <string name="detail_overview_collapse">Скупи опис</string>
 
     <string name="detail_empty">Овај садржај више није доступан.</string>
     <string name="detail_message_download_queued">Додато у преузимања.</string>

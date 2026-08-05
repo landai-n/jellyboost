@@ -5,11 +5,37 @@
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Reculer de 10 secondes</string>
     <string name="player_forward">Avancer de 30 secondes</string>
+    <string name="player_show_controls">Afficher les commandes du lecteur</string>
+    <string name="player_volume_percent">Volume %1$d pour cent</string>
+    <string name="player_brightness_percent">Luminosité %1$d pour cent</string>
+    <string name="player_buffering">Mise en mémoire tampon</string>
+    <string name="player_seek">Navigation dans la vidéo</string>
+    <string name="player_position_of_duration">%1$s sur %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d heure</item>
+        <item quantity="many">%d d\'heures</item>
+        <item quantity="other">%d heures</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="many">%d de minutes</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d seconde</item>
+        <item quantity="many">%d de secondes</item>
+        <item quantity="other">%d secondes</item>
+    </plurals>
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Sous-titres</string>
     <string name="player_subtitles_off">Désactivés</string>
     <string name="player_quality">Qualité</string>
     <string name="player_speed">Vitesse</string>
+    <string name="player_display">Affichage</string>
+    <string name="player_brightness">Luminosité</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d pour cent</string>
+    <string name="player_done">Terminé</string>
     <string name="player_skip_intro">Ignorer le générique</string>
     <string name="player_skip_outro">Ignorer la fin</string>
     <string name="player_quality_auto">Auto</string>
@@ -50,9 +76,10 @@
     <string name="player_syncplay_queue_playing">En cours de lecture</string>
     <string name="player_syncplay_queue_next">Élément suivant</string>
     <string name="player_syncplay_queue_previous">Élément précédent</string>
-    <string name="player_syncplay_queue_move_up">Monter</string>
-    <string name="player_syncplay_queue_move_down">Descendre</string>
-    <string name="player_syncplay_queue_remove">Retirer de la file</string>
+    <string name="player_syncplay_queue_move_up_item">Monter %1$s</string>
+    <string name="player_syncplay_queue_move_down_item">Descendre %1$s</string>
+    <string name="player_syncplay_queue_remove_item">Retirer %1$s de la file d\'attente</string>
+    <string name="player_syncplay_queue_play">Lecture</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d élément en attente</item>
         <item quantity="other">%d éléments en attente</item>

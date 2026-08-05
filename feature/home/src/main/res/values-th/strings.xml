@@ -9,6 +9,7 @@
     <string name="home_hero_resume">เล่นต่อ</string>
     <string name="home_hero_play">เล่น</string>
     <string name="home_hero_details">รายละเอียด</string>
+    <string name="home_hero_rated">เรตติ้ง %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="other">เหลืออีก %1$d นาที</item>
     </plurals>

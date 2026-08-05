@@ -4,13 +4,24 @@
     <string name="badge_download_queued">ডাউনলোডের জন্য সারিবদ্ধ</string>
     <string name="badge_download_paused">ডাউনলোড থামানো হয়েছে</string>
     <string name="badge_download_failed">ডাউনলোড ব্যর্থ হয়েছে</string>
+    <string name="badge_downloading_progress">ডাউনলোড হচ্ছে, %1$d%%</string>
     <string name="media_row_see_all">সব দেখুন</string>
+    <string name="media_row_see_all_section">%1$s-এর সব দেখুন</string>
     <string name="media_card_watched">দেখা হয়েছে</string>
+    <string name="media_card_type_movie">সিনেমা</string>
+    <string name="media_card_type_series">সিরিজ</string>
+    <string name="media_card_type_season">সিজন</string>
+    <string name="media_card_type_episode">পর্ব</string>
+    <string name="media_card_type_library">লাইব্রেরি</string>
+    <string name="media_card_progress">%1$d%% দেখা হয়েছে</string>
+    <string name="media_card_rating">রেটিং ১০-এর মধ্যে %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$dটি আইটেম</item>
         <item quantity="other">%1$dটি আইটেম</item>
     </plurals>
     <string name="state_retry">আবার চেষ্টা করুন</string>
+    <string name="state_loading">লোড হচ্ছে</string>
+    <string name="state_busy">কাজ চলছে</string>
     <plurals name="selection_count">
         <item quantity="one">%1$dটি নির্বাচিত</item>
         <item quantity="other">%1$dটি নির্বাচিত</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">ডাউনলোড</string>
     <string name="selection_item_selected">নির্বাচিত</string>
     <string name="selection_item_not_selected">নির্বাচিত নয়</string>
+    <string name="selection_enter">নির্বাচন করুন</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$dটি দেখা হয়েছে চিহ্নিত করা হয়েছে</item>
         <item quantity="other">%1$dটি দেখা হয়েছে চিহ্নিত করা হয়েছে</item>

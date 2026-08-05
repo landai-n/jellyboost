@@ -5,12 +5,35 @@
     <string name="player_pause">Пауза</string>
     <string name="player_rewind">Назад 10 секунди</string>
     <string name="player_forward">Напред 30 секунди</string>
+    <string name="player_show_controls">Покажи контролите на плейъра</string>
+    <string name="player_volume_percent">Сила на звука %1$d процента</string>
+    <string name="player_brightness_percent">Яркост %1$d процента</string>
+    <string name="player_buffering">Буфериране</string>
+    <string name="player_seek">Превъртане</string>
+    <string name="player_position_of_duration">%1$s от %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d час</item>
+        <item quantity="other">%d часа</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d минута</item>
+        <item quantity="other">%d минути</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="other">%d секунди</item>
+    </plurals>
 
     <string name="player_audio">Аудио</string>
     <string name="player_subtitles">Субтитри</string>
     <string name="player_subtitles_off">Изключени</string>
     <string name="player_quality">Качество</string>
     <string name="player_speed">Скорост</string>
+    <string name="player_display">Дисплей</string>
+    <string name="player_brightness">Яркост</string>
+    <string name="player_volume">Сила на звука</string>
+    <string name="player_percent">%1$d процента</string>
+    <string name="player_done">Готово</string>
 
     <string name="player_skip_intro">Пропускане на въведението</string>
     <string name="player_skip_outro">Пропускане на финалните надписи</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">В момента се възпроизвежда</string>
     <string name="player_syncplay_queue_next">Следващ елемент</string>
     <string name="player_syncplay_queue_previous">Предишен елемент</string>
-    <string name="player_syncplay_queue_move_up">Премести нагоре</string>
-    <string name="player_syncplay_queue_move_down">Премести надолу</string>
-    <string name="player_syncplay_queue_remove">Премахни от опашката</string>
+    <string name="player_syncplay_queue_move_up_item">Премести %1$s нагоре</string>
+    <string name="player_syncplay_queue_move_down_item">Премести %1$s надолу</string>
+    <string name="player_syncplay_queue_remove_item">Премахни %1$s от опашката</string>
+    <string name="player_syncplay_queue_play">Пусни</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d елемент в опашката</item>

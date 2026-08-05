@@ -5,6 +5,10 @@
     <string name="search_section_movies">චිත්‍රපට</string>
     <string name="search_section_series">වැඩසටහන්</string>
     <string name="search_section_episodes">කථාංග</string>
+    <plurals name="search_result_count">
+        <item quantity="one">ප්‍රතිඵල %1$d</item>
+        <item quantity="other">ප්‍රතිඵල %1$d</item>
+    </plurals>
     <string name="search_prompt">ඔබගේ පුස්තකාල සෙවීමට ටයිප් කරන්න.</string>
     <string name="search_no_results">“%1$s” ට ගැලපෙන කිසිවක් නැත.</string>
     <string name="search_error_network">ඔබගේ සේවාදායකයට ළඟා විය නොහැක. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>

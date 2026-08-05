@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">כרטיס SD</string>
     <string name="settings_storage_volume_free">%1$s פנויים</string>
     <string name="settings_storage_missing">האחסון שבחרת אינו זמין כרגע, ולכן ההורדות עוברות למיקום הנבחר למטה.</string>
+    <string name="settings_storage_use_this_hint">בחר במיקום הזה כדי שההורדות יישארו כאן</string>
     <string name="settings_storage_switch_title">להעביר הורדות?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">עדיין אי אפשר להעביר הורדות בין מיקומים, ולכן ההורדה הקיימת במכשיר זה תימחק. תוכל להוריד אותה שוב למיקום החדש.</item>

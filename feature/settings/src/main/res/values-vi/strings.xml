@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Thẻ SD</string>
     <string name="settings_storage_volume_free">Còn trống %1$s</string>
     <string name="settings_storage_missing">Bộ nhớ bạn đã chọn hiện không khả dụng, vì vậy tải xuống sẽ được lưu vào vị trí được chọn bên dưới.</string>
+    <string name="settings_storage_use_this_hint">Chọn nơi này để giữ các mục tải xuống ở đây</string>
     <string name="settings_storage_switch_title">Chuyển tải xuống?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">Hiện chưa thể di chuyển tải xuống giữa các vị trí, vì vậy %1$d mục đã có trên thiết bị này sẽ bị xóa. Bạn có thể tải xuống lại chúng vào vị trí mới.</item>

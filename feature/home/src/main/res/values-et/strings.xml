@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Jätka</string>
     <string name="home_hero_play">Esita</string>
     <string name="home_hero_details">Üksikasjad</string>
+    <string name="home_hero_rated">Vanusepiirang %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minut jäänud</item>
         <item quantity="other">%1$d minutit jäänud</item>

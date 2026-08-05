@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Επεισόδιο %1$d</string>
+    <string name="detail_meta_rating">Βαθμολογία %1$s</string>
+    <string name="detail_meta_rated">καταλληλότητα %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d λεπτά</string>
     <string name="detail_remaining_minutes">Απομένουν %1$d λεπτά</string>
     <string name="detail_size_on_device">%1$s στη συσκευή</string>
     <string name="detail_directed_by">Σκηνοθεσία: %1$s</string>
+    <string name="detail_cast_member_as">%1$s ως %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d σεζόν</item>
         <item quantity="other">%1$d σεζόν</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d επεισόδιο</item>
         <item quantity="other">%1$d επεισόδια</item>
     </plurals>
+    <string name="detail_overview_collapsed">Συμπτυγμένη</string>
+    <string name="detail_overview_expanded">Αναπτυγμένη</string>
+    <string name="detail_overview_expand">Διαβάστε ολόκληρη τη σύνοψη</string>
+    <string name="detail_overview_collapse">Σύμπτυξη της σύνοψης</string>
 
     <string name="detail_empty">Αυτό το στοιχείο δεν είναι πλέον διαθέσιμο.</string>
     <string name="detail_message_download_queued">Προστέθηκε στις λήψεις.</string>

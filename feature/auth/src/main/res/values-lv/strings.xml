@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Izmantot Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Atveriet Jellyfin ierīcē, kurā jau esat pieteicies, dodieties uz Quick Connect un ievadiet šo kodu.</string>
+    <string name="login_quick_connect_code_description">Jūsu kods ir %1$s</string>
     <string name="login_quick_connect_waiting">Gaida apstiprinājumu…</string>
     <string name="login_quick_connect_cancel">Atcelt</string>
 

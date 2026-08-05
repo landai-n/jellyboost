@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Targeta SD</string>
     <string name="settings_storage_volume_free">%1$s lliures</string>
     <string name="settings_storage_missing">L\'emmagatzematge que has triat no està disponible ara mateix, així que les baixades aniran a la ubicació seleccionada a sota.</string>
+    <string name="settings_storage_use_this_hint">Tria aquesta ubicació per mantenir-hi les baixades</string>
     <string name="settings_storage_switch_title">Vols moure les baixades?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Les baixades encara no es poden moure entre ubicacions, així que s\'eliminarà la que ja és en aquest dispositiu. La pots tornar a baixar a la nova ubicació.</item>

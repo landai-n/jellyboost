@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD 卡</string>
     <string name="settings_storage_volume_free">剩余 %1$s</string>
     <string name="settings_storage_missing">你选择的存储位置目前不可用，下载内容将改为保存到下方选择的位置。</string>
+    <string name="settings_storage_use_this_hint">选择此处，下载内容将继续保存在这里</string>
     <string name="settings_storage_switch_title">是否移动下载内容？</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">下载内容暂时无法在不同位置之间移动，因此此设备上已有的 %1$d 项将被删除。你可以重新下载到新位置。</item>

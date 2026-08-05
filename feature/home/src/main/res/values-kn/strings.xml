@@ -10,6 +10,7 @@
     <string name="home_hero_resume">ಮುಂದುವರಿಸಿ</string>
     <string name="home_hero_play">ಪ್ಲೇ</string>
     <string name="home_hero_details">ವಿವರಗಳು</string>
+    <string name="home_hero_rated">ವಯಸ್ಸಿನ ಮಾನದಂಡ %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d ನಿಮಿಷ ಬಾಕಿ</item>
         <item quantity="other">%1$d ನಿಮಿಷಗಳು ಬಾಕಿ</item>

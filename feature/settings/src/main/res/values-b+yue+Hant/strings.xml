@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD 卡</string>
     <string name="settings_storage_volume_free">仲有 %1$s</string>
     <string name="settings_storage_missing">你揀嘅儲存位置而家用唔到，下載內容會改為存放去下面揀嘅位置。</string>
+    <string name="settings_storage_use_this_hint">揀返呢個位置，下載就繼續放喺度</string>
     <string name="settings_storage_switch_title">要搬啲下載內容嗎？</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">下載內容而家仲未可以喺唔同位置之間搬，所以呢部裝置上已有嘅 %1$d 樣嘢會被刪除。你可以重新下載去新位置。</item>

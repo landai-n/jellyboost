@@ -5,12 +5,35 @@
     <string name="player_pause">இடைநிறுத்து</string>
     <string name="player_rewind">10 வினாடிகள் பின்செல்</string>
     <string name="player_forward">30 வினாடிகள் முன்செல்</string>
+    <string name="player_show_controls">பிளேயர் கட்டுப்பாடுகளைக் காட்டு</string>
+    <string name="player_volume_percent">ஒலியளவு %1$d சதவீதம்</string>
+    <string name="player_brightness_percent">ஒளிர்வு %1$d சதவீதம்</string>
+    <string name="player_buffering">இடையகப்படுத்துகிறது</string>
+    <string name="player_seek">நேரத்தை மாற்று</string>
+    <string name="player_position_of_duration">%2$s இல் %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d மணி</item>
+        <item quantity="other">%d மணி</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d நிமிடம்</item>
+        <item quantity="other">%d நிமிடங்கள்</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d வினாடி</item>
+        <item quantity="other">%d வினாடிகள்</item>
+    </plurals>
 
     <string name="player_audio">ஆடியோ</string>
     <string name="player_subtitles">வசன வரிகள்</string>
     <string name="player_subtitles_off">ஆஃப்</string>
     <string name="player_quality">தரம்</string>
     <string name="player_speed">வேகம்</string>
+    <string name="player_display">காட்சி</string>
+    <string name="player_brightness">ஒளிர்வு</string>
+    <string name="player_volume">ஒலியளவு</string>
+    <string name="player_percent">%1$d சதவீதம்</string>
+    <string name="player_done">முடிந்தது</string>
 
     <string name="player_skip_intro">தொடக்கத்தைத் தவிர்</string>
     <string name="player_skip_outro">முடிவைத் தவிர்</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">இப்போது இயங்குகிறது</string>
     <string name="player_syncplay_queue_next">அடுத்த உருப்படி</string>
     <string name="player_syncplay_queue_previous">முந்தைய உருப்படி</string>
-    <string name="player_syncplay_queue_move_up">மேலே நகர்த்து</string>
-    <string name="player_syncplay_queue_move_down">கீழே நகர்த்து</string>
-    <string name="player_syncplay_queue_remove">வரிசையிலிருந்து அகற்று</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s ஐ மேலே நகர்த்து</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s ஐ கீழே நகர்த்து</string>
+    <string name="player_syncplay_queue_remove_item">%1$s ஐ வரிசையிலிருந்து அகற்று</string>
+    <string name="player_syncplay_queue_play">இயக்கு</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d உருப்படி வரிசையில் உள்ளது</item>

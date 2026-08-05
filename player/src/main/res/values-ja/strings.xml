@@ -5,12 +5,32 @@
     <string name="player_pause">一時停止</string>
     <string name="player_rewind">10秒戻す</string>
     <string name="player_forward">30秒進める</string>
+    <string name="player_show_controls">プレーヤーの操作パネルを表示</string>
+    <string name="player_volume_percent">音量 %1$d パーセント</string>
+    <string name="player_brightness_percent">明るさ %1$d パーセント</string>
+    <string name="player_buffering">バッファ中</string>
+    <string name="player_seek">再生位置の移動</string>
+    <string name="player_position_of_duration">%2$s 中 %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d 時間</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d 分</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d 秒</item>
+    </plurals>
 
     <string name="player_audio">音声</string>
     <string name="player_subtitles">字幕</string>
     <string name="player_subtitles_off">オフ</string>
     <string name="player_quality">画質</string>
     <string name="player_speed">速度</string>
+    <string name="player_display">画面</string>
+    <string name="player_brightness">明るさ</string>
+    <string name="player_volume">音量</string>
+    <string name="player_percent">%1$d パーセント</string>
+    <string name="player_done">完了</string>
 
     <string name="player_skip_intro">オープニングをスキップ</string>
     <string name="player_skip_outro">エンディングをスキップ</string>
@@ -59,9 +79,10 @@
     <string name="player_syncplay_queue_playing">再生中</string>
     <string name="player_syncplay_queue_next">次のアイテム</string>
     <string name="player_syncplay_queue_previous">前のアイテム</string>
-    <string name="player_syncplay_queue_move_up">上へ移動</string>
-    <string name="player_syncplay_queue_move_down">下へ移動</string>
-    <string name="player_syncplay_queue_remove">キューから削除</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s を上へ移動</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s を下へ移動</string>
+    <string name="player_syncplay_queue_remove_item">%1$s をキューから削除</string>
+    <string name="player_syncplay_queue_play">再生</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d 件がキューに入っています</item>

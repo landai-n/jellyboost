@@ -28,17 +28,24 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">에피소드 %1$d</string>
+    <string name="detail_meta_rating">평점 %1$s</string>
+    <string name="detail_meta_rated">시청 등급 %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d분</string>
     <string name="detail_remaining_minutes">%1$d분 남음</string>
     <string name="detail_size_on_device">기기 저장 용량 %1$s</string>
     <string name="detail_directed_by">감독: %1$s</string>
+    <string name="detail_cast_member_as">%1$s, %2$s 역</string>
     <plurals name="detail_season_count">
         <item quantity="other">시즌 %1$d개</item>
     </plurals>
     <plurals name="detail_episode_count">
         <item quantity="other">에피소드 %1$d개</item>
     </plurals>
+    <string name="detail_overview_collapsed">접힘</string>
+    <string name="detail_overview_expanded">펼침</string>
+    <string name="detail_overview_expand">줄거리 전체 읽기</string>
+    <string name="detail_overview_collapse">줄거리 접기</string>
 
     <string name="detail_empty">이 항목은 더 이상 사용할 수 없습니다.</string>
     <string name="detail_message_download_queued">다운로드에 추가했습니다.</string>

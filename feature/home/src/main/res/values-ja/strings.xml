@@ -10,6 +10,7 @@
     <string name="home_hero_resume">再開</string>
     <string name="home_hero_play">再生</string>
     <string name="home_hero_details">詳細</string>
+    <string name="home_hero_rated">視聴年齢 %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="other">残り %1$d分</item>
     </plurals>

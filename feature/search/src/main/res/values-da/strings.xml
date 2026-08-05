@@ -6,6 +6,10 @@
     <string name="search_section_movies">Film</string>
     <string name="search_section_series">Serier</string>
     <string name="search_section_episodes">Episoder</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultat</item>
+        <item quantity="other">%1$d resultater</item>
+    </plurals>
 
     <string name="search_prompt">Skriv for at søge i dine biblioteker.</string>
     <string name="search_no_results">Intet matchede “%1$s”.</string>

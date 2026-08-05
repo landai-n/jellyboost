@@ -6,6 +6,10 @@
     <string name="search_section_movies">Филмови</string>
     <string name="search_section_series">Серии</string>
     <string name="search_section_episodes">Епизоди</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d резултат</item>
+        <item quantity="other">%1$d резултати</item>
+    </plurals>
 
     <string name="search_prompt">Пишете за да ги пребарате вашите библиотеки.</string>
     <string name="search_no_results">Нема совпаѓања за „%1$s”.</string>

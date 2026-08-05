@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Користи Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Отворете Jellyfin на уред на кој веќе сте најавени, одете на Quick Connect и внесете го овој код.</string>
+    <string name="login_quick_connect_code_description">Вашиот код е %1$s</string>
     <string name="login_quick_connect_waiting">Чекање одобрение…</string>
     <string name="login_quick_connect_cancel">Откажи</string>
 

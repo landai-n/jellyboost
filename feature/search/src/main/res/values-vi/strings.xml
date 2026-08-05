@@ -5,6 +5,9 @@
     <string name="search_section_movies">Phim</string>
     <string name="search_section_series">Chương trình</string>
     <string name="search_section_episodes">Tập phim</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d kết quả</item>
+    </plurals>
     <string name="search_prompt">Nhập để tìm kiếm trong thư viện của bạn.</string>
     <string name="search_no_results">Không có kết quả nào khớp với “%1$s”.</string>
     <string name="search_error_network">Không thể kết nối máy chủ của bạn. Kiểm tra kết nối và thử lại.</string>

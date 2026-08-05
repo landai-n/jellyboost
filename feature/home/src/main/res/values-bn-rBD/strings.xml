@@ -9,6 +9,7 @@
     <string name="home_hero_resume">আবার শুরু করুন</string>
     <string name="home_hero_play">চালান</string>
     <string name="home_hero_details">বিস্তারিত</string>
+    <string name="home_hero_rated">বয়স রেটিং %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d মিনিট বাকি</item>
         <item quantity="other">%1$d মিনিট বাকি</item>

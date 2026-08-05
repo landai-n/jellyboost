@@ -6,6 +6,9 @@
     <string name="search_section_movies">영화</string>
     <string name="search_section_series">시리즈</string>
     <string name="search_section_episodes">에피소드</string>
+    <plurals name="search_result_count">
+        <item quantity="other">결과 %1$d개</item>
+    </plurals>
 
     <string name="search_prompt">입력하여 라이브러리를 검색하세요.</string>
     <string name="search_no_results">“%1$s”와(과) 일치하는 항목이 없습니다.</string>

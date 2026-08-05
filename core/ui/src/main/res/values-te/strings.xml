@@ -4,14 +4,25 @@
     <string name="badge_download_queued">డౌన్‌లోడ్ కోసం క్యూలో ఉంది</string>
     <string name="badge_download_paused">డౌన్‌లోడ్ పాజ్ చేయబడింది</string>
     <string name="badge_download_failed">డౌన్‌లోడ్ విఫలమైంది</string>
+    <string name="badge_downloading_progress">డౌన్‌లోడ్ అవుతోంది, %1$d%%</string>
 
     <string name="media_row_see_all">అన్నీ చూడండి</string>
+    <string name="media_row_see_all_section">%1$s లోని అన్నీ చూడండి</string>
     <string name="media_card_watched">చూసినది</string>
+    <string name="media_card_type_movie">సినిమా</string>
+    <string name="media_card_type_series">సిరీస్</string>
+    <string name="media_card_type_season">సీజన్</string>
+    <string name="media_card_type_episode">ఎపిసోడ్</string>
+    <string name="media_card_type_library">లైబ్రరీ</string>
+    <string name="media_card_progress">%1$d%% చూశారు</string>
+    <string name="media_card_rating">రేటింగ్ 10కి %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d అంశం</item>
         <item quantity="other">%1$d అంశాలు</item>
     </plurals>
     <string name="state_retry">మళ్లీ ప్రయత్నించండి</string>
+    <string name="state_loading">లోడ్ అవుతోంది</string>
+    <string name="state_busy">పని జరుగుతోంది</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ఎంపిక చేయబడింది</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">ఎంపిక చేయబడింది</string>
     <string name="selection_item_not_selected">ఎంపిక చేయబడలేదు</string>
+    <string name="selection_enter">ఎంపిక చేయండి</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d అంశాన్ని చూసినట్లు గుర్తించారు</item>

@@ -10,6 +10,7 @@
     <string name="home_hero_resume">دوبارہ شروع کریں</string>
     <string name="home_hero_play">چلائیں</string>
     <string name="home_hero_details">تفصیلات</string>
+    <string name="home_hero_rated">عمر کی درجہ بندی %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d منٹ باقی</item>
         <item quantity="other">%1$d منٹ باقی</item>

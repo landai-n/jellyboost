@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Bruk Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Åpne Jellyfin på en enhet du allerede er logget inn på, gå til Quick Connect og skriv inn denne koden.</string>
+    <string name="login_quick_connect_code_description">Koden din er %1$s</string>
     <string name="login_quick_connect_waiting">Venter på godkjenning…</string>
     <string name="login_quick_connect_cancel">Avbryt</string>
 

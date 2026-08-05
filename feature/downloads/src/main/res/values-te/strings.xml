@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">సుమారు %1$s మిగిలి ఉంది</string>
     <string name="downloads_stat_network_helper">మొబైల్ డేటాలో స్వయంచాలకంగా పాజ్ అవుతుంది</string>
+    <string name="downloads_usage_storage_label">ఉపయోగించిన నిల్వ</string>
+    <string name="downloads_usage_queue_label">క్యూ పురోగతి</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">ప్లే చేయండి</string>
 
     <string name="downloads_action_delete">డౌన్‌లోడ్‌ను తొలగించండి</string>
     <string name="downloads_action_cancel">డౌన్‌లోడ్‌ను రద్దు చేయండి</string>

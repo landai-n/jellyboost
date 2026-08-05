@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Quick Connect භාවිත කරන්න</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">දැනටමත් පිවිසී ඇති උපාංගයක Jellyfin විවෘත කර, Quick Connect වෙත ගොස් මෙම කේතය ඇතුළත් කරන්න.</string>
+    <string name="login_quick_connect_code_description">ඔබගේ කේතය %1$s වේ</string>
     <string name="login_quick_connect_waiting">අනුමැතිය සඳහා රැඳී සිටිමින්…</string>
     <string name="login_quick_connect_cancel">අවලංගු කරන්න</string>
     <plurals name="auth_error_candidates_tried">

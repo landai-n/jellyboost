@@ -6,6 +6,10 @@
     <string name="search_section_movies">चित्रपट</string>
     <string name="search_section_series">शो</string>
     <string name="search_section_episodes">भाग</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d निकाल</item>
+        <item quantity="other">%1$d निकाल</item>
+    </plurals>
 
     <string name="search_prompt">आपल्या लायब्ररी शोधण्यासाठी टाइप करा.</string>
     <string name="search_no_results">“%1$s” शी जुळणारे काही आढळले नाही.</string>

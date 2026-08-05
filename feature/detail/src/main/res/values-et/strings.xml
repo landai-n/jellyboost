@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Osa %1$d</string>
+    <string name="detail_meta_rating">Hinnang %1$s</string>
+    <string name="detail_meta_rated">vanusepiirang %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min jäänud</string>
     <string name="detail_size_on_device">%1$s seadmes</string>
     <string name="detail_directed_by">Režissöör: %1$s</string>
+    <string name="detail_cast_member_as">%1$s kui %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d hooaeg</item>
         <item quantity="other">%1$d hooaega</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d osa</item>
         <item quantity="other">%1$d osa</item>
     </plurals>
+    <string name="detail_overview_collapsed">Kokku klapitud</string>
+    <string name="detail_overview_expanded">Laiendatud</string>
+    <string name="detail_overview_expand">Loe kogu kirjeldust</string>
+    <string name="detail_overview_collapse">Klapi kirjeldus kokku</string>
 
     <string name="detail_empty">See üksus pole enam saadaval.</string>
     <string name="detail_message_download_queued">Lisatud allalaadimistesse.</string>

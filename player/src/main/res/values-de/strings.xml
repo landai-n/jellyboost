@@ -5,12 +5,35 @@
     <string name="player_pause">Pause</string>
     <string name="player_rewind">10 Sekunden zurückspringen</string>
     <string name="player_forward">30 Sekunden vorspringen</string>
+    <string name="player_show_controls">Wiedergabesteuerung einblenden</string>
+    <string name="player_volume_percent">Lautstärke %1$d Prozent</string>
+    <string name="player_brightness_percent">Helligkeit %1$d Prozent</string>
+    <string name="player_buffering">Wird gepuffert</string>
+    <string name="player_seek">Suchlauf</string>
+    <string name="player_position_of_duration">%1$s von %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d Stunde</item>
+        <item quantity="other">%d Stunden</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d Minute</item>
+        <item quantity="other">%d Minuten</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d Sekunde</item>
+        <item quantity="other">%d Sekunden</item>
+    </plurals>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Untertitel</string>
     <string name="player_subtitles_off">Aus</string>
     <string name="player_quality">Qualität</string>
     <string name="player_speed">Geschwindigkeit</string>
+    <string name="player_display">Anzeige</string>
+    <string name="player_brightness">Helligkeit</string>
+    <string name="player_volume">Lautstärke</string>
+    <string name="player_percent">%1$d Prozent</string>
+    <string name="player_done">Fertig</string>
 
     <string name="player_skip_intro">Intro überspringen</string>
     <string name="player_skip_outro">Outro überspringen</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Spielt gerade</string>
     <string name="player_syncplay_queue_next">Nächster Titel</string>
     <string name="player_syncplay_queue_previous">Vorheriger Titel</string>
-    <string name="player_syncplay_queue_move_up">Nach oben</string>
-    <string name="player_syncplay_queue_move_down">Nach unten</string>
-    <string name="player_syncplay_queue_remove">Aus Warteschlange entfernen</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s nach oben verschieben</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s nach unten verschieben</string>
+    <string name="player_syncplay_queue_remove_item">%1$s aus der Warteschlange entfernen</string>
+    <string name="player_syncplay_queue_play">Abspielen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d Titel in der Warteschlange</item>

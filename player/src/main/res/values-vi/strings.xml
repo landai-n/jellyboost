@@ -5,11 +5,31 @@
     <string name="player_pause">Tạm dừng</string>
     <string name="player_rewind">Tua lại 10 giây</string>
     <string name="player_forward">Tua tới 30 giây</string>
+    <string name="player_show_controls">Hiện các nút điều khiển trình phát</string>
+    <string name="player_volume_percent">Âm lượng %1$d phần trăm</string>
+    <string name="player_brightness_percent">Độ sáng %1$d phần trăm</string>
+    <string name="player_buffering">Đang đệm</string>
+    <string name="player_seek">Tua</string>
+    <string name="player_position_of_duration">%1$s trên %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d giờ</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d phút</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d giây</item>
+    </plurals>
     <string name="player_audio">Âm thanh</string>
     <string name="player_subtitles">Phụ đề</string>
     <string name="player_subtitles_off">Tắt</string>
     <string name="player_quality">Chất lượng</string>
     <string name="player_speed">Tốc độ</string>
+    <string name="player_display">Hiển thị</string>
+    <string name="player_brightness">Độ sáng</string>
+    <string name="player_volume">Âm lượng</string>
+    <string name="player_percent">%1$d phần trăm</string>
+    <string name="player_done">Xong</string>
     <string name="player_skip_intro">Bỏ qua đoạn giới thiệu</string>
     <string name="player_skip_outro">Bỏ qua đoạn kết</string>
     <string name="player_quality_auto">Tự động</string>
@@ -49,9 +69,10 @@
     <string name="player_syncplay_queue_playing">Đang phát</string>
     <string name="player_syncplay_queue_next">Mục tiếp theo</string>
     <string name="player_syncplay_queue_previous">Mục trước đó</string>
-    <string name="player_syncplay_queue_move_up">Di chuyển lên</string>
-    <string name="player_syncplay_queue_move_down">Di chuyển xuống</string>
-    <string name="player_syncplay_queue_remove">Xóa khỏi hàng đợi</string>
+    <string name="player_syncplay_queue_move_up_item">Di chuyển %1$s lên</string>
+    <string name="player_syncplay_queue_move_down_item">Di chuyển %1$s xuống</string>
+    <string name="player_syncplay_queue_remove_item">Xóa %1$s khỏi hàng đợi</string>
+    <string name="player_syncplay_queue_play">Phát</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d mục trong hàng đợi</item>
     </plurals>

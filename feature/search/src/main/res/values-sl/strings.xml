@@ -6,6 +6,12 @@
     <string name="search_section_movies">Filmi</string>
     <string name="search_section_series">Serije</string>
     <string name="search_section_episodes">Epizode</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d zadetek</item>
+        <item quantity="two">%1$d zadetka</item>
+        <item quantity="few">%1$d zadetki</item>
+        <item quantity="other">%1$d zadetkov</item>
+    </plurals>
 
     <string name="search_prompt">Za iskanje po knjižnicah začnite tipkati.</string>
     <string name="search_no_results">Ni zadetkov za „%1$s“.</string>

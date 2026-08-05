@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">ಸುಮಾರು %1$s ಬಾಕಿ</string>
     <string name="downloads_stat_network_helper">ಮೊಬೈಲ್ ಡೇಟಾದಲ್ಲಿ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ವಿರಾಮಗೊಳ್ಳುತ್ತದೆ</string>
+    <string name="downloads_usage_storage_label">ಬಳಸಿದ ಸಂಗ್ರಹಣೆ</string>
+    <string name="downloads_usage_queue_label">ಸರತಿಯ ಪ್ರಗತಿ</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">ಪ್ಲೇ ಮಾಡಿ</string>
 
     <string name="downloads_action_delete">ಡೌನ್‌ಲೋಡ್ ಅಳಿಸಿ</string>
     <string name="downloads_action_cancel">ಡೌನ್‌ಲೋಡ್ ರದ್ದುಮಾಡಿ</string>

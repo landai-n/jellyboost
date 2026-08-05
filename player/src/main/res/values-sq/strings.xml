@@ -5,12 +5,35 @@
     <string name="player_pause">Pauzë</string>
     <string name="player_rewind">Kthehu 10 sekonda</string>
     <string name="player_forward">Përpara 30 sekonda</string>
+    <string name="player_show_controls">Shfaq kontrollet e luajtësit</string>
+    <string name="player_volume_percent">Volumi %1$d për qind</string>
+    <string name="player_brightness_percent">Ndriçimi %1$d për qind</string>
+    <string name="player_buffering">Po mbushet buferi</string>
+    <string name="player_seek">Lëvizje në kohë</string>
+    <string name="player_position_of_duration">%1$s nga %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d orë</item>
+        <item quantity="other">%d orë</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minutë</item>
+        <item quantity="other">%d minuta</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekondë</item>
+        <item quantity="other">%d sekonda</item>
+    </plurals>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Titrat</string>
     <string name="player_subtitles_off">Joaktiv</string>
     <string name="player_quality">Cilësia</string>
     <string name="player_speed">Shpejtësia</string>
+    <string name="player_display">Ekrani</string>
+    <string name="player_brightness">Ndriçimi</string>
+    <string name="player_volume">Volumi</string>
+    <string name="player_percent">%1$d për qind</string>
+    <string name="player_done">U krye</string>
 
     <string name="player_skip_intro">Kapërce hyrjen</string>
     <string name="player_skip_outro">Kapërce mbylljen</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Po luhet tani</string>
     <string name="player_syncplay_queue_next">Artikulli tjetër</string>
     <string name="player_syncplay_queue_previous">Artikulli i mëparshëm</string>
-    <string name="player_syncplay_queue_move_up">Zhvendos lart</string>
-    <string name="player_syncplay_queue_move_down">Zhvendos poshtë</string>
-    <string name="player_syncplay_queue_remove">Hiq nga radha</string>
+    <string name="player_syncplay_queue_move_up_item">Zhvendos %1$s lart</string>
+    <string name="player_syncplay_queue_move_down_item">Zhvendos %1$s poshtë</string>
+    <string name="player_syncplay_queue_remove_item">Hiq %1$s nga radha</string>
+    <string name="player_syncplay_queue_play">Luaj</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d artikull në radhë</item>

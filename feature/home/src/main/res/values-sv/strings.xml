@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Återuppta</string>
     <string name="home_hero_play">Spela upp</string>
     <string name="home_hero_details">Detaljer</string>
+    <string name="home_hero_rated">Åldersgräns %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minut kvar</item>
         <item quantity="other">%1$d minuter kvar</item>

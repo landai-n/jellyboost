@@ -5,12 +5,41 @@
     <string name="player_pause">Pozastaviť</string>
     <string name="player_rewind">Posunúť späť o 10 sekúnd</string>
     <string name="player_forward">Posunúť dopredu o 30 sekúnd</string>
+    <string name="player_show_controls">Zobraziť ovládanie prehrávača</string>
+    <string name="player_volume_percent">Hlasitosť %1$d percent</string>
+    <string name="player_brightness_percent">Jas %1$d percent</string>
+    <string name="player_buffering">Ukladanie do vyrovnávacej pamäte</string>
+    <string name="player_seek">Posun v čase</string>
+    <string name="player_position_of_duration">%1$s z %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hodina</item>
+        <item quantity="few">%d hodiny</item>
+        <item quantity="many">%d hodiny</item>
+        <item quantity="other">%d hodín</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minúta</item>
+        <item quantity="few">%d minúty</item>
+        <item quantity="many">%d minúty</item>
+        <item quantity="other">%d minút</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="few">%d sekundy</item>
+        <item quantity="many">%d sekundy</item>
+        <item quantity="other">%d sekúnd</item>
+    </plurals>
 
     <string name="player_audio">Zvuk</string>
     <string name="player_subtitles">Titulky</string>
     <string name="player_subtitles_off">Vypnuté</string>
     <string name="player_quality">Kvalita</string>
     <string name="player_speed">Rýchlosť</string>
+    <string name="player_display">Obraz</string>
+    <string name="player_brightness">Jas</string>
+    <string name="player_volume">Hlasitosť</string>
+    <string name="player_percent">%1$d percent</string>
+    <string name="player_done">Hotovo</string>
 
     <string name="player_skip_intro">Preskočiť úvod</string>
     <string name="player_skip_outro">Preskočiť záver</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Práve sa prehráva</string>
     <string name="player_syncplay_queue_next">Ďalšia položka</string>
     <string name="player_syncplay_queue_previous">Predchádzajúca položka</string>
-    <string name="player_syncplay_queue_move_up">Posunúť vyššie</string>
-    <string name="player_syncplay_queue_move_down">Posunúť nižšie</string>
-    <string name="player_syncplay_queue_remove">Odstrániť z frontu</string>
+    <string name="player_syncplay_queue_move_up_item">Posunúť %1$s vyššie</string>
+    <string name="player_syncplay_queue_move_down_item">Posunúť %1$s nižšie</string>
+    <string name="player_syncplay_queue_remove_item">Odstrániť %1$s z frontu</string>
+    <string name="player_syncplay_queue_play">Prehrať</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d položka vo fronte</item>

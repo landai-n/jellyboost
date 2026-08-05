@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Folosește Conectare rapidă</string>
     <string name="login_quick_connect_title">Conectare rapidă</string>
     <string name="login_quick_connect_instructions">Deschideți Jellyfin pe un dispozitiv pe care sunteți deja autentificat(ă), accesați Conectare rapidă și introduceți acest cod.</string>
+    <string name="login_quick_connect_code_description">Codul dvs. este %1$s</string>
     <string name="login_quick_connect_waiting">Se așteaptă aprobarea…</string>
     <string name="login_quick_connect_cancel">Anulează</string>
     <plurals name="auth_error_candidates_tried">

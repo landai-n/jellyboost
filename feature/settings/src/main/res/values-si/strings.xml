@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD කාඩ්පත</string>
     <string name="settings_storage_volume_free">%1$s නිදහස්</string>
     <string name="settings_storage_missing">ඔබ තෝරාගත් ආචයනය දැනට ලබා ගත නොහැකි බැවින්, බාගත කිරීම් පහත තෝරාගත් ස්ථානයට යනු ඇත.</string>
+    <string name="settings_storage_use_this_hint">බාගැනීම් මෙහි තබා ගැනීමට මෙය තෝරන්න</string>
     <string name="settings_storage_switch_title">බාගත කිරීම් ගෙන යන්නද?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">බාගත කිරීම් තවම ස්ථාන අතර ගෙන යා නොහැකි බැවින්, මෙම උපාංගයේ දැනටමත් ඇති එක මකා දමනු ලැබේ. ඔබට එය නව ස්ථානයට නැවත බාගත කළ හැක.</item>

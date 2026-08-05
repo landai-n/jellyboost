@@ -6,6 +6,10 @@
     <string name="search_section_movies">సినిమాలు</string>
     <string name="search_section_series">షోలు</string>
     <string name="search_section_episodes">ఎపిసోడ్‌లు</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d ఫలితం</item>
+        <item quantity="other">%1$d ఫలితాలు</item>
+    </plurals>
 
     <string name="search_prompt">మీ లైబ్రరీలను శోధించడానికి టైప్ చేయండి.</string>
     <string name="search_no_results">“%1$s”కు ఏమీ సరిపోలలేదు.</string>

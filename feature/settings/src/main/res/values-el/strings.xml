@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">Κάρτα SD</string>
     <string name="settings_storage_volume_free">%1$s ελεύθερα</string>
     <string name="settings_storage_missing">Ο αποθηκευτικός χώρος που επιλέξατε δεν είναι διαθέσιμος αυτή τη στιγμή, οπότε οι λήψεις πηγαίνουν στην τοποθεσία που επιλέχθηκε παρακάτω.</string>
+    <string name="settings_storage_use_this_hint">Επιλέξτε αυτόν τον χώρο για να μένουν εδώ οι λήψεις</string>
     <string name="settings_storage_switch_title">Μετακίνηση λήψεων;</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Οι λήψεις δεν μπορούν ακόμη να μετακινηθούν μεταξύ τοποθεσιών, οπότε αυτή που υπάρχει ήδη σε αυτή τη συσκευή θα διαγραφεί. Μπορείτε να την κατεβάσετε ξανά στη νέα τοποθεσία.</item>

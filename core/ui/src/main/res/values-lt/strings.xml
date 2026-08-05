@@ -4,9 +4,18 @@
     <string name="badge_download_queued">Eilėje atsisiuntimui</string>
     <string name="badge_download_paused">Atsisiuntimas pristabdytas</string>
     <string name="badge_download_failed">Atsisiuntimas nepavyko</string>
+    <string name="badge_downloading_progress">Atsisiunčiama, %1$d%%</string>
 
     <string name="media_row_see_all">Žiūrėti viską</string>
+    <string name="media_row_see_all_section">Žiūrėti viską skiltyje %1$s</string>
     <string name="media_card_watched">Žiūrėta</string>
+    <string name="media_card_type_movie">Filmas</string>
+    <string name="media_card_type_series">Serialas</string>
+    <string name="media_card_type_season">Sezonas</string>
+    <string name="media_card_type_episode">Epizodas</string>
+    <string name="media_card_type_library">Biblioteka</string>
+    <string name="media_card_progress">Žiūrėta %1$d%%</string>
+    <string name="media_card_rating">Įvertinimas %1$s iš 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d elementas</item>
         <item quantity="few">%1$d elementai</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d elementų</item>
     </plurals>
     <string name="state_retry">Bandyti dar kartą</string>
+    <string name="state_loading">Įkeliama</string>
+    <string name="state_busy">Vykdoma</string>
 
     <plurals name="selection_count">
         <item quantity="one">Pasirinktas %1$d</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">Pasirinkta</string>
     <string name="selection_item_not_selected">Nepasirinkta</string>
+    <string name="selection_enter">Pasirinkti</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Pažymėtas %1$d kaip žiūrėtas</item>

@@ -7,6 +7,10 @@
     <string name="search_section_movies">फ़िल्में</string>
     <string name="search_section_series">शो</string>
     <string name="search_section_episodes">एपिसोड</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d परिणाम</item>
+        <item quantity="other">%1$d परिणाम</item>
+    </plurals>
 
     <!-- States -->
     <string name="search_prompt">अपनी लाइब्रेरी खोजने के लिए टाइप करें।</string>

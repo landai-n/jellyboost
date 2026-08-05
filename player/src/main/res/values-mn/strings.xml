@@ -5,12 +5,35 @@
     <string name="player_pause">Түр зогсоох</string>
     <string name="player_rewind">10 секунд ухрах</string>
     <string name="player_forward">30 секунд урагшлах</string>
+    <string name="player_show_controls">Тоглуулагчийн удирдлагыг харуулах</string>
+    <string name="player_volume_percent">Дуу %1$d хувь</string>
+    <string name="player_brightness_percent">Гэрэлтүүлэг %1$d хувь</string>
+    <string name="player_buffering">Буферлэж байна</string>
+    <string name="player_seek">Цагийг шилжүүлэх</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d цаг</item>
+        <item quantity="other">%d цаг</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d минут</item>
+        <item quantity="other">%d минут</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунд</item>
+        <item quantity="other">%d секунд</item>
+    </plurals>
 
     <string name="player_audio">Аудио</string>
     <string name="player_subtitles">Хадмал орчуулга</string>
     <string name="player_subtitles_off">Идэвхгүй</string>
     <string name="player_quality">Чанар</string>
     <string name="player_speed">Хурд</string>
+    <string name="player_display">Дэлгэц</string>
+    <string name="player_brightness">Гэрэлтүүлэг</string>
+    <string name="player_volume">Дуу</string>
+    <string name="player_percent">%1$d хувь</string>
+    <string name="player_done">Болсон</string>
 
     <string name="player_skip_intro">Эхлэлийг алгасах</string>
     <string name="player_skip_outro">Төгсгөлийг алгасах</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Одоо тоглуулж байна</string>
     <string name="player_syncplay_queue_next">Дараагийн зүйл</string>
     <string name="player_syncplay_queue_previous">Өмнөх зүйл</string>
-    <string name="player_syncplay_queue_move_up">Дээш зөөх</string>
-    <string name="player_syncplay_queue_move_down">Доош зөөх</string>
-    <string name="player_syncplay_queue_remove">Дараалалаас хасах</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s-г дээш зөөх</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s-г доош зөөх</string>
+    <string name="player_syncplay_queue_remove_item">%1$s-г дараалалаас хасах</string>
+    <string name="player_syncplay_queue_play">Тоглуулах</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d зүйл дараалалд орсон</item>

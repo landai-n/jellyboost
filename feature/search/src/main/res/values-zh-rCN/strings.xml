@@ -6,6 +6,9 @@
     <string name="search_section_movies">电影</string>
     <string name="search_section_series">剧集</string>
     <string name="search_section_episodes">集数</string>
+    <plurals name="search_result_count">
+        <item quantity="other">%1$d 个结果</item>
+    </plurals>
 
     <string name="search_prompt">输入内容以搜索你的媒体库。</string>
     <string name="search_no_results">没有匹配“%1$s”的内容。</string>

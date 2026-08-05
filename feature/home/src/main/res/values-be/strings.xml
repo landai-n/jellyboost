@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Працягнуць</string>
     <string name="home_hero_play">Прайграць</string>
     <string name="home_hero_details">Падрабязнасці</string>
+    <string name="home_hero_rated">Узроставы рэйтынг %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Засталося %1$d хвіліна</item>
         <item quantity="few">Засталося %1$d хвіліны</item>

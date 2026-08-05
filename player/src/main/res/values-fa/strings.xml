@@ -5,12 +5,35 @@
     <string name="player_pause">توقف موقت</string>
     <string name="player_rewind">10 ثانیه عقب بروید</string>
     <string name="player_forward">30 ثانیه جلو بروید</string>
+    <string name="player_show_controls">نمایش کنترل‌های پخش‌کننده</string>
+    <string name="player_volume_percent">صدا %1$d درصد</string>
+    <string name="player_brightness_percent">روشنایی %1$d درصد</string>
+    <string name="player_buffering">در حال بافر کردن</string>
+    <string name="player_seek">جابه‌جایی زمان</string>
+    <string name="player_position_of_duration">%1$s از %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ساعت</item>
+        <item quantity="other">%d ساعت</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d دقیقه</item>
+        <item quantity="other">%d دقیقه</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d ثانیه</item>
+        <item quantity="other">%d ثانیه</item>
+    </plurals>
 
     <string name="player_audio">صدا</string>
     <string name="player_subtitles">زیرنویس</string>
     <string name="player_subtitles_off">خاموش</string>
     <string name="player_quality">کیفیت</string>
     <string name="player_speed">سرعت</string>
+    <string name="player_display">تصویر</string>
+    <string name="player_brightness">روشنایی</string>
+    <string name="player_volume">صدا</string>
+    <string name="player_percent">%1$d درصد</string>
+    <string name="player_done">انجام شد</string>
 
     <string name="player_skip_intro">رد کردن مقدمه</string>
     <string name="player_skip_outro">رد کردن پایان‌بندی</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">اکنون در حال پخش</string>
     <string name="player_syncplay_queue_next">مورد بعدی</string>
     <string name="player_syncplay_queue_previous">مورد قبلی</string>
-    <string name="player_syncplay_queue_move_up">انتقال به بالا</string>
-    <string name="player_syncplay_queue_move_down">انتقال به پایین</string>
-    <string name="player_syncplay_queue_remove">حذف از صف</string>
+    <string name="player_syncplay_queue_move_up_item">انتقال %1$s به بالا</string>
+    <string name="player_syncplay_queue_move_down_item">انتقال %1$s به پایین</string>
+    <string name="player_syncplay_queue_remove_item">حذف %1$s از صف</string>
+    <string name="player_syncplay_queue_play">پخش</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d مورد در صف</item>

@@ -5,12 +5,41 @@
     <string name="player_pause">Прыпыніць</string>
     <string name="player_rewind">Перамотка назад на 10 секунд</string>
     <string name="player_forward">Перамотка наперад на 30 секунд</string>
+    <string name="player_show_controls">Паказаць кіраванне плэерам</string>
+    <string name="player_volume_percent">Гучнасць %1$d працэнтаў</string>
+    <string name="player_brightness_percent">Яркасць %1$d працэнтаў</string>
+    <string name="player_buffering">Буферызацыя</string>
+    <string name="player_seek">Перамотка</string>
+    <string name="player_position_of_duration">%1$s з %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d гадзіна</item>
+        <item quantity="few">%d гадзіны</item>
+        <item quantity="many">%d гадзін</item>
+        <item quantity="other">%d гадзін</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d хвіліна</item>
+        <item quantity="few">%d хвіліны</item>
+        <item quantity="many">%d хвілін</item>
+        <item quantity="other">%d хвілін</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунда</item>
+        <item quantity="few">%d секунды</item>
+        <item quantity="many">%d секунд</item>
+        <item quantity="other">%d секунд</item>
+    </plurals>
 
     <string name="player_audio">Аўдыё</string>
     <string name="player_subtitles">Субцітры</string>
     <string name="player_subtitles_off">Выключаны</string>
     <string name="player_quality">Якасць</string>
     <string name="player_speed">Хуткасць</string>
+    <string name="player_display">Экран</string>
+    <string name="player_brightness">Яркасць</string>
+    <string name="player_volume">Гучнасць</string>
+    <string name="player_percent">%1$d працэнтаў</string>
+    <string name="player_done">Гатова</string>
 
     <string name="player_skip_intro">Прапусціць уступ</string>
     <string name="player_skip_outro">Прапусціць канцоўку</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Прайграецца зараз</string>
     <string name="player_syncplay_queue_next">Наступны элемент</string>
     <string name="player_syncplay_queue_previous">Папярэдні элемент</string>
-    <string name="player_syncplay_queue_move_up">Перамясціць вышэй</string>
-    <string name="player_syncplay_queue_move_down">Перамясціць ніжэй</string>
-    <string name="player_syncplay_queue_remove">Выдаліць з чаргі</string>
+    <string name="player_syncplay_queue_move_up_item">Перамясціць %1$s вышэй</string>
+    <string name="player_syncplay_queue_move_down_item">Перамясціць %1$s ніжэй</string>
+    <string name="player_syncplay_queue_remove_item">Выдаліць %1$s з чаргі</string>
+    <string name="player_syncplay_queue_play">Прайграць</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент у чарзе</item>

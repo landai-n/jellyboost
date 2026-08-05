@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD карт</string>
     <string name="settings_storage_volume_free">%1$s чөлөөтэй</string>
     <string name="settings_storage_missing">Таны сонгосон хадгалах сан одоогоор боломжгүй байгаа тул татаж авалт доор сонгосон байршилд очих болно.</string>
+    <string name="settings_storage_use_this_hint">Татсан файлууд энд үлдэхийн тулд үүнийг сонгоно уу</string>
     <string name="settings_storage_switch_title">Татсан файлуудыг зөөх үү?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Татсан файлуудыг байршил хооронд зөөх боломж одоохондоо алга тул энэ төхөөрөмж дээр байгаа файлыг устгана. Та шинэ байршилд дахин татаж болно.</item>

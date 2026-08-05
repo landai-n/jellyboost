@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">ეპიზოდი %1$d</string>
+    <string name="detail_meta_rating">შეფასება %1$s</string>
+    <string name="detail_meta_rated">ასაკობრივი კატეგორია %1$s</string>
     <string name="detail_runtime_minutes">%1$d წთ</string>
     <string name="detail_remaining_minutes">დარჩენილია %1$d წთ</string>
     <string name="detail_size_on_device">%1$s მოწყობილობაზე</string>
     <string name="detail_directed_by">რეჟისორი: %1$s</string>
+    <string name="detail_cast_member_as">%1$s — %2$s-ის როლში</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d სეზონი</item>
         <item quantity="other">%1$d სეზონი</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d ეპიზოდი</item>
         <item quantity="other">%1$d ეპიზოდი</item>
     </plurals>
+    <string name="detail_overview_collapsed">ჩაკეცილია</string>
+    <string name="detail_overview_expanded">გაშლილია</string>
+    <string name="detail_overview_expand">სრული აღწერის წაკითხვა</string>
+    <string name="detail_overview_collapse">აღწერის ჩაკეცვა</string>
     <string name="detail_empty">ეს ერთეული აღარ არის ხელმისაწვდომი.</string>
     <string name="detail_message_download_queued">დაემატა გადმოწერებში.</string>
     <string name="detail_message_download_failed">ამ გადმოწერის დაწყება ვერ მოხერხდა.</string>

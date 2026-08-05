@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">تقریباً %1$s باقی</string>
     <string name="downloads_stat_network_helper">موبائل ڈیٹا پر خودکار طور پر موقوف ہو جاتا ہے</string>
+    <string name="downloads_usage_storage_label">استعمال شدہ اسٹوریج</string>
+    <string name="downloads_usage_queue_label">قطار کی پیش رفت</string>
+    <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
+    <string name="downloads_action_play">چلائیں</string>
 
     <string name="downloads_action_delete">ڈاؤن لوڈ حذف کریں</string>
     <string name="downloads_action_cancel">ڈاؤن لوڈ منسوخ کریں</string>

@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kort</string>
     <string name="settings_storage_volume_free">%1$s ledigt</string>
     <string name="settings_storage_missing">Lagringsutrymmet du valde är inte tillgängligt just nu, så nedladdningar går till platsen som valts nedan.</string>
+    <string name="settings_storage_use_this_hint">Välj den här så att nedladdningar stannar kvar här</string>
     <string name="settings_storage_switch_title">Flytta nedladdningar?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Nedladdningar kan inte flyttas mellan platser än, så den som redan finns på den här enheten tas bort. Du kan ladda ner den igen till den nya platsen.</item>

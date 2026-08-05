@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD kart</string>
     <string name="settings_storage_volume_free">%1$s boş</string>
     <string name="settings_storage_missing">Seçdiyiniz yaddaş hazırda mövcud deyil, ona görə də yükləmələr aşağıda seçilmiş yerə gedəcək.</string>
+    <string name="settings_storage_use_this_hint">Yükləmələri burada saxlamaq üçün bunu seçin</string>
     <string name="settings_storage_switch_title">Yükləmələr köçürülsün?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Yükləmələr hələ məkanlar arasında köçürülə bilmir, ona görə də bu cihazdakı silinəcək. Onu yeni məkana yenidən yükləyə bilərsiniz.</item>

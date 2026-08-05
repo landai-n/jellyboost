@@ -5,11 +5,37 @@
     <string name="player_pause">Pausa</string>
     <string name="player_rewind">Retrocedeix 10 segons</string>
     <string name="player_forward">Avança 30 segons</string>
+    <string name="player_show_controls">Mostra els controls del reproductor</string>
+    <string name="player_volume_percent">Volum %1$d per cent</string>
+    <string name="player_brightness_percent">Brillantor %1$d per cent</string>
+    <string name="player_buffering">Emplenant la memòria intermèdia</string>
+    <string name="player_seek">Desplaçament</string>
+    <string name="player_position_of_duration">%1$s de %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="many">%d hores</item>
+        <item quantity="other">%d hores</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minut</item>
+        <item quantity="many">%d minuts</item>
+        <item quantity="other">%d minuts</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d segon</item>
+        <item quantity="many">%d segons</item>
+        <item quantity="other">%d segons</item>
+    </plurals>
     <string name="player_audio">Àudio</string>
     <string name="player_subtitles">Subtítols</string>
     <string name="player_subtitles_off">Desactivats</string>
     <string name="player_quality">Qualitat</string>
     <string name="player_speed">Velocitat</string>
+    <string name="player_display">Pantalla</string>
+    <string name="player_brightness">Brillantor</string>
+    <string name="player_volume">Volum</string>
+    <string name="player_percent">%1$d per cent</string>
+    <string name="player_done">Fet</string>
     <string name="player_skip_intro">Omet la introducció</string>
     <string name="player_skip_outro">Omet els crèdits finals</string>
     <string name="player_quality_auto">Automàtica</string>
@@ -50,9 +76,10 @@
     <string name="player_syncplay_queue_playing">Reproduint ara</string>
     <string name="player_syncplay_queue_next">Element següent</string>
     <string name="player_syncplay_queue_previous">Element anterior</string>
-    <string name="player_syncplay_queue_move_up">Puja</string>
-    <string name="player_syncplay_queue_move_down">Baixa</string>
-    <string name="player_syncplay_queue_remove">Elimina de la cua</string>
+    <string name="player_syncplay_queue_move_up_item">Puja %1$s</string>
+    <string name="player_syncplay_queue_move_down_item">Baixa %1$s</string>
+    <string name="player_syncplay_queue_remove_item">Elimina %1$s de la cua</string>
+    <string name="player_syncplay_queue_play">Reprodueix</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element a la cua</item>
         <item quantity="other">%d elements a la cua</item>

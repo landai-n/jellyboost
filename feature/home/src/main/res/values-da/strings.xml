@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Genoptag</string>
     <string name="home_hero_play">Afspil</string>
     <string name="home_hero_details">Detaljer</string>
+    <string name="home_hero_rated">Aldersmærket %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minut tilbage</item>
         <item quantity="other">%1$d minutter tilbage</item>

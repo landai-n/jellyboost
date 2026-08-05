@@ -6,6 +6,14 @@
     <string name="search_section_movies">الأفلام</string>
     <string name="search_section_series">المسلسلات</string>
     <string name="search_section_episodes">الحلقات</string>
+    <plurals name="search_result_count">
+        <item quantity="zero">لا نتائج</item>
+        <item quantity="one">نتيجة واحدة</item>
+        <item quantity="two">نتيجتان</item>
+        <item quantity="few">%1$d نتائج</item>
+        <item quantity="many">%1$d نتيجة</item>
+        <item quantity="other">%1$d نتيجة</item>
+    </plurals>
 
     <string name="search_prompt">اكتب للبحث في مكتباتك.</string>
     <string name="search_no_results">لم يتم العثور على أي تطابق مع «%1$s».</string>

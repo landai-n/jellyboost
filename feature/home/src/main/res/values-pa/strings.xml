@@ -10,6 +10,7 @@
     <string name="home_hero_resume">ਜਾਰੀ ਰੱਖੋ</string>
     <string name="home_hero_play">ਚਲਾਓ</string>
     <string name="home_hero_details">ਵੇਰਵੇ</string>
+    <string name="home_hero_rated">ਉਮਰ ਰੇਟਿੰਗ %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d ਮਿੰਟ ਬਾਕੀ</item>
         <item quantity="other">%1$d ਮਿੰਟ ਬਾਕੀ</item>

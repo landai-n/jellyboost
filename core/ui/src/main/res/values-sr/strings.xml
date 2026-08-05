@@ -4,15 +4,26 @@
     <string name="badge_download_queued">На чекању за преузимање</string>
     <string name="badge_download_paused">Преузимање паузирано</string>
     <string name="badge_download_failed">Преузимање није успело</string>
+    <string name="badge_downloading_progress">Преузимање, %1$d%%</string>
 
     <string name="media_row_see_all">Прикажи све</string>
+    <string name="media_row_see_all_section">Прикажи све из одељка %1$s</string>
     <string name="media_card_watched">Погледано</string>
+    <string name="media_card_type_movie">Филм</string>
+    <string name="media_card_type_series">Серија</string>
+    <string name="media_card_type_season">Сезона</string>
+    <string name="media_card_type_episode">Епизода</string>
+    <string name="media_card_type_library">Библиотека</string>
+    <string name="media_card_progress">Погледано %1$d%%</string>
+    <string name="media_card_rating">Оцена %1$s од 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d ставка</item>
         <item quantity="few">%1$d ставке</item>
         <item quantity="other">%1$d ставки</item>
     </plurals>
     <string name="state_retry">Покушај поново</string>
+    <string name="state_loading">Учитавање</string>
+    <string name="state_busy">У току</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d изабрана ставка</item>
@@ -27,6 +38,7 @@
 
     <string name="selection_item_selected">Изабрано</string>
     <string name="selection_item_not_selected">Није изабрано</string>
+    <string name="selection_enter">Изабери</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Означено %1$d као погледано</item>

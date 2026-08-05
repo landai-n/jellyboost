@@ -5,12 +5,35 @@
     <string name="player_pause">Παύση</string>
     <string name="player_rewind">Πίσω 10 δευτερόλεπτα</string>
     <string name="player_forward">Μπροστά 30 δευτερόλεπτα</string>
+    <string name="player_show_controls">Εμφάνιση των χειριστηρίων αναπαραγωγής</string>
+    <string name="player_volume_percent">Ένταση %1$d τοις εκατό</string>
+    <string name="player_brightness_percent">Φωτεινότητα %1$d τοις εκατό</string>
+    <string name="player_buffering">Προσωρινή αποθήκευση</string>
+    <string name="player_seek">Μετακίνηση στον χρόνο</string>
+    <string name="player_position_of_duration">%1$s από %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ώρα</item>
+        <item quantity="other">%d ώρες</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d λεπτό</item>
+        <item quantity="other">%d λεπτά</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d δευτερόλεπτο</item>
+        <item quantity="other">%d δευτερόλεπτα</item>
+    </plurals>
 
     <string name="player_audio">Ήχος</string>
     <string name="player_subtitles">Υπότιτλοι</string>
     <string name="player_subtitles_off">Ανενεργοί</string>
     <string name="player_quality">Ποιότητα</string>
     <string name="player_speed">Ταχύτητα</string>
+    <string name="player_display">Οθόνη</string>
+    <string name="player_brightness">Φωτεινότητα</string>
+    <string name="player_volume">Ένταση</string>
+    <string name="player_percent">%1$d τοις εκατό</string>
+    <string name="player_done">Τέλος</string>
 
     <string name="player_skip_intro">Παράλειψη εισαγωγής</string>
     <string name="player_skip_outro">Παράλειψη τίτλων τέλους</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Αναπαράγεται τώρα</string>
     <string name="player_syncplay_queue_next">Επόμενο στοιχείο</string>
     <string name="player_syncplay_queue_previous">Προηγούμενο στοιχείο</string>
-    <string name="player_syncplay_queue_move_up">Μετακίνηση επάνω</string>
-    <string name="player_syncplay_queue_move_down">Μετακίνηση κάτω</string>
-    <string name="player_syncplay_queue_remove">Αφαίρεση από την ουρά</string>
+    <string name="player_syncplay_queue_move_up_item">Μετακίνηση του %1$s επάνω</string>
+    <string name="player_syncplay_queue_move_down_item">Μετακίνηση του %1$s κάτω</string>
+    <string name="player_syncplay_queue_remove_item">Αφαίρεση του %1$s από την ουρά</string>
+    <string name="player_syncplay_queue_play">Αναπαραγωγή</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d στοιχείο στην ουρά</item>

@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Эпизод %1$d</string>
+    <string name="detail_meta_rating">Оценка %1$s</string>
+    <string name="detail_meta_rated">возрастной рейтинг %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d мин</string>
     <string name="detail_remaining_minutes">Осталось %1$d мин</string>
     <string name="detail_size_on_device">%1$s на устройстве</string>
     <string name="detail_directed_by">Режиссёр: %1$s</string>
+    <string name="detail_cast_member_as">%1$s в роли %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d сезон</item>
         <item quantity="few">%1$d сезона</item>
@@ -45,6 +48,10 @@
         <item quantity="many">%1$d эпизодов</item>
         <item quantity="other">%1$d эпизода</item>
     </plurals>
+    <string name="detail_overview_collapsed">Свёрнуто</string>
+    <string name="detail_overview_expanded">Развёрнуто</string>
+    <string name="detail_overview_expand">Прочитать описание полностью</string>
+    <string name="detail_overview_collapse">Свернуть описание</string>
 
     <string name="detail_empty">Этот элемент больше недоступен.</string>
     <string name="detail_message_download_queued">Добавлено в загрузки.</string>

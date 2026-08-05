@@ -30,12 +30,15 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">एपिसोड %1$d</string>
+    <string name="detail_meta_rating">रेटिंग %1$s</string>
+    <string name="detail_meta_rated">आयु रेटिंग %1$s</string>
 
     <!-- Metadata -->
     <string name="detail_runtime_minutes">%1$d मिनट</string>
     <string name="detail_remaining_minutes">%1$d मिनट शेष</string>
     <string name="detail_size_on_device">डिवाइस पर %1$s</string>
     <string name="detail_directed_by">निर्देशक: %1$s</string>
+    <string name="detail_cast_member_as">%2$s के रूप में %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d सीज़न</item>
         <item quantity="other">%1$d सीज़न</item>
@@ -44,6 +47,10 @@
         <item quantity="one">%1$d एपिसोड</item>
         <item quantity="other">%1$d एपिसोड</item>
     </plurals>
+    <string name="detail_overview_collapsed">संक्षिप्त</string>
+    <string name="detail_overview_expanded">विस्तृत</string>
+    <string name="detail_overview_expand">पूरा विवरण पढ़ें</string>
+    <string name="detail_overview_collapse">विवरण संक्षिप्त करें</string>
 
     <!-- States and messages -->
     <string name="detail_empty">यह आइटम अब उपलब्ध नहीं है।</string>

@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Остават около %1$s</string>
     <string name="downloads_stat_network_helper">Автоматично се поставя на пауза при мобилни данни</string>
+    <string name="downloads_usage_storage_label">Използвано хранилище</string>
+    <string name="downloads_usage_queue_label">Напредък на опашката</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Пусни</string>
 
     <string name="downloads_action_delete">Изтрий изтеглянето</string>
     <string name="downloads_action_cancel">Отказ на изтеглянето</string>

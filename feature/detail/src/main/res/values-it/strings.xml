@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episodio %1$d</string>
+    <string name="detail_meta_rating">Valutazione %1$s</string>
+    <string name="detail_meta_rated">classificazione %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min rimanenti</string>
     <string name="detail_size_on_device">%1$s sul dispositivo</string>
     <string name="detail_directed_by">Diretto da %1$s</string>
+    <string name="detail_cast_member_as">%1$s nel ruolo di %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d stagione</item>
         <item quantity="other">%1$d stagioni</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d episodio</item>
         <item quantity="other">%1$d episodi</item>
     </plurals>
+    <string name="detail_overview_collapsed">Compressa</string>
+    <string name="detail_overview_expanded">Espansa</string>
+    <string name="detail_overview_expand">Leggi la trama completa</string>
+    <string name="detail_overview_collapse">Comprimi la trama</string>
     <string name="detail_empty">Questo elemento non è più disponibile.</string>
     <string name="detail_message_download_queued">Aggiunto ai download.</string>
     <string name="detail_message_download_failed">Impossibile avviare il download.</string>

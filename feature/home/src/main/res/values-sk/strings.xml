@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Pokračovať</string>
     <string name="home_hero_play">Prehrať</string>
     <string name="home_hero_details">Podrobnosti</string>
+    <string name="home_hero_rated">Prístupnosť %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Zostáva %1$d minúta</item>
         <item quantity="few">Zostáva %1$d minúty</item>

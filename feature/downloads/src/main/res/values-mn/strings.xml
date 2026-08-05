@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">ойролцоогоор %1$s үлдсэн</string>
     <string name="downloads_stat_network_helper">Мобайл дата дээр автоматаар түр зогсдог</string>
+    <string name="downloads_usage_storage_label">Ашигласан сан</string>
+    <string name="downloads_usage_queue_label">Дарааллын явц</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Тоглуулах</string>
 
     <string name="downloads_action_delete">Татсан файлыг устгах</string>
     <string name="downloads_action_cancel">Татаж авалтыг цуцлах</string>

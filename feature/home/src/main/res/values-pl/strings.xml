@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Wznów</string>
     <string name="home_hero_play">Odtwórz</string>
     <string name="home_hero_details">Szczegóły</string>
+    <string name="home_hero_rated">Kategoria wiekowa %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Pozostało %1$d minuta</item>
         <item quantity="few">Pozostało %1$d minuty</item>

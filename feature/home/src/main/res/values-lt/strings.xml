@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Tęsti</string>
     <string name="home_hero_play">Leisti</string>
     <string name="home_hero_details">Detalės</string>
+    <string name="home_hero_rated">Amžiaus cenzas %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Liko %1$d minutė</item>
         <item quantity="few">Liko %1$d minutės</item>

@@ -4,13 +4,24 @@
     <string name="badge_download_queued">Deskargatzeko ilaran</string>
     <string name="badge_download_paused">Deskarga pausatuta</string>
     <string name="badge_download_failed">Deskargak huts egin du</string>
+    <string name="badge_downloading_progress">Deskargatzen, %1$d%%</string>
     <string name="media_row_see_all">Ikusi guztiak</string>
+    <string name="media_row_see_all_section">Ikusi %1$s ataleko guztiak</string>
     <string name="media_card_watched">Ikusita</string>
+    <string name="media_card_type_movie">Filma</string>
+    <string name="media_card_type_series">Seriea</string>
+    <string name="media_card_type_season">Denboraldia</string>
+    <string name="media_card_type_episode">Atala</string>
+    <string name="media_card_type_library">Liburutegia</string>
+    <string name="media_card_progress">%1$d%% ikusita</string>
+    <string name="media_card_rating">Balorazioa: %1$s 10etik</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d elementu</item>
         <item quantity="other">%1$d elementu</item>
     </plurals>
     <string name="state_retry">Berriz saiatu</string>
+    <string name="state_loading">Kargatzen</string>
+    <string name="state_busy">Lanean</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d hautatuta</item>
         <item quantity="other">%1$d hautatuta</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">Deskargatu</string>
     <string name="selection_item_selected">Hautatuta</string>
     <string name="selection_item_not_selected">Hautatu gabe</string>
+    <string name="selection_enter">Hautatu</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d ikusita gisa markatuta</item>
         <item quantity="other">%1$d ikusita gisa markatuta</item>

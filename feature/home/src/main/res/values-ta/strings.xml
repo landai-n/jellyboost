@@ -10,6 +10,7 @@
     <string name="home_hero_resume">தொடர்</string>
     <string name="home_hero_play">இயக்கு</string>
     <string name="home_hero_details">விவரங்கள்</string>
+    <string name="home_hero_rated">வயது தரம் %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d நிமிடம் மீதம்</item>
         <item quantity="other">%1$d நிமிடங்கள் மீதம்</item>

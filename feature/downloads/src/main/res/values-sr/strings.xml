@@ -20,6 +20,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Још приближно %1$s</string>
     <string name="downloads_stat_network_helper">Аутоматски се паузира на мобилним подацима</string>
+    <string name="downloads_usage_storage_label">Искоришћено складиште</string>
+    <string name="downloads_usage_queue_label">Напредак реда чекања</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Пусти</string>
 
     <string name="downloads_action_delete">Обриши преузимање</string>
     <string name="downloads_action_cancel">Откажи преузимање</string>

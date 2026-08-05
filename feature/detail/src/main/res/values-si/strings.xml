@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">කථාංගය %1$d</string>
+    <string name="detail_meta_rating">ශ්‍රේණිගත කිරීම %1$s</string>
+    <string name="detail_meta_rated">වයස් සීමාව %1$s</string>
     <string name="detail_runtime_minutes">මිනිත්තු %1$d</string>
     <string name="detail_remaining_minutes">මිනිත්තු %1$d ඉතිරිය</string>
     <string name="detail_size_on_device">උපාංගයේ %1$s</string>
     <string name="detail_directed_by">අධ්‍යක්ෂණය %1$s විසිනි</string>
+    <string name="detail_cast_member_as">%2$s ලෙස %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d වාරය</item>
         <item quantity="other">%1$d වාර</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d කථාංගය</item>
         <item quantity="other">%1$d කථාංග</item>
     </plurals>
+    <string name="detail_overview_collapsed">හකුළා ඇත</string>
+    <string name="detail_overview_expanded">දිගහැර ඇත</string>
+    <string name="detail_overview_expand">සම්පූර්ණ සාරාංශය කියවන්න</string>
+    <string name="detail_overview_collapse">සාරාංශය හකුළන්න</string>
     <string name="detail_empty">මෙම අයිතමය තවදුරටත් ලබා ගත නොහැක.</string>
     <string name="detail_message_download_queued">බාගත කිරීම් වෙත එක් කරන ලදී.</string>
     <string name="detail_message_download_failed">එම බාගත කිරීම ආරම්භ කළ නොහැකි විය.</string>

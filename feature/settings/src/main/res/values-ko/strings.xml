@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD 카드</string>
     <string name="settings_storage_volume_free">여유 공간 %1$s</string>
     <string name="settings_storage_missing">선택한 저장 위치를 지금 사용할 수 없어 다운로드가 아래에서 선택한 위치에 저장됩니다.</string>
+    <string name="settings_storage_use_this_hint">다운로드를 계속 여기에 두려면 이 위치를 선택하세요</string>
     <string name="settings_storage_switch_title">다운로드를 이동할까요?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">다운로드는 아직 위치 간 이동을 지원하지 않아 이 기기에 있는 %1$d개가 삭제됩니다. 새 위치로 다시 다운로드할 수 있습니다.</item>

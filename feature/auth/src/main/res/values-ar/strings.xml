@@ -30,6 +30,7 @@
     <string name="login_quick_connect">استخدام الاتصال السريع</string>
     <string name="login_quick_connect_title">الاتصال السريع</string>
     <string name="login_quick_connect_instructions">افتح Jellyfin على جهاز مسجّل الدخول عليه بالفعل، وانتقل إلى الاتصال السريع، ثم أدخل هذا الرمز.</string>
+    <string name="login_quick_connect_code_description">رمزك هو %1$s</string>
     <string name="login_quick_connect_waiting">بانتظار الموافقة…</string>
     <string name="login_quick_connect_cancel">إلغاء</string>
 

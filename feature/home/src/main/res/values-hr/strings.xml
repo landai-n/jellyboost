@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Nastavi</string>
     <string name="home_hero_play">Reproduciraj</string>
     <string name="home_hero_details">Detalji</string>
+    <string name="home_hero_rated">Dobna oznaka %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Preostalo %1$d minuta</item>
         <item quantity="few">Preostalo %1$d minute</item>

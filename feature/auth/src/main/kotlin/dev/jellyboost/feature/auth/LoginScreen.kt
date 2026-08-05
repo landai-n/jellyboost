@@ -349,6 +349,9 @@ private fun LoginFormFields(
         // dropping accessibility focus to the top of the screen at the exact moment the user wants
         // to hear what happened. `LoginViewModel` ignores edits while `isSigningIn`, so "enabled"
         // does not mean "mutable" — what is in flight is what was in the fields when it started.
+        // `readOnly` says that to the platform too, so the IME does not offer a keyboard for a
+        // field whose contents cannot move.
+        readOnly = state.isSigningIn,
         isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
         labelText = stringResource(R.string.login_username_label),
@@ -365,6 +368,7 @@ private fun LoginFormFields(
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         // Enabled through the sign-in for the same reason the username field is — see above.
+        readOnly = state.isSigningIn,
         isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_password_label).uppercase()) },
         labelText = stringResource(R.string.login_password_label),

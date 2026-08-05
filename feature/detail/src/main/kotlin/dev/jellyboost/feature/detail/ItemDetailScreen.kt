@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -329,10 +330,19 @@ fun ItemDetailContent(
         state.isLoading -> LoadingState(modifier = modifier)
 
         state.errorMessage != null ->
-            ErrorState(message = state.errorMessage, modifier = modifier, onRetry = onRetry)
+            ErrorState(
+                message = state.errorMessage,
+                modifier = modifier,
+                onRetry = onRetry,
+                announce = LiveRegionMode.Assertive,
+            )
 
         detail == null ->
-            EmptyState(message = stringResource(R.string.detail_empty), modifier = modifier)
+            EmptyState(
+                message = stringResource(R.string.detail_empty),
+                modifier = modifier,
+                announce = LiveRegionMode.Polite,
+            )
 
         else ->
             BoxWithConstraints(modifier = modifier.fillMaxSize()) {

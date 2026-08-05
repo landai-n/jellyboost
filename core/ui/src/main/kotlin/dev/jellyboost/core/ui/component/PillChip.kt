@@ -2,6 +2,7 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -89,6 +90,38 @@ fun PillChip(
             interaction =
                 Modifier.selectable(
                     selected = selected,
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                ),
+        )
+    }
+}
+
+/**
+ * The same pill, when tapping it *does* something rather than turning something on.
+ *
+ * The library's "Filters" chip is the case this exists for: it opens a sheet, it can never be in an
+ * "on" state, and as a [PillChip] it announced "not selected" every single time — a state a user
+ * could reasonably spend a while trying to change (accessibility audit 2026-08-05, wave 5). A
+ * button is what it is, so a button is what it says.
+ *
+ * Visually identical to an unselected [PillChip], and inside the same invisible 48dp frame.
+ */
+@Composable
+fun ActionPillChip(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    ChipFrame(modifier = modifier) {
+        ChipSurface(
+            text = text,
+            selected = false,
+            contentAlpha = if (enabled) 1f else DISABLED_CHIP_ALPHA,
+            interaction =
+                Modifier.clickable(
                     enabled = enabled,
                     role = Role.Button,
                     onClick = onClick,
@@ -224,6 +257,7 @@ private fun PillChipPreview() {
         ) {
             PillChip(text = "Unwatched", selected = true, onClick = {})
             PillChip(text = "Favourites", selected = false, onClick = {})
+            ActionPillChip(text = "Filters", onClick = {})
             InfoPillChip(text = "Sci-Fi")
             MPillBadge(text = "TV-MA")
         }

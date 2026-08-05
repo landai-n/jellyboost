@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -122,8 +123,16 @@ fun HomeContent(
     when {
         state.isLoading -> LoadingState(modifier = modifier)
 
+        // Both states announce themselves: they arrive by *replacing* the rows a user was reading,
+        // or the spinner they were waiting behind, and until now that swap was silent — the node
+        // under the reader's finger simply vanished (accessibility audit 2026-08-05, CR-3).
         state.errorMessage != null ->
-            ErrorState(message = state.errorMessage, modifier = modifier, onRetry = onRetry)
+            ErrorState(
+                message = state.errorMessage,
+                modifier = modifier,
+                onRetry = onRetry,
+                announce = LiveRegionMode.Assertive,
+            )
 
         state.isEmpty ->
             EmptyState(
@@ -131,6 +140,7 @@ fun HomeContent(
                 modifier = modifier,
                 actionLabel = stringResource(R.string.home_empty_refresh),
                 onAction = onRetry,
+                announce = LiveRegionMode.Polite,
             )
 
         else -> HomeRows(state = state, actions = actions, modifier = modifier)

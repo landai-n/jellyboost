@@ -402,6 +402,10 @@ private fun ManualAddressSection(
                 // to, so a TalkBack user pressing Connect was thrown back to the top of the screen.
                 // The field cannot be *changed* mid-probe either — `ServerSetupViewModel` ignores
                 // edits while `isConnecting`, which is a stronger guarantee than a greyed-out box.
+                // `readOnly` says the same thing to the platform: keep the node, keep the name,
+                // keep the value, refuse the keystroke. The state-holder guard stays as well; it
+                // is the one a JVM test can hold still.
+                readOnly = state.isConnecting,
                 isError = state.error != null,
                 // "Server address" — was the panel's own heading; now the field's own caption.
                 label = { Text(text = stringResource(R.string.server_setup_manual_title).uppercase()) },

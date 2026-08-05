@@ -4,14 +4,25 @@
     <string name="badge_download_queued">In wachtrij voor download</string>
     <string name="badge_download_paused">Download gepauzeerd</string>
     <string name="badge_download_failed">Download mislukt</string>
+    <string name="badge_downloading_progress">Bezig met downloaden, %1$d%%</string>
 
     <string name="media_row_see_all">Alles bekijken</string>
+    <string name="media_row_see_all_section">Alles in %1$s bekijken</string>
     <string name="media_card_watched">Bekeken</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serie</string>
+    <string name="media_card_type_season">Seizoen</string>
+    <string name="media_card_type_episode">Aflevering</string>
+    <string name="media_card_type_library">Bibliotheek</string>
+    <string name="media_card_progress">%1$d%% bekeken</string>
+    <string name="media_card_rating">Beoordeling %1$s van 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d items</item>
     </plurals>
     <string name="state_retry">Opnieuw proberen</string>
+    <string name="state_loading">Laden</string>
+    <string name="state_busy">Bezig</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d geselecteerd</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Geselecteerd</string>
     <string name="selection_item_not_selected">Niet geselecteerd</string>
+    <string name="selection_enter">Selecteren</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d gemarkeerd als bekeken</item>

@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Aflevering %1$d</string>
+    <string name="detail_meta_rating">Beoordeling %1$s</string>
+    <string name="detail_meta_rated">kijkwijzer %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Nog %1$d min</string>
     <string name="detail_size_on_device">%1$s op apparaat</string>
     <string name="detail_directed_by">Regie: %1$s</string>
+    <string name="detail_cast_member_as">%1$s als %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d seizoen</item>
         <item quantity="other">%1$d seizoenen</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d aflevering</item>
         <item quantity="other">%1$d afleveringen</item>
     </plurals>
+    <string name="detail_overview_collapsed">Ingeklapt</string>
+    <string name="detail_overview_expanded">Uitgeklapt</string>
+    <string name="detail_overview_expand">Lees de volledige samenvatting</string>
+    <string name="detail_overview_collapse">Samenvatting inklappen</string>
 
     <string name="detail_empty">Dit item is niet meer beschikbaar.</string>
     <string name="detail_message_download_queued">Toegevoegd aan downloads.</string>

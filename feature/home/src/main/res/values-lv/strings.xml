@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Turpināt</string>
     <string name="home_hero_play">Atskaņot</string>
     <string name="home_hero_details">Detaļas</string>
+    <string name="home_hero_rated">Vecuma ierobežojums %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="zero">Atlikušas %1$d minūšu</item>
         <item quantity="one">Atlikušas %1$d minūte</item>

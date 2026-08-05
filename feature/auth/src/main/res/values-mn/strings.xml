@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Түргэн холболт ашиглах</string>
     <string name="login_quick_connect_title">Түргэн холболт</string>
     <string name="login_quick_connect_instructions">Аль хэдийн нэвтэрсэн төхөөрөмж дээрээ Jellyfin-г нээж, Түргэн холболт руу орж энэ кодыг оруулна уу.</string>
+    <string name="login_quick_connect_code_description">Таны код бол %1$s</string>
     <string name="login_quick_connect_waiting">Зөвшөөрлийг хүлээж байна…</string>
     <string name="login_quick_connect_cancel">Цуцлах</string>
 

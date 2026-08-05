@@ -10,6 +10,7 @@
     <string name="home_hero_resume">కొనసాగించండి</string>
     <string name="home_hero_play">ప్లే చేయండి</string>
     <string name="home_hero_details">వివరాలు</string>
+    <string name="home_hero_rated">వయో ప్రమాణం %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d నిమిషం మిగిలి ఉంది</item>
         <item quantity="other">%1$d నిమిషాలు మిగిలి ఉన్నాయి</item>

@@ -4,13 +4,24 @@
     <string name="badge_download_queued">ダウンロード待ち</string>
     <string name="badge_download_paused">ダウンロード一時停止中</string>
     <string name="badge_download_failed">ダウンロード失敗</string>
+    <string name="badge_downloading_progress">ダウンロード中、%1$d%%</string>
 
     <string name="media_row_see_all">すべて表示</string>
+    <string name="media_row_see_all_section">%1$s をすべて表示</string>
     <string name="media_card_watched">視聴済み</string>
+    <string name="media_card_type_movie">映画</string>
+    <string name="media_card_type_series">シリーズ</string>
+    <string name="media_card_type_season">シーズン</string>
+    <string name="media_card_type_episode">エピソード</string>
+    <string name="media_card_type_library">ライブラリ</string>
+    <string name="media_card_progress">%1$d%% 視聴済み</string>
+    <string name="media_card_rating">評価 10 点中 %1$s 点</string>
     <plurals name="library_item_count">
         <item quantity="other">%1$d 件</item>
     </plurals>
     <string name="state_retry">再試行</string>
+    <string name="state_loading">読み込み中</string>
+    <string name="state_busy">処理中</string>
 
     <plurals name="selection_count">
         <item quantity="other">%1$d 件選択中</item>
@@ -23,6 +34,7 @@
 
     <string name="selection_item_selected">選択済み</string>
     <string name="selection_item_not_selected">未選択</string>
+    <string name="selection_enter">選択</string>
 
     <plurals name="selection_result_watched">
         <item quantity="other">%1$d 件を視聴済みにしました</item>

@@ -4,14 +4,25 @@
     <string name="badge_download_queued">ڈاؤن لوڈ کی قطار میں</string>
     <string name="badge_download_paused">ڈاؤن لوڈ موقوف ہے</string>
     <string name="badge_download_failed">ڈاؤن لوڈ ناکام ہوگیا</string>
+    <string name="badge_downloading_progress">ڈاؤن لوڈ ہو رہا ہے، %1$d%%</string>
 
     <string name="media_row_see_all">سب دیکھیں</string>
+    <string name="media_row_see_all_section">%1$s کے سب دیکھیں</string>
     <string name="media_card_watched">دیکھا گیا</string>
+    <string name="media_card_type_movie">فلم</string>
+    <string name="media_card_type_series">سیریز</string>
+    <string name="media_card_type_season">سیزن</string>
+    <string name="media_card_type_episode">قسط</string>
+    <string name="media_card_type_library">لائبریری</string>
+    <string name="media_card_progress">%1$d%% دیکھا گیا</string>
+    <string name="media_card_rating">درجہ بندی 10 میں سے %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d آئٹم</item>
         <item quantity="other">%1$d آئٹمز</item>
     </plurals>
     <string name="state_retry">دوبارہ کوشش کریں</string>
+    <string name="state_loading">لوڈ ہو رہا ہے</string>
+    <string name="state_busy">کام جاری ہے</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d منتخب</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">منتخب</string>
     <string name="selection_item_not_selected">غیر منتخب</string>
+    <string name="selection_enter">منتخب کریں</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d کو دیکھا گیا نشان زد کیا گیا</item>

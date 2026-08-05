@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">noin %1$s jäljellä</string>
     <string name="downloads_stat_network_helper">Keskeytyy automaattisesti mobiilidatalla</string>
+    <string name="downloads_usage_storage_label">Käytetty tallennustila</string>
+    <string name="downloads_usage_queue_label">Jonon edistyminen</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Toista</string>
 
     <string name="downloads_action_delete">Poista lataus</string>
     <string name="downloads_action_cancel">Peruuta lataus</string>

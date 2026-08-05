@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kaart</string>
     <string name="settings_storage_volume_free">%1$s vaba</string>
     <string name="settings_storage_missing">Valitud salvestusruum pole praegu saadaval, seega lähevad allalaadimised allpool valitud kohta.</string>
+    <string name="settings_storage_use_this_hint">Vali see, et allalaadimised siia jääksid</string>
     <string name="settings_storage_switch_title">Kas liigutada allalaadimised?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Allalaadimisi ei saa veel asukohtade vahel liigutada, seega selles seadmes juba olev allalaadimine kustutatakse. Saad selle uude asukohta uuesti alla laadida.</item>

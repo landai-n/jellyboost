@@ -5,11 +5,34 @@
     <string name="player_pause">විරාම කරන්න</string>
     <string name="player_rewind">තත්පර 10 ක් පසුපසට යන්න</string>
     <string name="player_forward">තත්පර 30 ක් ඉදිරියට යන්න</string>
+    <string name="player_show_controls">වාදක පාලන පෙන්වන්න</string>
+    <string name="player_volume_percent">හඬ පරිමාව සියයට %1$d</string>
+    <string name="player_brightness_percent">දීප්තිය සියයට %1$d</string>
+    <string name="player_buffering">බෆර වෙමින්</string>
+    <string name="player_seek">වේලාව වෙනස් කරන්න</string>
+    <string name="player_position_of_duration">%2$s න් %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">පැය %d</item>
+        <item quantity="other">පැය %d</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">මිනිත්තු %d</item>
+        <item quantity="other">මිනිත්තු %d</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">තත්පර %d</item>
+        <item quantity="other">තත්පර %d</item>
+    </plurals>
     <string name="player_audio">ශබ්ද</string>
     <string name="player_subtitles">උපසිරැසි</string>
     <string name="player_subtitles_off">නැත</string>
     <string name="player_quality">ගුණත්වය</string>
     <string name="player_speed">වේගය</string>
+    <string name="player_display">සංදර්ශකය</string>
+    <string name="player_brightness">දීප්තිය</string>
+    <string name="player_volume">හඬ පරිමාව</string>
+    <string name="player_percent">සියයට %1$d</string>
+    <string name="player_done">නිමයි</string>
     <string name="player_skip_intro">හැඳින්වීම මඟහරින්න</string>
     <string name="player_skip_outro">අවසානය මඟහරින්න</string>
     <string name="player_quality_auto">ස්වයංක්‍රීය</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">දැන් වාදනය වේ</string>
     <string name="player_syncplay_queue_next">ඊළඟ අයිතමය</string>
     <string name="player_syncplay_queue_previous">පෙර අයිතමය</string>
-    <string name="player_syncplay_queue_move_up">ඉහළට ගෙන යන්න</string>
-    <string name="player_syncplay_queue_move_down">පහළට ගෙන යන්න</string>
-    <string name="player_syncplay_queue_remove">පෝලිමෙන් ඉවත් කරන්න</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s ඉහළට ගෙන යන්න</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s පහළට ගෙන යන්න</string>
+    <string name="player_syncplay_queue_remove_item">%1$s පෝලිමෙන් ඉවත් කරන්න</string>
+    <string name="player_syncplay_queue_play">වාදනය කරන්න</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d අයිතමයක් පෝලිමේ ඇත</item>
         <item quantity="other">%d අයිතම පෝලිමේ ඇත</item>

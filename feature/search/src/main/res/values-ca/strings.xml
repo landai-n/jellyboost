@@ -5,6 +5,11 @@
     <string name="search_section_movies">Pel·lícules</string>
     <string name="search_section_series">Sèries</string>
     <string name="search_section_episodes">Episodis</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultat</item>
+        <item quantity="many">%1$d resultats</item>
+        <item quantity="other">%1$d resultats</item>
+    </plurals>
     <string name="search_prompt">Escriu per cercar a les teves biblioteques.</string>
     <string name="search_no_results">Res coincideix amb “%1$s”.</string>
     <string name="search_error_network">No es pot contactar amb el teu servidor. Comprova la connexió i torna-ho a provar.</string>

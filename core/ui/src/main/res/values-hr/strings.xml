@@ -4,15 +4,26 @@
     <string name="badge_download_queued">U redu za preuzimanje</string>
     <string name="badge_download_paused">Preuzimanje pauzirano</string>
     <string name="badge_download_failed">Preuzimanje neuspješno</string>
+    <string name="badge_downloading_progress">Preuzimanje, %1$d%%</string>
 
     <string name="media_row_see_all">Prikaži sve</string>
+    <string name="media_row_see_all_section">Prikaži sve iz odjeljka %1$s</string>
     <string name="media_card_watched">Gledano</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serija</string>
+    <string name="media_card_type_season">Sezona</string>
+    <string name="media_card_type_episode">Epizoda</string>
+    <string name="media_card_type_library">Biblioteka</string>
+    <string name="media_card_progress">Gledano %1$d%%</string>
+    <string name="media_card_rating">Ocjena %1$s od 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d stavka</item>
         <item quantity="few">%1$d stavke</item>
         <item quantity="other">%1$d stavki</item>
     </plurals>
     <string name="state_retry">Pokušaj ponovno</string>
+    <string name="state_loading">Učitavanje</string>
+    <string name="state_busy">U tijeku</string>
 
     <plurals name="selection_count">
         <item quantity="one">Odabrano: %1$d</item>
@@ -27,6 +38,7 @@
 
     <string name="selection_item_selected">Odabrano</string>
     <string name="selection_item_not_selected">Nije odabrano</string>
+    <string name="selection_enter">Odaberi</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d stavka označena kao gledana</item>

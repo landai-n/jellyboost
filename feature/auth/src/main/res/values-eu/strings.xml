@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Erabili Konexio Azkarra</string>
     <string name="login_quick_connect_title">Konexio Azkarra</string>
     <string name="login_quick_connect_instructions">Ireki Jellyfin dagoeneko saioa hasita duzun gailu batean, joan Konexio Azkarrara eta sartu kode hau.</string>
+    <string name="login_quick_connect_code_description">Zure kodea %1$s da</string>
     <string name="login_quick_connect_waiting">Onarpenaren zain…</string>
     <string name="login_quick_connect_cancel">Utzi</string>
     <plurals name="auth_error_candidates_tried">

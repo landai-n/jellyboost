@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Retomar</string>
     <string name="home_hero_play">Reproduzir</string>
     <string name="home_hero_details">Detalhes</string>
+    <string name="home_hero_rated">Faixa etária %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Falta %1$d minuto</item>
         <item quantity="other">Faltam %1$d minutos</item>

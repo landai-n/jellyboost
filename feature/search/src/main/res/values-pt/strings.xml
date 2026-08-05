@@ -5,6 +5,11 @@
     <string name="search_section_movies">Filmes</string>
     <string name="search_section_series">Séries</string>
     <string name="search_section_episodes">Episódios</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resultado</item>
+        <item quantity="many">%1$d resultados</item>
+        <item quantity="other">%1$d resultados</item>
+    </plurals>
     <string name="search_prompt">Escreva para pesquisar nas suas bibliotecas.</string>
     <string name="search_no_results">Nada correspondeu a “%1$s”.</string>
     <string name="search_error_network">Não é possível contactar o seu servidor. Verifique a sua ligação e tente novamente.</string>

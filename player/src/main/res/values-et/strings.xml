@@ -5,12 +5,35 @@
     <string name="player_pause">Peata</string>
     <string name="player_rewind">Keri 10 sekundit tagasi</string>
     <string name="player_forward">Keri 30 sekundit edasi</string>
+    <string name="player_show_controls">Näita mängija juhtnuppe</string>
+    <string name="player_volume_percent">Helitugevus %1$d protsenti</string>
+    <string name="player_brightness_percent">Heledus %1$d protsenti</string>
+    <string name="player_buffering">Puhverdamine</string>
+    <string name="player_seek">Kerimine</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d tund</item>
+        <item quantity="other">%d tundi</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minut</item>
+        <item quantity="other">%d minutit</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekund</item>
+        <item quantity="other">%d sekundit</item>
+    </plurals>
 
     <string name="player_audio">Heli</string>
     <string name="player_subtitles">Subtiitrid</string>
     <string name="player_subtitles_off">Väljas</string>
     <string name="player_quality">Kvaliteet</string>
     <string name="player_speed">Kiirus</string>
+    <string name="player_display">Ekraan</string>
+    <string name="player_brightness">Heledus</string>
+    <string name="player_volume">Helitugevus</string>
+    <string name="player_percent">%1$d protsenti</string>
+    <string name="player_done">Valmis</string>
 
     <string name="player_skip_intro">Jäta intro vahele</string>
     <string name="player_skip_outro">Jäta outro vahele</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Esitatakse praegu</string>
     <string name="player_syncplay_queue_next">Järgmine üksus</string>
     <string name="player_syncplay_queue_previous">Eelmine üksus</string>
-    <string name="player_syncplay_queue_move_up">Liiguta üles</string>
-    <string name="player_syncplay_queue_move_down">Liiguta alla</string>
-    <string name="player_syncplay_queue_remove">Eemalda järjekorrast</string>
+    <string name="player_syncplay_queue_move_up_item">Liiguta %1$s üles</string>
+    <string name="player_syncplay_queue_move_down_item">Liiguta %1$s alla</string>
+    <string name="player_syncplay_queue_remove_item">Eemalda %1$s järjekorrast</string>
+    <string name="player_syncplay_queue_play">Esita</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d üksus järjekorras</item>

@@ -10,6 +10,7 @@
     <string name="home_hero_resume">ކުރިއަށް ގެންދޭ</string>
     <string name="home_hero_play">ޕްލޭ</string>
     <string name="home_hero_details">ތަފްޞީލް</string>
+    <string name="home_hero_rated">އުމުރު ރޭޓިން %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d މިނިޓް ބާކީ</item>
         <item quantity="other">%1$d މިނިޓް ބާކީ</item>

@@ -5,12 +5,35 @@
     <string name="player_pause">Keskeytä</string>
     <string name="player_rewind">Siirry 10 sekuntia taaksepäin</string>
     <string name="player_forward">Siirry 30 sekuntia eteenpäin</string>
+    <string name="player_show_controls">Näytä soittimen säätimet</string>
+    <string name="player_volume_percent">Äänenvoimakkuus %1$d prosenttia</string>
+    <string name="player_brightness_percent">Kirkkaus %1$d prosenttia</string>
+    <string name="player_buffering">Puskuroidaan</string>
+    <string name="player_seek">Kelaus</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d tunti</item>
+        <item quantity="other">%d tuntia</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuutti</item>
+        <item quantity="other">%d minuuttia</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekunti</item>
+        <item quantity="other">%d sekuntia</item>
+    </plurals>
 
     <string name="player_audio">Ääni</string>
     <string name="player_subtitles">Tekstitykset</string>
     <string name="player_subtitles_off">Pois</string>
     <string name="player_quality">Laatu</string>
     <string name="player_speed">Nopeus</string>
+    <string name="player_display">Kuva</string>
+    <string name="player_brightness">Kirkkaus</string>
+    <string name="player_volume">Äänenvoimakkuus</string>
+    <string name="player_percent">%1$d prosenttia</string>
+    <string name="player_done">Valmis</string>
 
     <string name="player_skip_intro">Ohita intro</string>
     <string name="player_skip_outro">Ohita outro</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Toistetaan nyt</string>
     <string name="player_syncplay_queue_next">Seuraava kohde</string>
     <string name="player_syncplay_queue_previous">Edellinen kohde</string>
-    <string name="player_syncplay_queue_move_up">Siirrä ylös</string>
-    <string name="player_syncplay_queue_move_down">Siirrä alas</string>
-    <string name="player_syncplay_queue_remove">Poista jonosta</string>
+    <string name="player_syncplay_queue_move_up_item">Siirrä %1$s ylös</string>
+    <string name="player_syncplay_queue_move_down_item">Siirrä %1$s alas</string>
+    <string name="player_syncplay_queue_remove_item">Poista %1$s jonosta</string>
+    <string name="player_syncplay_queue_play">Toista</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d kohde jonossa</item>

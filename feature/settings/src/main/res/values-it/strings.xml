@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Scheda SD</string>
     <string name="settings_storage_volume_free">%1$s liberi</string>
     <string name="settings_storage_missing">L\'archiviazione scelta non è disponibile al momento, quindi i download andranno nella posizione selezionata di seguito.</string>
+    <string name="settings_storage_use_this_hint">Scegli questa posizione per tenere qui i download</string>
     <string name="settings_storage_switch_title">Spostare i download?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">I download non possono ancora essere spostati tra posizioni, quindi quello già presente su questo dispositivo verrà eliminato. Potrai scaricarlo di nuovo nella nuova posizione.</item>

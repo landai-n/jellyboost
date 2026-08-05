@@ -5,12 +5,32 @@
     <string name="player_pause">暫停</string>
     <string name="player_rewind">倒返 10 秒</string>
     <string name="player_forward">快進 30 秒</string>
+    <string name="player_show_controls">顯示播放控制項</string>
+    <string name="player_volume_percent">音量 %1$d%%</string>
+    <string name="player_brightness_percent">亮度 %1$d%%</string>
+    <string name="player_buffering">緩衝緊</string>
+    <string name="player_seek">調整播放位置</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d 個鐘</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d 分鐘</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d 秒</item>
+    </plurals>
 
     <string name="player_audio">音軌</string>
     <string name="player_subtitles">字幕</string>
     <string name="player_subtitles_off">關閉</string>
     <string name="player_quality">畫質</string>
     <string name="player_speed">速度</string>
+    <string name="player_display">畫面</string>
+    <string name="player_brightness">亮度</string>
+    <string name="player_volume">音量</string>
+    <string name="player_percent">%1$d%%</string>
+    <string name="player_done">完成</string>
 
     <string name="player_skip_intro">跳過片頭</string>
     <string name="player_skip_outro">跳過片尾</string>
@@ -59,9 +79,10 @@
     <string name="player_syncplay_queue_playing">依家播緊</string>
     <string name="player_syncplay_queue_next">下一項</string>
     <string name="player_syncplay_queue_previous">上一項</string>
-    <string name="player_syncplay_queue_move_up">上移</string>
-    <string name="player_syncplay_queue_move_down">下移</string>
-    <string name="player_syncplay_queue_remove">由佇列度移除</string>
+    <string name="player_syncplay_queue_move_up_item">將 %1$s 上移</string>
+    <string name="player_syncplay_queue_move_down_item">將 %1$s 下移</string>
+    <string name="player_syncplay_queue_remove_item">由佇列度移除 %1$s</string>
+    <string name="player_syncplay_queue_play">播放</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">已加咗 %d 項入佇列</item>

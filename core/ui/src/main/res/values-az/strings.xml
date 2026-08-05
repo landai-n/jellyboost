@@ -4,13 +4,24 @@
     <string name="badge_download_queued">Yükləmə növbəsində</string>
     <string name="badge_download_paused">Yükləmə dayandırıldı</string>
     <string name="badge_download_failed">Yükləmə uğursuz oldu</string>
+    <string name="badge_downloading_progress">Yüklənir, %1$d%%</string>
     <string name="media_row_see_all">Hamısına bax</string>
+    <string name="media_row_see_all_section">%1$s bölməsinin hamısına bax</string>
     <string name="media_card_watched">İzlənilib</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serial</string>
+    <string name="media_card_type_season">Fəsil</string>
+    <string name="media_card_type_episode">Epizod</string>
+    <string name="media_card_type_library">Kitabxana</string>
+    <string name="media_card_progress">%1$d%% izlənilib</string>
+    <string name="media_card_rating">Reytinq 10 üzrə %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d element</item>
         <item quantity="other">%1$d element</item>
     </plurals>
     <string name="state_retry">Yenidən cəhd et</string>
+    <string name="state_loading">Yüklənir</string>
+    <string name="state_busy">Məşğuldur</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d seçildi</item>
         <item quantity="other">%1$d seçildi</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">Yüklə</string>
     <string name="selection_item_selected">Seçildi</string>
     <string name="selection_item_not_selected">Seçilməyib</string>
+    <string name="selection_enter">Seç</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d izlənilib kimi qeyd edildi</item>
         <item quantity="other">%1$d izlənilib kimi qeyd edildi</item>

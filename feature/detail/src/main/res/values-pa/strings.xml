@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">ਐਪੀਸੋਡ %1$d</string>
+    <string name="detail_meta_rating">ਰੇਟਿੰਗ %1$s</string>
+    <string name="detail_meta_rated">ਉਮਰ ਰੇਟਿੰਗ %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d ਮਿੰਟ</string>
     <string name="detail_remaining_minutes">%1$d ਮਿੰਟ ਬਾਕੀ</string>
     <string name="detail_size_on_device">ਡਿਵਾਈਸ ਉੱਤੇ %1$s</string>
     <string name="detail_directed_by">%1$s ਦੁਆਰਾ ਨਿਰਦੇਸ਼ਿਤ</string>
+    <string name="detail_cast_member_as">%2$s ਦੇ ਕਿਰਦਾਰ ਵਿੱਚ %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d ਸੀਜ਼ਨ</item>
         <item quantity="other">%1$d ਸੀਜ਼ਨ</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d ਐਪੀਸੋਡ</item>
         <item quantity="other">%1$d ਐਪੀਸੋਡ</item>
     </plurals>
+    <string name="detail_overview_collapsed">ਸਮੇਟਿਆ ਹੋਇਆ</string>
+    <string name="detail_overview_expanded">ਖੋਲ੍ਹਿਆ ਹੋਇਆ</string>
+    <string name="detail_overview_expand">ਪੂਰਾ ਸਾਰ ਪੜ੍ਹੋ</string>
+    <string name="detail_overview_collapse">ਸਾਰ ਸਮੇਟੋ</string>
 
     <string name="detail_empty">ਇਹ ਆਈਟਮ ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।</string>
     <string name="detail_message_download_queued">ਡਾਊਨਲੋਡਾਂ ਵਿੱਚ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ।</string>

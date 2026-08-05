@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kort</string>
     <string name="settings_storage_volume_free">%1$s ledig</string>
     <string name="settings_storage_missing">Det lager, du valgte, er ikke tilgængeligt lige nu, så downloads går til placeringen valgt nedenfor.</string>
+    <string name="settings_storage_use_this_hint">Vælg denne for at beholde downloads her</string>
     <string name="settings_storage_switch_title">Flyt downloads?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Downloads kan endnu ikke flyttes mellem placeringer, så den download, der allerede er på denne enhed, bliver slettet. Du kan downloade den igen til den nye placering.</item>

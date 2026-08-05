@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Reprendre</string>
     <string name="home_hero_play">Lecture</string>
     <string name="home_hero_details">Détails</string>
+    <string name="home_hero_rated">Classé %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minute restante</item>
         <item quantity="other">%1$d minutes restantes</item>

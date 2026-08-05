@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Продължи</string>
     <string name="home_hero_play">Пусни</string>
     <string name="home_hero_details">Подробности</string>
+    <string name="home_hero_rated">Възрастова категория %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Остава %1$d минута</item>
         <item quantity="other">Остават %1$d минути</item>

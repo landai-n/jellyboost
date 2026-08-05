@@ -4,14 +4,25 @@
     <string name="badge_download_queued">I download-kø</string>
     <string name="badge_download_paused">Download sat på pause</string>
     <string name="badge_download_failed">Download mislykkedes</string>
+    <string name="badge_downloading_progress">Downloader, %1$d%%</string>
 
     <string name="media_row_see_all">Se alle</string>
+    <string name="media_row_see_all_section">Se alle i %1$s</string>
     <string name="media_card_watched">Set</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serie</string>
+    <string name="media_card_type_season">Sæson</string>
+    <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_library">Bibliotek</string>
+    <string name="media_card_progress">%1$d%% set</string>
+    <string name="media_card_rating">Bedømmelse %1$s ud af 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d element</item>
         <item quantity="other">%1$d elementer</item>
     </plurals>
     <string name="state_retry">Prøv igen</string>
+    <string name="state_loading">Indlæser</string>
+    <string name="state_busy">Arbejder</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valgt</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Valgt</string>
     <string name="selection_item_not_selected">Ikke valgt</string>
+    <string name="selection_enter">Vælg</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Markerede %1$d som set</item>

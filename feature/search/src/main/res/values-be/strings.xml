@@ -6,6 +6,12 @@
     <string name="search_section_movies">Фільмы</string>
     <string name="search_section_series">Серыялы</string>
     <string name="search_section_episodes">Эпізоды</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d вынік</item>
+        <item quantity="few">%1$d вынікі</item>
+        <item quantity="many">%1$d вынікаў</item>
+        <item quantity="other">%1$d вынікаў</item>
+    </plurals>
 
     <string name="search_prompt">Пачніце ўводзіць, каб шукаць у бібліятэках.</string>
     <string name="search_no_results">Няма супадзенняў для «%1$s».</string>

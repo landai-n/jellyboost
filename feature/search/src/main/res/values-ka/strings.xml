@@ -5,6 +5,10 @@
     <string name="search_section_movies">ფილმები</string>
     <string name="search_section_series">სერიალები</string>
     <string name="search_section_episodes">ეპიზოდები</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d შედეგი</item>
+        <item quantity="other">%1$d შედეგი</item>
+    </plurals>
     <string name="search_prompt">აკრიფეთ თქვენს ბიბლიოთეკებში საძებნად.</string>
     <string name="search_no_results">ვერაფერი მოიძებნა „%1$s“-სთვის.</string>
     <string name="search_error_network">თქვენს სერვერთან დაკავშირება ვერ ხერხდება. შეამოწმეთ თქვენი კავშირი და სცადეთ ხელახლა.</string>

@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Resume</string>
     <string name="home_hero_play">Play</string>
     <string name="home_hero_details">Details</string>
+    <string name="home_hero_rated">Rated %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minute left</item>
         <item quantity="other">%1$d minutes left</item>

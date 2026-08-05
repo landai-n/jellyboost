@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Jatka</string>
     <string name="home_hero_play">Toista</string>
     <string name="home_hero_details">Tiedot</string>
+    <string name="home_hero_rated">Ikäraja %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minuutti jäljellä</item>
         <item quantity="other">%1$d minuuttia jäljellä</item>

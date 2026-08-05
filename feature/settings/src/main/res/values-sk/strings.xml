@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD karta</string>
     <string name="settings_storage_volume_free">%1$s voľné</string>
     <string name="settings_storage_missing">Zvolené úložisko momentálne nie je dostupné, preto stiahnutia smerujú na miesto vybrané nižšie.</string>
+    <string name="settings_storage_use_this_hint">Zvoľte toto miesto, aby stiahnuté súbory ostali tu</string>
     <string name="settings_storage_switch_title">Presunúť stiahnutia?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Stiahnutia zatiaľ nie je možné presúvať medzi umiestneniami, preto bude to, čo je už v tomto zariadení, odstránené. Môžete si to znova stiahnuť na nové miesto.</item>

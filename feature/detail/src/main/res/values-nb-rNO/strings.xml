@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episode %1$d</string>
+    <string name="detail_meta_rating">Vurdering %1$s</string>
+    <string name="detail_meta_rated">aldersgrense %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min igjen</string>
     <string name="detail_size_on_device">%1$s på enheten</string>
     <string name="detail_directed_by">Regissert av %1$s</string>
+    <string name="detail_cast_member_as">%1$s som %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sesong</item>
         <item quantity="other">%1$d sesonger</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d episode</item>
         <item quantity="other">%1$d episoder</item>
     </plurals>
+    <string name="detail_overview_collapsed">Sammenslått</string>
+    <string name="detail_overview_expanded">Utvidet</string>
+    <string name="detail_overview_expand">Les hele sammendraget</string>
+    <string name="detail_overview_collapse">Slå sammen sammendraget</string>
 
     <string name="detail_empty">Dette elementet er ikke lenger tilgjengelig.</string>
     <string name="detail_message_download_queued">Lagt til i nedlastinger.</string>

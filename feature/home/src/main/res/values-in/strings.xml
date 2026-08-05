@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Lanjutkan</string>
     <string name="home_hero_play">Putar</string>
     <string name="home_hero_details">Detail</string>
+    <string name="home_hero_rated">Klasifikasi usia %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="other">%1$d menit tersisa</item>
     </plurals>

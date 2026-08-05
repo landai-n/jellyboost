@@ -4,9 +4,18 @@
     <string name="badge_download_queued">W kolejce do pobrania</string>
     <string name="badge_download_paused">Pobieranie wstrzymane</string>
     <string name="badge_download_failed">Pobieranie nie powiodło się</string>
+    <string name="badge_downloading_progress">Pobieranie, %1$d%%</string>
 
     <string name="media_row_see_all">Zobacz wszystko</string>
+    <string name="media_row_see_all_section">Zobacz wszystko w sekcji %1$s</string>
     <string name="media_card_watched">Obejrzane</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serial</string>
+    <string name="media_card_type_season">Sezon</string>
+    <string name="media_card_type_episode">Odcinek</string>
+    <string name="media_card_type_library">Biblioteka</string>
+    <string name="media_card_progress">Obejrzano %1$d%%</string>
+    <string name="media_card_rating">Ocena %1$s na 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d pozycja</item>
         <item quantity="few">%1$d pozycje</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d pozycji</item>
     </plurals>
     <string name="state_retry">Spróbuj ponownie</string>
+    <string name="state_loading">Wczytywanie</string>
+    <string name="state_busy">Trwa operacja</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d zaznaczona</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">Zaznaczone</string>
     <string name="selection_item_not_selected">Niezaznaczone</string>
+    <string name="selection_enter">Zaznacz</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Oznaczono %1$d jako obejrzaną</item>

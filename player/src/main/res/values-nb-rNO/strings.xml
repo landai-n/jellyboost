@@ -5,12 +5,35 @@
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Hopp tilbake 10 sekunder</string>
     <string name="player_forward">Hopp fram 30 sekunder</string>
+    <string name="player_show_controls">Vis avspillerkontrollene</string>
+    <string name="player_volume_percent">Volum %1$d prosent</string>
+    <string name="player_brightness_percent">Lysstyrke %1$d prosent</string>
+    <string name="player_buffering">Bufrer</string>
+    <string name="player_seek">Spol</string>
+    <string name="player_position_of_duration">%1$s av %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d time</item>
+        <item quantity="other">%d timer</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minutt</item>
+        <item quantity="other">%d minutter</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekund</item>
+        <item quantity="other">%d sekunder</item>
+    </plurals>
 
     <string name="player_audio">Lyd</string>
     <string name="player_subtitles">Undertekster</string>
     <string name="player_subtitles_off">Av</string>
     <string name="player_quality">Kvalitet</string>
     <string name="player_speed">Hastighet</string>
+    <string name="player_display">Skjerm</string>
+    <string name="player_brightness">Lysstyrke</string>
+    <string name="player_volume">Volum</string>
+    <string name="player_percent">%1$d prosent</string>
+    <string name="player_done">Ferdig</string>
 
     <string name="player_skip_intro">Hopp over intro</string>
     <string name="player_skip_outro">Hopp over avslutning</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Spilles nå</string>
     <string name="player_syncplay_queue_next">Neste element</string>
     <string name="player_syncplay_queue_previous">Forrige element</string>
-    <string name="player_syncplay_queue_move_up">Flytt opp</string>
-    <string name="player_syncplay_queue_move_down">Flytt ned</string>
-    <string name="player_syncplay_queue_remove">Fjern fra køen</string>
+    <string name="player_syncplay_queue_move_up_item">Flytt %1$s opp</string>
+    <string name="player_syncplay_queue_move_down_item">Flytt %1$s ned</string>
+    <string name="player_syncplay_queue_remove_item">Fjern %1$s fra køen</string>
+    <string name="player_syncplay_queue_play">Spill av</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element i kø</item>

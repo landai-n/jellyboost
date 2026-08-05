@@ -4,9 +4,18 @@
     <string name="badge_download_queued">في قائمة انتظار التنزيل</string>
     <string name="badge_download_paused">تم إيقاف التنزيل مؤقتًا</string>
     <string name="badge_download_failed">فشل التنزيل</string>
+    <string name="badge_downloading_progress">جارٍ التنزيل، %1$d%%</string>
 
     <string name="media_row_see_all">عرض الكل</string>
+    <string name="media_row_see_all_section">عرض كل %1$s</string>
     <string name="media_card_watched">تمت مشاهدته</string>
+    <string name="media_card_type_movie">فيلم</string>
+    <string name="media_card_type_series">مسلسل</string>
+    <string name="media_card_type_season">موسم</string>
+    <string name="media_card_type_episode">حلقة</string>
+    <string name="media_card_type_library">مكتبة</string>
+    <string name="media_card_progress">تمت مشاهدة %1$d%%</string>
+    <string name="media_card_rating">التقييم %1$s من 10</string>
     <plurals name="library_item_count">
         <item quantity="zero">لا عناصر</item>
         <item quantity="one">عنصر واحد</item>
@@ -16,6 +25,8 @@
         <item quantity="other">%1$d عنصر</item>
     </plurals>
     <string name="state_retry">إعادة المحاولة</string>
+    <string name="state_loading">جارٍ التحميل</string>
+    <string name="state_busy">مشغول</string>
 
     <plurals name="selection_count">
         <item quantity="zero">لم يتم تحديد أي عنصر</item>
@@ -33,6 +44,7 @@
 
     <string name="selection_item_selected">محدد</string>
     <string name="selection_item_not_selected">غير محدد</string>
+    <string name="selection_enter">تحديد</string>
 
     <plurals name="selection_result_watched">
         <item quantity="zero">لم يتم تعليم أي عنصر كمشاهَد</item>

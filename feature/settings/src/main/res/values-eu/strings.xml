@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD txartela</string>
     <string name="settings_storage_volume_free">%1$s libre</string>
     <string name="settings_storage_missing">Aukeratu duzun biltegiratzea ez dago erabilgarri une honetan, beraz deskargak beheko kokapenera joango dira.</string>
+    <string name="settings_storage_use_this_hint">Hautatu hau deskargak hemen gordetzen jarraitzeko</string>
     <string name="settings_storage_switch_title">Deskargak lekuz aldatu?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Deskargak oraindik ezin dira kokapenez aldatu, beraz gailu honetan dagoena ezabatu egingo da. Berriz deskarga dezakezu kokapen berrian.</item>

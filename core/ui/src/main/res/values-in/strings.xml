@@ -4,12 +4,23 @@
     <string name="badge_download_queued">Antre untuk diunduh</string>
     <string name="badge_download_paused">Unduhan dijeda</string>
     <string name="badge_download_failed">Unduhan gagal</string>
+    <string name="badge_downloading_progress">Mengunduh, %1$d%%</string>
     <string name="media_row_see_all">Lihat semua</string>
+    <string name="media_row_see_all_section">Lihat semua di %1$s</string>
     <string name="media_card_watched">Sudah ditonton</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serial</string>
+    <string name="media_card_type_season">Musim</string>
+    <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_library">Pustaka</string>
+    <string name="media_card_progress">%1$d%% ditonton</string>
+    <string name="media_card_rating">Peringkat %1$s dari 10</string>
     <plurals name="library_item_count">
         <item quantity="other">%1$d item</item>
     </plurals>
     <string name="state_retry">Coba lagi</string>
+    <string name="state_loading">Memuat</string>
+    <string name="state_busy">Sedang berjalan</string>
     <plurals name="selection_count">
         <item quantity="other">%1$d dipilih</item>
     </plurals>
@@ -20,6 +31,7 @@
     <string name="selection_download">Unduh</string>
     <string name="selection_item_selected">Dipilih</string>
     <string name="selection_item_not_selected">Tidak dipilih</string>
+    <string name="selection_enter">Pilih</string>
     <plurals name="selection_result_watched">
         <item quantity="other">Menandai %1$d sebagai sudah ditonton</item>
     </plurals>

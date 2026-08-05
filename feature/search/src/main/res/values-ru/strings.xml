@@ -6,6 +6,12 @@
     <string name="search_section_movies">Фильмы</string>
     <string name="search_section_series">Сериалы</string>
     <string name="search_section_episodes">Эпизоды</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d результат</item>
+        <item quantity="few">%1$d результата</item>
+        <item quantity="many">%1$d результатов</item>
+        <item quantity="other">%1$d результата</item>
+    </plurals>
 
     <string name="search_prompt">Начните вводить, чтобы найти в своих библиотеках.</string>
     <string name="search_no_results">Совпадений для «%1$s» не найдено.</string>

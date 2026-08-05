@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Jonossa latausta varten</string>
     <string name="badge_download_paused">Lataus keskeytetty</string>
     <string name="badge_download_failed">Lataus epäonnistui</string>
+    <string name="badge_downloading_progress">Ladataan, %1$d%%</string>
 
     <string name="media_row_see_all">Näytä kaikki</string>
+    <string name="media_row_see_all_section">Näytä kaikki osiosta %1$s</string>
     <string name="media_card_watched">Katsottu</string>
+    <string name="media_card_type_movie">Elokuva</string>
+    <string name="media_card_type_series">Sarja</string>
+    <string name="media_card_type_season">Kausi</string>
+    <string name="media_card_type_episode">Jakso</string>
+    <string name="media_card_type_library">Kirjasto</string>
+    <string name="media_card_progress">%1$d%% katsottu</string>
+    <string name="media_card_rating">Arvosana %1$s / 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d kohde</item>
         <item quantity="other">%1$d kohdetta</item>
     </plurals>
     <string name="state_retry">Yritä uudelleen</string>
+    <string name="state_loading">Ladataan</string>
+    <string name="state_busy">Käynnissä</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valittu</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Valittu</string>
     <string name="selection_item_not_selected">Ei valittu</string>
+    <string name="selection_enter">Valitse</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Merkitty %1$d katsotuksi</item>

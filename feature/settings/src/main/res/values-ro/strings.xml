@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Card SD</string>
     <string name="settings_storage_volume_free">%1$s liberi</string>
     <string name="settings_storage_missing">Stocarea aleasă nu este disponibilă acum, așa că descărcările vor merge la locația selectată mai jos.</string>
+    <string name="settings_storage_use_this_hint">Alegeți acest loc pentru ca descărcările să rămână aici</string>
     <string name="settings_storage_switch_title">Mutați descărcările?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Descărcările nu pot fi mutate încă între locații, așa că cea deja existentă pe acest dispozitiv va fi ștearsă. O puteți descărca din nou la noua locație.</item>

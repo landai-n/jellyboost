@@ -32,6 +32,7 @@
     <string name="settings_storage_sd_card">SD कार्ड</string>
     <string name="settings_storage_volume_free">%1$s खाली</string>
     <string name="settings_storage_missing">आपने जो स्टोरेज चुना है वह अभी उपलब्ध नहीं है, इसलिए डाउनलोड नीचे चुने गए स्थान पर जा रहे हैं।</string>
+    <string name="settings_storage_use_this_hint">डाउनलोड यहीं रखने के लिए इसे चुनें</string>
     <string name="settings_storage_switch_title">डाउनलोड स्थानांतरित करें?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">डाउनलोड अभी स्थानों के बीच स्थानांतरित नहीं किए जा सकते, इसलिए इस डिवाइस पर पहले से मौजूद डाउनलोड हटा दिया जाएगा। आप इसे नए स्थान पर फिर से डाउनलोड कर सकते हैं।</item>

@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Epizodas %1$d</string>
+    <string name="detail_meta_rating">Įvertinimas %1$s</string>
+    <string name="detail_meta_rated">amžiaus cenzas %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Liko %1$d min</string>
     <string name="detail_size_on_device">%1$s įrenginyje</string>
     <string name="detail_directed_by">Režisierius: %1$s</string>
+    <string name="detail_cast_member_as">%1$s — %2$s vaidmuo</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezonas</item>
         <item quantity="few">%1$d sezonai</item>
@@ -45,6 +48,10 @@
         <item quantity="many">%1$d epizodų</item>
         <item quantity="other">%1$d epizodų</item>
     </plurals>
+    <string name="detail_overview_collapsed">Sutraukta</string>
+    <string name="detail_overview_expanded">Išskleista</string>
+    <string name="detail_overview_expand">Skaityti visą aprašymą</string>
+    <string name="detail_overview_collapse">Sutraukti aprašymą</string>
 
     <string name="detail_empty">Šio elemento nebėra.</string>
     <string name="detail_message_download_queued">Pridėta prie atsisiuntimų.</string>

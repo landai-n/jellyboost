@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episodi %1$d</string>
+    <string name="detail_meta_rating">Vlerësimi %1$s</string>
+    <string name="detail_meta_rated">kategoria e moshës %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Edhe %1$d min</string>
     <string name="detail_size_on_device">%1$s në pajisje</string>
     <string name="detail_directed_by">Regjizor: %1$s</string>
+    <string name="detail_cast_member_as">%1$s në rolin e %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezon</item>
         <item quantity="other">%1$d sezone</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d episod</item>
         <item quantity="other">%1$d episode</item>
     </plurals>
+    <string name="detail_overview_collapsed">E palosur</string>
+    <string name="detail_overview_expanded">E zgjeruar</string>
+    <string name="detail_overview_expand">Lexo përmbledhjen e plotë</string>
+    <string name="detail_overview_collapse">Palos përmbledhjen</string>
 
     <string name="detail_empty">Ky artikull nuk është më i disponueshëm.</string>
     <string name="detail_message_download_queued">U shtua te shkarkimet.</string>

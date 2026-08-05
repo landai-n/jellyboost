@@ -30,6 +30,7 @@
     <string name="login_quick_connect">ಕ್ವಿಕ್ ಕನೆಕ್ಟ್ ಬಳಸಿ</string>
     <string name="login_quick_connect_title">ಕ್ವಿಕ್ ಕನೆಕ್ಟ್</string>
     <string name="login_quick_connect_instructions">ನೀವು ಈಗಾಗಲೇ ಸೈನ್ ಇನ್ ಆಗಿರುವ ಸಾಧನದಲ್ಲಿ Jellyfin ತೆರೆಯಿರಿ, ಕ್ವಿಕ್ ಕನೆಕ್ಟ್‌ಗೆ ಹೋಗಿ ಮತ್ತು ಈ ಕೋಡ್ ಅನ್ನು ನಮೂದಿಸಿ.</string>
+    <string name="login_quick_connect_code_description">ನಿಮ್ಮ ಕೋಡ್ %1$s</string>
     <string name="login_quick_connect_waiting">ಅನುಮೋದನೆಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ…</string>
     <string name="login_quick_connect_cancel">ರದ್ದುಮಾಡಿ</string>
 

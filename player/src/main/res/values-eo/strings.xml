@@ -5,11 +5,34 @@
     <string name="player_pause">Paŭzo</string>
     <string name="player_rewind">Reen 10 sekundojn</string>
     <string name="player_forward">Antaŭen 30 sekundojn</string>
+    <string name="player_show_controls">Montri la regilojn de la ludilo</string>
+    <string name="player_volume_percent">Laŭteco %1$d procentoj</string>
+    <string name="player_brightness_percent">Heleco %1$d procentoj</string>
+    <string name="player_buffering">Bufrante</string>
+    <string name="player_seek">Serĉi en la tempolinio</string>
+    <string name="player_position_of_duration">%1$s el %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d horo</item>
+        <item quantity="other">%d horoj</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minutoj</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekundo</item>
+        <item quantity="other">%d sekundoj</item>
+    </plurals>
     <string name="player_audio">Sono</string>
     <string name="player_subtitles">Subtekstoj</string>
     <string name="player_subtitles_off">Malŝaltitaj</string>
     <string name="player_quality">Kvalito</string>
     <string name="player_speed">Rapido</string>
+    <string name="player_display">Ekrano</string>
+    <string name="player_brightness">Heleco</string>
+    <string name="player_volume">Laŭteco</string>
+    <string name="player_percent">%1$d procentoj</string>
+    <string name="player_done">Farita</string>
     <string name="player_skip_intro">Preterlasi la enkondukon</string>
     <string name="player_skip_outro">Preterlasi la finaĵon</string>
     <string name="player_quality_auto">Aŭtomata</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">Nun ludante</string>
     <string name="player_syncplay_queue_next">Sekva ero</string>
     <string name="player_syncplay_queue_previous">Antaŭa ero</string>
-    <string name="player_syncplay_queue_move_up">Movi supren</string>
-    <string name="player_syncplay_queue_move_down">Movi malsupren</string>
-    <string name="player_syncplay_queue_remove">Forigi el atendovico</string>
+    <string name="player_syncplay_queue_move_up_item">Movi %1$s supren</string>
+    <string name="player_syncplay_queue_move_down_item">Movi %1$s malsupren</string>
+    <string name="player_syncplay_queue_remove_item">Forigi %1$s el la atendovico</string>
+    <string name="player_syncplay_queue_play">Ludi</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ero envicigita</item>
         <item quantity="other">%d eroj envicigitaj</item>

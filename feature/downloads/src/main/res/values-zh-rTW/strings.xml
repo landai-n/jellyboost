@@ -18,6 +18,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">剩餘約 %1$s</string>
     <string name="downloads_stat_network_helper">使用行動數據時自動暫停</string>
+    <string name="downloads_usage_storage_label">已用儲存空間</string>
+    <string name="downloads_usage_queue_label">佇列進度</string>
+    <string name="downloads_queue_row_description">%1$s，%2$d%%，%3$s</string>
+    <string name="downloads_action_play">播放</string>
 
     <string name="downloads_action_delete">刪除下載</string>
     <string name="downloads_action_cancel">取消下載</string>

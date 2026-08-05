@@ -21,6 +21,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">засталося прыблізна %1$s</string>
     <string name="downloads_stat_network_helper">Аўтаматычна прыпыняецца пры мабільным інтэрнэце</string>
+    <string name="downloads_usage_storage_label">Выкарыстана сховішча</string>
+    <string name="downloads_usage_queue_label">Прагрэс чаргі</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Прайграць</string>
 
     <string name="downloads_action_delete">Выдаліць спампоўку</string>
     <string name="downloads_action_cancel">Скасаваць спампоўку</string>

@@ -6,6 +6,10 @@
     <string name="search_section_movies">فلمیں</string>
     <string name="search_section_series">شوز</string>
     <string name="search_section_episodes">اقساط</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d نتیجہ</item>
+        <item quantity="other">%1$d نتائج</item>
+    </plurals>
 
     <string name="search_prompt">اپنی لائبریریوں میں تلاش کرنے کے لیے ٹائپ کریں۔</string>
     <string name="search_no_results">“%1$s” سے کچھ مطابقت نہیں رکھتا۔</string>

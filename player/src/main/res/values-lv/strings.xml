@@ -5,12 +5,38 @@
     <string name="player_pause">Pauzēt</string>
     <string name="player_rewind">Pārtīt 10 sekundes atpakaļ</string>
     <string name="player_forward">Pārtīt 30 sekundes uz priekšu</string>
+    <string name="player_show_controls">Rādīt atskaņotāja vadīklas</string>
+    <string name="player_volume_percent">Skaļums %1$d procenti</string>
+    <string name="player_brightness_percent">Spilgtums %1$d procenti</string>
+    <string name="player_buffering">Notiek buferizācija</string>
+    <string name="player_seek">Pārtīšana</string>
+    <string name="player_position_of_duration">%1$s no %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="zero">%d stundu</item>
+        <item quantity="one">%d stunda</item>
+        <item quantity="other">%d stundas</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="zero">%d minūšu</item>
+        <item quantity="one">%d minūte</item>
+        <item quantity="other">%d minūtes</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="zero">%d sekunžu</item>
+        <item quantity="one">%d sekunde</item>
+        <item quantity="other">%d sekundes</item>
+    </plurals>
 
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitri</string>
     <string name="player_subtitles_off">Izslēgts</string>
     <string name="player_quality">Kvalitāte</string>
     <string name="player_speed">Ātrums</string>
+    <string name="player_display">Ekrāns</string>
+    <string name="player_brightness">Spilgtums</string>
+    <string name="player_volume">Skaļums</string>
+    <string name="player_percent">%1$d procenti</string>
+    <string name="player_done">Gatavs</string>
 
     <string name="player_skip_intro">Izlaist ievadu</string>
     <string name="player_skip_outro">Izlaist nobeigumu</string>
@@ -61,9 +87,10 @@
     <string name="player_syncplay_queue_playing">Atskaņo tagad</string>
     <string name="player_syncplay_queue_next">Nākamais vienums</string>
     <string name="player_syncplay_queue_previous">Iepriekšējais vienums</string>
-    <string name="player_syncplay_queue_move_up">Pārvietot augšup</string>
-    <string name="player_syncplay_queue_move_down">Pārvietot lejup</string>
-    <string name="player_syncplay_queue_remove">Noņemt no rindas</string>
+    <string name="player_syncplay_queue_move_up_item">Pārvietot %1$s augšup</string>
+    <string name="player_syncplay_queue_move_down_item">Pārvietot %1$s lejup</string>
+    <string name="player_syncplay_queue_remove_item">Noņemt %1$s no rindas</string>
+    <string name="player_syncplay_queue_play">Atskaņot</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="zero">%d vienumu rindā</item>

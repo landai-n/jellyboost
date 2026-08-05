@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">އެޕިސޯޑް %1$d</string>
+    <string name="detail_meta_rating">ރޭޓިން %1$s</string>
+    <string name="detail_meta_rated">އުމުރު ރޭޓިން %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d މިނިޓް</string>
     <string name="detail_remaining_minutes">%1$d މިނިޓް ބާކީ</string>
     <string name="detail_size_on_device">%1$s ޑިވައިސްގައި</string>
     <string name="detail_directed_by">ޑައިރެކްޓްކުރީ %1$s</string>
+    <string name="detail_cast_member_as">%2$s ގެ ރޯލުގައި %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d ސީޒަން</item>
         <item quantity="other">%1$d ސީޒަން</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d އެޕިސޯޑް</item>
         <item quantity="other">%1$d އެޕިސޯޑް</item>
     </plurals>
+    <string name="detail_overview_collapsed">ފޮރުވާލެވިފައި</string>
+    <string name="detail_overview_expanded">ދިއްކޮށްލެވިފައި</string>
+    <string name="detail_overview_expand">ފުރިހަމަ ތަޢާރަފު ކިޔާ</string>
+    <string name="detail_overview_collapse">ތަޢާރަފު ފޮރުވާލާ</string>
 
     <string name="detail_empty">މި އައިޓަމް މިހާރު ނެތް.</string>
     <string name="detail_message_download_queued">ޑައުންލޯޑްތަކަށް އިތުރުކުރެވިއްޖެ.</string>

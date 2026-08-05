@@ -4,13 +4,24 @@
     <string name="badge_download_queued">İndirme kuyruğunda</string>
     <string name="badge_download_paused">İndirme duraklatıldı</string>
     <string name="badge_download_failed">İndirme başarısız oldu</string>
+    <string name="badge_downloading_progress">İndiriliyor, %%%1$d</string>
     <string name="media_row_see_all">Tümünü gör</string>
+    <string name="media_row_see_all_section">%1$s bölümündekilerin tümünü gör</string>
     <string name="media_card_watched">İzlendi</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Dizi</string>
+    <string name="media_card_type_season">Sezon</string>
+    <string name="media_card_type_episode">Bölüm</string>
+    <string name="media_card_type_library">Kitaplık</string>
+    <string name="media_card_progress">%%%1$d izlendi</string>
+    <string name="media_card_rating">Puan 10 üzerinden %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d öğe</item>
         <item quantity="other">%1$d öğe</item>
     </plurals>
     <string name="state_retry">Tekrar dene</string>
+    <string name="state_loading">Yükleniyor</string>
+    <string name="state_busy">İşlem sürüyor</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d öğe seçildi</item>
         <item quantity="other">%1$d öğe seçildi</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">İndir</string>
     <string name="selection_item_selected">Seçildi</string>
     <string name="selection_item_not_selected">Seçilmedi</string>
+    <string name="selection_enter">Seç</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d öğe izlendi olarak işaretlendi</item>
         <item quantity="other">%1$d öğe izlendi olarak işaretlendi</item>

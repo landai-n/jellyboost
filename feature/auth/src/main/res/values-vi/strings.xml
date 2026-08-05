@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Dùng Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Mở Jellyfin trên một thiết bị bạn đã đăng nhập sẵn, vào Quick Connect và nhập mã này.</string>
+    <string name="login_quick_connect_code_description">Mã của bạn là %1$s</string>
     <string name="login_quick_connect_waiting">Đang chờ phê duyệt…</string>
     <string name="login_quick_connect_cancel">Hủy</string>
     <plurals name="auth_error_candidates_tried">

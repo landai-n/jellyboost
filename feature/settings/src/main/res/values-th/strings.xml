@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">การ์ด SD</string>
     <string name="settings_storage_volume_free">เหลือ %1$s</string>
     <string name="settings_storage_missing">พื้นที่จัดเก็บที่คุณเลือกไม่พร้อมใช้งานในขณะนี้ ดาวน์โหลดจึงถูกส่งไปยังตำแหน่งที่เลือกไว้ด้านล่าง</string>
+    <string name="settings_storage_use_this_hint">เลือกที่นี่เพื่อให้เก็บไฟล์ดาวน์โหลดไว้ที่นี่ต่อไป</string>
     <string name="settings_storage_switch_title">ย้ายดาวน์โหลดหรือไม่?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">ยังไม่สามารถย้ายดาวน์โหลดระหว่างตำแหน่งได้ %1$d รายการที่มีอยู่ในอุปกรณ์นี้จะถูกลบ คุณสามารถดาวน์โหลดใหม่ไปยังตำแหน่งใหม่ได้</item>

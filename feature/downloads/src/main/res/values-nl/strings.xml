@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Nog ongeveer %1$s</string>
     <string name="downloads_stat_network_helper">Wordt automatisch gepauzeerd bij mobiele data</string>
+    <string name="downloads_usage_storage_label">Gebruikte opslag</string>
+    <string name="downloads_usage_queue_label">Voortgang van de wachtrij</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Afspelen</string>
 
     <string name="downloads_action_delete">Download verwijderen</string>
     <string name="downloads_action_cancel">Download annuleren</string>

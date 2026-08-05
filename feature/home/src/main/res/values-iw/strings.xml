@@ -10,6 +10,7 @@
     <string name="home_hero_resume">המשך</string>
     <string name="home_hero_play">הפעלה</string>
     <string name="home_hero_details">פרטים</string>
+    <string name="home_hero_rated">סיווג גיל %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">דקה אחת נותרה</item>
         <item quantity="two">שתי דקות נותרו</item>

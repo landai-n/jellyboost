@@ -16,6 +16,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">เหลืออีกประมาณ %1$s</string>
     <string name="downloads_stat_network_helper">หยุดชั่วคราวโดยอัตโนมัติเมื่อใช้เน็ตมือถือ</string>
+    <string name="downloads_usage_storage_label">พื้นที่จัดเก็บที่ใช้ไป</string>
+    <string name="downloads_usage_queue_label">ความคืบหน้าของคิว</string>
+    <string name="downloads_queue_row_description">%1$s %2$d%% %3$s</string>
+    <string name="downloads_action_play">เล่น</string>
     <string name="downloads_action_delete">ลบดาวน์โหลด</string>
     <string name="downloads_action_cancel">ยกเลิกดาวน์โหลด</string>
     <string name="downloads_action_pause">หยุดดาวน์โหลดชั่วคราว</string>

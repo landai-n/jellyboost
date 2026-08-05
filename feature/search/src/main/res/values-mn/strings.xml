@@ -6,6 +6,10 @@
     <string name="search_section_movies">Кино</string>
     <string name="search_section_series">Цувралууд</string>
     <string name="search_section_episodes">Ангиуд</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d үр дүн</item>
+        <item quantity="other">%1$d үр дүн</item>
+    </plurals>
 
     <string name="search_prompt">Сангуудаасаа хайхын тулд бичнэ үү.</string>
     <string name="search_no_results">«%1$s»-д тохирох зүйл олдсонгүй.</string>

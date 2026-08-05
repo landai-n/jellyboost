@@ -5,12 +5,32 @@
     <string name="player_pause">일시정지</string>
     <string name="player_rewind">10초 뒤로</string>
     <string name="player_forward">30초 앞으로</string>
+    <string name="player_show_controls">재생 컨트롤 표시</string>
+    <string name="player_volume_percent">음량 %1$d퍼센트</string>
+    <string name="player_brightness_percent">밝기 %1$d퍼센트</string>
+    <string name="player_buffering">버퍼링 중</string>
+    <string name="player_seek">재생 위치 이동</string>
+    <string name="player_position_of_duration">%2$s 중 %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d시간</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d분</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d초</item>
+    </plurals>
 
     <string name="player_audio">오디오</string>
     <string name="player_subtitles">자막</string>
     <string name="player_subtitles_off">끄기</string>
     <string name="player_quality">화질</string>
     <string name="player_speed">속도</string>
+    <string name="player_display">화면</string>
+    <string name="player_brightness">밝기</string>
+    <string name="player_volume">음량</string>
+    <string name="player_percent">%1$d퍼센트</string>
+    <string name="player_done">완료</string>
 
     <string name="player_skip_intro">인트로 건너뛰기</string>
     <string name="player_skip_outro">아웃트로 건너뛰기</string>
@@ -59,9 +79,10 @@
     <string name="player_syncplay_queue_playing">지금 재생 중</string>
     <string name="player_syncplay_queue_next">다음 항목</string>
     <string name="player_syncplay_queue_previous">이전 항목</string>
-    <string name="player_syncplay_queue_move_up">위로 이동</string>
-    <string name="player_syncplay_queue_move_down">아래로 이동</string>
-    <string name="player_syncplay_queue_remove">대기열에서 제거</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s 위로 이동</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s 아래로 이동</string>
+    <string name="player_syncplay_queue_remove_item">%1$s 대기열에서 제거</string>
+    <string name="player_syncplay_queue_play">재생</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d개가 대기열에 있음</item>

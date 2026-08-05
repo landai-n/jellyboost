@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filme</string>
     <string name="search_section_series">Serien</string>
     <string name="search_section_episodes">Folgen</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d Ergebnis</item>
+        <item quantity="other">%1$d Ergebnisse</item>
+    </plurals>
 
     <string name="search_prompt">Tippe, um deine Bibliotheken zu durchsuchen.</string>
     <string name="search_no_results">Keine Treffer für „%1$s“.</string>

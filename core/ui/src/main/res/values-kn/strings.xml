@@ -4,14 +4,25 @@
     <string name="badge_download_queued">ಡೌನ್‌ಲೋಡ್‌ಗಾಗಿ ಸರತಿಯಲ್ಲಿದೆ</string>
     <string name="badge_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಂಡಿದೆ</string>
     <string name="badge_download_failed">ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ</string>
+    <string name="badge_downloading_progress">ಡೌನ್‌ಲೋಡ್ ಆಗುತ್ತಿದೆ, %1$d%%</string>
 
     <string name="media_row_see_all">ಎಲ್ಲವನ್ನೂ ನೋಡಿ</string>
+    <string name="media_row_see_all_section">%1$s ವಿಭಾಗದ ಎಲ್ಲವನ್ನೂ ನೋಡಿ</string>
     <string name="media_card_watched">ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
+    <string name="media_card_type_movie">ಚಲನಚಿತ್ರ</string>
+    <string name="media_card_type_series">ಸರಣಿ</string>
+    <string name="media_card_type_season">ಸೀಸನ್</string>
+    <string name="media_card_type_episode">ಸಂಚಿಕೆ</string>
+    <string name="media_card_type_library">ಲೈಬ್ರರಿ</string>
+    <string name="media_card_progress">%1$d%% ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
+    <string name="media_card_rating">ರೇಟಿಂಗ್ 10ರಲ್ಲಿ %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d ಐಟಂ</item>
         <item quantity="other">%1$d ಐಟಂಗಳು</item>
     </plurals>
     <string name="state_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+    <string name="state_loading">ಲೋಡ್ ಆಗುತ್ತಿದೆ</string>
+    <string name="state_busy">ಕೆಲಸ ನಡೆಯುತ್ತಿದೆ</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ಆಯ್ಕೆಯಾಗಿದೆ</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">ಆಯ್ಕೆಯಾಗಿದೆ</string>
     <string name="selection_item_not_selected">ಆಯ್ಕೆಯಾಗಿಲ್ಲ</string>
+    <string name="selection_enter">ಆಯ್ಕೆಮಾಡಿ</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d ಅನ್ನು ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ</item>

@@ -6,6 +6,11 @@
     <string name="search_section_movies">Filmas</string>
     <string name="search_section_series">Seriāli</string>
     <string name="search_section_episodes">Sērijas</string>
+    <plurals name="search_result_count">
+        <item quantity="zero">%1$d rezultātu</item>
+        <item quantity="one">%1$d rezultāts</item>
+        <item quantity="other">%1$d rezultāti</item>
+    </plurals>
 
     <string name="search_prompt">Rakstiet, lai meklētu savās bibliotēkās.</string>
     <string name="search_no_results">Nekas neatbilda vaicājumam “%1$s”.</string>

@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">भाग %1$d</string>
+    <string name="detail_meta_rating">रेटिंग %1$s</string>
+    <string name="detail_meta_rated">वयोमर्यादा %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d मिनिटे</string>
     <string name="detail_remaining_minutes">%1$d मिनिटे शिल्लक</string>
     <string name="detail_size_on_device">%1$s डिव्हाइसवर</string>
     <string name="detail_directed_by">दिग्दर्शक: %1$s</string>
+    <string name="detail_cast_member_as">%2$s च्या भूमिकेत %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d सीझन</item>
         <item quantity="other">%1$d सीझन</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d भाग</item>
         <item quantity="other">%1$d भाग</item>
     </plurals>
+    <string name="detail_overview_collapsed">संक्षिप्त केलेले</string>
+    <string name="detail_overview_expanded">विस्तारित केलेले</string>
+    <string name="detail_overview_expand">संपूर्ण सारांश वाचा</string>
+    <string name="detail_overview_collapse">सारांश संक्षिप्त करा</string>
 
     <string name="detail_empty">हा आयटम आता उपलब्ध नाही.</string>
     <string name="detail_message_download_queued">डाउनलोडमध्ये जोडले.</string>

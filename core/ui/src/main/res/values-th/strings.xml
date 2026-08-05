@@ -4,12 +4,23 @@
     <string name="badge_download_queued">อยู่ในคิวดาวน์โหลด</string>
     <string name="badge_download_paused">หยุดดาวน์โหลดชั่วคราว</string>
     <string name="badge_download_failed">ดาวน์โหลดล้มเหลว</string>
+    <string name="badge_downloading_progress">กำลังดาวน์โหลด %1$d%%</string>
     <string name="media_row_see_all">ดูทั้งหมด</string>
+    <string name="media_row_see_all_section">ดูทั้งหมดใน %1$s</string>
     <string name="media_card_watched">ดูแล้ว</string>
+    <string name="media_card_type_movie">ภาพยนตร์</string>
+    <string name="media_card_type_series">ซีรีส์</string>
+    <string name="media_card_type_season">ซีซัน</string>
+    <string name="media_card_type_episode">ตอน</string>
+    <string name="media_card_type_library">คลังสื่อ</string>
+    <string name="media_card_progress">ดูแล้ว %1$d%%</string>
+    <string name="media_card_rating">คะแนน %1$s จาก 10</string>
     <plurals name="library_item_count">
         <item quantity="other">%1$d รายการ</item>
     </plurals>
     <string name="state_retry">ลองอีกครั้ง</string>
+    <string name="state_loading">กำลังโหลด</string>
+    <string name="state_busy">กำลังดำเนินการ</string>
     <plurals name="selection_count">
         <item quantity="other">เลือกแล้ว %1$d รายการ</item>
     </plurals>
@@ -20,6 +31,7 @@
     <string name="selection_download">ดาวน์โหลด</string>
     <string name="selection_item_selected">เลือกแล้ว</string>
     <string name="selection_item_not_selected">ยังไม่ได้เลือก</string>
+    <string name="selection_enter">เลือก</string>
     <plurals name="selection_result_watched">
         <item quantity="other">ทำเครื่องหมาย %1$d รายการว่าดูแล้ว</item>
     </plurals>

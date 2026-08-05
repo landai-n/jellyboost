@@ -6,6 +6,10 @@
     <string name="search_section_movies">ಚಲನಚಿತ್ರಗಳು</string>
     <string name="search_section_series">ಶೋಗಳು</string>
     <string name="search_section_episodes">ಸಂಚಿಕೆಗಳು</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d ಫಲಿತಾಂಶ</item>
+        <item quantity="other">%1$d ಫಲಿತಾಂಶಗಳು</item>
+    </plurals>
 
     <string name="search_prompt">ನಿಮ್ಮ ಲೈಬ್ರರಿಗಳನ್ನು ಹುಡುಕಲು ಟೈಪ್ ಮಾಡಿ.</string>
     <string name="search_no_results">“%1$s” ಗೆ ಯಾವುದೂ ಹೊಂದಿಕೆಯಾಗಲಿಲ್ಲ.</string>

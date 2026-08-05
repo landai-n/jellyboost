@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Kasuta Quick Connecti</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Ava Jellyfin seadmes, kuhu oled juba sisse logitud, mine Quick Connecti juurde ja sisesta see kood.</string>
+    <string name="login_quick_connect_code_description">Sinu kood on %1$s</string>
     <string name="login_quick_connect_waiting">Ootan kinnitust…</string>
     <string name="login_quick_connect_cancel">Tühista</string>
 

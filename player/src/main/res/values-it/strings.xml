@@ -5,11 +5,37 @@
     <string name="player_pause">Pausa</string>
     <string name="player_rewind">Indietro di 10 secondi</string>
     <string name="player_forward">Avanti di 30 secondi</string>
+    <string name="player_show_controls">Mostra i comandi del player</string>
+    <string name="player_volume_percent">Volume %1$d per cento</string>
+    <string name="player_brightness_percent">Luminosità %1$d per cento</string>
+    <string name="player_buffering">Buffering in corso</string>
+    <string name="player_seek">Scorrimento</string>
+    <string name="player_position_of_duration">%1$s di %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ora</item>
+        <item quantity="many">%d ore</item>
+        <item quantity="other">%d ore</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d minuti</item>
+        <item quantity="other">%d minuti</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d secondo</item>
+        <item quantity="many">%d secondi</item>
+        <item quantity="other">%d secondi</item>
+    </plurals>
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Sottotitoli</string>
     <string name="player_subtitles_off">Disattivati</string>
     <string name="player_quality">Qualità</string>
     <string name="player_speed">Velocità</string>
+    <string name="player_display">Schermo</string>
+    <string name="player_brightness">Luminosità</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d per cento</string>
+    <string name="player_done">Fatto</string>
     <string name="player_skip_intro">Salta la sigla iniziale</string>
     <string name="player_skip_outro">Salta la sigla finale</string>
     <string name="player_quality_auto">Automatica</string>
@@ -50,9 +76,10 @@
     <string name="player_syncplay_queue_playing">In riproduzione ora</string>
     <string name="player_syncplay_queue_next">Elemento successivo</string>
     <string name="player_syncplay_queue_previous">Elemento precedente</string>
-    <string name="player_syncplay_queue_move_up">Sposta su</string>
-    <string name="player_syncplay_queue_move_down">Sposta giù</string>
-    <string name="player_syncplay_queue_remove">Rimuovi dalla coda</string>
+    <string name="player_syncplay_queue_move_up_item">Sposta %1$s su</string>
+    <string name="player_syncplay_queue_move_down_item">Sposta %1$s giù</string>
+    <string name="player_syncplay_queue_remove_item">Rimuovi %1$s dalla coda</string>
+    <string name="player_syncplay_queue_play">Riproduci</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elemento in coda</item>
         <item quantity="other">%d elementi in coda</item>

@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">шамамен %1$s қалды</string>
     <string name="downloads_stat_network_helper">Мобильдік деректерде автоматты түрде тоқтатылады</string>
+    <string name="downloads_usage_storage_label">Қолданылған жад</string>
+    <string name="downloads_usage_queue_label">Кезектің барысы</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Ойнату</string>
 
     <string name="downloads_action_delete">Жүктеуді жою</string>
     <string name="downloads_action_cancel">Жүктеуден бас тарту</string>

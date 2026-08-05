@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episodul %1$d</string>
+    <string name="detail_meta_rating">Notă %1$s</string>
+    <string name="detail_meta_rated">clasificare %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min rămase</string>
     <string name="detail_size_on_device">%1$s pe dispozitiv</string>
     <string name="detail_directed_by">Regizat de %1$s</string>
+    <string name="detail_cast_member_as">%1$s în rolul %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezon</item>
         <item quantity="few">%1$d sezoane</item>
@@ -41,6 +44,10 @@
         <item quantity="few">%1$d episoade</item>
         <item quantity="other">%1$d de episoade</item>
     </plurals>
+    <string name="detail_overview_collapsed">Restrâns</string>
+    <string name="detail_overview_expanded">Extins</string>
+    <string name="detail_overview_expand">Citește descrierea completă</string>
+    <string name="detail_overview_collapse">Restrânge descrierea</string>
     <string name="detail_empty">Acest element nu mai este disponibil.</string>
     <string name="detail_message_download_queued">Adăugat la descărcări.</string>
     <string name="detail_message_download_failed">Descărcarea nu a putut fi pornită.</string>

@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episode %1$d</string>
+    <string name="detail_meta_rating">Rating %1$s</string>
+    <string name="detail_meta_rated">rated %1$s</string>
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min left</string>
     <string name="detail_size_on_device">%1$s on device</string>
     <string name="detail_directed_by">Directed by %1$s</string>
+    <string name="detail_cast_member_as">%1$s as %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d season</item>
         <item quantity="other">%1$d seasons</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d episode</item>
         <item quantity="other">%1$d episodes</item>
     </plurals>
+    <string name="detail_overview_collapsed">Collapsed</string>
+    <string name="detail_overview_expanded">Expanded</string>
+    <string name="detail_overview_expand">Read full overview</string>
+    <string name="detail_overview_collapse">Collapse overview</string>
     <string name="detail_empty">This item is no longer available.</string>
     <string name="detail_message_download_queued">Added to downloads.</string>
     <string name="detail_message_download_failed">Couldn\'t start that download.</string>

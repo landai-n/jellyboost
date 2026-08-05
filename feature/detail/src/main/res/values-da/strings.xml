@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episode %1$d</string>
+    <string name="detail_meta_rating">Bedømmelse %1$s</string>
+    <string name="detail_meta_rated">aldersmærket %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">%1$d min tilbage</string>
     <string name="detail_size_on_device">%1$s på enheden</string>
     <string name="detail_directed_by">Instrueret af %1$s</string>
+    <string name="detail_cast_member_as">%1$s som %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sæson</item>
         <item quantity="other">%1$d sæsoner</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d episode</item>
         <item quantity="other">%1$d episoder</item>
     </plurals>
+    <string name="detail_overview_collapsed">Sammenfoldet</string>
+    <string name="detail_overview_expanded">Udfoldet</string>
+    <string name="detail_overview_expand">Læs hele resuméet</string>
+    <string name="detail_overview_collapse">Fold resuméet sammen</string>
 
     <string name="detail_empty">Dette element er ikke længere tilgængeligt.</string>
     <string name="detail_message_download_queued">Føjet til downloads.</string>

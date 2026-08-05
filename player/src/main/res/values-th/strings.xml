@@ -5,11 +5,31 @@
     <string name="player_pause">หยุดชั่วคราว</string>
     <string name="player_rewind">ย้อนกลับ 10 วินาที</string>
     <string name="player_forward">ข้ามไปข้างหน้า 30 วินาที</string>
+    <string name="player_show_controls">แสดงตัวควบคุมของตัวเล่น</string>
+    <string name="player_volume_percent">ระดับเสียง %1$d เปอร์เซ็นต์</string>
+    <string name="player_brightness_percent">ความสว่าง %1$d เปอร์เซ็นต์</string>
+    <string name="player_buffering">กำลังบัฟเฟอร์</string>
+    <string name="player_seek">เลื่อนตำแหน่งเล่น</string>
+    <string name="player_position_of_duration">%1$s จาก %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="other">%d ชั่วโมง</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="other">%d นาที</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="other">%d วินาที</item>
+    </plurals>
     <string name="player_audio">เสียง</string>
     <string name="player_subtitles">คำบรรยาย</string>
     <string name="player_subtitles_off">ปิด</string>
     <string name="player_quality">คุณภาพ</string>
     <string name="player_speed">ความเร็ว</string>
+    <string name="player_display">การแสดงผล</string>
+    <string name="player_brightness">ความสว่าง</string>
+    <string name="player_volume">ระดับเสียง</string>
+    <string name="player_percent">%1$d เปอร์เซ็นต์</string>
+    <string name="player_done">เสร็จสิ้น</string>
     <string name="player_skip_intro">ข้ามอินโทร</string>
     <string name="player_skip_outro">ข้ามเอาต์โทร</string>
     <string name="player_quality_auto">อัตโนมัติ</string>
@@ -49,9 +69,10 @@
     <string name="player_syncplay_queue_playing">กำลังเล่นอยู่</string>
     <string name="player_syncplay_queue_next">รายการถัดไป</string>
     <string name="player_syncplay_queue_previous">รายการก่อนหน้า</string>
-    <string name="player_syncplay_queue_move_up">เลื่อนขึ้น</string>
-    <string name="player_syncplay_queue_move_down">เลื่อนลง</string>
-    <string name="player_syncplay_queue_remove">ลบออกจากคิว</string>
+    <string name="player_syncplay_queue_move_up_item">เลื่อน %1$s ขึ้น</string>
+    <string name="player_syncplay_queue_move_down_item">เลื่อน %1$s ลง</string>
+    <string name="player_syncplay_queue_remove_item">ลบ %1$s ออกจากคิว</string>
+    <string name="player_syncplay_queue_play">เล่น</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">มี %d รายการในคิว</item>
     </plurals>

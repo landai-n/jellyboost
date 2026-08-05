@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filma</string>
     <string name="search_section_series">Seriale</string>
     <string name="search_section_episodes">Episode</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d rezultat</item>
+        <item quantity="other">%1$d rezultate</item>
+    </plurals>
 
     <string name="search_prompt">Shkruaj për të kërkuar në bibliotekat e tua.</string>
     <string name="search_no_results">Asnjë përputhje për «%1$s».</string>

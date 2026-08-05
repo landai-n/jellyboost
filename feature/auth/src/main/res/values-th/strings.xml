@@ -27,6 +27,7 @@
     <string name="login_quick_connect">ใช้ Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">เปิด Jellyfin บนอุปกรณ์ที่คุณเข้าสู่ระบบอยู่แล้ว ไปที่ Quick Connect แล้วป้อนรหัสนี้</string>
+    <string name="login_quick_connect_code_description">รหัสของคุณคือ %1$s</string>
     <string name="login_quick_connect_waiting">กำลังรอการอนุมัติ…</string>
     <string name="login_quick_connect_cancel">ยกเลิก</string>
     <plurals name="auth_error_candidates_tried">

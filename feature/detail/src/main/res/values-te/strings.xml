@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">ఎపిసోడ్ %1$d</string>
+    <string name="detail_meta_rating">రేటింగ్ %1$s</string>
+    <string name="detail_meta_rated">వయో ప్రమాణం %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d నిమి</string>
     <string name="detail_remaining_minutes">%1$d నిమి మిగిలి ఉంది</string>
     <string name="detail_size_on_device">పరికరంలో %1$s</string>
     <string name="detail_directed_by">దర్శకత్వం: %1$s</string>
+    <string name="detail_cast_member_as">%2$s పాత్రలో %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d సీజన్</item>
         <item quantity="other">%1$d సీజన్‌లు</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d ఎపిసోడ్</item>
         <item quantity="other">%1$d ఎపిసోడ్‌లు</item>
     </plurals>
+    <string name="detail_overview_collapsed">కుదించబడింది</string>
+    <string name="detail_overview_expanded">విస్తరించబడింది</string>
+    <string name="detail_overview_expand">పూర్తి సారాంశం చదవండి</string>
+    <string name="detail_overview_collapse">సారాంశాన్ని కుదించండి</string>
 
     <string name="detail_empty">ఈ అంశం ఇకపై అందుబాటులో లేదు.</string>
     <string name="detail_message_download_queued">డౌన్‌లోడ్‌లకు జోడించారు.</string>

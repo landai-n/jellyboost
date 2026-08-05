@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD کارڈ</string>
     <string name="settings_storage_volume_free">%1$s خالی</string>
     <string name="settings_storage_missing">جو اسٹوریج آپ نے منتخب کیا وہ ابھی دستیاب نہیں ہے، اس لیے ڈاؤن لوڈز نیچے منتخب کردہ مقام پر جا رہے ہیں۔</string>
+    <string name="settings_storage_use_this_hint">ڈاؤن لوڈز یہیں رکھنے کے لیے یہ منتخب کریں</string>
     <string name="settings_storage_switch_title">ڈاؤن لوڈز منتقل کریں؟</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">ڈاؤن لوڈز ابھی مقامات کے درمیان منتقل نہیں کیے جا سکتے، اس لیے اس ڈیوائس پر موجود ڈاؤن لوڈ حذف کر دیا جائے گا۔ آپ اسے نئے مقام پر دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</item>

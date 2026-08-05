@@ -21,6 +21,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">Še približno %1$s</string>
     <string name="downloads_stat_network_helper">Samodejno se zaustavi pri mobilnih podatkih</string>
+    <string name="downloads_usage_storage_label">Porabljena shramba</string>
+    <string name="downloads_usage_queue_label">Napredek čakalne vrste</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Predvajaj</string>
 
     <string name="downloads_action_delete">Izbriši prenos</string>
     <string name="downloads_action_cancel">Prekliči prenos</string>

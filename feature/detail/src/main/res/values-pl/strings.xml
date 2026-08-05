@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Odcinek %1$d</string>
+    <string name="detail_meta_rating">Ocena %1$s</string>
+    <string name="detail_meta_rated">kategoria wiekowa %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d min</string>
     <string name="detail_remaining_minutes">Pozostało %1$d min</string>
     <string name="detail_size_on_device">%1$s na urządzeniu</string>
     <string name="detail_directed_by">Reżyseria: %1$s</string>
+    <string name="detail_cast_member_as">%1$s jako %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezon</item>
         <item quantity="few">%1$d sezony</item>
@@ -45,6 +48,10 @@
         <item quantity="many">%1$d odcinków</item>
         <item quantity="other">%1$d odcinków</item>
     </plurals>
+    <string name="detail_overview_collapsed">Zwinięty</string>
+    <string name="detail_overview_expanded">Rozwinięty</string>
+    <string name="detail_overview_expand">Przeczytaj cały opis</string>
+    <string name="detail_overview_collapse">Zwiń opis</string>
 
     <string name="detail_empty">Ten element nie jest już dostępny.</string>
     <string name="detail_message_download_queued">Dodano do pobrań.</string>

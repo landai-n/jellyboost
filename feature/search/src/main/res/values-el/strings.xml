@@ -6,6 +6,10 @@
     <string name="search_section_movies">Ταινίες</string>
     <string name="search_section_series">Σειρές</string>
     <string name="search_section_episodes">Επεισόδια</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d αποτέλεσμα</item>
+        <item quantity="other">%1$d αποτελέσματα</item>
+    </plurals>
 
     <string name="search_prompt">Πληκτρολογήστε για αναζήτηση στις βιβλιοθήκες σας.</string>
     <string name="search_no_results">Δεν βρέθηκαν αποτελέσματα για «%1$s».</string>

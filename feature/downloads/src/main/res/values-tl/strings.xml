@@ -17,6 +17,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">mga %1$s na lang</string>
     <string name="downloads_stat_network_helper">Awtomatikong nape-pause sa mobile data</string>
+    <string name="downloads_usage_storage_label">Nagamit na storage</string>
+    <string name="downloads_usage_queue_label">Progreso ng pila</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">I-play</string>
     <string name="downloads_action_delete">Tanggalin ang download</string>
     <string name="downloads_action_cancel">Kanselahin ang download</string>
     <string name="downloads_action_pause">I-pause ang download</string>

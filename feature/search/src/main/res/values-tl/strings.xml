@@ -5,6 +5,10 @@
     <string name="search_section_movies">Mga Pelikula</string>
     <string name="search_section_series">Mga Palabas</string>
     <string name="search_section_episodes">Mga Episode</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d resulta</item>
+        <item quantity="other">%1$d na resulta</item>
+    </plurals>
     <string name="search_prompt">Mag-type para maghanap sa mga aklatan mo.</string>
     <string name="search_no_results">Walang tumugma sa “%1$s”.</string>
     <string name="search_error_network">Hindi ma-reach ang server mo. Suriin ang koneksyon mo at subukan ulit.</string>

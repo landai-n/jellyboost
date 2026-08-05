@@ -5,12 +5,35 @@
     <string name="player_pause">ਰੋਕੋ</string>
     <string name="player_rewind">10 ਸਕਿੰਟ ਪਿੱਛੇ ਜਾਓ</string>
     <string name="player_forward">30 ਸਕਿੰਟ ਅੱਗੇ ਜਾਓ</string>
+    <string name="player_show_controls">ਪਲੇਅਰ ਦੇ ਕੰਟਰੋਲ ਦਿਖਾਓ</string>
+    <string name="player_volume_percent">ਆਵਾਜ਼ %1$d ਪ੍ਰਤੀਸ਼ਤ</string>
+    <string name="player_brightness_percent">ਚਮਕ %1$d ਪ੍ਰਤੀਸ਼ਤ</string>
+    <string name="player_buffering">ਬਫ਼ਰ ਹੋ ਰਿਹਾ ਹੈ</string>
+    <string name="player_seek">ਸਮਾਂ ਬਦਲੋ</string>
+    <string name="player_position_of_duration">%2$s ਵਿੱਚੋਂ %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ਘੰਟਾ</item>
+        <item quantity="other">%d ਘੰਟੇ</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d ਮਿੰਟ</item>
+        <item quantity="other">%d ਮਿੰਟ</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d ਸਕਿੰਟ</item>
+        <item quantity="other">%d ਸਕਿੰਟ</item>
+    </plurals>
 
     <string name="player_audio">ਆਡੀਓ</string>
     <string name="player_subtitles">ਸਬਟਾਈਟਲ</string>
     <string name="player_subtitles_off">ਬੰਦ</string>
     <string name="player_quality">ਕੁਆਲਿਟੀ</string>
     <string name="player_speed">ਸਪੀਡ</string>
+    <string name="player_display">ਡਿਸਪਲੇ</string>
+    <string name="player_brightness">ਚਮਕ</string>
+    <string name="player_volume">ਆਵਾਜ਼</string>
+    <string name="player_percent">%1$d ਪ੍ਰਤੀਸ਼ਤ</string>
+    <string name="player_done">ਹੋ ਗਿਆ</string>
 
     <string name="player_skip_intro">ਇੰਟਰੋ ਛੱਡੋ</string>
     <string name="player_skip_outro">ਆਉਟਰੋ ਛੱਡੋ</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">ਹੁਣ ਚੱਲ ਰਿਹਾ ਹੈ</string>
     <string name="player_syncplay_queue_next">ਅਗਲੀ ਆਈਟਮ</string>
     <string name="player_syncplay_queue_previous">ਪਿਛਲੀ ਆਈਟਮ</string>
-    <string name="player_syncplay_queue_move_up">ਉੱਪਰ ਲਿਜਾਓ</string>
-    <string name="player_syncplay_queue_move_down">ਹੇਠਾਂ ਲਿਜਾਓ</string>
-    <string name="player_syncplay_queue_remove">ਕਤਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s ਨੂੰ ਉੱਪਰ ਲਿਜਾਓ</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s ਨੂੰ ਹੇਠਾਂ ਲਿਜਾਓ</string>
+    <string name="player_syncplay_queue_remove_item">%1$s ਨੂੰ ਕਤਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
+    <string name="player_syncplay_queue_play">ਚਲਾਓ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ਆਈਟਮ ਕਤਾਰਬੱਧ</item>

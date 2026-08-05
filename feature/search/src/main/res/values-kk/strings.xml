@@ -6,6 +6,10 @@
     <string name="search_section_movies">Фильмдер</string>
     <string name="search_section_series">Көрсетілімдер</string>
     <string name="search_section_episodes">Бөлімдер</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d нәтиже</item>
+        <item quantity="other">%1$d нәтиже</item>
+    </plurals>
 
     <string name="search_prompt">Кітапханаларыңыздан іздеу үшін теріңіз.</string>
     <string name="search_no_results">«%1$s» бойынша ешнәрсе табылмады.</string>

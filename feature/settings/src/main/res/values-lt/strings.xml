@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD kortelė</string>
     <string name="settings_storage_volume_free">Laisva %1$s</string>
     <string name="settings_storage_missing">Pasirinkta saugykla šiuo metu nepasiekiama, todėl atsisiuntimai bus saugomi žemiau pasirinktoje vietoje.</string>
+    <string name="settings_storage_use_this_hint">Pasirinkite šią vietą, kad atsisiuntimai liktų čia</string>
     <string name="settings_storage_switch_title">Perkelti atsisiuntimus?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Atsisiuntimų kol kas negalima perkelti tarp vietų, todėl šiame įrenginyje jau esantis atsisiuntimas bus ištrintas. Galėsite jį atsisiųsti iš naujo į naują vietą.</item>

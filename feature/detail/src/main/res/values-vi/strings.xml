@@ -27,16 +27,23 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Tập %1$d</string>
+    <string name="detail_meta_rating">Đánh giá %1$s</string>
+    <string name="detail_meta_rated">phân loại độ tuổi %1$s</string>
     <string name="detail_runtime_minutes">%1$d phút</string>
     <string name="detail_remaining_minutes">Còn %1$d phút</string>
     <string name="detail_size_on_device">%1$s trên thiết bị</string>
     <string name="detail_directed_by">Đạo diễn: %1$s</string>
+    <string name="detail_cast_member_as">%1$s vai %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="other">%1$d mùa</item>
     </plurals>
     <plurals name="detail_episode_count">
         <item quantity="other">%1$d tập</item>
     </plurals>
+    <string name="detail_overview_collapsed">Đang thu gọn</string>
+    <string name="detail_overview_expanded">Đang mở rộng</string>
+    <string name="detail_overview_expand">Đọc toàn bộ tóm tắt</string>
+    <string name="detail_overview_collapse">Thu gọn tóm tắt</string>
     <string name="detail_empty">Mục này không còn khả dụng.</string>
     <string name="detail_message_download_queued">Đã thêm vào danh sách tải xuống.</string>
     <string name="detail_message_download_failed">Không thể bắt đầu tải xuống đó.</string>

@@ -5,12 +5,41 @@
     <string name="player_pause">Pristabdyti</string>
     <string name="player_rewind">Grįžti 10 sekundžių atgal</string>
     <string name="player_forward">Peršokti 30 sekundžių į priekį</string>
+    <string name="player_show_controls">Rodyti leistuvo valdiklius</string>
+    <string name="player_volume_percent">Garsumas %1$d procentų</string>
+    <string name="player_brightness_percent">Ryškumas %1$d procentų</string>
+    <string name="player_buffering">Kaupiama į buferį</string>
+    <string name="player_seek">Persukimas</string>
+    <string name="player_position_of_duration">%1$s iš %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d valanda</item>
+        <item quantity="few">%d valandos</item>
+        <item quantity="many">%d valandos</item>
+        <item quantity="other">%d valandų</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minutė</item>
+        <item quantity="few">%d minutės</item>
+        <item quantity="many">%d minutės</item>
+        <item quantity="other">%d minučių</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekundė</item>
+        <item quantity="few">%d sekundės</item>
+        <item quantity="many">%d sekundės</item>
+        <item quantity="other">%d sekundžių</item>
+    </plurals>
 
     <string name="player_audio">Garsas</string>
     <string name="player_subtitles">Subtitrai</string>
     <string name="player_subtitles_off">Išjungta</string>
     <string name="player_quality">Kokybė</string>
     <string name="player_speed">Greitis</string>
+    <string name="player_display">Vaizdas</string>
+    <string name="player_brightness">Ryškumas</string>
+    <string name="player_volume">Garsumas</string>
+    <string name="player_percent">%1$d procentų</string>
+    <string name="player_done">Atlikta</string>
 
     <string name="player_skip_intro">Praleisti įžangą</string>
     <string name="player_skip_outro">Praleisti pabaigą</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Leidžiama dabar</string>
     <string name="player_syncplay_queue_next">Kitas elementas</string>
     <string name="player_syncplay_queue_previous">Ankstesnis elementas</string>
-    <string name="player_syncplay_queue_move_up">Perkelti aukštyn</string>
-    <string name="player_syncplay_queue_move_down">Perkelti žemyn</string>
-    <string name="player_syncplay_queue_remove">Pašalinti iš eilės</string>
+    <string name="player_syncplay_queue_move_up_item">Perkelti %1$s aukštyn</string>
+    <string name="player_syncplay_queue_move_down_item">Perkelti %1$s žemyn</string>
+    <string name="player_syncplay_queue_remove_item">Pašalinti %1$s iš eilės</string>
+    <string name="player_syncplay_queue_play">Leisti</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elementas eilėje</item>

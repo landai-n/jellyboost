@@ -4,14 +4,25 @@
     <string name="badge_download_queued">На ред за преземање</string>
     <string name="badge_download_paused">Преземањето е паузирано</string>
     <string name="badge_download_failed">Преземањето не успеа</string>
+    <string name="badge_downloading_progress">Се презема, %1$d%%</string>
 
     <string name="media_row_see_all">Прикажи ги сите</string>
+    <string name="media_row_see_all_section">Прикажи ги сите во %1$s</string>
     <string name="media_card_watched">Гледано</string>
+    <string name="media_card_type_movie">Филм</string>
+    <string name="media_card_type_series">Серија</string>
+    <string name="media_card_type_season">Сезона</string>
+    <string name="media_card_type_episode">Епизода</string>
+    <string name="media_card_type_library">Библиотека</string>
+    <string name="media_card_progress">Гледано %1$d%%</string>
+    <string name="media_card_rating">Оцена %1$s од 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d ставка</item>
         <item quantity="other">%1$d ставки</item>
     </plurals>
     <string name="state_retry">Обиди се повторно</string>
+    <string name="state_loading">Вчитување</string>
+    <string name="state_busy">Во тек</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d избрана ставка</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Избрано</string>
     <string name="selection_item_not_selected">Не е избрано</string>
+    <string name="selection_enter">Избери</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Означена %1$d ставка како гледана</item>

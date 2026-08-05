@@ -4,13 +4,24 @@
     <string name="badge_download_queued">Nasa pila para i-download</string>
     <string name="badge_download_paused">Naka-pause ang pag-download</string>
     <string name="badge_download_failed">Nabigo ang pag-download</string>
+    <string name="badge_downloading_progress">Dina-download, %1$d%%</string>
     <string name="media_row_see_all">Tingnan lahat</string>
+    <string name="media_row_see_all_section">Tingnan lahat sa %1$s</string>
     <string name="media_card_watched">Napanood na</string>
+    <string name="media_card_type_movie">Pelikula</string>
+    <string name="media_card_type_series">Serye</string>
+    <string name="media_card_type_season">Season</string>
+    <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_library">Aklatan</string>
+    <string name="media_card_progress">%1$d%% napanood</string>
+    <string name="media_card_rating">Rating %1$s sa 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d item</item>
         <item quantity="other">%1$d item</item>
     </plurals>
     <string name="state_retry">Subukan muli</string>
+    <string name="state_loading">Nilo-load</string>
+    <string name="state_busy">Ginagawa pa</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d napili</item>
         <item quantity="other">%1$d napili</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">I-download</string>
     <string name="selection_item_selected">Napili</string>
     <string name="selection_item_not_selected">Hindi napili</string>
+    <string name="selection_enter">Piliin</string>
     <plurals name="selection_result_watched">
         <item quantity="one">Namarkahan ang %1$d bilang napanood na</item>
         <item quantity="other">Namarkahan ang %1$d bilang napanood na</item>

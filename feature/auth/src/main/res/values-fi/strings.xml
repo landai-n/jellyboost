@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Käytä Quick Connectia</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Avaa Jellyfin laitteessa, jossa olet jo kirjautuneena sisään, siirry kohtaan Quick Connect ja anna tämä koodi.</string>
+    <string name="login_quick_connect_code_description">Koodisi on %1$s</string>
     <string name="login_quick_connect_waiting">Odotetaan hyväksyntää…</string>
     <string name="login_quick_connect_cancel">Peruuta</string>
 

@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">Kartu SD</string>
     <string name="settings_storage_volume_free">%1$s tersisa</string>
     <string name="settings_storage_missing">Penyimpanan yang Anda pilih tidak tersedia saat ini, sehingga unduhan akan disimpan di lokasi yang dipilih di bawah.</string>
+    <string name="settings_storage_use_this_hint">Pilih lokasi ini agar unduhan tetap tersimpan di sini</string>
     <string name="settings_storage_switch_title">Pindahkan unduhan?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="other">Unduhan belum dapat dipindahkan antar lokasi, sehingga %1$d unduhan yang sudah ada di perangkat ini akan dihapus. Anda dapat mengunduhnya lagi ke lokasi baru.</item>

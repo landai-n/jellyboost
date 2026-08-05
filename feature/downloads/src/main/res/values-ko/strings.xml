@@ -18,6 +18,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">약 %1$s 남음</string>
     <string name="downloads_stat_network_helper">모바일 데이터에서는 자동으로 일시정지됨</string>
+    <string name="downloads_usage_storage_label">사용 중인 저장공간</string>
+    <string name="downloads_usage_queue_label">대기열 진행률</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">재생</string>
 
     <string name="downloads_action_delete">다운로드 삭제</string>
     <string name="downloads_action_cancel">다운로드 취소</string>

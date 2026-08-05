@@ -9,6 +9,7 @@
     <string name="home_hero_resume">Jarraitu</string>
     <string name="home_hero_play">Erreproduzitu</string>
     <string name="home_hero_details">Xehetasunak</string>
+    <string name="home_hero_rated">Adin-sailkapena %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d minutu falta</item>
         <item quantity="other">%1$d minutu falta</item>

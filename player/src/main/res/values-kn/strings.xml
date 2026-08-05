@@ -5,12 +5,35 @@
     <string name="player_pause">ವಿರಾಮ</string>
     <string name="player_rewind">10 ಸೆಕೆಂಡ್ ಹಿಂದೆ ಸರಿಸಿ</string>
     <string name="player_forward">30 ಸೆಕೆಂಡ್ ಮುಂದೆ ಸರಿಸಿ</string>
+    <string name="player_show_controls">ಪ್ಲೇಯರ್ ನಿಯಂತ್ರಣಗಳನ್ನು ತೋರಿಸಿ</string>
+    <string name="player_volume_percent">ವಾಲ್ಯೂಮ್ %1$d ಶೇಕಡಾ</string>
+    <string name="player_brightness_percent">ಪ್ರಕಾಶ %1$d ಶೇಕಡಾ</string>
+    <string name="player_buffering">ಬಫರ್ ಆಗುತ್ತಿದೆ</string>
+    <string name="player_seek">ಸಮಯ ಬದಲಿಸಿ</string>
+    <string name="player_position_of_duration">%2$s ರಲ್ಲಿ %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d ಗಂಟೆ</item>
+        <item quantity="other">%d ಗಂಟೆಗಳು</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d ನಿಮಿಷ</item>
+        <item quantity="other">%d ನಿಮಿಷಗಳು</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d ಸೆಕೆಂಡ್</item>
+        <item quantity="other">%d ಸೆಕೆಂಡುಗಳು</item>
+    </plurals>
 
     <string name="player_audio">ಆಡಿಯೋ</string>
     <string name="player_subtitles">ಉಪಶೀರ್ಷಿಕೆಗಳು</string>
     <string name="player_subtitles_off">ಆಫ್</string>
     <string name="player_quality">ಗುಣಮಟ್ಟ</string>
     <string name="player_speed">ವೇಗ</string>
+    <string name="player_display">ಪ್ರದರ್ಶನ</string>
+    <string name="player_brightness">ಪ್ರಕಾಶ</string>
+    <string name="player_volume">ವಾಲ್ಯೂಮ್</string>
+    <string name="player_percent">%1$d ಶೇಕಡಾ</string>
+    <string name="player_done">ಮುಗಿದಿದೆ</string>
 
     <string name="player_skip_intro">ಇಂಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
     <string name="player_skip_outro">ಔಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">ಈಗ ಪ್ಲೇ ಆಗುತ್ತಿದೆ</string>
     <string name="player_syncplay_queue_next">ಮುಂದಿನ ಐಟಂ</string>
     <string name="player_syncplay_queue_previous">ಹಿಂದಿನ ಐಟಂ</string>
-    <string name="player_syncplay_queue_move_up">ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
-    <string name="player_syncplay_queue_move_down">ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>
-    <string name="player_syncplay_queue_remove">ಸರತಿಯಿಂದ ತೆಗೆದುಹಾಕಿ</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s ಅನ್ನು ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s ಅನ್ನು ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>
+    <string name="player_syncplay_queue_remove_item">%1$s ಅನ್ನು ಸರತಿಯಿಂದ ತೆಗೆದುಹಾಕಿ</string>
+    <string name="player_syncplay_queue_play">ಪ್ಲೇ ಮಾಡಿ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ಐಟಂ ಸರತಿಯಲ್ಲಿದೆ</item>

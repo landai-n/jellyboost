@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-Kaart</string>
     <string name="settings_storage_volume_free">%1$s fräi</string>
     <string name="settings_storage_missing">De Späicher, deen s du ausgewielt hues, ass grad net disponibel, dofir ginn d\'Downloads op de Standuert hei ënnendrënner gespäichert.</string>
+    <string name="settings_storage_use_this_hint">Wiel dëse Standuert, fir datt d\'Downloads hei bleiwen</string>
     <string name="settings_storage_switch_title">Downloads réckelen?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Downloads kënnen nach net tëscht Standuerter réckelt ginn, dofir gëtt deen, deen schonn op dësem Apparat ass, geläscht. Du kanns en nach eng Kéier un den neie Standuert eroflueden.</item>

@@ -5,11 +5,34 @@
     <string name="player_pause">შეჩერება</string>
     <string name="player_rewind">10 წამით უკან გადახვევა</string>
     <string name="player_forward">30 წამით წინ გადახვევა</string>
+    <string name="player_show_controls">პლეერის მართვის ელემენტების ჩვენება</string>
+    <string name="player_volume_percent">ხმა %1$d პროცენტი</string>
+    <string name="player_brightness_percent">სიკაშკაშე %1$d პროცენტი</string>
+    <string name="player_buffering">ბუფერიზაცია</string>
+    <string name="player_seek">დროზე გადაადგილება</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d საათი</item>
+        <item quantity="other">%d საათი</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d წუთი</item>
+        <item quantity="other">%d წუთი</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d წამი</item>
+        <item quantity="other">%d წამი</item>
+    </plurals>
     <string name="player_audio">აუდიო</string>
     <string name="player_subtitles">სუბტიტრები</string>
     <string name="player_subtitles_off">გამორთული</string>
     <string name="player_quality">ხარისხი</string>
     <string name="player_speed">სისწრაფე</string>
+    <string name="player_display">ეკრანი</string>
+    <string name="player_brightness">სიკაშკაშე</string>
+    <string name="player_volume">ხმა</string>
+    <string name="player_percent">%1$d პროცენტი</string>
+    <string name="player_done">მზადაა</string>
     <string name="player_skip_intro">შესავლის გამოტოვება</string>
     <string name="player_skip_outro">დასასრულის გამოტოვება</string>
     <string name="player_quality_auto">ავტომატური</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">ახლა უკრავს</string>
     <string name="player_syncplay_queue_next">შემდეგი ერთეული</string>
     <string name="player_syncplay_queue_previous">წინა ერთეული</string>
-    <string name="player_syncplay_queue_move_up">აწევა</string>
-    <string name="player_syncplay_queue_move_down">ჩამოწევა</string>
-    <string name="player_syncplay_queue_remove">რიგიდან წაშლა</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s-ის აწევა</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s-ის ჩამოწევა</string>
+    <string name="player_syncplay_queue_remove_item">%1$s-ის წაშლა რიგიდან</string>
+    <string name="player_syncplay_queue_play">დაკვრა</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ერთეული რიგშია</item>
         <item quantity="other">%d ერთეული რიგშია</item>

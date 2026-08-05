@@ -4,14 +4,25 @@
     <string name="badge_download_queued">பதிவிறக்கத்திற்கு வரிசையில் உள்ளது</string>
     <string name="badge_download_paused">பதிவிறக்கம் இடைநிறுத்தப்பட்டது</string>
     <string name="badge_download_failed">பதிவிறக்கம் தோல்வியடைந்தது</string>
+    <string name="badge_downloading_progress">பதிவிறக்கப்படுகிறது, %1$d%%</string>
 
     <string name="media_row_see_all">அனைத்தையும் காண்க</string>
+    <string name="media_row_see_all_section">%1$s பிரிவில் உள்ள அனைத்தையும் காண்க</string>
     <string name="media_card_watched">பார்க்கப்பட்டது</string>
+    <string name="media_card_type_movie">திரைப்படம்</string>
+    <string name="media_card_type_series">தொடர்</string>
+    <string name="media_card_type_season">சீசன்</string>
+    <string name="media_card_type_episode">எபிசோட்</string>
+    <string name="media_card_type_library">நூலகம்</string>
+    <string name="media_card_progress">%1$d%% பார்க்கப்பட்டது</string>
+    <string name="media_card_rating">மதிப்பீடு 10-இல் %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d உருப்படி</item>
         <item quantity="other">%1$d உருப்படிகள்</item>
     </plurals>
     <string name="state_retry">மீண்டும் முயற்சி</string>
+    <string name="state_loading">ஏற்றுகிறது</string>
+    <string name="state_busy">செயலில் உள்ளது</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d தேர்ந்தெடுக்கப்பட்டது</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">தேர்ந்தெடுக்கப்பட்டது</string>
     <string name="selection_item_not_selected">தேர்ந்தெடுக்கப்படவில்லை</string>
+    <string name="selection_enter">தேர்ந்தெடு</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d பார்த்ததாகக் குறிக்கப்பட்டது</item>

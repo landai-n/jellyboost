@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD-karto</string>
     <string name="settings_storage_volume_free">%1$s liberaj</string>
     <string name="settings_storage_missing">La elektita konservejo ne disponeblas nun, do elŝutoj iros al la loko elektita malsupre.</string>
+    <string name="settings_storage_use_this_hint">Elektu ĉi tiun lokon por konservi la elŝutojn ĉi tie</string>
     <string name="settings_storage_switch_title">Ĉu movi la elŝutojn?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Elŝutoj ankoraŭ ne moveblas inter lokoj, do tiu jam sur ĉi tiu aparato estos forigita. Vi povas denove elŝuti ĝin al la nova loko.</item>

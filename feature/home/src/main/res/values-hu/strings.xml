@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Folytatás</string>
     <string name="home_hero_play">Lejátszás</string>
     <string name="home_hero_details">Részletek</string>
+    <string name="home_hero_rated">Korhatár %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">%1$d perc van hátra</item>
         <item quantity="other">%1$d perc van hátra</item>

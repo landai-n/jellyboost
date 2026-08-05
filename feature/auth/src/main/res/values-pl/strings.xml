@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Użyj Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Otwórz Jellyfin na urządzeniu, na którym jesteś już zalogowany, przejdź do Quick Connect i wpisz ten kod.</string>
+    <string name="login_quick_connect_code_description">Twój kod to %1$s</string>
     <string name="login_quick_connect_waiting">Oczekiwanie na zatwierdzenie…</string>
     <string name="login_quick_connect_cancel">Anuluj</string>
 

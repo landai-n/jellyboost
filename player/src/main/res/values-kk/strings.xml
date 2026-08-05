@@ -5,12 +5,35 @@
     <string name="player_pause">Кідірту</string>
     <string name="player_rewind">10 секундқа артқа айналдыру</string>
     <string name="player_forward">30 секундқа алға айналдыру</string>
+    <string name="player_show_controls">Ойнатқыш басқару элементтерін көрсету</string>
+    <string name="player_volume_percent">Дыбыс деңгейі %1$d пайыз</string>
+    <string name="player_brightness_percent">Жарықтық %1$d пайыз</string>
+    <string name="player_buffering">Буферленуде</string>
+    <string name="player_seek">Уақыт бойынша жылжу</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d сағат</item>
+        <item quantity="other">%d сағат</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d минут</item>
+        <item quantity="other">%d минут</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d секунд</item>
+        <item quantity="other">%d секунд</item>
+    </plurals>
 
     <string name="player_audio">Аудио</string>
     <string name="player_subtitles">Субтитрлер</string>
     <string name="player_subtitles_off">Өшірулі</string>
     <string name="player_quality">Сапа</string>
     <string name="player_speed">Жылдамдық</string>
+    <string name="player_display">Экран</string>
+    <string name="player_brightness">Жарықтық</string>
+    <string name="player_volume">Дыбыс деңгейі</string>
+    <string name="player_percent">%1$d пайыз</string>
+    <string name="player_done">Дайын</string>
 
     <string name="player_skip_intro">Кіріспені өткізіп жіберу</string>
     <string name="player_skip_outro">Соңғы титрді өткізіп жіберу</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Қазір ойнатылуда</string>
     <string name="player_syncplay_queue_next">Келесі элемент</string>
     <string name="player_syncplay_queue_previous">Алдыңғы элемент</string>
-    <string name="player_syncplay_queue_move_up">Жоғары жылжыту</string>
-    <string name="player_syncplay_queue_move_down">Төмен жылжыту</string>
-    <string name="player_syncplay_queue_remove">Кезектен жою</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s жоғары жылжыту</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s төмен жылжыту</string>
+    <string name="player_syncplay_queue_remove_item">%1$s кезектен жою</string>
+    <string name="player_syncplay_queue_play">Ойнату</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент кезекте</item>

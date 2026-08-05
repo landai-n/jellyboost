@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Brúka Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Opna Jellyfin á einum tóli, har tú longu ert innritað(ur), far til Quick Connect og skriva hesa kotuna.</string>
+    <string name="login_quick_connect_code_description">Kota tín er %1$s</string>
     <string name="login_quick_connect_waiting">Bíðar eftir góðkenning…</string>
     <string name="login_quick_connect_cancel">Avlýs</string>
 

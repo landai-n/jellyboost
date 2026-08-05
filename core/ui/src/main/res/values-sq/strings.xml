@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Në pritje për shkarkim</string>
     <string name="badge_download_paused">Shkarkimi u ndal përkohësisht</string>
     <string name="badge_download_failed">Shkarkimi dështoi</string>
+    <string name="badge_downloading_progress">Po shkarkohet, %1$d%%</string>
 
     <string name="media_row_see_all">Shiko të gjitha</string>
+    <string name="media_row_see_all_section">Shiko të gjitha te %1$s</string>
     <string name="media_card_watched">Shikuar</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serial</string>
+    <string name="media_card_type_season">Sezon</string>
+    <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_library">Bibliotekë</string>
+    <string name="media_card_progress">%1$d%% të shikuara</string>
+    <string name="media_card_rating">Vlerësimi %1$s nga 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d artikull</item>
         <item quantity="other">%1$d artikuj</item>
     </plurals>
     <string name="state_retry">Provo përsëri</string>
+    <string name="state_loading">Duke ngarkuar</string>
+    <string name="state_busy">Në punë</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d i përzgjedhur</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Të përzgjedhur</string>
     <string name="selection_item_not_selected">Jo të përzgjedhur</string>
+    <string name="selection_enter">Përzgjidh</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">U shënua %1$d si i shikuar</item>

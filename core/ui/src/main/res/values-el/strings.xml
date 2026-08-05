@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Σε αναμονή για λήψη</string>
     <string name="badge_download_paused">Η λήψη διακόπηκε</string>
     <string name="badge_download_failed">Η λήψη απέτυχε</string>
+    <string name="badge_downloading_progress">Γίνεται λήψη, %1$d%%</string>
 
     <string name="media_row_see_all">Προβολή όλων</string>
+    <string name="media_row_see_all_section">Προβολή όλων στην ενότητα %1$s</string>
     <string name="media_card_watched">Παρακολουθήθηκε</string>
+    <string name="media_card_type_movie">Ταινία</string>
+    <string name="media_card_type_series">Σειρά</string>
+    <string name="media_card_type_season">Σεζόν</string>
+    <string name="media_card_type_episode">Επεισόδιο</string>
+    <string name="media_card_type_library">Βιβλιοθήκη</string>
+    <string name="media_card_progress">Έχει προβληθεί %1$d%%</string>
+    <string name="media_card_rating">Βαθμολογία %1$s στα 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d στοιχείο</item>
         <item quantity="other">%1$d στοιχεία</item>
     </plurals>
     <string name="state_retry">Επανάληψη</string>
+    <string name="state_loading">Φόρτωση</string>
+    <string name="state_busy">Σε εξέλιξη</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d επιλεγμένο</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Επιλεγμένο</string>
     <string name="selection_item_not_selected">Μη επιλεγμένο</string>
+    <string name="selection_enter">Επιλογή</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Σημειώθηκε %1$d ως παρακολουθημένο</item>

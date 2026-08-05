@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">ގާތްގަނޑަކަށް %1$s ބާކީ</string>
     <string name="downloads_stat_network_helper">މޯބައިލް ޑޭޓާގައި އޮޓަމެޓިކުން މެދުކަނޑާލެވޭ</string>
+    <string name="downloads_usage_storage_label">ބޭނުންކުރެވިފައިވާ ސްޓޯރޭޖް</string>
+    <string name="downloads_usage_queue_label">ކިއޫގެ ކުރިއެރުން</string>
+    <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
+    <string name="downloads_action_play">ޕްލޭ</string>
 
     <string name="downloads_action_delete">ޑައުންލޯޑް ފޮހެލާ</string>
     <string name="downloads_action_cancel">ޑައުންލޯޑް ކެންސަލްކުރޭ</string>

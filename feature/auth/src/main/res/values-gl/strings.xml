@@ -27,6 +27,7 @@
     <string name="login_quick_connect">Usar Conexión Rápida</string>
     <string name="login_quick_connect_title">Conexión Rápida</string>
     <string name="login_quick_connect_instructions">Abre Jellyfin nun dispositivo no que xa iniciaches sesión, vai a Conexión Rápida e introduce este código.</string>
+    <string name="login_quick_connect_code_description">O teu código é %1$s</string>
     <string name="login_quick_connect_waiting">Agardando aprobación…</string>
     <string name="login_quick_connect_cancel">Cancelar</string>
     <plurals name="auth_error_candidates_tried">

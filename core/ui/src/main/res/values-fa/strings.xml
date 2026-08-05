@@ -4,14 +4,25 @@
     <string name="badge_download_queued">در صف دانلود</string>
     <string name="badge_download_paused">دانلود متوقف شد</string>
     <string name="badge_download_failed">دانلود ناموفق بود</string>
+    <string name="badge_downloading_progress">در حال دانلود، %1$d%%</string>
 
     <string name="media_row_see_all">مشاهده همه</string>
+    <string name="media_row_see_all_section">مشاهده همه %1$s</string>
     <string name="media_card_watched">تماشا شده</string>
+    <string name="media_card_type_movie">فیلم</string>
+    <string name="media_card_type_series">سریال</string>
+    <string name="media_card_type_season">فصل</string>
+    <string name="media_card_type_episode">قسمت</string>
+    <string name="media_card_type_library">کتابخانه</string>
+    <string name="media_card_progress">%1$d%% تماشا شده</string>
+    <string name="media_card_rating">امتیاز %1$s از ۱۰</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d مورد</item>
         <item quantity="other">%1$d مورد</item>
     </plurals>
     <string name="state_retry">تلاش دوباره</string>
+    <string name="state_loading">در حال بارگذاری</string>
+    <string name="state_busy">در حال انجام</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d مورد انتخاب شد</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">انتخاب شده</string>
     <string name="selection_item_not_selected">انتخاب نشده</string>
+    <string name="selection_enter">انتخاب</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d مورد به‌عنوان تماشا شده علامت‌گذاری شد</item>

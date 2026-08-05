@@ -17,6 +17,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">təxminən %1$s qalıb</string>
     <string name="downloads_stat_network_helper">Mobil datada avtomatik olaraq fasilə verilir</string>
+    <string name="downloads_usage_storage_label">İstifadə olunan yaddaş</string>
+    <string name="downloads_usage_queue_label">Növbənin gedişi</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Oynat</string>
     <string name="downloads_action_delete">Yükləməni sil</string>
     <string name="downloads_action_cancel">Yükləməni ləğv et</string>
     <string name="downloads_action_pause">Yükləməni fasilə ver</string>

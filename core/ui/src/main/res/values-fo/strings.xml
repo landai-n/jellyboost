@@ -4,14 +4,25 @@
     <string name="badge_download_queued">Í bíðirøð til niðurhal</string>
     <string name="badge_download_paused">Niðurhal steðgað</string>
     <string name="badge_download_failed">Niðurhal miseydnaðist</string>
+    <string name="badge_downloading_progress">Niðurhentar, %1$d%%</string>
 
     <string name="media_row_see_all">Sí alt</string>
+    <string name="media_row_see_all_section">Sí alt í %1$s</string>
     <string name="media_card_watched">Sætt</string>
+    <string name="media_card_type_movie">Filmur</string>
+    <string name="media_card_type_series">Sería</string>
+    <string name="media_card_type_season">Sesongur</string>
+    <string name="media_card_type_episode">Partur</string>
+    <string name="media_card_type_library">Savn</string>
+    <string name="media_card_progress">%1$d%% sætt</string>
+    <string name="media_card_rating">Meting %1$s av 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d lutur</item>
         <item quantity="other">%1$d lutir</item>
     </plurals>
     <string name="state_retry">Royn aftur</string>
+    <string name="state_loading">Heintar</string>
+    <string name="state_busy">Arbeiðir</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d valt</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Valt</string>
     <string name="selection_item_not_selected">Ikki valt</string>
+    <string name="selection_enter">Vel</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Merkti %1$d sum sætt</item>

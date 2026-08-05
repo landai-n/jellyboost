@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">بطاقة SD</string>
     <string name="settings_storage_volume_free">%1$s متاحة</string>
     <string name="settings_storage_missing">التخزين الذي اخترته غير متاح حاليًا، لذا تذهب التنزيلات إلى الموقع المحدد أدناه.</string>
+    <string name="settings_storage_use_this_hint">اختر هذا الموقع للاحتفاظ بالتنزيلات هنا</string>
     <string name="settings_storage_switch_title">نقل التنزيلات؟</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="zero">لا يمكن نقل التنزيلات بين المواقع بعد، ولا يوجد أي تنزيل على هذا الجهاز حاليًا.</item>

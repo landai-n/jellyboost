@@ -28,11 +28,14 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">قسمت %1$d</string>
+    <string name="detail_meta_rating">امتیاز %1$s</string>
+    <string name="detail_meta_rated">رده سنی %1$s</string>
 
     <string name="detail_runtime_minutes">%1$d دقیقه</string>
     <string name="detail_remaining_minutes">%1$d دقیقه مانده</string>
     <string name="detail_size_on_device">%1$s روی دستگاه</string>
     <string name="detail_directed_by">کارگردانی: %1$s</string>
+    <string name="detail_cast_member_as">%1$s در نقش %2$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d فصل</item>
         <item quantity="other">%1$d فصل</item>
@@ -41,6 +44,10 @@
         <item quantity="one">%1$d قسمت</item>
         <item quantity="other">%1$d قسمت</item>
     </plurals>
+    <string name="detail_overview_collapsed">جمع‌شده</string>
+    <string name="detail_overview_expanded">بازشده</string>
+    <string name="detail_overview_expand">خواندن خلاصه کامل</string>
+    <string name="detail_overview_collapse">جمع کردن خلاصه</string>
 
     <string name="detail_empty">این مورد دیگر در دسترس نیست.</string>
     <string name="detail_message_download_queued">به دانلودها اضافه شد.</string>

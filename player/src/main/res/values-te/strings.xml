@@ -5,12 +5,35 @@
     <string name="player_pause">పాజ్ చేయండి</string>
     <string name="player_rewind">10 సెకన్లు వెనక్కి దాటవేయండి</string>
     <string name="player_forward">30 సెకన్లు ముందుకు దాటవేయండి</string>
+    <string name="player_show_controls">ప్లేయర్ నియంత్రణలను చూపించు</string>
+    <string name="player_volume_percent">వాల్యూమ్ %1$d శాతం</string>
+    <string name="player_brightness_percent">ప్రకాశం %1$d శాతం</string>
+    <string name="player_buffering">బఫర్ అవుతోంది</string>
+    <string name="player_seek">సమయాన్ని మార్చండి</string>
+    <string name="player_position_of_duration">%2$sలో %1$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d గంట</item>
+        <item quantity="other">%d గంటలు</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d నిమిషం</item>
+        <item quantity="other">%d నిమిషాలు</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d సెకను</item>
+        <item quantity="other">%d సెకన్లు</item>
+    </plurals>
 
     <string name="player_audio">ఆడియో</string>
     <string name="player_subtitles">సబ్‌టైటిల్స్</string>
     <string name="player_subtitles_off">ఆఫ్</string>
     <string name="player_quality">నాణ్యత</string>
     <string name="player_speed">వేగం</string>
+    <string name="player_display">ప్రదర్శన</string>
+    <string name="player_brightness">ప్రకాశం</string>
+    <string name="player_volume">వాల్యూమ్</string>
+    <string name="player_percent">%1$d శాతం</string>
+    <string name="player_done">పూర్తయింది</string>
 
     <string name="player_skip_intro">ఇంట్రోను దాటవేయండి</string>
     <string name="player_skip_outro">అవుట్రోను దాటవేయండి</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">ఇప్పుడు ప్లే అవుతోంది</string>
     <string name="player_syncplay_queue_next">తర్వాతి అంశం</string>
     <string name="player_syncplay_queue_previous">మునుపటి అంశం</string>
-    <string name="player_syncplay_queue_move_up">పైకి జరపండి</string>
-    <string name="player_syncplay_queue_move_down">కిందికి జరపండి</string>
-    <string name="player_syncplay_queue_remove">క్యూ నుండి తీసివేయండి</string>
+    <string name="player_syncplay_queue_move_up_item">%1$sను పైకి జరపండి</string>
+    <string name="player_syncplay_queue_move_down_item">%1$sను కిందికి జరపండి</string>
+    <string name="player_syncplay_queue_remove_item">%1$sను క్యూ నుండి తీసివేయండి</string>
+    <string name="player_syncplay_queue_play">ప్లే చేయండి</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d అంశం క్యూలో ఉంది</item>

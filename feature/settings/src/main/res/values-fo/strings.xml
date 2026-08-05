@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kort</string>
     <string name="settings_storage_volume_free">%1$s frítt</string>
     <string name="settings_storage_missing">Goymslan, sum tú valdi, er ikki tøk beint nú, so niðurhal fara til staðin, sum er valdur niðanfyri.</string>
+    <string name="settings_storage_use_this_hint">Vel hetta staðið, so niðurhøling verða goymd her</string>
     <string name="settings_storage_switch_title">Flyt niðurhal?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Niðurhal kunnu ikki flytast millum staðir enn, so tað, sum longu er á hesum tólinum, verður strikað. Tú kanst hala tað niður aftur til nýggja staðin.</item>

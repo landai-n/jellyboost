@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-kártya</string>
     <string name="settings_storage_volume_free">%1$s szabad</string>
     <string name="settings_storage_missing">A kiválasztott tárhely jelenleg nem elérhető, ezért a letöltések az alább megadott helyre kerülnek.</string>
+    <string name="settings_storage_use_this_hint">Válaszd ezt, hogy a letöltések itt maradjanak</string>
     <string name="settings_storage_switch_title">Áthelyezed a letöltéseket?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">A letöltések egyelőre nem helyezhetők át helyek között, ezért az eszközön lévő törlődik. Az új helyre újra letöltheted.</item>

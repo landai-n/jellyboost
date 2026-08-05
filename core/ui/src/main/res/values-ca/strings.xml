@@ -4,13 +4,24 @@
     <string name="badge_download_queued">En cua per baixar</string>
     <string name="badge_download_paused">Baixada en pausa</string>
     <string name="badge_download_failed">Baixada fallida</string>
+    <string name="badge_downloading_progress">S’està baixant, %1$d%%</string>
     <string name="media_row_see_all">Mostra-ho tot</string>
+    <string name="media_row_see_all_section">Mostra-ho tot de %1$s</string>
     <string name="media_card_watched">Vist</string>
+    <string name="media_card_type_movie">Pel·lícula</string>
+    <string name="media_card_type_series">Sèrie</string>
+    <string name="media_card_type_season">Temporada</string>
+    <string name="media_card_type_episode">Episodi</string>
+    <string name="media_card_type_library">Biblioteca</string>
+    <string name="media_card_progress">%1$d%% vist</string>
+    <string name="media_card_rating">Valoració %1$s sobre 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d element</item>
         <item quantity="other">%1$d elements</item>
     </plurals>
     <string name="state_retry">Torna-ho a provar</string>
+    <string name="state_loading">Carregant</string>
+    <string name="state_busy">Ocupat</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d seleccionat</item>
         <item quantity="other">%1$d seleccionats</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">Baixa</string>
     <string name="selection_item_selected">Seleccionat</string>
     <string name="selection_item_not_selected">No seleccionat</string>
+    <string name="selection_enter">Selecciona</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d marcat com a vist</item>
         <item quantity="other">%1$d marcats com a vistos</item>

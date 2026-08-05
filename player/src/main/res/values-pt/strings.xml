@@ -5,11 +5,37 @@
     <string name="player_pause">Pausar</string>
     <string name="player_rewind">Recuar 10 segundos</string>
     <string name="player_forward">Avançar 30 segundos</string>
+    <string name="player_show_controls">Mostrar os controlos do reprodutor</string>
+    <string name="player_volume_percent">Volume %1$d por cento</string>
+    <string name="player_brightness_percent">Brilho %1$d por cento</string>
+    <string name="player_buffering">A colocar em memória intermédia</string>
+    <string name="player_seek">Percorrer a reprodução</string>
+    <string name="player_position_of_duration">%1$s de %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="many">%d horas</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="many">%d minutos</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d segundo</item>
+        <item quantity="many">%d segundos</item>
+        <item quantity="other">%d segundos</item>
+    </plurals>
     <string name="player_audio">Áudio</string>
     <string name="player_subtitles">Legendas</string>
     <string name="player_subtitles_off">Desativadas</string>
     <string name="player_quality">Qualidade</string>
     <string name="player_speed">Velocidade</string>
+    <string name="player_display">Imagem</string>
+    <string name="player_brightness">Brilho</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d por cento</string>
+    <string name="player_done">Concluído</string>
     <string name="player_skip_intro">Saltar abertura</string>
     <string name="player_skip_outro">Saltar créditos finais</string>
     <string name="player_quality_auto">Automática</string>
@@ -50,9 +76,10 @@
     <string name="player_syncplay_queue_playing">A reproduzir agora</string>
     <string name="player_syncplay_queue_next">Item seguinte</string>
     <string name="player_syncplay_queue_previous">Item anterior</string>
-    <string name="player_syncplay_queue_move_up">Mover para cima</string>
-    <string name="player_syncplay_queue_move_down">Mover para baixo</string>
-    <string name="player_syncplay_queue_remove">Remover da fila</string>
+    <string name="player_syncplay_queue_move_up_item">Mover %1$s para cima</string>
+    <string name="player_syncplay_queue_move_down_item">Mover %1$s para baixo</string>
+    <string name="player_syncplay_queue_remove_item">Remover %1$s da fila</string>
+    <string name="player_syncplay_queue_play">Reproduzir</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item na fila</item>
         <item quantity="other">%d itens na fila</item>

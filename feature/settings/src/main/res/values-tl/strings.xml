@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD card</string>
     <string name="settings_storage_volume_free">%1$s libre</string>
     <string name="settings_storage_missing">Hindi available ngayon ang storage na pinili mo, kaya pupunta ang mga download sa lokasyon na napili sa ibaba.</string>
+    <string name="settings_storage_use_this_hint">Piliin ito para manatili rito ang mga download</string>
     <string name="settings_storage_switch_title">Ilipat ang mga download?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Hindi pa maaaring ilipat ang mga download sa pagitan ng mga lokasyon, kaya buburahin ang nasa device na ito. Puwede mo itong i-download ulit sa bagong lokasyon.</item>

@@ -4,14 +4,25 @@
     <string name="badge_download_queued">I kö för nedladdning</string>
     <string name="badge_download_paused">Nedladdning pausad</string>
     <string name="badge_download_failed">Nedladdning misslyckades</string>
+    <string name="badge_downloading_progress">Laddar ner, %1$d%%</string>
 
     <string name="media_row_see_all">Se alla</string>
+    <string name="media_row_see_all_section">Se alla i %1$s</string>
     <string name="media_card_watched">Sedd</string>
+    <string name="media_card_type_movie">Film</string>
+    <string name="media_card_type_series">Serie</string>
+    <string name="media_card_type_season">Säsong</string>
+    <string name="media_card_type_episode">Avsnitt</string>
+    <string name="media_card_type_library">Bibliotek</string>
+    <string name="media_card_progress">%1$d%% sett</string>
+    <string name="media_card_rating">Betyg %1$s av 10</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d objekt</item>
         <item quantity="other">%1$d objekt</item>
     </plurals>
     <string name="state_retry">Försök igen</string>
+    <string name="state_loading">Läser in</string>
+    <string name="state_busy">Pågår</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d markerad</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">Markerad</string>
     <string name="selection_item_not_selected">Inte markerad</string>
+    <string name="selection_enter">Markera</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">Markerade %1$d som sedd</item>

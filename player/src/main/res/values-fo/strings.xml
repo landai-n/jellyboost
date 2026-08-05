@@ -5,12 +5,35 @@
     <string name="player_pause">Steðga</string>
     <string name="player_rewind">Flyt 10 sekund aftur</string>
     <string name="player_forward">Flyt 30 sekund fram</string>
+    <string name="player_show_controls">Vís stýringar spælarans</string>
+    <string name="player_volume_percent">Ljóðstyrki %1$d prosent</string>
+    <string name="player_brightness_percent">Lýsistyrki %1$d prosent</string>
+    <string name="player_buffering">Buffrar</string>
+    <string name="player_seek">Flyt í tíðini</string>
+    <string name="player_position_of_duration">%1$s av %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d tími</item>
+        <item quantity="other">%d tímar</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuttur</item>
+        <item quantity="other">%d minuttir</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekund</item>
+        <item quantity="other">%d sekund</item>
+    </plurals>
 
     <string name="player_audio">Ljóð</string>
     <string name="player_subtitles">Undirtekstir</string>
     <string name="player_subtitles_off">Sløkt</string>
     <string name="player_quality">Gæði</string>
     <string name="player_speed">Ferð</string>
+    <string name="player_display">Skermur</string>
+    <string name="player_brightness">Lýsistyrki</string>
+    <string name="player_volume">Ljóðstyrki</string>
+    <string name="player_percent">%1$d prosent</string>
+    <string name="player_done">Liðugt</string>
 
     <string name="player_skip_intro">Sleppa intro</string>
     <string name="player_skip_outro">Sleppa outro</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Spælir nú</string>
     <string name="player_syncplay_queue_next">Næsti lutur</string>
     <string name="player_syncplay_queue_previous">Fyrri lutur</string>
-    <string name="player_syncplay_queue_move_up">Flyt upp</string>
-    <string name="player_syncplay_queue_move_down">Flyt niður</string>
-    <string name="player_syncplay_queue_remove">Tak úr bíðirøð</string>
+    <string name="player_syncplay_queue_move_up_item">Flyt %1$s upp</string>
+    <string name="player_syncplay_queue_move_down_item">Flyt %1$s niður</string>
+    <string name="player_syncplay_queue_remove_item">Tak %1$s úr bíðirøðini</string>
+    <string name="player_syncplay_queue_play">Spæl</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d lutur í bíðirøð</item>

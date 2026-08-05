@@ -10,6 +10,7 @@
     <string name="home_hero_resume">Weiderfueren</string>
     <string name="home_hero_play">Ofspillen</string>
     <string name="home_hero_details">Detailer</string>
+    <string name="home_hero_rated">Alterfräigab %1$s</string>
     <plurals name="home_minutes_left">
         <item quantity="one">Nach %1$d Minutt</item>
         <item quantity="other">Nach %1$d Minutten</item>

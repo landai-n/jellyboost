@@ -17,6 +17,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">aproximadament %1$s restant</string>
     <string name="downloads_stat_network_helper">Es posa en pausa automàticament amb dades mòbils</string>
+    <string name="downloads_usage_storage_label">Emmagatzematge utilitzat</string>
+    <string name="downloads_usage_queue_label">Progrés de la cua</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">Reprodueix</string>
     <string name="downloads_action_delete">Elimina la baixada</string>
     <string name="downloads_action_cancel">Cancel·la la baixada</string>
     <string name="downloads_action_pause">Posa en pausa la baixada</string>

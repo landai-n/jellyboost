@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD карта</string>
     <string name="settings_storage_volume_free">%1$s свободни</string>
     <string name="settings_storage_missing">Избраното от вас хранилище в момента не е налично, затова изтеглянията отиват в мястото, избрано по-долу.</string>
+    <string name="settings_storage_use_this_hint">Изберете това място, за да останат изтеглянията тук</string>
     <string name="settings_storage_switch_title">Да се преместят ли изтеглянията?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Изтеглянията все още не могат да се местят между места, затова наличното на това устройство ще бъде изтрито. Можете да го изтеглите отново на новото място.</item>

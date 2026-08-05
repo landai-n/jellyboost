@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmer</string>
     <string name="search_section_series">Serien</string>
     <string name="search_section_episodes">Episoden</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d Resultat</item>
+        <item quantity="other">%1$d Resultater</item>
+    </plurals>
 
     <string name="search_prompt">Gëff eppes an, fir deng Bibliothéiken ze duerchsichen.</string>
     <string name="search_no_results">Näischt entsprécht „%1$s“.</string>

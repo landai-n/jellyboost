@@ -19,6 +19,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">अंदाजे %1$s शिल्लक</string>
     <string name="downloads_stat_network_helper">मोबाइल डेटावर आपोआप थांबते</string>
+    <string name="downloads_usage_storage_label">वापरलेले स्टोरेज</string>
+    <string name="downloads_usage_queue_label">रांगेची प्रगती</string>
+    <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
+    <string name="downloads_action_play">प्ले करा</string>
 
     <string name="downloads_action_delete">डाउनलोड हटवा</string>
     <string name="downloads_action_cancel">डाउनलोड रद्द करा</string>

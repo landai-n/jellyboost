@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD karte</string>
     <string name="settings_storage_volume_free">Brīvs %1$s</string>
     <string name="settings_storage_missing">Izvēlētā krātuve pašlaik nav pieejama, tāpēc lejupielādes tiek saglabātas zemāk norādītajā vietā.</string>
+    <string name="settings_storage_use_this_hint">Izvēlieties šo vietu, lai lejupielādes paliktu šeit</string>
     <string name="settings_storage_switch_title">Pārvietot lejupielādes?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="zero">Lejupielādes vēl nevar pārvietot starp vietām, tāpēc %1$d šajā ierīcē jau esošās tiks dzēstas. Varat tās lejupielādēt vēlreiz jaunajā vietā.</item>

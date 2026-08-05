@@ -5,12 +5,35 @@
     <string name="player_pause">Szünet</string>
     <string name="player_rewind">10 másodperc vissza</string>
     <string name="player_forward">30 másodperc előre</string>
+    <string name="player_show_controls">Lejátszó kezelőelemeinek megjelenítése</string>
+    <string name="player_volume_percent">Hangerő %1$d százalék</string>
+    <string name="player_brightness_percent">Fényerő %1$d százalék</string>
+    <string name="player_buffering">Pufferelés</string>
+    <string name="player_seek">Tekerés</string>
+    <string name="player_position_of_duration">%1$s / %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d óra</item>
+        <item quantity="other">%d óra</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d perc</item>
+        <item quantity="other">%d perc</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d másodperc</item>
+        <item quantity="other">%d másodperc</item>
+    </plurals>
 
     <string name="player_audio">Hang</string>
     <string name="player_subtitles">Feliratok</string>
     <string name="player_subtitles_off">Ki</string>
     <string name="player_quality">Minőség</string>
     <string name="player_speed">Sebesség</string>
+    <string name="player_display">Kép</string>
+    <string name="player_brightness">Fényerő</string>
+    <string name="player_volume">Hangerő</string>
+    <string name="player_percent">%1$d százalék</string>
+    <string name="player_done">Kész</string>
 
     <string name="player_skip_intro">Bevezető kihagyása</string>
     <string name="player_skip_outro">Végjelenet kihagyása</string>
@@ -60,9 +83,10 @@
     <string name="player_syncplay_queue_playing">Most játszik</string>
     <string name="player_syncplay_queue_next">Következő elem</string>
     <string name="player_syncplay_queue_previous">Előző elem</string>
-    <string name="player_syncplay_queue_move_up">Feljebb</string>
-    <string name="player_syncplay_queue_move_down">Lejjebb</string>
-    <string name="player_syncplay_queue_remove">Eltávolítás a sorból</string>
+    <string name="player_syncplay_queue_move_up_item">%1$s feljebb mozgatása</string>
+    <string name="player_syncplay_queue_move_down_item">%1$s lejjebb mozgatása</string>
+    <string name="player_syncplay_queue_remove_item">%1$s eltávolítása a sorból</string>
+    <string name="player_syncplay_queue_play">Lejátszás</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elem a sorban</item>

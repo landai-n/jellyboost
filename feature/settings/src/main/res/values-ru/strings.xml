@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD-карта</string>
     <string name="settings_storage_volume_free">Свободно: %1$s</string>
     <string name="settings_storage_missing">Выбранное хранилище сейчас недоступно, поэтому загрузки идут в место, выбранное ниже.</string>
+    <string name="settings_storage_use_this_hint">Выберите это место, чтобы загрузки оставались здесь</string>
     <string name="settings_storage_switch_title">Переместить загрузки?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">Загрузки пока нельзя перемещать между местами хранения, поэтому уже имеющаяся на этом устройстве будет удалена. Вы можете загрузить её снова в новое место.</item>

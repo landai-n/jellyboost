@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD কার্ড</string>
     <string name="settings_storage_volume_free">%1$s খালি</string>
     <string name="settings_storage_missing">আপনার বেছে নেওয়া স্টোরেজ এখন উপলব্ধ নেই, তাই ডাউনলোডগুলো নিচে নির্বাচিত অবস্থানে যাচ্ছে।</string>
+    <string name="settings_storage_use_this_hint">ডাউনলোড এখানেই রাখতে এটি বেছে নিন</string>
     <string name="settings_storage_switch_title">ডাউনলোড সরাবেন?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">ডাউনলোড এখনও এক অবস্থান থেকে অন্য অবস্থানে সরানো যায় না, তাই এই ডিভাইসে থাকা একটি মুছে ফেলা হবে। আপনি নতুন অবস্থানে এটি আবার ডাউনলোড করতে পারবেন।</item>

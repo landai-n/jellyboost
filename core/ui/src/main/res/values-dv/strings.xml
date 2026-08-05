@@ -4,14 +4,25 @@
     <string name="badge_download_queued">ޑައުންލޯޑަށް ކިޔޫގައި</string>
     <string name="badge_download_paused">ޑައުންލޯޑް މެދުކަނޑާލައިފި</string>
     <string name="badge_download_failed">ޑައުންލޯޑް ފެއިލްވެއްޖެ</string>
+    <string name="badge_downloading_progress">ޑައުންލޯޑްވަނީ، %1$d%%</string>
 
     <string name="media_row_see_all">ހުރިހާ އެއްޗެއް ބަލާ</string>
+    <string name="media_row_see_all_section">%1$s ގެ ހުރިހާ އެއްޗެއް ބަލާ</string>
     <string name="media_card_watched">ބަލައިފި</string>
+    <string name="media_card_type_movie">ފިލްމު</string>
+    <string name="media_card_type_series">ސީރީޒް</string>
+    <string name="media_card_type_season">ސީޒަން</string>
+    <string name="media_card_type_episode">އެޕިސޯޑް</string>
+    <string name="media_card_type_library">ލައިބްރަރީ</string>
+    <string name="media_card_progress">%1$d%% ބަލައިފި</string>
+    <string name="media_card_rating">ރޭޓިން 10 ން %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d އައިޓަމް</item>
         <item quantity="other">%1$d އައިޓަމް</item>
     </plurals>
     <string name="state_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
+    <string name="state_loading">ލޯޑްކުރަނީ</string>
+    <string name="state_busy">މަސައްކަތްކުރަނީ</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d ހޮވިއްޖެ</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">ހޮވިއްޖެ</string>
     <string name="selection_item_not_selected">ނުހޮވޭ</string>
+    <string name="selection_enter">ހޮވާ</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d ބަލައިފި ކަމަށް ފާހަގަކުރެވިއްޖެ</item>

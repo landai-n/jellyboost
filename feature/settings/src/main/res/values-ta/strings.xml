@@ -30,6 +30,7 @@
     <string name="settings_storage_sd_card">SD கார்டு</string>
     <string name="settings_storage_volume_free">%1$s காலி</string>
     <string name="settings_storage_missing">நீங்கள் தேர்ந்தெடுத்த சேமிப்பகம் தற்போது கிடைக்கவில்லை, எனவே பதிவிறக்கங்கள் கீழே தேர்ந்தெடுக்கப்பட்ட இடத்திற்குச் செல்கின்றன.</string>
+    <string name="settings_storage_use_this_hint">பதிவிறக்கங்கள் இங்கேயே இருக்க இதைத் தேர்ந்தெடுக்கவும்</string>
     <string name="settings_storage_switch_title">பதிவிறக்கங்களை நகர்த்தவா?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">பதிவிறக்கங்களை இடங்களுக்கு இடையே இன்னும் நகர்த்த முடியாது, எனவே இந்தச் சாதனத்தில் ஏற்கனவே உள்ள ஒன்று நீக்கப்படும். புதிய இடத்திற்கு மீண்டும் பதிவிறக்கலாம்.</item>

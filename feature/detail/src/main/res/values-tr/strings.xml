@@ -27,10 +27,13 @@
     <string name="detail_episode_label">S%1$d · E%2$d</string>
     <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">%1$d. Bölüm</string>
+    <string name="detail_meta_rating">Puan %1$s</string>
+    <string name="detail_meta_rated">yaş sınırı %1$s</string>
     <string name="detail_runtime_minutes">%1$d dk</string>
     <string name="detail_remaining_minutes">%1$d dk kaldı</string>
     <string name="detail_size_on_device">Cihazda %1$s</string>
     <string name="detail_directed_by">Yönetmen: %1$s</string>
+    <string name="detail_cast_member_as">%2$s rolünde %1$s</string>
     <plurals name="detail_season_count">
         <item quantity="one">%1$d sezon</item>
         <item quantity="other">%1$d sezon</item>
@@ -39,6 +42,10 @@
         <item quantity="one">%1$d bölüm</item>
         <item quantity="other">%1$d bölüm</item>
     </plurals>
+    <string name="detail_overview_collapsed">Daraltıldı</string>
+    <string name="detail_overview_expanded">Genişletildi</string>
+    <string name="detail_overview_expand">Özetin tamamını oku</string>
+    <string name="detail_overview_collapse">Özeti daralt</string>
     <string name="detail_empty">Bu öğe artık kullanılamıyor.</string>
     <string name="detail_message_download_queued">İndirilenlere eklendi.</string>
     <string name="detail_message_download_failed">O indirme başlatılamadı.</string>

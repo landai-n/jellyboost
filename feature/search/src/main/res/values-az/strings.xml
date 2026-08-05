@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmlər</string>
     <string name="search_section_series">Seriallar</string>
     <string name="search_section_episodes">Epizodlar</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d nəticə</item>
+        <item quantity="other">%1$d nəticə</item>
+    </plurals>
     <string name="search_prompt">Kitabxanalarınızda axtarmaq üçün yazın.</string>
     <string name="search_no_results">“%1$s” ilə uyğun heç nə tapılmadı.</string>
     <string name="search_error_network">Serverinizə çatmaq mümkün deyil. Bağlantınızı yoxlayın və yenidən cəhd edin.</string>

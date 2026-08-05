@@ -23,6 +23,10 @@
     </plurals>
     <string name="downloads_stat_eta_about">نحو %1$s متبقٍ</string>
     <string name="downloads_stat_network_helper">يتم الإيقاف المؤقت تلقائيًا عند استخدام بيانات الجوال</string>
+    <string name="downloads_usage_storage_label">المساحة المستخدمة</string>
+    <string name="downloads_usage_queue_label">تقدّم قائمة الانتظار</string>
+    <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
+    <string name="downloads_action_play">تشغيل</string>
 
     <string name="downloads_action_delete">حذف التنزيل</string>
     <string name="downloads_action_cancel">إلغاء التنزيل</string>

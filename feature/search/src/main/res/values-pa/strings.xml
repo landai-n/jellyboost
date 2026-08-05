@@ -6,6 +6,10 @@
     <string name="search_section_movies">ਫਿਲਮਾਂ</string>
     <string name="search_section_series">ਸ਼ੋਅ</string>
     <string name="search_section_episodes">ਐਪੀਸੋਡ</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d ਨਤੀਜਾ</item>
+        <item quantity="other">%1$d ਨਤੀਜੇ</item>
+    </plurals>
 
     <string name="search_prompt">ਆਪਣੀਆਂ ਲਾਇਬ੍ਰੇਰੀਆਂ ਖੋਜਣ ਲਈ ਟਾਈਪ ਕਰੋ।</string>
     <string name="search_no_results">“%1$s” ਨਾਲ ਕੁਝ ਮੇਲ ਨਹੀਂ ਖਾਂਦਾ।</string>

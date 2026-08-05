@@ -4,14 +4,25 @@
     <string name="badge_download_queued">डाउनलोडसाठी रांगेत</string>
     <string name="badge_download_paused">डाउनलोड थांबवले</string>
     <string name="badge_download_failed">डाउनलोड अयशस्वी</string>
+    <string name="badge_downloading_progress">डाउनलोड होत आहे, %1$d%%</string>
 
     <string name="media_row_see_all">सर्व पाहा</string>
+    <string name="media_row_see_all_section">%1$s मधील सर्व पाहा</string>
     <string name="media_card_watched">पाहिले</string>
+    <string name="media_card_type_movie">चित्रपट</string>
+    <string name="media_card_type_series">मालिका</string>
+    <string name="media_card_type_season">सीझन</string>
+    <string name="media_card_type_episode">भाग</string>
+    <string name="media_card_type_library">लायब्ररी</string>
+    <string name="media_card_progress">%1$d%% पाहिले</string>
+    <string name="media_card_rating">रेटिंग १० पैकी %1$s</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d आयटम</item>
         <item quantity="other">%1$d आयटम</item>
     </plurals>
     <string name="state_retry">पुन्हा प्रयत्न करा</string>
+    <string name="state_loading">लोड करत आहे</string>
+    <string name="state_busy">काम सुरू आहे</string>
 
     <plurals name="selection_count">
         <item quantity="one">%1$d निवडले</item>
@@ -25,6 +36,7 @@
 
     <string name="selection_item_selected">निवडले</string>
     <string name="selection_item_not_selected">निवडलेले नाही</string>
+    <string name="selection_enter">निवडा</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d पाहिले म्हणून चिन्हांकित केले</item>

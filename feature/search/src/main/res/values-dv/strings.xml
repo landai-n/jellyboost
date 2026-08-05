@@ -6,6 +6,10 @@
     <string name="search_section_movies">ފިލްމުތައް</string>
     <string name="search_section_series">ސީރީޒްތައް</string>
     <string name="search_section_episodes">އެޕިސޯޑްތައް</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d ނަތީޖާ</item>
+        <item quantity="other">%1$d ނަތީޖާ</item>
+    </plurals>
 
     <string name="search_prompt">ތިޔަ ލައިބްރަރީތަކުގައި ހޯދުމަށް ޓައިޕްކުރޭ.</string>
     <string name="search_no_results">“%1$s” އަކާ ދިމާވާ އެއްޗެއް ނުފެނުނު.</string>

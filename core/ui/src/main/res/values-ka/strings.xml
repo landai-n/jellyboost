@@ -4,13 +4,24 @@
     <string name="badge_download_queued">გადმოწერის რიგშია</string>
     <string name="badge_download_paused">გადმოწერა შეჩერებულია</string>
     <string name="badge_download_failed">გადმოწერა ვერ მოხერხდა</string>
+    <string name="badge_downloading_progress">მიმდინარეობს გადმოწერა, %1$d%%</string>
     <string name="media_row_see_all">ყველას ნახვა</string>
+    <string name="media_row_see_all_section">%1$s — ყველას ნახვა</string>
     <string name="media_card_watched">ნანახია</string>
+    <string name="media_card_type_movie">ფილმი</string>
+    <string name="media_card_type_series">სერიალი</string>
+    <string name="media_card_type_season">სეზონი</string>
+    <string name="media_card_type_episode">ეპიზოდი</string>
+    <string name="media_card_type_library">ბიბლიოთეკა</string>
+    <string name="media_card_progress">ნანახია %1$d%%</string>
+    <string name="media_card_rating">შეფასება %1$s 10-დან</string>
     <plurals name="library_item_count">
         <item quantity="one">%1$d ერთეული</item>
         <item quantity="other">%1$d ერთეული</item>
     </plurals>
     <string name="state_retry">ხელახლა ცდა</string>
+    <string name="state_loading">იტვირთება</string>
+    <string name="state_busy">მიმდინარეობს</string>
     <plurals name="selection_count">
         <item quantity="one">%1$d მონიშნულია</item>
         <item quantity="other">%1$d მონიშნულია</item>
@@ -22,6 +33,7 @@
     <string name="selection_download">გადმოწერა</string>
     <string name="selection_item_selected">მონიშნულია</string>
     <string name="selection_item_not_selected">არ არის მონიშნული</string>
+    <string name="selection_enter">მონიშვნა</string>
     <plurals name="selection_result_watched">
         <item quantity="one">%1$d მონიშნულია ნანახად</item>
         <item quantity="other">%1$d მონიშნულია ნანახად</item>

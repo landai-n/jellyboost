@@ -30,6 +30,7 @@
     <string name="login_quick_connect">Përdor Quick Connect</string>
     <string name="login_quick_connect_title">Quick Connect</string>
     <string name="login_quick_connect_instructions">Hap Jellyfin në një pajisje ku je i identifikuar tashmë, shko te Quick Connect dhe shkruaj këtë kod.</string>
+    <string name="login_quick_connect_code_description">Kodi yt është %1$s</string>
     <string name="login_quick_connect_waiting">Duke pritur miratimin…</string>
     <string name="login_quick_connect_cancel">Anulo</string>
 

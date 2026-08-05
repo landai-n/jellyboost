@@ -5,12 +5,41 @@
     <string name="player_pause">Pauza</string>
     <string name="player_rewind">Przewiń do tyłu o 10 sekund</string>
     <string name="player_forward">Przewiń do przodu o 30 sekund</string>
+    <string name="player_show_controls">Pokaż elementy sterowania odtwarzaczem</string>
+    <string name="player_volume_percent">Głośność %1$d procent</string>
+    <string name="player_brightness_percent">Jasność %1$d procent</string>
+    <string name="player_buffering">Buforowanie</string>
+    <string name="player_seek">Przewijanie</string>
+    <string name="player_position_of_duration">%1$s z %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d godzina</item>
+        <item quantity="few">%d godziny</item>
+        <item quantity="many">%d godzin</item>
+        <item quantity="other">%d godziny</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuta</item>
+        <item quantity="few">%d minuty</item>
+        <item quantity="many">%d minut</item>
+        <item quantity="other">%d minuty</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d sekunda</item>
+        <item quantity="few">%d sekundy</item>
+        <item quantity="many">%d sekund</item>
+        <item quantity="other">%d sekundy</item>
+    </plurals>
 
     <string name="player_audio">Dźwięk</string>
     <string name="player_subtitles">Napisy</string>
     <string name="player_subtitles_off">Wyłączone</string>
     <string name="player_quality">Jakość</string>
     <string name="player_speed">Szybkość</string>
+    <string name="player_display">Obraz</string>
+    <string name="player_brightness">Jasność</string>
+    <string name="player_volume">Głośność</string>
+    <string name="player_percent">%1$d procent</string>
+    <string name="player_done">Gotowe</string>
 
     <string name="player_skip_intro">Pomiń intro</string>
     <string name="player_skip_outro">Pomiń napisy końcowe</string>
@@ -62,9 +91,10 @@
     <string name="player_syncplay_queue_playing">Odtwarzane teraz</string>
     <string name="player_syncplay_queue_next">Następny element</string>
     <string name="player_syncplay_queue_previous">Poprzedni element</string>
-    <string name="player_syncplay_queue_move_up">Przesuń w górę</string>
-    <string name="player_syncplay_queue_move_down">Przesuń w dół</string>
-    <string name="player_syncplay_queue_remove">Usuń z kolejki</string>
+    <string name="player_syncplay_queue_move_up_item">Przesuń %1$s w górę</string>
+    <string name="player_syncplay_queue_move_down_item">Przesuń %1$s w dół</string>
+    <string name="player_syncplay_queue_remove_item">Usuń %1$s z kolejki</string>
+    <string name="player_syncplay_queue_play">Odtwórz</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d pozycja w kolejce</item>

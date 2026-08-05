@@ -6,6 +6,12 @@
     <string name="search_section_movies">Filmy</string>
     <string name="search_section_series">Seriály</string>
     <string name="search_section_episodes">Epizódy</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$d výsledok</item>
+        <item quantity="few">%1$d výsledky</item>
+        <item quantity="many">%1$d výsledku</item>
+        <item quantity="other">%1$d výsledkov</item>
+    </plurals>
 
     <string name="search_prompt">Napíšte niečo na vyhľadávanie vo vašich knižniciach.</string>
     <string name="search_no_results">Nič sa nezhoduje s výrazom „%1$s“.</string>

@@ -28,6 +28,7 @@
     <string name="settings_storage_sd_card">SD kart</string>
     <string name="settings_storage_volume_free">%1$s boş</string>
     <string name="settings_storage_missing">Seçtiğiniz depolama şu anda kullanılamıyor, bu yüzden indirmeler aşağıda seçilen konuma gidiyor.</string>
+    <string name="settings_storage_use_this_hint">İndirilenlerin burada kalması için bunu seçin</string>
     <string name="settings_storage_switch_title">İndirmeler taşınsın mı?</string>
     <plurals name="settings_storage_switch_message">
         <item quantity="one">İndirmeler henüz konumlar arasında taşınamıyor, bu yüzden bu cihazdaki mevcut olan silinecek. Yeni konuma tekrar indirebilirsiniz.</item>

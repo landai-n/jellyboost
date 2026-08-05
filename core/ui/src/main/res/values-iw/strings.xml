@@ -4,9 +4,18 @@
     <string name="badge_download_queued">בתור להורדה</string>
     <string name="badge_download_paused">ההורדה הושהתה</string>
     <string name="badge_download_failed">ההורדה נכשלה</string>
+    <string name="badge_downloading_progress">מוריד, %1$d%%</string>
 
     <string name="media_row_see_all">הצג הכול</string>
+    <string name="media_row_see_all_section">הצג הכול ב-%1$s</string>
     <string name="media_card_watched">נצפה</string>
+    <string name="media_card_type_movie">סרט</string>
+    <string name="media_card_type_series">סדרה</string>
+    <string name="media_card_type_season">עונה</string>
+    <string name="media_card_type_episode">פרק</string>
+    <string name="media_card_type_library">ספרייה</string>
+    <string name="media_card_progress">%1$d%% נצפו</string>
+    <string name="media_card_rating">דירוג %1$s מתוך 10</string>
     <plurals name="library_item_count">
         <item quantity="one">פריט אחד</item>
         <item quantity="two">שני פריטים</item>
@@ -14,6 +23,8 @@
         <item quantity="other">%1$d פריטים</item>
     </plurals>
     <string name="state_retry">ניסיון חוזר</string>
+    <string name="state_loading">טוען</string>
+    <string name="state_busy">מתבצע</string>
 
     <plurals name="selection_count">
         <item quantity="one">פריט אחד נבחר</item>
@@ -29,6 +40,7 @@
 
     <string name="selection_item_selected">נבחר</string>
     <string name="selection_item_not_selected">לא נבחר</string>
+    <string name="selection_enter">בחירה</string>
 
     <plurals name="selection_result_watched">
         <item quantity="one">פריט אחד סומן כנצפה</item>

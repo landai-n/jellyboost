@@ -5,11 +5,34 @@
     <string name="player_pause">Pausar</string>
     <string name="player_rewind">Retroceder 10 segundos</string>
     <string name="player_forward">Avanzar 30 segundos</string>
+    <string name="player_show_controls">Amosar os controis do reprodutor</string>
+    <string name="player_volume_percent">Volume %1$d por cento</string>
+    <string name="player_brightness_percent">Brillo %1$d por cento</string>
+    <string name="player_buffering">Almacenando no búfer</string>
+    <string name="player_seek">Desprazamento</string>
+    <string name="player_position_of_duration">%1$s de %2$s</string>
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hora</item>
+        <item quantity="other">%d horas</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minuto</item>
+        <item quantity="other">%d minutos</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d segundo</item>
+        <item quantity="other">%d segundos</item>
+    </plurals>
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtítulos</string>
     <string name="player_subtitles_off">Desactivados</string>
     <string name="player_quality">Calidade</string>
     <string name="player_speed">Velocidade</string>
+    <string name="player_display">Pantalla</string>
+    <string name="player_brightness">Brillo</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d por cento</string>
+    <string name="player_done">Feito</string>
     <string name="player_skip_intro">Saltar introdución</string>
     <string name="player_skip_outro">Saltar créditos finais</string>
     <string name="player_quality_auto">Automática</string>
@@ -50,9 +73,10 @@
     <string name="player_syncplay_queue_playing">Reproducindo agora</string>
     <string name="player_syncplay_queue_next">Seguinte elemento</string>
     <string name="player_syncplay_queue_previous">Elemento anterior</string>
-    <string name="player_syncplay_queue_move_up">Subir</string>
-    <string name="player_syncplay_queue_move_down">Baixar</string>
-    <string name="player_syncplay_queue_remove">Quitar da cola</string>
+    <string name="player_syncplay_queue_move_up_item">Subir %1$s</string>
+    <string name="player_syncplay_queue_move_down_item">Baixar %1$s</string>
+    <string name="player_syncplay_queue_remove_item">Quitar %1$s da cola</string>
+    <string name="player_syncplay_queue_play">Reproducir</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elemento na cola</item>
         <item quantity="other">%d elementos na cola</item>

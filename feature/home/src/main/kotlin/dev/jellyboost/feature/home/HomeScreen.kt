@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -354,7 +354,10 @@ private fun QuickAccessChip(
     Row(
         modifier =
             modifier
-                .height(QuickAccessChipHeight)
+                // A *minimum*, not a fixed height (`GlassBottomNav` records the same reasoning):
+                // 38dp around a 13sp label has under 4dp of slack, so at accessibility font scales
+                // a hard `height` clipped the chip's word. The row scrolls, so growing is free.
+                .heightIn(min = QuickAccessChipHeight)
                 .background(color = GlassDefaults.Fill, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
                 .clickable(onClick = onClick)

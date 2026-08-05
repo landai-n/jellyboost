@@ -8,11 +8,58 @@
     <string name="player_rewind">Skip back 10 seconds</string>
     <string name="player_forward">Skip forward 30 seconds</string>
 
+    <!--
+      The tap surface over the video. It is the only way back to the controls once they have hidden,
+      so it carries a real accessibility action rather than a bare touch gesture (audit CR-1).
+    -->
+    <string name="player_show_controls">Show player controls</string>
+
+    <!-- The swipe indicator, which doubles as the announcement of what the swipe just changed. -->
+    <string name="player_volume_percent">Volume %1$d percent</string>
+    <string name="player_brightness_percent">Brightness %1$d percent</string>
+
+    <!--
+      The mid-playback rebuffer spinner's label. `isBuffering` had no UI at all before the
+      accessibility pass: a stall showed a frozen frame and said nothing (audit CR-3).
+    -->
+    <string name="player_buffering">Buffering</string>
+
+    <!--
+      The seek bar's name, and the sentence the clock and the seek bar both speak: %1$s is the
+      position, %2$s the duration, each already in words ("12 minutes 34 seconds of 45 minutes").
+      Spoken rather than "12:34", which a speech engine reads as a time of day.
+    -->
+    <string name="player_seek">Seek</string>
+    <string name="player_position_of_duration">%1$s of %2$s</string>
+
+    <plurals name="player_spoken_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="player_spoken_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="player_spoken_seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+
     <string name="player_audio">Audio</string>
     <string name="player_subtitles">Subtitles</string>
     <string name="player_subtitles_off">Off</string>
     <string name="player_quality">Quality</string>
     <string name="player_speed">Speed</string>
+
+    <!--
+      The Display sheet: brightness and volume as controls rather than as vertical swipes, which
+      touch exploration, a switch device and a keyboard all have no way to perform (audit CR-8).
+    -->
+    <string name="player_display">Display</string>
+    <string name="player_brightness">Brightness</string>
+    <string name="player_volume">Volume</string>
+    <string name="player_percent">%1$d percent</string>
+    <string name="player_done">Done</string>
 
     <string name="player_skip_intro">Skip intro</string>
     <string name="player_skip_outro">Skip outro</string>
@@ -78,9 +125,27 @@
     <string name="player_syncplay_queue_playing">Playing now</string>
     <string name="player_syncplay_queue_next">Next item</string>
     <string name="player_syncplay_queue_previous">Previous item</string>
+    <!--
+      The bare forms. No longer drawn — the queue rows use the item-named ones below — but kept
+      because all 69 locale folders carry translations of these three keys, and deleting the base
+      strings would orphan every one of them. A later localization pass should translate the
+      `_item` forms and then retire these together with their translations.
+    -->
     <string name="player_syncplay_queue_move_up">Move up</string>
     <string name="player_syncplay_queue_move_down">Move down</string>
     <string name="player_syncplay_queue_remove">Remove from queue</string>
+
+    <!--
+      The queue row's three actions, each named for the item it acts on (%1$s is its title). A queue
+      of ten episodes otherwise offers thirty identical labels with nothing to tell them apart
+      (audit A11Y-P-18).
+    -->
+    <string name="player_syncplay_queue_move_up_item">Move %1$s up</string>
+    <string name="player_syncplay_queue_move_down_item">Move %1$s down</string>
+    <string name="player_syncplay_queue_remove_item">Remove %1$s from the queue</string>
+
+    <!-- What tapping a queue row does — the row's own click label. -->
+    <string name="player_syncplay_queue_play">Play</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item queued</item>

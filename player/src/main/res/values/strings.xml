@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- The back button's description, and the label of the player error state's one action —
+         both close the player and return to where the user came from. -->
     <string name="player_back">Close player</string>
     <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>

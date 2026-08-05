@@ -85,8 +85,17 @@ internal class ServerSetupViewModel
             observeLocalServers()
         }
 
-        /** Records what the user typed into the address field. */
+        /**
+         * Records what the user typed into the address field.
+         *
+         * Ignored while a probe is in flight. The field is no longer disabled during one — a
+         * disabled field destroys its accessibility node and drops focus (accessibility audit
+         * 2026-08-05, F17) — so the guard moved here, where it is stronger: [connectTo] captured the
+         * address it is resolving, and letting the field drift away from it would leave the screen
+         * showing one address while reporting the outcome of another.
+         */
         fun onAddressChange(value: String) {
+            if (mutableUiState.value.isConnecting) return
             mutableUiState.update { it.copy(address = value, error = null) }
         }
 

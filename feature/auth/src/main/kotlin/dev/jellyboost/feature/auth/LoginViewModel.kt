@@ -156,18 +156,29 @@ internal class LoginViewModel
             }
         }
 
-        /** Records what the user typed into the username field. */
+        /**
+         * Records what the user typed into the username field.
+         *
+         * Ignored while a sign-in is in flight, which is what lets the screen keep both credential
+         * fields *enabled* through the exchange: a disabled field destroys its accessibility node
+         * and throws focus back to the top of the screen (accessibility audit 2026-08-05, F17).
+         * [signIn] captured the credentials it is sending, so an edit landing mid-request could only
+         * ever produce a screen whose fields disagree with the failure it is about to show.
+         */
         fun onUsernameChange(value: String) {
+            if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(username = value, error = null) }
         }
 
-        /** Records what the user typed into the password field. */
+        /** Records what the user typed into the password field; inert mid-request, see above. */
         fun onPasswordChange(value: String) {
+            if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(password = value, error = null) }
         }
 
-        /** Pre-fills the username from the public-user row. */
+        /** Pre-fills the username from the public-user row; inert mid-request, see above. */
         fun onPublicUserSelected(user: PublicUserInfo) {
+            if (mutableUiState.value.isSigningIn) return
             mutableUiState.update { it.copy(username = user.name, error = null) }
         }
 

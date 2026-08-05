@@ -46,6 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -394,7 +397,11 @@ private fun ManualAddressSection(
                 onValueChange = onAddressChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                enabled = !state.isConnecting,
+                // Stays enabled while the probe runs (accessibility audit 2026-08-05, F17):
+                // disabling a focused field drops accessibility focus with no anchor to fall back
+                // to, so a TalkBack user pressing Connect was thrown back to the top of the screen.
+                // The field cannot be *changed* mid-probe either — `ServerSetupViewModel` ignores
+                // edits while `isConnecting`, which is a stronger guarantee than a greyed-out box.
                 isError = state.error != null,
                 // "Server address" — was the panel's own heading; now the field's own caption.
                 label = { Text(text = stringResource(R.string.server_setup_manual_title).uppercase()) },
@@ -431,28 +438,48 @@ private fun ManualAddressSection(
             )
 
             if (state.isConnecting) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().height(ConnectingProgressHeight),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = ProgressTrackColor,
-                )
-                Text(
-                    text = stringResource(R.string.server_setup_connecting),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // Bar and caption as one polite live region, so "Contacting the server…" is spoken
+                // when it appears instead of being a line the user has to go looking for
+                // (accessibility audit 2026-08-05, F4). The inner spacing repeats the panel's own
+                // [AuthPanelInnerGap] so grouping the two costs no layout change.
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                    verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth().height(ConnectingProgressHeight),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = ProgressTrackColor,
+                    )
+                    Text(
+                        text = stringResource(R.string.server_setup_connecting),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
 }
 
-/** A hint line, optionally preceded by a small spinner. */
+/**
+ * A hint line, optionally preceded by a small spinner.
+ *
+ * One polite live region covering both states this row has: the discovery caption while the scan
+ * runs, and the "nothing announced itself" line that replaces it when the scan ends. That handover
+ * is the whole point — it happens seconds after the screen opens, with the user's attention (and
+ * accessibility focus) somewhere else entirely, and until the 2026-08-05 audit (F4) it was silent.
+ */
 @Composable
 private fun HintRow(
     text: String,
     showSpinner: Boolean,
 ) {
     Row(
+        modifier = Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
@@ -627,7 +654,20 @@ private fun AuthPane(
     }
 }
 
-/** Multi-line, error-coloured copy shared by both auth screens. */
+/**
+ * Multi-line, error-coloured copy shared by both auth screens.
+ *
+ * It interrupts. This block appears *because* the thing the user just asked for did not happen, and
+ * before the 2026-08-05 accessibility audit (F2/CR-3) nothing said so: focus stayed on the button
+ * that had apparently done nothing, and the sentence explaining why sat several swipes away.
+ * Assertive rather than polite for the same reason `:core:ui`'s `ErrorBanner` is — the user is about
+ * to retype a password into a form that has already rejected it.
+ *
+ * Kept as plain copy rather than swapped for `ErrorBanner`: the 2026 refresh gives an inline auth
+ * failure a bare error-coloured line under the form (DECISIONS.md 2026-08-01), and the banner's
+ * washed panel is the treatment reserved for [SessionLostBanner] — the one message that is *not*
+ * about the last attempt. The two need to keep looking different; only the announcement was missing.
+ */
 @Composable
 internal fun AuthErrorBlock(
     message: AuthErrorMessage,
@@ -635,7 +675,10 @@ internal fun AuthErrorBlock(
 ) {
     Text(
         text = authErrorText(message),
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .semantics { liveRegion = LiveRegionMode.Assertive },
         style = AuthErrorTextStyle,
         color = MaterialTheme.colorScheme.error,
     )

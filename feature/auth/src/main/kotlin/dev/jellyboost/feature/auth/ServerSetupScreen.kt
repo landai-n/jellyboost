@@ -401,6 +401,10 @@ private fun ManualAddressSection(
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
+                        // Uri alone still leaves the IME's correction machinery on (the
+                        // KeyboardOptions default), and an autocorrected hostname is a typo the
+                        // user cannot see — the probe just fails.
+                        autoCorrectEnabled = false,
                         imeAction = ImeAction.Done,
                     ),
                 keyboardActions =

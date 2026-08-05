@@ -87,6 +87,11 @@ fun LoadingState(modifier: Modifier = Modifier) {
  * Callers pass a message already translated from `AppError`, so `:core:ui` never has to know the
  * failure taxonomy.
  *
+ * @param actionLabel what the button says. Defaults to "Retry", which is what [onRetry] means
+ *   almost everywhere — but not everywhere: a screen whose only recovery is to leave (the player's
+ *   error state closes the player) has to say so, because a control has to be named for what it
+ *   does (WCAG 2.5.3; accessibility audit 2026-08-05). Ignored when [onRetry] is `null`, since
+ *   there is no button to label.
  * @param dashedPanel draws the message inside a dashed outline. Off by default: a state view that
  *   fills a screen needs no container, but one that sits *inside* other content (an empty tab under
  *   a header, a failed section of a populated screen) does, or it reads as content that is missing
@@ -98,13 +103,14 @@ fun ErrorState(
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Outlined.CloudOff,
     onRetry: (() -> Unit)? = null,
+    actionLabel: String? = null,
     dashedPanel: Boolean = false,
 ) {
     MessageState(
         icon = icon,
         message = message,
         modifier = modifier,
-        actionLabel = if (onRetry != null) stringResource(R.string.state_retry) else null,
+        actionLabel = if (onRetry != null) actionLabel ?: stringResource(R.string.state_retry) else null,
         onAction = onRetry,
         dashedPanel = dashedPanel,
     )

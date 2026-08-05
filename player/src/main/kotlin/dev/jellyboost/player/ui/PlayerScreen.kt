@@ -188,6 +188,12 @@ fun PlayerScreen(
                     message = requireNotNull(state.errorMessage),
                     modifier = Modifier.align(Alignment.Center),
                     onRetry = onBack,
+                    // Named for what it does, not for what an error screen's button usually does:
+                    // there is nothing to retry here — the session is gone and the only way out is
+                    // back to where the user came from (WCAG 2.5.3, accessibility audit
+                    // 2026-08-05). `player_back` is the same three words, already translated
+                    // everywhere, and describes the same action the top-left button performs.
+                    actionLabel = stringResource(R.string.player_back),
                 )
 
             state.isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))

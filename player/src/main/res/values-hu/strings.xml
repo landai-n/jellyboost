@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Ez a sáv nincs a letöltésben – streamelés a szerverről.</string>
     <string name="player_message_track_offline">Ez a sáv nincs a letöltött fájlban.</string>
     <string name="player_message_failed">A lejátszás sikertelen.</string>
+    <string name="player_message_change_reverted">A módosítást nem sikerült alkalmazni — folytatás a korábbiak szerint.</string>
 
     <string name="player_syncplay_group">Csoport</string>
     <string name="player_syncplay_waiting">Várakozás a csoportra…</string>

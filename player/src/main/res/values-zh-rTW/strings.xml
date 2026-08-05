@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">這個音軌不在下載內容中——正在從伺服器串流播放。</string>
     <string name="player_message_track_offline">這個音軌不在已下載的檔案中。</string>
     <string name="player_message_failed">播放失敗。</string>
+    <string name="player_message_change_reverted">無法套用該變更 — 將照原樣繼續。</string>
 
     <string name="player_syncplay_group">群組</string>
     <string name="player_syncplay_waiting">正在等待群組…</string>

@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">সেই ট্র্যাকটি ডাউনলোডে নেই — আপনার সার্ভার থেকে স্ট্রিম করা হচ্ছে।</string>
     <string name="player_message_track_offline">সেই ট্র্যাকটি ডাউনলোড করা ফাইলে নেই।</string>
     <string name="player_message_failed">প্লেব্যাক ব্যর্থ হয়েছে।</string>
+    <string name="player_message_change_reverted">পরিবর্তনটি প্রয়োগ করা যায়নি — আগের মতোই চলছে।</string>
     <string name="player_syncplay_group">গ্রুপ</string>
     <string name="player_syncplay_waiting">গ্রুপের অপেক্ষায়…</string>
     <string name="player_syncplay_shuffle">সারি এলোমেলো করুন</string>

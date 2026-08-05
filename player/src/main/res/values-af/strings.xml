@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Daardie baan is nie in die aflaai nie — stroom dit vanaf jou bediener.</string>
     <string name="player_message_track_offline">Daardie baan is nie in die afgelaaide lêer nie.</string>
     <string name="player_message_failed">Terugspeel het misluk.</string>
+    <string name="player_message_change_reverted">Kon daardie verandering nie toepas nie — gaan voort soos voorheen.</string>
 
     <string name="player_syncplay_group">Groep</string>
     <string name="player_syncplay_waiting">Wag vir groep…</string>

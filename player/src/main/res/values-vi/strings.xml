@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Track đó không có trong bản tải xuống — đang phát trực tuyến từ máy chủ của bạn.</string>
     <string name="player_message_track_offline">Track đó không có trong tệp đã tải xuống.</string>
     <string name="player_message_failed">Phát lại thất bại.</string>
+    <string name="player_message_change_reverted">Không thể áp dụng thay đổi đó — tiếp tục như trước.</string>
     <string name="player_syncplay_group">Nhóm</string>
     <string name="player_syncplay_waiting">Đang chờ nhóm…</string>
     <string name="player_syncplay_shuffle">Xáo trộn hàng đợi</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">هذا المقطع غير موجود في التنزيل — تتم بثّه من خادمك.</string>
     <string name="player_message_track_offline">هذا المقطع غير موجود في الملف الذي تم تنزيله.</string>
     <string name="player_message_failed">فشل التشغيل.</string>
+    <string name="player_message_change_reverted">تعذّر تطبيق هذا التغيير — نواصل كما كان من قبل.</string>
 
     <string name="player_syncplay_group">المجموعة</string>
     <string name="player_syncplay_waiting">بانتظار المجموعة…</string>

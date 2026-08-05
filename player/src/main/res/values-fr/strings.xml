@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Cette piste n\'est pas dans le téléchargement — diffusion depuis votre serveur.</string>
     <string name="player_message_track_offline">Cette piste n\'est pas dans le fichier téléchargé.</string>
     <string name="player_message_failed">Échec de la lecture.</string>
+    <string name="player_message_change_reverted">Impossible d\'appliquer ce changement — la lecture continue comme avant.</string>
     <string name="player_syncplay_group">Groupe</string>
     <string name="player_syncplay_waiting">En attente du groupe…</string>
     <string name="player_syncplay_shuffle">Mélanger la file d\'attente</string>

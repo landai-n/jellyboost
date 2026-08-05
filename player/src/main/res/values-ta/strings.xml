@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">அந்தத் தட்டு பதிவிறக்கத்தில் இல்லை — உங்கள் சேவையகத்திலிருந்து ஸ்ட்ரீம் செய்யப்படுகிறது.</string>
     <string name="player_message_track_offline">அந்தத் தட்டு பதிவிறக்கப்பட்ட கோப்பில் இல்லை.</string>
     <string name="player_message_failed">பிளேபேக் தோல்வியடைந்தது.</string>
+    <string name="player_message_change_reverted">அந்த மாற்றத்தைப் பயன்படுத்த முடியவில்லை — முன்பு போலவே தொடர்கிறது.</string>
 
     <string name="player_syncplay_group">குழு</string>
     <string name="player_syncplay_waiting">குழுவிற்காகக் காத்திருக்கிறது…</string>

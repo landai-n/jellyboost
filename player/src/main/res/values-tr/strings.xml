@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">O parça indirmede yok — sunucunuzdan yayınlanıyor.</string>
     <string name="player_message_track_offline">O parça indirilen dosyada yok.</string>
     <string name="player_message_failed">Oynatma başarısız oldu.</string>
+    <string name="player_message_change_reverted">Bu değişiklik uygulanamadı — kaldığı gibi devam ediyor.</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Grup bekleniyor…</string>
     <string name="player_syncplay_shuffle">Kuyruğu karıştır</string>

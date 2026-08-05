@@ -334,6 +334,10 @@ Full app translation into the 69 locales the official jellyfin-android client sh
   `scripts/validate_i18n.py` (name parity, `%1$s` placeholder parity, CLDR plural
   quantities, escaping) — 0 problems. NOT native-speaker reviewed; per-agent uncertain-term
   notes live in the i18n commit message trailer / docs/features/localization.md.
+- 2026-08-05: the CI i18n gate caught `player_message_change_reverted` (added in
+  `2b1703b1`) missing from every locale — translated into all 69 player locales,
+  validator back to 0 problems. Reminder: any new user-visible string needs the same
+  69-locale sweep in the same change, or CI on `main` goes red.
 - Known follow-ups: `feature/auth`'s `auth_app_name` could also be `translatable="false"`
   (currently carries a literal "Jellyboost" entry in every locale); dv (Divehi) and fo
   (Faroese) are the lowest-confidence locales.
@@ -344,9 +348,8 @@ User-requested, DECISIONS entry logged (plan scoped Settings to prefs/account/si
 An About section closes the settings list with the installed version as an info row —
 `BuildConfig.VERSION_NAME` passed from `:app` at the `SettingsScreen` call site, so the
 `-debug`/`-debugsigned` suffixes show as-is. Deliberately not in `SettingsUiState`
-(build-time constant, not state). New strings (`settings_section_about`,
-`settings_version`) are in the default locale only; the 69 translated locales fall back
-to English until the next i18n pass.
+(build-time constant, not state). The new strings (`settings_section_about`,
+`settings_version`) were subsequently localized into all 69 locales (`1c76f72a`).
 
 ## Current milestone: M11 — SyncPlay (IN PROGRESS: all 6 phases landed 2026-07-30, device DoD owed)
 

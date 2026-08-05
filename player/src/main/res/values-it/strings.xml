@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Quella traccia non è nel download — riproduzione in streaming dal tuo server.</string>
     <string name="player_message_track_offline">Quella traccia non è nel file scaricato.</string>
     <string name="player_message_failed">Riproduzione non riuscita.</string>
+    <string name="player_message_change_reverted">Impossibile applicare la modifica — si continua come prima.</string>
     <string name="player_syncplay_group">Gruppo</string>
     <string name="player_syncplay_waiting">In attesa del gruppo…</string>
     <string name="player_syncplay_shuffle">Riproduzione casuale della coda</string>

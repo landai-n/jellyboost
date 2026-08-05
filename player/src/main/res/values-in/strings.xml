@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Trek itu tidak ada dalam unduhan — menyiarkannya dari server Anda.</string>
     <string name="player_message_track_offline">Trek itu tidak ada dalam file yang diunduh.</string>
     <string name="player_message_failed">Pemutaran gagal.</string>
+    <string name="player_message_change_reverted">Perubahan itu tidak dapat diterapkan — melanjutkan seperti sebelumnya.</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Menunggu grup…</string>
     <string name="player_syncplay_shuffle">Acak antrean</string>

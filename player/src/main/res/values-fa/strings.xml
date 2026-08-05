@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">این تِرک در دانلود موجود نیست — در حال استریم از سرور شما.</string>
     <string name="player_message_track_offline">این تِرک در فایل دانلودشده موجود نیست.</string>
     <string name="player_message_failed">پخش ناموفق بود.</string>
+    <string name="player_message_change_reverted">اعمال آن تغییر ممکن نشد — مانند قبل ادامه می‌دهیم.</string>
 
     <string name="player_syncplay_group">گروه</string>
     <string name="player_syncplay_waiting">در انتظار گروه…</string>

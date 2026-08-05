@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">Esa pista no está en la descarga — transmitiéndola desde tu servidor.</string>
     <string name="player_message_track_offline">Esa pista no está en el archivo descargado.</string>
     <string name="player_message_failed">Error de reproducción.</string>
+    <string name="player_message_change_reverted">No se pudo aplicar ese cambio — se continúa como antes.</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Esperando al grupo…</string>
     <string name="player_syncplay_shuffle">Aleatorizar cola</string>

@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">See rada pole allalaadimises – voogesitatakse seda sinu serverist.</string>
     <string name="player_message_track_offline">See rada pole allalaaditud failis.</string>
     <string name="player_message_failed">Esitamine ebaõnnestus.</string>
+    <string name="player_message_change_reverted">Muudatust ei saanud rakendada — jätkatakse nagu enne.</string>
 
     <string name="player_syncplay_group">Grupp</string>
     <string name="player_syncplay_waiting">Ootan gruppi…</string>

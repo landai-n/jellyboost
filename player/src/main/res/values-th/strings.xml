@@ -27,6 +27,7 @@
     <string name="player_message_track_streaming">แทร็กนั้นไม่ได้อยู่ในไฟล์ที่ดาวน์โหลดไว้ — กำลังสตรีมจากเซิร์ฟเวอร์ของคุณ</string>
     <string name="player_message_track_offline">แทร็กนั้นไม่ได้อยู่ในไฟล์ที่ดาวน์โหลดไว้</string>
     <string name="player_message_failed">การเล่นล้มเหลว</string>
+    <string name="player_message_change_reverted">ไม่สามารถใช้การเปลี่ยนแปลงนั้นได้ — เล่นต่อแบบเดิม</string>
     <string name="player_syncplay_group">กลุ่ม</string>
     <string name="player_syncplay_waiting">กำลังรอกลุ่ม…</string>
     <string name="player_syncplay_shuffle">สุ่มคิว</string>

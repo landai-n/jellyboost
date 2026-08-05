@@ -32,6 +32,7 @@
     <string name="player_message_track_streaming">Тухайн трек татсан файлд алга — серверээс дамжуулж байна.</string>
     <string name="player_message_track_offline">Тухайн трек татсан файлд алга байна.</string>
     <string name="player_message_failed">Тоглуулалт амжилтгүй боллоо.</string>
+    <string name="player_message_change_reverted">Энэ өөрчлөлтийг хэрэгжүүлж чадсангүй — өмнөх байдлаар үргэлжилж байна.</string>
 
     <string name="player_syncplay_group">Бүлэг</string>
     <string name="player_syncplay_waiting">Бүлгийг хүлээж байна…</string>

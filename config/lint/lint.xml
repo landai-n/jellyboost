@@ -38,6 +38,19 @@
     <issue id="LabelFor" severity="error" />
 
     <!--
+      ## Also a gate: a user-facing string exists in every locale or not at all.
+
+      Not an accessibility check by lint's taxonomy, but it is one in practice — most of what the
+      accessibility waves added is *only* ever heard, never seen, so an untranslated one is a
+      screen reader speaking English into a French device with nothing on screen to fall back on.
+      The 45 strings those waves added were localized into all 69 locales on 2026-08-05, which is
+      what lets this be an error rather than the debt note it replaced. A string that genuinely has
+      no translation (a proper noun, a pure format) is marked `translatable="false"` at its
+      definition — see `auth_logo_description` — rather than copied 69 times.
+    -->
+    <issue id="MissingTranslation" severity="error" />
+
+    <!--
       A typo in an id above would silently disable the check it was meant to switch on, so an
       unrecognised id is itself a build failure.
     -->
@@ -47,12 +60,12 @@
       ## Advisory: the families that already fail today, demoted so the gate stays a11y-shaped.
 
       Before this file, lint ran with `abortOnError = false` and *nothing* it found could fail the
-      build. Turning that on to make the accessibility checks bite would also have made these 293
+      build. Turning that on to make the accessibility checks bite would also have made these
       pre-existing findings fatal, which is a different project's worth of work. Demoting them to
       `warning` leaves their enforcement exactly where it has always been — visible in the report,
       not blocking — while everything else lint calls an error now blocks.
 
-      A baseline file was the alternative and was rejected: it would freeze 293 findings into a
+      A baseline file was the alternative and was rejected: it would freeze the findings into a
       generated XML blob that has to be regenerated every time a string is added, and it would hide
       them from the report rather than leave them in it.
 
@@ -62,11 +75,6 @@
     <issue id="MissingQuantity" severity="warning" />
     <!-- 40×. Same corpus: a 'one' bucket that covers 0 and 1 without a %d in the string. -->
     <issue id="ImpliedQuantity" severity="warning" />
-    <!--
-      45×. The strings the accessibility waves added (2026-08-05) exist in English only; the rest
-      of the app is translated into all 69 locales. Tracked as follow-up work, not as a11y work.
-    -->
-    <issue id="MissingTranslation" severity="warning" />
     <!-- 7×. Media3's @UnstableApi surface, used deliberately in the DI modules and the player. -->
     <issue id="UnsafeOptInUsageError" severity="warning" />
 

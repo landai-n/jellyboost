@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -1187,7 +1188,10 @@ private fun SegmentedTab(
     Box(
         modifier =
             modifier
-                .height(Dimens.PillHeightSmall)
+                // Minimum, not fixed (see `GlassBottomNav`): 36dp around a 13sp label leaves under
+                // 4dp of slack, so at accessibility font scales a hard `height` clipped the tab's
+                // own word. The segmented control sizes to its tabs, so growing is free.
+                .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
                 .background(color = if (selected) Color.White else Color.Transparent, shape = CircleShape)
@@ -1272,7 +1276,13 @@ private val BulkButtonHorizontalPadding = 14.dp
 private val BulkButtonVerticalPadding = 8.dp
 private val BulkButtonIconSize = 15.dp
 private val BulkButtonLabel = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.W500)
-private const val BULK_BUTTON_DISABLED_ALPHA = 0.35f
+
+/**
+ * A disabled bulk button's content. 0.48, not 0.35: the label still has to name the action it is
+ * refusing, so it is text with a 4.5:1 obligation — 3.20:1 before, 4.78:1 on `#202020` now
+ * (accessibility audit 2026-08-05, matching `JellyfinButtons`' disabled pill content).
+ */
+private const val BULK_BUTTON_DISABLED_ALPHA = 0.48f
 private val StatValue = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.W600)
 private val StatValueSmall = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)
 private val StatSwitchLabel = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W600)

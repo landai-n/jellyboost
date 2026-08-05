@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -610,7 +611,13 @@ private fun QuickConnectDigitBox(
     Box(
         modifier =
             Modifier
-                .size(width = width, height = QuickConnectDigitHeight)
+                // Width is fixed — the row measures it so N boxes fit the viewport — but the height
+                // is a *floor*: the digit inside is the largest type on the screen, and at
+                // accessibility font scales a fixed box clipped the very code the user is meant to
+                // read out. The boxes are laid out in a `Row`, so one growing takes the rest with
+                // it and they stay a set (`GlassBottomNav` records the same min-not-fixed rule).
+                .width(width)
+                .heightIn(min = QuickConnectDigitHeight)
                 .background(color = QuickConnectDigitFill, shape = shape)
                 .border(width = GlassDefaults.HairlineWidth, color = GlassDefaults.Hairline, shape = shape),
         contentAlignment = Alignment.Center,

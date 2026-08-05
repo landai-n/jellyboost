@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -91,7 +91,11 @@ internal fun GlassTopNav(
             modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(TopChromeInsets)
-                .height(TopNavHeight)
+                // A *minimum*, not a fixed height, for the reason `GlassBottomNav` records: the
+                // capsule inside this bar carries a label, and at accessibility font scales the
+                // label outgrows the 56dp the design draws. A hard `height` clipped it. The bar
+                // floats over the page, so growing costs the content nothing but overlap slack.
+                .heightIn(min = TopNavHeight)
                 // The trailing edge is corrected for the actions' invisible frame, so the last
                 // *circle* sits the same distance from the window edge as the brand mark does.
                 .padding(start = BarHorizontalPadding, end = BarHorizontalPadding - ActionFrameOverhang),
@@ -190,7 +194,10 @@ private fun TopNavTab(
     Row(
         modifier =
             modifier
-                .height(Dimens.PillHeightSmall)
+                // Minimum, not fixed: 36dp around a 12sp label leaves under 4dp of slack at
+                // fontScale 1.0 and none at all once font padding is added, so the selected tab's
+                // word — the only text in this bar — was clipped at every accessibility scale.
+                .heightIn(min = Dimens.PillHeightSmall)
                 .clip(CircleShape)
                 .selectable(selected = selected, onClick = onClick, role = Role.Tab)
                 .background(

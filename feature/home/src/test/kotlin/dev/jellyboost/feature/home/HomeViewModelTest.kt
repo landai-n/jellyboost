@@ -39,11 +39,32 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import dev.jellyboost.core.ui.R as CoreUiR
 
-/** Unit tests for [HomeViewModel]'s load, failure and refresh behaviour. */
+/**
+ * Unit tests for [HomeViewModel]'s load, failure and refresh behaviour.
+ *
+ * One class rather than one per row (`@Suppress("LargeClass")` below): splitting it would scatter
+ * the shared mock setup (`stubEverythingEmpty`, the `sections`/`homeLayout` fixtures every test
+ * needs) across files for no real gain — the `SyncPlayControllerTest` precedent, not
+ * `ItemDetailViewModelTest`'s split, which separates genuinely distinct *collaborators* (selection,
+ * downloads) rather than one ViewModel's own rows. M13 Phase 4's Continue Listening tests pushed
+ * this class past the threshold.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass")
 class HomeViewModelTest {
     private val dispatcher = StandardTestDispatcher()
-    private val repository = mockk<JellyfinRepository>()
+
+    /**
+     * `getResumeAudioItems` defaults to empty for every test in this class — `DEFAULT_HOME_SECTIONS`
+     * (the default [sections] below) includes `RESUME_AUDIO` (M13 Phase 4), so every test that loads
+     * the screen now reaches this call whether or not it cares about *Continue Listening*. The tests
+     * that do care override it with their own `coEvery`, set after this one in the test body, which
+     * wins.
+     */
+    private val repository =
+        mockk<JellyfinRepository> {
+            coEvery { getResumeAudioItems(any()) } returns AppResult.Success(emptyList())
+        }
     private val eventBus = UserDataEventBus()
 
     /** The badge source (M7). Most tests do not care, so it emits an empty map and stays quiet. */
@@ -152,6 +173,51 @@ class HomeViewModelTest {
 
             coVerify(exactly = 1) { repository.getLatestMedia("lib-movies", any()) }
             coVerify(exactly = 1) { repository.getLatestMedia("lib-shows", any()) }
+        }
+
+    // ---- Continue Listening (M13 Phase 4) --------------------------------------------------
+
+    @Test
+    fun `fetches Continue Listening when RESUME_AUDIO is in the layout`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            val track = track("t1", "Fake Plastic Trees")
+            coEvery { repository.getResumeAudioItems(any()) } returns AppResult.Success(listOf(track))
+
+            val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            viewModel.uiState.value.resumeAudio shouldContainExactly listOf(track)
+        }
+
+    @Test
+    fun `does not call getResumeAudioItems when RESUME_AUDIO is not in the layout`() =
+        runTest(dispatcher) {
+            sections = listOf(HomeSectionType.RESUME, HomeSectionType.NEXT_UP)
+            stubEverythingEmpty()
+
+            HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { repository.getResumeAudioItems(any()) }
+        }
+
+    @Test
+    fun `marking a Continue Listening track played drops it from the row`() =
+        runTest(dispatcher) {
+            stubEverythingEmpty()
+            val track = track("t1", "Fake Plastic Trees")
+            coEvery { repository.getResumeAudioItems(any()) } returns AppResult.Success(listOf(track))
+            // The debounced membership refresh re-asks the same (now-empty) row; keeping it non-empty
+            // here would hide a bug where the instant patch below is the only thing removing the row.
+            val viewModel = HomeViewModel(repository, homeLayout, eventBus, downloads, connectivityRefresher)
+            advanceUntilIdle()
+
+            eventBus.emit(UserDataChange(itemId = "t1", userData = UserData(played = true)))
+            runCurrent()
+
+            viewModel.uiState.value.resumeAudio
+                .shouldBeEmpty()
         }
 
     @Test
@@ -818,6 +884,7 @@ class HomeViewModelTest {
         coEvery { repository.getUserViews() } returns AppResult.Success(emptyList())
         coEvery { repository.getResumeItems(any()) } returns AppResult.Success(emptyList())
         coEvery { repository.getNextUp(any()) } returns AppResult.Success(emptyList())
+        coEvery { repository.getResumeAudioItems(any()) } returns AppResult.Success(emptyList())
         coEvery { repository.getLatestMedia(any(), any()) } returns AppResult.Success(emptyList())
     }
 
@@ -830,6 +897,11 @@ class HomeViewModelTest {
         id: String,
         name: String,
     ) = JellyfinItem(id = id, name = name, type = ItemType.MOVIE)
+
+    private fun track(
+        id: String,
+        name: String,
+    ) = JellyfinItem(id = id, name = name, type = ItemType.AUDIO)
 
     private companion object {
         /** Episodes toggled in one go — "mark season watched" is one write per episode. */

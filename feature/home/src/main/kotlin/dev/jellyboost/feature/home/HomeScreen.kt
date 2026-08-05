@@ -1,3 +1,9 @@
+// One `LazyListScope` extension per home section (`resumeRow`, `nextUpRow`, `latestRows`,
+// `resumeAudioRow`, …) is this screen's whole structure; they are not `@Composable`, so the rule's
+// Composable exemption cannot reach them. Suppressed here rather than raising the global
+// `thresholdInFiles` (PlayerViewModel precedent, DECISIONS 2026-08-03).
+@file:Suppress("TooManyFunctions")
+
 package dev.jellyboost.feature.home
 
 import androidx.compose.foundation.background
@@ -48,6 +54,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.ui.component.AlbumCard
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.LIBRARY_CARD_CONTENT_TYPE
@@ -106,12 +113,16 @@ fun HomeScreen(
  *   navigation. The hero's Resume pill is its only caller.
  * @param onLibraryClick open a library's grid — the *See all* action and the quick-access chips.
  * @param onOpenDownloads switch to the Downloads tab, behind the quick-access row's *Offline* chip.
+ * @param onPlayTrack resume a *Continue Listening* track from its saved position (M13 Phase 4) —
+ *   unlike [onPlay], this starts the music queue rather than navigating to `Routes.Player`, so it
+ *   is a distinct callback rather than an overload of it.
  */
 data class HomeActions(
     val onItemClick: (JellyfinItem) -> Unit,
     val onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     val onLibraryClick: (LibraryView) -> Unit,
     val onOpenDownloads: () -> Unit,
+    val onPlayTrack: (JellyfinItem) -> Unit,
 )
 
 /**
@@ -242,10 +253,10 @@ private fun HomeRows(
 
                     HomeSectionType.NEXT_UP -> nextUpRow(state, actions, cardWidth)
                     HomeSectionType.LATEST_MEDIA -> latestRows(state, actions)
+                    HomeSectionType.RESUME_AUDIO -> resumeAudioRow(state, actions)
 
                     HomeSectionType.NONE,
                     HomeSectionType.ACTIVE_RECORDINGS,
-                    HomeSectionType.RESUME_AUDIO,
                     HomeSectionType.RESUME_BOOK,
                     HomeSectionType.LIVE_TV,
                     -> Unit
@@ -470,6 +481,32 @@ private fun LazyListScope.nextUpRow(
     }
 }
 
+/**
+ * *Continue Listening* (M13 Phase 4): partially-played tracks, square album-shaped cards like the
+ * browse screens' [AlbumCard] rather than [ThumbCard] — the 16:9 shape has no meaning for a track,
+ * which carries square artwork exactly like an album does.
+ *
+ * A tap resumes the track from where it left off ([HomeActions.onPlayTrack]) rather than opening a
+ * detail page — there is no `ItemDetail` for a track yet, and "continue listening" already says
+ * what the tap should do, the same contract the hero's Resume pill has for video.
+ */
+private fun LazyListScope.resumeAudioRow(
+    state: HomeUiState,
+    actions: HomeActions,
+) {
+    if (state.resumeAudio.isEmpty()) return
+    item(key = SECTION_RESUME_AUDIO, contentType = ROW_ALBUMS) {
+        MediaRow(
+            title = stringResource(R.string.home_section_continue_listening),
+            items = state.resumeAudio,
+            key = JellyfinItem::id,
+            contentType = CARD_ALBUM,
+        ) { item ->
+            AlbumCard(item = item, onClick = { actions.onPlayTrack(item) })
+        }
+    }
+}
+
 private fun LazyListScope.latestRows(
     state: HomeUiState,
     actions: HomeActions,
@@ -626,6 +663,7 @@ private const val SECTION_HERO = "section-hero"
 private const val SECTION_MY_MEDIA = "section-my-media"
 private const val SECTION_RESUME = "section-resume"
 private const val SECTION_NEXT_UP = "section-next-up"
+private const val SECTION_RESUME_AUDIO = "section-resume-audio"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
 // The card types themselves (poster/thumb/library) come from `:core:ui`, beside the cards they
@@ -636,6 +674,8 @@ private const val ROW_LIBRARIES = "row-libraries"
 private const val ROW_QUICK_ACCESS = "row-quick-access"
 private const val ROW_THUMBS = "row-thumbs"
 private const val ROW_POSTERS = "row-posters"
+private const val ROW_ALBUMS = "row-albums"
+private const val CARD_ALBUM = "card-album"
 private const val CHIP_QUICK_ACCESS = "chip-quick-access"
 private const val CHIP_OFFLINE = "chip-offline"
 
@@ -709,7 +749,13 @@ private fun previewState(withResume: Boolean): HomeUiState =
     )
 
 private val PreviewActions =
-    HomeActions(onItemClick = {}, onPlay = { _, _ -> }, onLibraryClick = {}, onOpenDownloads = {})
+    HomeActions(
+        onItemClick = {},
+        onPlay = { _, _ -> },
+        onLibraryClick = {},
+        onOpenDownloads = {},
+        onPlayTrack = {},
+    )
 
 @Preview(name = "Home — hero", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 900)
 @Composable

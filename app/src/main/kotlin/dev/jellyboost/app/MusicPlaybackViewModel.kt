@@ -6,7 +6,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.core.common.music.MusicMessage
+import dev.jellyboost.core.common.music.MusicPlaybackState
+import dev.jellyboost.player.model.ticksToMillis
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -32,6 +35,9 @@ class MusicPlaybackViewModel
         /** Refusals and unplayable tracks, for the app chrome's snackbar. */
         val messages: Flow<MusicMessage> = controller.messages
 
+        /** The queue and its transport state, for [MiniPlayer] and its visibility rule. */
+        val state: StateFlow<MusicPlaybackState> = controller.state
+
         /**
          * Plays [tracks] starting at [startIndex] — a track tap, or a "Play" button at index 0.
          *
@@ -55,4 +61,23 @@ class MusicPlaybackViewModel
         fun shuffle(tracks: List<JellyfinItem>) {
             viewModelScope.launch { controller.play(tracks, startIndex = 0, shuffled = true) }
         }
+
+        /**
+         * Resumes [item] from its saved position — Home's *Continue Listening* row (M13 Phase 4).
+         *
+         * A single-item queue, exactly like tapping any other track, except started at
+         * [dev.jellyboost.core.common.model.UserData.playbackPositionTicks] rather than from zero.
+         * The ticks-to-millis conversion is `:player`'s own (`PlaybackSnapshot.kt`) — `:app` already
+         * depends on `:player` for the video screen, so reusing it here needs no new dependency.
+         */
+        fun playResumed(item: JellyfinItem) {
+            val startPositionMs = item.userData.playbackPositionTicks.ticksToMillis()
+            viewModelScope.launch { controller.play(listOf(item), startIndex = 0, startPositionMs = startPositionMs) }
+        }
+
+        /** The mini-player's play/pause button. */
+        fun togglePlayPause() = controller.togglePlayPause()
+
+        /** The mini-player's next button. */
+        fun next() = controller.next()
     }

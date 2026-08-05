@@ -33,7 +33,6 @@
     <string name="music_album_add_favorite">Add to favorites</string>
     <string name="music_album_play">Play</string>
     <string name="music_album_shuffle">Shuffle</string>
-    <string name="music_album_playback_coming_soon">Playback is coming in a future update</string>
 
     <!-- ArtistDetailScreen -->
     <string name="music_artist_empty">This artist isn\'t available</string>
@@ -51,6 +50,34 @@
     <string name="music_playlist_home">Home</string>
     <string name="music_playlist_no_tracks">No tracks to show — playlists aren\'t available offline yet</string>
     <plurals name="music_playlist_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+
+    <!-- NowPlayingScreen -->
+    <string name="music_now_playing_back">Back</string>
+    <string name="music_now_playing_open_queue">Queue</string>
+    <string name="music_now_playing_shuffle_on">Enable shuffle</string>
+    <string name="music_now_playing_shuffle_off">Disable shuffle</string>
+    <string name="music_now_playing_previous">Previous</string>
+    <string name="music_now_playing_next">Next</string>
+    <string name="music_now_playing_play">Play</string>
+    <string name="music_now_playing_pause">Pause</string>
+    <string name="music_now_playing_repeat_off">Enable repeat</string>
+    <string name="music_now_playing_repeat_all">Repeat all — tap for repeat one</string>
+    <string name="music_now_playing_repeat_one">Repeat one — tap to disable repeat</string>
+    <string name="music_now_playing_favorite_add">Add to favorites</string>
+    <string name="music_now_playing_favorite_remove">Remove from favorites</string>
+
+    <!-- QueueSheet -->
+    <string name="music_now_playing_queue">Queue</string>
+    <string name="music_now_playing_queue_empty">The queue is empty</string>
+    <string name="music_now_playing_queue_close">Close queue</string>
+    <string name="music_now_playing_queue_playing">Now playing</string>
+    <string name="music_now_playing_queue_move_up">Move up</string>
+    <string name="music_now_playing_queue_move_down">Move down</string>
+    <string name="music_now_playing_queue_remove">Remove from queue</string>
+    <plurals name="music_now_playing_queue_count">
         <item quantity="one">%1$d track</item>
         <item quantity="other">%1$d tracks</item>
     </plurals>

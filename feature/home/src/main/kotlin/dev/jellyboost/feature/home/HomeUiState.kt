@@ -32,6 +32,8 @@ data class HomeUiState(
     val resume: List<JellyfinItem> = emptyList(),
     val nextUp: List<JellyfinItem> = emptyList(),
     val latest: List<LatestSection> = emptyList(),
+    /** *Continue Listening* — [resume]'s audio counterpart (M13 Phase 4). */
+    val resumeAudio: List<JellyfinItem> = emptyList(),
     /**
      * Set only when the screen has nothing to show. A row that fails on its own is left empty
      * rather than blanking the whole screen.
@@ -44,6 +46,7 @@ data class HomeUiState(
             libraries.isEmpty() &&
                 resume.isEmpty() &&
                 nextUp.isEmpty() &&
+                resumeAudio.isEmpty() &&
                 latest.all { it.items.isEmpty() }
 }
 
@@ -78,6 +81,7 @@ internal fun HomeUiState.withUserData(
     copy(
         resume = resume.patchUnwatchedRow(itemId, userData),
         nextUp = nextUp.patchUnwatchedRow(itemId, userData),
+        resumeAudio = resumeAudio.patchUnwatchedRow(itemId, userData),
         latest =
             latest.map { section ->
                 val patched = section.items.patch(itemId, userData)
@@ -132,6 +136,7 @@ internal fun HomeUiState.withDownloadStates(states: Map<String, DownloadState>):
     copy(
         resume = resume.withDownloadStates(states),
         nextUp = nextUp.withDownloadStates(states),
+        resumeAudio = resumeAudio.withDownloadStates(states),
         latest =
             latest.map { section ->
                 val patched = section.items.withDownloadStates(states)

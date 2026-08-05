@@ -57,12 +57,11 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
  * An album's header (art, title, artist, year, favourite) and its tracks, disc-grouped when the
  * album has more than one (M13 Phase 2, docs/notes/music-m13-plan.md).
  *
- * Play and Shuffle render but are **disabled** — there is no queue to hand them to until M13
- * Phase 3 builds `MusicController`. [onPlay]/[onShuffle] exist on this signature today so Phase 3
- * only has to fill the callback in at the nav-wiring call site; nothing on this screen changes.
+ * Play and Shuffle hand the album's tracks straight to [onPlay]/[onShuffle], which
+ * `JellyfinNavHost` wires to `MusicPlaybackViewModel` (M13 Phase 3's queue).
  *
- * @param onPlay `(tracks, startIndex)` — a track row was tapped. No-op until Phase 3.
- * @param onShuffle `(tracks)` — the (disabled) Shuffle button. No-op until Phase 3.
+ * @param onPlay `(tracks, startIndex)` — a track row was tapped, or the Play button at index 0.
+ * @param onShuffle `(tracks)` — the Shuffle button; starts the queue shuffled from the top.
  */
 @Composable
 fun AlbumDetailScreen(
@@ -264,37 +263,27 @@ private fun AlbumHeader(
     }
 }
 
-/** Play / Shuffle, both disabled — see the screen's KDoc. */
+/** Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue. */
 @Composable
 private fun AlbumTransportRow(
     onPlay: () -> Unit,
     onShuffle: () -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(horizontal = Dimens.SpaceLarge),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-        ) {
-            PrimaryPillButton(
-                text = stringResource(R.string.music_album_play),
-                onClick = onPlay,
-                enabled = false,
-                leadingIcon = Icons.Filled.PlayArrow,
-                modifier = Modifier.weight(1f),
-            )
-            GhostPillButton(
-                text = stringResource(R.string.music_album_shuffle),
-                onClick = onShuffle,
-                enabled = false,
-                leadingIcon = Icons.Filled.Shuffle,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Text(
-            text = stringResource(R.string.music_album_playback_coming_soon),
-            style = ComingSoonStyle,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = Dimens.SpaceSmall),
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.SpaceLarge),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        PrimaryPillButton(
+            text = stringResource(R.string.music_album_play),
+            onClick = onPlay,
+            leadingIcon = Icons.Filled.PlayArrow,
+            modifier = Modifier.weight(1f),
+        )
+        GhostPillButton(
+            text = stringResource(R.string.music_album_shuffle),
+            onClick = onShuffle,
+            leadingIcon = Icons.Filled.Shuffle,
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -306,8 +295,6 @@ private val DiscHeaderStyle = TextStyle(fontSize = 12.sp, fontWeight = FontWeigh
 private val AlbumArtistStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.W500)
 
 private val AlbumYearStyle = TextStyle(fontSize = 13.sp)
-
-private val ComingSoonStyle = TextStyle(fontSize = 11.sp)
 
 private const val SECTION_HEADER = "album-header"
 private const val SECTION_EMPTY = "album-empty"

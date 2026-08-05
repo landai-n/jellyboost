@@ -69,7 +69,8 @@ import javax.inject.Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — same rationale as
     // `OnlineJellyfinRepository`'s identical suppression. M13 Phase 2's four music members
-    // (docs/notes/music-m13-plan.md) pushed this class from 19 to 23. Logged in DECISIONS.md.
+    // (docs/notes/music-m13-plan.md) pushed this class from 19 to 23; Phase 4's `getResumeAudioItems`
+    // to 24. Logged in DECISIONS.md.
     "TooManyFunctions",
 )
 internal class OfflineJellyfinRepository
@@ -423,6 +424,18 @@ internal class OfflineJellyfinRepository
          */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             AppResult.Success(emptyList())
+
+        // ---- M13 Phase 4 — Continue Listening ---------------------------------------------------
+
+        /** [getResumeItems]'s audio counterpart — see [ItemDao.resumeDownloadedAudio]'s KDoc. */
+        override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
+            onIo {
+                val userId = currentUserId() ?: return@onIo emptyList()
+                itemDao
+                    .resumeDownloadedAudio(ItemSource.DOWNLOAD, userId, ItemType.AUDIO, limit)
+                    .withLocalUserData(userId)
+                    .asHomeCards()
+            }
 
         // ---- helpers -------------------------------------------------------------------------
 

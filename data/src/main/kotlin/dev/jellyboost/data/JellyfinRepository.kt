@@ -235,6 +235,24 @@ interface JellyfinRepository {
      * playlists their own offline model (docs/notes/music-m13-plan.md, Phase 5).
      */
     suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>>
+
+    // ---- M13 Phase 4 — Continue Listening -------------------------------------------------------
+
+    /**
+     * Partially-played tracks, newest first — the *Continue Listening* row (`HomeSectionType
+     * .RESUME_AUDIO`), [getResumeItems]'s audio counterpart.
+     *
+     * Online: the same `/Users/{userId}/Items/Resume` endpoint [getResumeItems] calls, narrowed to
+     * `mediaTypes=[AUDIO]` instead of `[VIDEO]` — the two rows are one server query each, split the
+     * same way jellyfin-web splits *Continue Watching* from *Continue Listening*.
+     *
+     * Offline: downloaded audio this device has a resume position for
+     * ([dev.jellyboost.core.database.dao.ItemDao.resumeDownloadedAudio], the [getResumeItems]
+     * offline query narrowed to [dev.jellyboost.core.common.model.ItemType.AUDIO]).
+     *
+     * @param limit maximum number of items; defaults to the same row size [getResumeItems] uses.
+     */
+    suspend fun getResumeAudioItems(limit: Int = DEFAULT_RESUME_LIMIT): AppResult<List<JellyfinItem>>
 }
 
 // ---- M4 — item detail ------------------------------------------------------------------------

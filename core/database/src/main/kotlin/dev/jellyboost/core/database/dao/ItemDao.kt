@@ -155,6 +155,34 @@ interface ItemDao {
     ): List<ItemEntity>
 
     /**
+     * The offline *Continue Listening* row (M13 Phase 4): [resumeDownloaded]'s audio counterpart.
+     *
+     * A new query rather than a `types` parameter added to [resumeDownloaded] — that method already
+     * answers *every* resumable downloaded item regardless of kind (there was, until M13, only ever
+     * one kind of resumable download), and widening its signature would be a breaking change to a
+     * query every existing *Continue watching* test pins. `audioType` is passed in rather than
+     * hard-coded, the same style [tracksOfAlbum] and [albumsOfArtist] use for their own type filter.
+     */
+    @Query(
+        """
+        SELECT i.* FROM items AS i
+        INNER JOIN user_data AS u ON u.itemId = i.id AND u.userId = :userId
+        WHERE i.source = :source
+          AND i.type = :audioType
+          AND u.playbackPositionTicks > 0
+          AND u.played = 0
+        ORDER BY u.lastPlayedDate DESC, u.updatedAt DESC
+        LIMIT :limit
+        """,
+    )
+    suspend fun resumeDownloadedAudio(
+        source: ItemSource,
+        userId: UUID,
+        audioType: ItemType,
+        limit: Int,
+    ): List<ItemEntity>
+
+    /**
      * Every downloaded episode this device has neither played nor started, in broadcast order.
      *
      * The "one per series" reduction that produces the *Next up* row is done in Kotlin: SQLite's

@@ -103,6 +103,24 @@ class MusicPlaybackControllerTest {
         }
 
     @Test
+    fun `play with a startPositionMs resumes the starting track from that position`() =
+        musicTest {
+            val controller = controller()
+
+            controller.play(MusicFixtures.album(), startIndex = 1, startPositionMs = 42_000L) shouldBe true
+            runCurrent()
+
+            port.calls shouldContainExactly
+                listOf("setShuffleEnabled(false)", "setRepeatMode(OFF)", "setQueue(3, 1, 42000, true)")
+            reports shouldContainExactly
+                listOf("start ${MusicFixtures.TRACK_IDS[1]} @420000000 paused=false NONE DEFAULT")
+
+            val state = controller.state.value.shouldBeInstanceOf<MusicPlaybackState.Active>()
+            state.currentIndex shouldBe 1
+            state.positionMs shouldBe 42_000L
+        }
+
+    @Test
     fun `a transition stops the outgoing track's session before it starts the incoming one`() =
         musicTest {
             val controller = controller()

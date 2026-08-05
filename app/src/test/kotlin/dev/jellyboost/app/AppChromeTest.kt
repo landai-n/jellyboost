@@ -1,6 +1,10 @@
 package dev.jellyboost.app
 
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.core.common.model.ItemType
+import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.common.music.MusicPlaybackState
+import dev.jellyboost.core.common.music.MusicRepeatMode
 import dev.jellyboost.core.ui.theme.Dimens
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.DisplayName
@@ -53,4 +57,65 @@ class AppChromeTest {
         ActionClusterHeight shouldBe 56.dp
         ActionClusterHeight shouldBe ActionClusterTopGap + Dimens.MinTouchTarget
     }
+}
+
+/**
+ * Unit tests for [showsMiniPlayer] and [miniPlayerBottomOffset] — the two plain functions behind
+ * the M13 Phase 4 mini-player's visibility and docking position, split out from `NavDestination`
+ * so they are testable without one (the same reasoning [AppChromeTest] documents for [useBottomNav]).
+ */
+class MiniPlayerVisibilityTest {
+    @Test
+    @DisplayName("an active queue shows the bar, off both Player and NowPlaying")
+    fun activeQueueOffPlayerAndNowPlayingShowsTheBar() {
+        showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = false) shouldBe true
+    }
+
+    @Test
+    @DisplayName("idle hides the bar however the destination")
+    fun idleHidesTheBar() {
+        showsMiniPlayer(MusicPlaybackState.Idle, onPlayer = false, onNowPlaying = false) shouldBe false
+    }
+
+    @Test
+    @DisplayName("the video player hides the bar even mid-queue")
+    fun onPlayerHidesTheBar() {
+        showsMiniPlayer(activeState(), onPlayer = true, onNowPlaying = false) shouldBe false
+    }
+
+    @Test
+    @DisplayName("the now-playing screen hides its own docked bar")
+    fun onNowPlayingHidesTheBar() {
+        showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = true) shouldBe false
+    }
+
+    @Test
+    @DisplayName("stacks above the floating pill when one is showing")
+    fun docksAboveTheBottomNavPill() {
+        miniPlayerBottomOffset(isTopLevel = true, bottomNav = true) shouldBe
+            BottomNavMargin + BottomNavHeight + MiniPlayerGap
+    }
+
+    @Test
+    @DisplayName("sits at the window's bottom edge on the wide layout")
+    fun sitsAtTheBottomEdgeOnTheWideLayout() {
+        miniPlayerBottomOffset(isTopLevel = true, bottomNav = false) shouldBe MiniPlayerGap
+    }
+
+    @Test
+    @DisplayName("sits at the bottom edge off the top-level destinations too")
+    fun sitsAtTheBottomEdgeOffTopLevel() {
+        miniPlayerBottomOffset(isTopLevel = false, bottomNav = true) shouldBe MiniPlayerGap
+    }
+
+    private fun activeState() =
+        MusicPlaybackState.Active(
+            queue = listOf(JellyfinItem(id = "t1", name = "Track 1", type = ItemType.AUDIO)),
+            currentIndex = 0,
+            isPlaying = true,
+            positionMs = 0L,
+            durationMs = 0L,
+            shuffleEnabled = false,
+            repeatMode = MusicRepeatMode.OFF,
+        )
 }

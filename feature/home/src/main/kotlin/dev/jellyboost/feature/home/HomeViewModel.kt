@@ -166,8 +166,10 @@ class HomeViewModel
         /** The user data the loaded rows currently show for [itemId], if any of them shows it. */
         private fun currentUserData(itemId: String): UserData? =
             with(_uiState.value) {
-                (resume.asSequence() + nextUp.asSequence() + latest.asSequence().flatMap { it.items })
-                    .firstOrNull { it.id == itemId }
+                (
+                    resume.asSequence() + nextUp.asSequence() + resumeAudio.asSequence() +
+                        latest.asSequence().flatMap { it.items }
+                ).firstOrNull { it.id == itemId }
                     ?.userData
             }
 
@@ -198,13 +200,15 @@ class HomeViewModel
             val sections = _uiState.value.sections
             val wantsResume = HomeSectionType.RESUME in sections
             val wantsNextUp = HomeSectionType.NEXT_UP in sections
-            if (!wantsResume && !wantsNextUp) return
+            val wantsResumeAudio = HomeSectionType.RESUME_AUDIO in sections
+            if (!wantsResume && !wantsNextUp && !wantsResumeAudio) return
 
-            val (resume, nextUp) =
+            val (resume, nextUp, resumeAudio) =
                 coroutineScope {
                     val resumeCall = async { if (wantsResume) repository.getResumeItems() else null }
                     val nextUpCall = async { if (wantsNextUp) repository.getNextUp() else null }
-                    resumeCall.await() to nextUpCall.await()
+                    val resumeAudioCall = async { if (wantsResumeAudio) repository.getResumeAudioItems() else null }
+                    Triple(resumeCall.await(), nextUpCall.await(), resumeAudioCall.await())
                 }
 
             _uiState.update { state ->
@@ -214,6 +218,8 @@ class HomeViewModel
                         // empty a shelf the user is looking at.
                         resume = resume?.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.resume,
                         nextUp = nextUp?.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.nextUp,
+                        resumeAudio =
+                            resumeAudio?.getOrNull()?.mergeLocalUserData(knownUserData) ?: state.resumeAudio,
                     ).withDownloadStates(downloadStates)
             }
         }
@@ -277,6 +283,7 @@ class HomeViewModel
                         // cleared the overrides before starting, so only those changes are left.
                         resume = rows.resume.mergeLocalUserData(knownUserData),
                         nextUp = rows.nextUp.mergeLocalUserData(knownUserData),
+                        resumeAudio = rows.resumeAudio.mergeLocalUserData(knownUserData),
                         latest = rows.latest,
                         errorMessage = null,
                     ).withDownloadStates(downloadStates)
@@ -301,6 +308,14 @@ class HomeViewModel
                     async {
                         if (HomeSectionType.NEXT_UP in sections) {
                             repository.getNextUp().getOrNull().orEmpty()
+                        } else {
+                            emptyList()
+                        }
+                    }
+                val resumeAudio =
+                    async {
+                        if (HomeSectionType.RESUME_AUDIO in sections) {
+                            repository.getResumeAudioItems().getOrNull().orEmpty()
                         } else {
                             emptyList()
                         }
@@ -331,6 +346,7 @@ class HomeViewModel
                         },
                     resume = resume.await(),
                     nextUp = nextUp.await(),
+                    resumeAudio = resumeAudio.await(),
                     latest =
                         latest.mapNotNull { (library, result) ->
                             result
@@ -348,6 +364,7 @@ class HomeViewModel
             val libraries: List<LibraryView>,
             val resume: List<JellyfinItem>,
             val nextUp: List<JellyfinItem>,
+            val resumeAudio: List<JellyfinItem>,
             val latest: List<LatestSection>,
         )
 

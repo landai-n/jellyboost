@@ -3992,3 +3992,81 @@ Seeded from the approved plan; listed for traceability, no divergence:
   `PlaybackSessionController` gained a defaulted `PlaybackHandover` plus a non-suspending
   `endVideoSession()` called from `PlayerViewModel.releaseSession()`, without which video's
   relinquish would stay armed and re-report a stop for a session closed hours earlier.
+
+## 2026-08-06 — M13 Phase 4: NowPlaying, mini-player and Continue Listening — nine implementation-time decisions
+- **Scope:** `core/common/.../music/MusicController.kt`, `core/common/.../Routes.kt`,
+  `core/common/.../model/HomeSectionType.kt`, `player/.../music/MusicPlaybackController.kt`,
+  `feature/music/.../nowplaying/*`, `feature/music/.../AlbumDetailScreen.kt`, `app/.../MiniPlayer.kt`,
+  `app/.../AppScaffold.kt`, `app/.../AppChrome.kt`, `app/.../MusicPlaybackViewModel.kt`,
+  `data/.../JellyfinRepository.kt` (+`Online`/`Offline`/`Delegating`), `core/database/.../ItemDao.kt`,
+  `feature/home/.../HomeUiState.kt`, `HomeViewModel.kt`, `HomeScreen.kt`, `config/detekt/detekt.yml`.
+- **Plan said:** `docs/notes/music-m13-plan.md`, Phase 4 section + key decisions 2, 6, 12, and the
+  Phase 4 prompt (worktree `music-m13`).
+- **Done instead:** nine deviations from the letter of the spec, each small.
+  1. **`MusicController.play` gained a fourth parameter, `startPositionMs: Long = 0L`**, defaulted
+     so every existing call site (album/artist/playlist play and shuffle) is untouched. Wired
+     through `MusicPlaybackController.startQueue` into the `MusicPlayerPort.setQueue` parameter of
+     the same name, which Phase 3 had already built but always called with a hardcoded `0L` — the
+     prompt's own hint ("the port's `setQueue(startPositionMs)` which already exists"). Home's
+     Continue Listening resume is the one caller that passes anything but the default.
+  2. **`QueueSheet` does not resolve its own ViewModel**, unlike its model `SyncPlayQueueSheet`
+     (`:player`). It is drawn from inside `NowPlayingScreen`, which already collects everything the
+     sheet needs from `NowPlayingViewModel` — a second collector of the same `@Singleton`
+     `MusicController.state` would be redundant. `SyncPlayQueueSheet` resolves its own because it is
+     opened from the solo `PlayerScreen`, which has no other access to the group queue.
+  3. **The queue sheet reorders with up/down buttons, not drag.** No drag-to-reorder pattern exists
+     anywhere in this codebase (searched: no `detectDragGestures`/reorderable usage); `SyncPlayQueueSheet`
+     — the one sibling queue sheet — uses the same up/down-button shape for its own (server-round-trip)
+     reasons. Mirrored rather than inventing a new interaction pattern for one sheet; a real drag is a
+     fair follow-up once a second call site wants it.
+  4. **`NowPlayingScreen` has no `onHome` callback and no rendered overflow button**, unlike its
+     sibling detail screens (Album/Artist/Playlist all take `onBack` *and* `onHome`). The prompt's
+     own nav-wiring line names only "artist nav, back". Overflow is reserved layout-wise for Phase 6's
+     Instant Mix/lyrics actions but not drawn: a button with nothing to do yet is a worse a11y
+     surface than no button.
+  5. **`MiniPlayer` is shown on top-level destinations only** (`isTopLevel`, the same gate
+     `GlassBottomNav`/`GlassTopNav` use), not on every screen the literal "not Player or NowPlaying"
+     visibility rule would allow. Two reasons: the Phase 4 DoD text itself says "docked above the
+     bottom nav on every *tab*", and `LocalAppChromePadding` — which the bar's height folds into — is
+     documented as consumed by top-level screens only; showing the bar on a pushed screen
+     (`ItemDetail`, `Settings`, an album page) would float it over content with no reserved
+     clearance, unlike every other piece of this chrome. The pure predicate (`showsMiniPlayer` in
+     `AppChrome.kt`) still implements the literal state+route rule and is unit-tested standalone;
+     `isTopLevel` is a separate `&&` at the one call site in `AppScaffold`.
+  6. **Offline Continue Listening is a new DAO query (`ItemDao.resumeDownloadedAudio`), not a
+     widened `resumeDownloaded`.** That method already answers "every downloaded item with a resume
+     position" with no type filter at all (there was only ever one resumable kind before M13), and
+     several `OfflineJellyfinRepositoryTest` cases pin its exact signature; widening it to accept a
+     type list would be a needless breaking change to a query that already works for video. Recorded
+     gap, not fixed here: because `resumeDownloaded` has no type filter, an offline audio track that
+     now (Phase 3 onward) writes a resume position could in principle surface in the *video* Continue
+     Watching row too. Worth a follow-up narrowing pass; out of this phase's scope (it would touch a
+     query used only by the video row, with its own pinned tests).
+  7. **Fixed a Phase 3 gap while in the file:** `AlbumDetailScreen`'s Play/Shuffle buttons were
+     still `enabled = false` with a "Playback is coming in a future update" caption and a stale KDoc
+     ("no queue to hand them to until M13 Phase 3 builds `MusicController`"), even though
+     `JellyfinNavHost` has wired `onPlay = music::play` / `onShuffle = music::shuffle` to a working
+     queue since Phase 3 landed. Flipped both buttons to enabled, removed the dead caption/string/
+     style, and corrected the KDoc — the one piece of this phase not in the Phase 4 spec's own file
+     list, but directly adjacent (the album screen is the primary way a queue starts) and it was
+     blocking manual verification of the mini-player/NowPlaying flow from the album page.
+  8. **`HomeScreen.kt` carries a justified `@file:Suppress("TooManyFunctions")`.** Its
+     per-section `LazyListScope` extension functions (`resumeRow`, `nextUpRow`, `latestRows`,
+     Phase 4's new `resumeAudioRow`, …) are not `@Composable` themselves — the rule's
+     `ignoreAnnotatedFunctions: ['Composable']` doesn't reach them — and legitimately accumulate
+     one per home-screen section. Implemented as a targeted file-level suppression with an
+     in-code rationale rather than raising the global `thresholdInFiles` (initially 15, reverted
+     by orchestrator review): the PlayerViewModel `LargeClass` precedent (2026-08-03) — a global
+     threshold change loosens the gate for every file in the tree; a suppression names its reason
+     where it applies.
+  9. **New M13 Phase 4 strings (`:app`, `:feature:music`, `:feature:home`) are English-only**
+     (default `values/` only), matching the gap every earlier M13 string already has (Phase 2/3's
+     `:feature:music` and `:app` `music_*` strings) — a recorded, pre-existing gap this phase did not
+     widen or narrow.
+- **Reason:** each is the smallest change that keeps an existing invariant true or avoids inventing
+  a new one — additive interface change (1), no redundant state collector (2), no new interaction
+  pattern for one sheet (3), following the prompt's own literal callback list (4), the DoD's own
+  wording plus `LocalAppChromePadding`'s documented scope (5), not breaking a pinned video-row query
+  (6), a directly-adjacent bug found while editing the same file (7), the same "legitimately grows
+  large" precedent already applied to repositories (8), and consistency with the milestone's existing
+  localization gap rather than a one-off fix (9).

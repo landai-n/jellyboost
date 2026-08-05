@@ -49,6 +49,13 @@ import javax.inject.Singleton
  * reports the failure so the probe runs.
  */
 @Singleton
+@Suppress(
+    // One member per [JellyfinRepository] method, by construction — same rationale as
+    // `OnlineJellyfinRepository`'s and `OfflineJellyfinRepository`'s identical suppression. M13
+    // Phase 4's `getResumeAudioItems` pushed this class to the threshold (20). Logged in
+    // DECISIONS.md.
+    "TooManyFunctions",
+)
 internal class DelegatingJellyfinRepository
     @Inject
     constructor(
@@ -118,6 +125,11 @@ internal class DelegatingJellyfinRepository
 
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             delegate({ getPlaylistItems(playlistId) }, { getPlaylistItems(playlistId) })
+
+        // ---- M13 Phase 4 — Continue Listening -------------------------------------------------
+
+        override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
+            delegate({ getResumeAudioItems(limit) }, { getResumeAudioItems(limit) })
 
         /**
          * The paged grid is a stream, so the choice is re-made whenever the connection changes

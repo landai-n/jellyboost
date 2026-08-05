@@ -36,6 +36,7 @@ import dev.jellyboost.feature.music.AlbumDetailScreen
 import dev.jellyboost.feature.music.ArtistDetailScreen
 import dev.jellyboost.feature.music.MusicLibraryScreen
 import dev.jellyboost.feature.music.PlaylistDetailScreen
+import dev.jellyboost.feature.music.nowplaying.NowPlayingScreen
 import dev.jellyboost.feature.search.SearchScreen
 import dev.jellyboost.feature.settings.SettingsScreen
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupsScreen
@@ -127,6 +128,10 @@ internal fun JellyfinNavHost(
                         // A tab switch, not a push: the Downloads chip lands on the Downloads tab
                         // exactly as its button in the nav bar does, back stack and all.
                         onOpenDownloads = { navController.navigateToTab(Routes.Downloads) },
+                        // Continue Listening (M13 Phase 4): starts the music queue at the saved
+                        // position, rather than navigating anywhere — the mini-player is where the
+                        // result shows up.
+                        onPlayTrack = music::playResumed,
                     ),
             )
         }
@@ -227,6 +232,14 @@ internal fun JellyfinNavHost(
                 onTrackClick = music::play,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
+            )
+        }
+
+        composable<Routes.NowPlaying> {
+            NowPlayingScreen(
+                viewModel = hiltViewModel(),
+                onArtistClick = { item -> navController.navigateToItem(item) },
+                onBack = { navController.popBackStack() },
             )
         }
 

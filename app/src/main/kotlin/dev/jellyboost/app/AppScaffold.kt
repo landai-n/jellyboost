@@ -54,6 +54,7 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.common.music.MusicMessage
+import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
@@ -145,6 +146,7 @@ internal fun AppScaffold(
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination
     val isTopLevel = currentDestination.isTopLevel()
     val onPlayer = currentDestination?.hasRoute<Routes.Player>() == true
+    val onNowPlaying = currentDestination?.hasRoute<Routes.NowPlaying>() == true
 
     // What the chrome shows while it animates away: the destination it was last drawn for. Writing
     // it during composition is idempotent — the same value for the same destination — and it is only
@@ -157,6 +159,19 @@ internal fun AppScaffold(
 
     val syncPlayBadgeViewModel: SyncPlayBadgeViewModel = hiltViewModel()
     val activeSyncPlayGroup by syncPlayBadgeViewModel.activeGroup.collectAsStateWithLifecycle()
+
+    // Resolved at the scaffold's own level, independent of `MusicMessageEffect`'s and
+    // `JellyfinNavHost`'s own `hiltViewModel()` calls below — all three return the same
+    // Activity-scoped instance (no NavBackStackEntry owns this destination-independent chrome), the
+    // same arrangement those two already rely on.
+    val musicViewModel: MusicPlaybackViewModel = hiltViewModel()
+    val musicState by musicViewModel.state.collectAsStateWithLifecycle()
+    // Restricted to top-level destinations, matching the M13 Phase 4 DoD's own wording ("docked
+    // above the bottom nav on every *tab*"): `LocalAppChromePadding` — which the bar's height folds
+    // into — is likewise only consumed by top-level screens (see that composition local's KDoc), so
+    // showing the bar on a pushed screen (`ItemDetail`, `Settings`, …) would float it over content
+    // with no reserved clearance, unlike every other piece of this chrome.
+    val showMiniPlayer = isTopLevel && showsMiniPlayer(musicState, onPlayer, onNowPlaying)
 
     val snackbarHostState = remember { SnackbarHostState() }
     val showConnectionStatus =
@@ -194,7 +209,8 @@ internal fun AppScaffold(
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val bottomNav = useBottomNav(maxWidth)
-        val chromePadding = chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav)
+        val chromePadding =
+            chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav, showMiniPlayer = showMiniPlayer)
 
         CompositionLocalProvider(
             LocalHazeState provides hazeState,
@@ -262,6 +278,27 @@ internal fun AppScaffold(
                     currentDestination = barDestination,
                     onSelectTab = navController::navigateToTab,
                 )
+            }
+
+            AnimatedVisibility(
+                visible = showMiniPlayer,
+                enter = slideInVertically { it } + fadeIn(tween(NAV_TRANSITION_MILLIS)),
+                exit = slideOutVertically { it } + fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(horizontal = Dimens.ScreenPadding)
+                        .padding(bottom = miniPlayerBottomOffset(isTopLevel = isTopLevel, bottomNav = bottomNav)),
+            ) {
+                (musicState as? MusicPlaybackState.Active)?.let { active ->
+                    MiniPlayer(
+                        state = active,
+                        onTogglePlayPause = musicViewModel::togglePlayPause,
+                        onNext = musicViewModel::next,
+                        onClick = { navController.navigate(Routes.NowPlaying) },
+                    )
+                }
             }
 
             JellyboostSnackbarHost(
@@ -383,6 +420,11 @@ private fun TopChromeScrim(
  * How much of a top-level screen the chrome covers, as the animated value published through
  * [LocalAppChromePadding] — see that composition local for the contract itself.
  *
+ * [MiniPlayer] (M13 Phase 4) folds into [bottomTarget][chromePadding] exactly like the floating
+ * bottom pill does: [showMiniPlayer] adds [MiniPlayerHeight] plus [MiniPlayerGap] of clearance
+ * whenever the bar is on screen, so a list's last row scrolls clear of it the same way it already
+ * scrolls clear of [GlassBottomNav] — no top-level screen has anything else to do.
+ *
  * Both ends animate over [NAV_TRANSITION_MILLIS] rather than switching, for the reason spelled out
  * in [AppScaffold]'s KDoc: the value is read by a list's `contentPadding`, and a screen fading out
  * while its padding snapped to zero jumped visibly under the fade.
@@ -409,6 +451,7 @@ private fun TopChromeScrim(
 private fun chromePadding(
     isTopLevel: Boolean,
     bottomNav: Boolean,
+    showMiniPlayer: Boolean,
 ): PaddingValues {
     val navigationBarInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val statusBarInset = topChromeInset
@@ -420,7 +463,8 @@ private fun chromePadding(
             else -> statusBarInset + TopNavHeight + Dimens.SpaceSmall
         }
     val bottomTarget =
-        if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp
+        (if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp) +
+            (if (showMiniPlayer) MiniPlayerHeight + MiniPlayerGap else 0.dp)
 
     val top =
         animateDpAsState(
@@ -437,6 +481,20 @@ private fun chromePadding(
 
     return remember { AnimatedChromePadding(top = top, bottom = bottom) }
 }
+
+/**
+ * How far above whatever is already at the bottom edge [MiniPlayer] itself docks (M13 Phase 4).
+ *
+ * The same condition [chromePadding]'s `bottomTarget` gates its own contribution on: stacked above
+ * the floating pill when one is showing ([BottomNavMargin] + [BottomNavHeight] plus [MiniPlayerGap]
+ * of daylight between the two floating surfaces), flush against the window's bottom edge — just
+ * [MiniPlayerGap] above the navigation-bar inset the bar's own `navigationBarsPadding()` already
+ * consumes — everywhere else, which is the wide layout's "at the bottom edge" (spec wording).
+ */
+internal fun miniPlayerBottomOffset(
+    isTopLevel: Boolean,
+    bottomNav: Boolean,
+): Dp = if (isTopLevel && bottomNav) BottomNavMargin + BottomNavHeight + MiniPlayerGap else MiniPlayerGap
 
 /**
  * The [PaddingValues] published through [LocalAppChromePadding]: a stable identity whose top and

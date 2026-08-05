@@ -156,6 +156,9 @@ private fun SearchField(
                 .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SpaceSmall),
         singleLine = true,
         placeholder = { Text(text = stringResource(R.string.search_field_label)) },
+        // The placeholder is the only thing naming this field on screen, and a placeholder vanishes
+        // the moment there is a query — so the node carries the same words itself (audit CR-2).
+        labelText = stringResource(R.string.search_field_label),
         leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {

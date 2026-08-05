@@ -2225,3 +2225,44 @@ Five findings from the M9 device walk (docs/POLISH.md), all in the downloads dom
 
 <!-- END M9 (downloads polish) -->
 
+
+<!-- BEGIN a11y wave 2 (design-system semantics) -->
+
+## Accessibility remediation — wave 2: design-system semantics (2026-08-05)
+
+Wave 2 of the audit in `docs/audits/accessibility-audit-2026-08-05.md`, after wave 1's
+contrast tokens and height floors. Three components carry most of it.
+
+**Done**
+- **Text fields** (`JellyfinTextField`): a field node now has a *name* (`labelText`, sentence
+  case — the visible caption is uppercased and is muted for the screen reader), an `error(…)`
+  with the failure in it, `password()` and autofill content types. Both auth screens pass
+  `isError` + the message they already display; search names its field.
+- **Cards** (`PosterCard`, `ThumbCard`, `LibraryCard`, `MediaCardArtwork`, `DownloadBadge`,
+  `JellyfinAsyncImage`): one merged node per card with an authored sentence — type, untruncated
+  title, subtitle, progress, rating, download and watched state — plus real `selected`
+  semantics in selection mode and a labelled long press to enter it. Everything inside a card
+  is silenced so the sentence is the only thing spoken. `ThumbCard(onClick = null)` is the new
+  non-clickable form, which is what makes an episode row one node instead of two.
+- **Chips** (`PillChip` + new `InfoPillChip`): `selectable` with a 48dp frame; genres are inert
+  rather than "disabled" (DECISIONS entry).
+- **Silent states**: `LoadingState` says "Loading" politely, `ErrorBanner` announces
+  assertively, a busy pill says "Busy" instead of only "disabled".
+- **Structure**: section titles are headings, "See all" says *of what*, the selection bar's
+  count is a polite live region, the snackbar's action is a 48dp target.
+- Pure builders (`MediaCardFacts.describe`, `progressPercent`, `cardTitleMaxLines`,
+  `itemTypeLabelRes`) are covered by `core/ui`'s `MediaCardFactsTest` (13 pins).
+
+**Next (later waves, not this one)**
+- Screen-level announcements: auth failures, search result counts, downloads progress
+  (wave 4) — this wave gave the components live regions, not the screens.
+- The player is wave 3 and was untouched here; its call sites still pass no `labelText` and
+  its chips keep the old `PillChip` shape (source-compatible, so nothing broke).
+- No androidTest/semantics tests exist yet — that is wave 5, and until then none of the above
+  is held in place by anything but the JVM pins on the pure builders.
+
+**Device check worth doing**: TalkBack over home → a library grid in selection mode → an
+episode list: one stop per card, the Play button inside an episode row still reachable, and
+the selection count announced as it changes.
+
+<!-- END a11y wave 2 (design-system semantics) -->

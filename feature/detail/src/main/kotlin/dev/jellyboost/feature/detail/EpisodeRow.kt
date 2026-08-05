@@ -32,11 +32,17 @@ import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.MediaCardFacts
 import dev.jellyboost.core.ui.component.ThumbCard
+import dev.jellyboost.core.ui.component.describe
+import dev.jellyboost.core.ui.component.downloadStateLabel
+import dev.jellyboost.core.ui.component.mediaCardSemantics
+import dev.jellyboost.core.ui.component.progressPercent
 import dev.jellyboost.core.ui.component.selectableCardClick
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * One episode in a season's list, drawn as the refresh's surface card (spec section 4c): the 16:9
@@ -106,15 +112,15 @@ private fun EpisodeStackedCard(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = DetailEdgePadding)
+                .then(mediaCardSemantics(description = episodeDescription(episode), selected = selected))
                 .episodeCard(selected = selected, onClick = onClick, onLongClick = onLongClick),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
         ThumbCard(
             item = episode,
-            onClick = onClick,
+            onClick = null,
             width = STACKED_ART_WIDTH,
             showTitle = false,
-            onLongClick = onLongClick,
             selected = selected,
         )
 
@@ -149,16 +155,16 @@ private fun EpisodeStripCard(
         modifier =
             modifier
                 .width(STRIP_CARD_WIDTH)
+                .then(mediaCardSemantics(description = episodeDescription(episode), selected = selected))
                 .episodeCard(selected = selected, onClick = onClick, onLongClick = onLongClick),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
             ThumbCard(
                 item = episode,
-                onClick = onClick,
+                onClick = null,
                 width = STRIP_ART_WIDTH,
                 showTitle = false,
-                onLongClick = onLongClick,
                 selected = selected,
             )
             Column(
@@ -216,6 +222,38 @@ private fun Modifier.episodeCard(
                 Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
             },
         ).padding(EpisodeCardPadding)
+}
+
+/**
+ * The one sentence an episode row announces: `Episode 10, The Bicameral Mind, 54 min, 50% watched`.
+ *
+ * It mirrors what the row *draws* — the number line, the title, and the state its artwork's
+ * overlays carry — and deliberately stops there. The synopsis under the title is two lines of prose
+ * that would be read out before the user could reach the next episode, and it is available on the
+ * episode's own page; a list is for choosing, not for reading (accessibility audit 2026-08-05,
+ * A11Y-05).
+ *
+ * The number line's own text is uppercased for the design; this takes the un-uppercased strings,
+ * because "EPISODE 10" spelled out is not how a person says it (audit F16).
+ */
+@Composable
+private fun episodeDescription(episode: JellyfinItem): String {
+    val progress = episode.playbackProgress
+    return MediaCardFacts(
+        title = episode.name,
+        typeLabel =
+            episode.indexNumber?.let { stringResource(R.string.detail_episode_number, it) }
+                ?: stringResource(CoreUiR.string.media_card_type_episode),
+        subtitle = episode.runtimeMinutes?.let { stringResource(R.string.detail_runtime_minutes, it) },
+        progressLabel =
+            progress?.let { stringResource(CoreUiR.string.media_card_progress, progressPercent(it)) },
+        stateLabels =
+            listOfNotNull(
+                downloadStateLabel(episode.downloadState),
+                stringResource(CoreUiR.string.media_card_watched)
+                    .takeIf { episode.userData.played && progress == null },
+            ),
+    ).describe()
 }
 
 /** `EPISODE 1 · 62 MIN` — the number line the refresh puts above the episode's title. */
@@ -276,6 +314,8 @@ private fun EpisodeControl(
     } else {
         // `onCheckedChange = null` on purpose: the whole card is already the click target, and a
         // second one inside it would let a tap land on the box but not on the card it belongs to.
+        // It contributes no semantics either — which used to mean the selection state was drawn
+        // and nowhere spoken; the row itself now carries `selected` (audit A11Y-20).
         Checkbox(checked = selected, onCheckedChange = null, modifier = modifier)
     }
 }

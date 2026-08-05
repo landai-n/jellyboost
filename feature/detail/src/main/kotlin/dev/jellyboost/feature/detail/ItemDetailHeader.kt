@@ -69,9 +69,9 @@ import dev.jellyboost.core.ui.component.BackdropHeader
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.GlassIconTint
+import dev.jellyboost.core.ui.component.InfoPillChip
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.MPillBadge
-import dev.jellyboost.core.ui.component.PillChip
 import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
@@ -476,9 +476,11 @@ private fun DetailBody(
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
             ) {
                 item.genres.forEach { genre ->
-                    // Not a filter yet — genre filtering lives on the library grid (M3). `enabled`
-                    // is what keeps the pill inert while it still looks like the filter it will be.
-                    PillChip(text = genre, selected = false, onClick = {}, enabled = false)
+                    // Not a filter yet — genre filtering lives on the library grid (M3). The inert
+                    // chip is what keeps it looking like the filter it will be without claiming to
+                    // be a disabled one: a genre here is a label, and a screen reader is told so
+                    // (accessibility audit 2026-08-05, A11Y-14).
+                    InfoPillChip(text = genre)
                 }
             }
         }

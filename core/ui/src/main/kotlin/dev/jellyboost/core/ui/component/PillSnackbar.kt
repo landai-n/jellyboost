@@ -3,7 +3,9 @@ package dev.jellyboost.core.ui.component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -94,7 +96,7 @@ fun PillSnackbar(
                 .clip(CircleShape)
                 .background(color = SnackbarContainer, shape = CircleShape)
                 .border(GlassDefaults.HairlineWidth, GlassDefaults.Hairline, CircleShape)
-                .padding(horizontal = SnackbarHorizontalPadding, vertical = SnackbarVerticalPadding),
+                .padding(horizontal = SnackbarHorizontalPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -104,21 +106,33 @@ fun PillSnackbar(
             textAlign = TextAlign.Center,
             maxLines = SNACKBAR_MAX_LINES,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(weight = 1f, fill = false),
+            // The pill's vertical padding lives on the message rather than on the row, so that the
+            // action beside it can claim a full 48dp of height without adding that padding on top
+            // of it: a message-only snackbar draws exactly as before, and one with an action is
+            // 48dp tall instead of 46 (accessibility audit 2026-08-05, M7).
+            modifier =
+                Modifier
+                    .weight(weight = 1f, fill = false)
+                    .padding(vertical = SnackbarVerticalPadding),
         )
         if (actionLabel != null) {
-            Text(
-                text = actionLabel,
-                style = SnackbarActionLabel,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
+            Box(
                 modifier =
                     Modifier
                         .padding(start = ActionStartGap)
+                        .heightIn(min = Dimens.MinTouchTarget)
                         .clip(CircleShape)
-                        .clickable(role = Role.Button) { snackbarData.performAction() }
-                        .padding(ActionPadding),
-            )
+                        .clickable(role = Role.Button) { snackbarData.performAction() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = actionLabel,
+                    style = SnackbarActionLabel,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = ActionPadding),
+                )
+            }
         }
     }
 }

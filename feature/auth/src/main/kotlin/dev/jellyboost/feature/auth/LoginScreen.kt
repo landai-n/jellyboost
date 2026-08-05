@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -313,13 +314,22 @@ private fun LoginFormFields(
         color = MaterialTheme.colorScheme.onSurface,
     )
 
+    // Both credential fields carry the failure, because a rejected sign-in does not say which of
+    // the two was wrong — and a field marked invalid with nothing to say about it is worse than
+    // one that repeats the screen's sentence (accessibility audit 2026-08-05, CR-2/F2).
+    val errorText = state.error?.let { authErrorText(it) }
+
     JellyfinTextField(
         value = state.username,
         onValueChange = onUsernameChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = !state.isSigningIn,
+        isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
+        labelText = stringResource(R.string.login_username_label),
+        errorMessage = errorText,
+        autofillContentType = ContentType.Username,
         // Autocorrect off for the same reason as the server address field: an IME "fixing" an
         // account name produces a sign-in failure the user cannot see the cause of.
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
@@ -331,7 +341,12 @@ private fun LoginFormFields(
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         enabled = !state.isSigningIn,
+        isError = state.error != null,
         label = { Text(text = stringResource(R.string.login_password_label).uppercase()) },
+        labelText = stringResource(R.string.login_password_label),
+        errorMessage = errorText,
+        password = true,
+        autofillContentType = ContentType.Password,
         visualTransformation =
             if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions =

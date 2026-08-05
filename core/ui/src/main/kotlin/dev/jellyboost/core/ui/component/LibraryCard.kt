@@ -21,6 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.LibraryView
+import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.glassSurface
@@ -90,16 +96,29 @@ fun LibraryCard(
     width: Dp = Dimens.LibraryTileWidth,
     subtitle: String? = null,
 ) {
+    // One node, one sentence: "Library, Shows, 412 items". The tile was a glyph, a name and a count
+    // as separate stops, with the glyph — the only thing saying what *kind* of library it is —
+    // unlabelled (accessibility audit 2026-08-05, CR-6).
+    val description =
+        MediaCardFacts(
+            title = library.name,
+            typeLabel = stringResource(R.string.media_card_type_library),
+            subtitle = subtitle,
+        ).describe()
     Row(
         modifier =
             modifier
                 .cardWidth(width)
+                .semantics(mergeDescendants = true) {
+                    contentDescription = description
+                    role = Role.Button
+                }
                 // A minimum rather than a fixed height: the title-over-count column outgrows 64dp
                 // somewhere around font scale 1.7, and a hard `height` clipped the subtitle — the
                 // item count — to nothing. Rows and adaptive grid cells both absorb the growth.
                 .heightIn(min = Dimens.LibraryTileHeight)
                 .glassSurface(RoundedCornerShape(Dimens.CardCornerRadius))
-                .clickable(onClick = onClick)
+                .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),

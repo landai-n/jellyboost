@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -75,6 +76,7 @@ import dev.jellyboost.core.common.model.SortBy
 import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.common.selection.ItemSelection
 import dev.jellyboost.core.common.selection.SelectionIntent
+import dev.jellyboost.core.ui.component.ActionPillChip
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
@@ -346,6 +348,10 @@ private fun LibraryFilterRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             item(key = CHIP_ALL_KEY) {
+                // Stays a `PillChip` while its neighbour became an `ActionPillChip`: "All" *has* a
+                // state — it is drawn solid while no filter is applied — and it behaves exactly
+                // like the radio button in a group that its facets make it. "Filters" below has no
+                // state to have; it opens a sheet.
                 PillChip(
                     text = stringResource(R.string.library_filter_all),
                     selected = state.filters.isEmpty,
@@ -362,9 +368,8 @@ private fun LibraryFilterRow(
             }
 
             item(key = CHIP_SHEET_KEY) {
-                PillChip(
+                ActionPillChip(
                     text = stringResource(R.string.library_filter_more),
-                    selected = false,
                     onClick = onOpenSheet,
                 )
             }
@@ -510,6 +515,7 @@ internal fun LibraryGridContent(
                 message = refreshState.error.toPagingMessage(),
                 modifier = modifier,
                 onRetry = items::retry,
+                announce = LiveRegionMode.Assertive,
             )
 
         items.itemCount == 0 && refreshState is LoadState.NotLoading ->
@@ -524,6 +530,9 @@ internal fun LibraryGridContent(
                 actionLabel =
                     stringResource(R.string.library_empty_clear_filters).takeIf { hasActiveFilters },
                 onAction = onClearFilters.takeIf { hasActiveFilters },
+                // The filtered case is the one that earns it: the user changed a chip and the grid
+                // emptied, which is a result and has to be reported like one.
+                announce = LiveRegionMode.Polite,
             )
 
         else ->

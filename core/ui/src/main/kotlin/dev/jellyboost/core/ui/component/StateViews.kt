@@ -115,6 +115,9 @@ fun LoadingState(modifier: Modifier = Modifier) {
  *   fills a screen needs no container, but one that sits *inside* other content (an empty tab under
  *   a header, a failed section of a populated screen) does, or it reads as content that is missing
  *   rather than as a place where content will appear.
+ * @param announce see [EmptyState]. `Assertive` is the right default *choice* for a failure that
+ *   has just replaced a screen's content — but it stays opt-in, because a screen that draws its own
+ *   announcement (search does) would otherwise say it twice.
  */
 @Composable
 fun ErrorState(
@@ -124,6 +127,7 @@ fun ErrorState(
     onRetry: (() -> Unit)? = null,
     actionLabel: String? = null,
     dashedPanel: Boolean = false,
+    announce: LiveRegionMode? = null,
 ) {
     MessageState(
         icon = icon,
@@ -132,10 +136,20 @@ fun ErrorState(
         actionLabel = if (onRetry != null) actionLabel ?: stringResource(R.string.state_retry) else null,
         onAction = onRetry,
         dashedPanel = dashedPanel,
+        announce = announce,
     )
 }
 
-/** Full-screen "nothing here yet" state. */
+/**
+ * Full-screen "nothing here yet" state.
+ *
+ * @param announce makes the message a live region, so it is read out when it appears rather than
+ *   only when someone swipes onto it. Opt-in and `null` by default: these views also appear on a
+ *   first composition, where the screen reader is about to read the message anyway and an
+ *   announcement would be a stutter. Pass it where the view *replaces* content the user was
+ *   already in — a failed refresh, a filter that matched nothing (accessibility audit 2026-08-05,
+ *   CR-3). `Polite` waits its turn; `Assertive` interrupts and belongs to failures.
+ */
 @Composable
 fun EmptyState(
     message: String,
@@ -144,6 +158,7 @@ fun EmptyState(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
     dashedPanel: Boolean = false,
+    announce: LiveRegionMode? = null,
 ) {
     MessageState(
         icon = icon,
@@ -152,6 +167,7 @@ fun EmptyState(
         actionLabel = actionLabel,
         onAction = onAction,
         dashedPanel = dashedPanel,
+        announce = announce,
     )
 }
 
@@ -163,6 +179,7 @@ private fun MessageState(
     actionLabel: String?,
     onAction: (() -> Unit)?,
     dashedPanel: Boolean,
+    announce: LiveRegionMode?,
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(Dimens.SpaceExtraLarge),
@@ -188,7 +205,20 @@ private fun MessageState(
                 style = StateMessage,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = Dimens.SpaceMedium),
+                // The live region goes on the message and not on the panel: the panel would drag
+                // the action button's label into the announcement, and "Could not reach the
+                // server. Retry" read as one sentence is a worse thing to hear than the two nodes
+                // it actually is.
+                modifier =
+                    Modifier
+                        .padding(top = Dimens.SpaceMedium)
+                        .then(
+                            if (announce != null) {
+                                Modifier.semantics { liveRegion = announce }
+                            } else {
+                                Modifier
+                            },
+                        ),
             )
             if (actionLabel != null && onAction != null) {
                 PrimaryPillButton(

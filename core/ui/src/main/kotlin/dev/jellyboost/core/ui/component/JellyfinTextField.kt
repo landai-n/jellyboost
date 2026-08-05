@@ -110,6 +110,12 @@ private val FieldSupportingStyle =
  *   own error blocks own the visuals — but while [isError] it is attached to the field node as
  *   `error(…)` semantics, so TalkBack says *what* is wrong rather than only that something is.
  *   Pass the same sentence the screen shows.
+ * @param readOnly the field keeps its focus, its name and its value and refuses to be typed into.
+ *   This is what an in-flight request wants, not `enabled = false`: disabling destroys the node the
+ *   user is standing on at the exact moment they pressed the button, and a screen reader dropped
+ *   mid-form has nowhere to land (accessibility audit 2026-08-05, F17). The auth screens guard the
+ *   edit in their state holders as well — belt and braces, and the guard is the part a JVM test can
+ *   hold still (DECISIONS.md, "an in-flight auth field stays enabled").
  * @param password marks the field node as holding a secret, so a screen reader speaks it the way
  *   the platform speaks passwords instead of reading the value out loud (audit F5). Independent of
  *   [visualTransformation], which is what hides the characters on screen.
@@ -123,6 +129,7 @@ fun JellyfinTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     isError: Boolean = false,
     singleLine: Boolean = true,
     label: (@Composable () -> Unit)? = null,
@@ -191,6 +198,7 @@ fun JellyfinTextField(
                         autofillContentType = autofillContentType,
                     ).padding(FieldPadding),
             enabled = enabled,
+            readOnly = readOnly,
             textStyle = FieldTextStyle.copy(color = contentColor),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,

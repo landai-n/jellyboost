@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,9 +80,19 @@ internal fun LibrariesContent(
         state.isLoading -> LoadingState(modifier = modifier)
 
         state.error != null ->
-            ErrorState(message = state.error.toMessage(), modifier = modifier, onRetry = onRetry)
+            ErrorState(
+                message = state.error.toMessage(),
+                modifier = modifier,
+                onRetry = onRetry,
+                announce = LiveRegionMode.Assertive,
+            )
 
-        state.isEmpty -> EmptyState(message = stringResource(R.string.libraries_empty), modifier = modifier)
+        state.isEmpty ->
+            EmptyState(
+                message = stringResource(R.string.libraries_empty),
+                modifier = modifier,
+                announce = LiveRegionMode.Polite,
+            )
 
         else -> LibrariesGrid(libraries = state.libraries, onLibraryClick = onLibraryClick, modifier = modifier)
     }

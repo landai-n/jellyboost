@@ -255,6 +255,34 @@ changes when the probe rotates to another address.
 - `DOWNLOAD` — downloaded, or a series/season parent of a downloaded episode. **Never evicted, and
   never downgraded.**
 
+### Eviction — `:data/cache/BrowseCacheMaintenance`
+
+The other half of that contract, and until audit HYG-1 it was missing: `ItemDao.evictBrowseCacheOlderThan`
+existed and had **zero callers**, so the `items` table grew monotonically for the life of the install
+and an item deleted on the server kept resolving offline forever.
+
+`BrowseCacheMaintenance.start()` runs one sweep per process from `JellyboostApplication.onCreate`,
+beside `UserDataSyncTrigger` and `DownloadedMetadataRefresher` and for the same reason (a sweep tied
+to a screen would be tied to the very activity that fills the table). The TTL is **30 days**
+(`BROWSE_CACHE_TTL`), a project choice — docs/PLAN.md fixes the policy (`cachedAt` + "DOWNLOAD rows
+never evicted") but no number. A month covers a holiday's worth of offline use while still bounding a
+table whose every row carries a multi-kilobyte `BaseItemDto` blob; past it the row is near-certainly
+stale, and the cost of being wrong is one network read.
+
+Downloads are excluded by **source**, not by age — the query says so and the test pins the argument.
+Two other paths delete `items` rows and neither touches a download either: `deleteDownloadsNotIn`
+(the M7 delete cascade, which prunes `DOWNLOAD` rows no download points at any more) and
+`deleteAllBrowseCache` (sign-out, below).
+
+### Sign-out wipes the browse cache
+
+`items` is keyed by item, not by user — an item id belongs to the server. On a shared tablet that
+meant one account's cached browsing kept serving the next account's offline read path and search
+results, including items that account cannot see (audit HYG-2). `SessionRepository.signOut` now calls
+`ItemDao.deleteAllBrowseCache` — `BROWSE_CACHE` rows only — after the server goodbye and **before**
+`SessionState.LoggedOut` is published, so nothing observing the transition reads a half-cleared
+database. Downloads survive: removing them is a separate, explicit choice on the sign-out screen.
+
 `LibraryViewEntity` (`library_views`) caches the user's libraries with the server's ordering
 (`sortIndex`), so *My Media* looks the same either way.
 
@@ -263,8 +291,8 @@ Migration: `@AutoMigration(2, 3)`, purely additive, schema exported to
 
 ### Write-through — `:data/cache/BrowseCacheWriter`
 
-One rule, and it is the reason the class exists rather than a `@Transaction` DAO method (which could
-only be tested on a device):
+One rule, and it is the reason the merge *decision* lives here in Kotlin rather than inside a
+`@Transaction` DAO method (which could only be tested on a device):
 
 > A browse write must never downgrade a download — neither its `source` nor its `cachedAt`.
 
@@ -284,6 +312,17 @@ exactly what happened, and what left downloaded films with a blank offline detai
 `full: Boolean` flag on `cacheItems`/`writeItems` is a **caller** statement, never sniffed out of the
 DTO's shape (an item that genuinely has no overview would fool any such sniff in the direction that
 loses data). `OnlineJellyfinRepository.getItem` is the only call site that passes `true`.
+
+**The decision is Kotlin; the read and the write are one transaction.** Keeping the merge here cost
+atomicity until audit HYG-3 found it: `getCacheKeys` → thirty lines of merge → `upsert` were three
+separate statements, and `DownloadEnqueuer` (which upserts `DOWNLOAD` rows straight to the same DAO)
+could commit between the first and the last — the stale snapshot's else-branch then wrote
+`BROWSE_CACHE` back over a real download with the lean list blob. Reachable in practice: open a
+season page and tap Download while the list write is still in flight. `writeItemRows` now wraps the
+read *and* the write in `TransactionRunner.inTransaction`; the decision itself stayed a pure
+function, `mergeRows`, so both properties hold at once. `TransactionRunner` (`:core:database`) is a
+one-method seam over Room's `withTransaction` — `:data` gets atomicity without being handed the
+database, and tests substitute a runner that simply runs the block.
 
 ### Downloaded metadata stays current — `:data:downloads/DownloadedMetadataRefresher`
 
@@ -386,7 +425,8 @@ Unit tests (JVM, no device):
 | `ServerReachabilityProbeTest` | candidate rotation, per-address 3 s budget, signed-out short-circuit |
 | `DelegatingJellyfinRepositoryTest` | the full online/offline/forced/fallback/401 matrix, the 10 s ceiling, paged-grid swap |
 | `OfflineJellyfinRepositoryTest` | every row shape, `getItem` cache hits, missing-item behaviour, and the *Latest* grouping — episodes of a show collapsing to one card, a card per show newest-download-first, the limit counting shows rather than episodes, films unaffected, and the uncached-series fallback |
-| `BrowseCacheWriterTest` | the never-downgrade-a-download rule, library pruning |
+| `BrowseCacheWriterTest` | the never-downgrade-a-download rule, library pruning, and that the source snapshot, blob read and upsert all happen inside one transaction (audit HYG-3) |
+| `BrowseCacheMaintenanceTest` | the eviction pass: browse-cache rows only, the 30-day cutoff, one sweep per process, a failed sweep swallowed |
 | `ItemEntityMapperTest` | blob round trip against the online mapper, unreadable-blob handling, the synthesised series card (id, name, the show's poster) and the rows that have none |
 | `DataStoreAppPreferencesTest` | force-offline round trip through a real DataStore file |
 | `ConnectivityEdgesTest` | the edge semantics: nothing for the initial value (online and offline), `true` on coming back online, `false` on losing the connection, `false` when the user pins offline mode, nothing for a flap between two offline reasons, and `false,true,false,true` for a connection that flaps twice |

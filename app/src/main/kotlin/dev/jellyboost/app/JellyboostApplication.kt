@@ -11,6 +11,7 @@ import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
 import dagger.hilt.android.HiltAndroidApp
+import dev.jellyboost.data.cache.BrowseCacheMaintenance
 import dev.jellyboost.data.downloads.DownloadedMetadataRefresher
 import dev.jellyboost.data.userdata.UserDataSyncTrigger
 import dev.jellyboost.player.cast.CastSessionCoordinator
@@ -53,6 +54,18 @@ class JellyboostApplication :
      */
     @Inject
     lateinit var downloadedMetadataRefresher: DownloadedMetadataRefresher
+
+    /**
+     * Expires the browse cache, so the `items` table stops growing for the life of the install
+     * (audit HYG-1).
+     *
+     * The counterpart of the refresher above — that one keeps downloaded metadata current, this one
+     * throws the *browsed* metadata away once it is old enough to be worthless. Here rather than on
+     * a screen for the plainest of the reasons: a sweep that only ran while some particular screen
+     * was showing would be a sweep tied to the very activity that fills the table.
+     */
+    @Inject
+    lateinit var browseCacheMaintenance: BrowseCacheMaintenance
 
     /**
      * Keeps a SyncPlay group alive while the app is off screen, and takes one back on return
@@ -121,6 +134,7 @@ class JellyboostApplication :
         }
         userDataSyncTrigger.start()
         downloadedMetadataRefresher.start()
+        browseCacheMaintenance.start()
         syncPlayPresenceCoordinator.start()
         castSessionCoordinator.start()
     }

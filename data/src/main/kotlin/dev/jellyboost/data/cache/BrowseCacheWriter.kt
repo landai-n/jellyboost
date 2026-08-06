@@ -1,9 +1,11 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
+import dev.jellyboost.core.database.entities.ItemCacheKey
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.network.SessionRepository
@@ -85,8 +87,20 @@ import javax.inject.Singleton
  * home screen must not wait on a disk write to draw, and a failed cache write is a logged warning,
  * never a failed read. Callers that need determinism (the unit tests) inject a `TestScope`.
  *
- * The merge rule lives here rather than in a `@Transaction` DAO method deliberately — this way it
- * is JVM-unit-testable instead of only exercisable on a device.
+ * ### The merge decides in Kotlin, but reads and writes atomically
+ * The merge *rule* lives here rather than inside a `@Transaction` DAO method deliberately — this way
+ * it is JVM-unit-testable instead of only exercisable on a device. What that cost, until audit
+ * HYG-3 found it, was atomicity: [writeItemRows] read the existing rows' sources, spent thirty lines
+ * deciding, and only then upserted, so `DownloadEnqueuer` — which upserts `DOWNLOAD` rows straight
+ * to the DAO — could turn one of those rows into a download in between. The stale snapshot's
+ * else-branch then wrote `BROWSE_CACHE` back over it with the lean list blob: rule one broken by the
+ * very class that exists to enforce it, and (now that eviction is wired) a downloaded film made
+ * evictable while its files sit on disk. The window is real and reachable — open a season page and
+ * tap Download while the list write is still in flight.
+ *
+ * Both properties are kept: the decision is still the pure, testable [mergeRows], and the read that
+ * feeds it plus the write that follows it run inside one [TransactionRunner.inTransaction] block, so
+ * nothing can change underneath them.
  */
 @Singleton
 class BrowseCacheWriter
@@ -98,6 +112,7 @@ class BrowseCacheWriter
         private val sessionRepository: SessionRepository,
         private val mapper: ItemEntityMapper,
         private val clock: Clock,
+        private val transactionRunner: TransactionRunner,
         @ApplicationScope private val scope: CoroutineScope,
     ) {
         /**
@@ -139,57 +154,76 @@ class BrowseCacheWriter
             refreshUserData(dtos, now)
         }
 
+        /**
+         * Reads what is already stored, merges the response against it, and writes the result —
+         * **as one transaction**, so no concurrent `DOWNLOAD` upsert can land between the read the
+         * decision is made from and the write that acts on it (audit HYG-3).
+         */
         private suspend fun writeItemRows(
             dtos: List<BaseItemDto>,
             now: Instant,
             full: Boolean,
         ) {
             try {
-                val existing = itemDao.getCacheKeys(dtos.map { it.id }).associateBy { it.id }
+                transactionRunner.inTransaction {
+                    val existing = itemDao.getCacheKeys(dtos.map { it.id }).associateBy { it.id }
 
-                // The blob is only fetched for rows that are actually downloads *and* only when the
-                // incoming DTO is lean enough to need protecting — everything else is happy to be
-                // replaced wholesale, and reading a multi-kilobyte blob for a page of ordinary
-                // browse-cache rows would be pure waste (the reason `getCacheKeys` excludes it in
-                // the first place). A `full` write skips the read entirely: it is going to overwrite
-                // every blob it fetched.
-                val downloadIds =
-                    if (full) {
-                        emptyList()
-                    } else {
-                        existing.values.filter { it.source == ItemSource.DOWNLOAD }.map { it.id }
-                    }
-                val richBlobs =
-                    if (downloadIds.isEmpty()) {
-                        emptyMap()
-                    } else {
-                        itemDao.getItems(downloadIds).associate { it.id to it.dto }
-                    }
-
-                val rows =
-                    dtos.map { dto ->
-                        val row = mapper.toEntity(dto, ItemSource.BROWSE_CACHE, now)
-                        val previous = existing[dto.id]
-                        if (previous?.source == ItemSource.DOWNLOAD) {
-                            row.copy(
-                                source = ItemSource.DOWNLOAD,
-                                cachedAt = previous.cachedAt,
-                                // Empty on a full write, so `row.dto` — the complete response —
-                                // wins and a previously gutted row is repaired.
-                                dto = richBlobs[dto.id] ?: row.dto,
-                            )
+                    // The blob is only fetched for rows that are actually downloads *and* only when
+                    // the incoming DTO is lean enough to need protecting — everything else is happy
+                    // to be replaced wholesale, and reading a multi-kilobyte blob for a page of
+                    // ordinary browse-cache rows would be pure waste (the reason `getCacheKeys`
+                    // excludes it in the first place). A `full` write skips the read entirely: it is
+                    // going to overwrite every blob it fetched.
+                    val downloadIds =
+                        if (full) {
+                            emptyList()
                         } else {
-                            row
+                            existing.values.filter { it.source == ItemSource.DOWNLOAD }.map { it.id }
                         }
-                    }
+                    val richBlobs =
+                        if (downloadIds.isEmpty()) {
+                            emptyMap()
+                        } else {
+                            itemDao.getItems(downloadIds).associate { it.id to it.dto }
+                        }
 
-                itemDao.upsert(rows)
+                    itemDao.upsert(mergeRows(dtos, existing, richBlobs, now))
+                }
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: SQLiteException) {
                 Timber.w(error, "Could not write %d items through to the browse cache", dtos.size)
             }
         }
+
+        /**
+         * The merge rule itself, as a pure function of what came back and what is already stored —
+         * no database access, so it stays a JVM unit test rather than a device one.
+         *
+         * @param existing what [ItemDao.getCacheKeys] said about these ids, keyed by id. A missing
+         *   entry is a row that does not exist yet.
+         * @param richBlobs the stored `dto` blobs worth preserving, keyed by id — empty on a full
+         *   write, so the complete response wins and a previously gutted row is repaired.
+         */
+        internal fun mergeRows(
+            dtos: List<BaseItemDto>,
+            existing: Map<UUID, ItemCacheKey>,
+            richBlobs: Map<UUID, String>,
+            now: Instant,
+        ): List<ItemEntity> =
+            dtos.map { dto ->
+                val row = mapper.toEntity(dto, ItemSource.BROWSE_CACHE, now)
+                val previous = existing[dto.id]
+                if (previous?.source == ItemSource.DOWNLOAD) {
+                    row.copy(
+                        source = ItemSource.DOWNLOAD,
+                        cachedAt = previous.cachedAt,
+                        dto = richBlobs[dto.id] ?: row.dto,
+                    )
+                } else {
+                    row
+                }
+            }
 
         /**
          * Adopts the server's `userData` into the local mirror for every item that has one and is

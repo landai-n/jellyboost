@@ -1,6 +1,7 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
@@ -62,6 +63,11 @@ import java.util.UUID
  * **A server read refreshes `user_data`, unless the row is pending.** Getting *that* wrong is the
  * corruption bug in STATUS.md: a local row that never learns about a change made from another
  * client is pushed straight back to the server by the next `setPosition`.
+ *
+ * **And the merge decides on a snapshot it holds.** The rule above is only as good as the read it
+ * decides from: `DownloadEnqueuer` upserts `DOWNLOAD` rows straight to the same DAO, so a merge that
+ * reads, thinks and writes as three separate statements can be overtaken between the first and the
+ * last and downgrade the row it just protected (audit HYG-3). The transaction is pinned below.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseCacheWriterTest {
@@ -70,6 +76,7 @@ class BrowseCacheWriterTest {
     private val userDataDao = mockk<UserDataDao>()
     private val sessionRepository = mockk<SessionRepository>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
+    private val transactionRunner = RecordingTransactionRunner()
 
     private val upserted = slot<List<ItemEntity>>()
     private val userDataRows = slot<List<UserDataEntity>>()
@@ -94,6 +101,7 @@ class BrowseCacheWriterTest {
             sessionRepository = sessionRepository,
             mapper = mapper,
             clock = clock,
+            transactionRunner = transactionRunner,
             scope = this,
         )
 
@@ -268,6 +276,68 @@ class BrowseCacheWriterTest {
 
             upserted.captured.map { it.source } shouldContainExactly
                 listOf(ItemSource.BROWSE_CACHE, ItemSource.DOWNLOAD, ItemSource.BROWSE_CACHE)
+        }
+
+    // ---- the merge is atomic (audit HYG-3) ------------------------------------------------------
+
+    /**
+     * The regression test for the downgrade race. Before the fix these three statements were three
+     * separate transactions, and `DownloadEnqueuer.write` — which upserts `DOWNLOAD` rows straight
+     * to this same DAO — could commit between the first and the last.
+     */
+    @Test
+    fun `the source snapshot, the blob read and the upsert all happen in one transaction`() =
+        runTest {
+            val depths = mutableListOf<Int>()
+            coEvery { itemDao.getCacheKeys(any()) } answers {
+                depths += transactionRunner.depth
+                listOf(ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, NOW))
+            }
+            coEvery { itemDao.getItems(any()) } answers {
+                depths += transactionRunner.depth
+                emptyList()
+            }
+            coEvery { itemDao.upsert(capture(upserted)) } answers {
+                depths += transactionRunner.depth
+            }
+
+            writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
+
+            transactionRunner.opened shouldBe 1
+            // Every one of them saw an open transaction — a zero here is the race.
+            depths shouldContainExactly listOf(1, 1, 1)
+        }
+
+    @Test
+    fun `a download enqueued while the merge is deciding cannot be downgraded by it`() =
+        runTest {
+            // What the enqueuer would do mid-merge, and what the transaction is what stops: the row
+            // was BROWSE_CACHE when the snapshot was taken, and is a DOWNLOAD by the time the write
+            // lands. The merge must decide from the state it actually holds the transaction over.
+            val stored = ItemCacheKey(uuid(1), ItemSource.DOWNLOAD, NOW.minusSeconds(3_600))
+
+            val rows =
+                writer().mergeRows(
+                    dtos = listOf(movieDto(uuid(1), "Arrival")),
+                    existing = mapOf(uuid(1) to stored),
+                    richBlobs = emptyMap(),
+                    now = NOW,
+                )
+
+            rows.single().source shouldBe ItemSource.DOWNLOAD
+            rows.single().cachedAt shouldBe stored.cachedAt
+        }
+
+    @Test
+    fun `a failed merge write rolls the whole block back rather than half-writing it`() =
+        runTest {
+            coEvery { itemDao.upsert(any()) } throws SQLiteException("disk full")
+
+            writer().writeItems(listOf(movieDto(uuid(1), "Arrival")))
+
+            // The failure is still swallowed — a broken cache never fails a read — but it reaches
+            // the runner, which is what makes Room roll the transaction back.
+            transactionRunner.rolledBack shouldBe 1
         }
 
     // ---- the user-data refresh rule -------------------------------------------------------------
@@ -537,6 +607,39 @@ class BrowseCacheWriterTest {
             serverName = "home",
             serverVersion = "10.11.0",
         )
+
+    /**
+     * Stands in for Room's `withTransaction`: it simply runs the block, and records enough for a
+     * test to assert *that* the work happened inside one — which is the property the fix adds, and
+     * the one no amount of mocked DAO calls can otherwise see.
+     */
+    private class RecordingTransactionRunner : TransactionRunner {
+        /** How deep in nested transactions the calling code currently is; 0 means none. */
+        var depth: Int = 0
+            private set
+
+        /** How many transactions were opened in total. */
+        var opened: Int = 0
+            private set
+
+        /** How many ended by throwing — Room's rollback path. */
+        var rolledBack: Int = 0
+            private set
+
+        override suspend fun <T> inTransaction(block: suspend () -> T): T {
+            opened++
+            depth++
+            var committed = false
+            try {
+                val result = block()
+                committed = true
+                return result
+            } finally {
+                depth--
+                if (!committed) rolledBack++
+            }
+        }
+    }
 
     private companion object {
         /** The SDK reads its date fields in the device's zone, so this is a local wall-clock time. */

@@ -1,5 +1,6 @@
 package dev.jellyboost.data.cache
 
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.UserDataEntity
@@ -26,6 +27,16 @@ internal object CacheFixtures {
     val SHOWS_LIBRARY: UUID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
 
     val mapper = ItemEntityMapper(ItemMapper(FakeImageUrlFactory()), FakeImageUrlFactory())
+
+    /**
+     * A [TransactionRunner] that just runs the block — the right stand-in for every test that is
+     * *not* about atomicity itself (`BrowseCacheWriterTest` has a recording one for those). Room's
+     * real transaction is a device concern; what a JVM test can assert is the decision it wraps.
+     */
+    val directTransactionRunner =
+        object : TransactionRunner {
+            override suspend fun <T> inTransaction(block: suspend () -> T): T = block()
+        }
 
     fun uuid(seed: Int): UUID = UUID.fromString("00000000-0000-0000-0000-%012d".format(seed))
 

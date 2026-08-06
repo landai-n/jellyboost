@@ -203,6 +203,53 @@ class DownloadDeleterTest {
             kept.captured shouldContainExactlyInAnyOrder listOf(uuid(5))
         }
 
+    // ---- the metadata prune, for music (M13 Phase 5) ---------------------------------------------
+
+    @Test
+    fun `a surviving track keeps its album and artist rows alive`() =
+        runTest {
+            // uuid(31) is another track of the same album; its album (40) and artist (50) are what
+            // the offline artist page and album page are read from, and deleting a sibling must
+            // not take them.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(31))
+            coEvery { itemDao.getParentRefs(listOf(uuid(31))) } returns
+                listOf(trackRefs(id = uuid(31), albumId = uuid(40), albumArtistId = uuid(50)))
+
+            deleter().delete(uuid(30))
+
+            kept.captured shouldContainExactlyInAnyOrder listOf(uuid(31), uuid(40), uuid(50))
+        }
+
+    @Test
+    fun `deleting a whole album prunes the album and the artist with it`() =
+        runTest {
+            // Every track of the album goes in one batch — what the Downloads screen's group delete
+            // and a full-album removal both produce. Nothing is left pointing at either parent.
+            coEvery { downloadDao.get(uuid(30)) } returns download(itemId = uuid(30), directoryName = "t30")
+            coEvery { downloadDao.get(uuid(31)) } returns download(itemId = uuid(31), directoryName = "t31")
+            coEvery { downloadDao.allItemIds() } returns emptyList()
+
+            deleter().deleteAll(listOf(uuid(30), uuid(31)))
+
+            kept.captured shouldBe emptyList()
+            coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(emptyList(), ItemSource.DOWNLOAD) }
+        }
+
+    @Test
+    fun `deleting one album of an artist keeps the artist for the album that remains`() =
+        runTest {
+            // The track that survives belongs to a *different* album of the same artist: the artist
+            // row has to stay or the offline artist page loses the album that is still on disk.
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(32))
+            coEvery { itemDao.getParentRefs(listOf(uuid(32))) } returns
+                listOf(trackRefs(id = uuid(32), albumId = uuid(41), albumArtistId = uuid(50)))
+
+            deleter().deleteAll(listOf(uuid(30), uuid(31)))
+
+            kept.captured shouldContainExactlyInAnyOrder listOf(uuid(32), uuid(41), uuid(50))
+            kept.captured shouldNotContain uuid(40)
+        }
+
     // ---- the batch cascade (DL-05) --------------------------------------------------------------
 
     @Test
@@ -263,4 +310,18 @@ class DownloadDeleterTest {
         seriesId: UUID? = uuid(10),
         seasonId: UUID? = uuid(11),
     ) = ItemParentRefs(id = id, parentId = null, seriesId = seriesId, seasonId = seasonId)
+
+    /** A downloaded track's links: no series or season, an album and an album artist instead. */
+    private fun trackRefs(
+        id: UUID,
+        albumId: UUID?,
+        albumArtistId: UUID?,
+    ) = ItemParentRefs(
+        id = id,
+        parentId = albumId,
+        seriesId = null,
+        seasonId = null,
+        albumId = albumId,
+        albumArtistId = albumArtistId,
+    )
 }

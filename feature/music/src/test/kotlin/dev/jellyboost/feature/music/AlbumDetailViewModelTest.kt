@@ -189,6 +189,92 @@ class AlbumDetailViewModelTest {
             coVerify(exactly = 2) { repository.getItem(ALBUM_ID) }
         }
 
+    // ---- downloads (M13 Phase 5) -----------------------------------------------------------------
+
+    @Test
+    fun `downloading the album enqueues the album id, not the track ids`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ALBUM_ID) } returns AppResult.Success(album())
+            coEvery { repository.getAlbumTracks(ALBUM_ID) } returns
+                AppResult.Success(listOf(track("t1", "Track 1", disc = 1, index = 1)))
+            coEvery { downloads.enqueue(any()) } returns AppResult.Success(Unit)
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.downloadAlbum()
+            advanceUntilIdle()
+
+            // `DownloadEnqueuer` is the one place that knows a music container expands into its
+            // tracks, in the album's own disc/track order, skipping what is already downloaded.
+            coVerify(exactly = 1) { downloads.enqueue(ALBUM_ID) }
+            coVerify(exactly = 0) { downloads.enqueue("t1") }
+        }
+
+    @Test
+    fun `an album whose every track is downloaded reads as downloaded and queues nothing more`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ALBUM_ID) } returns AppResult.Success(album())
+            coEvery { repository.getAlbumTracks(ALBUM_ID) } returns
+                AppResult.Success(
+                    listOf(
+                        track("t1", "Track 1", disc = 1, index = 1),
+                        track("t2", "Track 2", disc = 1, index = 2),
+                    ),
+                )
+            coEvery { downloads.enqueue(any()) } returns AppResult.Success(Unit)
+            downloadStates.value =
+                mapOf("t1" to DownloadState.Downloaded, "t2" to DownloadState.Downloaded)
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.albumDownloadState shouldBe DownloadState.Downloaded
+            viewModel.uiState.value.canDownload shouldBe false
+
+            viewModel.downloadAlbum()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { downloads.enqueue(any()) }
+        }
+
+    @Test
+    fun `a half-downloaded album reports the share of it that is on the device`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ALBUM_ID) } returns AppResult.Success(album())
+            coEvery { repository.getAlbumTracks(ALBUM_ID) } returns
+                AppResult.Success(
+                    listOf(
+                        track("t1", "Track 1", disc = 1, index = 1),
+                        track("t2", "Track 2", disc = 1, index = 2),
+                    ),
+                )
+            downloadStates.value = mapOf("t1" to DownloadState.Downloaded)
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            // A finished track counts as one and a transferring one as its fraction, so the control
+            // reads "half the album" rather than the progress of whichever file is moving.
+            viewModel.uiState.value.albumDownloadState shouldBe DownloadState.NotDownloaded
+
+            downloadStates.value =
+                mapOf("t1" to DownloadState.Downloaded, "t2" to DownloadState.Downloading(0.5f))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.albumDownloadState shouldBe DownloadState.Downloading(0.75f)
+            viewModel.uiState.value.canDownload shouldBe false
+        }
+
+    @Test
+    fun `an album with no tracks offers no download`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ALBUM_ID) } returns AppResult.Success(album())
+            coEvery { repository.getAlbumTracks(ALBUM_ID) } returns AppResult.Success(emptyList())
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            viewModel.uiState.value.albumDownloadState shouldBe DownloadState.NotDownloaded
+            viewModel.uiState.value.canDownload shouldBe false
+        }
+
     private fun viewModel() =
         AlbumDetailViewModel(
             repository = repository,

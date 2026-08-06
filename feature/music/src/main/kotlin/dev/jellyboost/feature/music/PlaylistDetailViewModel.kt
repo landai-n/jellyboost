@@ -6,17 +6,21 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.getOrNull
+import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -24,8 +28,10 @@ import javax.inject.Inject
  * M13's scope; docs/notes/music-m13-plan.md).
  *
  * Offline, [JellyfinRepository.getPlaylistItems] always answers empty — Room has no
- * playlist-membership relation before M13 Phase 5 — so an offline visit to this screen simply shows
- * the empty state; nothing here has to special-case connectivity to be honest about that.
+ * playlist-membership relation, and M13 Phase 5 deliberately did not add one (the deferred item
+ * "offline playlist membership"; DECISIONS.md, 2026-08-05) — so an offline visit to this screen
+ * simply shows the empty state; nothing here has to special-case connectivity to be honest about
+ * that. Downloading *from* a playlist works regardless: the tracks land under their own albums.
  */
 @HiltViewModel
 class PlaylistDetailViewModel
@@ -33,6 +39,7 @@ class PlaylistDetailViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val userDataRepository: UserDataRepository,
+        private val downloads: DownloadRepository,
         private val connectivityRefresher: ConnectivityRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
@@ -44,9 +51,12 @@ class PlaylistDetailViewModel
         private val _uiState = MutableStateFlow(PlaylistDetailUiState())
         val uiState: StateFlow<PlaylistDetailUiState> = _uiState.asStateFlow()
 
+        private var downloadStates: Map<String, DownloadState> = emptyMap()
+
         init {
             load()
             observeUserDataChanges()
+            observeDownloadStates()
             observeConnectivityChanges()
         }
 
@@ -63,6 +73,21 @@ class PlaylistDetailViewModel
         private fun observeConnectivityChanges() {
             viewModelScope.launch {
                 connectivityRefresher.connectivityChanged.collect { refresh() }
+            }
+        }
+
+        /** The app-wide badge feed — a playlist's tracks carry the same badge as anywhere else. */
+        private fun observeDownloadStates() {
+            viewModelScope.launch {
+                downloads
+                    .observeStates()
+                    .catch { error ->
+                        Timber.w(error, "The download-state flow failed; clearing the playlist badges")
+                        emit(emptyMap())
+                    }.collect { states ->
+                        downloadStates = states
+                        _uiState.update { it.withDownloadStates(states) }
+                    }
             }
         }
 
@@ -96,12 +121,13 @@ class PlaylistDetailViewModel
 
                     is AppResult.Success ->
                         _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                playlist = playlistResult.value,
-                                tracks = tracksResult.getOrNull().orEmpty(),
-                                errorMessage = null,
-                            )
+                            it
+                                .copy(
+                                    isLoading = false,
+                                    playlist = playlistResult.value,
+                                    tracks = tracksResult.getOrNull().orEmpty(),
+                                    errorMessage = null,
+                                ).withDownloadStates(downloadStates)
                         }
                 }
             }

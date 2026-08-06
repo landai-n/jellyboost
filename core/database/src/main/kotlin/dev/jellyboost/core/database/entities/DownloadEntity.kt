@@ -105,6 +105,12 @@ data class DownloadEntity(
     /** Directory name under the storage root, e.g. `Westworld - S01E02 - Chestnut`. */
     val directoryName: String,
     val itemName: String,
+    /**
+     * The heading this row belongs under on the Downloads screen: an episode's series, a track's
+     * **album** (M13 Phase 5), `null` for a film. Written by `DownloadEnqueuer` and read as
+     * `DownloadItem.seriesKey`; the name predates music and is kept because the column's meaning
+     * did not change.
+     */
     val seriesName: String? = null,
     val errorMessage: String? = null,
     val createdAt: Instant,

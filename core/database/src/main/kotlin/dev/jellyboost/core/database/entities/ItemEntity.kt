@@ -143,17 +143,24 @@ data class ItemCacheKey(
 
 /**
  * One item reduced to the rows the offline read path walks *up* through — its series, season and
- * containing folder.
+ * containing folder, and for a downloaded track its album and album artist (M13).
  *
  * A projection rather than [ItemEntity] because its one consumer, the delete cascade's orphan
  * prune, only needs the parent links: `SELECT *` materialised every surviving download's
  * multi-kilobyte `dto` blob once per pruned item (audit DL-05).
+ *
+ * [albumId] and [albumArtistId] are the M13 query columns, and they are here for exactly the reason
+ * [seriesId] is: without them the prune would drop the album and artist rows of a *surviving*
+ * downloaded track the moment any other download was deleted, and the offline artist → album →
+ * tracks walk would dead-end at the artist page.
  */
 data class ItemParentRefs(
     val id: UUID,
     val parentId: UUID?,
     val seriesId: UUID?,
     val seasonId: UUID?,
+    val albumId: UUID? = null,
+    val albumArtistId: UUID? = null,
 )
 
 /**

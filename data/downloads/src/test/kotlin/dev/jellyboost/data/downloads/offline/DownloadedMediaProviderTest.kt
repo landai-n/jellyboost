@@ -11,6 +11,7 @@ import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures
 import dev.jellyboost.data.downloads.engine.MatroskaSeekIndexRepair
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -459,6 +460,48 @@ class DownloadedMediaProviderTest {
         }
 
     // ---- helpers ------------------------------------------------------------------------------
+
+    // ---- music (M13 Phase 5) --------------------------------------------------------------------
+
+    @Test
+    fun `a downloaded track is offered exactly like a downloaded video`() =
+        runTest {
+            // Nothing in this class is kind-aware, and this is the test that says so on purpose:
+            // `MusicStreamResolver` asks this provider first for every track it plays, so an
+            // assumption that a download is a video would silently send offline music to the server.
+            val track = File(storage, "04 - Go Your Own Way.flac").also { it.writeText("flac") }
+            every { itemMapper.toDtoOrNull(any()) } returns
+                DownloadFixtures.track(id = itemId, runTimeTicks = 21_000_000_000L)
+            stored(mediaSourceId = "source-$itemId", files = listOf(mediaFile(path = track.path)))
+
+            val media = provider.get(itemId).shouldNotBeNull()
+
+            // Percent-encoded, which matters far more for music than for video: a track's file name
+            // is the server's own ("04 - Go Your Own Way.flac") and is full of spaces, where a video
+            // download's is usually a dotted release name.
+            media.mediaUri shouldBe "file://${storage.path}/04%20-%20Go%20Your%20Own%20Way.flac"
+            media.runTimeTicks shouldBe 21_000_000_000L
+            media.quality shouldBe DownloadQuality.ORIGINAL
+            // A track has none of the extras a video download carries, and asking for them is not
+            // an error — it is simply an empty list.
+            media.subtitles.shouldBeEmpty()
+            media.audio.shouldBeEmpty()
+            media.trickplay.shouldBeNull()
+        }
+
+    @Test
+    fun `the seek-index repair is still offered a track, and declines it as not Matroska`() =
+        runTest {
+            val track = File(storage, "04 - Go Your Own Way.flac").also { it.writeText("flac") }
+            every { itemMapper.toDtoOrNull(any()) } returns DownloadFixtures.track(id = itemId)
+            stored(mediaSourceId = "source-$itemId", files = listOf(mediaFile(path = track.path)))
+
+            provider.get(itemId).shouldNotBeNull()
+
+            // Called unconditionally, which is fine: the repair's first veto is "not Matroska", so
+            // a flac or an mp3 costs two reads of twelve bytes and is left byte-for-byte alone.
+            verify(exactly = 1) { seekIndex.ensureSeekable(File(track.path), any()) }
+        }
 
     private fun stored(
         status: DownloadStatus = DownloadStatus.DOWNLOADED,

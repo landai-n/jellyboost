@@ -419,8 +419,10 @@ internal class OfflineJellyfinRepository
         /**
          * Always empty offline — see [JellyfinRepository.getPlaylistItems]'s KDoc: Room has no
          * playlist-membership relation, so there is no set of downloaded tracks that can honestly be
-         * called "this playlist's members" before M13 Phase 5 gives playlists their own offline
-         * model.
+         * called "this playlist's members". Giving them one is the deferred item "offline playlist
+         * membership" (docs/notes/music-m13-plan.md; DECISIONS.md, 2026-08-05), not a gap Phase 5
+         * left open by accident: a playlist download expands to its tracks, and those are reachable
+         * offline through their own albums and artists.
          */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             AppResult.Success(emptyList())

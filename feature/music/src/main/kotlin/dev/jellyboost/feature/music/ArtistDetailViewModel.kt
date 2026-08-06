@@ -6,17 +6,21 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.getOrNull
+import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -29,6 +33,7 @@ class ArtistDetailViewModel
     constructor(
         private val repository: JellyfinRepository,
         private val userDataRepository: UserDataRepository,
+        private val downloads: DownloadRepository,
         private val connectivityRefresher: ConnectivityRefresher,
         savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
@@ -40,9 +45,12 @@ class ArtistDetailViewModel
         private val _uiState = MutableStateFlow(ArtistDetailUiState())
         val uiState: StateFlow<ArtistDetailUiState> = _uiState.asStateFlow()
 
+        private var downloadStates: Map<String, DownloadState> = emptyMap()
+
         init {
             load()
             observeUserDataChanges()
+            observeDownloadStates()
             observeConnectivityChanges()
         }
 
@@ -64,6 +72,21 @@ class ArtistDetailViewModel
         private fun observeConnectivityChanges() {
             viewModelScope.launch {
                 connectivityRefresher.connectivityChanged.collect { refresh() }
+            }
+        }
+
+        /** The app-wide badge feed, kept for [load] to stamp onto a freshly-fetched page. */
+        private fun observeDownloadStates() {
+            viewModelScope.launch {
+                downloads
+                    .observeStates()
+                    .catch { error ->
+                        Timber.w(error, "The download-state flow failed; clearing the artist badges")
+                        emit(emptyMap())
+                    }.collect { states ->
+                        downloadStates = states
+                        _uiState.update { it.withDownloadStates(states) }
+                    }
             }
         }
 
@@ -100,13 +123,14 @@ class ArtistDetailViewModel
 
                     is AppResult.Success ->
                         _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                artist = artistResult.value,
-                                albums = albums.getOrNull().orEmpty(),
-                                topTracks = topTracks.getOrNull().orEmpty(),
-                                errorMessage = null,
-                            )
+                            it
+                                .copy(
+                                    isLoading = false,
+                                    artist = artistResult.value,
+                                    albums = albums.getOrNull().orEmpty(),
+                                    topTracks = topTracks.getOrNull().orEmpty(),
+                                    errorMessage = null,
+                                ).withDownloadStates(downloadStates)
                         }
                 }
             }

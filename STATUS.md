@@ -12,7 +12,7 @@ device walk, and expect its downloads and database not to carry over. Full gate 
 the rename: ktlint + detekt + unit tests + `assembleDebug` + `assembleRelease` all green,
 baseline profile still compiles into the release APK (`assets/dexopt/baseline.prof`).
 
-## Planned milestone: M13 — Music (approved 2026-08-05; Phases 0–4 landed, Phase 5 in progress)
+## Planned milestone: M13 — Music (approved 2026-08-05; Phases 0–5 landed, Phase 6 next)
 
 Third user-approved scope extension (after M11/M12): a full music experience —
 artist/album/playlist browsing, background playback with notification/lock-screen
@@ -72,9 +72,34 @@ dedicated bottom-nav tab — user decision). Detailed phase plan:
   checks: mini-player docking in both nav layouts and both orientations, queue
   sheet reorder/remove/jump on the tablet, NowPlaying two-pane at tablet widths,
   Continue Listening resume-at-position online and offline.
-- **Phase 5 (music downloads + offline parity)** — IN PROGRESS. Note: the dev
-  server was unreachable from the workstation on 2026-08-06, so live
-  verification of `/Items/{id}/Download` for audio originals is an owed check.
+- **Phase 5 (music downloads + offline parity)** — code landed, device DoD owed.
+  `DownloadEnqueuer` expands MUSIC_ALBUM / MUSIC_ARTIST / PLAYLIST (new
+  `DownloadApi.getAlbumTrackIds` / `getArtistTrackIds` / `getPlaylistTrackIds` —
+  disc/track order, artist ordered album-by-album, playlist order with non-audio
+  members dropped), upserting the album and album-artist rows as
+  `ItemSource.DOWNLOAD` so the offline artist→album→tracks walk resolves;
+  `DownloadFilePlanner` gained a two-file audio branch (the album's cover, then
+  the original via `/Items/{id}/Download`) with no subtitles, sidecars, trickplay
+  or transcode, and audio rows are stamped `DownloadQuality.ORIGINAL` at enqueue
+  so no video-shaped quality machinery can reach them; `DownloadPaths` names a
+  track `AlbumArtist - Album - 04 - Title` (the plain form collides for music);
+  `DownloadedMetadataRefresher` refreshes album/artist parents;
+  `ItemParentRefs` + the delete cascade's prune now walk `albumId`/`albumArtistId`
+  (projection only — the columns are v9, no schema change); the Downloads screen
+  groups tracks under their album through the existing `seriesName` heading
+  column; `AlbumDetailScreen` gained a Download control and
+  `ArtistDetail`/`PlaylistDetail` the `observeStates()` badge wiring they were
+  missing. Offline playlist membership is **deferred**, not built (DECISIONS.md
+  2026-08-06). Gate green, +30 tests.
+  **Owed device checks:** (1) **live verification of `/Items/{id}/Download` for an
+  audio item** — the dev server was unreachable from the workstation for the whole
+  phase (HTTP 000), so the primary media URL is unproven and only the recorded
+  fallback (`/Audio/{id}/stream?static=true`, reached by the queue's existing 403
+  re-plan) is designed-in; (2) download an album → airplane mode → browse
+  artist→album→tracks, play with queue/shuffle, art present; (3) download a
+  playlist and an artist; (4) delete an album, then one track of another, and
+  confirm the offline artist page keeps what remains; (5) the Downloads tab's
+  album grouping and per-track rows on the tablet in both orientations.
 - Phase 6: Instant Mix + lyrics + hardening + docs. Work happens on the
   `worktree-music-m13` branch.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`

@@ -56,7 +56,7 @@ interface ItemDao {
      * series/season/folder ids, and reading them through [getItems] materialised every survivor's
      * multi-kilobyte blob once per deleted item (audit DL-05).
      */
-    @Query("SELECT id, parentId, seriesId, seasonId FROM items WHERE id IN (:ids)")
+    @Query("SELECT id, parentId, seriesId, seasonId, albumId, albumArtistId FROM items WHERE id IN (:ids)")
     suspend fun getParentRefs(ids: List<UUID>): List<ItemParentRefs>
 
     /**

@@ -14,10 +14,13 @@ import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
+import dev.jellyboost.data.downloads.DownloadFixtures.album
+import dev.jellyboost.data.downloads.DownloadFixtures.artist
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
 import dev.jellyboost.data.downloads.DownloadFixtures.season
 import dev.jellyboost.data.downloads.DownloadFixtures.series
+import dev.jellyboost.data.downloads.DownloadFixtures.track
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.engine.SubtitleSidecarTopUp
 import io.kotest.assertions.throwables.shouldThrow
@@ -214,6 +217,22 @@ class DownloadedMetadataRefresherTest {
             // The same bug gutted the parents, and they are what the offline "walk up to the show"
             // path reads.
             upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(2), uuid(10), uuid(11))
+        }
+
+    @Test
+    fun `a downloaded track has its album and artist refreshed too`() =
+        runTest {
+            coEvery { downloadDao.allItemIds() } returns listOf(uuid(30))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            refresher().refresh()
+
+            // The music parents matter more than the video ones: an album and an artist are pure
+            // metadata with no file of their own, so nothing but this pass ever brings a re-tagged
+            // album or a renamed artist up to date on the device (M13 Phase 5).
+            upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
         }
 
     @Test

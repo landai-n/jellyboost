@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads.plan
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.api.client.extensions.audioApi
 import org.jellyfin.sdk.api.client.extensions.imageApi
 import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.subtitleApi
@@ -38,6 +39,25 @@ internal interface DownloadUrlFactory {
      * not simply stop working for a differently-configured account.
      */
     fun videoStreamUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+    ): String
+
+    /**
+     * [videoStreamUrl]'s audio counterpart: `/Audio/{id}/stream?static=true` (M13 Phase 5).
+     *
+     * Same role and same trigger — a user whose policy has `enableContentDownloading` off — and the
+     * queue reaches it the same way, by re-planning the one media file after a `403` from
+     * [mediaUrl]. `static=true` is what makes it the original bytes rather than a transcode, so the
+     * file that lands is the file on the server, which is what a music download is
+     * (docs/notes/music-m13-plan.md, key decision 10: originals only).
+     *
+     * Routing through `/Audio` rather than `/Videos` here is safe for the reason
+     * `docs/ARCHITECTURE.md` records: the "/Videos not /Audio" note is about `audioStreamIndex` on
+     * multi-stream video sidecars, and this request names no stream index at all — a music track
+     * has one audio stream and `static=true` copies the whole file regardless.
+     */
+    fun staticAudioUrl(
         itemId: UUID,
         mediaSourceId: String?,
     ): String
@@ -132,6 +152,17 @@ internal class SdkDownloadUrlFactory
             mediaSourceId: String?,
         ): String =
             apiClient.videosApi.getVideoStreamUrl(
+                itemId = itemId,
+                static = true,
+                mediaSourceId = mediaSourceId,
+                deviceId = apiClient.deviceInfo.id,
+            )
+
+        override fun staticAudioUrl(
+            itemId: UUID,
+            mediaSourceId: String?,
+        ): String =
+            apiClient.audioApi.getAudioStreamUrl(
                 itemId = itemId,
                 static = true,
                 mediaSourceId = mediaSourceId,

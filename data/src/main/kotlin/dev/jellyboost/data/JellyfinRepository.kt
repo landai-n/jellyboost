@@ -229,10 +229,14 @@ interface JellyfinRepository {
      * which (unlike a generic `parentId` items query) is guaranteed to preserve the order the
      * playlist was built in.
      *
-     * Offline: always empty. Room has no playlist-membership table — a playlist's members are only
-     * ever known from the server's own ordering, and nothing about a downloaded track records which
-     * playlist(s) it belongs to — so there is no honest non-empty answer before M13 Phase 5 gives
-     * playlists their own offline model (docs/notes/music-m13-plan.md, Phase 5).
+     * Offline: **always empty, deliberately and for the foreseeable future.** Room has no
+     * playlist-membership table — a playlist's members are only ever known from the server's own
+     * ordering, and nothing about a downloaded track records which playlist(s) it belongs to — so
+     * there is no honest non-empty answer without a new table and a schema bump. M13 Phase 5
+     * decided not to spend one: the milestone's offline walk is artist → album → tracks, and a
+     * playlist *download* is fully supported (it expands to its tracks, which land under their own
+     * albums). Recorded as the deferred item "offline playlist membership"
+     * (docs/notes/music-m13-plan.md, deferred list; DECISIONS.md, 2026-08-05).
      */
     suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>>
 

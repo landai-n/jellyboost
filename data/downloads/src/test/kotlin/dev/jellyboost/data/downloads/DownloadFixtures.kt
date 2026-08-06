@@ -15,6 +15,7 @@ import org.jellyfin.sdk.model.api.MediaSourceType
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
 import org.jellyfin.sdk.model.api.MediaStreamType
+import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.TrickplayInfoDto
 import java.time.Instant
 import java.util.UUID
@@ -190,6 +191,95 @@ object DownloadFixtures {
             name = name,
             isFolder = true,
             imageTags = mapOf(ImageType.PRIMARY to "primary-tag"),
+        )
+
+    // ---- M13 music ----------------------------------------------------------------------------
+
+    /**
+     * A music track (M13 Phase 5).
+     *
+     * The three ids are what the whole music download path turns on: [albumId] is the folder it was
+     * expanded from and the artwork's address, [albumArtistId] is what the offline artist page
+     * queries, and [albumPrimaryImageTag] is the cover the plan fetches.
+     */
+    fun track(
+        id: UUID = uuid(30),
+        name: String = "Go Your Own Way",
+        albumId: UUID? = uuid(40),
+        album: String? = "Rumours",
+        albumArtistId: UUID? = uuid(50),
+        albumArtist: String? = "Fleetwood Mac",
+        trackNumber: Int? = 4,
+        discNumber: Int? = null,
+        albumPrimaryImageTag: String? = "album-tag",
+        primaryTag: String? = null,
+        path: String? = "/media/music/Fleetwood Mac/Rumours/04 - Go Your Own Way.flac",
+        container: String? = "flac",
+        sizeBytes: Long? = 32_000_000L,
+        runTimeTicks: Long? = 21_000_000_000L,
+        streams: List<MediaStream> = emptyList(),
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.AUDIO,
+            name = name,
+            album = album,
+            albumId = albumId,
+            albumArtist = albumArtist,
+            albumArtists = albumArtistId?.let { listOf(NameGuidPair(id = it, name = albumArtist)) },
+            albumPrimaryImageTag = albumPrimaryImageTag,
+            indexNumber = trackNumber,
+            parentIndexNumber = discNumber,
+            parentId = albumId,
+            path = path,
+            container = container,
+            runTimeTicks = runTimeTicks,
+            imageTags = primaryTag?.let { mapOf(ImageType.PRIMARY to it) },
+            mediaSources =
+                listOf(mediaSource(id = "source-$id", size = sizeBytes, streams = streams, container = container)),
+        )
+
+    /** A music album — a **folder**, like [season], so a tap on it has to expand. */
+    fun album(
+        id: UUID = uuid(40),
+        name: String = "Rumours",
+        artistId: UUID? = uuid(50),
+        artistName: String? = "Fleetwood Mac",
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.MUSIC_ALBUM,
+            name = name,
+            albumArtist = artistName,
+            albumArtists = artistId?.let { listOf(NameGuidPair(id = it, name = artistName)) },
+            isFolder = true,
+            imageTags = mapOf(ImageType.PRIMARY to "album-tag"),
+        )
+
+    /** A music artist — the other music folder a Download button can be tapped on. */
+    fun artist(
+        id: UUID = uuid(50),
+        name: String = "Fleetwood Mac",
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.MUSIC_ARTIST,
+            name = name,
+            isFolder = true,
+            imageTags = mapOf(ImageType.PRIMARY to "artist-tag"),
+        )
+
+    /** A playlist — a folder whose members are ordered by the playlist, not by the library. */
+    fun playlist(
+        id: UUID = uuid(60),
+        name: String = "Road trip",
+    ): BaseItemDto =
+        BaseItemDto(
+            id = id,
+            type = BaseItemKind.PLAYLIST,
+            name = name,
+            isFolder = true,
+            imageTags = mapOf(ImageType.PRIMARY to "playlist-tag"),
         )
 
     /**

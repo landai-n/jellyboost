@@ -4070,3 +4070,70 @@ Seeded from the approved plan; listed for traceability, no divergence:
   (6), a directly-adjacent bug found while editing the same file (7), the same "legitimately grows
   large" precedent already applied to repositories (8), and consistency with the milestone's existing
   localization gap rather than a one-off fix (9).
+
+## 2026-08-06 — M13 Phase 5: music downloads — offline playlists deferred, and six smaller implementation decisions
+- **Scope:** `data/downloads/.../DownloadApi.kt`, `impl/DownloadEnqueuer.kt`, `impl/DownloadDeleter.kt`,
+  `plan/DownloadFilePlanner.kt`, `plan/DownloadUrlFactory.kt`, `plan/DownloadPaths.kt`,
+  `DownloadedMetadataRefresher.kt`, `model/DownloadItem.kt`, `core/database/.../ItemDao.kt`,
+  `core/database/.../entities/ItemEntity.kt`, `core/database/.../entities/DownloadEntity.kt`,
+  `data/.../JellyfinRepository.kt`, `data/.../OfflineJellyfinRepository.kt`,
+  `feature/downloads/.../DownloadsUiState.kt`, `feature/music/.../AlbumDetail*`, `ArtistDetail*`,
+  `PlaylistDetail*`.
+- **Plan said:** `docs/notes/music-m13-plan.md`, Phase 5 section + key decision 10, and the Phase 5
+  prompt (worktree `music-m13`).
+- **Done instead:**
+  1. **Offline playlist membership is deferred, not built.** The plan's Phase 5 line says "offline
+     repository music members over the new DAO queries", and `OfflineJellyfinRepository.getPlaylistItems`'
+     KDoc promised that "M13 Phase 5 gives playlists their own offline model". It does not. An honest
+     offline playlist needs a real membership table (playlist id, item id, ordinal) and therefore
+     schema v10 plus a sync path that keeps it current — and nothing in the M13 DoD asks for it: the
+     offline walk it specifies is artist → album → tracks, and a playlist *download* is fully
+     supported (it expands to its audio members, which land under their own albums). The method stays
+     `AppResult.Success(emptyList())`, its KDoc now points at the deferred item instead of at this
+     phase, and "offline playlist membership" is recorded in the plan note's deferred list. No hacky
+     substitute was invented: "every downloaded track that was ever in some playlist" is not a
+     playlist, and presenting it as one would be worse than an empty screen.
+  2. **A playlist download does not cache the playlist row itself.** Every other container expansion
+     upserts its container as `ItemSource.DOWNLOAD` (M7's series/season precedent, which M13's album
+     and artist follow). A `PLAYLIST` row would be the one whose offline detail page can never have
+     contents, per (1) — so `DownloadEnqueuer` writes the tracks and their album/artist parents and
+     skips the container. It is the only kind treated that way, and the branch says so.
+  3. **A track's album goes in the download row's `seriesName` column.** The Downloads screen groups
+     finished rows by that column (`DownloadItem.seriesKey`), whose meaning was always "the heading
+     these rows belong under" rather than literally a series. Reusing it gives albums the same
+     grouping episodes have, with no schema change and no second grouping rule; the column's KDoc and
+     `seriesKey`'s now name both cases. **Albums are the top grouping** — artists do not nest above
+     them: the tab is a flat list of one-level groups, and a second level would be a new row kind, a
+     new expansion state and a new empty case for a screen whose job is "what is on this device and
+     how big is it".
+  4. **Album art is planned per track, not once per album.** Key decision 10 says "one album-art
+     image"; the file plan's unit is the *item directory*, which is also the unit of the delete
+     cascade and of the storage accounting, so a single file shared by twenty tracks would live in
+     one track's directory and vanish when that track was deleted. Each track therefore plans one
+     `primary.webp` fetched from the **album's** id and `albumPrimaryImageTag` (so it is the cover,
+     not a per-track image), at the existing 480 px cap — a few tens of kilobytes against a track's
+     own megabytes.
+  5. **A track gets its own directory-name form**, `AlbumArtist - Album - 04 - Title`, mirroring the
+     episode form. The plan specifies none, and the default (`Name (Year)`) is not merely ugly for
+     music but *unsafe*: a track has no `productionYear`, so two albums' *Intro* would share one
+     directory, share one `primary.webp`, and have either's delete take the other's files.
+  6. **`ItemParentRefs` gained `albumId`/`albumArtistId`** (projection only — both columns have
+     existed since v9, so no schema change). Without them the delete cascade's orphan prune drops the
+     album and artist rows of *surviving* downloaded tracks and the offline artist → album → tracks
+     walk dead-ends. It is the music equivalent of the rule the prune already applies to series and
+     season, and it makes both of the DoD's delete cases fall out with no per-kind code.
+  7. **`AlbumDetailScreen` gained a Download control**, and `ArtistDetail`/`PlaylistDetail` gained the
+     `observeStates()` wiring their badges needed. The plan's Phase 2 line lists "play/shuffle/download"
+     on the album screen but Phase 2 shipped only the first two, which left Phase 5's whole pipeline
+     unreachable from the UI. The control is deliberately **download-only**: removal keeps going
+     through the Downloads screen, which already has the confirmed delete, rather than growing this
+     screen a confirmation dialog of its own.
+- **Reason:** (1) and (2) refuse to invent an offline model the milestone does not need and cannot
+  fill honestly; (3), (4) and (6) reuse mechanisms that already mean the right thing instead of
+  adding parallel ones; (5) fixes a real collision the default naming would cause for music; (7) is
+  the smallest change that makes the phase verifiable on a device at all.
+- **Owed:** `/Items/{id}/Download` has **not** been verified against a real server for an audio item —
+  the dev server was unreachable from this machine for the whole phase (HTTP 000, connect timeout).
+  The fallback the plan asked for is implemented (`DownloadUrlFactory.staticAudioUrl`,
+  `/Audio/{id}/stream?static=true`, reached by the queue's existing `403` re-plan), but the primary
+  path is unproven. Recorded in STATUS.md's owed-DoD list.

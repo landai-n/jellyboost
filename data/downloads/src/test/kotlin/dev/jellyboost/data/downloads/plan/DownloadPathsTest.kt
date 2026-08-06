@@ -3,8 +3,10 @@ package dev.jellyboost.data.downloads.plan
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
+import dev.jellyboost.data.downloads.DownloadFixtures.track
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
@@ -37,6 +39,46 @@ class DownloadPathsTest {
     @Test
     fun `an episode with no season number still gets an episode code`() {
         DownloadPaths.itemDirectoryName(episode(seasonNumber = null)) shouldBe "Westworld - E02 - Chestnut"
+    }
+
+    @Test
+    fun `a track directory is artist, album, track number and title`() {
+        DownloadPaths.itemDirectoryName(track()) shouldBe "Fleetwood Mac - Rumours - 04 - Go Your Own Way"
+    }
+
+    @Test
+    fun `two same-titled tracks on different albums get different directories`() {
+        // The reason a track is not simply named after itself: it has no `productionYear` to
+        // disambiguate it, so the plain form would put both *Intro*s in one directory — sharing one
+        // `primary.webp`, and letting either one's delete take the other's files.
+        val first = DownloadPaths.itemDirectoryName(track(name = "Intro", album = "Rumours", trackNumber = 1))
+        val second =
+            DownloadPaths.itemDirectoryName(
+                track(name = "Intro", album = "Tusk", albumId = uuid(41), trackNumber = 1),
+            )
+
+        first shouldNotBe second
+    }
+
+    @Test
+    fun `a track with no track number keeps artist, album and title`() {
+        DownloadPaths.itemDirectoryName(track(trackNumber = null)) shouldBe
+            "Fleetwood Mac - Rumours - Go Your Own Way"
+    }
+
+    @Test
+    fun `a track the server gives no album or artist falls back to its own title`() {
+        DownloadPaths.itemDirectoryName(track(album = null, albumArtist = null, trackNumber = null)) shouldBe
+            "Go Your Own Way"
+    }
+
+    @Test
+    fun `a track keeps the server's own file name and container`() {
+        val name = DownloadPaths.mediaFileName(track(), "Fleetwood Mac - Rumours - 04 - Go Your Own Way")
+
+        // A flac stays a flac: originals-only means the bytes on disk are the bytes on the server,
+        // and the name is what makes that visible from a file manager.
+        name shouldBe "04 - Go Your Own Way.flac"
     }
 
     @Test

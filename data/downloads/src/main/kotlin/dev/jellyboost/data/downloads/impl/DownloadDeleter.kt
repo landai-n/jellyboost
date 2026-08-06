@@ -137,10 +137,19 @@ internal class DownloadDeleter
          * Drops every `DOWNLOAD`-sourced item row that no remaining download needs.
          *
          * The surviving set is computed rather than guessed: it is the remaining downloads plus,
-         * for each of them, its series and season. That is exactly the set the offline read path
-         * walks — an episode's detail page reaches its season, which reaches its series. The walk
-         * reads [ItemDao.getParentRefs], a projection without the `dto` blob: the prune needs only
-         * the links, never the metadata itself (audit DL-05).
+         * for each of them, its parents — series and season for an episode, **album and album
+         * artist for a track** (M13). That is exactly the set the offline read path walks: an
+         * episode's detail page reaches its season, which reaches its series; an artist page reaches
+         * its albums (`ItemDao.albumsOfArtist`), each of which reaches its tracks
+         * (`ItemDao.tracksOfAlbum`). The walk reads [ItemDao.getParentRefs], a projection without
+         * the `dto` blob: the prune needs only the links, never the metadata itself (audit DL-05).
+         *
+         * The music half is what makes the two cases the M13 DoD asks about correct without any
+         * per-kind code: deleting a whole album (its tracks, in one [deleteAll]) leaves no track
+         * pointing at that album or that artist, so both parent rows are pruned; deleting one track
+         * of an album leaves its siblings pointing at both, so both survive. Deleting the *last*
+         * track of an artist's last album takes the album and the artist with it, which is what
+         * "nothing of theirs is on the device any more" should look like offline.
          *
          * Run after every batch rather than only on the last one, so a half-cleaned cache cannot
          * accumulate over a session of deletions — and inside [deleteAll]'s transaction, because
@@ -157,7 +166,9 @@ internal class DownloadDeleter
             val parents =
                 itemDao
                     .getParentRefs(remaining)
-                    .flatMap { listOfNotNull(it.seriesId, it.seasonId, it.parentId) }
+                    .flatMap {
+                        listOfNotNull(it.seriesId, it.seasonId, it.parentId, it.albumId, it.albumArtistId)
+                    }
 
             val keep = (remaining + parents).distinct()
             val pruned = itemDao.deleteDownloadsNotIn(keep, ItemSource.DOWNLOAD)

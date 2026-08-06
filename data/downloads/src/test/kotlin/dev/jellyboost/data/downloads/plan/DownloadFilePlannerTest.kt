@@ -2,12 +2,17 @@ package dev.jellyboost.data.downloads.plan
 
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadQuality
+import dev.jellyboost.data.downloads.DownloadFixtures
+import dev.jellyboost.data.downloads.DownloadFixtures.album
+import dev.jellyboost.data.downloads.DownloadFixtures.artist
 import dev.jellyboost.data.downloads.DownloadFixtures.audioStream
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
+import dev.jellyboost.data.downloads.DownloadFixtures.playlist
 import dev.jellyboost.data.downloads.DownloadFixtures.season
 import dev.jellyboost.data.downloads.DownloadFixtures.series
 import dev.jellyboost.data.downloads.DownloadFixtures.subtitleStream
+import dev.jellyboost.data.downloads.DownloadFixtures.track
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -583,6 +588,97 @@ class DownloadFilePlannerTest {
         thumbnails: Int,
     ) = mapOf("source-1" to mapOf(width.toString() to info(width, thumbnails)))
 
+    // ---- music (M13 Phase 5) --------------------------------------------------------------------
+
+    @Test
+    fun `a track plans exactly two files, artwork then the original`() {
+        val plan = planner.plan(track(), TRACK_DIRECTORY)
+
+        // The whole audio branch in one assertion: no backdrop, no series poster, no subtitles, no
+        // audio sidecars, no trickplay — and the same artwork-first order the video plan promises.
+        plan.map { it.type } shouldContainExactly
+            listOf(DownloadFileType.IMAGE_PRIMARY, DownloadFileType.MEDIA)
+    }
+
+    @Test
+    fun `a track's artwork is the album's cover, not the track's own image`() {
+        val plan = planner.plan(track(), TRACK_DIRECTORY)
+
+        val art = plan.of(DownloadFileType.IMAGE_PRIMARY).shouldNotBeNull()
+        // Addressed on the album id and the album's tag: every track of the album then holds the
+        // same cover, which is the image the offline card draws.
+        art.url shouldContain uuid(40).toString()
+        art.url shouldContain "tag=album-tag"
+        art.fileName shouldBe "primary.webp"
+    }
+
+    @Test
+    fun `a track whose album has no cover falls back to its own primary image`() {
+        val plan = planner.plan(track(albumPrimaryImageTag = null, primaryTag = "track-tag"), TRACK_DIRECTORY)
+
+        plan.of(DownloadFileType.IMAGE_PRIMARY).shouldNotBeNull().url shouldContain "tag=track-tag"
+    }
+
+    @Test
+    fun `a track with no artwork anywhere still plans its media file`() {
+        val plan = planner.plan(track(albumPrimaryImageTag = null, primaryTag = null), TRACK_DIRECTORY)
+
+        plan.map { it.type } shouldContainExactly listOf(DownloadFileType.MEDIA)
+    }
+
+    @Test
+    fun `a track is fetched from the download endpoint and keeps the server's file name`() {
+        val plan = planner.plan(track(), TRACK_DIRECTORY)
+
+        plan.media().url shouldBe "download://${uuid(30)}"
+        plan.media().fileName shouldBe "04 - Go Your Own Way.flac"
+    }
+
+    @Test
+    fun `a track falls back to the static audio stream when downloading is not allowed`() {
+        val plan = planner.plan(track(), TRACK_DIRECTORY, downloadAllowed = false)
+
+        // `/Audio/{id}/stream?static=true`, not the video route: the same bytes over a route the
+        // server does not gate on `enableContentDownloading`.
+        plan.media().url shouldContain "audio-static://${uuid(30)}"
+        plan.media().url shouldContain "mediaSourceId=source-${uuid(30)}"
+    }
+
+    @Test
+    fun `a quality stamped on a track is ignored — music downloads are originals only`() {
+        val plan = planner.plan(track(), TRACK_DIRECTORY, quality = DownloadQuality.LOW)
+
+        // Key decision 10. `DownloadEnqueuer` never writes a transcoded audio row, and the planner
+        // does not honour one either: a transcode URL here would produce a file the offline player
+        // and the size machinery both describe wrongly.
+        plan.media().url shouldBe "download://${uuid(30)}"
+        plan.media().fileName shouldNotContain "low"
+        plan.map { it.type } shouldContainExactly
+            listOf(DownloadFileType.IMAGE_PRIMARY, DownloadFileType.MEDIA)
+    }
+
+    @Test
+    fun `a track's subtitle-shaped streams are never turned into sidecars`() {
+        // A tagged music file can carry an odd extra stream; the audio branch does not look.
+        val plan =
+            planner.plan(
+                track(streams = listOf(subtitleStream(index = 2), audioStream(index = 1))),
+                TRACK_DIRECTORY,
+            )
+
+        plan.filter { it.type == DownloadFileType.SUBTITLE }.shouldBeEmpty()
+        plan.filter { it.type == DownloadFileType.AUDIO }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `an album is refused before a URL is ever built`() {
+        // Same guard a season gets: the caller expands containers, and one that forgot must fail
+        // here rather than as an unexplained 400 halfway down the queue.
+        shouldThrow<NotDownloadableException> { planner.plan(album(), TRACK_DIRECTORY) }
+        shouldThrow<NotDownloadableException> { planner.plan(artist(), TRACK_DIRECTORY) }
+        shouldThrow<NotDownloadableException> { planner.plan(playlist(), TRACK_DIRECTORY) }
+    }
+
     private fun info(
         width: Int,
         thumbnails: Int,
@@ -598,6 +694,9 @@ class DownloadFilePlannerTest {
 
     private companion object {
         const val DIRECTORY = "Arrival (2016)"
+
+        /** What `DownloadPaths.itemDirectoryName` produces for [DownloadFixtures.track]. */
+        const val TRACK_DIRECTORY = "Fleetwood Mac - Rumours - 04 - Go Your Own Way"
     }
 }
 
@@ -609,6 +708,11 @@ private class FakeDownloadUrlFactory : DownloadUrlFactory {
         itemId: UUID,
         mediaSourceId: String?,
     ) = "stream://$itemId?mediaSourceId=$mediaSourceId"
+
+    override fun staticAudioUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+    ) = "audio-static://$itemId?mediaSourceId=$mediaSourceId"
 
     override fun transcodedVideoUrl(
         itemId: UUID,

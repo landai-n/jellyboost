@@ -186,19 +186,25 @@ class DownloadedMetadataRefresher
             }
 
         /**
-         * The series and season ids of [items] that are not already being written.
+         * The parent ids of [items] that are not already being written — series and season for an
+         * episode, album and album artist for a track (M13 Phase 5).
          *
-         * Mirrors `DownloadEnqueuer.fetchParents`: a downloaded episode is only reachable from its
-         * show offline because those two rows were cached alongside it. They go stale exactly like
-         * the episode does — a renamed show, new series artwork — and the lean-write bug gutted them
-         * too.
+         * Mirrors `DownloadEnqueuer.fetchParents` exactly, and has to: a downloaded episode is only
+         * reachable from its show offline, and a downloaded track from its artist, because those
+         * rows were cached alongside them. They go stale exactly like the download does — a renamed
+         * show, new series artwork, an album re-tagged after a metadata fix — and the lean-write bug
+         * gutted them too.
+         *
+         * A downloaded **track** is also why this pass matters more for music than for video: the
+         * album and artist rows behind it are pure metadata with no file of their own, so nothing
+         * but this sync ever brings them up to date.
          */
         private fun parentIdsOf(
             items: List<BaseItemDto>,
             known: Set<UUID>,
         ): List<UUID> =
             items
-                .flatMap { listOfNotNull(it.seriesId, it.seasonId) }
+                .flatMap { listOfNotNull(it.seriesId, it.seasonId, it.albumId, it.albumArtists?.firstOrNull()?.id) }
                 .filterNot { it in known }
                 .distinct()
 

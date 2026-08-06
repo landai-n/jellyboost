@@ -16,11 +16,15 @@ import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadApi
 import dev.jellyboost.data.downloads.DownloadFixtures
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
+import dev.jellyboost.data.downloads.DownloadFixtures.album
+import dev.jellyboost.data.downloads.DownloadFixtures.artist
 import dev.jellyboost.data.downloads.DownloadFixtures.audioStream
 import dev.jellyboost.data.downloads.DownloadFixtures.episode
 import dev.jellyboost.data.downloads.DownloadFixtures.movie
+import dev.jellyboost.data.downloads.DownloadFixtures.playlist
 import dev.jellyboost.data.downloads.DownloadFixtures.season
 import dev.jellyboost.data.downloads.DownloadFixtures.series
+import dev.jellyboost.data.downloads.DownloadFixtures.track
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.engine.SiblingSeeder
 import io.kotest.assertions.throwables.shouldThrow
@@ -713,7 +717,164 @@ class DownloadEnqueuerTest {
             coVerify(exactly = 0) { downloadDao.upsert(any()) }
         }
 
+    // ---- music containers expand too (M13 Phase 5) -----------------------------------------------
+
+    @Test
+    fun `an album becomes one download per track, in the order the server lists them`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30), uuid(31)))
+            // Answered out of order on purpose: `getItems(ids = …)` sorts to its own taste, and the
+            // queue's order is the disc/track order that was asked for.
+            coEvery { api.getFullItems(listOf(uuid(30), uuid(31))) } returns
+                AppResult.Success(listOf(track(id = uuid(31), trackNumber = 5), track(id = uuid(30))))
+
+            val result = enqueuer().enqueue(uuid(40), USER)
+
+            // The album itself is never a download row — a folder has no file, exactly as a season.
+            rows.map { it.itemId } shouldContainExactly listOf(uuid(30), uuid(31))
+            rows.map { it.queuePosition } shouldContainExactly listOf(1, 2)
+            result.shouldBeInstanceOf<AppResult.Success<List<DownloadEntity>>>().value.size shouldBe 2
+        }
+
+    @Test
+    fun `downloading an album caches the album and the artist so the offline walk works`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            // artist → album → tracks is the M13 DoD's offline walk, and every hop reads a row with
+            // `source = DOWNLOAD`. A missing artist row is an artist page with nothing on it.
+            upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(40), uuid(30), uuid(50))
+            upserted.captured.map { it.source }.distinct() shouldContainExactly listOf(ItemSource.DOWNLOAD)
+        }
+
+    @Test
+    fun `an artist is expanded through one album-ordered request`() =
+        runTest {
+            coEvery { api.getFullItems(listOf(uuid(50))) } returns AppResult.Success(listOf(artist()))
+            coEvery { api.getArtistTrackIds(uuid(50)) } returns AppResult.Success(listOf(uuid(30), uuid(32)))
+            coEvery { api.getFullItems(listOf(uuid(30), uuid(32))) } returns
+                AppResult.Success(
+                    listOf(
+                        track(id = uuid(30)),
+                        track(id = uuid(32), albumId = uuid(41), album = "Tusk", trackNumber = 1),
+                    ),
+                )
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(41))) } returns
+                AppResult.Success(listOf(album(), album(id = uuid(41), name = "Tusk")))
+
+            enqueuer().enqueue(uuid(50), USER)
+
+            coVerify(exactly = 1) { api.getArtistTrackIds(uuid(50)) }
+            rows.map { it.itemId } shouldContainExactly listOf(uuid(30), uuid(32))
+            // Both albums are cached — the artist page lists them, and each one's own page lists
+            // the tracks underneath it.
+            upserted.captured.map { it.id } shouldContainExactlyInAnyOrder
+                listOf(uuid(50), uuid(30), uuid(32), uuid(40), uuid(41))
+        }
+
+    @Test
+    fun `a playlist queues its members' albums and artists, but not the playlist itself`() =
+        runTest {
+            coEvery { api.getFullItems(listOf(uuid(60))) } returns AppResult.Success(listOf(playlist()))
+            coEvery { api.getPlaylistTrackIds(uuid(60)) } returns AppResult.Success(listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            enqueuer().enqueue(uuid(60), USER)
+
+            rows.map { it.itemId } shouldContainExactly listOf(uuid(30))
+            // The playlist row is deliberately absent: offline it could only ever open onto an
+            // empty track list, because Room has no playlist-membership relation (DECISIONS.md,
+            // 2026-08-06). The tracks are reachable through their album and artist instead.
+            upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
+        }
+
+    @Test
+    fun `a single track caches its album and its artist`() =
+        runTest {
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+            coEvery { api.getFullItems(listOf(uuid(40), uuid(50))) } returns
+                AppResult.Success(listOf(album(), artist()))
+
+            enqueuer().enqueue(uuid(30), USER)
+
+            upserted.captured.map { it.id } shouldContainExactlyInAnyOrder listOf(uuid(30), uuid(40), uuid(50))
+        }
+
+    @Test
+    fun `tracks already on the device are left exactly as they are`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30), uuid(31)))
+            coEvery { downloadDao.get(uuid(30)) } returns
+                DownloadFixtures.download(itemId = uuid(30), status = DownloadStatus.DOWNLOADED)
+            coEvery { api.getFullItems(listOf(uuid(31))) } returns
+                AppResult.Success(listOf(track(id = uuid(31), trackNumber = 5)))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            rows.map { it.itemId } shouldContainExactly listOf(uuid(31))
+        }
+
+    @Test
+    fun `a track is always downloaded as the original, whatever the quality preference says`() =
+        runTest {
+            downloadQuality.value = DownloadQuality.LOW
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            // Key decision 10: music is originals-only, and the *row* says so. Every downstream
+            // rule keys off this column — the transcode URL, the size projector, the "a transcode
+            // cannot be paused" rule, the *Transcoded* marker — so a row written ORIGINAL is one
+            // none of that machinery can reach.
+            row.quality shouldBe DownloadQuality.ORIGINAL
+            row.bakedAudioStreamIndex.shouldBeNull()
+            // …and the size is the server's own, exactly, rather than a runtime × bitrate ceiling.
+            row.bytesTotal shouldBe 32_000_000L
+            row.sizeIsExact shouldBe true
+            row.projectedBytes.shouldBeNull()
+        }
+
+    @Test
+    fun `a track files itself under its album on the Downloads screen`() =
+        runTest {
+            givenAlbum(trackIds = listOf(uuid(30)))
+            coEvery { api.getFullItems(listOf(uuid(30))) } returns AppResult.Success(listOf(track()))
+
+            enqueuer().enqueue(uuid(40), USER)
+
+            // The column the Downloaded tab groups by (`DownloadItem.seriesKey`): a track's heading
+            // is its album, the way an episode's is its show.
+            row.seriesName shouldBe "Rumours"
+            // And the directory is unique per track — two albums' *Intro* must not share one.
+            row.directoryName shouldBe "Fleetwood Mac - Rumours - 04 - Go Your Own Way"
+        }
+
+    @Test
+    fun `an album the server lists no tracks for fails instead of queueing the album`() =
+        runTest {
+            givenAlbum(trackIds = emptyList())
+
+            val result = enqueuer().enqueue(uuid(40), USER)
+
+            result.shouldBeInstanceOf<AppResult.Failure>().error.shouldBeInstanceOf<AppError.NotFound>()
+            coVerify(exactly = 0) { downloadDao.upsert(any()) }
+        }
+
     // ---- helpers --------------------------------------------------------------------------------
+
+    /** An album (`uuid(40)`) by an artist (`uuid(50)`) the server lists [trackIds] under. */
+    private fun givenAlbum(trackIds: List<java.util.UUID>) {
+        coEvery { api.getFullItems(listOf(uuid(40))) } returns AppResult.Success(listOf(album()))
+        coEvery { api.getAlbumTrackIds(uuid(40)) } returns AppResult.Success(trackIds)
+        // The tracks' parents: the album is already cached, so only the artist is fetched.
+        coEvery { api.getFullItems(listOf(uuid(50))) } returns AppResult.Success(listOf(artist()))
+    }
 
     /** A season (`uuid(11)`) of a series (`uuid(10)`) the server lists [episodeIds] under. */
     private fun givenSeason(episodeIds: List<java.util.UUID>) {

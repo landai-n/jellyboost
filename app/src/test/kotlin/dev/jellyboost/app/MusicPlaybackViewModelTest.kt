@@ -1,12 +1,15 @@
 package dev.jellyboost.app
 
 import app.cash.turbine.test
+import dev.jellyboost.core.common.AppError
+import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.common.music.MusicPlaybackState
+import dev.jellyboost.data.JellyfinRepository
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,8 +37,9 @@ class MusicPlaybackViewModelTest {
             every { togglePlayPause() } returns Unit
             every { next() } returns Unit
         }
+    private val repository = mockk<JellyfinRepository>()
 
-    private fun viewModel() = MusicPlaybackViewModel(controller)
+    private fun viewModel() = MusicPlaybackViewModel(controller, repository)
 
     @Test
     fun `state is the controller's own state, passed straight through`() =
@@ -88,6 +92,52 @@ class MusicPlaybackViewModelTest {
 
             verify(exactly = 1) { controller.togglePlayPause() }
             verify(exactly = 1) { controller.next() }
+        }
+
+    // ---- startRadio (M13 Phase 6) --------------------------------------------------------------
+
+    @Test
+    fun `startRadio hands a non-empty mix straight to the queue`() =
+        runTest(dispatcher) {
+            val seed = track()
+            val mix = listOf(track().copy(id = "m1"), track().copy(id = "m2"))
+            coEvery { repository.getInstantMix(seed.id) } returns AppResult.Success(mix)
+
+            viewModel().startRadio(seed)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { controller.play(mix, 0, false, 0L) }
+        }
+
+    @Test
+    fun `startRadio reports RadioFailed when the mix comes back empty`() =
+        runTest(dispatcher) {
+            val seed = track()
+            coEvery { repository.getInstantMix(seed.id) } returns AppResult.Success(emptyList())
+
+            val viewModel = viewModel()
+            viewModel.messages.test {
+                viewModel.startRadio(seed)
+
+                awaitItem() shouldBe MusicMessage.RadioFailed("Track 1")
+                cancelAndIgnoreRemainingEvents()
+            }
+            coVerify(exactly = 0) { controller.play(any(), any(), any(), any()) }
+        }
+
+    @Test
+    fun `startRadio reports RadioFailed when the fetch fails`() =
+        runTest(dispatcher) {
+            val seed = track()
+            coEvery { repository.getInstantMix(seed.id) } returns AppResult.Failure(AppError.Network())
+
+            val viewModel = viewModel()
+            viewModel.messages.test {
+                viewModel.startRadio(seed)
+
+                awaitItem() shouldBe MusicMessage.RadioFailed("Track 1")
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 
     private fun track() = JellyfinItem(id = "t1", name = "Track 1", type = ItemType.AUDIO)

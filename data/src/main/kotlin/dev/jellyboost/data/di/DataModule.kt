@@ -12,6 +12,8 @@ import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.mapper.ArtworkRequestWidths
 import dev.jellyboost.data.mapper.ImageUrlFactory
 import dev.jellyboost.data.mapper.SdkImageUrlFactory
+import dev.jellyboost.data.music.MusicApi
+import dev.jellyboost.data.music.SdkMusicApi
 import javax.inject.Singleton
 
 /**
@@ -37,6 +39,11 @@ internal interface DataModule {
     @Binds
     @Singleton
     fun bindImageUrlFactory(impl: SdkImageUrlFactory): ImageUrlFactory
+
+    /** Binds Instant Mix and lyrics to the SDK's `instantMixApi`/`lyricsApi` (M13 Phase 6). */
+    @Binds
+    @Singleton
+    fun bindMusicApi(impl: SdkMusicApi): MusicApi
 
     companion object {
         /**

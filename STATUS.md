@@ -12,7 +12,7 @@ device walk, and expect its downloads and database not to carry over. Full gate 
 the rename: ktlint + detekt + unit tests + `assembleDebug` + `assembleRelease` all green,
 baseline profile still compiles into the release APK (`assets/dexopt/baseline.prof`).
 
-## Planned milestone: M13 — Music (approved 2026-08-05; Phases 0–5 landed, Phase 6 next)
+## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
 Third user-approved scope extension (after M11/M12): a full music experience —
 artist/album/playlist browsing, background playback with notification/lock-screen
@@ -100,10 +100,42 @@ dedicated bottom-nav tab — user decision). Detailed phase plan:
   playlist and an artist; (4) delete an album, then one track of another, and
   confirm the offline artist page keeps what remains; (5) the Downloads tab's
   album grouping and per-track rows on the tablet in both orientations.
-- Phase 6: Instant Mix + lyrics + hardening + docs. Work happens on the
-  `worktree-music-m13` branch.
+- **Phase 6 (Instant Mix + lyrics + hardening + docs)** — landed. `data/.../music/MusicApi.kt`
+  + `SdkMusicApi.kt` (`InstantMixApi`/`LyricsApi`, the `PlayerApi`/`SdkPlayerApi` pattern);
+  `getInstantMix`/`getLyrics` on the repository ×3 (offline: `AppError.Network`, the
+  `PlaybackSourceResolver` "no substitute" idiom; `DEFAULT_INSTANT_MIX_LIMIT = 200`);
+  `LyricsMapper.kt` (`LyricDto.metadata.isSynced` trusted first, falls back to "any line has a
+  start tick"); "Start radio" on AlbumDetail's header, ArtistDetail's header and NowPlaying,
+  all three routed through `MusicPlaybackViewModel.startRadio` (the same indirection
+  `play`/`shuffle` use) and a new `MusicMessage.RadioFailed` on the existing snackbar channel;
+  `LyricsPane` in `:feature:music/nowplaying/` (compact: an overlay-nav toggle swaps the
+  artwork square for the pane; wide: a Queue/Lyrics tab beside the inline queue), synced-line
+  highlight/auto-scroll derived from `positionMs` in `NowPlayingViewModel`
+  (fetch-on-track-change keyed on item id, session cache, cleared on Idle). `TrackRow` has no
+  overflow affordance — none was invented for it. `assembleRelease` green, no new R8 keep rule
+  needed. +40 tests (`:data` 321, `:feature:music` 58, `:app` 44, all green). Gate green in one
+  run. Docs: this section, `docs/features/music.md`, `docs/ARCHITECTURE.md`'s M13 section,
+  `docs/notes/music-m13-dod-walk.md`, DECISIONS.md.
 - **Gating:** M13 lands code while M11/M12 device DoDs are owed, but tags `m13`
   only after M11 and M12 close (their precedent).
+
+**Consolidated device DoD — owed, one walk covers it all: `docs/notes/music-m13-dod-walk.md`.**
+Every phase above left device-only checks open; nothing has been verified on the test tablet yet.
+Highest-priority single item: **`/Items/{id}/Download` was never confirmed against a live server
+for an audio item** (the dev server was unreachable for all of Phase 5) — the implemented fallback
+(`/Audio/{id}/stream?static=true`) is designed-in but unproven as a fallback because the primary
+path itself is unproven. The walk also covers: audio-focus survival across the video⇄music
+`AudioAttributes` flip; notification/lock-screen shuffle-repeat rendering and prev/next-from-
+playlist; dashboard `PlayMethod`/`PlaySessionId` for flac (DirectPlay) vs. a transcoded container;
+exactly-one-session across a video⇄music handoff on the dashboard; mini-player docking in both nav
+layouts and orientations; queue-sheet reorder/remove/jump on the tablet; NowPlaying two-pane at
+tablet widths; Continue Listening resume-at-position online and offline; download an album/artist/
+playlist → airplane mode → browse artist→album→tracks, play with full queue controls, art present;
+delete cascade leaves the rest of an artist's downloads intact; Instant Mix from all three "Start
+radio" sites; synced-lyrics scroll/highlight on a track that has them, and the affordance absent on
+one that doesn't; SyncPlay⊕music refusal; favorites reflected in jellyfin-web; kill-and-relaunch
+mid-playback; the minified build repeating the background/transcode/offline checks (items 3, 6, 9
+of the walk).
 
 ## Current milestone: M10 — Release hardening (**COMPLETE**, 2026-07-30, tag `m10`)
 

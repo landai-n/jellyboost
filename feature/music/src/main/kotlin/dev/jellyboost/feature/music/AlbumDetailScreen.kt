@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,9 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
  *
  * @param onPlay `(tracks, startIndex)` — a track row was tapped, or the Play button at index 0.
  * @param onShuffle `(tracks)` — the Shuffle button; starts the queue shuffled from the top.
+ * @param onStartRadio the album itself — "Start radio" (M13 Phase 6); resolves an Instant Mix
+ *   seeded from the album and hands it to the queue. `JellyfinNavHost` wires it straight to
+ *   `MusicPlaybackViewModel.startRadio`, the same indirection [onPlay]/[onShuffle] go through.
  */
 @Composable
 fun AlbumDetailScreen(
@@ -73,6 +77,7 @@ fun AlbumDetailScreen(
     onArtistClick: (JellyfinItem) -> Unit,
     onPlay: (tracks: List<JellyfinItem>, startIndex: Int) -> Unit,
     onShuffle: (tracks: List<JellyfinItem>) -> Unit,
+    onStartRadio: (JellyfinItem) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit,
     modifier: Modifier = Modifier,
@@ -96,6 +101,7 @@ fun AlbumDetailScreen(
                     onTrackClick = { index -> onPlay(state.tracks, index) },
                     onPlayAlbum = { onPlay(state.tracks, 0) },
                     onShuffle = { onShuffle(state.tracks) },
+                    onStartRadio = { state.album?.let(onStartRadio) },
                     onDownload = viewModel::downloadAlbum,
                 )
         }
@@ -141,6 +147,7 @@ private fun AlbumDetailContent(
     onTrackClick: (index: Int) -> Unit,
     onPlayAlbum: () -> Unit,
     onShuffle: () -> Unit,
+    onStartRadio: () -> Unit,
     onDownload: () -> Unit,
 ) {
     val album = state.album ?: return
@@ -158,7 +165,7 @@ private fun AlbumDetailContent(
                 onDownload = onDownload,
             )
             Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
-            AlbumTransportRow(onPlay = onPlayAlbum, onShuffle = onShuffle)
+            AlbumTransportRow(onPlay = onPlayAlbum, onShuffle = onShuffle, onStartRadio = onStartRadio)
             Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
         }
 
@@ -325,15 +332,21 @@ private fun AlbumDownloadButton(
     )
 }
 
-/** Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue. */
+/**
+ * Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue — plus a
+ * "Start radio" affordance (M13 Phase 6) that hands `MusicPlaybackViewModel.startRadio` the album
+ * itself rather than its tracks.
+ */
 @Composable
 private fun AlbumTransportRow(
     onPlay: () -> Unit,
     onShuffle: () -> Unit,
+    onStartRadio: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.SpaceLarge),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         PrimaryPillButton(
             text = stringResource(R.string.music_album_play),
@@ -346,6 +359,11 @@ private fun AlbumTransportRow(
             onClick = onShuffle,
             leadingIcon = Icons.Filled.Shuffle,
             modifier = Modifier.weight(1f),
+        )
+        GlassIconButton(
+            icon = Icons.Filled.Radio,
+            contentDescription = stringResource(R.string.music_album_start_radio),
+            onClick = onStartRadio,
         )
     }
 }

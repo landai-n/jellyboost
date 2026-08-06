@@ -386,6 +386,9 @@ private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
                     MusicMessage.QueueUnavailable -> context.getString(R.string.music_queue_unavailable)
                     is MusicMessage.PlaybackFailed ->
                         context.getString(R.string.music_playback_failed, message.itemName)
+
+                    is MusicMessage.RadioFailed ->
+                        context.getString(R.string.music_radio_failed, message.itemName)
                 }
             snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
         }

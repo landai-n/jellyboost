@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,12 +57,15 @@ import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
  * @param onAlbumClick an album card in the "Albums" row was tapped.
  * @param onTrackClick `(tracks, startIndex)` — a top-track row was tapped. No-op until M13 Phase 3
  *   wires an actual queue, exactly as [AlbumDetailScreen]'s `onPlay` — see that screen's KDoc.
+ * @param onStartRadio the artist itself — "Start radio" (M13 Phase 6), the header action next to
+ *   the favourite heart; see [AlbumDetailScreen]'s `onStartRadio` for the wiring this mirrors.
  */
 @Composable
 fun ArtistDetailScreen(
     viewModel: ArtistDetailViewModel,
     onAlbumClick: (JellyfinItem) -> Unit,
     onTrackClick: (tracks: List<JellyfinItem>, startIndex: Int) -> Unit,
+    onStartRadio: (JellyfinItem) -> Unit,
     onBack: () -> Unit,
     onHome: () -> Unit,
     modifier: Modifier = Modifier,
@@ -84,6 +88,7 @@ fun ArtistDetailScreen(
                     onToggleFavorite = viewModel::toggleFavorite,
                     onTrackClick = { index -> onTrackClick(state.visibleTopTracks, index) },
                     onExpandTopTracks = viewModel::expandTopTracks,
+                    onStartRadio = { state.artist?.let(onStartRadio) },
                 )
         }
 
@@ -127,6 +132,7 @@ private fun ArtistDetailContent(
     onToggleFavorite: (JellyfinItem) -> Unit,
     onTrackClick: (index: Int) -> Unit,
     onExpandTopTracks: () -> Unit,
+    onStartRadio: () -> Unit,
 ) {
     val artist = state.artist ?: return
     LazyColumn(
@@ -135,7 +141,7 @@ private fun ArtistDetailContent(
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
         item(key = SECTION_HEADER) {
-            ArtistHeader(artist = artist, onToggleFavorite = onToggleFavorite)
+            ArtistHeader(artist = artist, onToggleFavorite = onToggleFavorite, onStartRadio = onStartRadio)
         }
 
         if (state.albums.isNotEmpty()) {
@@ -190,6 +196,7 @@ private fun LazyListScope.itemsIndexed(
 private fun ArtistHeader(
     artist: JellyfinItem,
     onToggleFavorite: (JellyfinItem) -> Unit,
+    onStartRadio: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(Dimens.SpaceLarge),
@@ -216,16 +223,23 @@ private fun ArtistHeader(
 
         Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
 
-        val isFavorite = artist.userData.isFavorite
-        GlassIconButton(
-            icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription =
-                stringResource(
-                    if (isFavorite) R.string.music_artist_remove_favorite else R.string.music_artist_add_favorite,
-                ),
-            onClick = { onToggleFavorite(artist) },
-            tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
+            val isFavorite = artist.userData.isFavorite
+            GlassIconButton(
+                icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription =
+                    stringResource(
+                        if (isFavorite) R.string.music_artist_remove_favorite else R.string.music_artist_add_favorite,
+                    ),
+                onClick = { onToggleFavorite(artist) },
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
+            )
+            GlassIconButton(
+                icon = Icons.Filled.Radio,
+                contentDescription = stringResource(R.string.music_artist_start_radio),
+                onClick = onStartRadio,
+            )
+        }
     }
 }
 

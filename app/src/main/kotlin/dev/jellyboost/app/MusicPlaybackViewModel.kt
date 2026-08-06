@@ -3,13 +3,18 @@ package dev.jellyboost.app
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.common.music.MusicPlaybackState
+import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.player.model.ticksToMillis
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,9 +36,18 @@ class MusicPlaybackViewModel
     @Inject
     constructor(
         private val controller: MusicController,
+        private val repository: JellyfinRepository,
     ) : ViewModel() {
-        /** Refusals and unplayable tracks, for the app chrome's snackbar. */
-        val messages: Flow<MusicMessage> = controller.messages
+        /**
+         * [startRadio]'s own failures — an Instant Mix fetch is a repository call this class makes
+         * *before* there is anything to hand the controller, so it cannot ride [MusicController
+         * .messages] the way a refusal or an unplayable track does.
+         */
+        private val radioMessages =
+            MutableSharedFlow<MusicMessage>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+        /** Refusals, unplayable tracks and failed "Start radio" attempts, for the app chrome's snackbar. */
+        val messages: Flow<MusicMessage> = merge(controller.messages, radioMessages)
 
         /** The queue and its transport state, for [MiniPlayer] and its visibility rule. */
         val state: StateFlow<MusicPlaybackState> = controller.state
@@ -80,4 +94,30 @@ class MusicPlaybackViewModel
 
         /** The mini-player's next button. */
         fun next() = controller.next()
+
+        /**
+         * "Start radio" — `AlbumDetailScreen`'s header action, `ArtistDetailScreen`'s, and
+         * `NowPlayingScreen`'s (M13 Phase 6, docs/notes/music-m13-plan.md, key decision 11).
+         *
+         * Fetches the server's Instant Mix seeded from [item] and hands it straight to the queue,
+         * exactly like [play] but resolved from one seed item rather than a caller-supplied list. A
+         * failed fetch — offline, a server error, or a mix that came back empty — surfaces through
+         * [messages] as [MusicMessage.RadioFailed] instead of a full-screen error: this is a
+         * secondary action on an already-loaded screen, and its failure should not read as the
+         * screen itself being broken.
+         */
+        fun startRadio(item: JellyfinItem) {
+            viewModelScope.launch {
+                when (val result = repository.getInstantMix(item.id)) {
+                    is AppResult.Success ->
+                        if (result.value.isNotEmpty()) {
+                            controller.play(result.value)
+                        } else {
+                            radioMessages.emit(MusicMessage.RadioFailed(item.name))
+                        }
+
+                    is AppResult.Failure -> radioMessages.emit(MusicMessage.RadioFailed(item.name))
+                }
+            }
+        }
     }

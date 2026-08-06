@@ -659,3 +659,92 @@ for a reason that does not apply here: its message is written to Room at failure
 days later, so it could not be re-resolved against the device's current locale anyway. Moving it
 needs the row to store a key rather than a sentence — a schema migration, not a copy change.
 <!-- END: Error copy (audit H8) -->
+
+<!-- BEGIN: Music (M13) -->
+## Music (M13)
+
+Full detail: [`docs/features/music.md`](features/music.md).
+
+**One new feature module, one new package inside `:player`, one new interface published from
+`:core:common`.** The player itself gets a *second orchestrator*, not a second player: there is
+still exactly one `ExoPlayer` (`ExoPlayerHandle`), and music and video take turns owning it through
+an arbiter rather than each getting their own.
+
+```
+:core:common
+ ├── music/MusicController.kt   MusicController + MusicPlaybackState + MusicMessage/MusicRepeatMode
+ ├── music/Lyrics.kt            Lyrics, LyricLine
+ └── model/ArtistRef.kt
+
+:player/music
+ ├── MusicPlaybackController    @Singleton, @MusicSessionScope — implements MusicController
+ ├── MusicPlayerPort            internal seam over ExoPlayerHandle (+ ExoMusicPlayerAdapter)
+ ├── MusicStreamResolver        pure: item (+ downloads) → uri / playSessionId / playMethod
+ ├── MusicQueueSpecFactory      pure: track → MusicQueueEntry (→ MediaItem in the adapter)
+ ├── MusicSessionCallback       shuffle/repeat as MediaSession custom commands
+ └── di/MusicModule, MusicSessionScope
+
+:player/session/PlaybackHandover   the video⇄music arbiter (new)
+:player/api/AudioStreamUrlFactory (+Sdk)   /Audio/{id}/universal, separate from the video-only StreamUrlFactory
+:player/report/PlaybackReporter    parameterised repeat/order + MusicReportTarget (extended, not replaced)
+
+:data/music   MusicApi + SdkMusicApi        InstantMixApi / LyricsApi, the PlayerApi/SdkPlayerApi pattern
+:data         JellyfinRepository (+3 impls) getAlbumTracks/getArtistAlbums/getArtistTopTracks/
+                                             getPlaylistItems/getResumeAudioItems/getInstantMix/getLyrics
+
+:feature:music (new module)   MusicLibrary / AlbumDetail / ArtistDetail / PlaylistDetail /
+                               NowPlaying (+ QueueSheet, LyricsPane) screens and ViewModels
+:app   MusicPlaybackViewModel (play/shuffle/startRadio indirection), MiniPlayer chrome integration
+```
+
+**Why an arbiter instead of a second player.** Building a second `ExoPlayer` would mean two
+`MediaSession`s fighting for one notification slot and one audio focus grant. Instead
+`MusicPlayerPort`/`ExoMusicPlayerAdapter` drives the **same** shared player's native playlist
+(`setMediaItems`) — which is load-bearing twice: notification prev/next comes free from the
+wrapped player's own playlist commands, and the session timeline *is* the queue, which is exactly
+the shape a `MediaLibraryService`/Android Auto follow-up needs, with no internal `MediaController`
+anywhere to fight it. `PlaybackHandover` is the `@Singleton` mutex-guarded arbiter that decides who
+currently owns the shared player: `claim(kind, relinquish)` runs the *previous* owner's stored
+relinquish callback — one stop report, a paused snapshot, then the player released — before the new
+owner ever calls `prepare()`. **Invariant, unit-tested like M12's Cast coordinator's
+detached-ticker rule: exactly one stop report per session, issued by the outgoing owner, completed
+before `claim()` returns.** `PlayerHandle` itself is untouched — widening it would have meant three
+implementations (Exo/Cast/Routing) and dragged Cast into a milestone that deliberately keeps
+casting video-only.
+
+**Three cross-cutting mechanisms this introduces.**
+
+| mechanism | where | why it is shaped that way |
+|---|---|---|
+| `MusicController` + `MusicPlaybackState` | `:core:common` `music/` | The `SyncPlaySession` precedent, for the same reason: the queue, the player and the reporting all live in `:player`, and `:feature:*`/`:app` must not depend on it. Published from `:core:common`, implemented by `MusicPlaybackController`, Hilt-bound in `:player`'s `MusicModule` — so `:feature:music`'s screens, `:app`'s mini-player, and `MusicPlaybackViewModel`'s `startRadio` can all drive or read the queue without any of them ever depending on `:player`. |
+| `PlaybackHandover` | `:player/session` | The one new arbiter this milestone needed: two independent orchestrators (video's `PlaybackSessionController`, music's `MusicPlaybackController`) sharing one player, with a single invariant — one owner, one stop report per handoff — that both sides call into rather than either polling the other's state. |
+| `AudioStreamUrlFactory` | `:player/api` | Deliberately **not** a branch inside `StreamUrlFactory`: the video resolver's HLS-only transcode gate and the mp3-over-HTTP audio `TranscodingProfile` would both reject a music transcode, so audio gets its own pure URL builder over `/Audio/{id}/universal` (direct-play containers, `transcodingContainer=ts`, `audioCodec=aac`, `maxStreamingBitrate=384_000`, a hand-appended `PlaySessionId`) — one deterministic URL per queue entry, which is what lets a whole album become a single `setMediaItems` call instead of N `PlaybackInfo` round trips. |
+
+**The mini-player chrome integration.** `:app`'s `MiniPlayer` (drawn inside `AppScaffold`) observes
+`MusicController.state` directly and folds its own height into `LocalAppChromePadding` the same way
+the bottom-nav pill's height already does, so every top-level screen's content padding adjusts
+without each screen knowing the mini-player exists. It is visible whenever the queue is `Active` and
+neither the video player nor `NowPlaying` is the current destination — the same "docked chrome,
+folded padding" pattern the nav pill and top bar already established, extended to a third piece of
+persistent chrome rather than given its own layout mechanism.
+
+**Instant Mix and lyrics ride the same two mechanisms above, not new ones.** "Start radio"
+(`MusicPlaybackViewModel.startRadio`) is a `getInstantMix` fetch followed by the exact same
+`MusicController.play()` every track tap already calls; a failed fetch surfaces through
+`MusicController.messages`' existing snackbar channel via a new `MusicMessage.RadioFailed` case,
+not a parallel error-reporting path. Lyrics are fetched by `NowPlayingViewModel` (which already
+injects `MusicController` directly, unlike the browse ViewModels) and rendered by a new
+`LyricsPane` in `:feature:music`; nothing about the player, the queue, or the session layer changed
+to support either feature.
+
+**Data model.** Extended, not paralleled — `JellyfinItem` gained defaulted music fields
+(`album`, `albumId`, `albumArtist`, `artists`, `artistRefs`) rather than a second model, and
+`ItemEntity` (Room v9) gained two nullable **query-only** indexed columns (`albumId`,
+`albumArtistId`) behind a plain additive `@AutoMigration(8, 9)` — the domain item itself still
+rebuilds from the stored DTO blob, so this is the same shape M7's series/season columns took.
+
+**What is deliberately not built here.** Android Auto (`MediaLibraryService` browse tree), casting
+music, offline Instant Mix/lyrics, offline playlist membership, audio download transcoding, and
+gapless/crossfade tuning are all recorded deferred items — see `docs/features/music.md`'s
+"deliberately not supported" table and `docs/notes/music-m13-plan.md`'s deferred list.
+<!-- END: Music (M13) -->

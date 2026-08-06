@@ -4137,3 +4137,57 @@ Seeded from the approved plan; listed for traceability, no divergence:
   The fallback the plan asked for is implemented (`DownloadUrlFactory.staticAudioUrl`,
   `/Audio/{id}/stream?static=true`, reached by the queue's existing `403` re-plan), but the primary
   path is unproven. Recorded in STATUS.md's owed-DoD list.
+
+## 2026-08-06 — M13 Phase 6: Instant Mix + lyrics — five implementation-time decisions
+- **Scope:** `data/.../music/MusicApi.kt`, `SdkMusicApi.kt` (new), `data/.../mapper/LyricsMapper.kt`
+  (new), `data/.../JellyfinRepository.kt` (+3 impls), `data/.../di/DataModule.kt`,
+  `core/common/.../music/MusicController.kt` (+`Lyrics.kt`), `app/.../MusicPlaybackViewModel.kt`,
+  `app/.../AppScaffold.kt`, `app/.../JellyfinNavHost.kt`, `feature/music/AlbumDetailScreen.kt`,
+  `ArtistDetailScreen.kt`, `feature/music/nowplaying/NowPlayingScreen.kt`,
+  `NowPlayingViewModel.kt`, `NowPlayingUiState.kt`, `LyricsPane.kt` (new).
+- **Plan said:** `docs/notes/music-m13-plan.md`, Phase 6 section + key decisions 8 and 11.
+- **Done instead:**
+  1. **`LyricDto` shape, verified against the SDK 1.8.12 model jar (`javap`), not assumed.**
+     `metadata: LyricMetadata` is non-null (`checkNotNullParameter` in the constructor bytecode);
+     `metadata.isSynced: Boolean?` and each `LyricLine.start: Long?` are the nullable fields the
+     plan expected. Mapping (`LyricsMapper.kt`): `isSynced = metadata.isSynced ?: lines.any {
+     it.startTicks != null }` — the metadata flag is trusted first, and only when the source left
+     it unset does sync get inferred from the lines themselves.
+  2. **Instant Mix uses the generic `getInstantMixFromItem` for every seed kind** (album, artist,
+     track), per the plan's own steer — the server dispatches on the seed's own kind, so one call
+     shape covers "Start radio" from all three surfaces rather than three endpoint variants.
+  3. **Offline refusal reuses `AppError.Network()`, not a new `AppError.Offline` case.** The plan's
+     prose (key decision 8) named "AppError.Offline" descriptively, but no such variant exists in
+     the taxonomy (`core/common/AppError.kt`) and the codebase already has an idiom for exactly this
+     situation — `PlaybackSourceResolver.resolve()` answers `AppError.Network()` when a track has
+     no downloaded copy and no connection either ("no network, no offline substitute"). `getInstantMix`
+     and `getLyrics` match that idiom instead of introducing a parallel one for two call sites.
+  4. **"Start radio" is wired through `MusicPlaybackViewModel` (`:app`), not by injecting
+     `MusicController` into `AlbumDetailViewModel`/`ArtistDetailViewModel`.** The plan's decision 2
+     KDoc explains why browse ViewModels go through that indirection for `play`/`shuffle` rather
+     than each repeating the same lines — Instant Mix needs an async repository fetch *before* the
+     controller call, which is more than "the same two lines," but the existing indirection already
+     had everywhere it needed to reach: a `startRadio(item)` method there fetches the mix and calls
+     `MusicController.play(mix)` itself. `AlbumDetailScreen`/`ArtistDetailScreen` gained an
+     `onStartRadio: (JellyfinItem) -> Unit` parameter wired to `music::startRadio` in
+     `JellyfinNavHost`, exactly like `onPlay`/`onShuffle`. A failed or empty mix surfaces as a new
+     `MusicMessage.RadioFailed(itemName)`, merged into the same `messages` flow the chrome's
+     existing `MusicMessageEffect` snackbar already collects — no second message channel.
+  5. **`TrackRow` gained no overflow affordance.** The prompt's scope note said to add a "Start
+     radio" action to `TrackRow`'s overflow only if one already existed; it does not (only a
+     favourite-heart `IconButton`), so none was invented. Per-track radio is reachable from
+     NowPlaying's own "Start radio" button once the track is playing.
+  6. **Two more justified quality suppressions, same shape as 2026-08-05's.** `JellyfinRepository`
+     itself (the interface, not just its three implementations) crossed detekt's `TooManyFunctions`
+     threshold once `getInstantMix`/`getLyrics` joined it, and `OfflineJellyfinRepositoryTest`
+     crossed `LargeClass` once their offline-refusal tests joined it. Both get the same
+     `@Suppress` + inline comment the sibling classes already carry, not a split — the interface
+     *is* the repository's whole surface, and the test class is one repository's own members
+     (the `HomeViewModelTest`/`SyncPlayControllerTest` precedent, not `ItemDetailViewModelTest`'s
+     split by distinct collaborator).
+- **Reason:** (1) removes guesswork from a DTO the plan itself flagged as unverified; (2)–(6) each
+  reuse an existing mechanism (the error taxonomy, the browse-screen indirection, the snackbar
+  channel) rather than adding a parallel one for two or three new call sites.
+- **Verified, not owed:** `assembleRelease` is green with **no new R8 keep rule** — `LyricDto` rides
+  the same `kotlinx.serialization` keep rules every other SDK model does, and neither `MusicApi`
+  wrapper is reflectively instantiated.

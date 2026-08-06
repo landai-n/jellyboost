@@ -39,6 +39,35 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Quality audit — whole-tree structural pass (2026-08-06 — report committed, no fixes yet)
+
+Third full audit (`docs/notes/audit-2026-08-06-quality.md`), and the first *structural*
+one: code quality, duplication, complexity/spaghetti, architecture conformance over all
+production source (334 files / 58k lines), 4 parallel auditors primed with
+DECISIONS/STATUS so logged decisions weren't re-reported. **44 unique findings → 0
+Critical · 8 High · 19 Medium · 17 Low.** The three headline claims were independently
+grep-verified. Architecture itself is clean (module graph = PLAN.md exactly, offline seam
+verbatim, no SDK types in UI); the Highs cluster in four areas:
+
+1. **Dead retention paths**: `evictBrowseCacheOlderThan` and `UserDataDao.deleteSynced`
+   have zero callers — the browse cache grows unboundedly and sign-out leaves every Room
+   table intact (second user inherits the first's cache); plus an un-transactioned
+   `BrowseCacheWriter` merge that can downgrade a DOWNLOAD row.
+2. **SyncPlayController internals**: 14 `runCatching` sites swallow
+   `CancellationException` (the hazard `:data:downloads` fixed three times);
+   `teardown`/`standDown` share 12 hand-synchronized reset statements; 5 self-nulling
+   Job fields form an unguarded recovery state machine.
+3. **Blinded quality gate**: four unlogged *global* detekt relaxations from M0
+   (`TooManyFunctions` 20, blanket Composable/Inject exemptions, `ReturnCount` 6) —
+   against the targeted-@Suppress house rule; needs a DECISIONS entry or a revert.
+4. **Drifted duplication**: `AppError`→message ×5 with three hardcoded-English copies
+   (home/detail/player errors untranslated in all 69 locales — the deferred "M9 polish"
+   debt), STAB-10 badge fix ×4, auth header ×3 (same-origin guard in only one).
+
+Report ends with a 4-tier remediation plan (Tier 1 correctness ≈ one session; Tier 2
+gates/governance; Tier 3 structural, scheduled with the next touch of each area).
+**No fixes applied yet** — findings only.
+
 ## Accessibility audit + full remediation (2026-08-05 — landed, gate green; TalkBack walk owed)
 
 Full-app a11y audit (report: `docs/audits/accessibility-audit-2026-08-05.md`, ~90 findings)

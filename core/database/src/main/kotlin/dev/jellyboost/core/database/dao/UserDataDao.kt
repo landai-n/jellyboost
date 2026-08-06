@@ -110,8 +110,13 @@ interface UserDataDao {
     /**
      * Drops every fully-synced row for a user, keeping the ones still pending.
      *
-     * Used by the download-delete cascade (M7) and by sign-out: a synced row is pure cache, a
-     * pending one is the only copy of a change the server has not seen.
+     * Called by `SessionRepository.signOut`: a synced row is pure cache — a copy of state the server
+     * already holds, worth nothing once the account has left the device — while a pending one is the
+     * only copy of a change the server has not seen, and docs/PLAN.md's local-first story is a
+     * promise that it survives to be pushed when the same account signs back in.
+     *
+     * (The per-item version of the same rule, used by the M7 download-delete cascade, is
+     * `DownloadDao.deleteSyncedUserData`.)
      */
     @Query("DELETE FROM user_data WHERE userId = :userId AND toBeSynced = 0")
     suspend fun deleteSynced(userId: UUID)

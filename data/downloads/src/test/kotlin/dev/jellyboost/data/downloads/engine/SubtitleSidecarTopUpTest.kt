@@ -363,6 +363,11 @@ private object FakeUrls : DownloadUrlFactory {
         mediaSourceId: String?,
     ) = "stream://$itemId"
 
+    override fun staticAudioUrl(
+        itemId: UUID,
+        mediaSourceId: String?,
+    ) = "audio-static://$itemId"
+
     override fun transcodedVideoUrl(
         itemId: UUID,
         mediaSourceId: String?,

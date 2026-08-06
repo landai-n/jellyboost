@@ -17,8 +17,19 @@ enum class DownloadsTab {
  * A run of finished downloads that belong together, or the one shared block that gathers every
  * standalone film.
  *
- * Episodes are gathered under their series, which is how a user thinks about what is on the device:
- * *three episodes of Westworld*, not *three files*. A lone film normally needs no heading of its
+ * Episodes are gathered under their series, and **tracks under their album** (M13 Phase 5) — one
+ * mechanism, because `DownloadEnqueuer` files a track's album in the same `seriesName` column an
+ * episode's show goes in, and this screen only ever asked that column for "the heading these rows
+ * belong under" ([DownloadItem.seriesKey]). *Nine tracks of Rumours* is how a user thinks about
+ * what is on the device, exactly as *three episodes of Westworld* is.
+ *
+ * Albums are the **top** grouping; artists do not gather albums above them. The tab is a flat list
+ * of one-level groups and nesting a second level would be a new row kind, a new expansion state and
+ * a new empty case, for a screen whose job is "what is on this device and how big is it". An
+ * artist's albums still sort next to each other whenever their titles do not, because the album
+ * heading carries the album name and the rows underneath name the tracks.
+ *
+ * A lone film normally needs no heading of its
  * own — see [isSeries] — but once at least one series group is also on the tab, a bare film row
  * right after a series' last episode reads as one more episode of that series (there is nothing
  * marking where the series ended). [isMoviesSection] is the fix: every film is gathered under one

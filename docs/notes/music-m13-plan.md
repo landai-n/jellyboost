@@ -318,7 +318,18 @@ custom-layout outcome, `/Items/Download` audio finding); full DoD walk;
 **tag `m13` only after M11/M12 device DoDs close**. Deferred list recorded
 in PLAN.md: Android Auto browse tree (MediaLibraryService swap), casting
 music, offline lyrics/instant-mix, audio download transcoding,
-gapless/crossfade tuning, playlist editing.
+gapless/crossfade tuning, playlist editing, **offline playlist membership**.
+
+**Offline playlist membership** (deferred in Phase 5; DECISIONS.md,
+2026-08-06). `OfflineJellyfinRepository.getPlaylistItems` stays permanently
+empty. An honest answer needs a new Room table (playlist id, item id, ordinal),
+the schema bump that comes with it, and a sync path keeping it current with the
+server's ordering — and the M13 DoD's offline walk is artist → album → tracks,
+which does not go through a playlist. Downloading *from* a playlist is fully
+supported: it expands to the playlist's audio members, which land under their
+own albums and artists offline. The playlist's own row is deliberately **not**
+cached as a download, so no offline library entry exists whose track list could
+only ever be empty.
 
 ## Verification
 

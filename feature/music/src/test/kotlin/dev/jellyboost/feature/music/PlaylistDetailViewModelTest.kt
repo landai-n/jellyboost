@@ -3,11 +3,13 @@ package dev.jellyboost.feature.music
 import androidx.lifecycle.SavedStateHandle
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.userdata.UserDataChange
 import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -22,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -49,6 +52,9 @@ class PlaylistDetailViewModelTest {
             every { changes } returns userDataChanges
             coEvery { setFavorite(any(), any()) } returns AppResult.Success(UserData())
         }
+
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads = mockk<DownloadRepository> { every { observeStates() } returns downloadStates }
 
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
@@ -128,10 +134,29 @@ class PlaylistDetailViewModelTest {
             coVerify(exactly = 1) { userDataRepository.setFavorite("t1", true) }
         }
 
+    @Test
+    fun `a playlist's tracks carry the same download badge as anywhere else`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(PLAYLIST_ID) } returns AppResult.Success(playlist())
+            coEvery { repository.getPlaylistItems(PLAYLIST_ID) } returns
+                AppResult.Success(listOf(track("t1", "Track 1")))
+            downloadStates.value = mapOf("t1" to DownloadState.Downloaded)
+
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            // Honest even though the playlist itself has no offline model: the badge describes the
+            // *track's* file on this device, which is exactly what a playlist download produces.
+            viewModel.uiState.value.tracks
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+        }
+
     private fun viewModel() =
         PlaylistDetailViewModel(
             repository = repository,
             userDataRepository = userDataRepository,
+            downloads = downloads,
             connectivityRefresher = connectivityRefresher,
             savedStateHandle = SavedStateHandle(mapOf("playlistId" to PLAYLIST_ID)),
         )

@@ -57,7 +57,11 @@ data class DownloadItem(
             } ?: 0f
 
     /**
-     * What the *Downloaded* tab groups by: the show an episode belongs to, or `null` for a film.
+     * What the *Downloaded* tab groups by: the show an episode belongs to, the **album** a track
+     * belongs to (M13), or `null` for a film.
+     *
+     * One column serves both because it only ever meant "the heading these rows belong under" —
+     * `DownloadEnqueuer` writes a track's album into [seriesName] for exactly that reason.
      *
      * `null` rather than falling back to [title]: a film has nothing to be grouped *with*, and a
      * heading is only worth its line when it says something the rows underneath do not.

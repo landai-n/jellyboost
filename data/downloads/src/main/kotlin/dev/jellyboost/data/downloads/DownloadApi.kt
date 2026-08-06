@@ -7,10 +7,15 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.extensions.itemsApi
+import org.jellyfin.sdk.api.client.extensions.playlistsApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
+import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ItemFields
+import org.jellyfin.sdk.model.api.ItemSortBy
+import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
 import org.jellyfin.sdk.model.api.request.GetItemsRequest
+import org.jellyfin.sdk.model.api.request.GetPlaylistItemsRequest
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,6 +44,37 @@ internal interface DownloadApi {
         seriesId: UUID,
         seasonId: UUID?,
     ): AppResult<List<UUID>>
+
+    /**
+     * An album's tracks, in disc-then-track order (M13 Phase 5).
+     *
+     * [getEpisodeIds]'s music counterpart, and it exists for the same reason: a `MUSIC_ALBUM` is a
+     * folder, so tapping Download on one has to become one download per track. The order matches
+     * `OnlineJellyfinRepository.getAlbumTracks` exactly — a queue drained top-to-bottom then
+     * downloads the album in the order the user sees it on the album page.
+     */
+    suspend fun getAlbumTrackIds(albumId: UUID): AppResult<List<UUID>>
+
+    /**
+     * Every track of an artist, **grouped by album** (M13 Phase 5).
+     *
+     * Sorted album-then-disc-then-track rather than by any global key, so a whole-artist download
+     * drains one album at a time: the Downloads screen's album groups fill in one by one and each
+     * reads as complete or not, instead of every album of the artist sitting half-downloaded at
+     * once (docs/notes/music-m13-plan.md, key decision 10).
+     */
+    suspend fun getArtistTrackIds(artistId: UUID): AppResult<List<UUID>>
+
+    /**
+     * A playlist's **audio** members, in playlist order (M13 Phase 5).
+     *
+     * `/Playlists/{id}/Items` rather than a `parentId` items query, for the reason
+     * `OnlineJellyfinRepository.getPlaylistItems` gives: a generic items query is not guaranteed to
+     * preserve playlist order and the dedicated endpoint is built for exactly that. A mixed
+     * playlist's video members are dropped here rather than downloaded — the tap was on a music
+     * screen, and expanding it into films is not what it meant.
+     */
+    suspend fun getPlaylistTrackIds(playlistId: UUID): AppResult<List<UUID>>
 }
 
 /**
@@ -101,7 +137,76 @@ internal class SdkDownloadApi
                 }
             }
 
+        override suspend fun getAlbumTrackIds(albumId: UUID): AppResult<List<UUID>> =
+            withContext(ioDispatcher) {
+                runCatchingApi {
+                    apiClient.itemsApi
+                        .getItems(
+                            GetItemsRequest(
+                                parentId = albumId,
+                                includeItemTypes = listOf(BaseItemKind.AUDIO),
+                                recursive = true,
+                                sortBy = TRACK_ORDER,
+                                sortOrder = listOf(SortOrder.ASCENDING),
+                                fields = emptyList(),
+                                enableImages = false,
+                                enableUserData = false,
+                                enableTotalRecordCount = false,
+                            ),
+                        ).content.items
+                        .map { it.id }
+                }
+            }
+
+        override suspend fun getArtistTrackIds(artistId: UUID): AppResult<List<UUID>> =
+            withContext(ioDispatcher) {
+                runCatchingApi {
+                    apiClient.itemsApi
+                        .getItems(
+                            GetItemsRequest(
+                                // `albumArtistIds`, not `artistIds`: a whole-artist download means
+                                // the artist's own records, not every compilation they guest on —
+                                // the same predicate `getArtistAlbums` browses by.
+                                albumArtistIds = listOf(artistId),
+                                includeItemTypes = listOf(BaseItemKind.AUDIO),
+                                recursive = true,
+                                sortBy = listOf(ItemSortBy.ALBUM) + TRACK_ORDER,
+                                sortOrder = listOf(SortOrder.ASCENDING),
+                                fields = emptyList(),
+                                enableImages = false,
+                                enableUserData = false,
+                                enableTotalRecordCount = false,
+                            ),
+                        ).content.items
+                        .map { it.id }
+                }
+            }
+
+        override suspend fun getPlaylistTrackIds(playlistId: UUID): AppResult<List<UUID>> =
+            withContext(ioDispatcher) {
+                runCatchingApi {
+                    apiClient.playlistsApi
+                        .getPlaylistItems(
+                            GetPlaylistItemsRequest(
+                                playlistId = playlistId,
+                                fields = emptyList(),
+                                enableImages = false,
+                                enableUserData = false,
+                            ),
+                        ).content.items
+                        .filter { it.type == BaseItemKind.AUDIO }
+                        .map { it.id }
+                }
+            }
+
         private companion object {
+            /**
+             * Disc, then track, then a stable alphabetical tiebreak — the album page's own order
+             * (`OnlineJellyfinRepository.getAlbumTracks`).
+             */
+            val TRACK_ORDER =
+                listOf(ItemSortBy.PARENT_INDEX_NUMBER, ItemSortBy.INDEX_NUMBER, ItemSortBy.SORT_NAME)
+
             /**
              * Everything the file plan and the offline detail page read.
              *

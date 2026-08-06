@@ -3,11 +3,13 @@ package dev.jellyboost.feature.music
 import androidx.lifecycle.SavedStateHandle
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.userdata.UserDataChange
 import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldContainExactly
@@ -21,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -43,6 +46,9 @@ class ArtistDetailViewModelTest {
             every { changes } returns userDataChanges
             coEvery { setFavorite(any(), any()) } returns AppResult.Success(UserData())
         }
+
+    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
+    private val downloads = mockk<DownloadRepository> { every { observeStates() } returns downloadStates }
 
     private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     private val connectivityRefresher =
@@ -128,6 +134,47 @@ class ArtistDetailViewModelTest {
             coVerify(exactly = 1) { userDataRepository.setFavorite(ARTIST_ID, true) }
         }
 
+    @Test
+    fun `download badges reach both the albums and the top tracks`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ARTIST_ID) } returns AppResult.Success(artist())
+            coEvery { repository.getArtistAlbums(ARTIST_ID) } returns
+                AppResult.Success(listOf(album("a1", "The Bends")))
+            coEvery { repository.getArtistTopTracks(ARTIST_ID) } returns
+                AppResult.Success(listOf(track("t1", "Fake Plastic Trees")))
+            downloadStates.value = mapOf("a1" to DownloadState.Downloaded, "t1" to DownloadState.Queued)
+
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            // Both halves, not just the tracks: an album card carries the same badge every other
+            // card in the app does, and this page is where a user checks what they have offline.
+            viewModel.uiState.value.albums
+                .single()
+                .downloadState shouldBe DownloadState.Downloaded
+            viewModel.uiState.value.topTracks
+                .single()
+                .downloadState shouldBe DownloadState.Queued
+        }
+
+    @Test
+    fun `a badge that changes after the page loaded still reaches it`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(ARTIST_ID) } returns AppResult.Success(artist())
+            coEvery { repository.getArtistAlbums(ARTIST_ID) } returns
+                AppResult.Success(listOf(album("a1", "The Bends")))
+            coEvery { repository.getArtistTopTracks(ARTIST_ID) } returns AppResult.Success(emptyList())
+            val viewModel = viewModel()
+            advanceUntilIdle()
+
+            downloadStates.value = mapOf("a1" to DownloadState.Downloading(0.5f))
+            advanceUntilIdle()
+
+            viewModel.uiState.value.albums
+                .single()
+                .downloadState shouldBe DownloadState.Downloading(0.5f)
+        }
+
     private infix fun List<*>.shouldHaveSizeOf(expected: Int) {
         size shouldBe expected
     }
@@ -136,6 +183,7 @@ class ArtistDetailViewModelTest {
         ArtistDetailViewModel(
             repository = repository,
             userDataRepository = userDataRepository,
+            downloads = downloads,
             connectivityRefresher = connectivityRefresher,
             savedStateHandle = SavedStateHandle(mapOf("artistId" to ARTIST_ID)),
         )

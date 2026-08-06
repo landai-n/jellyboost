@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.BaseItemDto
+import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
@@ -57,6 +58,9 @@ internal data class PlannedFile(
  * Only step 2 is essential. Everything else failing degrades the offline experience without making
  * the item unplayable, which is why they come after it and are attempted independently.
  *
+ * A **music track** takes a different, much shorter route through [audioPlan] — album art and the
+ * original file, and nothing else. See its KDoc for what is deliberately absent and why.
+ *
  * @param downloadAllowed the user's `enableContentDownloading` policy. `false` swaps the dedicated
  *   download endpoint for the static video stream — same bytes, a route the server does not gate on
  *   that policy.
@@ -99,6 +103,7 @@ internal class DownloadFilePlanner
             audioStreamIndex: Int? = item.downloadAudioStreamIndex,
         ): List<PlannedFile> {
             if (item.isFolderItem) throw NotDownloadableException(item.id)
+            if (item.type == BaseItemKind.AUDIO) return audioPlan(item, directoryName, downloadAllowed)
 
             val mediaSource = item.mediaSources?.firstOrNull()
             val mediaSourceId = mediaSource?.id
@@ -115,6 +120,64 @@ internal class DownloadFilePlanner
                 }
                 addAll(trickplayTiles(item))
             }
+        }
+
+        /**
+         * A music track's whole plan: the album's artwork, then the original file. Two entries, and
+         * that is the point (docs/notes/music-m13-plan.md, key decision 10).
+         *
+         * Everything the video plan does after its media entry is deliberately absent:
+         * - **no transcode, ever.** Music downloads are originals only, so [DownloadQuality] does
+         *   not reach this branch at all — the parameter is not even read here, and `DownloadEnqueuer`
+         *   stamps [DownloadQuality.ORIGINAL] on every audio row so nothing downstream (the size
+         *   projector, the no-resume rule, the *Transcoded* marker) can misread one. Audio
+         *   transcoding for downloads is a recorded deferred item, not an accident of omission.
+         * - **no subtitles, no audio sidecars.** A track has one audio stream and no subtitle
+         *   streams; the sidecar machinery exists to rescue tracks a *transcode* dropped, and
+         *   nothing is dropped here.
+         * - **no trickplay, no backdrop.** There is no scrubber thumbnail strip for audio and no
+         *   full-bleed offline header to draw.
+         *
+         * ### The artwork is the album's, and it is one file per track
+         * [BaseItemDto.albumPrimaryImageTag] is the album's own primary image, carried on every
+         * track — so the file that lands is the album cover, not a per-track image the server
+         * probably does not have. It is planned **per track** rather than once per album because
+         * the item directory is the unit of the delete cascade (`DownloadStorage.deleteItemDirectory`)
+         * and the storage accounting: a single shared file would live in some other track's
+         * directory and vanish when that track was deleted. At [PRIMARY_IMAGE_WIDTH] a cover is a
+         * few tens of kilobytes, so an album's worth of copies is noise next to one track's audio.
+         * A track whose album has no image falls back to the track's own primary tag.
+         */
+        private fun audioPlan(
+            item: BaseItemDto,
+            directoryName: String,
+            downloadAllowed: Boolean,
+        ): List<PlannedFile> =
+            buildList {
+                (albumImage(item) ?: primaryImage(item))?.let(::add)
+                add(
+                    PlannedFile(
+                        type = DownloadFileType.MEDIA,
+                        fileName = DownloadPaths.mediaFileName(item, directoryName),
+                        url =
+                            if (downloadAllowed) {
+                                urls.mediaUrl(item.id)
+                            } else {
+                                urls.staticAudioUrl(item.id, item.mediaSources?.firstOrNull()?.id)
+                            },
+                    ),
+                )
+            }
+
+        /** The album cover of a track, addressed on the **album**, or `null` when it has none. */
+        private fun albumImage(item: BaseItemDto): PlannedFile? {
+            val albumId = item.albumId ?: return null
+            val tag = item.albumPrimaryImageTag ?: return null
+            return PlannedFile(
+                type = DownloadFileType.IMAGE_PRIMARY,
+                fileName = "primary.webp",
+                url = urls.imageUrl(albumId, ImageType.PRIMARY, tag, PRIMARY_IMAGE_WIDTH),
+            )
         }
 
         /**

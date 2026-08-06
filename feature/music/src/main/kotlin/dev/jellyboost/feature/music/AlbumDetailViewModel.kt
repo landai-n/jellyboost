@@ -59,6 +59,28 @@ class AlbumDetailViewModel
             load()
         }
 
+        /**
+         * Downloads the whole album (M13 Phase 5).
+         *
+         * The **album's** id goes to the repository, not the track ids: `DownloadEnqueuer` is the
+         * one place that knows a music container expands into its tracks, in the album's own
+         * disc/track order, skipping the tracks already on the device. Sending a list of tracks
+         * from here would duplicate that rule in the UI and lose the ordering with it.
+         *
+         * Deliberately download-only: removing an album goes through the Downloads screen, which
+         * already has the confirmed per-row delete and is where a user goes to free space. A
+         * one-tap remove here would need its own confirmation dialog to be safe, which is a bigger
+         * surface than this button is worth.
+         */
+        fun downloadAlbum() {
+            if (!_uiState.value.canDownload) return
+            viewModelScope.launch {
+                if (downloads.enqueue(albumId) is AppResult.Failure) {
+                    Timber.w("Could not queue the download of album %s", albumId)
+                }
+            }
+        }
+
         /** Toggles the favourite heart on the album header or on one of its tracks. */
         fun toggleFavorite(item: JellyfinItem) {
             viewModelScope.launch {

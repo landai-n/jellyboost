@@ -55,6 +55,11 @@ import javax.inject.Singleton
  * one of them is enqueued exactly as a direct tap on that episode would have been: same re-fetch,
  * same quality preference, same paths (DECISIONS.md, 2026-07-29). That makes this class the one
  * place the rule lives, so no caller can reintroduce the bug by enqueuing a folder.
+ *
+ * M13 adds three more container kinds on the same rule — an album expands to its tracks in
+ * disc/track order, an artist to every track of theirs album by album, a playlist to its audio
+ * members in playlist order — and one exception to the *quality* half of it: audio is downloaded
+ * as the original file whatever the preference says (see [planQuality]).
  */
 @Singleton
 internal class DownloadEnqueuer
@@ -130,7 +135,7 @@ internal class DownloadEnqueuer
             userId: UUID,
         ): AppResult<List<DownloadEntity>> {
             val episodeIds =
-                when (val result = childEpisodeIds(container)) {
+                when (val result = childItemIds(container)) {
                     is AppResult.Failure -> return result
                     is AppResult.Success -> result.value
                 }
@@ -160,11 +165,18 @@ internal class DownloadEnqueuer
 
             val known = episodes.map { it.id }.toSet() + container.id
             val parents = fetchParents(episodes, exclude = known)
-            return write(userId, cache = listOf(container) + episodes + parents, targets = episodes)
+            // A playlist is the one container that is not cached alongside what it expanded to: a
+            // `PLAYLIST` row with `source = DOWNLOAD` would appear in the offline library as a
+            // playlist whose track list is permanently empty, because Room has no
+            // playlist-membership relation to fill it from (DECISIONS.md, 2026-08-05, "Offline
+            // playlists deferred"). The tracks it queued are reachable offline through their own
+            // albums and artists, which is what the M13 DoD asks for.
+            val cached = if (container.type == BaseItemKind.PLAYLIST) emptyList() else listOf(container)
+            return write(userId, cache = cached + episodes + parents, targets = episodes)
         }
 
         /** The ids under a container, or a failure when it is one this pipeline cannot expand. */
-        private suspend fun childEpisodeIds(container: BaseItemDto): AppResult<List<UUID>> =
+        private suspend fun childItemIds(container: BaseItemDto): AppResult<List<UUID>> =
             when (container.type) {
                 BaseItemKind.SERIES -> api.getEpisodeIds(seriesId = container.id, seasonId = null)
                 BaseItemKind.SEASON -> {
@@ -173,6 +185,13 @@ internal class DownloadEnqueuer
                             ?: return AppResult.Failure(AppError.NotFound(container.id.toString()))
                     api.getEpisodeIds(seriesId = seriesId, seasonId = container.id)
                 }
+
+                // The M13 music containers. Each answers ids in the order the matching screen shows
+                // them, so a queue drained top-to-bottom downloads the album, the artist's
+                // discography or the playlist in the order the user is looking at.
+                BaseItemKind.MUSIC_ALBUM -> api.getAlbumTrackIds(container.id)
+                BaseItemKind.MUSIC_ARTIST -> api.getArtistTrackIds(container.id)
+                BaseItemKind.PLAYLIST -> api.getPlaylistTrackIds(container.id)
 
                 // A box set or a library folder: the detail screen never offers Download on one, and
                 // guessing what "download this library" means is not this milestone's business.
@@ -208,11 +227,18 @@ internal class DownloadEnqueuer
         }
 
         /**
-         * The series and season of the given items, best effort.
+         * The parents of the given items — series and season for an episode, album and album artist
+         * for a track — best effort.
          *
          * A failure here is deliberately *not* fatal: the download itself is perfectly usable
          * without its parents cached, it only means the offline series page is missing until the
          * user next browses to it online.
+         *
+         * The music half is what makes the offline walk in the M13 DoD work at all: artist → album
+         * → tracks reads `ItemDao.albumsOfArtist` and `ItemDao.tracksOfAlbum`, both of which filter
+         * on `source = DOWNLOAD`, so an album row that was never cached is an artist page with
+         * nothing on it. [dev.jellyboost.data.cache.ItemEntityMapper] fills the `albumId` /
+         * `albumArtistId` query columns from these same DTOs.
          *
          * @param exclude ids already being cached by the caller — the item itself, and for an
          *   expanded container the container and its episodes.
@@ -223,7 +249,7 @@ internal class DownloadEnqueuer
         ): List<BaseItemDto> {
             val parentIds =
                 items
-                    .flatMap { listOfNotNull(it.seriesId, it.seasonId) }
+                    .flatMap { it.parentIds() }
                     .filterNot { it in exclude }
                     .distinct()
             if (parentIds.isEmpty()) return emptyList()
@@ -236,6 +262,17 @@ internal class DownloadEnqueuer
                 }
             }
         }
+
+        /**
+         * The rows the offline read path walks *up* to from this item.
+         *
+         * Four ids, of which any given item has at most two: an episode's series and season, a
+         * track's album and album artist. `albumArtists.first()` rather than `artistItems.first()`
+         * on purpose — the album artist is the one an album is filed under, and it is the id
+         * `ItemEntityMapper` writes into the `albumArtistId` column the artist page queries.
+         */
+        private fun BaseItemDto.parentIds(): List<UUID> =
+            listOfNotNull(seriesId, seasonId, albumId, albumArtists?.firstOrNull()?.id)
 
         /**
          * The one write: metadata for everything in [cache], a queue row for everything in
@@ -384,7 +421,12 @@ internal class DownloadEnqueuer
                 queuePosition = position,
                 directoryName = DownloadPaths.itemDirectoryName(this),
                 itemName = name.orEmpty().ifBlank { id.toString() },
-                seriesName = seriesName,
+                // The Downloads screen groups finished rows by this column (`DownloadItem.seriesKey`),
+                // so a track files itself under its **album** the way an episode files itself under
+                // its show — three tracks of *Rumours*, not three files. Falling back rather than
+                // adding a column: the column already means "the heading these rows belong under",
+                // and a track has no series to conflict with (M13 Phase 5).
+                seriesName = seriesName ?: album?.takeIf { it.isNotBlank() },
                 errorMessage = null,
                 createdAt = existing?.createdAt ?: now,
                 updatedAt = now,
@@ -426,6 +468,16 @@ internal class DownloadEnqueuer
             "ReturnCount",
         )
         private fun BaseItemDto.planQuality(preferred: DownloadQuality): PlannedQuality {
+            // Music is originals-only, and the row says so rather than the planner quietly ignoring
+            // a quality it was stamped with (docs/notes/music-m13-plan.md, key decision 10). Every
+            // rule downstream keys off this column — the transcode URL, the size projector, the
+            // "a transcode cannot be paused" rule, the *Transcoded* marker on the row — so a track
+            // written as ORIGINAL is a track none of that machinery can reach. Audio download
+            // transcoding is a recorded deferred item.
+            if (type == BaseItemKind.AUDIO) {
+                return PlannedQuality(DownloadQuality.ORIGINAL, sizeEstimate(DownloadQuality.ORIGINAL))
+            }
+
             val chosen = PlannedQuality(preferred, sizeEstimate(preferred))
             if (!preferred.isTranscoded) return chosen
 

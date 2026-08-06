@@ -109,6 +109,28 @@ class DownloadsViewModelTest {
         }
 
     @Test
+    fun `downloaded tracks group under their album, alongside series groups`() =
+        runTest(dispatcher) {
+            // M13 Phase 5: `DownloadEnqueuer` writes a track's album into the same column an
+            // episode's series goes in, so albums group with no second grouping rule. Albums are
+            // the top level — artists do not nest above them (DECISIONS.md, 2026-08-06).
+            items.value =
+                listOf(
+                    item("1", "Go Your Own Way", series = "Rumours", status = DownloadStatus.DOWNLOADED),
+                    item("2", "Dreams", series = "Rumours", status = DownloadStatus.DOWNLOADED),
+                    item("3", "Chestnut", series = "Westworld", status = DownloadStatus.DOWNLOADED),
+                )
+
+            val model = viewModel()
+            advanceUntilIdle()
+
+            val groups = model.uiState.value.downloaded
+            groups.map { it.title } shouldContainExactly listOf("Rumours", "Westworld")
+            groups.all { it.isSeries } shouldBe true
+            groups.first().items.map { it.itemId } shouldContainExactly listOf("2", "1") // Dreams, Go Your…
+        }
+
+    @Test
     fun `a lone film gets no heading of its own name`() =
         runTest(dispatcher) {
             // The M9 bug (docs/POLISH.md): every film was drawn under a group header reading its

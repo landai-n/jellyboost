@@ -19,6 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadDone
+import androidx.compose.material.icons.filled.Downloading
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
@@ -39,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.EmptyState
@@ -92,6 +96,7 @@ fun AlbumDetailScreen(
                     onTrackClick = { index -> onPlay(state.tracks, index) },
                     onPlayAlbum = { onPlay(state.tracks, 0) },
                     onShuffle = { onShuffle(state.tracks) },
+                    onDownload = viewModel::downloadAlbum,
                 )
         }
 
@@ -136,6 +141,7 @@ private fun AlbumDetailContent(
     onTrackClick: (index: Int) -> Unit,
     onPlayAlbum: () -> Unit,
     onShuffle: () -> Unit,
+    onDownload: () -> Unit,
 ) {
     val album = state.album ?: return
     LazyColumn(
@@ -143,7 +149,14 @@ private fun AlbumDetailContent(
         contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
     ) {
         item(key = SECTION_HEADER) {
-            AlbumHeader(album = album, onArtistClick = onArtistClick, onToggleFavorite = onToggleFavorite)
+            AlbumHeader(
+                album = album,
+                downloadState = state.albumDownloadState,
+                canDownload = state.canDownload,
+                onArtistClick = onArtistClick,
+                onToggleFavorite = onToggleFavorite,
+                onDownload = onDownload,
+            )
             Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
             AlbumTransportRow(onPlay = onPlayAlbum, onShuffle = onShuffle)
             Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
@@ -186,8 +199,11 @@ private fun AlbumDetailContent(
 @Composable
 private fun AlbumHeader(
     album: JellyfinItem,
+    downloadState: DownloadState,
+    canDownload: Boolean,
     onArtistClick: (JellyfinItem) -> Unit,
     onToggleFavorite: (JellyfinItem) -> Unit,
+    onDownload: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(Dimens.SpaceLarge),
@@ -250,17 +266,63 @@ private fun AlbumHeader(
 
         Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
 
-        val isFavorite = album.userData.isFavorite
-        GlassIconButton(
-            icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription =
-                stringResource(
-                    if (isFavorite) R.string.music_album_remove_favorite else R.string.music_album_add_favorite,
-                ),
-            onClick = { onToggleFavorite(album) },
-            tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
+            val isFavorite = album.userData.isFavorite
+            GlassIconButton(
+                icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription =
+                    stringResource(
+                        if (isFavorite) R.string.music_album_remove_favorite else R.string.music_album_add_favorite,
+                    ),
+                onClick = { onToggleFavorite(album) },
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
+            )
+            AlbumDownloadButton(
+                state = downloadState,
+                canDownload = canDownload,
+                onDownload = onDownload,
+            )
+        }
     }
+}
+
+/**
+ * Downloads the whole album, and says what state it is in while it does.
+ *
+ * Three appearances, and the label is the accessible one in each: *Download album* while there is
+ * something to fetch, *Downloading album* while the queue is working through the tracks, and
+ * *Album downloaded* once every track is on the device. The finished state is deliberately still a
+ * button-shaped control with no action rather than a hidden one — an affordance that disappears
+ * reads as a bug, and its description is the confirmation the user came back to check for.
+ *
+ * Per-track progress is on the rows below (each `TrackRow` carries its own `DownloadBadge`), so
+ * this control does not repeat it as a number.
+ */
+@Composable
+private fun AlbumDownloadButton(
+    state: DownloadState,
+    canDownload: Boolean,
+    onDownload: () -> Unit,
+) {
+    val downloaded = state is DownloadState.Downloaded
+    GlassIconButton(
+        icon =
+            when {
+                downloaded -> Icons.Filled.DownloadDone
+                state.isActive -> Icons.Filled.Downloading
+                else -> Icons.Filled.Download
+            },
+        contentDescription =
+            stringResource(
+                when {
+                    downloaded -> R.string.music_album_downloaded
+                    state.isActive -> R.string.music_album_downloading
+                    else -> R.string.music_album_download
+                },
+            ),
+        onClick = { if (canDownload) onDownload() },
+        tint = if (downloaded || state.isActive) MaterialTheme.colorScheme.primary else GlassIconTint,
+    )
 }
 
 /** Play / Shuffle — hands the album straight to [MusicPlaybackViewModel][onPlay]'s queue. */

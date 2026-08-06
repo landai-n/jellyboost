@@ -47,7 +47,15 @@ internal object DownloadPaths {
      * The directory one item's files live in.
      *
      * - episode → `Westworld - S01E02 - Chestnut`
+     * - track (M13) → `Fleetwood Mac - Rumours - 04 - Go Your Own Way`
      * - anything else → `Arrival (2016)`, dropping the parenthesis when the year is unknown
+     *
+     * A track's form mirrors the episode's, and for the same two reasons. It is what someone
+     * plugging the tablet into a computer can read; and it is **unique**, which the plain-name form
+     * is not for music — a track has no `productionYear` to disambiguate it, so two different
+     * albums' *Intro* would share one directory, share one `primary.webp`, and have either's delete
+     * take the other's files with it. Artist and album in front of the track number make that
+     * collision as unlikely as the series name makes it for an episode.
      *
      * @param fallbackId appended when the resulting name would be empty, so two nameless items
      *   cannot collide into the same directory.
@@ -57,16 +65,27 @@ internal object DownloadPaths {
         fallbackId: String = item.id.toString(),
     ): String {
         val raw =
-            if (item.type == BaseItemKind.EPISODE) {
-                listOfNotNull(
-                    item.seriesName?.takeIf { it.isNotBlank() },
-                    episodeCode(item.parentIndexNumber, item.indexNumber),
-                    item.name?.takeIf { it.isNotBlank() },
-                ).joinToString(" - ")
-            } else {
-                val name = item.name.orEmpty()
-                val year = item.productionYear
-                if (year != null && name.isNotBlank()) "$name ($year)" else name
+            when (item.type) {
+                BaseItemKind.EPISODE ->
+                    listOfNotNull(
+                        item.seriesName?.takeIf { it.isNotBlank() },
+                        episodeCode(item.parentIndexNumber, item.indexNumber),
+                        item.name?.takeIf { it.isNotBlank() },
+                    ).joinToString(" - ")
+
+                BaseItemKind.AUDIO ->
+                    listOfNotNull(
+                        item.albumArtist?.takeIf { it.isNotBlank() },
+                        item.album?.takeIf { it.isNotBlank() },
+                        trackCode(item.indexNumber),
+                        item.name?.takeIf { it.isNotBlank() },
+                    ).joinToString(" - ")
+
+                else -> {
+                    val name = item.name.orEmpty()
+                    val year = item.productionYear
+                    if (year != null && name.isNotBlank()) "$name ($year)" else name
+                }
             }
 
         return sanitize(raw).ifBlank { "$FALLBACK-$fallbackId" }
@@ -114,6 +133,16 @@ internal object DownloadPaths {
                 ?: DEFAULT_CONTAINER
         return "$directoryName.$container"
     }
+
+    /**
+     * `04` for a numbered track, `null` for one the server gives no track number.
+     *
+     * Deliberately not disc-qualified: a multi-disc album repeats track numbers across its discs,
+     * but the album *name* is already in the directory name and the track title follows the number,
+     * so the pair still reads unambiguously — and a bare `04` is what a music file is named
+     * everywhere else the user has seen one.
+     */
+    fun trackCode(trackNumber: Int?): String? = trackNumber?.let { String.format(Locale.ROOT, "%02d", it) }
 
     /** `S01E02`, or `E02` when the season number is unknown, or `null` when neither is known. */
     fun episodeCode(

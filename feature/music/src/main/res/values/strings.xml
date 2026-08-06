@@ -33,6 +33,9 @@
     <string name="music_album_add_favorite">Add to favorites</string>
     <string name="music_album_play">Play</string>
     <string name="music_album_shuffle">Shuffle</string>
+    <string name="music_album_download">Download album</string>
+    <string name="music_album_downloading">Downloading album</string>
+    <string name="music_album_downloaded">Album downloaded</string>
 
     <!-- ArtistDetailScreen -->
     <string name="music_artist_empty">This artist isn\'t available</string>

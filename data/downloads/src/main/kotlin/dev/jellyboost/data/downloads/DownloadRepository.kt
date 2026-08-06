@@ -70,7 +70,10 @@ interface DownloadRepository {
      *
      * A **season or a series** is a folder with no file behind it, so it is expanded instead: one
      * download per episode, in broadcast order, skipping the episodes already on the device
-     * (DECISIONS.md, 2026-07-29). Callers therefore never have to check the item's type.
+     * (DECISIONS.md, 2026-07-29). An **album, an artist or a playlist** expands the same way (M13
+     * Phase 5) — tracks in disc/track order, an artist's whole discography album by album, a
+     * playlist's audio members in playlist order. Callers therefore never have to check the item's
+     * type.
      */
     suspend fun enqueue(itemId: String): AppResult<Unit>
 

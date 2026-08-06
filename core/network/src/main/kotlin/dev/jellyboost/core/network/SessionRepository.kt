@@ -1,8 +1,11 @@
 package dev.jellyboost.core.network
 
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.database.dao.UserDao
+import dev.jellyboost.core.database.dao.UserDataDao
+import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.datastore.HomeLayoutStore
 import dev.jellyboost.core.datastore.SecureCredentialStore
 import dev.jellyboost.core.network.di.ApplicationScope
@@ -35,6 +38,8 @@ class SessionRepository
         private val apiClientProvider: ApiClientProvider,
         private val serverDao: ServerDao,
         private val userDao: UserDao,
+        private val userDataDao: UserDataDao,
+        private val itemDao: ItemDao,
         private val secureCredentialStore: SecureCredentialStore,
         private val sessionStateHolder: SessionStateHolder,
         private val homeLayoutStore: HomeLayoutStore,
@@ -99,6 +104,9 @@ class SessionRepository
          * device see whatever the previous one's server last reported, for as long as their first
          * fetch keeps failing.
          *
+         * So is the account's local footprint in Room — see [forgetThisUsersLocalData], which is the
+         * same argument applied to the two tables that actually hold it.
+         *
          * Two things make that promise hold when the server is *unreachable* rather than merely
          * unhappy, which is the case that used to lose sign-outs entirely:
          *
@@ -134,9 +142,57 @@ class SessionRepository
             }
 
             homeLayoutStore.clear()
+            forgetThisUsersLocalData()
             apiClientProvider.clearSession()
             sessionStateHolder.update(SessionState.LoggedOut)
             Timber.i("Signed out")
+        }
+
+        /**
+         * Drops what this account left in Room that the next one must not inherit (audit HYG-2).
+         *
+         * Two tables, for two different reasons:
+         *
+         * - **`user_data`** is keyed by user, and every synced row in it is pure cache — a copy of
+         *   what the server already holds, worth nothing once the account is gone from the device.
+         *   A `toBeSynced` row is **not** deleted: it is the only copy of a change the server has
+         *   never accepted, and docs/PLAN.md's user-data story ("local-first always"; the sync
+         *   worker drains pending rows when the network comes back) is a promise that a change made
+         *   offline is not lost. Signing out on a train and back in at home must still push it —
+         *   `UserDataDao.deleteSynced` draws exactly that line, and has said so in its own
+         *   documentation since M7.
+         * - **`items`** is *not* keyed by user at all — an item id belongs to the server — so one
+         *   account's cached browsing would otherwise keep serving the next account's offline read
+         *   path and search results on a shared tablet, including items that account cannot see.
+         *   Only `BROWSE_CACHE` rows go: signing out never deletes anyone's downloads, which the
+         *   plan makes a separate, explicit choice on the sign-out screen.
+         *
+         * Deliberately **not** a [SignOutHook]. Hooks exist for work that needs the *still-valid
+         * token* and share one [SERVER_GOODBYE_TIMEOUT] budget with the server goodbye (audit
+         * NET-03); this is local work that needs no server, must not spend that budget, and must
+         * finish whether or not an unreachable host already exhausted it. It runs after the goodbye
+         * and before [SessionState.LoggedOut] is published, so nothing observing the sign-out can
+         * read a half-cleared database.
+         *
+         * The user id comes from the session that is still current — it is exactly why this runs
+         * before the state transition. A failure here is logged and the sign-out continues: leftover
+         * cache rows are a privacy and disk-space problem, and stranding the user in a signed-in UI
+         * is a worse one.
+         */
+        private suspend fun forgetThisUsersLocalData() {
+            val userId = (sessionStateHolder.state.value as? SessionState.LoggedIn)?.userId
+
+            val cleared =
+                storageCall {
+                    userId?.let { userDataDao.deleteSynced(it) }
+                    itemDao.deleteAllBrowseCache(ItemSource.BROWSE_CACHE)
+                }
+            when (cleared) {
+                is AppResult.Success ->
+                    Timber.i("Sign-out dropped %d cached item row(s)", cleared.value)
+                is AppResult.Failure ->
+                    Timber.e("Could not clear this user's local data: %s", cleared.error)
+            }
         }
 
         /** The part of a sign-out that needs a server: the pre-revocation hooks, then the goodbye. */

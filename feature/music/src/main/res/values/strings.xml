@@ -36,6 +36,7 @@
     <string name="music_album_download">Download album</string>
     <string name="music_album_downloading">Downloading album</string>
     <string name="music_album_downloaded">Album downloaded</string>
+    <string name="music_album_start_radio">Start radio</string>
 
     <!-- ArtistDetailScreen -->
     <string name="music_artist_empty">This artist isn\'t available</string>
@@ -46,6 +47,7 @@
     <string name="music_artist_top_tracks_show_more">Show more</string>
     <string name="music_artist_remove_favorite">Remove from favorites</string>
     <string name="music_artist_add_favorite">Add to favorites</string>
+    <string name="music_artist_start_radio">Start radio</string>
 
     <!-- PlaylistDetailScreen -->
     <string name="music_playlist_empty">This playlist isn\'t available</string>
@@ -71,6 +73,10 @@
     <string name="music_now_playing_repeat_one">Repeat one — tap to disable repeat</string>
     <string name="music_now_playing_favorite_add">Add to favorites</string>
     <string name="music_now_playing_favorite_remove">Remove from favorites</string>
+    <string name="music_now_playing_start_radio">Start radio</string>
+    <string name="music_now_playing_lyrics_show">Show lyrics</string>
+    <string name="music_now_playing_lyrics_hide">Show artwork</string>
+    <string name="music_now_playing_lyrics_tab">Lyrics</string>
 
     <!-- QueueSheet -->
     <string name="music_now_playing_queue">Queue</string>

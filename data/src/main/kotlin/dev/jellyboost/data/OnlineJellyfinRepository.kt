@@ -12,11 +12,14 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
+import dev.jellyboost.core.common.music.Lyrics
 import dev.jellyboost.core.network.runCatchingApi
 import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.ItemMapper
 import dev.jellyboost.data.mapper.toBaseItemKind
+import dev.jellyboost.data.mapper.toDomain
 import dev.jellyboost.data.mapper.toGetItemsRequest
+import dev.jellyboost.data.music.MusicApi
 import dev.jellyboost.data.paging.ItemPage
 import dev.jellyboost.data.paging.ItemPagingSource
 import kotlinx.coroutines.CancellationException
@@ -72,8 +75,8 @@ import javax.inject.Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — the interface is the
     // implementation's whole surface, and M13 Phase 2's four music members (docs/notes/
-    // music-m13-plan.md) pushed this class from 17 to 21; Phase 4's `getResumeAudioItems` to 22.
-    // Splitting it would mean two
+    // music-m13-plan.md) pushed this class from 17 to 21; Phase 4's `getResumeAudioItems` to 22;
+    // Phase 6's `getInstantMix`/`getLyrics` to 24. Splitting it would mean two
     // repositories implementing one interface, which is the parallel-model the plan's
     // "extend, don't parallel" rule (decision 5) rules out for the domain layer and would be
     // worse here, for the same reason. Logged in DECISIONS.md.
@@ -85,6 +88,7 @@ internal class OnlineJellyfinRepository
         private val apiClient: ApiClient,
         private val mapper: ItemMapper,
         private val browseCache: BrowseCacheWriter,
+        private val musicApi: MusicApi,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : JellyfinRepository {
         override suspend fun getUserViews(): AppResult<List<LibraryView>> =
@@ -530,6 +534,25 @@ internal class OnlineJellyfinRepository
             }
 
         // ---- end M13 Phase 4 ------------------------------------------------------------------
+
+        // ---- M13 Phase 6 — Instant Mix & lyrics ------------------------------------------------
+
+        override suspend fun getInstantMix(
+            itemId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> =
+            onIo {
+                val dtos = musicApi.getInstantMix(UUID.fromString(itemId), limit)
+                browseCache.cacheItems(dtos)
+                mapper.toDomain(dtos)
+            }
+
+        override suspend fun getLyrics(itemId: String): AppResult<Lyrics> =
+            onIo {
+                musicApi.getLyrics(UUID.fromString(itemId)).toDomain()
+            }
+
+        // ---- end M13 Phase 6 ------------------------------------------------------------------
 
         /**
          * Runs an SDK call off the caller's dispatcher.

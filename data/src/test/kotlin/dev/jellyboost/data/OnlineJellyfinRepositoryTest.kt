@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.FakeImageUrlFactory
 import dev.jellyboost.data.mapper.ItemMapper
+import dev.jellyboost.data.music.MusicApi
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -46,6 +47,9 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.CollectionType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemSortBy
+import org.jellyfin.sdk.model.api.LyricDto
+import org.jellyfin.sdk.model.api.LyricLine
+import org.jellyfin.sdk.model.api.LyricMetadata
 import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.SortOrder
 import org.jellyfin.sdk.model.api.request.GetEpisodesRequest
@@ -79,12 +83,14 @@ class OnlineJellyfinRepositoryTest {
     private val libraryApi = mockk<LibraryApi>()
     private val playlistsApi = mockk<PlaylistsApi>()
     private val browseCache = mockk<BrowseCacheWriter>(relaxed = true)
+    private val musicApi = mockk<MusicApi>()
 
     private val repository =
         OnlineJellyfinRepository(
             apiClient = apiClient,
             mapper = ItemMapper(FakeImageUrlFactory()),
             browseCache = browseCache,
+            musicApi = musicApi,
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 
@@ -590,6 +596,57 @@ class OnlineJellyfinRepositoryTest {
             val result = repository.getResumeAudioItems()
 
             (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
+        }
+
+    // ---- getInstantMix / getLyrics (M13 Phase 6) --------------------------------------------
+
+    @Test
+    fun `getInstantMix asks the music api by item id and limit, and maps the result`() =
+        runTest {
+            val seedId = UUID.randomUUID()
+            coEvery { musicApi.getInstantMix(seedId, 25) } returns listOf(itemDto(BaseItemKind.AUDIO, "Creep"))
+
+            val result = repository.getInstantMix(seedId.toString(), limit = 25)
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly listOf("Creep")
+            coVerify(exactly = 1) { musicApi.getInstantMix(seedId, 25) }
+        }
+
+    @Test
+    fun `getInstantMix maps a transport failure onto Network`() =
+        runTest {
+            coEvery { musicApi.getInstantMix(any(), any()) } throws IOException("reset")
+
+            val result = repository.getInstantMix(UUID.randomUUID().toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
+        }
+
+    @Test
+    fun `getLyrics maps a synced LyricDto onto domain lines carrying their start ticks`() =
+        runTest {
+            val trackId = UUID.randomUUID()
+            coEvery { musicApi.getLyrics(trackId) } returns
+                LyricDto(
+                    metadata = LyricMetadata(isSynced = true),
+                    lyrics = listOf(LyricLine(text = "Fake plastic trees", start = 123_0000L)),
+                )
+
+            val result = repository.getLyrics(trackId.toString())
+
+            val lyrics = (result as AppResult.Success).value
+            lyrics.isSynced shouldBe true
+            lyrics.lines.map { it.text } shouldContainExactly listOf("Fake plastic trees")
+        }
+
+    @Test
+    fun `getLyrics maps a 404 onto NotFound`() =
+        runTest {
+            coEvery { musicApi.getLyrics(any()) } throws InvalidStatusException(status = 404)
+
+            val result = repository.getLyrics(UUID.randomUUID().toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.NotFound>()
         }
 
     // ---- helpers ----------------------------------------------------------------------------

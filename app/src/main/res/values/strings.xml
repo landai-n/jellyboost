@@ -32,6 +32,7 @@
     <string name="music_track_unavailable">Couldn\'t play “%1$s” — it was skipped.</string>
     <string name="music_queue_unavailable">Couldn\'t play any of those tracks.</string>
     <string name="music_playback_failed">Playback failed for “%1$s”.</string>
+    <string name="music_radio_failed">Couldn\'t start radio from “%1$s”.</string>
 
     <!-- MiniPlayer (M13 Phase 4) -->
     <string name="mini_player_play">Play</string>

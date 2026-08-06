@@ -8,6 +8,7 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
+import dev.jellyboost.core.common.music.Lyrics
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.data.JellyfinRepository.Companion.ONLINE_CALL_TIMEOUT_MS
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -52,8 +53,8 @@ import javax.inject.Singleton
 @Suppress(
     // One member per [JellyfinRepository] method, by construction — same rationale as
     // `OnlineJellyfinRepository`'s and `OfflineJellyfinRepository`'s identical suppression. M13
-    // Phase 4's `getResumeAudioItems` pushed this class to the threshold (20). Logged in
-    // DECISIONS.md.
+    // Phase 4's `getResumeAudioItems` pushed this class to the threshold (20); Phase 6's
+    // `getInstantMix`/`getLyrics` to 22. Logged in DECISIONS.md.
     "TooManyFunctions",
 )
 internal class DelegatingJellyfinRepository
@@ -130,6 +131,16 @@ internal class DelegatingJellyfinRepository
 
         override suspend fun getResumeAudioItems(limit: Int): AppResult<List<JellyfinItem>> =
             delegate({ getResumeAudioItems(limit) }, { getResumeAudioItems(limit) })
+
+        // ---- M13 Phase 6 — Instant Mix & lyrics -------------------------------------------------
+
+        override suspend fun getInstantMix(
+            itemId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> = delegate({ getInstantMix(itemId, limit) }, { getInstantMix(itemId, limit) })
+
+        override suspend fun getLyrics(itemId: String): AppResult<Lyrics> =
+            delegate({ getLyrics(itemId) }, { getLyrics(itemId) })
 
         /**
          * The paged grid is a stream, so the choice is re-made whenever the connection changes

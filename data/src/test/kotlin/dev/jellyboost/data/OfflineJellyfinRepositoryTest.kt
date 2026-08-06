@@ -58,8 +58,14 @@ import java.util.UUID
  * The download pipeline is M7, so nothing writes `source = DOWNLOAD` rows on a real device yet.
  * These tests seed them directly, which is the only thing that can pin the offline behaviour
  * before the pipeline exists.
+ *
+ * One class rather than one per member (`@Suppress("LargeClass")` below): the `HomeViewModelTest`/
+ * `SyncPlayControllerTest` precedent — splitting it would scatter the shared mock setup across
+ * files for one repository's own members, not distinct collaborators. M13 Phase 6's
+ * `getInstantMix`/`getLyrics` tests pushed this class past the threshold.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass")
 class OfflineJellyfinRepositoryTest {
     private val itemDao = mockk<ItemDao>()
     private val libraryViewDao = mockk<LibraryViewDao>()
@@ -737,6 +743,24 @@ class OfflineJellyfinRepositoryTest {
             repository.getResumeAudioItems(limit = 12).getOrNull()!!.shouldBeEmpty()
 
             coVerify(exactly = 0) { itemDao.resumeDownloadedAudio(any(), any(), any(), any()) }
+        }
+
+    // ---- M13 Phase 6 — Instant Mix & lyrics -------------------------------------------------------
+
+    @Test
+    fun `getInstantMix always refuses offline`() =
+        runTest {
+            val result = repository.getInstantMix(uuid(1).toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
+        }
+
+    @Test
+    fun `getLyrics always refuses offline`() =
+        runTest {
+            val result = repository.getLyrics(uuid(1).toString())
+
+            (result as AppResult.Failure).error.shouldBeInstanceOf<AppError.Network>()
         }
 
     // ---- failure modes ------------------------------------------------------------------------

@@ -27,8 +27,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Lyrics
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -97,6 +99,7 @@ import dev.jellyboost.feature.music.R
 fun NowPlayingScreen(
     viewModel: NowPlayingViewModel,
     onArtistClick: (JellyfinItem) -> Unit,
+    onStartRadio: (JellyfinItem) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -126,6 +129,7 @@ fun NowPlayingScreen(
         state = state,
         actions = actions,
         onArtistClick = onArtistClick,
+        onStartRadio = { state.track?.let(onStartRadio) },
         onBack = onBack,
         modifier = modifier,
     )
@@ -154,10 +158,14 @@ private fun NowPlayingContent(
     state: NowPlayingUiState,
     actions: NowPlayingActions,
     onArtistClick: (JellyfinItem) -> Unit,
+    onStartRadio: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showQueue by rememberSaveable { mutableStateOf(false) }
+    // Compact-only toggle between artwork and lyrics; the wide layout has its own Queue/Lyrics tab
+    // state (`NowPlayingWideContent`'s `showLyrics`) since it shows both panes' *chrome* at once.
+    var showLyrics by rememberSaveable { mutableStateOf(false) }
     val track = state.track
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
@@ -165,13 +173,31 @@ private fun NowPlayingContent(
 
         if (track != null) {
             if (wide) {
-                NowPlayingWideContent(state = state, track = track, actions = actions, onArtistClick = onArtistClick)
+                NowPlayingWideContent(
+                    state = state,
+                    track = track,
+                    actions = actions,
+                    onArtistClick = onArtistClick,
+                    onStartRadio = onStartRadio,
+                )
             } else {
-                NowPlayingCompactContent(state = state, track = track, actions = actions, onArtistClick = onArtistClick)
+                NowPlayingCompactContent(
+                    state = state,
+                    track = track,
+                    actions = actions,
+                    onArtistClick = onArtistClick,
+                    onStartRadio = onStartRadio,
+                    showLyrics = showLyrics && state.lyricsAvailable,
+                )
             }
         }
 
-        NowPlayingOverlayNav(onBack = onBack, onOpenQueue = if (wide) null else ({ showQueue = true }))
+        NowPlayingOverlayNav(
+            onBack = onBack,
+            onOpenQueue = if (wide) null else ({ showQueue = true }),
+            onToggleLyrics = if (!wide && state.lyricsAvailable) ({ showLyrics = !showLyrics }) else null,
+            lyricsShown = showLyrics,
+        )
     }
 
     if (showQueue) {
@@ -190,11 +216,15 @@ private fun NowPlayingContent(
 /**
  * @param onOpenQueue `null` hides the button — the wide layout already shows the queue inline, so a
  *   second way to reach the same list would be redundant chrome.
+ * @param onToggleLyrics `null` hides the button — no lyrics for this track (M13 Phase 6), or the
+ *   wide layout, which shows its own Queue/Lyrics tab instead.
  */
 @Composable
 private fun NowPlayingOverlayNav(
     onBack: () -> Unit,
     onOpenQueue: (() -> Unit)?,
+    onToggleLyrics: (() -> Unit)?,
+    lyricsShown: Boolean,
 ) {
     Row(
         modifier =
@@ -211,6 +241,22 @@ private fun NowPlayingOverlayNav(
             surfaceTint = GlassDefaults.ChromeFill,
         )
         Box(modifier = Modifier.weight(1f))
+        if (onToggleLyrics != null) {
+            GlassIconButton(
+                icon = Icons.Filled.Lyrics,
+                contentDescription =
+                    stringResource(
+                        if (lyricsShown) {
+                            R.string.music_now_playing_lyrics_hide
+                        } else {
+                            R.string.music_now_playing_lyrics_show
+                        },
+                    ),
+                onClick = onToggleLyrics,
+                tint = if (lyricsShown) MaterialTheme.colorScheme.primary else GlassIconTint,
+                surfaceTint = GlassDefaults.ChromeFill,
+            )
+        }
         if (onOpenQueue != null) {
             GlassIconButton(
                 icon = Icons.AutoMirrored.Filled.QueueMusic,
@@ -228,6 +274,8 @@ private fun NowPlayingCompactContent(
     track: JellyfinItem,
     actions: NowPlayingActions,
     onArtistClick: (JellyfinItem) -> Unit,
+    onStartRadio: () -> Unit,
+    showLyrics: Boolean,
 ) {
     Column(
         modifier =
@@ -239,7 +287,17 @@ private fun NowPlayingCompactContent(
                 .padding(top = Dimens.MinTouchTarget + Dimens.SpaceMedium, bottom = Dimens.SpaceExtraLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        NowPlayingArtwork(track = track, size = ArtworkSizeCompact)
+        // The compact lyrics affordance: a toggle (the overlay nav's button) swaps this square for
+        // `LyricsPane`, same footprint, everything below unchanged (M13 Phase 6).
+        if (showLyrics && state.lyrics != null) {
+            LyricsPane(
+                lyrics = state.lyrics,
+                activeLineIndex = state.activeLyricLineIndex,
+                modifier = Modifier.fillMaxWidth().height(ArtworkSizeCompact),
+            )
+        } else {
+            NowPlayingArtwork(track = track, size = ArtworkSizeCompact)
+        }
 
         Spacer(modifier = Modifier.height(Dimens.SpaceExtraLarge))
 
@@ -255,7 +313,10 @@ private fun NowPlayingCompactContent(
 
         Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
 
-        NowPlayingFavoriteButton(isFavorite = track.userData.isFavorite, onClick = actions.onToggleFavorite)
+        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
+            NowPlayingFavoriteButton(isFavorite = track.userData.isFavorite, onClick = actions.onToggleFavorite)
+            NowPlayingStartRadioButton(onClick = onStartRadio)
+        }
     }
 }
 
@@ -269,7 +330,14 @@ private fun NowPlayingWideContent(
     track: JellyfinItem,
     actions: NowPlayingActions,
     onArtistClick: (JellyfinItem) -> Unit,
+    onStartRadio: () -> Unit,
 ) {
+    // The right pane's own Queue/Lyrics selector (M13 Phase 6) — independent of the compact
+    // layout's `showLyrics`, since wide shows this pane's *chrome* (the tab row) unconditionally
+    // once lyrics exist, rather than swapping the artwork the way compact does.
+    var showLyrics by rememberSaveable { mutableStateOf(false) }
+    val lyricsShown = showLyrics && state.lyricsAvailable
+
     Row(
         modifier =
             Modifier
@@ -302,27 +370,95 @@ private fun NowPlayingWideContent(
                 NowPlayingTransportRow(state = state, actions = actions)
                 Spacer(modifier = Modifier.width(Dimens.SpaceLarge))
                 NowPlayingFavoriteButton(isFavorite = track.userData.isFavorite, onClick = actions.onToggleFavorite)
+                NowPlayingStartRadioButton(onClick = onStartRadio)
             }
 
             Spacer(modifier = Modifier.height(Dimens.SpaceExtraLarge))
 
-            Text(
-                text = stringResource(R.string.music_now_playing_queue),
-                style = JellyfinTypeExtras.SectionTitle,
-                color = MaterialTheme.colorScheme.onBackground,
+            NowPlayingRightPaneTabRow(
+                lyricsAvailable = state.lyricsAvailable,
+                showingLyrics = lyricsShown,
+                onSelectQueue = { showLyrics = false },
+                onSelectLyrics = { showLyrics = true },
             )
             Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
-            QueueList(
-                queue = state.queue,
-                currentIndex = state.currentIndex,
-                onJumpTo = actions.onJumpTo,
-                onRemove = actions.onRemove,
-                onMoveUp = { index -> actions.onMoveItem(index, index - 1) },
-                onMoveDown = { index -> actions.onMoveItem(index, index + 1) },
-                modifier = Modifier.weight(1f, fill = false),
-            )
+
+            if (lyricsShown && state.lyrics != null) {
+                LyricsPane(
+                    lyrics = state.lyrics,
+                    activeLineIndex = state.activeLyricLineIndex,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            } else {
+                QueueList(
+                    queue = state.queue,
+                    currentIndex = state.currentIndex,
+                    onJumpTo = actions.onJumpTo,
+                    onRemove = actions.onRemove,
+                    onMoveUp = { index -> actions.onMoveItem(index, index - 1) },
+                    onMoveDown = { index -> actions.onMoveItem(index, index + 1) },
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            }
         }
     }
+}
+
+/**
+ * The wide layout's right-pane header: just the "Queue" title when there are no lyrics to show
+ * (unchanged from before M13 Phase 6), or a two-way Queue/Lyrics tab once there are.
+ */
+@Composable
+private fun NowPlayingRightPaneTabRow(
+    lyricsAvailable: Boolean,
+    showingLyrics: Boolean,
+    onSelectQueue: () -> Unit,
+    onSelectLyrics: () -> Unit,
+) {
+    if (!lyricsAvailable) {
+        Text(
+            text = stringResource(R.string.music_now_playing_queue),
+            style = JellyfinTypeExtras.SectionTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        return
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge)) {
+        NowPlayingTab(
+            text = stringResource(R.string.music_now_playing_queue),
+            selected = !showingLyrics,
+            onClick = onSelectQueue,
+        )
+        NowPlayingTab(
+            text = stringResource(R.string.music_now_playing_lyrics_tab),
+            selected = showingLyrics,
+            onClick = onSelectLyrics,
+        )
+    }
+}
+
+@Composable
+private fun NowPlayingTab(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = text,
+        style = JellyfinTypeExtras.SectionTitle,
+        color = if (selected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.clickable(onClick = onClick),
+    )
+}
+
+@Composable
+private fun NowPlayingStartRadioButton(onClick: () -> Unit) {
+    GlassIconButton(
+        icon = Icons.Filled.Radio,
+        contentDescription = stringResource(R.string.music_now_playing_start_radio),
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -610,7 +746,13 @@ private fun previewState() =
 @Composable
 private fun NowPlayingCompactPreview() {
     JellyfinTheme {
-        NowPlayingContent(state = previewState(), actions = PreviewActions, onArtistClick = {}, onBack = {})
+        NowPlayingContent(
+            state = previewState(),
+            actions = PreviewActions,
+            onArtistClick = {},
+            onStartRadio = {},
+            onBack = {},
+        )
     }
 }
 
@@ -624,6 +766,12 @@ private fun NowPlayingCompactPreview() {
 @Composable
 private fun NowPlayingWidePreview() {
     JellyfinTheme {
-        NowPlayingContent(state = previewState(), actions = PreviewActions, onArtistClick = {}, onBack = {})
+        NowPlayingContent(
+            state = previewState(),
+            actions = PreviewActions,
+            onArtistClick = {},
+            onStartRadio = {},
+            onBack = {},
+        )
     }
 }

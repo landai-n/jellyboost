@@ -62,6 +62,7 @@ class OnlineJellyfinRepositoryPagingTest {
             apiClient = apiClient,
             mapper = ItemMapper(FakeImageUrlFactory()),
             browseCache = mockk(relaxed = true),
+            musicApi = mockk(),
             ioDispatcher = UnconfinedTestDispatcher(),
         )
 

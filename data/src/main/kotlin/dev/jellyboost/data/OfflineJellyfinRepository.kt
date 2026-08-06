@@ -17,6 +17,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.common.music.Lyrics
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
@@ -70,7 +71,7 @@ import javax.inject.Singleton
     // One member per [JellyfinRepository] method, by construction — same rationale as
     // `OnlineJellyfinRepository`'s identical suppression. M13 Phase 2's four music members
     // (docs/notes/music-m13-plan.md) pushed this class from 19 to 23; Phase 4's `getResumeAudioItems`
-    // to 24. Logged in DECISIONS.md.
+    // to 24; Phase 6's `getInstantMix`/`getLyrics` to 26. Logged in DECISIONS.md.
     "TooManyFunctions",
 )
 internal class OfflineJellyfinRepository
@@ -438,6 +439,28 @@ internal class OfflineJellyfinRepository
                     .withLocalUserData(userId)
                     .asHomeCards()
             }
+
+        // ---- M13 Phase 6 — Instant Mix & lyrics -------------------------------------------------
+
+        /**
+         * Instant Mix is a server recommendation with no offline analog — there is nothing local
+         * that could honestly answer "what would the server queue next", so this always refuses.
+         *
+         * [AppError.Network] rather than a new error case: it is the same "no network, no offline
+         * substitute" answer [dev.jellyboost.player.resolve.PlaybackSourceResolver] gives when a
+         * track has no downloaded copy and no connection either (M13 Phase 6, docs/notes/
+         * music-m13-plan.md, key decision 8).
+         */
+        override suspend fun getInstantMix(
+            itemId: String,
+            limit: Int,
+        ): AppResult<List<JellyfinItem>> = AppResult.Failure(AppError.Network())
+
+        /**
+         * Lyrics are not cached offline in M13 — see [getInstantMix]'s KDoc for the refusal this
+         * shares. "Offline lyrics" is a recorded deferred item (docs/notes/music-m13-plan.md).
+         */
+        override suspend fun getLyrics(itemId: String): AppResult<Lyrics> = AppResult.Failure(AppError.Network())
 
         // ---- helpers -------------------------------------------------------------------------
 

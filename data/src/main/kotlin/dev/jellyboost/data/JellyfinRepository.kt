@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
+import dev.jellyboost.core.common.music.Lyrics
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -19,6 +20,13 @@ import kotlinx.coroutines.flow.Flow
  * M2 declares only the home-screen surface; the paged library grid, search and item detail extend
  * this interface in M3 and M4.
  */
+@Suppress(
+    // The interface *is* the whole surface `OnlineJellyfinRepository`/`OfflineJellyfinRepository`/
+    // `DelegatingJellyfinRepository` implement, all three of which already carry this same
+    // suppression for the same reason. M13 Phase 6's `getInstantMix`/`getLyrics` pushed this
+    // declaration past the threshold too. Logged in DECISIONS.md.
+    "TooManyFunctions",
+)
 interface JellyfinRepository {
     /**
      * The current user's libraries, filtered to the kinds the app supports (movies, TV shows, and
@@ -137,6 +145,14 @@ interface JellyfinRepository {
 
         /** Row size for [getArtistTopTracks] when the caller does not ask for a different one. */
         const val DEFAULT_TOP_TRACKS_LIMIT = 50
+
+        /**
+         * Ceiling on [getInstantMix] when the caller does not ask for a different one.
+         *
+         * The plan's large-queue note (docs/notes/music-m13-plan.md, "Risks"): an artist-seeded mix
+         * could otherwise hand the queue hundreds of tracks in one `setMediaItems` call.
+         */
+        const val DEFAULT_INSTANT_MIX_LIMIT = 200
     }
 
     // ---- M3 — library & search ---------------------------------------------------------------
@@ -257,6 +273,37 @@ interface JellyfinRepository {
      * @param limit maximum number of items; defaults to the same row size [getResumeItems] uses.
      */
     suspend fun getResumeAudioItems(limit: Int = DEFAULT_RESUME_LIMIT): AppResult<List<JellyfinItem>>
+
+    // ---- M13 Phase 6 — Instant Mix & lyrics -----------------------------------------------------
+
+    /**
+     * A server-generated "radio" queue seeded from [itemId] — an album, artist or track's "Start
+     * radio" action (docs/notes/music-m13-plan.md, key decision 11).
+     *
+     * Online: `InstantMixApi.getInstantMixFromItem`, capped at [limit] — the plan's large-queue
+     * note: an artist seed could otherwise hand the player a very large playlist.
+     *
+     * Offline: **always [dev.jellyboost.core.common.AppError.Network]**. Instant Mix is a server
+     * recommendation and there is nothing local that could stand in for it — the same "no network,
+     * no offline substitute" answer [dev.jellyboost.player.resolve.PlaybackSourceResolver] gives
+     * when a track has no downloaded copy and no connection either.
+     */
+    suspend fun getInstantMix(
+        itemId: String,
+        limit: Int = DEFAULT_INSTANT_MIX_LIMIT,
+    ): AppResult<List<JellyfinItem>>
+
+    /**
+     * [itemId]'s lyrics, synced or plain — the `NowPlaying` lyrics pane.
+     *
+     * Online: `LyricsApi.getLyrics`; answers [dev.jellyboost.core.common.AppError.NotFound] when
+     * the server has none for this track, which the pane reads as "hide the affordance" rather than
+     * an error to show.
+     *
+     * Offline: always [dev.jellyboost.core.common.AppError.Network] — lyrics are not cached
+     * ("offline lyrics" is a recorded deferred item, docs/notes/music-m13-plan.md).
+     */
+    suspend fun getLyrics(itemId: String): AppResult<Lyrics>
 }
 
 // ---- M4 — item detail ------------------------------------------------------------------------

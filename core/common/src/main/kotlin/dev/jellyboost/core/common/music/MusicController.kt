@@ -159,4 +159,13 @@ sealed interface MusicMessage {
     data class PlaybackFailed(
         val itemName: String,
     ) : MusicMessage
+
+    /**
+     * "Start radio" (M13 Phase 6) could not build a queue: the Instant Mix fetch failed, or the
+     * server answered with nothing to play. [itemName] is the seed — the album, artist or track
+     * radio was started from — not a track inside the (non-existent) mix.
+     */
+    data class RadioFailed(
+        val itemName: String,
+    ) : MusicMessage
 }

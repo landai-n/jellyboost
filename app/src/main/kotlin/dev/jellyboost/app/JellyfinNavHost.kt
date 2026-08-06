@@ -211,6 +211,7 @@ internal fun JellyfinNavHost(
                 onArtistClick = { item -> navController.navigateToItem(item) },
                 onPlay = music::play,
                 onShuffle = music::shuffle,
+                onStartRadio = music::startRadio,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -221,6 +222,7 @@ internal fun JellyfinNavHost(
                 viewModel = hiltViewModel(),
                 onAlbumClick = { item -> navController.navigateToItem(item) },
                 onTrackClick = music::play,
+                onStartRadio = music::startRadio,
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
             )
@@ -239,6 +241,7 @@ internal fun JellyfinNavHost(
             NowPlayingScreen(
                 viewModel = hiltViewModel(),
                 onArtistClick = { item -> navController.navigateToItem(item) },
+                onStartRadio = music::startRadio,
                 onBack = { navController.popBackStack() },
             )
         }

@@ -2735,3 +2735,68 @@ interfaces — the same visibility fix, not a behaviour change. Beyond the gate,
   CPX/DUP/HYG remainder.
 
 <!-- END quality audit — architecture wave (2026-08-07) -->
+
+## Quality audit — gates wave (2026-08-07)
+
+Branch `worktree-agent-a27caf13877c9270f`, merged from main at `5b3c29d2`. The last two findings
+from `docs/notes/audit-2026-08-06-quality.md`: **H7** (= CPX-3 + CPX-14) and **ARCH-4**, plus the
+three `:player` visibility follow-ups the architecture wave had to leave frozen. Gate green in one
+run (ktlint + detekt + unit tests + `:app:lintDebug` + `assembleDebug`). **This closes the audit** —
+see its new "Remediation" header for the per-tier outcome and the three deliberate leave-opens.
+
+**H7 — the detekt gate can see the UI layer again**
+
+Every relaxation was *measured* before it was decided: the config was stripped to detekt defaults
+and `./gradlew detekt` run. 209 findings fell out. The four M0 raises, which had never been logged,
+are now each either reverted or logged with the number that justifies keeping them.
+
+| rule | M0 | now | fallout | handled by |
+|---|---|---|---|---|
+| `ReturnCount` | `max: 6` | **3** | 86 @2, **34 @3** | 2 restructured, 25 targeted `@Suppress` (2 class-level, on the MKV parsers) |
+| `LongMethod` | Composable exempt | **exemption dropped** | 18 | **12 decomposed**, 6 suppressed with individual reasons |
+| `LongParameterList` | `[Composable, Inject]` | **`Inject` dropped** | 63 → **11** | 11 DI constructors annotated |
+| `TooManyFunctions` | 20/20 + Composable ignore | **kept + `thresholdInFiles: 20`** | 25 classes @11; 15 files without the ignore | kept, reasoned in the config |
+
+- **Extraction beat suppression 12 to 6** on the long composables. Two paid for themselves beyond
+  the line count: `GroupSheetContent` and `SyncPlayGroupsContent` were each carrying a
+  **byte-identical 26-line leave-confirmation dialog**, now one `LeaveGroupDialog` (a duplication
+  the DUP family missed), and `HomeRows`' hero block became a `LazyListScope.heroRow` matching the
+  five sibling extensions already in that file.
+- The six suppressed are `AppScaffold`, `JellyfinNavHost`, `JellyfinTextField`, `LibraryGridScreen`,
+  `PlayerGestureLayer` and `PlayerScreen` — each with its own one-line reason, none copy-pasted.
+- `ReturnCount` went to **3, not detekt's default of 2**: 86 offenders at 2, every one sampled an
+  idiomatic guard chain. 0 of the 34 remaining were defects, which confirms the audit's "the raise
+  buys nothing" from the other side.
+
+**ARCH-4 — the SDK boundary is a build failure**
+
+`style.ForbiddenImport` bans `org.jellyfin.*` with rule-level `includes` scoped to
+`**/app/src/main/**`, `**/core/ui/src/main/**`, `**/feature/*/src/main/**`. It rides the `detekt`
+task already in the gate — no new module wiring, no new test file. Proven both ways: adding
+`import org.jellyfin.sdk.model.api.BaseItemDto` to `HomeViewModel.kt` fails `:feature:home:detekt`
+with the reason attached; removing it passes.
+
+**Follow-ups from the architecture wave**
+- `SyncPlayGroupsContent`, `PlayerViewModel` and `SyncPlayGroupsViewModel` are `internal`.
+  `PlayerScreen` and `SyncPlayGroupsScreen` each gained a public overload that resolves its own
+  `hiltViewModel()`, so `:app` names a destination and nothing else. `:player` is at **25** public
+  top-level declarations.
+- **The `CastPlaybackHost` prediction was wrong, and its 2026-07-31 decision stands.** The compiler
+  was asked rather than the reasoning trusted: the cluster's anchor is not `PlayerViewModel` but
+  `:app` injecting `CastSessionCoordinator` to call `.start()`. Unlocking it needs a public starter
+  seam and an `internal` coordinator behind it — a design change, not a visibility sweep.
+
+**Known issues / next**
+- **`ForbiddenImport` catches imports, not fully-qualified references.** The tree has none today
+  (grep-verified) but `org.jellyfin.sdk.model.api.BaseItemDto` written inline would slip through.
+- **42 targeted suppression entries were added** (25 `ReturnCount`, 11 `LongParameterList`,
+  6 `LongMethod`) and one removed as redundant — the "one-time suppression sweep" the audit
+  predicted. Raising `ReturnCount` to 4 would remove 22 of them and still sit two rungs below the
+  M0 setting; the counts to make that call are in DECISIONS.md.
+- The `CastPlaybackHost` starter seam and the `DownloadedMetadataRefresher`/`DownloadedMediaProvider`
+  interface seam are the two named pieces of visibility work still open.
+- No device walk. This wave is config, decomposition and visibility; the 12 composable extractions
+  are pure moves, but a tablet sanity-check of login, the library filter sheet, the detail page and
+  the SyncPlay sheets is the cheap confirmation.
+
+<!-- END quality audit — gates wave (2026-08-07) -->

@@ -69,6 +69,36 @@ gates/governance; Tier 3 structural, scheduled with the next touch of each area)
 **Remediation started**: H8 (the drifted `AppError` copy) is landed — see the next
 entry. The rest are findings only.
 
+## Audit — SyncPlay structural wave: H5/H6/CPX-4/CPX-6/CPX-15/HYG-4 (2026-08-07 — landed, gate green per commit; group re-walk owed with the M11 DoD)
+
+The riskiest cluster of the 2026-08-06 audit, remediated in five gated commits
+(DECISIONS.md 2026-08-07 records the wave's decisions):
+
+1. **H6** — the 13 session-scoped fields boxed into `GroupSessionState`; teardown vs
+   stand-down is one assignment plus a named factory; every armed timer is now
+   `.cancel()`ed explicitly on both endings.
+2. **HYG-4** — all 14 `runCatching` sites → `runCatchingUnlessCancelled`; `:player`'s
+   duplicate `@MainDispatcher` deleted (five imports re-pointed at `:core:network`'s).
+3. **H5** — `SyncPlayRejoinPolicy` (rejoin state machine, driven through the controller's
+   lock-held `SessionDriver`) and `SyncPlayRecoveryNets` (the B3 nets + group anchor)
+   extracted; controller still ~850 SLOC so its `LargeClass` suppression stays, rationale
+   updated. All 81 test scenarios preserved verbatim across a shared base +
+   controller/rejoin/nets suites.
+4. **CPX-4** — the self-null-vs-cancel race in every recovery timer closed with the
+   scheduler's SP-01 identity-guard pattern (chosen over the sealed-RecoveryState
+   rewrite); two new race regressions verified to fail against the old bodies.
+5. **CPX-15** — `reconcile`'s decision is the pure `decideReconcile` → sealed
+   `ReconcileAction` (7 new unit tests); one `loadedPlaylistItemId` write site per
+   outcome.
+6. **CPX-6** — resolved as documentation: the `@SyncPlayScope` confinement contract is
+   stated once at the top of the controller; the receiver-type redesign was judged
+   disproportionate after the extractions (DECISIONS point 8).
+
+Behavioural deltas are confined to: cancellation during join/rejoin no longer surfaces
+error copy or burns attempts, and a recovery net disarmed mid-fire no longer acts. Both
+are covered by unit tests; a device group-watch walk (join, blip, rejoin, pause/resume
+nets) is owed and folds into the outstanding M11 DoD walk.
+
 ## Audit H8 — one `AppError`→copy mapper, and the end of English error text on home/detail/player (2026-08-06 — landed, gate green)
 
 `docs/notes/audit-2026-08-06-quality.md`, H8 (= DUP-1 = CPX-13). Five mappings of the

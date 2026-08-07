@@ -148,6 +148,31 @@ import javax.inject.Singleton
  * - at [SyncPlayState.Idle] with a `lostMembership` still inside `FOREGROUND_REJOIN_WINDOW_MS`, runs
  *   the same rejoin attempts, once and **silently** — a re-check that fails or finds the group gone
  *   must not put a message on screen every time the app is opened.
+ *
+ * ### Threading: the confinement contract (audit SP-07/SP-01/SP-08, CPX-6)
+ * Every field in this class — the [session] box, the extracted collaborators' state, the
+ * scheduler's memory — is confined to the single-threaded `@SyncPlayScope`
+ * (`SyncPlayScopeModule`: `limitedParallelism(1)`, which serialises every coroutine with a
+ * happens-before edge between them). That confinement **is** the synchronization; there are no
+ * locks on the fields, and the [sessionMutex] serialises *membership transitions*, not field
+ * access. The contract, in three rules:
+ *
+ * 1. **Public entry points hop first.** Anything callable from another thread ([attachHost],
+ *    [detachHost], [onHostBuffering], [leaveGroup], [onAppForegrounded], `createGroup`,
+ *    `joinGroup`) does nothing but `scope.launch`/`withContext(scope)` onto the confined scope
+ *    before touching state.
+ * 2. **Session work runs on the session's child scope** ([launchInSession]), so [closeSession]
+ *    cancels it wholesale — the child inherits the same confined dispatcher, so rule 1's
+ *    guarantee is unchanged there.
+ * 3. **Only [PlayerHandle]/host reads leave the scope**, via `withContext(mainDispatcher)`, and
+ *    they carry no controller state with them beyond their parameters.
+ *
+ * Kept as a documented contract rather than a compile-time receiver type deliberately (audit
+ * CPX-6, DECISIONS.md 2026-08-07): a `SyncPlaySessionScope` only `enterGroup` could mint would
+ * re-thread most private signatures to encode what the confined dispatcher already enforces
+ * mechanically, and the per-call-site choice the finding measured has shrunk with the class —
+ * the rejoin loop and the safety-net timers now live behind [SyncPlayRejoinPolicy] and
+ * [SyncPlayRecoveryNets], which run on this same scope.
  */
 @Singleton
 @Suppress(

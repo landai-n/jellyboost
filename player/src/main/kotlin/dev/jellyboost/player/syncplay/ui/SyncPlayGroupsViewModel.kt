@@ -53,7 +53,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SyncPlayGroupsViewModel
     @Inject
-    constructor(
+    internal constructor(
         private val api: SyncPlayApi,
         private val controller: SyncPlayController,
     ) : ViewModel() {
@@ -67,7 +67,7 @@ class SyncPlayGroupsViewModel
         private val retryRequests = Channel<Unit>(Channel.CONFLATED)
 
         /** The single source of truth for [SyncPlayGroupsScreen]. */
-        val uiState: StateFlow<SyncPlayGroupsUiState> =
+        internal val uiState: StateFlow<SyncPlayGroupsUiState> =
             combine(pollGroups(), controller.state, local) { poll, controllerState, localState ->
                 poll.toUiState(membership = controllerState.toMembership(), userMessage = localState.userMessage)
             }.stateIn(
@@ -86,29 +86,29 @@ class SyncPlayGroupsViewModel
         }
 
         /** Creates a group named [name] and joins it. A blank name (all whitespace) is ignored. */
-        fun createGroup(name: String) {
+        internal fun createGroup(name: String) {
             val trimmed = name.trim()
             if (trimmed.isEmpty()) return
             controller.createGroup(trimmed)
         }
 
         /** Joins [group] — one of the rows this screen is already showing. */
-        fun join(group: SyncPlayGroupSummary) {
+        internal fun join(group: SyncPlayGroupSummary) {
             controller.joinGroup(group)
         }
 
         /** Leaves whatever group this device is in. */
-        fun leave() {
+        internal fun leave() {
             controller.leaveGroup()
         }
 
         /** Asks the poll loop to try again now, instead of waiting out the rest of its 10 s tick. */
-        fun retry() {
+        internal fun retry() {
             retryRequests.trySend(Unit)
         }
 
         /** Clears the one-shot message once the snackbar has shown it. */
-        fun consumeMessage() {
+        internal fun consumeMessage() {
             local.update { it.copy(userMessage = null) }
         }
 

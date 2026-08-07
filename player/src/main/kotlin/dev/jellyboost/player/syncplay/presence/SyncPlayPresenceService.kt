@@ -40,7 +40,7 @@ import timber.log.Timber
  * `SyncPlayController` singleton and its membership are gone, so a resurrected notification would
  * promise a group that no longer exists.
  */
-class SyncPlayPresenceService : Service() {
+internal class SyncPlayPresenceService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     /**

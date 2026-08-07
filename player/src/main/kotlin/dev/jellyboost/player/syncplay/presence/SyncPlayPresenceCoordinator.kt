@@ -39,7 +39,7 @@ import javax.inject.Singleton
 @Singleton
 class SyncPlayPresenceCoordinator
     @Inject
-    constructor(
+    internal constructor(
         @ApplicationContext private val context: Context,
         private val controller: SyncPlayController,
         private val playbackServiceState: PlaybackServiceState,

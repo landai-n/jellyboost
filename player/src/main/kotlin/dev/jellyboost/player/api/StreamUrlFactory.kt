@@ -9,7 +9,7 @@ import java.util.UUID
  * behind an interface lets `ExoMediaSourceFactory` be tested against predictable strings instead
  * of an SDK client with a base URL and an access token.
  */
-interface StreamUrlFactory {
+internal interface StreamUrlFactory {
     /**
      * `GET /Videos/{itemId}/stream?static=true` — the untouched file, for direct play.
      *

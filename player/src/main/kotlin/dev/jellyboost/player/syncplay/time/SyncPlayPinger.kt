@@ -27,7 +27,7 @@ import javax.inject.Singleton
  * Runs for exactly as long as the group does.
  */
 @Singleton
-class SyncPlayPinger
+internal class SyncPlayPinger
     @Inject
     constructor(
         private val api: SyncPlayApi,

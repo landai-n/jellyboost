@@ -24,7 +24,7 @@ package dev.jellyboost.player.model
  * @property intervalMs milliseconds of video between two consecutive thumbnails.
  * @property tileUris the sheets, in tile order.
  */
-data class TrickplayTiles(
+internal data class TrickplayTiles(
     val thumbnailWidth: Int,
     val thumbnailHeight: Int,
     val columns: Int,

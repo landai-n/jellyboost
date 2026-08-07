@@ -156,7 +156,7 @@ internal object PlayerProvidersModule {
 /** Marks the OkHttp client ExoPlayer transfers media on (audit ARCH-06). */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class MediaHttpClient
+internal annotation class MediaHttpClient
 
 /**
  * Marks the `PlayerHandle` that plays on this device.

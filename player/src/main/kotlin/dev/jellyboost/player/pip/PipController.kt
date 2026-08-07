@@ -38,7 +38,7 @@ class PipController
          * @param videoWidth / @param videoHeight the decoded video size, for the window's aspect
          *   ratio; zero until the first frame is decoded, which the activity treats as "no hint".
          */
-        fun setPlayerState(
+        internal fun setPlayerState(
             active: Boolean,
             videoWidth: Int = 0,
             videoHeight: Int = 0,
@@ -54,7 +54,7 @@ class PipController
         }
 
         /** Forgets everything — the player screen is gone. */
-        fun clear() {
+        internal fun clear() {
             _state.value = PipState()
         }
     }

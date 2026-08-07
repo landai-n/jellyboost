@@ -38,7 +38,7 @@ import javax.inject.Inject
  * makes the sheet show the same order to everyone in the group rather than an optimistic local one.
  */
 @HiltViewModel
-class SyncPlayQueueViewModel
+internal class SyncPlayQueueViewModel
     @Inject
     constructor(
         private val controller: SyncPlayController,
@@ -169,7 +169,7 @@ class SyncPlayQueueViewModel
     }
 
 /** The queue sheet's state: the rows, and whether there is anything to draw at all. */
-data class SyncPlayQueueUiState(
+internal data class SyncPlayQueueUiState(
     val rows: List<SyncPlayQueueRow> = emptyList(),
     /** Index of the row playing now, or `-1` when the group is on nothing. */
     val playingIndex: Int = -1,
@@ -190,7 +190,7 @@ data class SyncPlayQueueUiState(
  * be queued twice. [title] falls back to a placeholder until the item is fetched, so the queue's
  * shape is visible immediately rather than after the last round trip.
  */
-data class SyncPlayQueueRow(
+internal data class SyncPlayQueueRow(
     val playlistItemId: UUID,
     val itemId: UUID,
     val title: String?,

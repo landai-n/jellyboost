@@ -67,7 +67,7 @@ import kotlin.time.Duration.Companion.seconds
  * encoder, so there is nothing to kill and the call would only be a lie to the server.
  */
 @Singleton
-class PlaybackReporter
+internal class PlaybackReporter
     @Inject
     constructor(
         private val api: PlayerApi,

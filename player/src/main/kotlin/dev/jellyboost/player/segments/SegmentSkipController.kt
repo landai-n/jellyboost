@@ -21,7 +21,7 @@ import dev.jellyboost.core.common.model.SegmentSkipMode
  * constructed by `PlayerViewModel` rather than injected, because "one per playback session" is
  * exactly the ViewModel's own lifetime and a Hilt scope would only be a longer way to say so.
  */
-class SegmentSkipController {
+internal class SegmentSkipController {
     /** Segments this session has already jumped over on its own. */
     private val autoSkipped = mutableSetOf<MediaSegment>()
 
@@ -70,7 +70,7 @@ class SegmentSkipController {
 }
 
 /** What [SegmentSkipController] concluded about the current position. */
-sealed interface SegmentSkipDecision {
+internal sealed interface SegmentSkipDecision {
     /** Nothing to offer — outside every actionable segment. */
     data object None : SegmentSkipDecision
 

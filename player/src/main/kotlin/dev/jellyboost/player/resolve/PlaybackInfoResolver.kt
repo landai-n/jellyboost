@@ -36,7 +36,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * driven by that answer, which is why this is the one place the decision is made.
  */
 @Singleton
-class PlaybackInfoResolver
+internal class PlaybackInfoResolver
     @Inject
     constructor(
         private val api: PlayerApi,
@@ -288,7 +288,7 @@ private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
 }
 
 /** Small helper so callers can build a request from the route's string item id. */
-fun playbackResolveRequest(
+internal fun playbackResolveRequest(
     itemId: String,
     mediaSourceId: String? = null,
     startPositionTicks: Long = 0L,

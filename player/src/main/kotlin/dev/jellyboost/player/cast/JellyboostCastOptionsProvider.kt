@@ -20,7 +20,7 @@ import com.google.android.gms.cast.framework.media.NotificationOptions
  * the receiver a plain URL (plan, "Key design decisions" 1). Pointing at a styled receiver later is
  * a one-line change here.
  */
-class JellyboostCastOptionsProvider : OptionsProvider {
+internal class JellyboostCastOptionsProvider : OptionsProvider {
     override fun getCastOptions(context: Context): CastOptions {
         val notificationOptions =
             NotificationOptions

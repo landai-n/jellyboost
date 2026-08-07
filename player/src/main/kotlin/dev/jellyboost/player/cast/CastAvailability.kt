@@ -32,13 +32,18 @@ import javax.inject.Singleton
 class CastAvailability
     @Inject
     constructor() {
+        // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
+        // when the read-only half is not `public`. Here [state] is `internal` because
+        // `CastDeviceState` is (audit ARCH-2) — the pairing is otherwise exactly the idiom the rule
+        // is about.
+        @Suppress("ktlint:standard:backing-property-naming")
         private val _state = MutableStateFlow<CastDeviceState>(CastDeviceState.Unavailable)
 
         /**
          * What casting looks like right now; [CastDeviceState.Unavailable] until (and unless)
          * [initialize] finds a working Cast stack.
          */
-        val state: StateFlow<CastDeviceState> = _state.asStateFlow()
+        internal val state: StateFlow<CastDeviceState> = _state.asStateFlow()
 
         /**
          * The shared [CastContext], or `null` while unavailable — the sender-side API the later
@@ -51,7 +56,7 @@ class CastAvailability
          * disable casting (audit CAST-07).
          */
         @Volatile
-        var castContext: CastContext? = null
+        internal var castContext: CastContext? = null
             private set
 
         /** One attempt per process — a stack that refused to start will not start on a retry. */
@@ -124,7 +129,7 @@ class CastAvailability
  * What the app knows about casting, with no Google Play services types in sight — the whole point,
  * so the UI can observe it on a device that has no Cast stack to observe.
  */
-sealed interface CastDeviceState {
+internal sealed interface CastDeviceState {
     /** No Cast stack: no Play services, or the framework failed to start. Draw nothing. */
     data object Unavailable : CastDeviceState
 

@@ -36,7 +36,7 @@ import javax.inject.Singleton
  * decisions are, so this is what the tests cover.
  */
 @Singleton
-class CastSpecMapper
+internal class CastSpecMapper
     @Inject
     constructor(
         private val urls: StreamUrlFactory,

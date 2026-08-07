@@ -25,8 +25,6 @@
     <string name="detail_type_series">Sari</string>
     <string name="detail_type_season">Hooaeg</string>
     <string name="detail_type_episode">Osa</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Osa %1$d</string>
     <string name="detail_meta_rating">Hinnang %1$s</string>
     <string name="detail_meta_rated">vanusepiirang %1$s</string>

@@ -80,4 +80,6 @@
     <string name="error_server">ਸਰਵਰ ਨੇ ਗਲਤੀ ਦਿੱਤੀ।</string>
     <string name="error_server_with_code">ਸਰਵਰ ਨੇ ਗਲਤੀ (%1$d) ਦਿੱਤੀ।</string>
     <string name="error_storage">ਲੋਕਲ ਡਾਟਾ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

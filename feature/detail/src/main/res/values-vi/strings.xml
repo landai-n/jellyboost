@@ -24,8 +24,6 @@
     <string name="detail_type_series">Phim bộ</string>
     <string name="detail_type_season">Mùa</string>
     <string name="detail_type_episode">Tập</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Tập %1$d</string>
     <string name="detail_meta_rating">Đánh giá %1$s</string>
     <string name="detail_meta_rated">phân loại độ tuổi %1$s</string>

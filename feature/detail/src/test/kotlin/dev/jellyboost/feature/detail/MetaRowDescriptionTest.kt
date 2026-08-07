@@ -61,7 +61,29 @@ class MetaRowDescriptionTest {
     fun `the parts are separated by a pause, not by the interpunct the row draws`() {
         // `·` is read out as "dot" by some engines and swallowed by others; a comma is a pause in
         // all of them. The row keeps drawing Separators.DOT.
-        DESCRIPTION_SEPARATOR shouldBe ", "
+        //
+        // Asserted through the sentence rather than against a local constant: the join moved to
+        // `:core:ui`'s `describeParts` (audit DUP-8), and what this test is really pinning is that
+        // this row's output did not change with it.
+        metaRowDescription(
+            rating = "Rating 8.6",
+            year = "2016",
+            certificate = null,
+            facts = emptyList(),
+        ) shouldBe "Rating 8.6, 2016"
         Separators.DOT shouldBe " · "
+    }
+
+    @Test
+    fun `a fact that repeats an earlier one is said once`() {
+        // Gained with the shared join: the header used to be the only one of the three assemblers
+        // without it, so a row whose runtime and time-left resolved to the same words said them
+        // twice.
+        metaRowDescription(
+            rating = null,
+            year = "2016",
+            certificate = null,
+            facts = listOf("22 min", "22 min"),
+        ) shouldBe "2016, 22 min"
     }
 }

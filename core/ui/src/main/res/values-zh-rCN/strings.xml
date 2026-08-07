@@ -71,4 +71,6 @@
     <string name="error_server">服务器返回了一个错误。</string>
     <string name="error_server_with_code">服务器返回了一个错误 (%1$d)。</string>
     <string name="error_storage">无法读取本地数据。</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

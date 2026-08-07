@@ -24,8 +24,6 @@
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Tempada</string>
     <string name="detail_type_episode">Episodio</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episodio %1$d</string>
     <string name="detail_meta_rating">Valoración %1$s</string>
     <string name="detail_meta_rated">clasificada %1$s</string>

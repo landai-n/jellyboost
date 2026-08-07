@@ -65,4 +65,6 @@
     <string name="error_server">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา</string>
     <string name="error_server_with_code">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา (%1$d)</string>
     <string name="error_storage">ไม่สามารถอ่านข้อมูลในเครื่องได้</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

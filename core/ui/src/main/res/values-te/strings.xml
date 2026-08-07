@@ -80,4 +80,6 @@
     <string name="error_server">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది.</string>
     <string name="error_server_with_code">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది (%1$d).</string>
     <string name="error_storage">స్థానిక డేటాను చదవలేకపోయాం.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

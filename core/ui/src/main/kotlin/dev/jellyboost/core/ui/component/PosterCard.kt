@@ -13,6 +13,7 @@ import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
@@ -96,7 +97,7 @@ fun PosterCard(
         )
 
         if (showTitle) {
-            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
+            CardTitleBlock(title = item.displayTitle, subtitle = item.subtitleLine())
         }
     }
 }

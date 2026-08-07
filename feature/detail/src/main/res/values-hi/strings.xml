@@ -27,8 +27,6 @@
     <string name="detail_type_series">सीरीज़</string>
     <string name="detail_type_season">सीज़न</string>
     <string name="detail_type_episode">एपिसोड</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">एपिसोड %1$d</string>
     <string name="detail_meta_rating">रेटिंग %1$s</string>
     <string name="detail_meta_rated">आयु रेटिंग %1$s</string>

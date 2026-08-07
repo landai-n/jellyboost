@@ -74,4 +74,6 @@
     <string name="error_server">Zerbitzariak errore bat itzuli du.</string>
     <string name="error_server_with_code">Zerbitzariak errore bat itzuli du (%1$d).</string>
     <string name="error_storage">Ezin izan dira datu lokalak irakurri.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

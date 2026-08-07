@@ -11,4 +11,4 @@ import javax.inject.Qualifier
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class DetachedPlayerScope
+internal annotation class DetachedPlayerScope

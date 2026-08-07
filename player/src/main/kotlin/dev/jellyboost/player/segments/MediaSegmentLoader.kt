@@ -25,7 +25,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * than surface an error the user cannot act on. Every failure therefore ends at "no segments".
  */
 @Singleton
-class MediaSegmentLoader
+internal class MediaSegmentLoader
     @Inject
     constructor(
         private val api: PlayerApi,

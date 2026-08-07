@@ -2,7 +2,7 @@ package dev.jellyboost.player.cast
 
 import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob

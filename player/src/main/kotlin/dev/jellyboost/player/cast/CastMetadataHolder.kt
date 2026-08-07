@@ -30,7 +30,7 @@ import javax.inject.Singleton
  * the cost of being sure is a single field read.
  */
 @Singleton
-class CastMetadataHolder
+internal class CastMetadataHolder
     @Inject
     constructor() {
         @Volatile

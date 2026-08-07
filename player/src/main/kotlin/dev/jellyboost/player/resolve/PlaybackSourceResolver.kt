@@ -51,7 +51,7 @@ import javax.inject.Singleton
  * HTTP server is explicitly out of scope (docs/notes/chromecast-m12-plan.md, key decision 3).
  */
 @Singleton
-class PlaybackSourceResolver
+internal class PlaybackSourceResolver
     @Inject
     constructor(
         private val local: LocalPlaybackResolver,

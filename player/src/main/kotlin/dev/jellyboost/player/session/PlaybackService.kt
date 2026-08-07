@@ -45,7 +45,7 @@ import javax.inject.Inject
  */
 @UnstableApi
 @AndroidEntryPoint
-class PlaybackService :
+internal class PlaybackService :
     MediaSessionService(),
     MediaSessionService.Listener {
     @Inject

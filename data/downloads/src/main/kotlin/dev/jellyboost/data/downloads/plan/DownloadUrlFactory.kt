@@ -22,7 +22,7 @@ import javax.inject.Singleton
  * if the URL builders are injectable. The SDK's builders are ordinary functions on a real
  * `ApiClient` with a real base URL, which a JVM test does not have.
  */
-interface DownloadUrlFactory {
+internal interface DownloadUrlFactory {
     /**
      * The dedicated download endpoint (`/Items/{id}/Download`).
      *

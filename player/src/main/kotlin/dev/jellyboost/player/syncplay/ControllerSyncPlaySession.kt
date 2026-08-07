@@ -30,7 +30,7 @@ import javax.inject.Singleton
  * `PlayQueueUpdate` bring the player up.
  */
 @Singleton
-class ControllerSyncPlaySession
+internal class ControllerSyncPlaySession
     @Inject
     constructor(
         private val controller: SyncPlayController,

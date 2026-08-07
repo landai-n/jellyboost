@@ -30,7 +30,7 @@ import kotlin.math.abs
  * it — the plan's "graceful absence, no placeholder flicker".
  */
 @Singleton
-class TrickplayResolver
+internal class TrickplayResolver
     @Inject
     constructor(
         private val api: PlayerApi,

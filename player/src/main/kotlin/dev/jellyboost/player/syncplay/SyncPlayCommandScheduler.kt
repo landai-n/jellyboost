@@ -1,6 +1,6 @@
 package dev.jellyboost.player.syncplay
 
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.session.PlayerHandle
 import dev.jellyboost.player.syncplay.di.SyncPlayScope
@@ -65,7 +65,7 @@ import kotlin.math.abs
  * ever moves forwards and a straggler cannot displace a newer command still waiting to fire.
  */
 @Singleton
-class SyncPlayCommandScheduler
+internal class SyncPlayCommandScheduler
     @Inject
     constructor(
         private val playerHandle: PlayerHandle,
@@ -295,7 +295,7 @@ class SyncPlayCommandScheduler
  * [anchor] is non-null exactly for an unpause — it is the fixed point the drift monitor measures
  * against, and no other command establishes one.
  */
-data class SyncPlayAppliedCommand(
+internal data class SyncPlayAppliedCommand(
     val command: SyncPlayCommand,
     val anchor: SyncPlayAnchor?,
 )

@@ -12,7 +12,7 @@ import dev.jellyboost.core.common.model.MediaSegmentKind
  * @property startMs first millisecond inside the segment.
  * @property endMs first millisecond *after* the segment — where a skip lands.
  */
-data class MediaSegment(
+internal data class MediaSegment(
     val kind: MediaSegmentKind,
     val startMs: Long,
     val endMs: Long,

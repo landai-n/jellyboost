@@ -8,7 +8,7 @@ package dev.jellyboost.player.model
  * from the UI (docs/PLAN.md, M5 DoD). [AUTO] sends no cap at all and lets the device profile's
  * 120 Mbps ceiling apply.
  */
-enum class PlaybackQuality(
+internal enum class PlaybackQuality(
     val maxStreamingBitrate: Int?,
 ) {
     AUTO(null),

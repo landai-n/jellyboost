@@ -2,6 +2,8 @@ package dev.jellyboost.data.downloads.impl
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.JellyfinItem
@@ -11,8 +13,6 @@ import dev.jellyboost.core.database.entities.DownloadProgress
 import dev.jellyboost.core.database.entities.DownloadWithFiles
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
-import dev.jellyboost.core.network.di.ApplicationScope
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.DownloadRepository

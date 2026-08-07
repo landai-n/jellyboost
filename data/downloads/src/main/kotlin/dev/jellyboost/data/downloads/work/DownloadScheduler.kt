@@ -27,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
  * Behind an interface so the enqueue/pause/resume paths can be unit-tested without WorkManager,
  * exactly like `UserDataSyncScheduler` in `:data`.
  */
-interface DownloadScheduler {
+internal interface DownloadScheduler {
     /**
      * Makes sure the queue is running, without disturbing a run already in progress.
      *
@@ -61,7 +61,7 @@ interface DownloadScheduler {
 
 /** [DownloadScheduler] on WorkManager, per docs/PLAN.md's "Download pipeline" → Enqueue. */
 @Singleton
-class WorkManagerDownloadScheduler
+internal class WorkManagerDownloadScheduler
     @Inject
     constructor(
         @ApplicationContext private val context: Context,

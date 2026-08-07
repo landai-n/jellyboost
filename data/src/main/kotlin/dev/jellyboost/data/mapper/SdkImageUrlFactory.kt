@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * artwork changes, so Coil's disk cache never serves a stale poster.
  */
 @Singleton
-class SdkImageUrlFactory
+internal class SdkImageUrlFactory
     @Inject
     constructor(
         private val apiClient: ApiClient,

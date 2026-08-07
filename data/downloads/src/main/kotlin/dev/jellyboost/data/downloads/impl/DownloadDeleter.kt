@@ -28,7 +28,7 @@ import javax.inject.Singleton
  * because only it knows whether the item being deleted is the one currently transferring.
  */
 @Singleton
-class DownloadDeleter
+internal class DownloadDeleter
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

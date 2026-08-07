@@ -1,9 +1,9 @@
 package dev.jellyboost.player.syncplay
 
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.network.SessionStateHolder
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
-import dev.jellyboost.core.network.di.MainDispatcher
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.session.PlayerEvent
@@ -186,7 +186,7 @@ import javax.inject.Singleton
 )
 class SyncPlayController
     @Inject
-    constructor(
+    internal constructor(
         private val api: SyncPlayApi,
         private val socket: SyncPlaySocket,
         private val timeSync: SyncPlayTimeSync,
@@ -203,11 +203,18 @@ class SyncPlayController
         @SyncPlayScope private val scope: CoroutineScope,
         @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     ) {
+        // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
+        // when the read-only half is not `public`. Here the read-only half is `internal` because
+        // nothing outside `:player` may see it (audit ARCH-2) — the pairing is otherwise exactly the
+        // idiom the rule is about, and renaming the backing field would churn 34 unrelated lines.
+        @Suppress("ktlint:standard:backing-property-naming")
         private val _state = MutableStateFlow<SyncPlayState>(SyncPlayState.Idle)
 
         /** Where the group is, and where this member is inside it. */
-        val state: StateFlow<SyncPlayState> = _state.asStateFlow()
+        internal val state: StateFlow<SyncPlayState> = _state.asStateFlow()
 
+        // See [_state] for why the rule is suppressed rather than the field renamed.
+        @Suppress("ktlint:standard:backing-property-naming")
         private val _messages =
             MutableSharedFlow<SyncPlayMessage>(
                 extraBufferCapacity = EVENT_BUFFER,
@@ -215,7 +222,7 @@ class SyncPlayController
             )
 
         /** Things the user has to be told; the UI owns the copy (M11 Phase 3). */
-        val messages: SharedFlow<SyncPlayMessage> = _messages.asSharedFlow()
+        internal val messages: SharedFlow<SyncPlayMessage> = _messages.asSharedFlow()
 
         private val _launchRequests =
             MutableSharedFlow<SyncPlayLaunchRequest>(
@@ -357,7 +364,7 @@ class SyncPlayController
         // Membership intents ------------------------------------------------------------------------
 
         /** Creates a group and joins it. */
-        fun createGroup(name: String) {
+        internal fun createGroup(name: String) {
             scope.launch { startSession(existing = null, newGroupName = name) }
         }
 
@@ -368,7 +375,7 @@ class SyncPlayController
          * them) and the server's own `GroupJoined` refreshes it a moment later anyway — so the
          * alternative would be a `getGroups` round trip to fill in a name we already knew.
          */
-        fun joinGroup(group: SyncPlayGroupSummary) {
+        internal fun joinGroup(group: SyncPlayGroupSummary) {
             scope.launch { startSession(existing = group, newGroupName = null) }
         }
 
@@ -380,7 +387,7 @@ class SyncPlayController
          * credential, a request guaranteed to 401. The `LoggedOut` transition that follows finds
          * the session already torn down, so [watchSignOut] has only local memory left to clear.
          */
-        suspend fun leaveBeforeSignOut() {
+        internal suspend fun leaveBeforeSignOut() {
             // On the confined scope, like every entry point that touches session state (audit
             // SP-07) — but awaited, because `signOut` must not revoke the token until the leave
             // has actually gone out.
@@ -396,7 +403,7 @@ class SyncPlayController
         }
 
         /** Leaves the group. Playback is left exactly as it is, now solo. */
-        fun leaveGroup() {
+        internal fun leaveGroup() {
             // On the confined scope, like every entry point that touches session state (audit
             // SP-07). First thing inside it, before anything suspends: clearing the target is the
             // one signal that the exit is deliberate, and a loss confirmed while the leave is in
@@ -426,7 +433,7 @@ class SyncPlayController
          * Anything else — [SyncPlayState.Joining], [SyncPlayState.Rejoining] — is already in the
          * middle of the conversation this would start.
          */
-        fun onAppForegrounded() {
+        internal fun onAppForegrounded() {
             scope.launch {
                 when (_state.value) {
                     is SyncPlayState.InGroup -> pinger.sampleNow()
@@ -438,41 +445,41 @@ class SyncPlayController
 
         // Transport intents — requests to the server, never local playback changes ------------------
 
-        fun requestPause() = request { api.requestPause() }
+        internal fun requestPause() = request { api.requestPause() }
 
-        fun requestUnpause() = request { api.requestUnpause() }
+        internal fun requestUnpause() = request { api.requestUnpause() }
 
-        fun requestSeek(positionTicks: Long) = request { api.requestSeek(positionTicks) }
+        internal fun requestSeek(positionTicks: Long) = request { api.requestSeek(positionTicks) }
 
-        fun requestNext() = request { currentEntry()?.let { api.requestNextItem(it.playlistItemId) } }
+        internal fun requestNext() = request { currentEntry()?.let { api.requestNextItem(it.playlistItemId) } }
 
-        fun requestPrevious() = request { currentEntry()?.let { api.requestPreviousItem(it.playlistItemId) } }
+        internal fun requestPrevious() = request { currentEntry()?.let { api.requestPreviousItem(it.playlistItemId) } }
 
-        fun requestSetPlaylistItem(playlistItemId: UUID) = request { api.setPlaylistItem(playlistItemId) }
+        internal fun requestSetPlaylistItem(playlistItemId: UUID) = request { api.setPlaylistItem(playlistItemId) }
 
         // Queue intents ----------------------------------------------------------------------------
 
-        fun setNewQueue(
+        internal fun setNewQueue(
             itemIds: List<UUID>,
             playingItemPosition: Int = 0,
             startPositionTicks: Long = 0L,
         ) = request { api.setNewQueue(itemIds, playingItemPosition, startPositionTicks) }
 
-        fun addToQueue(
+        internal fun addToQueue(
             itemIds: List<UUID>,
             mode: SyncPlayQueueMode,
         ) = request { api.addToQueue(itemIds, mode) }
 
-        fun moveQueueItem(
+        internal fun moveQueueItem(
             playlistItemId: UUID,
             newIndex: Int,
         ) = request { api.movePlaylistItem(playlistItemId, newIndex) }
 
-        fun removeFromQueue(playlistItemIds: List<UUID>) = request { api.removeFromPlaylist(playlistItemIds) }
+        internal fun removeFromQueue(playlistItemIds: List<UUID>) = request { api.removeFromPlaylist(playlistItemIds) }
 
-        fun setShuffle(mode: SyncPlayShuffleMode) = request { api.setShuffleMode(mode) }
+        internal fun setShuffle(mode: SyncPlayShuffleMode) = request { api.setShuffleMode(mode) }
 
-        fun setRepeat(mode: SyncPlayRepeatMode) = request { api.setRepeatMode(mode) }
+        internal fun setRepeat(mode: SyncPlayRepeatMode) = request { api.setRepeatMode(mode) }
 
         // Host attachment ---------------------------------------------------------------------------
 
@@ -483,7 +490,7 @@ class SyncPlayController
          * case where the user opened that very item themselves, which is adopted rather than
          * reloaded (see [reconcile]).
          */
-        fun attachHost(host: SyncPlayPlaybackHost) {
+        internal fun attachHost(host: SyncPlayPlaybackHost) {
             // Hopped onto the confined scope: the handshake bookkeeping this touches is only ever
             // read and written there, and a main-thread write would race it (audit SP-07).
             scope.launch {
@@ -522,7 +529,7 @@ class SyncPlayController
          * @param host ignored unless it is the attached one, so a stale ViewModel's teardown cannot
          *   detach the player that replaced it.
          */
-        fun detachHost(host: SyncPlayPlaybackHost) {
+        internal fun detachHost(host: SyncPlayPlaybackHost) {
             // Hopped like [attachHost], and for a sharper reason: `session.skippedSlots.clear()` from the
             // main thread raced the collectors' own `add`/`clear` on a plain `HashSet` (audit
             // SP-07) — a `ConcurrentModificationException` inside the group-updates collector reads
@@ -547,7 +554,7 @@ class SyncPlayController
          * ExoPlayer's re-prepare is invisible from here, and a group that was not told would keep
          * playing while this member reloads.
          */
-        fun onHostBuffering() {
+        internal fun onHostBuffering() {
             // Hopped onto the confined scope like the other host entry points (audit SP-07):
             // `readyOwedFor` and the scheduler's memory belong to that thread.
             scope.launch {

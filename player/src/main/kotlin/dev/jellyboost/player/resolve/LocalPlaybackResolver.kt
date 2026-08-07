@@ -69,7 +69,7 @@ import javax.inject.Singleton
  * classes' opinions.
  */
 @Singleton
-class LocalPlaybackResolver
+internal class LocalPlaybackResolver
     @Inject
     constructor(
         private val downloads: DownloadedMediaProvider,

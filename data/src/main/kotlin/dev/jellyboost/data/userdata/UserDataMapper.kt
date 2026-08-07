@@ -2,7 +2,7 @@ package dev.jellyboost.data.userdata
 
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.database.entities.UserDataEntity
-import dev.jellyboost.data.toSdkInstant
+import dev.jellyboost.core.network.toSdkInstant
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import java.time.Instant
 import java.util.UUID

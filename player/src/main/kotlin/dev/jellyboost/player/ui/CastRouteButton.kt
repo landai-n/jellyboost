@@ -175,7 +175,7 @@ private val CastButtonSize: Dp = Dimens.MinTouchTarget
  * what is wanted.
  */
 @HiltViewModel
-class CastRouteButtonViewModel
+internal class CastRouteButtonViewModel
     @Inject
     constructor(
         castAvailability: CastAvailability,

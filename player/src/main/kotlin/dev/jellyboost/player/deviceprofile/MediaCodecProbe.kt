@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * @param videoProfiles per video codec, the profile names the device's decoders advertise. An
  *   empty set means "profiles unknown", and no codec profile is emitted for it.
  */
-data class DeviceCodecs(
+internal data class DeviceCodecs(
     val videoCodecs: Set<String> = emptySet(),
     val audioCodecs: Set<String> = emptySet(),
     val videoProfiles: Map<String, Set<String>> = emptyMap(),
@@ -28,7 +28,7 @@ data class DeviceCodecs(
  * direct play and a transcode for every single item — can be unit tested against a known set of
  * codecs. `MediaCodecList` itself is a throwing stub in local unit tests.
  */
-fun interface MediaCodecProbe {
+internal fun interface MediaCodecProbe {
     fun probe(): DeviceCodecs
 }
 

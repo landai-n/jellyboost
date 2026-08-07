@@ -1,4 +1,4 @@
-package dev.jellyboost.core.network.di
+package dev.jellyboost.core.common.di
 
 import javax.inject.Qualifier
 
@@ -16,9 +16,9 @@ import javax.inject.Qualifier
  * exist in a plain JVM unit test, and "hops to the main thread" is a claim a `TestDispatcher` can
  * actually hold still.
  *
- * It lives beside [IoDispatcher] and [DefaultDispatcher] because that is where this project keeps
- * its dispatcher qualifiers — `:core:common` deliberately has no DI dependency (DECISIONS.md,
- * 2026-07-30, structural batch, divergence 6), and moving all three is the separately-logged ARCH-1.
+ * It lives beside [IoDispatcher] and [DefaultDispatcher] in `:core:common`, the one module every
+ * other module can see, which is what lets `:data:downloads` and `:player` name the same annotation
+ * (audit ARCH-1; the binding stays in `:core:network`'s `NetworkDispatchersModule`).
  *
  * This is the app's only main-thread qualifier: `:player`'s same-named twin was collapsed onto this
  * one when the SyncPlay structural wave landed (audit HYG-11's plan, executed with HYG-4's sweep).

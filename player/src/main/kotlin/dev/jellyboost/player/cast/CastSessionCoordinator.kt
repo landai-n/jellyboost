@@ -1,6 +1,6 @@
 package dev.jellyboost.player.cast
 
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.report.PlaybackReporter
@@ -52,10 +52,10 @@ class CastSessionCoordinator
         @MainDispatcher mainDispatcher: CoroutineDispatcher,
     ) : CastPlaybackCoordinator {
         /** The receiver this device is connected to, if any. */
-        val connection: StateFlow<CastConnection> = status.connection
+        internal val connection: StateFlow<CastConnection> = status.connection
 
         /** `true` while a receiver is playing, or about to — what a resolve asks before negotiating. */
-        val isCasting: Boolean get() = status.isCasting
+        internal val isCasting: Boolean get() = status.isCasting
 
         private var host: CastPlaybackHost? = null
 

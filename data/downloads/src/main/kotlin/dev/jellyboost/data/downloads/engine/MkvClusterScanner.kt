@@ -60,7 +60,7 @@ package dev.jellyboost.data.downloads.engine
  * Not thread-safe, and not meant to be: one instance belongs to one file transfer, on the one
  * thread copying it.
  */
-class MkvClusterScanner {
+internal class MkvClusterScanner {
     private val carry = ByteArray(WINDOW - 1)
     private var carryLength = 0
 

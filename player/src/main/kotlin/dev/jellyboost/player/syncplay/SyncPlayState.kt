@@ -7,7 +7,7 @@ import java.time.Instant
 import java.util.UUID
 
 /** Where [SyncPlayController] is: outside a group, on the way in, or in one. */
-sealed interface SyncPlayState {
+internal sealed interface SyncPlayState {
     /** Not in a group, and nothing running — no websocket, no ping loop, no scheduled command. */
     data object Idle : SyncPlayState
 
@@ -63,7 +63,7 @@ sealed interface SyncPlayState {
  * while this client is still loading the file, and that difference is exactly what the WAITING
  * overlay (M11 Phase 3) shows.
  */
-sealed interface SyncPlayPhase {
+internal sealed interface SyncPlayPhase {
     /** Prepared, ready reported, waiting for the server to say go. */
     data object Waiting : SyncPlayPhase
 
@@ -87,7 +87,7 @@ sealed interface SyncPlayPhase {
  * `positionMs + (serverNow − at)`, so a wrong anchor is indistinguishable from a wrong clock.
  * [at] is on the **server's** clock, never the device's.
  */
-data class SyncPlayAnchor(
+internal data class SyncPlayAnchor(
     val positionMs: Long,
     val at: Instant,
 )

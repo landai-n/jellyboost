@@ -1,6 +1,7 @@
 package dev.jellyboost.core.network
 
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.database.dao.UserDao
@@ -8,7 +9,6 @@ import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.datastore.HomeLayoutStore
 import dev.jellyboost.core.datastore.SecureCredentialStore
-import dev.jellyboost.core.network.di.ApplicationScope
 import dev.jellyboost.core.network.model.SessionState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

@@ -41,7 +41,7 @@ import org.jellyfin.sdk.model.api.TranscodingProfile
  *
  * The whole object is a constant; [build] only stamps the quality picker's cap onto it.
  */
-object CastDeviceProfile {
+internal object CastDeviceProfile {
     /** Shown next to the session in the server's Dashboard → Devices, beside the local "Jellyboost". */
     const val PROFILE_NAME: String = "Jellyboost Chromecast"
 

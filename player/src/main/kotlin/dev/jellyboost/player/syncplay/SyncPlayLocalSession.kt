@@ -34,7 +34,7 @@ import javax.inject.Singleton
  *   encoder.
  */
 @Singleton
-class SyncPlayLocalSession
+internal class SyncPlayLocalSession
     @Inject
     constructor(
         private val resolver: PlaybackInfoResolver,

@@ -2,13 +2,13 @@ package dev.jellyboost.data.downloads
 
 import android.database.sqlite.SQLiteException
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
-import dev.jellyboost.core.network.di.ApplicationScope
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.engine.SubtitleSidecarTopUp
@@ -98,7 +98,7 @@ import javax.inject.Singleton
 @Singleton
 class DownloadedMetadataRefresher
     @Inject
-    constructor(
+    internal constructor(
         private val connectionState: ConnectionStateProvider,
         private val sessionGate: SessionGate,
         private val api: DownloadApi,

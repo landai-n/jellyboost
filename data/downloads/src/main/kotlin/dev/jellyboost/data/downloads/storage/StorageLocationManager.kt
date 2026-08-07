@@ -28,7 +28,7 @@ import javax.inject.Singleton
  * The one blocking read happens on whichever IO thread first asks for the root.
  */
 @Singleton
-class StorageLocationManager
+internal class StorageLocationManager
     @Inject
     constructor(
         private val volumeProvider: StorageVolumeProvider,
@@ -120,7 +120,7 @@ class StorageLocationManager
  *   therefore a fallback. The settings screen says so out loud; silently writing somewhere else is
  *   how a user ends up wondering where twelve gigabytes went.
  */
-data class StorageSelection(
+internal data class StorageSelection(
     val volumes: List<DownloadVolume>,
     val active: DownloadVolume?,
     val selectionMissing: Boolean,

@@ -215,14 +215,19 @@ internal class LoginViewModel
                 viewModelScope.launch {
                     mutableUiState.update { it.copy(error = null) }
 
-                    val initiated = authRepository.initiateQuickConnect()
-                    if (initiated is AppResult.Failure) {
-                        Timber.w("Could not initiate Quick Connect: %s", initiated.error)
-                        mutableUiState.update { it.copy(error = AuthErrorMessage.from(initiated.error)) }
-                        return@launch
-                    }
+                    // Exhaustive rather than a failure guard plus an unchecked cast (audit HYG-6):
+                    // the cast was only sound because `AppResult` has exactly two variants today,
+                    // and a third would have turned a compile error into a sign-in-path crash.
+                    val session =
+                        when (val initiated = authRepository.initiateQuickConnect()) {
+                            is AppResult.Failure -> {
+                                Timber.w("Could not initiate Quick Connect: %s", initiated.error)
+                                mutableUiState.update { it.copy(error = AuthErrorMessage.from(initiated.error)) }
+                                return@launch
+                            }
 
-                    val session = (initiated as AppResult.Success).value
+                            is AppResult.Success -> initiated.value
+                        }
                     mutableUiState.update { it.copy(quickConnect = QuickConnectUiState(code = session.code)) }
 
                     authRepository.observeQuickConnectState(session.secret).collect { state ->

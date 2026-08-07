@@ -856,7 +856,8 @@ class SyncPlayController
                     withContext(mainDispatcher) { playerHandle.pause() }
                     setPhase(SyncPlayPhase.Waiting)
                     delay(CONNECTIVITY_GRACE_MS)
-                    session.connectivityGraceJob = null
+                    // Identity-guarded (audit CPX-4, the SP-01 pattern), like the other timers.
+                    if (session.connectivityGraceJob === coroutineContext[Job]) session.connectivityGraceJob = null
                     Timber.w("Connectivity did not return within the SyncPlay grace window")
                     rejoinPolicy.confirmLoss()
                 }
@@ -1364,7 +1365,10 @@ class SyncPlayController
                 fallbackMillis?.let { millis ->
                     launchInSession {
                         delay(millis)
-                        session.readyFallbackJob = null
+                        // Identity-guarded (audit CPX-4, the SP-01 pattern): an unconditional nil
+                        // here could orphan a replacement's handle. Cleared *before* reportReady,
+                        // whose own disarm must not cancel the very job that is reporting.
+                        if (session.readyFallbackJob === coroutineContext[Job]) session.readyFallbackJob = null
                         val current = currentEntry() ?: return@launchInSession
                         if (session.readyOwedFor != current.playlistItemId) return@launchInSession
                         Timber.d("Player never re-buffered; reporting SyncPlay ready from where it stands")

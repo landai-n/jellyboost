@@ -2,15 +2,20 @@ package dev.jellyboost.player.syncplay
 
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.millisToTicks
+import dev.jellyboost.player.session.FakePlayerHandle
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.syncplay.model.SyncPlayCommandType
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupEvent
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupState
 import dev.jellyboost.player.syncplay.model.SyncPlayQueueUpdateReason
 import dev.jellyboost.player.syncplay.model.SyncPlayRequestKind
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -405,4 +410,137 @@ internal class SyncPlayRecoveryNetsTest : SyncPlayControllerTestBase() {
 
             fixture.player.hadNoTransportCalls shouldBe true
         }
+
+    // The CPX-4 race: a disarm during the armed window must reach the running body ----------------
+    //
+    // These two drive SyncPlayRecoveryNets directly, with the main-thread hop held on its own
+    // scheduler, because the race lives *inside* one net firing: the body used to null its own
+    // handle at wake-up, so a cancel arriving while it was suspended on the player probe (or the
+    // fallback's seek-and-play hop) was a no-op against an orphaned job, and the net acted for a
+    // group state that had just changed.
+
+    @Test
+    fun `a pause net disarmed during its player probe neither asks nor pauses`() =
+        runTest {
+            val heldMain = HeldMainDispatcher()
+            val player = FakePlayerHandle()
+            player.snapshot = PlaybackSnapshot(isPlaying = true)
+            val driver =
+                RecordingNetsDriver(
+                    backgroundScope,
+                    SyncPlayState.InGroup(group(), null, SyncPlayGroupState.Paused, SyncPlayPhase.Paused),
+                )
+            val nets =
+                SyncPlayRecoveryNets(
+                    player,
+                    timeSyncWithOffset(VirtualClock(testScheduler, origin), offsetMillis = 0L),
+                    heldMain,
+                    driver,
+                )
+
+            nets.armPauseNet()
+            advanceTimeBy(SyncPlayRecoveryNets.PAUSE_NET_TIMEOUT_MS)
+            runCurrent()
+            // The elicit stage is now suspended on the main-thread player probe.
+            driver.pauseRequests shouldBe 0
+
+            // The group's own command lands and the controller disarms - mid-probe.
+            nets.cancelPauseNet()
+            heldMain.drain()
+            runCurrent()
+            advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS * 2)
+            runCurrent()
+            heldMain.drain()
+            runCurrent()
+
+            // Neither stage fired: no redundant ask, and no local pause behind the disarm.
+            driver.pauseRequests shouldBe 0
+            player.pauseCount shouldBe 0
+        }
+
+    @Test
+    fun `a self-sync disarmed during its seek-and-play hop starts nothing`() =
+        runTest {
+            val heldMain = HeldMainDispatcher()
+            val player = FakePlayerHandle()
+            val driver =
+                RecordingNetsDriver(
+                    backgroundScope,
+                    SyncPlayState.InGroup(group(), null, SyncPlayGroupState.Playing, SyncPlayPhase.Waiting),
+                )
+            val nets =
+                SyncPlayRecoveryNets(
+                    player,
+                    timeSyncWithOffset(VirtualClock(testScheduler, origin), offsetMillis = 0L),
+                    heldMain,
+                    driver,
+                )
+            nets.groupPlayingAnchor = SyncPlayAnchor(60_000L, origin)
+
+            nets.armSelfSync()
+            advanceTimeBy(SyncPlayRecoveryNets.SELF_SYNC_TIMEOUT_MS)
+            runCurrent()
+            // The elicit stage asked once and re-armed as the fallback window.
+            driver.unpauseRequests shouldBe 1
+
+            advanceTimeBy(SyncPlayRecoveryNets.COMMAND_REPEAT_TIMEOUT_MS)
+            runCurrent()
+            // The fallback is now suspended on its main-thread seek-and-play hop; the group
+            // stops playing and the controller disarms - exactly the "must never start playback
+            // in a group that has since stopped" rule.
+            nets.cancelSelfSync()
+            heldMain.drain()
+            runCurrent()
+
+            player.playCount shouldBe 0
+            player.seekedToMs.shouldBeEmpty()
+            driver.selfSynced.shouldBeEmpty()
+        }
+
+    /**
+     * A main dispatcher that holds every dispatched block until [drain] — what freezes the nets
+     * mid-hop so a disarm can land inside the armed window.
+     */
+    private class HeldMainDispatcher : kotlinx.coroutines.CoroutineDispatcher() {
+        private val queue = ArrayDeque<Runnable>()
+
+        override fun dispatch(
+            context: kotlin.coroutines.CoroutineContext,
+            block: Runnable,
+        ) {
+            queue += block
+        }
+
+        fun drain() {
+            while (queue.isNotEmpty()) queue.removeFirst().run()
+        }
+    }
+
+    /** Records what the nets asked of the controller, with the state a test hands it. */
+    private class RecordingNetsDriver(
+        private val scope: CoroutineScope,
+        private val current: SyncPlayState,
+    ) : SyncPlayRecoveryNets.Driver {
+        var unpauseRequests = 0
+        var pauseRequests = 0
+        val selfSynced = mutableListOf<SyncPlayAnchor>()
+
+        override fun state(): SyncPlayState = current
+
+        override fun hasHost(): Boolean = true
+
+        override fun launchNet(block: suspend CoroutineScope.() -> Unit): Job = scope.launch(block = block)
+
+        override fun requestUnpause() {
+            unpauseRequests++
+        }
+
+        override fun requestPause() {
+            pauseRequests++
+        }
+
+        override fun onSelfSynced(anchor: SyncPlayAnchor) {
+            selfSynced += anchor
+        }
+    }
 }

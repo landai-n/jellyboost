@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.plan
 
+import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadQuality
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -345,9 +346,6 @@ class DownloadFilePlanner
                 )
 
             private const val DEFAULT_SUBTITLE_FORMAT = "srt"
-
-            /** ISO 639-2 "undetermined" — what a track with no declared language is filed under. */
-            private const val UNDEFINED_LANGUAGE = "und"
 
             /** Longer than any real BCP-47 tag; short enough that a hostile one cannot ENAMETOOLONG. */
             private const val MAX_LANGUAGE_LENGTH = 20

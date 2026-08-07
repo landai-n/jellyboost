@@ -1,5 +1,7 @@
 package dev.jellyboost.core.common.model
 
+import dev.jellyboost.core.common.Separators
+import dev.jellyboost.core.common.Ticks
 import java.time.Instant
 
 /**
@@ -75,7 +77,7 @@ data class JellyfinItem(
     val displaySubtitle: String?
         get() =
             when (type) {
-                ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(" · ").ifEmpty { null }
+                ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(Separators.DOT).ifEmpty { null }
                 ItemType.SEASON -> seriesName
                 else -> productionYear?.toString()
             }
@@ -95,18 +97,13 @@ data class JellyfinItem(
 
     /** Runtime rounded to whole minutes, or `null` when the server reports no runtime. */
     val runtimeMinutes: Int?
-        get() = runTimeTicks?.takeIf { it > 0L }?.let { (it / TICKS_PER_MINUTE).toInt() }
+        get() = runTimeTicks?.takeIf { it > 0L }?.let { Ticks.ticksToMinutes(it) }
 
     /** Remaining runtime in whole minutes for a partially-watched item, `null` otherwise. */
     val remainingMinutes: Int?
         get() {
             val total = runTimeTicks?.takeIf { it > 0L } ?: return null
             if (!userData.isResumable) return null
-            return ((total - userData.playbackPositionTicks).coerceAtLeast(0L) / TICKS_PER_MINUTE).toInt()
+            return Ticks.ticksToMinutes((total - userData.playbackPositionTicks).coerceAtLeast(0L))
         }
-
-    private companion object {
-        /** Jellyfin measures durations in 100-nanosecond ticks. */
-        const val TICKS_PER_MINUTE = 600_000_000L
-    }
 }

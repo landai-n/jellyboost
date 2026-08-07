@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
@@ -117,7 +118,9 @@ internal fun DownloadedRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = listOfNotNull(formatBytes(item.bytesOnDisk), item.transcodedMarker()).joinToString(" · "),
+                text =
+                    listOfNotNull(formatBytes(item.bytesOnDisk), item.transcodedMarker())
+                        .joinToString(Separators.DOT),
                 style = CardSubtitle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -381,7 +384,7 @@ internal fun DownloadItem.rowTitle(inSeriesGroup: Boolean = false): String =
     if (inSeriesGroup) {
         title
     } else {
-        listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(" · ")
+        listOfNotNull(seriesName?.takeIf { it.isNotBlank() }, title).joinToString(Separators.DOT)
     }
 
 /** The second line under a queue row's progress bar. */
@@ -404,7 +407,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                     ?.let { stringResource(R.string.downloads_speed, formatBytes(it)) },
                 etaSeconds(speedBytesPerSecond)?.let { etaText(it) },
                 transcodedMarker(),
-            ).joinToString(" · ")
+            ).joinToString(Separators.DOT)
 
         DownloadStatus.QUEUED ->
             listOfNotNull(
@@ -415,7 +418,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                 // same rule the in-progress line above follows.
                 displayTotalBytes.takeIf { it > 0L }?.let { expectedSizeText(it) },
                 transcodedMarker(),
-            ).joinToString(" · ")
+            ).joinToString(Separators.DOT)
 
         DownloadStatus.PAUSED -> stringResource(R.string.downloads_status_paused)
         DownloadStatus.ERROR ->
@@ -423,7 +426,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
                 ?: stringResource(R.string.downloads_status_failed)
 
         DownloadStatus.DOWNLOADED, DownloadStatus.CANCELLED ->
-            listOfNotNull(formatBytes(bytesOnDisk), transcodedMarker()).joinToString(" · ")
+            listOfNotNull(formatBytes(bytesOnDisk), transcodedMarker()).joinToString(Separators.DOT)
     }
 
 /**

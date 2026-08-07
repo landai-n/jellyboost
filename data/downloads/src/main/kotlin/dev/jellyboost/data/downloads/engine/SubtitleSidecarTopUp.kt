@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
@@ -11,7 +12,6 @@ import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
 import dev.jellyboost.data.downloads.plan.PlannedFile
 import dev.jellyboost.data.downloads.storage.DownloadStorage
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -105,7 +105,7 @@ class SubtitleSidecarTopUp
 
         /** The download row and its files, or `null` when this item is not a finished download. */
         private suspend fun finishedDownload(itemId: UUID): DownloadWithFiles? =
-            runCatchingUnlessCancelled { downloadDao.getWithFiles(itemId) }
+            topUpOrNull { downloadDao.getWithFiles(itemId) }
                 ?.takeIf { it.download.status == DownloadStatus.DOWNLOADED }
 
         /**
@@ -121,7 +121,7 @@ class SubtitleSidecarTopUp
             files: List<DownloadFileEntity>,
         ): List<PlannedFile> {
             val planned =
-                runCatchingUnlessCancelled {
+                topUpOrNull {
                     planner.plan(item, download.directoryName, quality = download.quality)
                 } ?: return emptyList()
 
@@ -150,7 +150,7 @@ class SubtitleSidecarTopUp
             planned: PlannedFile,
             files: List<DownloadFileEntity>,
         ): Boolean =
-            runCatchingUnlessCancelled {
+            topUpOrNull {
                 storage.prepareItemDirectory(download.directoryName)
                 val previous =
                     files.firstOrNull {
@@ -198,20 +198,17 @@ class SubtitleSidecarTopUp
             } ?: false
 
         /**
-         * [runCatching] that still lets a cancellation through.
+         * [runCatchingUnlessCancelled] with this class's "never throws" promise on top of it.
          *
-         * This runs on the application scope behind the metadata refresher; swallowing its
-         * cancellation would keep a coroutine writing to Room after the scope was torn down
-         * (the audit's STAB-06 rule).
+         * A failure is one gap left unrepaired, which is the state the item was already in — so it
+         * is logged and folded to `null` rather than surfaced. The cancellation still gets through:
+         * this runs on the application scope behind the metadata refresher, and swallowing it would
+         * keep a coroutine writing to Room after the scope was torn down (the audit's STAB-06 rule).
+         * That rule lives in `:core:common` since the 2026-08-06 hygiene wave; this is the local
+         * half — the log line — and nothing more.
          */
-        @Suppress("TooGenericExceptionCaught")
-        private inline fun <T> runCatchingUnlessCancelled(block: () -> T): T? =
-            try {
-                block()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (error: Exception) {
-                Timber.w(error, "Could not top up a subtitle sidecar")
-                null
-            }
+        private inline fun <T> topUpOrNull(block: () -> T): T? =
+            runCatchingUnlessCancelled(block)
+                .onFailure { Timber.w(it, "Could not top up a subtitle sidecar") }
+                .getOrNull()
     }

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
  * track switching are sequenced — behind this seam is what lets that sequencing be unit tested
  * against a fake, and leaves the real implementation as thin, mechanical glue.
  */
-interface PlayerHandle {
+internal interface PlayerHandle {
     /** Player callbacks, already off the ExoPlayer listener thread. */
     val events: Flow<PlayerEvent>
 
@@ -133,7 +133,7 @@ interface PlayerHandle {
 }
 
 /** The player callbacks the ViewModel reacts to. */
-sealed interface PlayerEvent {
+internal sealed interface PlayerEvent {
     /** The player has enough data to play. */
     data object Ready : PlayerEvent
 

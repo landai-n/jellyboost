@@ -33,7 +33,7 @@ import java.util.UUID
 // assertion about a returned value can say that.
 
 /** One call made on [SyncPlayApi], recorded in order. */
-sealed interface SyncPlayCall {
+internal sealed interface SyncPlayCall {
     data object GetGroups : SyncPlayCall
 
     data class CreateGroup(
@@ -123,7 +123,7 @@ sealed interface SyncPlayCall {
 
 /** A recording [SyncPlayApi]. */
 @Suppress("TooManyFunctions") // Implements the 21-operation facade.
-class FakeSyncPlayApi(
+internal class FakeSyncPlayApi(
     private val clock: Clock = Clock.systemUTC(),
 ) : SyncPlayApi {
     val calls = mutableListOf<SyncPlayCall>()
@@ -300,7 +300,7 @@ class FakeSyncPlayApi(
  * [failStreams] throws inside them, which is what the SDK's socket does when its own reconnection
  * gives up.
  */
-class FakeSyncPlaySocket : SyncPlaySocket {
+internal class FakeSyncPlaySocket : SyncPlaySocket {
     private val groupEvents = MutableSharedFlow<SyncPlayGroupEvent>(extraBufferCapacity = 32)
     private val commandEvents = MutableSharedFlow<SyncPlayCommand>(extraBufferCapacity = 32)
     private val streamEnd = CompletableDeferred<Throwable?>()
@@ -347,7 +347,7 @@ class FakeSyncPlaySocket : SyncPlaySocket {
 }
 
 /** A [SyncPlayPlaybackHost] that records what it was asked to open. */
-class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
+internal class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
     val loaded = mutableListOf<Pair<UUID, Long>>()
 
     /** What [loadItem] answers — `false` is "this item cannot be opened here". */
@@ -377,7 +377,7 @@ class FakeSyncPlayPlaybackHost : SyncPlayPlaybackHost {
  * Everything SyncPlay schedules is "wait until this instant", so a wall-clock reading and a
  * `delay()` have to agree exactly or the tests measure nothing.
  */
-class VirtualClock(
+internal class VirtualClock(
     private val scheduler: TestCoroutineScheduler,
     private val origin: Instant,
 ) : Clock() {
@@ -394,7 +394,7 @@ class VirtualClock(
  * Built from a real sample rather than by poking the estimator, so the tests exercise the same path
  * the pinger does.
  */
-fun timeSyncWithOffset(
+internal fun timeSyncWithOffset(
     clock: Clock,
     offsetMillis: Long,
 ): SyncPlayTimeSync =
@@ -412,7 +412,7 @@ fun timeSyncWithOffset(
     }
 
 /** A group summary with sensible defaults. */
-fun group(
+internal fun group(
     id: UUID = UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
     name: String = "Film night",
     participants: List<String> = listOf("casey"),

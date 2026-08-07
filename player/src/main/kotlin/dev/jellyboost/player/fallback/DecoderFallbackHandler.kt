@@ -23,7 +23,7 @@ import javax.inject.Inject
  *
  * Stateful on purpose: without an attempt counter a failing item retries forever.
  */
-class DecoderFallbackHandler
+internal class DecoderFallbackHandler
     @Inject
     constructor() {
         private var forcedTranscode = false
@@ -94,7 +94,7 @@ class DecoderFallbackHandler
     }
 
 /** What the player should try next after a failure. */
-sealed interface FallbackDecision {
+internal sealed interface FallbackDecision {
     /** Re-resolve with direct play and direct stream forbidden, resuming at [positionTicks]. */
     data class ForceTranscode(
         val positionTicks: Long,
@@ -111,7 +111,7 @@ sealed interface FallbackDecision {
 }
 
 /** The three classes of failure the fallback ladder distinguishes. */
-enum class PlaybackErrorKind {
+internal enum class PlaybackErrorKind {
     /** The device's decoder rejected or choked on the stream. */
     RENDERER,
 
@@ -128,7 +128,7 @@ enum class PlaybackErrorKind {
  * Matched against Media3's own numeric groupings rather than against individual codes, so that a
  * code added in a future Media3 release still lands in the right bucket.
  */
-fun errorKindOf(errorCode: Int): PlaybackErrorKind =
+internal fun errorKindOf(errorCode: Int): PlaybackErrorKind =
     when (errorCode) {
         in DECODING_ERRORS, in AUDIO_TRACK_ERRORS -> PlaybackErrorKind.RENDERER
         in IO_ERRORS, in PARSING_ERRORS -> PlaybackErrorKind.SOURCE

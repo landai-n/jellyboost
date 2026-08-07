@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * Written only by [PlaybackService], from `onCreate` and `onDestroy`.
  */
 @Singleton
-class PlaybackServiceState
+internal class PlaybackServiceState
     @Inject
     constructor() {
         private val _running = MutableStateFlow(false)

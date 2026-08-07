@@ -6,6 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.map
 import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.FilterFacets
@@ -24,7 +25,6 @@ import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.LatestDownloadKey
 import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.core.network.SessionRepository
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.paging.ItemPage

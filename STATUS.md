@@ -2665,3 +2665,73 @@ and the three deliberate behaviour changes.
 - Still open from the same audit: H1–H6, HYG-4 proper, the rest of the ARCH/DUP/CPX families.
 
 <!-- END quality audit — duplication wave (2026-08-06) -->
+
+## Quality audit — architecture wave (2026-08-07)
+
+Branch `worktree-agent-ad1395ce1816095c8`, merged from main at `8453ec71`. Eight findings from
+`docs/notes/audit-2026-08-06-quality.md`: ARCH-1, 2, 3, 6, 7, 8, 9, 10. Four commits, each gated
+with `ktlintCheck detekt testDebugUnitTest :app:lintDebug assembleDebug` green in one run.
+
+**What moved**
+- **ARCH-1** — `@DefaultDispatcher`/`@IoDispatcher`/`@MainDispatcher`/`@ApplicationScope` now live
+  in `:core:common` (which took `javax.inject:javax.inject:1`, annotations only); the `@Provides`
+  bindings stay in `:core:network`. 35 import sites updated. `feature/downloads` dropped its
+  `:core:network` dependency — the edge existed for `@DefaultDispatcher` and nothing else, as its
+  own build file admitted. This reverses divergence 6 of the 2026-07-30 structural batch; see
+  DECISIONS.md.
+- **ARCH-7** — `toSdkDateTime`/`toSdkInstant` moved `:data` → `:core:network`, so `:player` stops
+  importing them out of the repository layer. `:core:common` was rejected: nothing here names an
+  SDK type, but the rule is *about* the SDK's serializer, and that module is deliberately
+  SDK-innocent.
+- **ARCH-8** — `navigateToTab`/`navigateHome`/`homeNavOptions`/`topLevelNavOptions` left
+  `AppScaffold.kt` for a new `app/.../NavPolicy.kt` beside `JellyfinNavHost.kt`, KDoc verbatim,
+  including the device-debugged `saveState`/`restoreState` asymmetry.
+- **ARCH-9** — Coil escapes no `:core:ui` signature, so both Coil dependencies dropped `api` →
+  `implementation`; `:app` and `:player` name `coil3` types directly and now declare it themselves.
+  Haze stays `api` — `LocalHazeState` genuinely names a Haze type.
+- **ARCH-6 + ARCH-3** — `UserDataRepositoryImpl`, `SdkImageUrlFactory` and `UserDataModule` are
+  `internal` in `:data`; every public declaration in `:data:downloads`' `engine/`, `plan/`, `work/`,
+  `storage/` and `impl/` is `internal` (35 across 23 files). The only two exposure errors were the
+  pair the 2026-07-30 batch predicted — `DownloadedMetadataRefresher` and `DownloadedMediaProvider`
+  each inject one engine class — and both took an `internal constructor` rather than keeping a
+  collaborator public.
+- **ARCH-2 + ARCH-10** — `:player` went from **129 public top-level declarations to 28** (101
+  internalised across 53 files, plus member-level visibility on the six classes that had to stay
+  public and `internal constructor` on four). With `PlayerViewModel.videoPlayer` internal, no public
+  signature names a Media3 type, so `api(media3-common)`/`api(media3-exoplayer)` dropped to
+  `implementation`.
+
+**Audit claims that did not survive re-verification**
+- ARCH-2 says `:app` imports ten `:player` types. It imports **eleven** — `PipState` was missed
+  (`MainActivity.PipState.toParams()`).
+- ARCH-1 names only `feature/downloads` as carrying a false edge, and that is right, but
+  `feature/settings` was checked too (it keeps its edge legitimately, for `SessionRepository`).
+- ARCH-3's "zero cross-module consumers" held exactly; the wave-2 `DownloadBadges.kt` additions
+  (`observeBadgeStates`, `withDownloadState(s)`) are root-package and were already outside scope.
+
+**Tests**
+No test was weakened, deleted, or had an assertion changed. Seven fakes in
+`player/.../SyncPlayTestDoubles.kt` became `internal` because they implement now-internal
+interfaces — the same visibility fix, not a behaviour change. Beyond the gate,
+`:player`, `:app`, `:core:ui` and `:feature:detail` androidTest sources were compiled explicitly.
+
+**Known issues / next**
+- **Three `:player` declarations are public only because two files were frozen this wave.**
+  `SyncPlayGroupsContent` is in `SyncPlayGroupsScreen.kt`; `PlayerViewModel` and
+  `SyncPlayGroupsViewModel` are public because their screens take them as parameters. When those
+  screens' owner lands, all three can go `internal` (the ViewModels if the screens switch to
+  `hiltViewModel()`).
+- **The `CastPlaybackHost` cluster is next after that.** Its 2026-07-31 decision rests on
+  `PlayerViewModel` being public; once it is not, `CastPlaybackHost`/`CastPlaybackCoordinator`/
+  `NoCastPlaybackCoordinator` and the `PlaybackMediaSource`/`PlaybackSnapshot` vocabulary behind
+  them can follow, taking `:player`'s public surface into single figures.
+- **The `DownloadedMetadataRefresher`/`DownloadedMediaProvider` interface seam is still backlog.**
+  This wave narrowed the leak from two public engine classes to two internal constructors; it did
+  not close it.
+- **Five new `@Suppress("ktlint:standard:backing-property-naming")`**, all in `:player`: ktlint
+  refuses a `_x`/`x` pair when the read-only half is not `public`, which is now the normal case.
+  Each carries a comment; renaming the backing fields would have churned ~78 unrelated lines.
+- Still open from the same audit: H1–H8 (bar what earlier waves took), ARCH-4, ARCH-5, and the
+  CPX/DUP/HYG remainder.
+
+<!-- END quality audit — architecture wave (2026-08-07) -->

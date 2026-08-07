@@ -124,7 +124,7 @@ import kotlin.time.Duration.Companion.milliseconds
 )
 class PlayerViewModel
     @Inject
-    constructor(
+    internal constructor(
         private val repository: JellyfinRepository,
         private val sessionController: PlaybackSessionController,
         private val playerHandle: PlayerHandle,
@@ -185,10 +185,15 @@ class PlayerViewModel
 
         private val positionTracker = PlaybackPositionTracker()
 
+        // ktlint reads `_x`/`x` as an idiom for exposing a mutable field *publicly*, and refuses it
+        // when the read-only half is not `public`. Here the read-only half is `internal` because
+        // nothing outside `:player` may see it (audit ARCH-2) — the pairing is otherwise exactly the
+        // idiom the rule is about, and renaming the backing field would churn 35 unrelated lines.
+        @Suppress("ktlint:standard:backing-property-naming")
         private val _uiState = MutableStateFlow(PlayerUiState())
 
         /** The slow-changing state [PlayerScreen] draws; the position is deliberately not in it. */
-        val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
+        internal val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
         /**
          * The seek bar's position and buffer, ticking twice a second (audit PERF-04).
@@ -196,8 +201,10 @@ class PlayerViewModel
          * Separate from [uiState] so that a number only the scrubber and the clock read cannot
          * invalidate the top bar, the transport row and the pickers along with them.
          */
-        val position: StateFlow<PlaybackPosition> = positionTracker.position
+        internal val position: StateFlow<PlaybackPosition> = positionTracker.position
 
+        // See [_uiState] for why the rule is suppressed rather than the field renamed.
+        @Suppress("ktlint:standard:backing-property-naming")
         private val _videoPlayer = MutableStateFlow<Player?>(null)
 
         /**
@@ -207,7 +214,7 @@ class PlayerViewModel
          * the surface binds to once, and putting a `Player` inside a data class would give that
          * class no meaningful equality.
          */
-        val videoPlayer: StateFlow<Player?> = _videoPlayer.asStateFlow()
+        internal val videoPlayer: StateFlow<Player?> = _videoPlayer.asStateFlow()
 
         /**
          * Picture-in-picture state, straight off the shared [PipController].
@@ -215,7 +222,7 @@ class PlayerViewModel
          * Re-exposed here rather than injected into the composable so the screen keeps its single
          * dependency on this ViewModel; the activity reads the same flow from the other end.
          */
-        val pipState: StateFlow<PipState> = pipController.state
+        internal val pipState: StateFlow<PipState> = pipController.state
 
         /**
          * Everything that is true of the session playing right now, or `null` before the first
@@ -620,7 +627,7 @@ class PlayerViewModel
 
         // ---- user actions -------------------------------------------------------------------------
 
-        fun togglePlayPause() {
+        internal fun togglePlayPause() {
             if (syncPlay.isInGroup) return syncPlay.requestPlayPause()
             val snapshot = playerHandle.snapshot()
             if (snapshot.isPlaying) playerHandle.pause() else playerHandle.play()
@@ -635,14 +642,14 @@ class PlayerViewModel
          * follows the server's command a moment later, and springing it forward first would show a
          * position this player is not at.
          */
-        fun seekTo(positionMs: Long) {
+        internal fun seekTo(positionMs: Long) {
             if (syncPlay.isInGroup) return syncPlay.requestSeek(positionMs)
             playerHandle.seekTo(positionMs)
             positionTracker.onSeekTo(positionMs)
         }
 
         /** Jumps by [deltaMs], clamped to the item — backs the skip-back / skip-forward buttons. */
-        fun seekBy(deltaMs: Long) {
+        internal fun seekBy(deltaMs: Long) {
             val snapshot = playerHandle.snapshot()
             seekTo((snapshot.positionMs + deltaMs).coerceIn(0L, snapshot.durationMs.coerceAtLeast(0L)))
         }
@@ -658,7 +665,7 @@ class PlayerViewModel
          * whose file can serve the selection has somewhere better to be than this stream, and an
          * in-stream switch that happens to succeed would strand it there.
          */
-        fun selectAudioTrack(jellyfinIndex: Int) {
+        internal fun selectAudioTrack(jellyfinIndex: Int) {
             // A tap that beats the first `TracksChanged` outranks the open's own choice, which would
             // otherwise be applied over the top of it a moment later.
             updateSession { it.copy(pendingAudioIndex = null) }
@@ -679,7 +686,7 @@ class PlayerViewModel
         }
 
         /** Switches subtitle track; [jellyfinIndex] `null` turns subtitles off. */
-        fun selectSubtitleTrack(jellyfinIndex: Int?) {
+        internal fun selectSubtitleTrack(jellyfinIndex: Int?) {
             // As in [selectAudioTrack]: the user has now said what they want, so the open's pending
             // choice is spent whether this call is satisfied locally or by a re-resolve.
             updateSession { it.copy(pendingSubtitleApply = false) }
@@ -794,7 +801,7 @@ class PlayerViewModel
          * control is hidden for it (`PlayerUiState.isLocalPlayback`) and the call is ignored if it
          * arrives anyway.
          */
-        fun selectQuality(quality: PlaybackQuality) {
+        internal fun selectQuality(quality: PlaybackQuality) {
             val active = session ?: return
             val current = active.source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
@@ -813,7 +820,7 @@ class PlayerViewModel
          * ([PlaybackSessionController.open]), and nothing writes it to disk (docs/PLAN.md,
          * "M9 Polish" → speed).
          */
-        fun selectSpeed(speed: PlaybackSpeed) {
+        internal fun selectSpeed(speed: PlaybackSpeed) {
             if (syncPlay.isInGroup) {
                 // SyncPlay has no per-member rate: playing faster than the group is drifting from it.
                 // The control is hidden in a group, so this is only the backstop for a stale tap.
@@ -828,13 +835,13 @@ class PlayerViewModel
         // ---- group actions ------------------------------------------------------------------------
 
         /** Leaves the group; playback carries on exactly as it is, now solo. */
-        fun leaveGroup() = syncPlay.leaveGroup()
+        internal fun leaveGroup() = syncPlay.leaveGroup()
 
         /** Shuffles the group's queue for everyone, or puts it back in order. */
-        fun setGroupShuffle(shuffled: Boolean) = syncPlay.setShuffle(shuffled)
+        internal fun setGroupShuffle(shuffled: Boolean) = syncPlay.setShuffle(shuffled)
 
         /** Sets the group's repeat mode for everyone. */
-        fun setGroupRepeat(mode: SyncPlayRepeatMode) = syncPlay.setRepeat(mode)
+        internal fun setGroupRepeat(mode: SyncPlayRepeatMode) = syncPlay.setRepeat(mode)
 
         /**
          * Jumps to the end of the intro or outro currently on screen.
@@ -845,7 +852,7 @@ class PlayerViewModel
          * In a group the seek goes through [seekTo] like every other one, so the whole group skips
          * the intro together rather than this member alone.
          */
-        fun skipCurrentSegment() {
+        internal fun skipCurrentSegment() {
             val segment = _uiState.value.skippableSegment ?: return
             Timber.d("Skipping %s at %d ms", segment.kind, segment.startMs)
             seekTo(segment.endMs)
@@ -864,7 +871,7 @@ class PlayerViewModel
          * screen after a spell in the background — or in picture-in-picture — shows the live
          * position instead of the one playback had when it was left.
          */
-        fun setScreenVisible(visible: Boolean) {
+        internal fun setScreenVisible(visible: Boolean) {
             setScreenPresent(visible)
             uiTickerJob?.cancel()
             uiTickerJob =
@@ -979,7 +986,7 @@ class PlayerViewModel
         }
 
         /** Clears the one-shot message once the snackbar has shown it. */
-        fun consumeMessage() {
+        internal fun consumeMessage() {
             _uiState.update { it.copy(userMessage = null) }
         }
 

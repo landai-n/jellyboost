@@ -3,15 +3,15 @@ package dev.jellyboost.data.userdata
 import android.database.sqlite.SQLiteException
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.model.SessionState
+import dev.jellyboost.core.network.toSdkDateTime
 import dev.jellyboost.data.runCatchingApi
-import dev.jellyboost.data.toSdkDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +45,7 @@ import javax.inject.Singleton
  * and already on screen. While offline they are skipped altogether — see [pushToServer].
  */
 @Singleton
-class UserDataRepositoryImpl
+internal class UserDataRepositoryImpl
     @Inject
     constructor(
         private val userDataDao: UserDataDao,

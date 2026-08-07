@@ -21,7 +21,7 @@ import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
  * [isLocalPlayback] is the *only* thing on this screen that differs between a streamed item and a
  * downloaded one, and it hides exactly one control — see its own documentation.
  */
-data class PlayerUiState(
+internal data class PlayerUiState(
     val isLoading: Boolean = true,
     val errorMessage: UiText? = null,
     val title: String = "",
@@ -153,7 +153,7 @@ internal const val PLAYER_LABEL_SEPARATOR = Separators.DOT
  * @property deviceName the receiver's friendly name, or `null` when the Cast framework has not
  *   published one — which the screen draws as a generic "casting" rather than as an empty label.
  */
-data class PlayerCastState(
+internal data class PlayerCastState(
     val isCasting: Boolean = false,
     val deviceName: String? = null,
 )
@@ -165,7 +165,7 @@ data class PlayerCastState(
  * it: no group id, no playlist item ids, and — see [PlayerSyncPlayPhase] — no drift anchor. What is
  * here is what changes a control on screen.
  */
-data class PlayerSyncPlayState(
+internal data class PlayerSyncPlayState(
     /**
      * `true` while the server, not this device, decides when playback moves.
      *
@@ -212,7 +212,7 @@ data class PlayerSyncPlayState(
  * which is replaced on every group unpause — putting it in [PlayerUiState] would make the whole
  * control surface recompose for a value nothing draws (audit PERF-04).
  */
-enum class PlayerSyncPlayPhase {
+internal enum class PlayerSyncPlayPhase {
     /** Not in a group at all. */
     NONE,
 
@@ -238,7 +238,7 @@ enum class PlayerSyncPlayPhase {
  * The duration lives on [PlayerUiState] and is passed in, because a fraction of an unknown length is
  * not a number this class can produce.
  */
-data class PlaybackPosition(
+internal data class PlaybackPosition(
     val positionMs: Long = 0L,
     val bufferedMs: Long = 0L,
 ) {
@@ -257,7 +257,7 @@ data class PlaybackPosition(
  * An enum rather than a string, matching `:feature:detail`, so the ViewModel stays free of
  * resources and the copy lives in `strings.xml`.
  */
-enum class PlayerMessage {
+internal enum class PlayerMessage {
     /** A decoder failed and the server was asked to transcode instead. */
     SwitchedToTranscode,
 
@@ -354,7 +354,7 @@ enum class PlayerMessage {
 }
 
 /** Everything the controls can do, bundled so the composables stay under the parameter limit. */
-data class PlayerActions(
+internal data class PlayerActions(
     val onPlayPause: () -> Unit,
     val onSeekTo: (Long) -> Unit,
     val onSeekBy: (Long) -> Unit,

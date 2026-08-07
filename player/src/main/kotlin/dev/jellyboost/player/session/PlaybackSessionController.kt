@@ -34,7 +34,7 @@ import javax.inject.Singleton
  * suspending after `prepare`, which leaves the caller no window at all to do it in.
  */
 @Singleton
-class PlaybackSessionController
+internal class PlaybackSessionController
     @Inject
     constructor(
         private val resolver: PlaybackSourceResolver,
@@ -133,7 +133,7 @@ class PlaybackSessionController
     }
 
 /** What one [PlaybackSessionController.open] attempt produced. */
-sealed interface SessionOpenResult {
+internal sealed interface SessionOpenResult {
     /** The player is prepared on [source]; the caller owns publishing and reporting it. */
     data class Opened(
         val source: PlaybackMediaSource,

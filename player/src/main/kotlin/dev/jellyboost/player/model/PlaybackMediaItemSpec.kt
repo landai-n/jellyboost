@@ -16,7 +16,7 @@ package dev.jellyboost.player.model
  *   `TrackSelectionController` navigates back by (DECISIONS.md 2026-07-31, "Offline multi-track
  *   Phase 2"). Only a transcoded download has any.
  */
-data class PlaybackMediaItemSpec(
+internal data class PlaybackMediaItemSpec(
     /** `MediaItem.mediaId`; the Jellyfin item id, used to correlate player callbacks. */
     val mediaId: String,
     val uri: String,
@@ -37,7 +37,7 @@ data class PlaybackMediaItemSpec(
  * @property streamIndex the absolute Jellyfin `MediaStream.index` this file holds, kept so the
  *   merge order can be checked against the track list it was built from.
  */
-data class AudioSidecarSpec(
+internal data class AudioSidecarSpec(
     val streamIndex: Int,
     val uri: String,
 )
@@ -48,7 +48,7 @@ data class AudioSidecarSpec(
  * [id] carries the [EXTERNAL_SUBTITLE_ID_PREFIX] convention so that `TrackSelectionController`
  * can map an ExoPlayer text track back onto the Jellyfin stream index it came from.
  */
-data class SubtitleSpec(
+internal data class SubtitleSpec(
     val id: String,
     val uri: String,
     val mimeType: String,
@@ -57,10 +57,10 @@ data class SubtitleSpec(
 )
 
 /** Prefix of the ExoPlayer track id given to a side-loaded Jellyfin subtitle stream. */
-const val EXTERNAL_SUBTITLE_ID_PREFIX: String = "external:"
+internal const val EXTERNAL_SUBTITLE_ID_PREFIX: String = "external:"
 
 /** The ExoPlayer track id for the Jellyfin subtitle stream at [index]. */
-fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_ID_PREFIX$index"
+internal fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_ID_PREFIX$index"
 
 /**
  * The Jellyfin stream index behind an ExoPlayer track id, or `null` if it is not one of ours.
@@ -79,7 +79,7 @@ fun externalSubtitleTrackId(index: Int): String = "$EXTERNAL_SUBTITLE_ID_PREFIX$
  * The same `external:2` then arrives as `0:1:external:2`, so the strip is a loop rather than one
  * step.
  */
-fun jellyfinIndexOfTrackId(trackId: String?): Int? {
+internal fun jellyfinIndexOfTrackId(trackId: String?): Int? {
     val id = trackId?.withoutMergePrefixes() ?: return null
     if (!id.startsWith(EXTERNAL_SUBTITLE_ID_PREFIX)) return null
     return id.removePrefix(EXTERNAL_SUBTITLE_ID_PREFIX).toIntOrNull()

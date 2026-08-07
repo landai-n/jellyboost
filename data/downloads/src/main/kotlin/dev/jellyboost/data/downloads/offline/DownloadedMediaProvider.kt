@@ -1,12 +1,12 @@
 package dev.jellyboost.data.downloads.offline
 
 import dev.jellyboost.core.common.Ticks
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadFileEntity
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.engine.MatroskaSeekIndexRepair
 import kotlinx.coroutines.CoroutineDispatcher
@@ -43,7 +43,7 @@ import javax.inject.Singleton
 @Singleton
 class DownloadedMediaProvider
     @Inject
-    constructor(
+    internal constructor(
         private val downloadDao: DownloadDao,
         private val itemDao: ItemDao,
         private val itemMapper: ItemEntityMapper,

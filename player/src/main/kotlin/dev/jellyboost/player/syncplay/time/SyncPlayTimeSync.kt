@@ -37,7 +37,7 @@ import javax.inject.Singleton
  * class is `@Singleton` because the offset belongs to the connection, not to a screen.
  */
 @Singleton
-class SyncPlayTimeSync
+internal class SyncPlayTimeSync
     @Inject
     constructor(
         private val clock: Clock,

@@ -11,7 +11,7 @@ package dev.jellyboost.player.model
  * An enum rather than a raw `Float` because it is a *picker*, and because the UI needs a stable
  * label per step: `0.75f.toString()` is not "0.75×" on every locale.
  */
-enum class PlaybackSpeed(
+internal enum class PlaybackSpeed(
     val rate: Float,
     /** Label as drawn on the control and in the picker; ASCII-safe and locale-independent. */
     val label: String,

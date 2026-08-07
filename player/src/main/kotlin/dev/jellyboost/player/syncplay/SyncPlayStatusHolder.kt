@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * anyone.
  */
 @Singleton
-class SyncPlayStatusHolder
+internal class SyncPlayStatusHolder
     @Inject
     constructor() {
         private val _inGroup = MutableStateFlow(false)

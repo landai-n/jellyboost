@@ -47,6 +47,9 @@ desugarJdkLibs = "2.1.5"
 # DI
 hilt = "2.60.1"
 androidxHilt = "1.4.0"
+# JSR-330 annotations only (`@Qualifier`, `@Inject`, `@Singleton`) — no processor, no Android. The
+# one dependency `:core:common` needs to own the project's DI qualifiers (audit ARCH-1).
+javaxInject = "1"
 
 # Compose
 composeBom = "2026.06.01"
@@ -155,6 +158,7 @@ hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", v
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "androidxHilt" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "androidxHilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "androidxHilt" }
+javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 
 # Compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

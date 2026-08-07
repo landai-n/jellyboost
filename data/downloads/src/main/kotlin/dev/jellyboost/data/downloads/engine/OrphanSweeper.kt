@@ -28,7 +28,7 @@ import javax.inject.Singleton
  * what is missing. An unmounted volume lists nothing, so the sweep is a no-op instead of a wipe.
  */
 @Singleton
-class OrphanSweeper
+internal class OrphanSweeper
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

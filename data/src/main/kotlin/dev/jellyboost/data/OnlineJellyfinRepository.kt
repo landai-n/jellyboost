@@ -4,13 +4,13 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.map
 import dev.jellyboost.core.common.model.FilterFacets
 import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.ItemMapper
 import dev.jellyboost.data.mapper.toBaseItemKind

@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * (audit DL-10). `DownloadFailureClassifier` recognises this type as TRANSIENT instead, so the
  * drain stops, backs off and retries.
  */
-class StorageUnavailableException(
+internal class StorageUnavailableException(
     message: String,
 ) : IllegalStateException(message)
 
@@ -36,7 +36,7 @@ class StorageUnavailableException(
  * interface is unchanged by that; the SAF-tree backend the plan also describes is still the reason
  * the interface exists, and is still deferred.
  */
-interface DownloadStorage {
+internal interface DownloadStorage {
     /** Absolute path of the storage root, or `null` when no external volume is mounted. */
     val rootPath: String?
 
@@ -87,7 +87,7 @@ interface DownloadStorage {
  * from this class, so there is exactly one place the root has to change.
  */
 @Singleton
-class FileDownloadStorage
+internal class FileDownloadStorage
     @Inject
     constructor(
         private val locations: StorageLocationManager,

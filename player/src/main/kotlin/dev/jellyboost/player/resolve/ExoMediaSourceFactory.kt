@@ -27,7 +27,7 @@ import javax.inject.Singleton
  * tested; `toMediaItem` performs the mechanical conversion on-device.
  */
 @Singleton
-class ExoMediaSourceFactory
+internal class ExoMediaSourceFactory
     @Inject
     constructor(
         private val urls: StreamUrlFactory,

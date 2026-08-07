@@ -35,7 +35,7 @@ data class PlaybackSnapshot(
  * wave — imports this extension by its `dev.jellyboost.player.model` package name; changing that
  * import would count as editing that file.
  */
-fun Long.ticksToMillis(): Long = Ticks.ticksToMillis(this)
+internal fun Long.ticksToMillis(): Long = Ticks.ticksToMillis(this)
 
 /** See [ticksToMillis]; converts milliseconds to Jellyfin ticks. */
-fun Long.millisToTicks(): Long = Ticks.millisToTicks(this)
+internal fun Long.millisToTicks(): Long = Ticks.millisToTicks(this)

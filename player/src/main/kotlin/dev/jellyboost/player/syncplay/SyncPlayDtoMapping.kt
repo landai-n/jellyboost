@@ -1,7 +1,7 @@
 package dev.jellyboost.player.syncplay
 
-import dev.jellyboost.data.toSdkDateTime
-import dev.jellyboost.data.toSdkInstant
+import dev.jellyboost.core.network.toSdkDateTime
+import dev.jellyboost.core.network.toSdkInstant
 import dev.jellyboost.player.syncplay.model.SyncPlayCommand
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupEvent
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupQueue
@@ -33,7 +33,7 @@ import java.time.ZoneId
 // [ZoneId.systemDefault] — not UTC — so `SendCommand.when` parsed as if it were UTC is wrong by the
 // device's offset, which for SyncPlay means every scheduled play/pause/seek fires hours away from
 // the rest of the group. (Same bug class as the M4 two-hour progress-report shift; see
-// `dev.jellyboost.data.toSdkInstant`, whose helpers do the conversion.)
+// `dev.jellyboost.core.network.toSdkInstant`, whose helpers do the conversion.)
 //
 // Every function here takes an explicit [zone] so the round-trip can be tested against a fixed
 // non-UTC zone: a test that pins `Europe/Paris` fails the moment someone "simplifies" this to

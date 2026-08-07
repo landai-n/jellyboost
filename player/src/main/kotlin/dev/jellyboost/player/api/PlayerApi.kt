@@ -18,7 +18,7 @@ import java.util.UUID
  * With this interface the resolver and the reporter — the two classes this milestone must test
  * densely — are plain objects with a mockable dependency.
  */
-interface PlayerApi {
+internal interface PlayerApi {
     /** Device id the server attributes this session to; `null` only if the SDK has no DeviceInfo. */
     val deviceId: String?
 

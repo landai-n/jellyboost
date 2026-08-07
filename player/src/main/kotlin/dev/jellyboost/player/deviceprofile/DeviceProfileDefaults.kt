@@ -13,7 +13,7 @@ import org.jellyfin.sdk.model.api.ProfileConditionValue
  * bitrate figures the server negotiates against are the same question asked twice, so the numbers
  * live here once.
  */
-object DeviceProfileDefaults {
+internal object DeviceProfileDefaults {
     /** From jellyfin-web's `browserDeviceProfile.js`. */
     const val MAX_STREAMING_BITRATE: Int = 120_000_000
     const val MAX_STATIC_BITRATE: Int = 100_000_000

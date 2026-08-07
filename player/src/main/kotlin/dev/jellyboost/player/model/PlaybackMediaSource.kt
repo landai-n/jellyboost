@@ -64,7 +64,7 @@ sealed interface PlaybackMediaSource {
  *   the `stopEncodingProcess` call that kills a stray ffmpeg process are keyed on it, so it must
  *   survive for as long as playback does.
  */
-data class RemotePlaybackMediaSource(
+internal data class RemotePlaybackMediaSource(
     override val itemId: UUID,
     override val mediaSourceId: String,
     val playSessionId: String,
@@ -125,7 +125,7 @@ data class RemotePlaybackMediaSource(
  *   sets are the same list, and every other collaborator — `TrackSelectionController` above all —
  *   must keep reading the playable one.
  */
-data class LocalPlaybackMediaSource(
+internal data class LocalPlaybackMediaSource(
     override val itemId: UUID,
     override val mediaSourceId: String,
     val mediaUri: String,
@@ -165,11 +165,11 @@ data class LocalPlaybackMediaSource(
  * what the file and its sidecars can play, because a picker entry that cannot do anything is worse
  * than one fewer language. A streamed source has one list either way.
  */
-fun PlaybackMediaSource.audioTracksFor(online: Boolean): List<PlaybackTrack> =
+internal fun PlaybackMediaSource.audioTracksFor(online: Boolean): List<PlaybackTrack> =
     (this as? LocalPlaybackMediaSource)?.takeIf { online }?.allAudioTracks ?: audioTracks
 
 /** The subtitle tracks the picker should offer; see [audioTracksFor]. */
-fun PlaybackMediaSource.subtitleTracksFor(online: Boolean): List<PlaybackTrack> =
+internal fun PlaybackMediaSource.subtitleTracksFor(online: Boolean): List<PlaybackTrack> =
     (this as? LocalPlaybackMediaSource)?.takeIf { online }?.allSubtitleTracks ?: subtitleTracks
 
 /**
@@ -182,7 +182,7 @@ fun PlaybackMediaSource.subtitleTracksFor(online: Boolean): List<PlaybackTrack> 
  * @property tileWidth thumbnails per row in one sheet; @property tileHeight rows per sheet.
  * @property intervalMs milliseconds of video between two consecutive thumbnails.
  */
-data class LocalTrickplay(
+internal data class LocalTrickplay(
     val width: Int,
     val height: Int,
     val tileWidth: Int,
@@ -222,7 +222,7 @@ data class LocalTrickplay(
 }
 
 /** Where one trickplay thumbnail sits: which sheet, and which cell of it. */
-data class TrickplayThumbnail(
+internal data class TrickplayThumbnail(
     val uri: String,
     val column: Int,
     val row: Int,
@@ -270,7 +270,7 @@ data class ExternalSubtitle(
  * @property index the absolute Jellyfin `MediaStream.index` the file was fetched for.
  * @property uri `file://` URI of the audio-only sidecar.
  */
-data class ExternalAudio(
+internal data class ExternalAudio(
     val index: Int,
     val uri: String,
 )

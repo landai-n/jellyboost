@@ -1,6 +1,7 @@
 package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.Ticks
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -8,7 +9,6 @@ import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadWithFiles
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
@@ -34,7 +34,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** What the queue tells its host (the worker) as it moves through an item. */
-interface DownloadQueueListener {
+internal interface DownloadQueueListener {
     /** A new item started, or its progress advanced. Called on every throttled Room write. */
     suspend fun onProgress(
         download: DownloadEntity,
@@ -53,7 +53,7 @@ interface DownloadQueueListener {
  * [INCOMPLETE]) and the ones it must *re-run* ([RETRY], [NO_SESSION]): a queue that could not run,
  * or one that stopped on something that may work in a minute, is not a queue that ran badly.
  */
-enum class DrainOutcome {
+internal enum class DrainOutcome {
     /** Everything runnable finished. */
     COMPLETED,
 

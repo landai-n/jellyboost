@@ -1,10 +1,10 @@
 package dev.jellyboost.data.userdata
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
-import dev.jellyboost.core.network.di.ApplicationScope
-import dev.jellyboost.core.network.di.IoDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

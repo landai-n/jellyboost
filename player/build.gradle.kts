@@ -16,8 +16,11 @@ dependencies {
     implementation(projects.data)
     implementation(projects.data.downloads)
 
-    api(libs.androidx.media3.common)
-    api(libs.androidx.media3.exoplayer)
+    // `implementation`, not `api`: after the ARCH-2 visibility sweep no public declaration in this
+    // module names a Media3 type — `PlayerViewModel.videoPlayer` (a `StateFlow<Player?>`) was the
+    // last one and is `internal` now — so `:app` compiles against none of them (audit ARCH-10).
+    implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.hls)
     implementation(libs.androidx.media3.datasource.okhttp)
     implementation(libs.androidx.media3.session)
@@ -42,4 +45,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.okhttp)
     implementation(libs.timber)
+
+    // `TrickplayPreview` builds its own `ImageRequest` (a token-stripped cache key, DECISIONS.md
+    // 2026-07-30/SEC-02), so it names `coil3` types directly. Declared here since `:core:ui`
+    // stopped exporting Coil as `api` (audit ARCH-9).
+    implementation(libs.coil.compose)
 }

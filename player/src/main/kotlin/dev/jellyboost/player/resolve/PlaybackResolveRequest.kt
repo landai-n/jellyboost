@@ -28,7 +28,7 @@ import java.util.UUID
  *   it skips the copy on disk, because a `file://` URI means nothing on the other side of the
  *   network (docs/notes/chromecast-m12-plan.md, key decision 3).
  */
-data class PlaybackResolveRequest(
+internal data class PlaybackResolveRequest(
     val itemId: UUID,
     val mediaSourceId: String? = null,
     val startPositionTicks: Long = 0L,

@@ -32,7 +32,7 @@ import javax.inject.Singleton
  * settings that differ from the defaults.
  */
 @Singleton
-class DeviceProfileBuilder
+internal class DeviceProfileBuilder
     @Inject
     constructor(
         private val probe: MediaCodecProbe,

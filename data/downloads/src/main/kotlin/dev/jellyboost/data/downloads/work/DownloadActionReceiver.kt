@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.AndroidEntryPoint
-import dev.jellyboost.core.network.di.ApplicationScope
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.data.downloads.DownloadRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -24,7 +24,7 @@ import javax.inject.Inject
  * moment the work is done.
  */
 @AndroidEntryPoint
-class DownloadActionReceiver : BroadcastReceiver() {
+internal class DownloadActionReceiver : BroadcastReceiver() {
     @Inject
     lateinit var downloads: DownloadRepository
 

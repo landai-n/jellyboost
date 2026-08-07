@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
-import dev.jellyboost.core.network.di.ApplicationScope
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.downloads.DownloadRepository
 import kotlinx.coroutines.CoroutineScope

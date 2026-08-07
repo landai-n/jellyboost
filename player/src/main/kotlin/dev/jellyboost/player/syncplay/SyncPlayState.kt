@@ -46,7 +46,7 @@ sealed interface SyncPlayState {
      * session in [group], so anything keyed on membership — the reported server session for a
      * downloaded file above all (`SyncPlayLocalSession`) — has to see it go away and come back.
      * Short-lived by construction, like [Joining]: it ends at [InGroup] or at [Idle], within
-     * `SyncPlayController.REJOIN_MAX_ATTEMPTS` attempts.
+     * `SyncPlayRejoinPolicy.REJOIN_MAX_ATTEMPTS` attempts.
      *
      * @param attempt 1-based, for the log and for the UI to be able to say "still trying".
      */

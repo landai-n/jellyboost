@@ -55,8 +55,6 @@ import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import timber.log.Timber
 import java.net.HttpURLConnection.HTTP_FORBIDDEN
 import java.time.Clock
-import java.time.Duration
-import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -102,7 +100,7 @@ import javax.inject.Singleton
  * A confirmed loss pauses the player and — once the rejoin below has failed — leaves the group and
  * says so (key decision 10 as amended). Nothing here resumes: playing on would mean drifting from
  * the group invisibly, so the state change is made honest and the user resumes solo with one tap.
- * Three things confirm one, and they are deliberately one mechanism ([confirmLoss]):
+ * Three things confirm one, and they are deliberately one mechanism (`confirmLoss`):
  *
  * | signal | why it is confirmation | delay |
  * |---|---|---|
@@ -124,15 +122,15 @@ import javax.inject.Singleton
  * it within five seconds even when nothing else is happening). Nobody here asked to leave, so the
  * controller takes the membership back rather than reporting a loss (DECISIONS.md 2026-07-31,
  * amending key decision 10 a second time). **A confirmed loss goes the same way**: on the device the
- * grace window usually expires *before* anything discovers the removal, so [confirmLoss] hands over
+ * grace window usually expires *before* anything discovers the removal, so `confirmLoss` hands over
  * to the rejoin rather than ending the group, and reaches the old ending only if the attempts do.
  * In detail:
  *
- * - the group is remembered in [rejoinTarget] for as long as membership is *not* given up
+ * - the group is remembered in `rejoinTarget` for as long as membership is *not* given up
  *   deliberately — [leaveGroup], sign-out, `LibraryAccessDenied` and `GroupGone` all forget it, and
- *   so does a removal that arrives over a socket which was never in trouble ([recentlyTroubled]);
+ *   so does a removal that arrives over a socket which was never in trouble (`recentlyTroubled`);
  * - losing it after trouble stands the session down into [SyncPlayState.Rejoining] and runs up to
- *   [REJOIN_MAX_ATTEMPTS] attempts, [REJOIN_RETRY_DELAY_MS] apart, of "list the groups, and if ours
+ *   `REJOIN_MAX_ATTEMPTS` attempts, `REJOIN_RETRY_DELAY_MS` apart, of "list the groups, and if ours
  *   is still there, join it" — the ordinary join flow, handshake and all;
  * - the player is paused for the whole of it and is never started by the rejoin itself; the group's
  *   answer to this member's `ready` is what puts it back in step;
@@ -147,16 +145,18 @@ import javax.inject.Singleton
  *
  * - in a group, fires an immediate ping cycle, because a connection that died off screen is
  *   otherwise not even suspected until the next five-second cadence;
- * - at [SyncPlayState.Idle] with a [lostMembership] still inside [FOREGROUND_REJOIN_WINDOW_MS], runs
+ * - at [SyncPlayState.Idle] with a `lostMembership` still inside `FOREGROUND_REJOIN_WINDOW_MS`, runs
  *   the same rejoin attempts, once and **silently** — a re-check that fails or finds the group gone
  *   must not put a message on screen every time the app is opened.
  */
 @Singleton
 @Suppress(
     "TooManyFunctions", // A protocol coordinator; the intents alone are the plan's 15.
-    // One membership lifecycle: joining, rejoining, losing and leaving all read and write the same
-    // session scope, the same handshake bookkeeping and the same lock. Splitting it would mean
-    // publishing that state to a collaborator, which is a larger surface than the class it saves.
+    // What owned *disjoint* state has been split out (the rejoin policy, the recovery nets, the
+    // scheduler, the drift monitor, the pinger — DECISIONS.md 2026-08-07). What remains is one
+    // membership lifecycle: joining, losing and leaving all read and write the same session box,
+    // the same handshake bookkeeping and the same lock, and publishing that state to another
+    // collaborator would be a larger surface than the lines it saves.
     "LargeClass",
 )
 class SyncPlayController
@@ -172,7 +172,7 @@ class SyncPlayController
         private val playerHandle: PlayerHandle,
         private val connectionState: ConnectionStateProvider,
         private val sessionStateHolder: SessionStateHolder,
-        // The *device* clock, deliberately, and only for [lostMembership]: `timeSync.serverNow()`
+        // The *device* clock, deliberately, and only for `lostMembership`: `timeSync.serverNow()`
         // is reset by the very teardown that memory has to outlive.
         private val clock: Clock,
         @SyncPlayScope private val scope: CoroutineScope,
@@ -241,17 +241,6 @@ class SyncPlayController
              * rejoin ([enterGroup] re-sends it).
              */
             var ignoreWaitSent: Boolean = false,
-            /**
-             * When the connection last misbehaved, on the server clock.
-             *
-             * What tells "the server dropped us because the connection went" apart from "the server
-             * dropped us on purpose": only the first is worth rejoining, and only the first is
-             * preceded by connectivity going away, a ping failing, or the socket leaving
-             * `Connected`. Kept for [REJOIN_TROUBLE_WINDOW_MS], because the removal is discovered
-             * by the *next* request rather than at the moment of the trouble — which is also why it
-             * survives a stand-down.
-             */
-            var troubledAt: Instant? = null,
         ) {
             /** The slot the host has open, so a repeated `PlayQueueUpdate` reloads nothing. */
             var loadedPlaylistItemId: UUID? = null
@@ -281,12 +270,6 @@ class SyncPlayController
             /** Reports the owed `ready` when the player will not re-buffer to announce itself. */
             var readyFallbackJob: Job? = null
 
-            /** The B3 safety net: fires when a completed handshake produced no command. */
-            var selfSyncJob: Job? = null
-
-            /** The other half of it: fires when a paused group produced no pause command. */
-            var pauseNetJob: Job? = null
-
             /** The B9 grace window: fires when connectivity did not come back in time. */
             var connectivityGraceJob: Job? = null
 
@@ -294,40 +277,28 @@ class SyncPlayController
             var pingFailures = 0
 
             /**
-             * Where the *group* is on its own timeline, as of the last time it said it was playing.
-             *
-             * Not the same thing as the anchor in [SyncPlayPhase.Playing]: that one is established
-             * by an applied unpause and is exact, this one is inferred from the group's state
-             * updates and is only ever used when no unpause arrived at all ([selfSyncToGroup]).
-             * `null` whenever the group is not known to be playing.
-             */
-            var groupPlayingAnchor: SyncPlayAnchor? = null
-
-            /**
              * Cancels every timer this session armed.
              *
              * Explicit rather than left to [closeSession]'s scope cancellation (audit CPX-2): the
              * jobs are launched via [launchInSession], which falls back to the singleton scope when
              * no session scope is open, and a reset that only nils the handles would leave such a
-             * job running with nothing able to reach it.
+             * job running with nothing able to reach it. The two safety-net timers live with
+             * [SyncPlayRecoveryNets] and are cancelled by its own `reset()`.
              */
             fun cancelJobs() {
                 readyFallbackJob?.cancel()
-                selfSyncJob?.cancel()
-                pauseNetJob?.cancel()
                 connectivityGraceJob?.cancel()
             }
 
             companion object {
                 /**
                  * The [standDown] ending: the server ended the *session*, nobody ended the
-                 * *membership* — so the ignore-wait promise and the trouble memory carry over,
-                 * and (unlike [teardown]) the clock offset is left standing too.
+                 * *membership* — so the ignore-wait promise carries over, and (unlike [teardown])
+                 * the clock offset and the rejoin policy's trouble memory are left standing too.
                  */
                 fun carriedAcrossStandDown(previous: GroupSessionState) =
                     GroupSessionState(
                         ignoreWaitSent = previous.ignoreWaitSent,
-                        troubledAt = previous.troubledAt,
                     )
             }
         }
@@ -336,33 +307,20 @@ class SyncPlayController
         private var session = GroupSessionState()
 
         /**
-         * The group to take back if the server drops this session, or `null` if leaving would be
-         * nobody's mistake.
-         *
-         * Set on entering a group and cleared by every *deliberate* exit, which is the whole of the
-         * "never auto-rejoin something the user or the server meant to end" rule.
+         * The rejoin state machine: what to take back, when taking it back is right, and the
+         * attempt loop (audit CPX-1). It drives the membership transitions through
+         * [RejoinDriver], each one under [sessionMutex].
          */
-        private var rejoinTarget: SyncPlayGroupSummary? = null
-
-        /** The rejoin attempt loop, so leaving or signing out can abort it. */
-        private var rejoinJob: Job? = null
+        private val rejoinPolicy =
+            SyncPlayRejoinPolicy(connectionState, timeSync, clock, scope, RejoinDriver())
 
         /**
-         * The group this client was thrown out of against its will, and when — the one thing that
-         * survives [teardown].
-         *
-         * Everything else about a group session is forgotten when the session ends, deliberately.
-         * This is not, because the ending it records is the one nobody chose: the platform cut the
-         * app's network while it was backgrounded, the rejoin attempts all failed for the same
-         * reason, and the group is very probably still there with the user watching it somewhere
-         * else. Without a memory the controller sits at [SyncPlayState.Idle] for ever knowing
-         * nothing; with one, [onAppForegrounded] can ask for the group back at the one moment the
-         * ask can succeed.
-         *
-         * Bounded by [FOREGROUND_REJOIN_WINDOW_MS] and cleared by every deliberate exit — see
-         * [rememberLoss] and [forgetLoss].
+         * The B3 timer safety nets and the coarse group anchor they fall back on (audit CPX-1).
+         * They read the controller through [NetsDriver] and act on the player directly, exactly
+         * as the code did before the extraction.
          */
-        private var lostMembership: LostMembership? = null
+        private val recoveryNets =
+            SyncPlayRecoveryNets(playerHandle, timeSync, mainDispatcher, NetsDriver())
 
         init {
             // On the singleton scope rather than a group session, because a rejoin attempt stands the
@@ -402,10 +360,10 @@ class SyncPlayController
             // SP-07) — but awaited, because `signOut` must not revoke the token until the leave
             // has actually gone out.
             withContext(scope.coroutineContext) {
-                forgetLoss()
+                rejoinPolicy.forgetLoss()
                 // Awaited so a join in flight cannot land after the leave and strand the
                 // session in the group server-side (audit SP-10).
-                abandonRejoinAndAwait()
+                rejoinPolicy.abandonRejoinAndAwait()
                 if (_state.value is SyncPlayState.Idle) return@withContext
                 leaveOnServer()
                 teardown(message = null, pausePlayer = false)
@@ -419,8 +377,8 @@ class SyncPlayController
             // one signal that the exit is deliberate, and a loss confirmed while the leave is in
             // flight must find nothing to rejoin.
             scope.launch {
-                forgetLoss()
-                abandonRejoinAndAwait()
+                rejoinPolicy.forgetLoss()
+                rejoinPolicy.abandonRejoinAndAwait()
                 leaveOnServer()
                 teardown(message = null, pausePlayer = false)
             }
@@ -436,7 +394,7 @@ class SyncPlayController
          *   cadence would leave that undiscovered for up to five seconds before the failure streak
          *   even starts.
          * - **out of it** — if the membership was lost involuntarily and recently
-         *   ([FOREGROUND_REJOIN_WINDOW_MS]), ask for it back, once. This is the net under the
+         *   (`FOREGROUND_REJOIN_WINDOW_MS`), ask for it back, once. This is the net under the
          *   presence service: an OEM that kills the service anyway costs the group until the user
          *   comes back, not for the rest of the evening.
          *
@@ -447,7 +405,7 @@ class SyncPlayController
             scope.launch {
                 when (_state.value) {
                     is SyncPlayState.InGroup -> pinger.sampleNow()
-                    SyncPlayState.Idle -> resumeLostMembership()
+                    SyncPlayState.Idle -> rejoinPolicy.resumeLostMembership()
                     else -> Unit
                 }
             }
@@ -697,10 +655,7 @@ class SyncPlayController
             val entered = session.pendingGroup ?: group
             _state.value = SyncPlayState.InGroup(entered, null, entered.state, SyncPlayPhase.Waiting)
             session.pendingGroup = null
-            rejoinTarget = group
-            session.troubledAt = null
-            // Whatever was lost has been recovered, or replaced by a group the user chose.
-            forgetLoss()
+            rejoinPolicy.onEnteredGroup(group)
             statusHolder.setInGroup(true)
 
             openedSession.launch { pinger.run(::onPingOutcome) }
@@ -713,7 +668,7 @@ class SyncPlayController
             // A group already paused when we arrived gets the same net as one that pauses while we
             // are in it: nothing here can tell "paused before we joined" from "paused a moment ago
             // and the command was lost", and the net only ever pauses a player that is running.
-            if (entered.state == SyncPlayGroupState.Paused) armPauseNet()
+            if (entered.state == SyncPlayGroupState.Paused) recoveryNets.armPauseNet()
 
             // A rejoin lands on a new server session, which knows nothing of the ignore-wait this
             // client sent when it gave the player back — so a member with no player would silently
@@ -766,7 +721,7 @@ class SyncPlayController
         ) {
             // Outside the lock, and first: a rejoin attempt holds the membership lock across its
             // REST calls, so cancelling it is what lets this teardown get in at all.
-            abandonRejoin()
+            rejoinPolicy.onTeardown()
             sessionMutex.withLock {
                 if (_state.value is SyncPlayState.Idle) return@withLock
                 _state.value = SyncPlayState.Idle
@@ -789,35 +744,10 @@ class SyncPlayController
             statusHolder.setMintedPlaySessionId(null)
             scheduler.cancel()
             session.cancelJobs()
+            recoveryNets.reset()
             closeSession()
             // A launch request held for replay dies with the group it was raised for.
             _launchRequests.resetReplayCache()
-        }
-
-        /** Forgets the group and stops any attempt to take it back. */
-        private fun abandonRejoin() {
-            rejoinTarget = null
-            rejoinJob?.cancel()
-            rejoinJob = null
-        }
-
-        /**
-         * [abandonRejoin], but waited out — for the exits that go on to tell the server.
-         *
-         * The order is the point (audit SP-10): a rejoin can be suspended inside `api.joinGroup`,
-         * and a leave sent while that join is still in flight can be answered *before* it — the app
-         * ends at Idle while the server keeps the session in the group, a phantom participant the
-         * others wait on. Cancelling first and joining the job means any join the server already
-         * processed is followed by the `leaveGroup` the caller sends next, never the other way
-         * round.
-         */
-        private suspend fun abandonRejoinAndAwait() {
-            rejoinTarget = null
-            rejoinJob?.let { job ->
-                job.cancel()
-                job.join()
-            }
-            rejoinJob = null
         }
 
         private fun tearDownAsync(
@@ -862,7 +792,7 @@ class SyncPlayController
             ) {
                 Timber.w(error, "SyncPlay %s stream failed", name)
             }
-            confirmLoss()
+            rejoinPolicy.confirmLoss()
         }
 
         /**
@@ -893,27 +823,6 @@ class SyncPlayController
         // Losing the connection ------------------------------------------------------------------------
 
         /**
-         * The connection is gone as far as this client can tell — ask for the group back first.
-         *
-         * It used to be the end of the group outright. On the device it is also the *usual* way the
-         * membership is lost: a three-second Wi-Fi drop costs more than [CONNECTIVITY_GRACE_MS] of
-         * reported-offline once association, DHCP and the reachability probe are counted, so the
-         * grace expires before anything has had the chance to discover a `NotInGroup`. Handing it to
-         * the rejoin loop changes nothing when the connection really has gone — every attempt is
-         * gated on being online, and the ending is the same [SyncPlayMessage.ConnectionLost] a few
-         * seconds later, with the player paused from this moment either way.
-         */
-        private fun confirmLoss() {
-            val target = rejoinTarget
-            if (target == null) {
-                tearDownAsync(SyncPlayMessage.ConnectionLost, pausePlayer = true)
-                return
-            }
-            if (rejoinJob?.isActive == true) return
-            rejoinJob = scope.launch { rejoin(target) }
-        }
-
-        /**
          * Watches connectivity for a loss worth confirming.
          *
          * Both edges, not just the first offline one: a Wi-Fi handover or a two-second blip reports
@@ -939,7 +848,7 @@ class SyncPlayController
          * expire — pause immediately rather than at the end of the grace.
          */
         private fun onConnectivityGone() {
-            markTrouble()
+            rejoinPolicy.markTrouble()
             if (session.connectivityGraceJob != null) return
             Timber.w("Connectivity lost while in a SyncPlay group; freezing for %d ms", CONNECTIVITY_GRACE_MS)
             session.connectivityGraceJob =
@@ -949,7 +858,7 @@ class SyncPlayController
                     delay(CONNECTIVITY_GRACE_MS)
                     session.connectivityGraceJob = null
                     Timber.w("Connectivity did not return within the SyncPlay grace window")
-                    confirmLoss()
+                    rejoinPolicy.confirmLoss()
                 }
         }
 
@@ -975,11 +884,11 @@ class SyncPlayController
                 session.pingFailures = 0
                 return
             }
-            markTrouble()
+            rejoinPolicy.markTrouble()
             session.pingFailures++
             if (session.pingFailures < PING_FAILURE_STREAK) return
             Timber.w("SyncPlay: %d ping cycles failed in a row; treating it as a lost connection", session.pingFailures)
-            confirmLoss()
+            rejoinPolicy.confirmLoss()
         }
 
         /**
@@ -988,23 +897,12 @@ class SyncPlayController
          * Nothing here ends a group — a flapping socket is the SDK doing its job, and reacting to it
          * is exactly the bug the loss rules avoid. It is collected because a socket that went away
          * and came back is the *reason* the server no longer has this session in the group, and
-         * [recentlyTroubled] is what stops an unexplained removal being rejoined.
+         * `recentlyTroubled` is what stops an unexplained removal being rejoined.
          */
         private suspend fun watchSocket() {
             socket.connectionState
                 .distinctUntilChanged()
-                .collect { if (it !is SyncPlaySocketState.Connected) markTrouble() }
-        }
-
-        /** Records that the connection misbehaved just now; see [troubledAt]. */
-        private fun markTrouble() {
-            session.troubledAt = timeSync.serverNow()
-        }
-
-        /** Whether the connection misbehaved recently enough to explain a removal. */
-        private fun recentlyTroubled(): Boolean {
-            val at = session.troubledAt ?: return false
-            return Duration.between(at, timeSync.serverNow()).toMillis() <= REJOIN_TROUBLE_WINDOW_MS
+                .collect { if (it !is SyncPlaySocketState.Connected) rejoinPolicy.markTrouble() }
         }
 
         /**
@@ -1020,13 +918,13 @@ class SyncPlayController
                 if (session !is SessionState.LoggedOut) return@collect
                 // The memory is cleared even from Idle: a signed-out account must not have a group
                 // taken back for it when somebody signs in and opens the app.
-                forgetLoss()
+                rejoinPolicy.forgetLoss()
                 if (_state.value is SyncPlayState.Idle) return@collect
                 // Awaited, not just cancelled, so a join in flight cannot land after the local
                 // teardown and take the group back for a signed-out account (audit SP-10). No
                 // server call from here: the token is already revoked, [leaveBeforeSignOut] did
                 // the server-side leave while it still worked (audit NET-03).
-                abandonRejoinAndAwait()
+                rejoinPolicy.abandonRejoinAndAwait()
                 teardown(message = null, pausePlayer = false)
             }
         }
@@ -1043,7 +941,7 @@ class SyncPlayController
                 is SyncPlayGroupEvent.QueueChanged -> onQueueChanged(event.queue)
                 is SyncPlayGroupEvent.UserJoined -> updateGroup { it.copy(participants = it.participants + event.name) }
                 is SyncPlayGroupEvent.UserLeft -> updateGroup { it.copy(participants = it.participants - event.name) }
-                SyncPlayGroupEvent.NotInGroup -> onMembershipGone()
+                SyncPlayGroupEvent.NotInGroup -> rejoinPolicy.onMembershipGone()
                 // Definitive, and nothing a rejoin could undo: the id this client would ask for is
                 // the one the server has just said does not exist.
                 SyncPlayGroupEvent.GroupGone -> forgetAndTearDown(SyncPlayMessage.GroupEnded)
@@ -1058,144 +956,82 @@ class SyncPlayController
         private fun onLeft(groupId: UUID) {
             val current = _state.value as? SyncPlayState.InGroup ?: return
             if (current.group.id != groupId) return
-            onMembershipGone()
+            rejoinPolicy.onMembershipGone()
         }
 
         /** Gives up the group deliberately: no rejoin will follow, and none on the next foreground. */
         private fun forgetAndTearDown(message: SyncPlayMessage) {
-            rejoinTarget = null
-            forgetLoss()
+            rejoinPolicy.forgetDeliberately()
             tearDownAsync(message)
         }
 
         // Taking the group back --------------------------------------------------------------------
 
         /**
-         * The server no longer has this session in the group — decide whether that was meant.
-         *
-         * A removal over a connection that has been well all along is the server or another client
-         * saying so, and is obeyed exactly as it always was. A removal after [recentlyTroubled] is
-         * the websocket having dropped, `OnSessionEnded` having called `LeaveGroup` on our behalf,
-         * and nobody having wanted any of it — so the membership is taken back.
+         * The membership operations [SyncPlayRejoinPolicy] drives, each under [sessionMutex] —
+         * the rejoin runs through the same [performJoin]/[standDown] entry points every other
+         * membership change uses.
          */
-        private fun onMembershipGone() {
-            val target = rejoinTarget
-            if (target == null || !recentlyTroubled()) {
-                Timber.i("Removed from the SyncPlay group with the connection healthy; not rejoining")
-                forgetAndTearDown(SyncPlayMessage.RemovedFromGroup)
-                return
-            }
-            if (rejoinJob?.isActive == true) return
-            // The singleton scope, always: the first thing a rejoin does is cancel the session scope.
-            rejoinJob = scope.launch { rejoin(target) }
-        }
-
-        /**
-         * Stands the lost session down and tries [REJOIN_MAX_ATTEMPTS] times to get [target] back.
-         *
-         * The attempts are spaced because the first one can legitimately be too early: the server
-         * removes a session from its group when the *old* websocket is finally reaped, which can
-         * land after this client has already noticed and asked to come back.
-         */
-        private suspend fun rejoin(target: SyncPlayGroupSummary) {
-            val standing =
+        private inner class RejoinDriver : SyncPlayRejoinPolicy.SessionDriver {
+            override suspend fun standDownForRejoin(target: SyncPlayGroupSummary): Boolean =
                 sessionMutex.withLock {
                     if (_state.value !is SyncPlayState.InGroup) return@withLock false
                     standDown(target)
                     true
                 }
-            if (!standing) return
-            runRejoinAttempts(target, quiet = false)
-        }
 
-        /**
-         * The attempt loop itself, shared by the loss path and by the foreground re-check.
-         *
-         * @param quiet suppresses the two *endings* — "connection lost" and "the group has ended" —
-         *   without changing anything the protocol does. The re-check runs on every foreground, and
-         *   a group that is genuinely gone would otherwise announce itself every time the user
-         *   opened the app. A success is still announced: that one is news.
-         */
-        private suspend fun runRejoinAttempts(
-            target: SyncPlayGroupSummary,
-            quiet: Boolean,
-        ) {
-            for (attempt in 1..REJOIN_MAX_ATTEMPTS) {
-                if (attempt > 1) delay(REJOIN_RETRY_DELAY_MS)
-                if (!awaitOnline()) {
-                    Timber.w("Still offline; SyncPlay rejoin attempt %d spent waiting", attempt)
-                    continue
+            /**
+             * Enters `Rejoining` from idle — the foreground re-check.
+             *
+             * Everything a group session needs was already released by the teardown that got
+             * here, so there is nothing to tear down and nothing to pause — only the state to
+             * set, so that [attemptJoin] and [enterGroup] behave exactly as they do on every
+             * other rejoin. The one thing restored by hand is the ignore-wait: with no player
+             * attached this member must not be why the whole group sits in WAITING (key
+             * decision 5), and [enterGroup] sends it only when it believes one was owed.
+             */
+            override suspend fun standUpFromIdle(target: SyncPlayGroupSummary): Boolean =
+                sessionMutex.withLock {
+                    if (_state.value !is SyncPlayState.Idle) return@withLock false
+                    Timber.i("Back in the foreground; asking for the SyncPlay group %s back", target.id)
+                    _state.value = SyncPlayState.Rejoining(target, attempt = 1)
+                    session.ignoreWaitSent = host == null
+                    true
                 }
-                when (attemptRejoin(target, attempt)) {
-                    RejoinOutcome.Rejoined -> {
-                        rejoinJob = null
-                        Timber.i("Rejoined the SyncPlay group %s on attempt %d", target.id, attempt)
-                        _messages.tryEmit(SyncPlayMessage.Rejoined)
-                        return
+
+            /** One attempt: is the group still there, and will it have us back? */
+            override suspend fun attemptJoin(
+                target: SyncPlayGroupSummary,
+                attempt: Int,
+            ): SyncPlayRejoinOutcome =
+                sessionMutex.withLock {
+                    if (_state.value !is SyncPlayState.Rejoining) return@withLock SyncPlayRejoinOutcome.Aborted
+                    _state.value = SyncPlayState.Rejoining(target, attempt)
+                    val groups =
+                        runCatchingUnlessCancelled { api.getGroups() }
+                            .onFailure { Timber.w(it, "Could not list the SyncPlay groups while rejoining") }
+                            .getOrElse { return@withLock SyncPlayRejoinOutcome.Failed }
+                    if (groups.none { it.id == target.id }) return@withLock SyncPlayRejoinOutcome.Dissolved
+                    if (performJoin(existing = target, newGroupName = null)) {
+                        SyncPlayRejoinOutcome.Rejoined
+                    } else {
+                        closeSession()
+                        SyncPlayRejoinOutcome.Failed
                     }
-
-                    // Listed groups came back without ours: we were its last member and it is gone.
-                    RejoinOutcome.Dissolved -> {
-                        Timber.w("The SyncPlay group %s no longer exists; staying out", target.id)
-                        forgetLoss()
-                        endRejoin(SyncPlayMessage.GroupEnded.takeUnless { quiet })
-                        return
-                    }
-
-                    // Left or signed out from under us; whoever did it owns the teardown.
-                    RejoinOutcome.Aborted -> return
-
-                    RejoinOutcome.Failed -> Unit
                 }
+
+            override suspend fun tearDown(
+                message: SyncPlayMessage?,
+                pausePlayer: Boolean,
+            ) = teardown(message, pausePlayer)
+
+            override fun announce(message: SyncPlayMessage) {
+                _messages.tryEmit(message)
             }
-            Timber.w("Could not rejoin the SyncPlay group after %d attempts", REJOIN_MAX_ATTEMPTS)
-            // Remembered on the way out, so returning to the app can ask once more. A re-check that
-            // fails keeps the memory it already had, original instant and all.
-            rememberLoss(target)
-            endRejoin(SyncPlayMessage.ConnectionLost.takeUnless { quiet })
         }
 
         /**
-         * Waits, briefly, for a network worth spending an attempt on.
-         *
-         * The radio comes back several seconds after it went — Wi-Fi association, DHCP and the
-         * reachability probe all happen after `svc wifi enable` returns — so an attempt fired the
-         * instant the loss is confirmed is an attempt thrown away. Bounded by the same
-         * [REJOIN_RETRY_DELAY_MS] as the spacing, so a connection that is genuinely gone still ends
-         * at [SyncPlayState.Idle] within a handful of seconds.
-         *
-         * @return `false` when the wait ran out and the device is still offline.
-         */
-        private suspend fun awaitOnline(): Boolean {
-            if (connectionState.state.value.isOnline) return true
-            return withTimeoutOrNull(REJOIN_RETRY_DELAY_MS) {
-                connectionState.state.first { it.isOnline }
-            } != null
-        }
-
-        /** One attempt: is the group still there, and will it have us back? */
-        private suspend fun attemptRejoin(
-            target: SyncPlayGroupSummary,
-            attempt: Int,
-        ): RejoinOutcome =
-            sessionMutex.withLock {
-                if (_state.value !is SyncPlayState.Rejoining) return@withLock RejoinOutcome.Aborted
-                _state.value = SyncPlayState.Rejoining(target, attempt)
-                val groups =
-                    runCatchingUnlessCancelled { api.getGroups() }
-                        .onFailure { Timber.w(it, "Could not list the SyncPlay groups while rejoining") }
-                        .getOrElse { return@withLock RejoinOutcome.Failed }
-                if (groups.none { it.id == target.id }) return@withLock RejoinOutcome.Dissolved
-                if (performJoin(existing = target, newGroupName = null)) {
-                    RejoinOutcome.Rejoined
-                } else {
-                    closeSession()
-                    RejoinOutcome.Failed
-                }
-            }
-
-        /**
-         * Ends the group session that the server has already ended, keeping [rejoinTarget].
+         * Ends the group session that the server has already ended, keeping `rejoinTarget`.
          *
          * Everything [teardown] resets except what [GroupSessionState.carriedAcrossStandDown]
          * names — and the clock offset, because it is the same server and the rejoin handshake
@@ -1211,101 +1047,12 @@ class SyncPlayController
         }
 
         /**
-         * The rejoin gave up; hand over to the ordinary teardown without cancelling this coroutine.
-         *
-         * @param message `null` for the foreground re-check, which ends silently — see
-         *   [runRejoinAttempts].
-         */
-        private suspend fun endRejoin(message: SyncPlayMessage?) {
-            rejoinJob = null
-            teardown(message, pausePlayer = false)
-        }
-
-        // The foreground safety net -------------------------------------------------------------------
-
-        /**
-         * Asks for a recently, involuntarily lost group back — the [onAppForegrounded] half.
-         *
-         * Deliberately not a loop and not a retry schedule: it runs at most once per foreground, and
-         * a failure leaves the memory alone so the *next* foreground may try again inside the
-         * window. A memory that has expired is dropped here rather than left to rot, which is what
-         * makes "the user came back much later, to something else entirely" cost nothing.
-         */
-        private fun resumeLostMembership() {
-            val lost = lostMembership ?: return
-            val age = Duration.between(lost.at, clock.instant()).toMillis()
-            if (age !in 0..FOREGROUND_REJOIN_WINDOW_MS) {
-                Timber.i("The lost SyncPlay group %s is too old to take back; forgetting it", lost.group.id)
-                lostMembership = null
-                return
-            }
-            if (rejoinJob?.isActive == true) return
-            rejoinJob = scope.launch { rejoinFromIdle(lost.group) }
-        }
-
-        /**
-         * A rejoin that starts from [SyncPlayState.Idle] rather than from a session being stood down.
-         *
-         * Everything a group session needs was already released by the [teardown] that got here, so
-         * there is nothing to tear down and nothing to pause — only the state to set, so that
-         * [attemptRejoin] and [enterGroup] behave exactly as they do on every other rejoin.
-         *
-         * The one thing restored by hand is the ignore-wait: with no player attached this member
-         * must not be why the whole group sits in WAITING (key decision 5), and [enterGroup] sends it
-         * only when it believes one was owed.
-         */
-        private suspend fun rejoinFromIdle(target: SyncPlayGroupSummary) {
-            val standing =
-                sessionMutex.withLock {
-                    if (_state.value !is SyncPlayState.Idle) return@withLock false
-                    Timber.i("Back in the foreground; asking for the SyncPlay group %s back", target.id)
-                    _state.value = SyncPlayState.Rejoining(target, attempt = 1)
-                    session.ignoreWaitSent = host == null
-                    true
-                }
-            if (!standing) return
-            runRejoinAttempts(target, quiet = true)
-        }
-
-        /**
-         * Records that [group] was lost without anyone choosing it.
-         *
-         * The instant is **not** refreshed for a group already remembered: the window is counted
-         * from the loss, and a failed re-check on every foreground would otherwise walk the deadline
-         * forward for as long as the user kept opening the app.
-         */
-        private fun rememberLoss(group: SyncPlayGroupSummary) {
-            if (lostMembership?.group?.id == group.id) return
-            lostMembership = LostMembership(group, clock.instant())
-            Timber.i("Remembering the lost SyncPlay group %s for %d ms", group.id, FOREGROUND_REJOIN_WINDOW_MS)
-        }
-
-        /** Drops the memory: this exit was chosen, or the group has been recovered. */
-        private fun forgetLoss() {
-            lostMembership = null
-        }
-
-        /** A group that was lost involuntarily, and the device instant it was lost at. */
-        private data class LostMembership(
-            val group: SyncPlayGroupSummary,
-            val at: Instant,
-        )
-
-        /** What one [attemptRejoin] came to. */
-        private enum class RejoinOutcome {
-            Rejoined,
-            Dissolved,
-            Failed,
-            Aborted,
-        }
-
-        /**
          * Mirrors the group's own state onto [SyncPlayState.InGroup.groupState], and onto this
          * member's phase — except `Playing`.
          *
          * `Playing` is owned by the applied unpause, because that is the only thing that knows the
          * anchor; taking it from a state update would give the drift monitor nothing to measure. It
-         * is still recorded, in [groupPlayingAnchor], as the coarse reading the B3 safety net falls
+         * is still recorded, in `groupPlayingAnchor`, as the coarse reading the B3 safety net falls
          * back on when no unpause turns up at all.
          *
          * **WAITING pauses.** The group entering `Waiting` means it is stalled on somebody, and a
@@ -1320,30 +1067,30 @@ class SyncPlayController
          * **PAUSED arms a net.** The pause the group named reaches this member as a `SendCommand`
          * and nothing here acts locally — but a command that never arrives leaves this member
          * playing on for ever, with the drift monitor (which runs in `Playing` only) shut off along
-         * with it. See [armPauseNet]: the mirror image of [armSelfSync].
+         * with it. See `armPauseNet`: the mirror image of `armSelfSync`.
          */
         private suspend fun onGroupStateChanged(groupState: SyncPlayGroupState) {
             val resumedFromPause =
                 (_state.value as? SyncPlayState.InGroup)?.groupState == SyncPlayGroupState.Paused
             setGroupState(groupState)
             if (groupState == SyncPlayGroupState.Playing) {
-                session.groupPlayingAnchor =
+                recoveryNets.groupPlayingAnchor =
                     (if (resumedFromPause) parkedPlayerAnchor() else null) ?: inferredGroupAnchor()
-                cancelPauseNet()
+                recoveryNets.cancelPauseNet()
                 // Either order is possible — the state update can beat this member's own `ready` or
                 // trail it — so the net is armed from both ends. It disarms on the first command.
-                armSelfSync()
+                recoveryNets.armSelfSync()
                 return
             }
-            session.groupPlayingAnchor = null
+            recoveryNets.groupPlayingAnchor = null
             // Structural rather than incidental: a self-sync armed while the group was playing must
             // never start playback in a group that has since stopped.
-            cancelSelfSync()
+            recoveryNets.cancelSelfSync()
             if (groupState == SyncPlayGroupState.Waiting && isPlayerRunning()) {
                 Timber.d("SyncPlay group is waiting; holding this member where it is")
                 withContext(mainDispatcher) { playerHandle.pause() }
             }
-            if (groupState == SyncPlayGroupState.Paused) armPauseNet()
+            if (groupState == SyncPlayGroupState.Paused) recoveryNets.armPauseNet()
             val phase =
                 when (groupState) {
                     SyncPlayGroupState.Waiting -> SyncPlayPhase.Waiting
@@ -1359,7 +1106,7 @@ class SyncPlayController
          * was when it last published the queue, so pairing it with `serverNow()` claims the group has
          * not moved since — and everything downstream then measures against a timeline that is behind
          * the real one by however long ago the update was. That is the browser-resume desync in the
-         * bug report: [selfSyncToGroup] seeks to a position seconds short, and the drift monitor,
+         * bug report: `selfSyncToGroup` seeks to a position seconds short, and the drift monitor,
          * handed the same anchor, defends the wrong timeline instead of closing the gap
          * (`syncplay-bugreport.md`, "keeping a desynchronization of a few seconds initially, somehow
          * growing from there"). `lastUpdate` is the instant the position was actually true at.
@@ -1407,7 +1154,7 @@ class SyncPlayController
             // `update`, not read-copy-write: a phase the scheduler's collector applies between this
             // function's read and its write must never be reverted by the queue (audit SP-08).
             _state.update { if (it is SyncPlayState.InGroup) it.copy(queue = queue) else it }
-            if (queue.isPlaying) session.groupPlayingAnchor = inferredGroupAnchor()
+            if (queue.isPlaying) recoveryNets.groupPlayingAnchor = inferredGroupAnchor()
             reconcile(queue)
         }
 
@@ -1627,196 +1374,21 @@ class SyncPlayController
         }
 
         /**
-         * Starts the clock on "the group said go and nothing came".
-         *
-         * Armed after every `ready`, and by a `StateChanged(Playing)`; disarmed by the first command
-         * applied. What it catches is the queue-advance wedge (B3): the handshake completes, the
-         * group's own state update says `Playing`, and the unpause that should have followed it
-         * never arrives — leaving this member parked at 0:00 under the WAITING overlay while
-         * everyone else watches. A group unpause cannot recover it either, because the group *is*
-         * playing and the request no-ops.
-         *
-         * **Two windows, and the first one asks the server rather than guessing.** See [elicitRepeat]:
-         * at [SELF_SYNC_TIMEOUT_MS] this sends a redundant `UnpauseGroupRequest`, which a group that
-         * is already playing answers by re-sending its authoritative unpause to this session alone,
-         * and re-arms itself once for [COMMAND_REPEAT_TIMEOUT_MS] ([NetStage.Fallback]). Only when
-         * that window expires too does [selfSyncToGroup] act locally, off the inferred anchor. The
-         * order matters because the inferred anchor is the weaker reading of the two: it comes from
-         * the queue's `startPositionTicks`/`lastUpdate` and goes stale the moment the group pauses
-         * and resumes without publishing a queue, which on device landed the self-sync seconds off
-         * and compounded across cycles (STATUS.md, logcat run 3).
-         *
-         * Nothing here reports a `ready`: that would re-enter the storm B1 is about. A request is not
-         * a report — the server answers it with a command, not with a wait.
+         * What [SyncPlayRecoveryNets] reads of this controller, and the two things it may do to
+         * it (publish a self-synced phase, send the ordinary group requests).
          */
-        private fun armSelfSync(stage: NetStage = NetStage.Elicit) {
-            session.selfSyncJob?.cancel()
-            session.selfSyncJob =
-                launchInSession {
-                    delay(if (stage == NetStage.Elicit) SELF_SYNC_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                    session.selfSyncJob = null
-                    val asked = stage == NetStage.Elicit && elicitUnpauseRepeat()
-                    if (asked) armSelfSync(NetStage.Fallback) else selfSyncToGroup()
-                }
-        }
+        private inner class NetsDriver : SyncPlayRecoveryNets.Driver {
+            override fun state(): SyncPlayState = _state.value
 
-        private fun cancelSelfSync() {
-            session.selfSyncJob?.cancel()
-            session.selfSyncJob = null
-        }
+            override fun hasHost(): Boolean = host != null
 
-        /**
-         * The [armSelfSync] half of [elicitRepeat]: a playing group this member is not keeping up with.
-         *
-         * The phase check is the same one [selfSyncToGroup] opens with, so the ask goes out exactly
-         * where the local fallback would have acted. A member already playing needs nothing repeated
-         * — and a `StateChanged(Playing)` that merely trails its own applied command would otherwise
-         * cost a request every single time the two arrive in that order.
-         */
-        private fun elicitUnpauseRepeat(): Boolean {
-            val current = _state.value as? SyncPlayState.InGroup ?: return false
-            if (current.phase is SyncPlayPhase.Playing) return false
-            return elicitRepeat(current, SyncPlayGroupState.Playing) { requestUnpause() }
-        }
+            override fun launchNet(block: suspend CoroutineScope.() -> Unit): Job = launchInSession(block)
 
-        /**
-         * The [armPauseNet] half of [elicitRepeat]: a paused group this member is still playing past.
-         *
-         * Gated on the player actually running, for the same reason [pauseToGroup] is: a member that
-         * is already stopped is already where the group is, and has nothing to ask for.
-         */
-        private suspend fun elicitPauseRepeat(): Boolean {
-            if (!isPlayerRunning()) return false
-            // Read after the snapshot, not before: that hop to the main thread is long enough for
-            // the group to have moved, and the state check is only worth anything when it is current.
-            val current = _state.value as? SyncPlayState.InGroup ?: return false
-            return elicitRepeat(current, SyncPlayGroupState.Paused) { requestPause() }
-        }
+            override fun requestUnpause() = this@SyncPlayController.requestUnpause()
 
-        /**
-         * Asks the server to say again what this member never heard — the first stage of both nets.
-         *
-         * The protocol has a recovery for exactly this and we were not using it. A group request
-         * that asks for the state the group is *already* in is not a state change: the server reads
-         * it as a member that has lost the thread and answers by re-sending the current command to
-         * that one session, with the exact `When` and `PositionTicks` everyone else got —
-         * `PausedGroupState.HandleRequest(PauseGroupRequest)` when `prevState == Paused`
-         * (`PausedGroupState.cs`:88-93, "Client got lost, sending current state") and
-         * `PlayingGroupState.HandleRequest(UnpauseGroupRequest)` when `prevState == Playing`
-         * (`PlayingGroupState.cs`:80-86). The scheduler applies a re-sent command that never applied
-         * locally (its "applied exactly once" guard remembers only what actually reached the player),
-         * so the repeat lands and the ordinary command path — anchor, phase, drift monitor — does the
-         * rest. That is the group's own timeline instead of this client's guess at it.
-         *
-         * **Only when the group is still where the net was armed for.** An `UnpauseGroupRequest`
-         * sent to a group that has moved to WAITING is not a repeat, it is this member starting
-         * everyone — so a group state that no longer matches falls straight through to the local
-         * fallback, which is what the net did all along. The two callers add the other half of the
-         * condition, "and this member really is out of step" ([elicitUnpauseRepeat],
-         * [elicitPauseRepeat]), so the ask goes out exactly where the fallback would have acted.
-         *
-         * The ask itself goes through [request]: fire-and-forget, failure logged, and a failed one
-         * simply leaves [NetStage.Fallback] to fire.
-         *
-         * @return whether the ask went out, which is the caller's cue to re-arm for a second window.
-         */
-        private fun elicitRepeat(
-            current: SyncPlayState.InGroup,
-            expected: SyncPlayGroupState,
-            ask: () -> Unit,
-        ): Boolean {
-            if (current.groupState != expected) return false
-            Timber.w(
-                "SyncPlay group is %s and sent no command; asking the server to repeat itself",
-                expected,
-            )
-            ask()
-            return true
-        }
+            override fun requestPause() = this@SyncPlayController.requestPause()
 
-        /**
-         * Which of the two windows a safety net is in.
-         *
-         * The stage is carried rather than remembered, which is the whole of the loop guard: only an
-         * [Elicit] net asks, and it can only ever re-arm as a [Fallback] one. A fresh episode — a
-         * new `StateChanged`, a new `ready` — arms an [Elicit] net again and so gets one ask of its
-         * own, but nothing inside an episode can produce a second.
-         */
-        private enum class NetStage {
-            /** The group said something and no command came: ask it to say so again. */
-            Elicit,
-
-            /** The repeat did not come either: act locally, off the inferred anchor. */
-            Fallback,
-        }
-
-        private suspend fun selfSyncToGroup() {
-            val current = _state.value as? SyncPlayState.InGroup ?: return
-            if (current.phase is SyncPlayPhase.Playing) return
-            // Never on a detached player: a member with no screen open has told the group to stop
-            // waiting on it (key decision 5), and starting the shared ExoPlayer behind nothing at
-            // all would be sound from nowhere.
-            if (host == null) return
-            val anchor = session.groupPlayingAnchor ?: return
-            val expected =
-                (anchor.positionMs + Duration.between(anchor.at, timeSync.serverNow()).toMillis())
-                    .coerceAtLeast(0L)
-            Timber.w("SyncPlay group is playing but sent no command; self-syncing to %d ms", expected)
-            withContext(mainDispatcher) {
-                playerHandle.seekTo(expected)
-                playerHandle.play()
-            }
-            setPhase(SyncPlayPhase.Playing(anchor))
-        }
-
-        /**
-         * Starts the clock on "the group said stop and nothing came" — the mirror of [armSelfSync].
-         *
-         * The observed failure it exists for is the pause direction of B3, and it is the worse half:
-         * a `Pause` this client never receives leaves the member playing on alone, while the phase
-         * quietly goes to `Paused` and takes the drift monitor — which only runs in `Playing` — down
-         * with it. Nothing then measures anything, and the member free-runs for the rest of the
-         * evening (syncplay-bugreport.md, "Pause from browser: app continues playing").
-         *
-         * Two things separate it from the play net. It is **not** gated on a host: pausing a
-         * detached background player that the group has paused is right, where *starting* one would
-         * be sound from nowhere. And it takes no other action — no seek, no report, no `play` — so
-         * firing at a player that is already stopped costs nothing, which is what lets it be armed
-         * from the group's state alone rather than from a proof that this member is out of step.
-         * (The elicit stage below does want that proof, because a request is not free — see
-         * [elicitPauseRepeat].)
-         *
-         * It has the same two windows as [armSelfSync]: a redundant `PauseGroupRequest` first, which
-         * a group that is already paused answers with its authoritative pause — exact instant, exact
-         * position — to this session alone, and only then the local pause. The re-sent command is
-         * strictly better than the local one, because it parks this member *where the group is*
-         * rather than merely stopping it where it happens to be.
-         */
-        private fun armPauseNet(stage: NetStage = NetStage.Elicit) {
-            session.pauseNetJob?.cancel()
-            session.pauseNetJob =
-                launchInSession {
-                    delay(if (stage == NetStage.Elicit) PAUSE_NET_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                    session.pauseNetJob = null
-                    val asked = stage == NetStage.Elicit && elicitPauseRepeat()
-                    if (asked) armPauseNet(NetStage.Fallback) else pauseToGroup()
-                }
-        }
-
-        private fun cancelPauseNet() {
-            session.pauseNetJob?.cancel()
-            session.pauseNetJob = null
-        }
-
-        private suspend fun pauseToGroup() {
-            if (_state.value !is SyncPlayState.InGroup) return
-            withContext(mainDispatcher) {
-                // A player that is already stopped is already where the group is: no pause, and
-                // nothing reported either way.
-                if (!playerHandle.snapshot().isPlaying) return@withContext
-                Timber.w("SyncPlay group is paused but sent no command; pausing this member")
-                playerHandle.pause()
-            }
+            override fun onSelfSynced(anchor: SyncPlayAnchor) = setPhase(SyncPlayPhase.Playing(anchor))
         }
 
         /** Whether the player is actually running — the one reading no lost command can falsify. */
@@ -1857,7 +1429,7 @@ class SyncPlayController
                 )
             }.onFailure { error ->
                 Timber.w(error, "Could not report SyncPlay buffering")
-                if (error.isMembershipRefused()) onMembershipGone()
+                if (error.isMembershipRefused()) rejoinPolicy.onMembershipGone()
             }
         }
 
@@ -1911,7 +1483,7 @@ class SyncPlayController
             if ((_state.value as? SyncPlayState.InGroup)?.phase == SyncPlayPhase.Buffering) {
                 setPhase(SyncPlayPhase.Waiting)
             }
-            armSelfSync()
+            recoveryNets.armSelfSync()
         }
 
         /**
@@ -1924,7 +1496,7 @@ class SyncPlayController
          * background (see [detachHost]), and it is exactly as unwelcome a `ready` from a running
          * player as an attached one.
          *
-         * Nothing else changes: [armSelfSync] still runs after the report, so a member the group
+         * Nothing else changes: `armSelfSync` still runs after the report, so a member the group
          * never answers is still recovered three seconds later by the self-sync net.
          *
          * With no host attached the **shared player's** snapshot answers for both the running
@@ -1960,8 +1532,8 @@ class SyncPlayController
 
         private suspend fun onCommandApplied(applied: SyncPlayAppliedCommand) {
             // The group has spoken, so neither safety net is needed for this handshake.
-            cancelSelfSync()
-            cancelPauseNet()
+            recoveryNets.cancelSelfSync()
+            recoveryNets.cancelPauseNet()
             val phase =
                 when (applied.command.type) {
                     SyncPlayCommandType.Unpause -> applied.anchor?.let(SyncPlayPhase::Playing) ?: SyncPlayPhase.Paused
@@ -2069,73 +1641,6 @@ class SyncPlayController
              * group disposal (B8).
              */
             const val PING_FAILURE_STREAK = 3
-
-            /**
-             * How many times a lost membership is asked for back before the group is given up on.
-             *
-             * Three rather than one because the server can still be reaping the old session when the
-             * first attempt lands, and bounded rather than open-ended because a client that retries
-             * for ever is a client the user cannot get out of a group they are no longer in.
-             */
-            const val REJOIN_MAX_ATTEMPTS = 3
-
-            /** Spacing between rejoin attempts, in milliseconds. */
-            const val REJOIN_RETRY_DELAY_MS = 2_000L
-
-            /**
-             * How long after connection trouble a removal is still blamed on it, in milliseconds.
-             *
-             * The removal is discovered by the *next* request rather than at the moment of the
-             * trouble — the ping loop's five-second cadence is the usual finder — so the window has
-             * to outlast a couple of those. Outside it, a removal is somebody's decision and is
-             * obeyed.
-             */
-            const val REJOIN_TROUBLE_WINDOW_MS = 30_000L
-
-            /**
-             * How long an involuntarily lost membership is still worth taking back, in milliseconds.
-             *
-             * Ten minutes is a judgement about what the user meant, not about the protocol: the case
-             * this exists for is the app being backgrounded while the same tablet drives the group
-             * from jellyfin-web, where coming back within a few minutes means "I never left". Much
-             * longer and the app starts re-joining groups the user has genuinely finished with;
-             * much shorter and an evening's browsing in another app costs the group anyway.
-             */
-            const val FOREGROUND_REJOIN_WINDOW_MS = 600_000L
-
-            /**
-             * How long a completed handshake waits for the group's command before syncing itself.
-             *
-             * Comfortably more than the delay the server builds into an unpause (twice the highest
-             * member ping, floored at its 500 ms default), so the net only catches a command that is
-             * not coming at all.
-             */
-            const val SELF_SYNC_TIMEOUT_MS = 3_000L
-
-            /**
-             * How long a paused group waits for its pause command before this member pauses itself.
-             *
-             * The same three seconds as [SELF_SYNC_TIMEOUT_MS], and for the same reason: it is
-             * comfortably past the delay the server builds into a scheduled command, so only a
-             * command that is not coming at all is caught. Deliberately not shorter — a member that
-             * pauses ahead of the instant the group named is out of step just as surely.
-             */
-            const val PAUSE_NET_TIMEOUT_MS = 3_000L
-
-            /**
-             * The second window of both safety nets: how long the command elicited from the server
-             * has to arrive before this member acts locally, in milliseconds.
-             *
-             * Shorter than the first windows because it measures something narrower. Those have to
-             * outlast the delay the server *builds into* a scheduled command (twice the highest
-             * member ping); this one covers one REST round trip and the application of a command
-             * whose instant has, in the "client got lost" re-send, usually already passed — the
-             * scheduler applies those immediately. Two seconds is generous for that on a tablet with
-             * a busy main thread, and it is the whole of what the two-stage shape costs when the
-             * server does not answer: the local fallback that used to fire at three seconds now
-             * fires at five.
-             */
-            const val COMMAND_REPEAT_TIMEOUT_MS = 2_000L
 
             /**
              * How long an owed `ready` waits for a player that may never re-buffer, in milliseconds.

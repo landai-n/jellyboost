@@ -1,13 +1,7 @@
 package dev.jellyboost.core.ui.component
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import dev.jellyboost.core.common.model.DownloadState
@@ -16,7 +10,6 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
-import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
 
 /**
  * Lazy-list `contentType` for every [ThumbCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
@@ -46,6 +39,10 @@ const val THUMB_CARD_CONTENT_TYPE = "card-thumb"
  * @param selected `null` when the list is not in selection mode — see [MediaCardArtwork].
  * @param topStartBadge optional overlay metadata — see [MediaCardArtwork]. Formatted by the caller,
  *   which is the screen that owns the string resources ("S1 · E10", "22m left").
+ *
+ * The drawing itself is [MediaCard], shared with [PosterCard]: this signature exists for its four
+ * thumb-shaped answers — 16:9 artwork, a TV glyph for a missing image, the thumb → backdrop →
+ * primary fallback, and [Dimens.ThumbWidth] — for its nullable [onClick], and for the KDoc above.
  */
 @Composable
 fun ThumbCard(
@@ -59,50 +56,22 @@ fun ThumbCard(
     topStartBadge: String? = null,
     timeChipText: String? = null,
     ratingBadge: Float? = null,
-) {
-    val description =
-        mediaCardDescription(
-            item = item,
-            badge = topStartBadge,
-            timeChipText = timeChipText,
-            ratingBadge = ratingBadge,
-        )
-    Column(
-        modifier =
-            modifier
-                .cardWidth(width)
-                .then(
-                    when {
-                        onClick == null -> Modifier.clearAndSetSemantics {}
-                        onLongClick == null ->
-                            mediaCardSemantics(description = description, selected = selected)
-                                .clickable(role = Role.Button, onClick = onClick)
-
-                        else ->
-                            mediaCardSemantics(description = description, selected = selected)
-                                .selectableCardClick(onClick = onClick, onLongClick = onLongClick)
-                    },
-                ),
-    ) {
-        MediaCardArtwork(
-            imageUrl = item.thumbImageUrl ?: item.backdropImageUrl ?: item.primaryImageUrl,
-            contentDescription = null,
-            aspectRatio = THUMB_ASPECT_RATIO,
-            downloadState = item.downloadState,
-            played = item.userData.played,
-            progress = item.playbackProgress,
-            placeholderIcon = Icons.Outlined.Tv,
+) = MediaCard(
+    shape = CardShape.Thumb,
+    item = item,
+    onClick = onClick,
+    modifier = modifier,
+    width = width,
+    showTitle = showTitle,
+    onLongClick = onLongClick,
+    overlays =
+        CardOverlayFacts(
             selected = selected,
             topStartBadge = topStartBadge,
             timeChipText = timeChipText,
             ratingBadge = ratingBadge,
-        )
-
-        if (showTitle) {
-            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
-        }
-    }
-}
+        ),
+)
 
 @Preview(name = "ThumbCard", showBackground = true, backgroundColor = 0xFF101010)
 @Composable

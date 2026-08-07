@@ -317,6 +317,32 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             requests.shouldBeEmpty()
         }
 
+    @Test
+    fun `a download being streamed for a track keeps streaming it on the television`() =
+        runTest(dispatcher) {
+            // The one fact a transfer must carry across an *open* rather than reset with the session
+            // (audit CPX-5, `ActiveSession.forcedRemote`): this item is on disk, but it is
+            // deliberately coming off the server for a track the file does not hold. A transfer that
+            // dropped the flag would negotiate the receiver's stream against the download again and
+            // silently lose the very track the user went to the server for.
+            local.trackSelectionSucceeds = false
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(PlayerFixtures.downloadedFilm())
+            val model = castViewModel()
+            advanceUntilIdle()
+
+            coEvery { resolver.resolve(any()) } returns
+                AppResult.Success(source.copy(selectedAudioIndex = PlayerFixtures.STREAMED_AUDIO_INDEX))
+            model.selectAudioTrack(PlayerFixtures.STREAMED_AUDIO_INDEX)
+            advanceUntilIdle()
+            val requests = recordResolves()
+
+            framework.onSessionStarted("Living Room TV")
+            advanceUntilIdle()
+
+            requests.last().castTarget shouldBe true
+            requests.last().forceRemote shouldBe true
+        }
+
     // ---- control parity ---------------------------------------------------------------------------
 
     @Test

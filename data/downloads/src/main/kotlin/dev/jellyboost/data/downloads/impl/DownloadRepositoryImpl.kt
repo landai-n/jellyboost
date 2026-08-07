@@ -24,6 +24,7 @@ import dev.jellyboost.data.downloads.storage.DownloadStorage
 import dev.jellyboost.data.downloads.storage.DownloadVolume
 import dev.jellyboost.data.downloads.storage.StorageLocationManager
 import dev.jellyboost.data.downloads.work.DownloadScheduler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -255,7 +256,17 @@ internal class DownloadRepositoryImpl
 
                     locations.select(volumeId)
                     AppResult.Success(Unit)
+                } catch (cancellation: CancellationException) {
+                    // Settings' scope, so this is the user leaving the screen mid-switch. Reporting
+                    // it as `AppError.Storage` would raise "could not change storage" over a screen
+                    // that is already gone and swallow the cancellation structured concurrency is
+                    // owed (audit ARCH-08 / HYG-5).
+                    throw cancellation
                 } catch (error: Exception) {
+                    // Stays broad: the block mixes Room (`allItemIds`), the filesystem (`deleteAll`
+                    // unlinks directories) and WorkManager (`scheduler.stop`), so narrowing to
+                    // `SQLiteException` would let an ejected card crash the app instead of
+                    // answering "could not switch".
                     Timber.e(error, "Could not switch download storage to %s", volumeId)
                     AppResult.Failure(AppError.Storage(error))
                 }
@@ -363,7 +374,12 @@ internal class DownloadRepositoryImpl
                     // Something else may still be queued behind the deleted items.
                     scheduler.ensureRunning()
                     AppResult.Success(freed)
+                } catch (cancellation: CancellationException) {
+                    // See `mutate` below: a cancelled caller is not a failed delete.
+                    throw cancellation
                 } catch (error: Exception) {
+                    // Broad on purpose — `deleter.deleteAll` unlinks files, so this catches an
+                    // ejected volume as much as it catches Room.
                     Timber.e(error, "Could not delete downloads %s", itemIds)
                     AppResult.Failure(AppError.Storage(error))
                 }
@@ -400,7 +416,18 @@ internal class DownloadRepositoryImpl
                 try {
                     block(id)
                     AppResult.Success(Unit)
+                } catch (cancellation: CancellationException) {
+                    // Every mutation runs in the *caller's* coroutine — a ViewModel scope that dies
+                    // with the screen. A cancelled scope is not a failed pause: folding it into
+                    // `AppError.Storage` puts an error on a screen the user has left, spends the
+                    // caller's retry budget on their own back-press, and swallows the cancellation
+                    // the machinery is owed (audit ARCH-08 / HYG-5, same shape as `DownloadEnqueuer`).
+                    throw cancellation
                 } catch (error: Exception) {
+                    // Not narrowed to `SQLiteException` like the enqueuer's: `block` is caller-
+                    // supplied and every caller also drives `DownloadScheduler`, whose WorkManager
+                    // failures are not Room's. A pause that cannot reach WorkManager is still a
+                    // failed pause, not a crash.
                     Timber.e(error, "Download operation failed for %s", itemId)
                     AppResult.Failure(AppError.Storage(error))
                 }
@@ -426,7 +453,13 @@ internal class DownloadRepositoryImpl
                 try {
                     block(ids)
                     AppResult.Success(Unit)
+                } catch (cancellation: CancellationException) {
+                    // The bulk path is the one the audit caught in the act (HYG-5): a torn-down
+                    // scope during *Pause all* logged at E and answered `Failure(Storage)` for an
+                    // ordinary cancel. See [mutate].
+                    throw cancellation
                 } catch (error: Exception) {
+                    // Broad for [mutate]'s reason: the block drives the scheduler as well as Room.
                     Timber.e(error, "Bulk download operation failed for %s", itemIds)
                     AppResult.Failure(AppError.Storage(error))
                 }

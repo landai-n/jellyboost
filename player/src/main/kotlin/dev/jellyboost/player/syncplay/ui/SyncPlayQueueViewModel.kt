@@ -47,6 +47,27 @@ class SyncPlayQueueViewModel
         /** Everything fetched so far, keyed by library item id — never invalidated while open. */
         private val items = MutableStateFlow<Map<UUID, JellyfinItem>>(emptyMap())
 
+        /**
+         * Ids the repository has already refused, so that a queue entry nobody can describe is asked
+         * about **once** rather than once per emission (audit HYG-9).
+         *
+         * Only successes used to be remembered, and the queue re-arrives on every transport action —
+         * the server re-sends the whole `PlayQueueUpdate` when the group merely plays or pauses. An
+         * item the server will not describe (deleted from the library, or not visible to this user)
+         * therefore re-fired `getItem` on every play, pause and seek for as long as the sheet was
+         * open, forever, for a row that can never fill in.
+         *
+         * [unresolvedFor] is what keeps that from being permanent: it holds the queue's *membership*
+         * — its set of library item ids, order and playback state excluded — at the moment those
+         * refusals were collected. When membership changes, the group has queued or unqueued
+         * something and the server's answer may genuinely have changed, so the refusals are dropped
+         * and every unknown id gets one more attempt. A reorder, a play or a pause changes neither
+         * set and re-fetches nothing, which is the case the finding was about.
+         */
+        private var unresolved = emptySet<UUID>()
+
+        private var unresolvedFor = emptySet<UUID>()
+
         private val queue: StateFlow<SyncPlayGroupQueue?> =
             controller.state
                 .map { (it as? SyncPlayState.InGroup)?.queue }
@@ -104,9 +125,20 @@ class SyncPlayQueueViewModel
          * (DECISIONS.md, 2026-07-30), and `getItem` is also the call that answers from the Room cache
          * with no server — which is what a group watching something this device has downloaded needs.
          * Bounded because a long queue would otherwise open a request per row at once.
+         *
+         * Both outcomes are remembered: what was fetched in [items], what was refused in
+         * [unresolved]. Asking again costs a round trip and buys the same `null` title.
          */
         private suspend fun hydrate(itemIds: List<UUID>) {
-            val missing = itemIds.distinct().filterNot { items.value.containsKey(it) }
+            val queued = itemIds.toSet()
+            if (queued != unresolvedFor) {
+                // The group added or dropped something, so this is a different question from the
+                // one that was refused. See [unresolved].
+                unresolved = emptySet()
+                unresolvedFor = queued
+            }
+
+            val missing = itemIds.distinct().filterNot { items.value.containsKey(it) || it in unresolved }
             if (missing.isEmpty()) return
 
             missing.chunked(FETCH_CONCURRENCY).forEach { chunk ->
@@ -118,6 +150,7 @@ class SyncPlayQueueViewModel
                     }
                 val resolved = fetched.mapNotNull { (id, item) -> item?.let { id to it } }
                 if (resolved.isNotEmpty()) items.update { it + resolved }
+                unresolved = unresolved + fetched.filter { (_, item) -> item == null }.map { (id, _) -> id }
             }
         }
 

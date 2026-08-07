@@ -389,3 +389,23 @@ internal enum class PlayerSheet {
     QUALITY,
     SPEED,
 }
+
+/**
+ * The three panels `PlayerScreen` hosts above the controls — **one at a time** (audit CPX-9).
+ *
+ * One nullable field rather than the three independent booleans this used to be, following
+ * `PlayerControls`' own [PlayerSheet] precedent: three booleans are eight states of which only four
+ * are legal, and the other four — a display sheet and a group sheet up together, or all three — were
+ * unreachable only by the accident that an open sheet covers the very chips that open the next one.
+ * Making them unrepresentable is cheaper than relying on that.
+ *
+ * Separate from [PlayerSheet] rather than folded into it because the hosting is genuinely different:
+ * these three are hoisted to the *screen* so they survive the control bar composing itself out four
+ * seconds after it appears, which for the display sheet is the whole reason it exists as the
+ * accessible alternative to the brightness and volume swipes (accessibility audit 2026-08-05, CR-8).
+ */
+internal enum class PlayerPanel {
+    DISPLAY,
+    GROUP,
+    QUEUE,
+}

@@ -130,6 +130,58 @@ while showing untranslated copy); home/detail/player ViewModel tests strengthene
 `shouldContain "server"` to the exact `UiText` value. Docs: ARCHITECTURE.md ("Error copy"),
 features/localization.md. Not device-walked — no visual change in English.
 
+## Audit CPX-7 / CPX-9 / CPX-5 — the player's three complexity findings (2026-08-07 — landed, gate green)
+
+`docs/notes/audit-2026-08-06-quality.md` §3. Three findings in `:player`'s UI layer, all structural
+(no behaviour change intended), all in the same three files, so they went in one pass.
+
+- **CPX-7 — the bottom bar's seven visibility predicates.** They were seven inline `if`s in
+  `PlayerControls.BottomBar` over six `PlayerUiState` fields, interleaved with the chips they
+  guarded. Now a pure `sheetChipSpecs(state): List<SheetChipSpec>` in its own file
+  (`ui/PlayerSheetChips.kt`, with the label/icon/value/open tables and `SheetChipValues`); the bar is
+  a `forEach`. Every predicate is preserved verbatim and enumerated one-per-test.
+  **What asserting it found:** the "fullest bar is five pickers plus the clock" invariant behind
+  `LABELLED_BUTTONS_MIN_WIDTH` (840 dp) is **stale — it is six.** The accessibility audit's display
+  picker (CR-8) landed after the device sweep, and in a SyncPlay group with a queue the row is audio +
+  subtitles + group + queue + display + quality. `MAX_SHEET_CHIPS = 6` is now derived in a test that
+  sweeps all 128 combinations of the rule inputs, and the dp number is deliberately **unchanged** —
+  moving a measured constant on the strength of arithmetic would be inventing a measurement. So:
+  *the threshold is known right for five labelled chips and unverified for six*, on 840 dp–1000 dp,
+  in a group with a queue. **Device walk owed** (see below); the file's KDoc says all of this.
+- **CPX-9 — `PlayerScreen`'s three sheet booleans and its `return@Box`.** `groupSheetVisible` /
+  `queueSheetVisible` / `displaySheetVisible` (8 states, 4 nonsense) are one
+  `var openPanel: PlayerPanel?`, following `PlayerControls`' own `PlayerSheet` precedent, drawn by one
+  exhaustive `when` in a new `PanelHost`; the membership gates stay inside their branches. The PiP
+  early-exit at the old l.210 is inverted into a positive `if (!inPictureInPicture) { … }` around the
+  skipped children, so a sibling appended later cannot be silently dropped in picture-in-picture.
+- **CPX-5 — `PlayerViewModel`'s session-field boxing.** Eight of its sixteen mutable fields were pure
+  temporal coupling; they are now one `private var session: ActiveSession?` (`source`,
+  `pendingAudioIndex`, `pendingSubtitleApply`, `localSource`, `recoverySource`, `forcedRemote`,
+  `stopReported`, `segments`), reassigned as one value in `publish()` with a `updateSession {}` helper
+  that always re-reads. `source` survives as a derived read-only `val` for its ~16 call sites. The two
+  facts that deliberately *outlive* an open — `localSource` (not derived from `source`; a
+  forced-remote track change replaces `source` with the server's copy) and `forcedRemote` (a cast
+  transfer re-asks with it) — now say so in one place instead of by omission. `recoverySource` stays
+  one-shot and is carried, not reset, by `publish`. **Eight fields left out**, each with its reason in
+  KDoc: `metadataLoad` (started before the resolve that would mint the session), `isOnline` (observed
+  before/between/after sessions), `skipModes`/`pipEnabled` (preferences), `screenPresent` (screen),
+  and the three `Job`s — `openJob` in particular outlives its own session by construction, since a
+  session op waits for its *predecessor*. The audit guessed nine; the ninth candidates it named
+  loosely are two of the eight that cannot be boxed.
+
+Tests +18: `SheetChipSpecTest` (12 — each rule, the 128-state sweep deriving `MAX_SHEET_CHIPS`, the
+in-group and solo worst cases, the clock-alone case), `PlayerActiveSessionTest` (5 — the next item
+does not inherit the last one's intro; an item that ended does not spend the next item's stop report;
+the pending audio belongs to the open that resolved it; every control is inert with no session), and
+one in `PlayerViewModelCastTest` (a download being streamed for a track keeps streaming it on the
+television — the `forcedRemote` carry-across-an-open). No existing test weakened; the 49/19/27 of
+`PlayerViewModelTest`/`PlayerTrackPickerTest`/`PlayerViewModelCastTest` all pass unchanged. No
+DECISIONS entry: structural remediation of logged audit findings, no divergence from PLAN.md.
+
+**Owed — one device walk (bottom bar at six pickers).** Join a SyncPlay group with a queue on the
+test tablet in landscape (bar capped at 1000 dp, labels on) and confirm the six chips plus the clock
+do not clip; repeat at font scale 1.0 only, since ≥1.15 already forces icon-only at that width.
+
 ## Accessibility audit + full remediation (2026-08-05 — landed, gate green; TalkBack walk owed)
 
 Full-app a11y audit (report: `docs/audits/accessibility-audit-2026-08-05.md`, ~90 findings)

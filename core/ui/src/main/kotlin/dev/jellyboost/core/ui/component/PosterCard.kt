@@ -22,6 +22,12 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
 
 /**
+ * Lazy-list `contentType` for every [PosterCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * scrolled-off poster node instead of composing a fresh one when the next item is also a poster.
+ */
+const val POSTER_CARD_CONTENT_TYPE = "card-poster"
+
+/**
  * A 2:3 poster card — the default card for movies, series and seasons, matching the poster shape
  * jellyfin-web uses on its home and library screens.
  *

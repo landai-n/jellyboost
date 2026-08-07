@@ -70,6 +70,12 @@ fun libraryIcon(kind: CollectionKind): ImageVector =
     }
 
 /**
+ * Lazy-list `contentType` for every [LibraryCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * scrolled-off tile node instead of composing a fresh one when the next item is also a library.
+ */
+const val LIBRARY_CARD_CONTENT_TYPE = "card-library"
+
+/**
  * A user library tile — the home screen's library row and the Libraries tab.
  *
  * A wide, short glass tile with a glyph rather than the 16:9 artwork card it replaced: a Jellyfin

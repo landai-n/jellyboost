@@ -1,12 +1,7 @@
 package dev.jellyboost.core.ui.component
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import dev.jellyboost.core.common.model.DownloadState
@@ -15,7 +10,6 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
-import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
 
 /**
  * Lazy-list `contentType` for every [PosterCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
@@ -47,6 +41,10 @@ const val POSTER_CARD_CONTENT_TYPE = "card-poster"
  * The whole card is **one** semantics node with an authored description — type, untruncated title,
  * subtitle, progress, rating, download and watched state — plus real `selected` semantics in
  * selection mode. See [mediaCardSemantics] for why everything inside it is silenced.
+ *
+ * The drawing itself is [MediaCard], shared with [ThumbCard]: this signature exists for its four
+ * poster-shaped answers — 2:3 artwork, a film glyph for a missing image, the item's primary image,
+ * and [Dimens.PosterWidth] — and for the KDoc above, which is what a caller reads.
  */
 @Composable
 fun PosterCard(
@@ -60,46 +58,22 @@ fun PosterCard(
     topStartBadge: String? = null,
     timeChipText: String? = null,
     ratingBadge: Float? = null,
-) {
-    val description =
-        mediaCardDescription(
-            item = item,
-            badge = topStartBadge,
-            timeChipText = timeChipText,
-            ratingBadge = ratingBadge,
-        )
-    Column(
-        modifier =
-            modifier
-                .cardWidth(width)
-                .then(mediaCardSemantics(description = description, selected = selected))
-                .then(
-                    if (onLongClick == null) {
-                        Modifier.clickable(role = Role.Button, onClick = onClick)
-                    } else {
-                        Modifier.selectableCardClick(onClick = onClick, onLongClick = onLongClick)
-                    },
-                ),
-    ) {
-        MediaCardArtwork(
-            imageUrl = item.primaryImageUrl,
-            contentDescription = null,
-            aspectRatio = POSTER_ASPECT_RATIO,
-            downloadState = item.downloadState,
-            played = item.userData.played,
-            progress = item.playbackProgress,
-            placeholderIcon = Icons.Outlined.Movie,
+) = MediaCard(
+    shape = CardShape.Poster,
+    item = item,
+    onClick = onClick,
+    modifier = modifier,
+    width = width,
+    showTitle = showTitle,
+    onLongClick = onLongClick,
+    overlays =
+        CardOverlayFacts(
             selected = selected,
             topStartBadge = topStartBadge,
             timeChipText = timeChipText,
             ratingBadge = ratingBadge,
-        )
-
-        if (showTitle) {
-            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
-        }
-    }
-}
+        ),
+)
 
 @Preview(name = "PosterCard", showBackground = true, backgroundColor = 0xFF101010)
 @Composable

@@ -57,8 +57,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -68,6 +66,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.network.model.PublicUserInfo
+import dev.jellyboost.core.ui.component.FieldContent
+import dev.jellyboost.core.ui.component.FieldLabel
+import dev.jellyboost.core.ui.component.FieldState
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.JellyfinTextField
@@ -337,26 +338,30 @@ private fun LoginFormFields(
     // Both credential fields carry the failure, because a rejected sign-in does not say which of
     // the two was wrong — and a field marked invalid with nothing to say about it is worse than
     // one that repeats the screen's sentence (accessibility audit 2026-08-05, CR-2/F2).
-    val errorText = state.error?.let { authErrorText(it) }
+    //
+    // Both also stay *enabled* while the exchange runs (audit F17): disabling the field a TalkBack
+    // user is standing on destroys its node, dropping accessibility focus to the top of the screen
+    // at the exact moment the user wants to hear what happened. `LoginViewModel` ignores edits
+    // while `isSigningIn`, so "enabled" does not mean "mutable" — what is in flight is what was in
+    // the fields when it started, and `FieldState.InFlight` says exactly that to the platform.
+    //
+    // The error wins over the in-flight state, and the two never meet: `LoginViewModel` clears the
+    // error when it starts an exchange and clears `isSigningIn` when it records one.
+    val fieldState =
+        when {
+            state.error != null -> FieldState.Error(authErrorText(state.error))
+            state.isSigningIn -> FieldState.InFlight
+            else -> FieldState.Editable
+        }
 
     JellyfinTextField(
         value = state.username,
         onValueChange = onUsernameChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        // Both credential fields stay enabled while the exchange runs (accessibility audit
-        // 2026-08-05, F17): disabling the field a TalkBack user is standing on destroys its node,
-        // dropping accessibility focus to the top of the screen at the exact moment the user wants
-        // to hear what happened. `LoginViewModel` ignores edits while `isSigningIn`, so "enabled"
-        // does not mean "mutable" — what is in flight is what was in the fields when it started.
-        // `readOnly` says that to the platform too, so the IME does not offer a keyboard for a
-        // field whose contents cannot move.
-        readOnly = state.isSigningIn,
-        isError = state.error != null,
-        label = { Text(text = stringResource(R.string.login_username_label).uppercase()) },
-        labelText = stringResource(R.string.login_username_label),
-        errorMessage = errorText,
-        autofillContentType = ContentType.Username,
+        label = FieldLabel.eyebrow(stringResource(R.string.login_username_label)),
+        state = fieldState,
+        content = FieldContent.Plain(autofill = ContentType.Username),
         // Autocorrect off for the same reason as the server address field: an IME "fixing" an
         // account name produces a sign-in failure the user cannot see the cause of.
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
@@ -367,16 +372,11 @@ private fun LoginFormFields(
         onValueChange = onPasswordChange,
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
-        // Enabled through the sign-in for the same reason the username field is — see above.
-        readOnly = state.isSigningIn,
-        isError = state.error != null,
-        label = { Text(text = stringResource(R.string.login_password_label).uppercase()) },
-        labelText = stringResource(R.string.login_password_label),
-        errorMessage = errorText,
-        password = true,
-        autofillContentType = ContentType.Password,
-        visualTransformation =
-            if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        label = FieldLabel.eyebrow(stringResource(R.string.login_password_label)),
+        state = fieldState,
+        // The node is marked as holding a secret whichever way the eye button is set — revealing
+        // the characters on screen is not a reason for a screen reader to read them out loud.
+        content = FieldContent.Password(revealed = passwordVisible),
         keyboardOptions =
             KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         keyboardActions =

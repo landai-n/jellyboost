@@ -2527,3 +2527,45 @@ DECISIONS entry of the same date for the five judgement calls.
 - Still open from the same audit: H1–H6, HYG-4 proper, and the ARCH/DUP families.
 
 <!-- END quality audit — hygiene wave (2026-08-06) -->
+
+## Quality audit — complexity wave (2026-08-07)
+
+Three tier-3 findings from `docs/notes/audit-2026-08-06-quality.md`, each one a rule that was
+being kept by discipline rather than by the code. Gate green in one run
+(ktlint + detekt + unit tests + `:app:lintDebug` + `assembleDebug`); see DECISIONS.md,
+2026-08-07, for the seven decisions worth recording.
+
+- **CPX-8** — `JellyfinTextField` is 12 parameters, not 19. The four correlated pairs are three
+  value types in a new `core/ui/.../component/FieldSemantics.kt`: `FieldLabel(text, caption)`
+  (the drawn spelling and the spoken one can no longer disagree), `FieldState.Editable /
+  InFlight / Error(message)` (no `isError` without a sentence; no `enabled = false` for an
+  in-flight request — that state is now unrepresentable), `FieldContent.Plain(autofill) /
+  Password(revealed)` (masking and the secret node marking are one choice). 9 new JVM tests pin
+  each variant's mapping; the three instrumented field tests are rewritten onto the new API and
+  assert the same things.
+- **CPX-11/DUP-9** — `PosterCard` and `ThumbCard` are two-line delegations to one internal
+  `MediaCard(shape, …)`, and their reconciled click-and-semantics block is one three-arm `when`.
+  `CardOverlayFacts` replaces the four-value overlay cluster through the chain
+  (`MediaCardArtwork` 12→9 params, `CardOverlays` 8→5). **Public signatures unchanged**, so no
+  screen needed migrating. A new instrumented test pins that the two cards announce an identical
+  item identically.
+- **CPX-12** — `DownloadQueue`'s audio-sidecar clean-up rule is one `withFetchFile {}` `finally`
+  instead of three catch arms, and the 14-line progress lambda's five concerns are a
+  `ProgressPublisher` value (`downloadEssential`/`downloadOne` drop from 6 and 5 parameters to
+  2 and 1). A new `DownloadQueueFetchFileTest` holds the rule's three exits: the part file after
+  a failure, after a cancellation, and an ordinary file's target surviving its own success.
+
+**Known issues / next**
+- **Two `JellyfinTextField` call sites still use the deprecated overload** —
+  `feature/search/.../SearchScreen.kt:224` and `player/.../syncplay/ui/SyncPlayGroupsScreen.kt:515`,
+  both owned by other waves. Each is `labelText = x` → `label = FieldLabel(text = x)`, after
+  which the overload is deleted. The deprecation warning names the fix on every build.
+- **`CardOverlayFacts` is `internal`.** If a screen ever wants to pass the overlay cluster as one
+  value, the public cards can take it — that migration touches `HomeHero.kt`,
+  `ItemDetailScreen.kt` and `EpisodeRow.kt` and should ride with a wave that owns them.
+- **The poster/thumb equivalence test is instrumented**, so it runs at `/milestone`
+  (`connectedDebugAndroidTest`) rather than in `/verify`. This project has no Robolectric, so a
+  composed semantics tree cannot be asserted on the JVM.
+- Still open from the same audit: H1–H6, HYG-4 proper, and the ARCH/DUP families.
+
+<!-- END quality audit — complexity wave (2026-08-07) -->

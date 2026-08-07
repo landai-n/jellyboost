@@ -207,6 +207,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)
 
+    // `JellyboostApplication` builds the process-wide `ImageLoader` (memory + disk cache budgets),
+    // so it names `coil3` types directly. Declared here since `:core:ui` stopped exporting Coil as
+    // `api` (audit ARCH-9) — it was always this module's own dependency, just an undeclared one.
+    implementation(libs.coil.compose)
+
     // Installs the packaged baseline profile into ART on first run. Already arrives transitively
     // via Compose, but the profile is useless without it, so the dependency is declared where the
     // reason for it lives.

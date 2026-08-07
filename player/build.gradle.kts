@@ -42,4 +42,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.okhttp)
     implementation(libs.timber)
+
+    // `TrickplayPreview` builds its own `ImageRequest` (a token-stripped cache key, DECISIONS.md
+    // 2026-07-30/SEC-02), so it names `coil3` types directly. Declared here since `:core:ui`
+    // stopped exporting Coil as `api` (audit ARCH-9).
+    implementation(libs.coil.compose)
 }

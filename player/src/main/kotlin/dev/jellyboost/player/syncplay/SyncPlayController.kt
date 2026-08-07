@@ -1162,44 +1162,50 @@ class SyncPlayController
         /**
          * Makes the player show what the group is on.
          *
-         * Four outcomes: nothing to do (the slot is already open — which is every reorder, removal,
-         * shuffle and repeat change that leaves the playing item alone), ask the app to open a
-         * player (nothing attached), adopt what the host has (this very item is already open, so
-         * reloading it would restart playback for nothing — [adoptOpenItem] still runs the
-         * handshake around it), or run that same buffering/ready handshake around
-         * [SyncPlayPlaybackHost.loadItem].
-         *
-         * The slot, not the item, is the identity: the same episode queued twice is two slots, and a
-         * group jumping from one to the other has to start it again rather than carry on where the
-         * first copy had got to. Adoption is therefore only offered before this controller has
-         * loaded anything of its own — [loadedPlaylistItemId] is `null` on a fresh join and after a
-         * detach, which are exactly the two moments the host might already hold the right item.
+         * The decision itself is pure — [decideReconcile] (audit CPX-15), which owns the
+         * four-outcome rule and the slot-not-item identity; this function only gathers its inputs
+         * and acts on the result, so `loadedPlaylistItemId` has exactly one write site per
+         * outcome.
          */
         private suspend fun reconcile(queue: SyncPlayGroupQueue) {
             val entry = queue.playingEntry
-            if (entry == null) {
-                session.loadedPlaylistItemId = null
-                return
-            }
-            if (entry.playlistItemId == session.loadedPlaylistItemId) {
-                onSameSlotUpdate(entry, queue)
-                return
-            }
+            val snapshot =
+                if (host != null && entry != null && entry.playlistItemId != session.loadedPlaylistItemId) {
+                    // The one branch set that can need the host's reading; a same-slot update must
+                    // not pay the main-thread hop for a snapshot nothing looks at.
+                    hostSnapshot()
+                } else {
+                    null
+                }
+            when (val action = decideReconcile(queue, session.loadedPlaylistItemId, host != null, snapshot)) {
+                is ReconcileAction.None ->
+                    if (action.playingEntry == null) {
+                        session.loadedPlaylistItemId = null
+                    } else {
+                        onSameSlotUpdate(action.playingEntry, queue)
+                    }
 
-            val attached = host
-            if (attached == null) {
-                session.loadedPlaylistItemId = null
-                _launchRequests.tryEmit(SyncPlayLaunchRequest(entry.itemId, queue.startPositionTicks))
-                return
-            }
+                is ReconcileAction.RequestLaunch -> {
+                    session.loadedPlaylistItemId = null
+                    _launchRequests.tryEmit(SyncPlayLaunchRequest(action.entry.itemId, queue.startPositionTicks))
+                }
 
-            val snapshot = hostSnapshot()
-            if (session.loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
-                onEntryOpened(entry)
-                adoptOpenItem(entry, snapshot)
-                return
-            }
+                is ReconcileAction.Adopt -> {
+                    onEntryOpened(action.entry)
+                    adoptOpenItem(action.entry, action.snapshot)
+                }
 
+                is ReconcileAction.Load -> loadEntry(action.entry, queue, snapshot)
+            }
+        }
+
+        /** [ReconcileAction.Load]: the buffering/ready handshake around [SyncPlayPlaybackHost.loadItem]. */
+        private suspend fun loadEntry(
+            entry: SyncPlayQueueEntry,
+            queue: SyncPlayGroupQueue,
+            snapshot: SyncPlayHostSnapshot?,
+        ) {
+            val attached = host ?: return
             session.loadedPlaylistItemId = entry.playlistItemId
             setPhase(SyncPlayPhase.Buffering)
             // A new slot is a new player: what the old one applied means nothing here, and the

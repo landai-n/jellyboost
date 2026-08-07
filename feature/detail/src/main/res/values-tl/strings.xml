@@ -24,8 +24,6 @@
     <string name="detail_type_series">Serye</string>
     <string name="detail_type_season">Season</string>
     <string name="detail_type_episode">Episode</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episode %1$d</string>
     <string name="detail_meta_rating">Rating %1$s</string>
     <string name="detail_meta_rated">klasipikasyon %1$s</string>

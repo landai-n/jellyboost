@@ -98,4 +98,6 @@
     <string name="error_server">Server vrátil chybu.</string>
     <string name="error_server_with_code">Server vrátil chybu (%1$d).</string>
     <string name="error_storage">Nepodařilo se načíst místní data.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

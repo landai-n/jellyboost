@@ -74,4 +74,6 @@
     <string name="error_server">සේවාදායකය දෝෂයක් ලබා දුන්නේය.</string>
     <string name="error_server_with_code">සේවාදායකය දෝෂයක් (%1$d) ලබා දුන්නේය.</string>
     <string name="error_storage">දේශීය දත්ත කියවිය නොහැකි විය.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -25,8 +25,6 @@
     <string name="detail_type_series">தொடர்</string>
     <string name="detail_type_season">சீசன்</string>
     <string name="detail_type_episode">எபிசோட்</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">எபிசோட் %1$d</string>
     <string name="detail_meta_rating">மதிப்பீடு %1$s</string>
     <string name="detail_meta_rated">வயது தரம் %1$s</string>

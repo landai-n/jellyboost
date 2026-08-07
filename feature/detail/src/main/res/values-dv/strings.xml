@@ -25,8 +25,6 @@
     <string name="detail_type_series">ސީރީޒް</string>
     <string name="detail_type_season">ސީޒަން</string>
     <string name="detail_type_episode">އެޕިސޯޑް</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">އެޕިސޯޑް %1$d</string>
     <string name="detail_meta_rating">ރޭޓިން %1$s</string>
     <string name="detail_meta_rated">އުމުރު ރޭޓިން %1$s</string>

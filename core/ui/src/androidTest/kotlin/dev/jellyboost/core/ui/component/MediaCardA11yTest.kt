@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
@@ -84,7 +85,14 @@ class MediaCardA11yTest {
 
         val episode = rule.activity.getString(R.string.media_card_type_episode)
         val progress = rule.activity.getString(R.string.media_card_progress, HALF_PERCENT)
-        assertEquals("$episode, $SERIES_TITLE, S1:E4 · $EPISODE_TITLE, $progress", rule.onlyCardDescription())
+        // Read from the resource, not spelled here: the card now *speaks* the same localized
+        // "S1 · E4" it *draws*, where it used to speak a hardcoded "S1:E4" while drawing the other
+        // (audit DUP-7). Spelling it in the test would re-create exactly the drift being fixed.
+        val number = rule.activity.getString(R.string.media_episode_label, SEASON_NUMBER, EPISODE_NUMBER)
+        assertEquals(
+            "$episode, $SERIES_TITLE, $number${Separators.DOT}$EPISODE_TITLE, $progress",
+            rule.onlyCardDescription(),
+        )
         checks.assertClean()
     }
 
@@ -148,6 +156,9 @@ class MediaCardA11yTest {
         const val HALF_POSITION_TICKS = 36_000_000_000L
         const val HALF_PERCENT = 50
 
+        const val SEASON_NUMBER = 1
+        const val EPISODE_NUMBER = 4
+
         val MOVIE =
             JellyfinItem(
                 id = "movie-1",
@@ -162,8 +173,8 @@ class MediaCardA11yTest {
                 name = EPISODE_TITLE,
                 type = ItemType.EPISODE,
                 seriesName = SERIES_TITLE,
-                parentIndexNumber = 1,
-                indexNumber = 4,
+                parentIndexNumber = SEASON_NUMBER,
+                indexNumber = EPISODE_NUMBER,
                 runTimeTicks = RUNTIME_TICKS,
                 userData = UserData(playbackPositionTicks = HALF_POSITION_TICKS),
             )

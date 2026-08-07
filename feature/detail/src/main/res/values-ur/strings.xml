@@ -25,8 +25,6 @@
     <string name="detail_type_series">سیریز</string>
     <string name="detail_type_season">سیزن</string>
     <string name="detail_type_episode">قسط</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">قسط %1$d</string>
     <string name="detail_meta_rating">درجہ بندی %1$s</string>
     <string name="detail_meta_rated">عمر کی درجہ بندی %1$s</string>

@@ -42,11 +42,11 @@ class MediaCardFactsTest {
             MediaCardFacts(
                 title = "Westworld",
                 typeLabel = "Episode",
-                subtitle = "S1:E10 · The Bicameral Mind",
+                subtitle = "S1 · E10 · The Bicameral Mind",
                 badge = "S1 · E10",
             ).describe()
 
-        description shouldBe "Episode, Westworld, S1:E10 · The Bicameral Mind"
+        description shouldBe "Episode, Westworld, S1 · E10 · The Bicameral Mind"
     }
 
     @Test
@@ -126,5 +126,47 @@ class MediaCardFactsTest {
         itemTypeLabelRes(ItemType.COLLECTION_FOLDER).shouldBeNull()
         itemTypeLabelRes(ItemType.FOLDER).shouldBeNull()
         itemTypeLabelRes(ItemType.UNKNOWN).shouldBeNull()
+    }
+
+    // ---- the shared join (audit DUP-8) -----------------------------------------------------------
+
+    @Test
+    fun `parts are joined by a pause, not by the punctuation a row draws`() {
+        describeParts("Rating 8.6", "2016", "rated TV-MA") shouldBe "Rating 8.6, 2016, rated TV-MA"
+    }
+
+    @Test
+    fun `a blank part is dropped rather than punctuated around`() {
+        // The home hero's defect: a certificate the server answered "" for was announced as
+        // "Rated , 22 minutes left", because that one assembler skipped the trim.
+        describeParts("S1 · E4", "", "22 minutes left") shouldBe "S1 · E4, 22 minutes left"
+        describeParts("S1 · E4", "   ", "22 minutes left") shouldBe "S1 · E4, 22 minutes left"
+    }
+
+    @Test
+    fun `a null part is dropped like a blank one`() {
+        describeParts("2016", null, "4 seasons") shouldBe "2016, 4 seasons"
+    }
+
+    @Test
+    fun `surrounding whitespace is trimmed off a part that is kept`() {
+        describeParts("  2016  ", " 4 seasons ") shouldBe "2016, 4 seasons"
+    }
+
+    @Test
+    fun `a repeated part is said once`() {
+        describeParts("Westworld", "Westworld", "2016") shouldBe "Westworld, 2016"
+    }
+
+    @Test
+    fun `a part that is only a duplicate after trimming still collapses`() {
+        describeParts("Westworld", "  Westworld  ") shouldBe "Westworld"
+    }
+
+    @Test
+    fun `nothing to say says nothing`() {
+        describeParts() shouldBe ""
+        describeParts(null, "", "  ") shouldBe ""
+        describeParts(emptyList()) shouldBe ""
     }
 }

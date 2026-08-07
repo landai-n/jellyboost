@@ -59,6 +59,7 @@ import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.THUMB_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.libraryIcon
+import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
@@ -420,7 +421,7 @@ private fun LazyListScope.resumeRow(
                 item = item,
                 onClick = { actions.onItemClick(item) },
                 width = cardWidth,
-                topStartBadge = item.episodeLabel,
+                topStartBadge = item.episodeNumberLabel(),
                 timeChipText = item.remainingMinutes?.let { stringResource(R.string.home_time_left_short, it) },
             )
         }
@@ -445,7 +446,7 @@ private fun LazyListScope.nextUpRow(
                 item = item,
                 onClick = { actions.onItemClick(item) },
                 width = cardWidth,
-                topStartBadge = item.episodeLabel,
+                topStartBadge = item.episodeNumberLabel(),
             )
         }
     }

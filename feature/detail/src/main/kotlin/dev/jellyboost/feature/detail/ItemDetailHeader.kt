@@ -77,6 +77,9 @@ import dev.jellyboost.core.ui.component.InfoPillChip
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.MPillBadge
 import dev.jellyboost.core.ui.component.PrimaryPillButton
+import dev.jellyboost.core.ui.component.describeParts
+import dev.jellyboost.core.ui.text.episodeNumberLabel
+import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -408,11 +411,10 @@ private fun MetaRow(
 /**
  * The metadata row as one sentence, in the order the row draws it.
  *
- * A plain function, so what it drops and how it punctuates are held still by a JVM test rather than
- * by a device: blanks are dropped (a server that answers `""` for a certificate must not produce a
- * dangling "rated"), and the parts are separated by a comma rather than the interpunct the row
- * draws — `·` is either read out as "dot" or swallowed entirely, where a comma is a pause in every
- * screen reader.
+ * A plain function, so the *order* is held still by a JVM test rather than by a device. The join
+ * itself — blanks dropped so a server that answers `""` for a certificate cannot produce a dangling
+ * "rated", duplicates collapsed, and a comma rather than the interpunct the row draws — is
+ * `:core:ui`'s [describeParts], shared with the cards and the home hero (audit DUP-8).
  *
  * @param rating the community rating, already qualified ("Rating 8.6") and formatted.
  * @param certificate the age certificate, already qualified ("rated TV-MA").
@@ -424,13 +426,7 @@ internal fun metaRowDescription(
     year: String?,
     certificate: String?,
     facts: List<String>,
-): String =
-    (listOf(rating, year, certificate) + facts)
-        .mapNotNull { part -> part?.trim()?.takeIf { it.isNotEmpty() } }
-        .joinToString(DESCRIPTION_SEPARATOR)
-
-/** A comma and a space, where the row draws a gap or an interpunct — see [metaRowDescription]. */
-internal const val DESCRIPTION_SEPARATOR = ", "
+): String = describeParts(listOf(rating, year, certificate) + facts)
 
 /** The starred community rating — the one part of the metadata line the refresh draws in colour. */
 @Composable
@@ -881,26 +877,6 @@ private fun JellyfinItem.typeEyebrow(): String? {
         }
     return stringResource(label).uppercase()
 }
-
-/** `S1 · E4` — the refresh's spacing of `JellyfinItem.episodeLabel`, used in the Play button. */
-@Composable
-internal fun JellyfinItem.episodeNumberLabel(): String? {
-    val episode = indexNumber ?: return null
-    val season = parentIndexNumber
-    return if (season != null) {
-        stringResource(R.string.detail_episode_label, season, episode)
-    } else {
-        stringResource(R.string.detail_episode_label_short, episode)
-    }
-}
-
-/** `S1:E4 · Trompe L'Oeil` for an episode, the series name for a season, nothing otherwise. */
-private fun JellyfinItem.subtitleLine(): String? =
-    when (type) {
-        ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(Separators.DOT).ifBlank { null }
-        ItemType.SEASON -> seriesName
-        else -> null
-    }
 
 /** `Directed by X · A, B, C` — the one-line version of the credits the cast rail draws in full. */
 @Composable

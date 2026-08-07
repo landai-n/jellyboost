@@ -80,4 +80,6 @@
     <string name="error_server">De server gaf een fout terug.</string>
     <string name="error_server_with_code">De server gaf een fout terug (%1$d).</string>
     <string name="error_storage">Kon lokale gegevens niet lezen.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

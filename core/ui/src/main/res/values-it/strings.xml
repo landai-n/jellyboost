@@ -74,4 +74,6 @@
     <string name="error_server">Il server ha restituito un errore.</string>
     <string name="error_server_with_code">Il server ha restituito un errore (%1$d).</string>
     <string name="error_storage">Impossibile leggere i dati locali.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -14,6 +14,7 @@ import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.R
+import dev.jellyboost.core.ui.text.subtitleLine
 import kotlin.math.roundToInt
 
 /**
@@ -42,7 +43,7 @@ data class MediaCardFacts(
     val title: String,
     /** "Movie", "Episode", "Library"… `null` for a kind with no useful word (a plain folder). */
     val typeLabel: String? = null,
-    /** The card's second line: a year, `S1:E4 · Episode title`, an item count. */
+    /** The card's second line: a year, `S1 · E4 · Episode title`, an item count. */
     val subtitle: String? = null,
     /** The top-left overlay badge — "S1 · E10", "4K". Announced only when there is no [subtitle]. */
     val badge: String? = null,
@@ -56,25 +57,48 @@ data class MediaCardFacts(
 private const val DESCRIPTION_SEPARATOR = ", "
 
 /**
- * The sentence itself: type, title, subtitle, badge, progress, then state.
+ * Joins facts into the one sentence a merged accessibility node says.
  *
- * The two rules worth knowing:
- * - the [MediaCardFacts.badge] is dropped when there is a [MediaCardFacts.subtitle], because the
- *   badge is a *shorter* spelling of what the subtitle already said on every card that has both
- *   (`S1 · E10` beside `S1:E4 · The Bicameral Mind`);
- * - identical parts collapse, so a card whose subtitle repeats its title says it once.
+ * Three surfaces assembled a spoken sentence from a handful of nullable facts — a card, the detail
+ * header's metadata row, and the home hero's meta line — and all three had to know the same three
+ * things. They had drifted into three different answers (audit DUP-8), so the rule is stated once,
+ * here:
+ *
+ * - **A comma and a space between parts.** It is a *pause* in every screen reader, where the row
+ *   draws a gap or an interpunct. Neither of those is punctuation a synthesizer honours.
+ * - **Blanks are dropped, not spoken.** A fact that is present but empty — a certificate the
+ *   server returned as `""` — used to become a bare comma: the home hero announced
+ *   "Rated , 22 minutes left", which is the defect this join fixes for it.
+ * - **Identical parts collapse.** A card whose subtitle repeats its title says it once.
  */
-fun MediaCardFacts.describe(): String =
-    buildList {
-        add(typeLabel)
-        add(title)
-        add(subtitle)
-        if (subtitle.isNullOrBlank()) add(badge)
-        add(progressLabel)
-        addAll(stateLabels)
-    }.mapNotNull { part -> part?.trim()?.takeIf { it.isNotEmpty() } }
+fun describeParts(parts: List<String?>): String =
+    parts
+        .mapNotNull { part -> part?.trim()?.takeIf { it.isNotEmpty() } }
         .distinct()
         .joinToString(DESCRIPTION_SEPARATOR)
+
+/** [describeParts] without the list ceremony. */
+fun describeParts(vararg parts: String?): String = describeParts(parts.toList())
+
+/**
+ * The sentence itself: type, title, subtitle, badge, progress, then state.
+ *
+ * The one rule of its own, on top of what [describeParts] does: the [MediaCardFacts.badge] is
+ * dropped when there is a [MediaCardFacts.subtitle], because the badge is a *shorter* spelling
+ * of what the subtitle already said on every card that has both (`S1 · E10` beside
+ * `S1 · E4 · The Bicameral Mind`).
+ */
+fun MediaCardFacts.describe(): String =
+    describeParts(
+        buildList {
+            add(typeLabel)
+            add(title)
+            add(subtitle)
+            if (subtitle.isNullOrBlank()) add(badge)
+            add(progressLabel)
+            addAll(stateLabels)
+        },
+    )
 
 /**
  * Playback progress as whole percent, which is how it is spoken.
@@ -143,7 +167,9 @@ internal fun mediaCardDescription(
         MediaCardFacts(
             title = item.displayTitle,
             typeLabel = itemTypeLabelRes(item.type)?.let { stringResource(it) },
-            subtitle = item.displaySubtitle,
+            // The localized form, which is the one the card *draws* — before this the card drew
+            // "S1 · E4" and spoke "S1:E4" (audit DUP-7).
+            subtitle = item.subtitleLine(),
             badge = badge,
             progressLabel =
                 timeChipText

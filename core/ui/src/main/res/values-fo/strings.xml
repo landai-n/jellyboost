@@ -80,4 +80,6 @@
     <string name="error_server">Ambætarin gav eina villu aftur.</string>
     <string name="error_server_with_code">Ambætarin gav eina villu aftur (%1$d).</string>
     <string name="error_storage">Kundi ikki lesa staðbundnu dátuna.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

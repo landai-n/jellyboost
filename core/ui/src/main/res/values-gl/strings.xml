@@ -74,4 +74,6 @@
     <string name="error_server">O servidor devolveu un erro.</string>
     <string name="error_server_with_code">O servidor devolveu un erro (%1$d).</string>
     <string name="error_storage">Non foi posible ler os datos locais.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

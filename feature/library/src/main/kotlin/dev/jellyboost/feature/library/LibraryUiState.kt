@@ -91,8 +91,12 @@ data class LibraryUiState(
          * The grid lists top-level titles, whatever kind of library it is: a movie library answers
          * with movies and a TV library with series, so one type list serves both and the route does
          * not have to carry the collection kind.
+         *
+         * [ItemType.LIBRARY_TILE_TYPES] (DUP-11): shared with `:data`'s tile-count query, which
+         * projects the same list onto `BaseItemKind` (`OnlineJellyfinRepository.LIBRARY_COUNT_TYPES`)
+         * since `:data` cannot depend on this feature module.
          */
-        val GRID_ITEM_TYPES = listOf(ItemType.MOVIE, ItemType.SERIES)
+        val GRID_ITEM_TYPES = ItemType.LIBRARY_TILE_TYPES
     }
 }
 

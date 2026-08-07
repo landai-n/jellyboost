@@ -265,26 +265,7 @@ private fun QueueRow(
             contentScale = ContentScale.Crop,
         )
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                // Until the item is fetched the row still has to say *something*, so the queue's
-                // shape is readable before the last round trip lands.
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            row.subtitle?.let { subtitle ->
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
+        QueueRowLabels(title = title, subtitle = row.subtitle, modifier = Modifier.weight(1f))
 
         if (row.isPlaying) {
             Icon(
@@ -294,24 +275,77 @@ private fun QueueRow(
             )
         }
 
-        IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowUpward,
-                contentDescription = stringResource(R.string.player_syncplay_queue_move_up_item, title),
+        QueueRowActions(
+            title = title,
+            canMoveUp = canMoveUp,
+            canMoveDown = canMoveDown,
+            onMoveUp = onMoveUp,
+            onMoveDown = onMoveDown,
+            onRemove = onRemove,
+        )
+    }
+}
+
+@Composable
+private fun QueueRowLabels(
+    title: String,
+    subtitle: String?,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            // Until the item is fetched the row still has to say *something*, so the queue's
+            // shape is readable before the last round trip lands.
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        subtitle?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowDownward,
-                contentDescription = stringResource(R.string.player_syncplay_queue_move_down_item, title),
-            )
-        }
-        IconButton(onClick = onRemove) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = stringResource(R.string.player_syncplay_queue_remove_item, title),
-            )
-        }
+    }
+}
+
+/**
+ * Reorder and remove.
+ *
+ * @param title every row's three buttons used to announce the same three words, so a queue of ten
+ *   episodes was thirty identical "Move up" stops with nothing to tell them apart (audit A11Y-P-18).
+ */
+@Composable
+private fun QueueRowActions(
+    title: String,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowUpward,
+            contentDescription = stringResource(R.string.player_syncplay_queue_move_up_item, title),
+        )
+    }
+    IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowDownward,
+            contentDescription = stringResource(R.string.player_syncplay_queue_move_down_item, title),
+        )
+    }
+    IconButton(onClick = onRemove) {
+        Icon(
+            imageVector = Icons.Outlined.Delete,
+            contentDescription = stringResource(R.string.player_syncplay_queue_remove_item, title),
+        )
     }
 }
 

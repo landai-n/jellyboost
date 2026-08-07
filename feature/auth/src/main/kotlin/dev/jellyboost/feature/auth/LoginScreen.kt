@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -212,77 +213,11 @@ private fun LoginContent(
 ) {
     AuthScreenScaffold(
         header = { compact ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-            ) {
-                JellyboostLogo(
-                    size = InlineLogoSize,
-                    contentDescription = stringResource(R.string.auth_logo_description),
-                )
-                Text(
-                    text = state.serverName,
-                    style = if (compact) ServerNameStyleCompact else ServerNameStyle,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text =
-                        state.serverVersion
-                            ?.let { version -> stringResource(R.string.login_server_version, version) }
-                            ?: stringResource(R.string.login_server_version_unknown),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            if (state.isLoadingContext) {
-                // Bar and caption as one polite live region (accessibility audit 2026-08-05, F4):
-                // the screen arrives already loading, and until this the only sign of it was a
-                // moving bar. The inner spacing repeats the enclosing pane's own gap, so grouping
-                // the two into one node leaves the layout exactly where it was.
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-                    verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
-                ) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                    Text(
-                        text = stringResource(R.string.login_loading),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            state.loginDisclaimer?.let { disclaimer ->
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                ) {
-                    Text(
-                        text = disclaimer,
-                        modifier = Modifier.padding(Dimens.SpaceLarge),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            if (state.publicUsers.isNotEmpty()) {
-                PublicUsersRow(
-                    users = state.publicUsers,
-                    avatarUrlFor = state::avatarUrlFor,
-                    // Selection is derived, not stored: picking a user pre-fills the username,
-                    // so the highlighted profile is simply the one the field currently names.
-                    selectedName = state.username,
-                    onUserSelected = onPublicUserSelected,
-                    compact = compact,
-                )
-            }
+            LoginHeader(
+                state = state,
+                compact = compact,
+                onPublicUserSelected = onPublicUserSelected,
+            )
         },
         modifier = modifier,
     ) {
@@ -313,6 +248,101 @@ private fun LoginContent(
 
     state.quickConnect?.let { quickConnect ->
         QuickConnectDialog(state = quickConnect, onDismiss = onCancelQuickConnect)
+    }
+}
+
+/**
+ * Everything above the sign-in card: which server this is, whether its context is still loading,
+ * its administrator's disclaimer, and the profiles it publishes.
+ *
+ * @param compact the width class [AuthScreenScaffold] resolves; the server name and the profile row
+ *   are the two pieces that change size with it.
+ */
+@Composable
+private fun ColumnScope.LoginHeader(
+    state: LoginUiState,
+    compact: Boolean,
+    onPublicUserSelected: (PublicUserInfo) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
+    ) {
+        JellyboostLogo(
+            size = InlineLogoSize,
+            contentDescription = stringResource(R.string.auth_logo_description),
+        )
+        Text(
+            text = state.serverName,
+            style = if (compact) ServerNameStyleCompact else ServerNameStyle,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            text =
+                state.serverVersion
+                    ?.let { version -> stringResource(R.string.login_server_version, version) }
+                    ?: stringResource(R.string.login_server_version_unknown),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    if (state.isLoadingContext) {
+        LoginContextLoading()
+    }
+
+    state.loginDisclaimer?.let { disclaimer ->
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ) {
+            Text(
+                text = disclaimer,
+                modifier = Modifier.padding(Dimens.SpaceLarge),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
+    if (state.publicUsers.isNotEmpty()) {
+        PublicUsersRow(
+            users = state.publicUsers,
+            avatarUrlFor = state::avatarUrlFor,
+            // Selection is derived, not stored: picking a user pre-fills the username,
+            // so the highlighted profile is simply the one the field currently names.
+            selectedName = state.username,
+            onUserSelected = onPublicUserSelected,
+            compact = compact,
+        )
+    }
+}
+
+/**
+ * "Loading…" while the server's context is fetched.
+ *
+ * Bar and caption are one polite live region (accessibility audit 2026-08-05, F4): the screen
+ * arrives already loading, and until this the only sign of it was a moving bar. The inner spacing
+ * repeats the enclosing pane's own gap, so grouping the two into one node leaves the layout exactly
+ * where it was.
+ */
+@Composable
+private fun LoginContextLoading() {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
+    ) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        Text(
+            text = stringResource(R.string.login_loading),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -367,36 +397,15 @@ private fun LoginFormFields(
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Next),
     )
 
-    JellyfinTextField(
+    LoginPasswordField(
         value = state.password,
         onValueChange = onPasswordChange,
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        label = FieldLabel.eyebrow(stringResource(R.string.login_password_label)),
-        state = fieldState,
-        // The node is marked as holding a secret whichever way the eye button is set — revealing
-        // the characters on screen is not a reason for a screen reader to read them out loud.
-        content = FieldContent.Password(revealed = passwordVisible),
-        keyboardOptions =
-            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-        keyboardActions =
-            KeyboardActions(
-                onDone = {
-                    keyboardController?.hide()
-                    onSignIn()
-                },
-            ),
-        trailingIcon = {
-            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                Icon(
-                    imageVector =
-                        if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription =
-                        stringResource(
-                            if (passwordVisible) R.string.login_hide_password else R.string.login_show_password,
-                        ),
-                )
-            }
+        fieldState = fieldState,
+        revealed = passwordVisible,
+        onToggleReveal = { passwordVisible = !passwordVisible },
+        onDone = {
+            keyboardController?.hide()
+            onSignIn()
         },
     )
 
@@ -413,13 +422,29 @@ private fun LoginFormFields(
 
     state.error?.let { error -> AuthErrorBlock(message = error) }
 
-    if (state.quickConnectEnabled) {
+    LoginSecondaryActions(
+        quickConnectEnabled = state.quickConnectEnabled,
+        quickConnectAllowed = !state.isSigningIn,
+        onStartQuickConnect = onStartQuickConnect,
+        onChangeServer = onChangeServer,
+    )
+}
+
+/** Below the sign-in button: Quick Connect where the server offers it, and the way back out. */
+@Composable
+private fun LoginSecondaryActions(
+    quickConnectEnabled: Boolean,
+    quickConnectAllowed: Boolean,
+    onStartQuickConnect: () -> Unit,
+    onChangeServer: () -> Unit,
+) {
+    if (quickConnectEnabled) {
         OrDivider()
         GhostPillButton(
             text = stringResource(R.string.login_quick_connect),
             onClick = onStartQuickConnect,
             modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSigningIn,
+            enabled = quickConnectAllowed,
         )
     }
 
@@ -430,6 +455,46 @@ private fun LoginFormFields(
             color = MaterialTheme.colorScheme.primary,
         )
     }
+}
+
+/**
+ * The password field and the eye button that reveals it.
+ *
+ * @param revealed whether the characters are drawn; the node is marked as holding a secret either
+ *   way — showing the password on screen is not a reason for a screen reader to read it out loud.
+ */
+@Composable
+private fun LoginPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    fieldState: FieldState,
+    revealed: Boolean,
+    onToggleReveal: () -> Unit,
+    onDone: () -> Unit,
+) {
+    JellyfinTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        label = FieldLabel.eyebrow(stringResource(R.string.login_password_label)),
+        state = fieldState,
+        content = FieldContent.Password(revealed = revealed),
+        keyboardOptions =
+            KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+        trailingIcon = {
+            IconButton(onClick = onToggleReveal) {
+                Icon(
+                    imageVector = if (revealed) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription =
+                        stringResource(
+                            if (revealed) R.string.login_hide_password else R.string.login_show_password,
+                        ),
+                )
+            }
+        },
+    )
 }
 
 /** `——— OR ———`: a centred label with a hairline fading out to each side. */
@@ -547,30 +612,7 @@ private fun PublicUserAvatar(
                         .clip(CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                if (avatarUrl == null) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = user.name.take(1).uppercase(),
-                            // Muted: the initial is a drawing of the name, and the name itself is
-                            // right below inside the same merged node. Spoken, it was the whole bug.
-                            modifier = Modifier.clearAndSetSemantics {},
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-                } else {
-                    JellyfinAsyncImage(
-                        url = avatarUrl,
-                        // Decorative now: the name Text below is part of this node's merged
-                        // description, so describing the picture too says the name twice.
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        placeholderIcon = null,
-                    )
-                }
+                AvatarFace(name = user.name, avatarUrl = avatarUrl)
             }
         }
         Text(
@@ -582,6 +624,40 @@ private fun PublicUserAvatar(
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
+        )
+    }
+}
+
+/**
+ * What fills the avatar ring: the user's profile picture, or their initial on a solid disc.
+ *
+ * Both are decorative. The name is written below, inside the same merged node, so describing the
+ * picture would say the name twice — and the *initial*, spoken, was the whole of the audit bug this
+ * row's semantics were rewritten for: "C", not "claude".
+ */
+@Composable
+private fun AvatarFace(
+    name: String,
+    avatarUrl: String?,
+) {
+    if (avatarUrl == null) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = name.take(1).uppercase(),
+                modifier = Modifier.clearAndSetSemantics {},
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        }
+    } else {
+        JellyfinAsyncImage(
+            url = avatarUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            placeholderIcon = null,
         )
     }
 }

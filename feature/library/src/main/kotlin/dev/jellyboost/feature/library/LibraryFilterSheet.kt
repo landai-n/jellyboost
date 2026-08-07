@@ -102,23 +102,7 @@ private fun FilterSheetContent(
             modifier = Modifier.semantics { heading() },
         )
 
-        FilterSection(title = stringResource(R.string.library_filters_played)) {
-            ToggleChip(
-                label = stringResource(R.string.library_filters_played_any),
-                selected = draft.isPlayed == null,
-                onClick = { onDraftChange(draft.copy(isPlayed = null)) },
-            )
-            ToggleChip(
-                label = stringResource(R.string.library_filters_played_yes),
-                selected = draft.isPlayed == true,
-                onClick = { onDraftChange(draft.copy(isPlayed = true)) },
-            )
-            ToggleChip(
-                label = stringResource(R.string.library_filters_played_no),
-                selected = draft.isPlayed == false,
-                onClick = { onDraftChange(draft.copy(isPlayed = false)) },
-            )
-        }
+        PlayedFilterSection(draft = draft, onDraftChange = onDraftChange)
 
         if (facets.genres.isNotEmpty()) {
             FilterSection(title = stringResource(R.string.library_filters_genres)) {
@@ -161,6 +145,34 @@ private fun FilterSheetContent(
             Spacer(modifier = Modifier.width(Dimens.SpaceSmall))
             PrimaryPillButton(text = stringResource(R.string.library_filters_apply), onClick = onApply, small = true)
         }
+    }
+}
+
+/**
+ * The one tri-state facet: any / played / unplayed. Unlike genres and years it is not derived from
+ * the library's contents, so it is always drawn and its three chips are spelled out here.
+ */
+@Composable
+private fun PlayedFilterSection(
+    draft: FilterOptions,
+    onDraftChange: (FilterOptions) -> Unit,
+) {
+    FilterSection(title = stringResource(R.string.library_filters_played)) {
+        ToggleChip(
+            label = stringResource(R.string.library_filters_played_any),
+            selected = draft.isPlayed == null,
+            onClick = { onDraftChange(draft.copy(isPlayed = null)) },
+        )
+        ToggleChip(
+            label = stringResource(R.string.library_filters_played_yes),
+            selected = draft.isPlayed == true,
+            onClick = { onDraftChange(draft.copy(isPlayed = true)) },
+        )
+        ToggleChip(
+            label = stringResource(R.string.library_filters_played_no),
+            selected = draft.isPlayed == false,
+            onClick = { onDraftChange(draft.copy(isPlayed = false)) },
+        )
     }
 }
 

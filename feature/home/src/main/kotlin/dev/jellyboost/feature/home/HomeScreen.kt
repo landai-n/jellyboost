@@ -198,28 +198,12 @@ private fun HomeRows(
                 ),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
         ) {
-            if (hero != null) {
-                item(key = SECTION_HERO, contentType = ROW_HERO) {
-                    HomeHero(
-                        item = hero,
-                        wide = wide,
-                        height = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale),
-                        onResume = { actions.onPlay(hero.id, hero.userData.playbackPositionTicks) },
-                        onDetails = { actions.onItemClick(hero) },
-                        // The rows below a wide banner come to rest inside its faded bottom edge —
-                        // the mocks' -48dp rail. The item reports itself that much shorter (plus the
-                        // column's own gap, which still applies) rather than offsetting what follows
-                        // it, which a lazy list has no way to express: an item can only be placed
-                        // after the one before it ends.
-                        modifier =
-                            if (wide) {
-                                Modifier.reportShorterBy(HeroRailOverlap + Dimens.SpaceExtraLarge)
-                            } else {
-                                Modifier
-                            },
-                    )
-                }
-            }
+            heroRow(
+                hero = hero,
+                wide = wide,
+                height = heroHeight(wide = wide, viewportHeight = maxHeight, fontScale = fontScale),
+                actions = actions,
+            )
 
             // The order and the presence of every row is the user's, read from the server (see
             // `HomeLayoutRepository`); each row itself is unchanged. Sections this app has no row for
@@ -285,6 +269,40 @@ private fun Modifier.reportShorterBy(amount: Dp): Modifier =
         val height = (placeable.height - amount.roundToPx()).coerceAtLeast(0)
         layout(placeable.width, height) { placeable.place(0, 0) }
     }
+
+/**
+ * The banner at the top of the column: the first *Continue watching* card, drawn full-bleed.
+ *
+ * @param hero `null` when there is nothing to resume, in which case the column simply starts with
+ *   its own top padding and no item is emitted.
+ */
+private fun LazyListScope.heroRow(
+    hero: JellyfinItem?,
+    wide: Boolean,
+    height: Dp,
+    actions: HomeActions,
+) {
+    if (hero == null) return
+    item(key = SECTION_HERO, contentType = ROW_HERO) {
+        HomeHero(
+            item = hero,
+            wide = wide,
+            height = height,
+            onResume = { actions.onPlay(hero.id, hero.userData.playbackPositionTicks) },
+            onDetails = { actions.onItemClick(hero) },
+            // The rows below a wide banner come to rest inside its faded bottom edge — the mocks'
+            // -48dp rail. The item reports itself that much shorter (plus the column's own gap,
+            // which still applies) rather than offsetting what follows it, which a lazy list has no
+            // way to express: an item can only be placed after the one before it ends.
+            modifier =
+                if (wide) {
+                    Modifier.reportShorterBy(HeroRailOverlap + Dimens.SpaceExtraLarge)
+                } else {
+                    Modifier
+                },
+        )
+    }
+}
 
 /** *My Media* as tiles — the wide layout's shape for the libraries row. */
 private fun LazyListScope.librariesRow(

@@ -27,7 +27,7 @@ import javax.inject.Singleton
  * @property directory the app-specific directory on the volume; the downloads root is a
  *   sub-directory of it, so a volume is never written to outside the app's own space.
  */
-data class DownloadVolume(
+internal data class DownloadVolume(
     val id: String,
     val isPrimary: Boolean,
     val isRemovable: Boolean,
@@ -50,7 +50,7 @@ data class DownloadVolume(
  * can be exercised on the JVM against temporary directories. [AndroidStorageVolumeProvider] is the
  * only production implementation.
  */
-interface StorageVolumeProvider {
+internal interface StorageVolumeProvider {
     /**
      * Every currently **mounted** volume, primary first.
      *
@@ -62,7 +62,7 @@ interface StorageVolumeProvider {
 
 /** [StorageVolumeProvider] over `getExternalFilesDirs` and the platform's `StorageManager`. */
 @Singleton
-class AndroidStorageVolumeProvider
+internal class AndroidStorageVolumeProvider
     @Inject
     constructor(
         @ApplicationContext private val context: Context,

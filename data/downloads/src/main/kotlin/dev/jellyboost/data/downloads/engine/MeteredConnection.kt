@@ -18,14 +18,14 @@ import javax.inject.Singleton
  *
  * An interface so the engine's unit tests can dictate the answer on the JVM.
  */
-fun interface MeteredConnection {
+internal fun interface MeteredConnection {
     /** `true` while the active network is metered (mobile data, a metered hotspot). */
     fun isMetered(): Boolean
 }
 
 /** [MeteredConnection] off the platform's [ConnectivityManager]. */
 @Singleton
-class AndroidMeteredConnection
+internal class AndroidMeteredConnection
     @Inject
     constructor(
         @ApplicationContext private val context: Context,

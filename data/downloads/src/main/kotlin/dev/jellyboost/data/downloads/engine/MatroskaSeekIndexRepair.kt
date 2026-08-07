@@ -79,7 +79,7 @@ import javax.inject.Singleton
  * bug and one that no longer parses is a lost gigabyte.
  */
 @Singleton
-class MatroskaSeekIndexRepair
+internal class MatroskaSeekIndexRepair
     @Inject
     constructor() {
         /** What [ensureSeekable] did, or why it did nothing. */

@@ -32,7 +32,7 @@ import kotlin.coroutines.resumeWithException
  * fetched with the cheapest video the server will make and the video is dropped here, once the whole
  * file is on disk (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2").
  */
-interface AudioSidecarExtractor {
+internal interface AudioSidecarExtractor {
     /** Transmux the audio track of [source] (mkv, video+audio) into [target] (m4a, audio only). Throws on failure. */
     suspend fun extract(
         source: File,

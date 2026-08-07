@@ -21,7 +21,7 @@ import org.jellyfin.sdk.model.api.MediaStreamType
  * @return `null` when the item has no audio streams at all. The URL then omits the parameter rather
  *   than sending an index that names nothing, and the download row records no pin.
  */
-val BaseItemDto.downloadAudioStreamIndex: Int?
+internal val BaseItemDto.downloadAudioStreamIndex: Int?
     get() {
         val source = mediaSources?.firstOrNull() ?: return null
         val audio = source.mediaStreams.orEmpty().filter { it.type == MediaStreamType.AUDIO }

@@ -45,7 +45,7 @@ import javax.inject.Singleton
  * and already on screen. While offline they are skipped altogether — see [pushToServer].
  */
 @Singleton
-class UserDataRepositoryImpl
+internal class UserDataRepositoryImpl
     @Inject
     constructor(
         private val userDataDao: UserDataDao,

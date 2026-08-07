@@ -29,7 +29,7 @@ internal class NotDownloadableException(
  * @param essential mirrors [DownloadFileType.essential]; carried on the plan so the queue does not
  *   have to look it up while deciding whether a failure is fatal.
  */
-data class PlannedFile(
+internal data class PlannedFile(
     val type: DownloadFileType,
     val fileName: String,
     val url: String,
@@ -66,7 +66,7 @@ data class PlannedFile(
  *   subtitle the server can extract. Artwork and trickplay tiles are the same files either way.
  */
 @Singleton
-class DownloadFilePlanner
+internal class DownloadFilePlanner
     @Inject
     constructor(
         private val urls: DownloadUrlFactory,

@@ -16,7 +16,7 @@ package dev.jellyboost.data.downloads.engine
  * Not thread-safe on purpose: an instance belongs to one *file's* transfer, and a file has exactly
  * one writer — an item's two lanes (`DownloadQueue.transfer`) each create their own as they go.
  */
-class ProgressThrottle(
+internal class ProgressThrottle(
     private val intervalMillis: Long = DEFAULT_INTERVAL_MILLIS,
     private val fraction: Float = DEFAULT_FRACTION,
 ) {

@@ -24,7 +24,7 @@ import javax.inject.Inject
  * moment the work is done.
  */
 @AndroidEntryPoint
-class DownloadActionReceiver : BroadcastReceiver() {
+internal class DownloadActionReceiver : BroadcastReceiver() {
     @Inject
     lateinit var downloads: DownloadRepository
 

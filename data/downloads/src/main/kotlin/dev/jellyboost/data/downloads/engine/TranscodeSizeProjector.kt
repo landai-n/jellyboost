@@ -30,7 +30,7 @@ package dev.jellyboost.data.downloads.engine
  *   queue does not build a projector without it, because there is nothing to extrapolate to.
  * @param ceilingBytes the enqueue-time estimate, i.e. `DownloadEntity.bytesTotal`.
  */
-class TranscodeSizeProjector(
+internal class TranscodeSizeProjector(
     private val runtimeMillis: Long,
     private val ceilingBytes: Long,
     private val scanner: MkvClusterScanner = MkvClusterScanner(),

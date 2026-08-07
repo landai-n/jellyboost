@@ -43,7 +43,7 @@ import javax.inject.Singleton
 @Singleton
 class DownloadedMediaProvider
     @Inject
-    constructor(
+    internal constructor(
         private val downloadDao: DownloadDao,
         private val itemDao: ItemDao,
         private val itemMapper: ItemEntityMapper,

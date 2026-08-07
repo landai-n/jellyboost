@@ -40,13 +40,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,8 +74,9 @@ import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.ui.component.EmptyState
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.LoadingState
-import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -122,8 +120,11 @@ fun DownloadsScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { downloadsMessageText(it) }
+    val snackbarHostState =
+        rememberOneShotSnackbar(
+            message = state.userMessage,
+            onShown = viewModel::consumeMessage,
+        ) { downloadsMessageText(it) }
 
     // Remembered, not rebuilt per composition. These bundles are `equals`-compared by Compose to
     // decide whether a row can skip, and a fresh instance every time is never equal to the last —
@@ -132,27 +133,15 @@ fun DownloadsScreen(
     val actions = remember(viewModel) { downloadsActions(viewModel) }
     val bulk = remember(viewModel) { queueBulkActions(viewModel) }
 
-    LaunchedEffect(message) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.consumeMessage()
-        }
-    }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = {
-            // Clear of the floating navigation pill, which this screen's own frame knows nothing
-            // about — the pill is drawn by `:app` over the top of this whole `Scaffold`. Restyled
-            // as `PillSnackbar` (2026 refresh) — the same glass pill `AppScaffold`'s own snackbar
-            // host draws, so a message from this screen and one from anywhere else in the app look
-            // identical.
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = LocalAppChromePadding.current.calculateBottomPadding()),
-            ) { data -> PillSnackbar(snackbarData = data) }
-        },
+        // Clear of the floating navigation pill, which this screen's own frame knows nothing about
+        // — the pill is drawn by `:app` over the top of this whole `Scaffold`. That is the shared
+        // host's default policy, and taking it also fixes the wide-window case this screen used to
+        // get wrong: with the chrome all at the top its bottom padding is zero, so reading only
+        // that put the snackbar under the tablet's gesture bar (audit DUP-3).
+        snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         DownloadsContent(
             state = state,

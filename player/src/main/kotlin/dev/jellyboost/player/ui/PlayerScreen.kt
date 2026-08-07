@@ -25,8 +25,6 @@ import androidx.compose.material.icons.outlined.Cast
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -68,9 +66,10 @@ import androidx.media3.ui.PlayerView
 import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
-import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
@@ -108,7 +107,6 @@ fun PlayerScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
     // Hoisted above the controls, and above the auto-hide, because a panel must survive the controls
     // getting out of the way while the user is reading the participant list (M11) — and, for the
     // display sheet, because it is the accessible alternative to the brightness and volume swipes
@@ -139,7 +137,14 @@ fun PlayerScreen(
                 onLeaveGroup = viewModel::leaveGroup,
             )
         }
-    val message = state.userMessage?.snackbarText(state.cast)
+    // The shared one-shot idiom, keyed on the `PlayerMessage` rather than on its copy (audit
+    // DUP-3/HYG-8) — which matters most here, where the three cast messages resolve through the
+    // same device name and a `ChangeReverted` chasing a `RestartedForTrackChange` is routine.
+    val snackbarHostState =
+        rememberOneShotSnackbar(
+            message = state.userMessage,
+            onShown = viewModel::consumeMessage,
+        ) { message -> message.snackbarText(state.cast) }
     var controlsVisible by remember { mutableStateOf(true) }
     val inPictureInPicture = pipState.isInPictureInPicture
 
@@ -172,13 +177,6 @@ fun PlayerScreen(
     LaunchedEffect(focusRequester) { runCatching { focusRequester.requestFocus() } }
 
     val runKeyCommand = remember(actions) { playerKeyRunner(actions) { controlsVisible = true } }
-
-    LaunchedEffect(message) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.consumeMessage()
-        }
-    }
 
     LaunchedEffect(state.hasEnded) {
         if (state.hasEnded) onBack()
@@ -285,10 +283,14 @@ fun PlayerScreen(
                 )
             }
 
-            SnackbarHost(
+            // The player consumes no window insets of its own — it is immersive and full-bleed — so
+            // the shared host's chrome/gesture-bar rule resolves to zero here and [SNACKBAR_PADDING]
+            // is what actually applies: the floor exists for exactly this screen (audit DUP-3).
+            JellyboostSnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = SNACKBAR_PADDING),
-            ) { data -> PillSnackbar(snackbarData = data) }
+                modifier = Modifier.align(Alignment.BottomCenter),
+                minimumBottomInset = SNACKBAR_PADDING,
+            )
         }
     }
 

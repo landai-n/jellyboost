@@ -221,45 +221,6 @@ fun JellyfinTextField(
 }
 
 /**
- * The pre-[FieldLabel] signature, kept alive for the two call sites this wave was not allowed to
- * touch: `:feature:search`'s query box and `:player`'s SyncPlay create-group dialog.
- *
- * Both pass a bare `labelText` and nothing else from the old correlated pairs, so both become
- * `label = FieldLabel(…)` and this overload goes away — a mechanical follow-up, and one the
- * deprecation warning will keep asking for. `labelText` has no default on purpose: it is the one
- * parameter the new signature does not have, which is what makes every call resolve to exactly one
- * of the two.
- */
-@Deprecated(
-    message = "Pass label = FieldLabel(text) instead; this overload exists only for the unmigrated call sites.",
-    replaceWith = ReplaceWith("JellyfinTextField(value, onValueChange, modifier, FieldLabel(labelText))"),
-)
-@Composable
-fun JellyfinTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    labelText: String,
-    modifier: Modifier = Modifier,
-    singleLine: Boolean = true,
-    placeholder: (@Composable () -> Unit)? = null,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
-) = JellyfinTextField(
-    value = value,
-    onValueChange = onValueChange,
-    modifier = modifier,
-    label = FieldLabel(text = labelText),
-    singleLine = singleLine,
-    placeholder = placeholder,
-    leadingIcon = leadingIcon,
-    trailingIcon = trailingIcon,
-    keyboardOptions = keyboardOptions,
-    keyboardActions = keyboardActions,
-)
-
-/**
  * Everything a screen reader needs from the field itself.
  *
  * On the field's own node, because that is the node a screen reader lands on: the caption above the

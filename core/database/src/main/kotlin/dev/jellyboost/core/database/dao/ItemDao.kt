@@ -288,6 +288,21 @@ interface ItemDao {
         browseCache: ItemSource,
     ): Int
 
+    /**
+     * Drops **every** browse-cache row, whatever its age — what sign-out uses.
+     *
+     * The `items` table is not user-scoped (an item id is the server's, not a person's), so on a
+     * shared device one account's cached browsing would otherwise still be serving the next
+     * account's offline read path and search results (audit HYG-2). Downloads are excluded by the
+     * same `source` predicate as [evictBrowseCacheOlderThan], and for the same reason: signing out
+     * does not delete anyone's files, and the plan makes deleting downloads a separate, explicit
+     * choice on the sign-out screen (docs/PLAN.md, "Settings").
+     *
+     * @return how many rows were dropped.
+     */
+    @Query("DELETE FROM items WHERE source = :browseCache")
+    suspend fun deleteAllBrowseCache(browseCache: ItemSource): Int
+
     // ---- M7 — download-delete cascade ----------------------------------------------------------
 
     /**

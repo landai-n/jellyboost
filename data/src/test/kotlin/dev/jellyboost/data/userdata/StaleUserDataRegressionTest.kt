@@ -166,6 +166,7 @@ class StaleUserDataRegressionTest {
             sessionRepository = sessionRepository,
             mapper = CacheFixtures.mapper,
             clock = clock,
+            transactionRunner = CacheFixtures.directTransactionRunner,
             scope = scope,
         )
 

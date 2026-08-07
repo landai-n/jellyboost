@@ -140,6 +140,17 @@ a page's items still owe the server a write, then batch-write the rest. The filt
 in `BrowseCacheWriter` rather than in a `@Transaction` DAO method, for the same reason the
 download-demotion rule does — so it is JVM-unit-testable instead of device-only.
 
+### Sign-out keeps what the server has never seen
+
+`SessionRepository.signOut` calls `UserDataDao.deleteSynced(userId)` before publishing
+`SessionState.LoggedOut` (audit HYG-2 — until then the method had zero callers and an account's rows
+outlived it indefinitely on a shared device). The line it draws is the one the DAO already
+documented: a **synced** row is pure cache, a copy of state the server holds, and goes; a
+`toBeSynced` row is the only copy of a change the server has never accepted, and **stays**. That is
+not leniency, it is the plan's local-first promise — a favourite toggled on a train is not lost by
+signing out at the station, and the drain pushes it when the same account signs back in. The M7
+download-delete cascade draws the same line per item with `DownloadDao.deleteSyncedUserData`.
+
 ## `UserDataEventBus` — patch first, and never refetch for the patch's own sake
 
 A `@Singleton` `SharedFlow<UserDataChange>` (`itemId` + the new `UserData`), replay-free and

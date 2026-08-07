@@ -47,7 +47,9 @@ and `ItemEntity` never cross a repository boundary.
   and none of them changed at M6.
 - `:core:network` owns connectivity because it owns the `ApiClient` the probe re-points.
 - `:core:database` DAOs stay dumb (queries only). Rules that need testing — the never-downgrade-a-
-  download merge — live in `:data`, where they run on the JVM.
+  download merge — live in `:data`, where they run on the JVM. `TransactionRunner` is the seam that
+  keeps that affordable: a one-method interface over Room's `withTransaction`, so a `:data` rule can
+  read, decide and write atomically without being handed the database (audit HYG-3).
 
 ### Cross-cutting mechanisms introduced
 

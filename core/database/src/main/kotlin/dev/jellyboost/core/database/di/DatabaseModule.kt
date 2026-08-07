@@ -9,6 +9,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.jellyboost.core.database.DatabaseConstants
 import dev.jellyboost.core.database.JellyfinDatabase
+import dev.jellyboost.core.database.RoomTransactionRunner
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
@@ -57,4 +59,12 @@ object DatabaseModule {
     /** Exposes [JellyfinDatabase.downloadDao] for injection (M7). */
     @Provides
     fun provideDownloadDao(database: JellyfinDatabase): DownloadDao = database.downloadDao()
+
+    /**
+     * The seam `:data` uses to make a read-decide-write sequence atomic without seeing the database
+     * itself (audit HYG-3) — see [TransactionRunner].
+     */
+    @Provides
+    @Singleton
+    fun provideTransactionRunner(database: JellyfinDatabase): TransactionRunner = RoomTransactionRunner(database)
 }

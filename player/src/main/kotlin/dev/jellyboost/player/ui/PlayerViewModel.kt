@@ -217,8 +217,31 @@ class PlayerViewModel
          */
         val pipState: StateFlow<PipState> = pipController.state
 
-        /** The currently playing source; `null` until the first resolve succeeds. */
-        private var source: PlaybackMediaSource? = null
+        /**
+         * Everything that is true of the session playing right now, or `null` before the first
+         * resolve succeeds.
+         *
+         * Nine mutable fields used to say this between them, and the only thing tying them together
+         * was the order the methods below happened to run in (audit CPX-5): `pendingAudioIndex` and
+         * `pendingSubtitleApply` belonged to the open that resolved them, `stopReported` to the
+         * source it had reported, `recoverySource` to the re-negotiation that armed it — and a new
+         * session had to remember to reset each one by hand. Boxed, a new session is *one*
+         * assignment ([publish]), and forgetting a field is a compile error rather than a stale
+         * value from the film before.
+         *
+         * The type is deliberately not a snapshot of the *screen* — that is [PlayerUiState], which
+         * is published, drawn and diffed. This is the sequencing state the screen never sees.
+         */
+        private var session: ActiveSession? = null
+
+        /**
+         * The currently playing source; `null` until the first resolve succeeds.
+         *
+         * Derived rather than stored since the CPX-5 boxing, because roughly a dozen call sites want
+         * exactly this and nothing else about the session. Read-only on purpose: everything that
+         * *changes* it goes through [session], so there is one place a session can be replaced.
+         */
+        private val source: PlaybackMediaSource? get() = session?.source
 
         /**
          * The item fetch behind the title, the backdrop and the receiver's metadata.
@@ -227,49 +250,12 @@ class PlayerViewModel
          * looks at it: the title arriving a moment after the first frame is invisible, while a
          * receiver that was loaded before the label existed shows an unnamed stream until the film
          * is opened again.
+         *
+         * Not part of [ActiveSession], and it cannot be: this is started in `init` and by
+         * [loadItem] *before* the resolve, and awaited before [publish] mints the session it would
+         * have to live in.
          */
         private var metadataLoad: Job? = null
-
-        /**
-         * The audio stream this open resolved, until the player has been told about it.
-         *
-         * `null` means there is nothing left to apply. It cannot be applied where it is resolved:
-         * `prepare` has only just been called there and `Player.currentTracks` is still empty, so the
-         * selection waits for the player to report some ([applyPendingTrackSelections]).
-         */
-        private var pendingAudioIndex: Int? = null
-
-        /**
-         * `true` while this open's subtitle choice still has to reach the player.
-         *
-         * A flag rather than a nullable index because here `null` *is* a choice — subtitles off — and
-         * it has to be stated as explicitly as any other: `prepare` re-enables the text renderer for
-         * the new item, and ExoPlayer's selector will otherwise pick up a default-flagged text track
-         * on its own.
-         */
-        private var pendingSubtitleApply = false
-
-        /**
-         * The downloaded copy of this item, once one has been resolved.
-         *
-         * Kept for the whole session rather than read off [source], because a forced-remote track
-         * change replaces [source] with the *server's* copy — and it is precisely then that the two
-         * questions this answers arise: which tracks the file could still play (so choosing one of
-         * them can go home instead of streaming on), and what to fall back to if the server turns
-         * out not to be there after all.
-         */
-        private var localSource: LocalPlaybackMediaSource? = null
-
-        /**
-         * What was playing when the current re-negotiation started; `null` once spent.
-         *
-         * A failed re-resolve is not the end of a session that was fine a second earlier: the
-         * resolve fails *before* `prepare`, so the player is still sitting on this source, and
-         * asking for its terms again beats tearing the whole screen down to an error whose only
-         * action is leaving ([onResolveFailed]). One-shot — the retry itself does not re-arm it —
-         * so a server that is really gone still ends in the error state after one extra attempt.
-         */
-        private var recoverySource: PlaybackMediaSource? = null
 
         /**
          * `true` while the app believes it can reach the server.
@@ -278,17 +264,12 @@ class PlayerViewModel
          * decides what the pickers *offer*: the source's full track list while there is a server to
          * stream a missing track from, and only what the downloaded file holds when there is not.
          * A sheet that is already open therefore reacts to the network dropping.
+         *
+         * Not part of [ActiveSession]: connectivity is written by a collector that runs before,
+         * between and after sessions, and reading it off a session that does not exist yet would
+         * narrow the pickers to the offline lists before the first resolve.
          */
         private var isOnline = true
-
-        /**
-         * `true` while this session is deliberately streaming an item that is also on disk.
-         *
-         * Carried into every later re-negotiation ([asRequest]) so that changing quality — or a
-         * decoder fallback — does not silently drop back to the local file and lose the track the
-         * user went to the server for.
-         */
-        private var forcedRemote = false
 
         private var reportingJob: Job? = null
         private var uiTickerJob: Job? = null
@@ -302,14 +283,11 @@ class PlayerViewModel
          * prepare in either order, and can leave [source] describing a stream the player is not
          * decoding — with reports keyed on the wrong `playSessionId` and positional track matching
          * run against the wrong stream list.
+         *
+         * Not part of [ActiveSession] and never could be: a session operation waits for its
+         * *predecessor*, so this handle by definition outlives the session it belongs to.
          */
         private var openJob: Job? = null
-
-        /** Guards against reporting the stop twice when the item ends and the screen then closes. */
-        private var stopReported = false
-
-        /** The item's intro/outro ranges; empty offline and on a server without the segments API. */
-        private var segments: List<MediaSegment> = emptyList()
 
         /** The user's per-type segment preference, kept current for the position ticker to read. */
         private var skipModes: Map<MediaSegmentKind, SegmentSkipMode> = emptyMap()
@@ -328,6 +306,19 @@ class PlayerViewModel
          * whichever player will actually decode it.
          */
         private val isCasting: Boolean get() = cast.isCasting
+
+        /**
+         * Changes one or more facts about the session that is playing, or does nothing if there is
+         * none.
+         *
+         * Always re-reads [session] rather than copying a value the caller read earlier, which is
+         * the point of the boxing: a caller that has already suspended, or that ran a collaborator
+         * in between, cannot write a whole stale session back over a newer one on its way to
+         * flipping one boolean.
+         */
+        private fun updateSession(block: (ActiveSession) -> ActiveSession) {
+            session = session?.let(block)
+        }
 
         init {
             observePlayerEvents()
@@ -516,7 +507,8 @@ class PlayerViewModel
             deviceName: String?,
             from: PlaybackSnapshot,
         ) {
-            val current = source ?: return
+            val active = session ?: return
+            val current = active.source
             val leftGroup = syncPlay.isInGroup
             if (leftGroup) {
                 Timber.i("A receiver connected while in a SyncPlay group; leaving the group")
@@ -524,7 +516,7 @@ class PlayerViewModel
             }
             Timber.i("Moving %s to %s at %d ms", current.itemId, deviceName ?: "a receiver", from.positionMs)
             openSession(
-                current.asRequest(forcedRemote, castTarget = true).copy(startPositionTicks = from.positionTicks),
+                current.asRequest(active.forcedRemote, castTarget = true).copy(startPositionTicks = from.positionTicks),
                 playWhenReady = from.isPlaying,
                 message = if (leftGroup) PlayerMessage.CastLeftSyncPlayGroup else PlayerMessage.CastTransferred,
                 endingAt = from,
@@ -542,7 +534,8 @@ class PlayerViewModel
          * coordinator's to close, which is the other half of the one-stop-report-per-source rule.
          */
         private fun onCastEnded(at: PlaybackSnapshot) {
-            val current = source ?: return
+            val active = session ?: return
+            val current = active.source
             // An invalid snapshot means the receiver no longer held the item when the session ended
             // (stopped from the television) — its position is meaningless, so the film resumes where
             // this session started rather than jumping to zero. The stop report handles the same
@@ -550,7 +543,7 @@ class PlayerViewModel
             val resumeTicks = if (at.isValid) at.positionTicks else current.startPositionTicks
             Timber.i("Bringing %s back to this device at %d ticks", current.itemId, resumeTicks)
             openSession(
-                current.asRequest(forcedRemote, castTarget = false).copy(startPositionTicks = resumeTicks),
+                current.asRequest(active.forcedRemote, castTarget = false).copy(startPositionTicks = resumeTicks),
                 playWhenReady = false,
                 endingAt = at,
             )
@@ -618,11 +611,11 @@ class PlayerViewModel
          *   player, which has not started yet or has already gone.
          */
         private suspend fun endCurrentSource(at: PlaybackSnapshot = playerHandle.snapshot()) {
-            val current = source ?: return
+            val active = session ?: return
             setReportingActive(false)
-            if (stopReported) return
-            stopReported = true
-            reporter.reportStop(current, at)
+            if (active.stopReported) return
+            updateSession { it.copy(stopReported = true) }
+            reporter.reportStop(active.source, at)
         }
 
         // ---- user actions -------------------------------------------------------------------------
@@ -668,16 +661,17 @@ class PlayerViewModel
         fun selectAudioTrack(jellyfinIndex: Int) {
             // A tap that beats the first `TracksChanged` outranks the open's own choice, which would
             // otherwise be applied over the top of it a moment later.
-            pendingAudioIndex = null
-            val current = source ?: return
-            val home = goesHome(current, audioIndex = jellyfinIndex, subtitleIndex = current.selectedSubtitleIndex)
+            updateSession { it.copy(pendingAudioIndex = null) }
+            val active = session ?: return
+            val current = active.source
+            val home = active.goesHome(audioIndex = jellyfinIndex, subtitleIndex = current.selectedSubtitleIndex)
             if (!home && playerHandle.selectAudioTrack(current, jellyfinIndex)) {
-                source = current.withSelectedAudio(jellyfinIndex)
+                updateSession { it.copy(source = current.withSelectedAudio(jellyfinIndex)) }
                 _uiState.update { it.copy(selectedAudioIndex = jellyfinIndex) }
                 return
             }
             if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
-            val remote = needsServer(current, home)
+            val remote = active.needsServer(home)
             reopenSession(
                 current.asRequest(remote, isCasting).copy(audioStreamIndex = jellyfinIndex),
                 trackChangeMessage(current, remote),
@@ -688,16 +682,17 @@ class PlayerViewModel
         fun selectSubtitleTrack(jellyfinIndex: Int?) {
             // As in [selectAudioTrack]: the user has now said what they want, so the open's pending
             // choice is spent whether this call is satisfied locally or by a re-resolve.
-            pendingSubtitleApply = false
-            val current = source ?: return
-            val home = goesHome(current, audioIndex = current.selectedAudioIndex, subtitleIndex = jellyfinIndex)
+            updateSession { it.copy(pendingSubtitleApply = false) }
+            val active = session ?: return
+            val current = active.source
+            val home = active.goesHome(audioIndex = current.selectedAudioIndex, subtitleIndex = jellyfinIndex)
             if (!home && playerHandle.selectSubtitleTrack(current, jellyfinIndex)) {
-                source = current.withSelectedSubtitle(jellyfinIndex)
+                updateSession { it.copy(source = current.withSelectedSubtitle(jellyfinIndex)) }
                 _uiState.update { it.copy(selectedSubtitleIndex = jellyfinIndex) }
                 return
             }
             if (current is LocalPlaybackMediaSource && !isOnline) return refuseLocalTrackChange(current)
-            val remote = needsServer(current, home)
+            val remote = active.needsServer(home)
             // -1 is the server's "no subtitles"; null would make it pick the item's default again.
             reopenSession(
                 current.asRequest(remote, isCasting).copy(subtitleStreamIndex = jellyfinIndex ?: SUBTITLES_OFF),
@@ -721,13 +716,12 @@ class PlayerViewModel
          * for an audio track the file lacks must not drag playback back to a file that cannot produce
          * that audio — the same guarantee [selectQuality] gets from carrying [forcedRemote].
          */
-        private fun goesHome(
-            current: PlaybackMediaSource,
+        private fun ActiveSession.goesHome(
             audioIndex: Int?,
             subtitleIndex: Int?,
         ): Boolean =
             forcedRemote &&
-                current !is LocalPlaybackMediaSource &&
+                source !is LocalPlaybackMediaSource &&
                 localSource?.plays(audioIndex, subtitleIndex) == true
 
         /**
@@ -745,12 +739,9 @@ class PlayerViewModel
          *   streaming;
          * - **an item that was never downloaded:** nothing to bypass; this is M5's path untouched.
          */
-        private fun needsServer(
-            current: PlaybackMediaSource,
-            goesHome: Boolean,
-        ): Boolean =
+        private fun ActiveSession.needsServer(goesHome: Boolean): Boolean =
             when {
-                current is LocalPlaybackMediaSource -> true
+                source is LocalPlaybackMediaSource -> true
                 else -> localSource != null && !goesHome
             }
 
@@ -804,11 +795,14 @@ class PlayerViewModel
          * arrives anyway.
          */
         fun selectQuality(quality: PlaybackQuality) {
-            val current = source as? RemotePlaybackMediaSource ?: return
+            val active = session ?: return
+            val current = active.source as? RemotePlaybackMediaSource ?: return
             if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
             _uiState.update { it.copy(quality = quality) }
             reopenSession(
-                current.asRequest(forcedRemote, isCasting).copy(maxStreamingBitrate = quality.maxStreamingBitrate),
+                current
+                    .asRequest(active.forcedRemote, isCasting)
+                    .copy(maxStreamingBitrate = quality.maxStreamingBitrate),
             )
         }
 
@@ -908,7 +902,7 @@ class PlayerViewModel
          * `internal` so a test can hand it a position directly; see [setScreenPresent].
          */
         internal fun onTick(snapshot: PlaybackSnapshot) {
-            val decision = positionTracker.onTick(snapshot, segments, skipModes)
+            val decision = positionTracker.onTick(snapshot, session?.segments.orEmpty(), skipModes)
             _uiState.update {
                 it.copy(
                     // The server's runtime and the container's can disagree; once the player knows,
@@ -1009,7 +1003,7 @@ class PlayerViewModel
         ) {
             // A fresh open (or a transfer) is a new session: whatever an earlier re-negotiation
             // stashed to recover to belongs to a stream this one replaces.
-            recoverySource = null
+            updateSession { it.copy(recoverySource = null) }
             launchSessionOp {
                 endingAt?.let { endCurrentSource(it) }
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -1036,9 +1030,9 @@ class PlayerViewModel
             request: PlaybackResolveRequest,
             message: PlayerMessage? = null,
         ) {
-            val previous = source ?: return
+            val previous = session?.source ?: return
             val snapshot = playerHandle.snapshot()
-            forcedRemote = request.forceRemote
+            updateSession { it.copy(forcedRemote = request.forceRemote) }
             setReportingActive(false)
             // The group has to know this member is rebuilding its player, or it plays on without us.
             // `PlayerEvent` has no "buffering", so nothing else can tell it (DECISIONS, Phase 2).
@@ -1051,7 +1045,7 @@ class PlayerViewModel
 
             // What to fall back to if the resolve fails: the player is still prepared on
             // [previous] at that point, so its terms are worth one retry ([onResolveFailed]).
-            recoverySource = previous
+            updateSession { it.copy(recoverySource = previous) }
             launchSessionOp {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val result =
@@ -1083,8 +1077,13 @@ class PlayerViewModel
         /**
          * Adopts the outcome of an open.
          *
-         * [source] is assigned before anything suspends, so a player event arriving during the first
+         * [session] is assigned before anything suspends, so a player event arriving during the first
          * buffer is attributed to the stream that produced it rather than to the one it replaced.
+         *
+         * The one assignment is also the whole of the CPX-5 boxing: everything a session remembers is
+         * reset here, together, and the two facts that deliberately *survive* an open —
+         * [ActiveSession.localSource] and [ActiveSession.forcedRemote] — say so in one place instead
+         * of by omission spread over nine fields.
          */
         private suspend fun publish(
             result: SessionOpenResult,
@@ -1097,13 +1096,31 @@ class PlayerViewModel
 
                 is SessionOpenResult.Opened -> {
                     val resolved = result.source
-                    source = resolved
-                    // The stream was negotiated *for* these two, but the player has only just been
-                    // prepared and has no tracks yet, so both wait for the first `TracksChanged`.
-                    pendingAudioIndex = resolved.selectedAudioIndex
-                    pendingSubtitleApply = true
-                    (resolved as? LocalPlaybackMediaSource)?.let { localSource = it }
-                    stopReported = false
+                    val previous = session
+                    session =
+                        ActiveSession(
+                            source = resolved,
+                            // The stream was negotiated *for* these two, but the player has only just
+                            // been prepared and has no tracks yet, so both wait for the first
+                            // `TracksChanged`.
+                            pendingAudioIndex = resolved.selectedAudioIndex,
+                            pendingSubtitleApply = true,
+                            // Kept, not derived: a forced-remote track change replaces the source
+                            // with the server's copy, and the download has to outlive it — see
+                            // [ActiveSession.localSource].
+                            localSource = resolved as? LocalPlaybackMediaSource ?: previous?.localSource,
+                            // Likewise carried across the open: a transfer to or from a receiver
+                            // re-asks with this flag, and resetting it here would silently drop a
+                            // session back onto the file it deliberately left.
+                            forcedRemote = previous?.forcedRemote == true,
+                            // Untouched by an open, exactly as before the boxing: `openSession`
+                            // clears it and `onResolveFailed` spends it, and neither is here.
+                            recoverySource = previous?.recoverySource,
+                            stopReported = false,
+                            // The new item's ranges are fetched by `loadPlaybackExtras` below; until
+                            // they arrive this session has none, rather than the last film's.
+                            segments = emptyList(),
+                        )
                     // A re-resolve builds a fresh media item, which starts at 1×; the speed the user
                     // chose belongs to the session, not to the media item.
                     _uiState.value.speed
@@ -1151,8 +1168,9 @@ class PlayerViewModel
          * error state after one extra attempt.
          */
         private fun onResolveFailed(error: AppError) {
-            val downloaded = localSource
-            if (forcedRemote && downloaded != null) {
+            val active = session
+            val downloaded = active?.localSource
+            if (active?.forcedRemote == true && downloaded != null) {
                 Timber.i("Streaming %s for a track change failed; returning to the file on disk", downloaded.itemId)
                 reopenSession(
                     downloaded.asRequest(forceRemote = false, castTarget = isCasting),
@@ -1161,16 +1179,19 @@ class PlayerViewModel
                 return
             }
 
-            val previous = recoverySource
+            val previous = active?.recoverySource
             if (previous != null) {
-                recoverySource = null
+                updateSession { it.copy(recoverySource = null) }
                 Timber.i("Re-negotiating %s failed; retrying the terms that were playing", previous.itemId)
                 val snapshot = playerHandle.snapshot()
                 launchSessionOp {
                     publish(
                         sessionController.open(
                             previous
-                                .asRequest(forcedRemote, isCasting)
+                                // Read here rather than captured above, as it was before the boxing:
+                                // this runs once the predecessor operation has been cancelled, and
+                                // the flag that matters is the one in force by then.
+                                .asRequest(session?.forcedRemote == true, isCasting)
                                 .copy(startPositionTicks = snapshot.positionTicks),
                             playWhenReady = snapshot.isPlaying,
                         ),
@@ -1193,14 +1214,15 @@ class PlayerViewModel
          * not asked for yet. Neither can fail visibly: absence is the resolvers' normal answer.
          */
         private fun loadPlaybackExtras(resolved: PlaybackMediaSource) {
-            segments = emptyList()
+            updateSession { it.copy(segments = emptyList()) }
             _uiState.update { it.copy(trickplay = null, skippableSegment = null) }
 
             viewModelScope.launch {
                 _uiState.update { it.copy(trickplay = trickplayResolver.resolve(resolved)) }
             }
             viewModelScope.launch {
-                segments = segmentLoader.load(resolved)
+                val loaded = segmentLoader.load(resolved)
+                updateSession { it.copy(segments = loaded) }
             }
         }
 
@@ -1258,12 +1280,15 @@ class PlayerViewModel
          * it again would restart playback, in a loop, for something that is already showing.
          */
         private fun applyPendingTrackSelections() {
-            val current = source ?: return
-            pendingAudioIndex?.let { index ->
-                if (playerHandle.selectAudioTrack(current, index)) pendingAudioIndex = null
+            val active = session ?: return
+            val current = active.source
+            active.pendingAudioIndex?.let { index ->
+                if (playerHandle.selectAudioTrack(current, index)) updateSession { it.copy(pendingAudioIndex = null) }
             }
-            if (pendingSubtitleApply && playerHandle.selectSubtitleTrack(current, current.selectedSubtitleIndex)) {
-                pendingSubtitleApply = false
+            if (active.pendingSubtitleApply &&
+                playerHandle.selectSubtitleTrack(current, current.selectedSubtitleIndex)
+            ) {
+                updateSession { it.copy(pendingSubtitleApply = false) }
             }
         }
 
@@ -1281,12 +1306,13 @@ class PlayerViewModel
          * encoder killed whether or not something follows it.
          */
         private fun onEnded() {
-            val current = source ?: return
+            val active = session ?: return
+            val current = active.source
             val groupContinues = syncPlay.isInGroup && syncPlay.hasNextInQueue
             _uiState.update { it.copy(hasEnded = !groupContinues, isPlaying = false) }
             setReportingActive(false)
-            if (stopReported) return
-            stopReported = true
+            if (active.stopReported) return
+            updateSession { it.copy(stopReported = true) }
             // The detached scope, not `viewModelScope`: publishing `hasEnded` above is what makes
             // `PlayerScreen` pop the route on the next frame, which clears this ViewModel and
             // cancels its scope — a report launched there dies at its first server call, and with
@@ -1307,7 +1333,8 @@ class PlayerViewModel
          * actually was — and it stops (docs/notes/chromecast-m12-plan.md, decision 8).
          */
         private fun onError(event: PlayerEvent.Error) {
-            val current = source ?: return
+            val active = session ?: return
+            val current = active.source
             val positionTicks = playerHandle.snapshot().positionTicks
 
             if (isCasting) {
@@ -1318,7 +1345,7 @@ class PlayerViewModel
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
                 is FallbackDecision.ForceTranscode ->
                     reopenSession(
-                        current.asRequest(forcedRemote, isCasting).copy(
+                        current.asRequest(active.forcedRemote, isCasting).copy(
                             startPositionTicks = decision.positionTicks,
                             enableDirectPlay = false,
                             enableDirectStream = false,
@@ -1328,7 +1355,7 @@ class PlayerViewModel
 
                 is FallbackDecision.LowerBitrate ->
                     reopenSession(
-                        current.asRequest(forcedRemote, isCasting).copy(
+                        current.asRequest(active.forcedRemote, isCasting).copy(
                             startPositionTicks = decision.positionTicks,
                             maxStreamingBitrate = decision.maxStreamingBitrate,
                         ),
@@ -1424,10 +1451,10 @@ class PlayerViewModel
             cast.detach()
             // Nothing is playing any more, so nothing should float when the user leaves next.
             pipController.clear()
-            val current = source
-            if (current != null && !stopReported && !isCasting) {
-                stopReported = true
-                reporter.reportStopDetached(current, playerHandle.snapshot())
+            val active = session
+            if (active != null && !active.stopReported && !isCasting) {
+                updateSession { it.copy(stopReported = true) }
+                reporter.reportStopDetached(active.source, playerHandle.snapshot())
             }
             // After the stop report is handed over, never before: it is the one that closes the
             // group's view of a downloaded item, and it reads the minted id on its way out.
@@ -1470,6 +1497,63 @@ class PlayerViewModel
             private val PLAYBACK_FAILED = UiText.res(R.string.player_message_failed)
         }
     }
+
+/**
+ * Everything one playback session remembers, in one value (audit CPX-5).
+ *
+ * These eight facts used to be eight `private var`s on `PlayerViewModel`, and what bound them
+ * together was nothing but the order the methods happened to run in: a new open had to remember to
+ * re-arm two of them, clear one, leave two alone and never touch the last. Boxed, "a new session"
+ * is a single assignment in `PlayerViewModel.publish` and the compiler asks about every field.
+ *
+ * The eight are the ones whose lifetime really is one session. The other eight mutable fields on
+ * that class deliberately stay where they are, each because its lifetime is something else's:
+ * connectivity and the segment/PiP preferences are observed continuously, `screenPresent` is the
+ * screen's, the three `Job`s are cancelled by identity — and `openJob` in particular outlives its
+ * own session by construction, since a session operation waits for its *predecessor*.
+ *
+ * @property source what is playing. Non-null by construction: a session exists exactly when a
+ *   resolve has succeeded, which is what lets every call site stop asking.
+ * @property pendingAudioIndex the audio stream this open resolved, until the player has been told
+ *   about it; `null` once there is nothing left to apply. It cannot be applied where it is resolved —
+ *   `prepare` has only just been called and `Player.currentTracks` is still empty — so it waits for
+ *   the first `TracksChanged` (`applyPendingTrackSelections`).
+ * @property pendingSubtitleApply `true` while this open's subtitle choice still has to reach the
+ *   player. A flag rather than a nullable index because here `null` *is* a choice — subtitles off —
+ *   and it has to be stated as explicitly as any other: `prepare` re-enables the text renderer for
+ *   the new item, and ExoPlayer's selector will otherwise pick up a default-flagged text track on
+ *   its own.
+ * @property localSource the downloaded copy of this item, once one has been resolved — **carried
+ *   across a re-open rather than derived from [source]**. A forced-remote track change replaces
+ *   [source] with the *server's* copy, and it is precisely then that the two questions this answers
+ *   arise: which tracks the file could still play (so choosing one of them can go home instead of
+ *   streaming on), and what to fall back to if the server turns out not to be there after all.
+ * @property recoverySource what was playing when the current re-negotiation started; `null` once
+ *   spent. A failed re-resolve is not the end of a session that was fine a second earlier: the
+ *   resolve fails *before* `prepare`, so the player is still sitting on this source, and asking for
+ *   its terms again beats tearing the whole screen down to an error whose only action is leaving
+ *   (`onResolveFailed`). One-shot — the retry does not re-arm it — so a server that is really gone
+ *   still ends in the error state after one extra attempt.
+ * @property forcedRemote `true` while this session is deliberately streaming an item that is also on
+ *   disk. Carried into every later re-negotiation (`asRequest`), **including across an open**, so
+ *   that changing quality — or a decoder fallback, or a transfer to a receiver — does not silently
+ *   drop back to the local file and lose the track the user went to the server for.
+ * @property stopReported guards the three exits that can each report the stop — the item ending, a
+ *   session being replaced, and the screen going away — against reporting it twice.
+ * @property segments the item's intro/outro ranges; empty offline and on a server without the
+ *   segments API, and empty until `loadPlaybackExtras`' fetch comes back.
+ */
+@Suppress("LongParameterList") // Eight facts about one session; a value type is the point, not a smell.
+private data class ActiveSession(
+    val source: PlaybackMediaSource,
+    val pendingAudioIndex: Int?,
+    val pendingSubtitleApply: Boolean,
+    val localSource: LocalPlaybackMediaSource?,
+    val recoverySource: PlaybackMediaSource?,
+    val forcedRemote: Boolean,
+    val stopReported: Boolean,
+    val segments: List<MediaSegment>,
+)
 
 /**
  * The request that would reproduce what is playing right now.

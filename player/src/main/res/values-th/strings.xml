@@ -111,4 +111,9 @@
     <string name="player_message_cast_left_syncplay">ออกจากกลุ่ม SyncPlay เพื่อแคสต์ไปยัง %1$s</string>
     <string name="player_message_cast_failed">ไม่สามารถเล่นรายการนั้นบน %1$s ได้</string>
     <string name="player_casting_to">กำลังแคสต์ไปยัง %1$s</string>
+
+    <string name="player_error_server">เซิร์ฟเวอร์ไม่สามารถเริ่มเล่นได้</string>
+    <string name="player_error_server_with_code">เซิร์ฟเวอร์ไม่สามารถเริ่มเล่นได้ (%1$d)</string>
+    <string name="player_error_unknown">เกิดข้อผิดพลาดขณะเริ่มเล่น</string>
+    <string name="player_error_unsupported_source">ไม่สามารถเล่นรายการนี้บนอุปกรณ์นี้ได้</string>
 </resources>

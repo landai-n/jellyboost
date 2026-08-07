@@ -70,4 +70,6 @@
     <string name="detail_delete_download_dialog_message">Aceasta o elimină de pe acest dispozitiv. O puteți descărca din nou oricând.</string>
     <string name="detail_delete_download_dialog_confirm">Șterge</string>
     <string name="detail_delete_download_dialog_cancel">Anulează</string>
+
+    <string name="detail_error_unknown">Ceva nu a mers bine la încărcarea acestui element.</string>
 </resources>

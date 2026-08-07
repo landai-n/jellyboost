@@ -19,8 +19,11 @@ import dev.jellyboost.data.toAppError
  *
  * Copy lives in Kotlin rather than in `strings.xml` for one reason: the message is written to Room
  * at the moment of failure and read back days later, so it cannot be re-resolved against the
- * device's current locale anyway. `HomeViewModel.toMessage()` makes the same trade. Moving both
- * behind a resource-backed seam is M9 polish, not an M7 bug fix.
+ * device's current locale anyway — a row failed in French would still read English after the user
+ * switched the device to German. This is now the *only* place that trade is made: the browse-side
+ * mappers this one used to cite have moved behind `AppError.toUiText` (audit H8), which keeps the
+ * resource id in state and resolves it at draw time. Doing the same here needs the row to store a
+ * key rather than a sentence, which is a schema migration, not a copy change.
  */
 internal object DownloadErrorCopy {
     /** The message stored on the row for [error]. Never contains exception text. */

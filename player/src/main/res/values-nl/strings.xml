@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Kon dat niet afspelen op %1$s.</string>
 
     <string name="player_casting_to">Aan het casten naar %1$s</string>
+
+    <string name="player_error_server">De server kon het afspelen niet starten.</string>
+    <string name="player_error_server_with_code">De server kon het afspelen niet starten (%1$d).</string>
+    <string name="player_error_unknown">Er ging iets mis bij het starten van het afspelen.</string>
+    <string name="player_error_unsupported_source">Dit item kan niet op dit apparaat worden afgespeeld.</string>
 </resources>

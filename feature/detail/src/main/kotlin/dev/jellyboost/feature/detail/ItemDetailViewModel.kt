@@ -18,6 +18,9 @@ import dev.jellyboost.core.common.selection.SelectionIntent
 import dev.jellyboost.core.common.selection.runBatch
 import dev.jellyboost.core.common.syncplay.SyncPlayGroupHandle
 import dev.jellyboost.core.common.syncplay.SyncPlaySession
+import dev.jellyboost.core.ui.error.AppErrorCopy
+import dev.jellyboost.core.ui.error.toUiText
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
@@ -644,14 +647,11 @@ private suspend fun groupPlayQueue(
     return if (index >= 0) episodes.drop(index).map { it.id } else listOf(target.id)
 }
 
+/**
+ * What this screen calls the one branch it does not share: an unclassified failure here happened
+ * loading this item. A missing thing is an item, which is already the shared default.
+ */
+internal val DetailErrorCopy = AppErrorCopy(unknown = R.string.detail_error_unknown)
+
 /** Turns the domain failure taxonomy into copy a user can act on. */
-internal fun AppError.toMessage(): String =
-    when (this) {
-        is AppError.Network -> "Can't reach your server. Check your connection and try again."
-        is AppError.ServerResolution -> "Can't reach your server. Check your connection and try again."
-        is AppError.Unauthorized -> "Your session expired. Sign in again to continue."
-        is AppError.NotFound -> "That item is no longer on the server."
-        is AppError.Server -> "The server returned an error${statusCode?.let { " ($it)" }.orEmpty()}."
-        is AppError.Storage -> "Couldn't read local data."
-        is AppError.Unknown -> "Something went wrong loading this item."
-    }
+internal fun AppError.toMessage(): UiText = toUiText(DetailErrorCopy)

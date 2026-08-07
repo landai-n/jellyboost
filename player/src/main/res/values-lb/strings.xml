@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Konnt dat net op %1$s ofspillen.</string>
 
     <string name="player_casting_to">Gëtt op %1$s gestreamt</string>
+
+    <string name="player_error_server">De Server konnt d\'Widderginn net starten.</string>
+    <string name="player_error_server_with_code">De Server konnt d\'Widderginn net starten (%1$d).</string>
+    <string name="player_error_unknown">Beim Starte vun der Widderginn ass eppes schif gelaf.</string>
+    <string name="player_error_unsupported_source">Dëst Element kann op dësem Apparat net ofgespillt ginn.</string>
 </resources>

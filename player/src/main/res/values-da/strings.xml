@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Kunne ikke afspille det på %1$s.</string>
 
     <string name="player_casting_to">Caster til %1$s</string>
+
+    <string name="player_error_server">Serveren kunne ikke starte afspilningen.</string>
+    <string name="player_error_server_with_code">Serveren kunne ikke starte afspilningen (%1$d).</string>
+    <string name="player_error_unknown">Noget gik galt, da afspilningen skulle starte.</string>
+    <string name="player_error_unsupported_source">Dette element kan ikke afspilles på denne enhed.</string>
 </resources>

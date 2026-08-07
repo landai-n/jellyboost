@@ -57,4 +57,12 @@
     <plurals name="selection_result_download_all_skipped">
         <item quantity="other">%1$d รายการมีอยู่ในอุปกรณ์นี้แล้ว</item>
     </plurals>
+
+    <string name="error_network">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของคุณได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
+    <string name="error_unauthorized">เซสชันของคุณหมดอายุแล้ว เข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ</string>
+    <string name="error_not_found_item">รายการนั้นไม่มีอยู่บนเซิร์ฟเวอร์แล้ว</string>
+    <string name="error_not_found_library">คลังนั้นไม่มีอยู่บนเซิร์ฟเวอร์แล้ว</string>
+    <string name="error_server">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา</string>
+    <string name="error_server_with_code">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา (%1$d)</string>
+    <string name="error_storage">ไม่สามารถอ่านข้อมูลในเครื่องได้</string>
 </resources>

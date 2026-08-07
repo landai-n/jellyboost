@@ -72,4 +72,12 @@
         <item quantity="one">%1$d element er allerede på denne enhed</item>
         <item quantity="other">%1$d elementer er allerede på denne enhed</item>
     </plurals>
+
+    <string name="error_network">Kan ikke få forbindelse til din server. Kontrollér din forbindelse, og prøv igen.</string>
+    <string name="error_unauthorized">Din session udløb. Log ind igen for at fortsætte.</string>
+    <string name="error_not_found_item">Det element findes ikke længere på serveren.</string>
+    <string name="error_not_found_library">Det bibliotek findes ikke længere på serveren.</string>
+    <string name="error_server">Serveren returnerede en fejl.</string>
+    <string name="error_server_with_code">Serveren returnerede en fejl (%1$d).</string>
+    <string name="error_storage">Kunne ikke læse lokale data.</string>
 </resources>

@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">SyncPlay taldea utzi da %1$s(e)ra igortzeko.</string>
     <string name="player_message_cast_failed">Ezin izan da hori %1$s(e)n erreproduzitu.</string>
     <string name="player_casting_to">%1$s(e)ra igortzen</string>
+
+    <string name="player_error_server">Zerbitzariak ezin izan du erreprodukzioa hasi.</string>
+    <string name="player_error_server_with_code">Zerbitzariak ezin izan du erreprodukzioa hasi (%1$d).</string>
+    <string name="player_error_unknown">Zerbait gaizki joan da erreprodukzioa hastean.</string>
+    <string name="player_error_unsupported_source">Elementu hau ezin da gailu honetan erreproduzitu.</string>
 </resources>

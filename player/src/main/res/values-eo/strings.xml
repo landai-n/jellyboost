@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">Forlasis la SyncPlay-grupon por dissendi al %1$s.</string>
     <string name="player_message_cast_failed">Ne eblis ludi tion sur %1$s.</string>
     <string name="player_casting_to">Dissendante al %1$s</string>
+
+    <string name="player_error_server">La servilo ne povis komenci ludadon.</string>
+    <string name="player_error_server_with_code">La servilo ne povis komenci ludadon (%1$d).</string>
+    <string name="player_error_unknown">Io misfunkciis dum komenco de ludado.</string>
+    <string name="player_error_unsupported_source">Ĉi tiu ero ne ludeblas sur ĉi tiu aparato.</string>
 </resources>

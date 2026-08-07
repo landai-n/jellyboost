@@ -11,6 +11,14 @@ jellyfin-android client, plus the English source strings.
   `values-<locale>/strings.xml` per translated locale. There are no hardcoded user-facing
   strings in Compose code; everything goes through `stringResource(...)` /
   `pluralStringResource(...)` / `context.getString(...)`.
+- **Copy a ViewModel decides** goes through `core/ui`'s `UiText` (`text/UiText.kt`) — a resource
+  id plus its format arguments, resolved by the screen at draw time. A `ViewModel` has no
+  `Context` and no locale, so state holding a `String` has already been resolved into whatever
+  language the *build* was written in, and `MissingTranslation` cannot see a Kotlin literal.
+  That is exactly how home, detail and playback shipped English error copy on all 68 other
+  locales until audit H8 — see "Error copy" in [`ARCHITECTURE.md`](../ARCHITECTURE.md).
+  `UiText.Raw` is the one escape hatch, for wording that arrives already-worded from outside the
+  app (an ExoPlayer or Cast error string) and has no resource to point at.
 - **Locale selection** follows the platform:
   - Android 13+ (API 33): the OS *App languages* setting (Settings → System → Languages →
     App languages → Jellyboost). The list the OS offers is generated at build time by AGP's

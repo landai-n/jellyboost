@@ -72,4 +72,12 @@
         <item quantity="one">%1$d lutur er longu á hesum tólinum</item>
         <item quantity="other">%1$d lutir eru longu á hesum tólinum</item>
     </plurals>
+
+    <string name="error_network">Fær ikki samband við ambætaran. Kanna sambandið og royn aftur.</string>
+    <string name="error_unauthorized">Tín seta er útrunnin. Innrita teg aftur fyri at halda áfram.</string>
+    <string name="error_not_found_item">Hesin luturin er ikki longur á ambætaranum.</string>
+    <string name="error_not_found_library">Hetta savnið er ikki longur á ambætaranum.</string>
+    <string name="error_server">Ambætarin gav eina villu aftur.</string>
+    <string name="error_server_with_code">Ambætarin gav eina villu aftur (%1$d).</string>
+    <string name="error_storage">Kundi ikki lesa staðbundnu dátuna.</string>
 </resources>

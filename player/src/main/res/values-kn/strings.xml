@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">ಅದನ್ನು %1$s ನಲ್ಲಿ ಪ್ಲೇ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
 
     <string name="player_casting_to">%1$s ಗೆ ಕ್ಯಾಸ್ಟ್ ಮಾಡಲಾಗುತ್ತಿದೆ</string>
+
+    <string name="player_error_server">ಸರ್ವರ್‌ಗೆ ಪ್ಲೇಬ್ಯಾಕ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
+    <string name="player_error_server_with_code">ಸರ್ವರ್‌ಗೆ ಪ್ಲೇಬ್ಯಾಕ್ ಪ್ರಾರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ (%1$d).</string>
+    <string name="player_error_unknown">ಪ್ಲೇಬ್ಯಾಕ್ ಪ್ರಾರಂಭಿಸುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
+    <string name="player_error_unsupported_source">ಈ ಐಟಂ ಅನ್ನು ಈ ಸಾಧನದಲ್ಲಿ ಪ್ಲೇ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ.</string>
 </resources>

@@ -66,4 +66,12 @@
         <item quantity="one">Ang %1$d item ay nasa device na ito na</item>
         <item quantity="other">Ang %1$d item ay nasa device na ito na</item>
     </plurals>
+
+    <string name="error_network">Hindi ma-reach ang server mo. Suriin ang koneksyon mo at subukan ulit.</string>
+    <string name="error_unauthorized">Nag-expire na ang session mo. Mag-sign in ulit para magpatuloy.</string>
+    <string name="error_not_found_item">Wala na sa server ang item na iyon.</string>
+    <string name="error_not_found_library">Wala na sa server ang aklatan na iyon.</string>
+    <string name="error_server">Nagbalik ang server ng error.</string>
+    <string name="error_server_with_code">Nagbalik ang server ng error (%1$d).</string>
+    <string name="error_storage">Hindi mabasa ang lokal na data.</string>
 </resources>

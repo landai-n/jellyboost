@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Очистить фильтры</string>
     <string name="library_retry">Повторить</string>
 
-    <string name="library_error_network">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
-    <string name="library_error_unauthorized">Срок действия сеанса истёк. Войдите снова, чтобы продолжить.</string>
-    <string name="library_error_not_found">Этой библиотеки больше нет на сервере.</string>
-    <string name="library_error_server">Сервер вернул ошибку.</string>
-    <string name="library_error_server_with_code">Сервер вернул ошибку (%1$d).</string>
-    <string name="library_error_storage">Не удалось прочитать локальные данные.</string>
     <string name="library_error_unknown">Что-то пошло не так при загрузке этой библиотеки.</string>
 </resources>

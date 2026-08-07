@@ -139,4 +139,9 @@
     <string name="player_message_cast_failed">Neizdevās to atskaņot ierīcē %1$s.</string>
 
     <string name="player_casting_to">Notiek apraide uz %1$s</string>
+
+    <string name="player_error_server">Serveris nevarēja sākt atskaņošanu.</string>
+    <string name="player_error_server_with_code">Serveris nevarēja sākt atskaņošanu (%1$d).</string>
+    <string name="player_error_unknown">Sākot atskaņošanu, kaut kas nogāja greizi.</string>
+    <string name="player_error_unsupported_source">Šo vienumu šajā ierīcē nevar atskaņot.</string>
 </resources>

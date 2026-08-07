@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">%1$s-ə yayımlamaq üçün SyncPlay qrupundan çıxıldı.</string>
     <string name="player_message_cast_failed">Bu %1$s-də oxudula bilmədi.</string>
     <string name="player_casting_to">%1$s-ə yayımlanır</string>
+
+    <string name="player_error_server">Server oxutmanı başlada bilmədi.</string>
+    <string name="player_error_server_with_code">Server oxutmanı başlada bilmədi (%1$d).</string>
+    <string name="player_error_unknown">Oxutma başladılarkən xəta baş verdi.</string>
+    <string name="player_error_unsupported_source">Bu element bu cihazda oxudula bilməz.</string>
 </resources>

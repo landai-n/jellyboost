@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Nem sikerült lejátszani ezen: %1$s.</string>
 
     <string name="player_casting_to">Küldés erre: %1$s</string>
+
+    <string name="player_error_server">A szerver nem tudta elindítani a lejátszást.</string>
+    <string name="player_error_server_with_code">A szerver nem tudta elindítani a lejátszást (%1$d).</string>
+    <string name="player_error_unknown">Hiba történt a lejátszás indítása közben.</string>
+    <string name="player_error_unsupported_source">Ez az elem nem játszható le ezen az eszközön.</string>
 </resources>

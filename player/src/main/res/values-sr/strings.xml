@@ -139,4 +139,9 @@
     <string name="player_message_cast_failed">Није могуће пустити то на %1$s.</string>
 
     <string name="player_casting_to">Пребацивање на %1$s</string>
+
+    <string name="player_error_server">Сервер није могао да покрене репродукцију.</string>
+    <string name="player_error_server_with_code">Сервер није могао да покрене репродукцију (%1$d).</string>
+    <string name="player_error_unknown">Нешто није у реду приликом покретања репродукције.</string>
+    <string name="player_error_unsupported_source">Ова ставка не може да се репродукује на овом уређају.</string>
 </resources>

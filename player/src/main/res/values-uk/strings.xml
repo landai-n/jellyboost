@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Не вдалося відтворити це на %1$s.</string>
 
     <string name="player_casting_to">Трансляція на %1$s</string>
+
+    <string name="player_error_server">Серверу не вдалося почати відтворення.</string>
+    <string name="player_error_server_with_code">Серверу не вдалося почати відтворення (%1$d).</string>
+    <string name="player_error_unknown">Під час запуску відтворення сталася помилка.</string>
+    <string name="player_error_unsupported_source">Цей елемент неможливо відтворити на цьому пристрої.</string>
 </resources>

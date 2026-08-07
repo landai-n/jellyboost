@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Δεν ήταν δυνατή η αναπαραγωγή στο %1$s.</string>
 
     <string name="player_casting_to">Μετάδοση στο %1$s</string>
+
+    <string name="player_error_server">Ο διακομιστής δεν μπόρεσε να ξεκινήσει την αναπαραγωγή.</string>
+    <string name="player_error_server_with_code">Ο διακομιστής δεν μπόρεσε να ξεκινήσει την αναπαραγωγή (%1$d).</string>
+    <string name="player_error_unknown">Κάτι πήγε στραβά κατά την έναρξη της αναπαραγωγής.</string>
+    <string name="player_error_unsupported_source">Αυτό το στοιχείο δεν μπορεί να αναπαραχθεί σε αυτή τη συσκευή.</string>
 </resources>

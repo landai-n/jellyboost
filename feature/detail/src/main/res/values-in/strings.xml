@@ -64,4 +64,6 @@
     <string name="detail_delete_download_dialog_message">Ini akan menghapusnya dari perangkat ini. Anda dapat mengunduhnya lagi kapan saja.</string>
     <string name="detail_delete_download_dialog_confirm">Hapus</string>
     <string name="detail_delete_download_dialog_cancel">Batal</string>
+
+    <string name="detail_error_unknown">Terjadi kesalahan saat memuat item ini.</string>
 </resources>

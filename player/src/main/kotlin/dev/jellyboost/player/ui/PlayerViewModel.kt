@@ -11,7 +11,11 @@ import dev.jellyboost.core.common.model.MediaSegmentKind
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
+import dev.jellyboost.core.ui.error.AppErrorCopy
+import dev.jellyboost.core.ui.error.toUiText
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.player.R
 import dev.jellyboost.player.cast.CastMetadata
 import dev.jellyboost.player.cast.CastMetadataHolder
 import dev.jellyboost.player.cast.CastPlaybackCoordinator
@@ -1308,7 +1312,7 @@ class PlayerViewModel
 
             if (isCasting) {
                 Timber.w("Giving up on %s after a cast error %d", current.itemId, event.errorCode)
-                return fail(event.message ?: PLAYBACK_FAILED, PlayerMessage.CastPlaybackFailed)
+                return fail(event.message?.let(UiText::Raw) ?: PLAYBACK_FAILED, PlayerMessage.CastPlaybackFailed)
             }
 
             when (val decision = fallback.onPlayerError(event.errorCode, current, positionTicks)) {
@@ -1333,7 +1337,7 @@ class PlayerViewModel
 
                 FallbackDecision.GiveUp -> {
                     Timber.w("Giving up on %s after error %d", current.itemId, event.errorCode)
-                    fail(event.message ?: PLAYBACK_FAILED, PlayerMessage.PlaybackFailed)
+                    fail(event.message?.let(UiText::Raw) ?: PLAYBACK_FAILED, PlayerMessage.PlaybackFailed)
                 }
             }
         }
@@ -1364,7 +1368,7 @@ class PlayerViewModel
         }
 
         private fun fail(
-            message: String,
+            message: UiText,
             userMessage: PlayerMessage? = null,
         ) {
             _uiState.update {
@@ -1453,8 +1457,17 @@ class PlayerViewModel
             const val SUBTITLES_OFF = -1
 
             private val UI_TICK = 500.milliseconds
-            private const val UNSUPPORTED_SOURCE = "This item cannot be played on this device."
-            private const val PLAYBACK_FAILED = "Playback failed."
+
+            /**
+             * The two failures the player words itself, rather than mapping from [AppError].
+             *
+             * [UNSUPPORTED_SOURCE] is a local verdict — nothing was ever asked of the server.
+             * [PLAYBACK_FAILED] is the floor under an ExoPlayer or Cast error that carried no
+             * message of its own; one that *did* is passed through verbatim as `UiText.Raw`,
+             * because a decoder's own wording is not ours to translate.
+             */
+            private val UNSUPPORTED_SOURCE = UiText.res(R.string.player_error_unsupported_source)
+            private val PLAYBACK_FAILED = UiText.res(R.string.player_message_failed)
         }
     }
 
@@ -1534,14 +1547,20 @@ private fun PlayerUiState.withTracks(
         subtitleTracks = source.subtitleTracksFor(online),
     )
 
+/**
+ * What the player calls the branches it does not share.
+ *
+ * Three overrides rather than the usual one. A server that answered and refused here refused to
+ * *open a stream* — a different failure from a browse request coming back with an error, with a
+ * different remedy (try another quality, not pull-to-refresh) — so both server branches are the
+ * player's own. Everything else comes from `:core:ui`.
+ */
+private val PlayerErrorCopy =
+    AppErrorCopy(
+        unknown = R.string.player_error_unknown,
+        server = R.string.player_error_server,
+        serverWithCode = R.string.player_error_server_with_code,
+    )
+
 /** Turns the domain failure taxonomy into copy a user can act on. */
-private fun AppError.toMessage(): String =
-    when (this) {
-        is AppError.Network -> "Can't reach your server. Check your connection and try again."
-        is AppError.ServerResolution -> "Can't reach your server. Check your connection and try again."
-        is AppError.Unauthorized -> "Your session expired. Sign in again to continue."
-        is AppError.NotFound -> "That item is no longer on the server."
-        is AppError.Server -> "The server could not start playback${statusCode?.let { " ($it)" }.orEmpty()}."
-        is AppError.Storage -> "Couldn't read local data."
-        is AppError.Unknown -> "Something went wrong starting playback."
-    }
+private fun AppError.toMessage(): UiText = toUiText(PlayerErrorCopy)

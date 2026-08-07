@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">%1$sలో దాన్ని ప్లే చేయలేకపోయాం.</string>
 
     <string name="player_casting_to">%1$sకు కాస్ట్ చేస్తోంది</string>
+
+    <string name="player_error_server">సర్వర్ ప్లేబ్యాక్‌ను ప్రారంభించలేకపోయింది.</string>
+    <string name="player_error_server_with_code">సర్వర్ ప్లేబ్యాక్‌ను ప్రారంభించలేకపోయింది (%1$d).</string>
+    <string name="player_error_unknown">ప్లేబ్యాక్ ప్రారంభించడంలో ఏదో తప్పు జరిగింది.</string>
+    <string name="player_error_unsupported_source">ఈ అంశాన్ని ఈ పరికరంలో ప్లే చేయలేరు.</string>
 </resources>

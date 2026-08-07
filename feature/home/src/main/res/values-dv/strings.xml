@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dމި ބާކީ</string>
     <string name="home_quick_access_offline">އޮފްލައިން</string>
+
+    <string name="home_error_unknown">ހޯމް ސްކްރީން ލޯޑްކުރުމުގައި ގޯހެއް ދިމާވެއްޖެ.</string>
 </resources>

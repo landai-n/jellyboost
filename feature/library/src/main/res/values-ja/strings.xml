@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">フィルターをクリア</string>
     <string name="library_retry">再試行</string>
 
-    <string name="library_error_network">サーバーに接続できません。接続を確認してもう一度お試しください。</string>
-    <string name="library_error_unauthorized">セッションの有効期限が切れました。続けるには再度サインインしてください。</string>
-    <string name="library_error_not_found">そのライブラリはサーバーにもうありません。</string>
-    <string name="library_error_server">サーバーがエラーを返しました。</string>
-    <string name="library_error_server_with_code">サーバーがエラーを返しました (%1$d)。</string>
-    <string name="library_error_storage">ローカルデータを読み込めませんでした。</string>
     <string name="library_error_unknown">このライブラリの読み込み中に問題が発生しました。</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Fjern filtre</string>
     <string name="library_retry">Prøv igjen</string>
 
-    <string name="library_error_network">Får ikke kontakt med serveren din. Sjekk tilkoblingen og prøv igjen.</string>
-    <string name="library_error_unauthorized">Økten din er utløpt. Logg inn på nytt for å fortsette.</string>
-    <string name="library_error_not_found">Det biblioteket er ikke lenger på serveren.</string>
-    <string name="library_error_server">Serveren returnerte en feil.</string>
-    <string name="library_error_server_with_code">Serveren returnerte en feil (%1$d).</string>
-    <string name="library_error_storage">Kunne ikke lese lokale data.</string>
     <string name="library_error_unknown">Noe gikk galt under lasting av dette biblioteket.</string>
 </resources>

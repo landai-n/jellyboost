@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Rensa filter</string>
     <string name="library_retry">Försök igen</string>
 
-    <string name="library_error_network">Kan inte nå din server. Kontrollera din anslutning och försök igen.</string>
-    <string name="library_error_unauthorized">Din session har gått ut. Logga in igen för att fortsätta.</string>
-    <string name="library_error_not_found">Det biblioteket finns inte längre på servern.</string>
-    <string name="library_error_server">Servern returnerade ett fel.</string>
-    <string name="library_error_server_with_code">Servern returnerade ett fel (%1$d).</string>
-    <string name="library_error_storage">Kunde inte läsa lokal data.</string>
     <string name="library_error_unknown">Något gick fel när biblioteket lästes in.</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Обриши филтере</string>
     <string name="library_retry">Покушај поново</string>
 
-    <string name="library_error_network">Сервер није доступан. Проверите везу и покушајте поново.</string>
-    <string name="library_error_unauthorized">Ваша сесија је истекла. Пријавите се поново да наставите.</string>
-    <string name="library_error_not_found">Та библиотека више није на серверу.</string>
-    <string name="library_error_server">Сервер је вратио грешку.</string>
-    <string name="library_error_server_with_code">Сервер је вратио грешку (%1$d).</string>
-    <string name="library_error_storage">Није могуће прочитати локалне податке.</string>
     <string name="library_error_unknown">Нешто није у реду приликом учитавања ове библиотеке.</string>
 </resources>

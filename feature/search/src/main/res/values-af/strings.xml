@@ -14,11 +14,5 @@
     <string name="search_prompt">Tik om jou biblioteke te deursoek.</string>
     <string name="search_no_results">Niks het by “%1$s” gepas nie.</string>
 
-    <string name="search_error_network">Kan nie jou bediener bereik nie. Gaan jou verbinding na en probeer weer.</string>
-    <string name="search_error_unauthorized">Jou sessie het verval. Meld weer aan om voort te gaan.</string>
-    <string name="search_error_not_found">Daardie item is nie meer op die bediener nie.</string>
-    <string name="search_error_server">Die bediener het \'n fout teruggestuur.</string>
-    <string name="search_error_server_with_code">Die bediener het \'n fout teruggestuur (%1$d).</string>
-    <string name="search_error_storage">Kon nie plaaslike data lees nie.</string>
     <string name="search_error_unknown">Iets het verkeerd geloop tydens soek.</string>
 </resources>

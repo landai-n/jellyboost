@@ -14,11 +14,5 @@
     <string name="search_prompt">Сангуудаасаа хайхын тулд бичнэ үү.</string>
     <string name="search_no_results">«%1$s»-д тохирох зүйл олдсонгүй.</string>
 
-    <string name="search_error_network">Серверт холбогдож чадсангүй. Холболтоо шалгаад дахин оролдоно уу.</string>
-    <string name="search_error_unauthorized">Таны сесс дууссан байна. Үргэлжлүүлэхийн тулд дахин нэвтэрнэ үү.</string>
-    <string name="search_error_not_found">Тухайн зүйл серверт байхгүй боллоо.</string>
-    <string name="search_error_server">Сервер алдаа буцаалаа.</string>
-    <string name="search_error_server_with_code">Сервер алдаа буцаалаа (%1$d).</string>
-    <string name="search_error_storage">Локал өгөгдлийг уншиж чадсангүй.</string>
     <string name="search_error_unknown">Хайлт хийхэд алдаа гарлаа.</string>
 </resources>

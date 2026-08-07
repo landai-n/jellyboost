@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin falta</string>
     <string name="home_quick_access_offline">Lineaz kanpo</string>
+
+    <string name="home_error_unknown">Zerbait gaizki joan da hasierako pantaila kargatzean.</string>
 </resources>

@@ -72,4 +72,12 @@
         <item quantity="one">%1$d kohde on jo tällä laitteella</item>
         <item quantity="other">%1$d kohdetta on jo tällä laitteella</item>
     </plurals>
+
+    <string name="error_network">Palvelimeen ei saada yhteyttä. Tarkista yhteytesi ja yritä uudelleen.</string>
+    <string name="error_unauthorized">Istuntosi vanheni. Kirjaudu sisään uudelleen jatkaaksesi.</string>
+    <string name="error_not_found_item">Kyseinen kohde ei ole enää palvelimella.</string>
+    <string name="error_not_found_library">Kyseinen kirjasto ei ole enää palvelimella.</string>
+    <string name="error_server">Palvelin palautti virheen.</string>
+    <string name="error_server_with_code">Palvelin palautti virheen (%1$d).</string>
+    <string name="error_storage">Paikallisia tietoja ei voitu lukea.</string>
 </resources>

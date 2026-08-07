@@ -30,4 +30,12 @@
     <string name="home_time_left_short">%1$dm left</string>
     <!-- Quick-access chip that opens the Downloads tab -->
     <string name="home_quick_access_offline">Offline</string>
+
+    <!--
+      The screen-specific half of the shared failure copy (`AppError.toUiText`): every other branch
+      comes from `:core:ui`, but "unknown" has to name what failed to load, and only this screen
+      knows that. It was a Kotlin literal until audit H8 — invisible to the translation gate, so
+      home showed English on all 68 other locales.
+    -->
+    <string name="home_error_unknown">Something went wrong loading your home screen.</string>
 </resources>

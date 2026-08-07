@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dमि शिल्लक</string>
     <string name="home_quick_access_offline">ऑफलाइन</string>
+
+    <string name="home_error_unknown">मुख्यपृष्ठ लोड करताना काहीतरी चुकले.</string>
 </resources>

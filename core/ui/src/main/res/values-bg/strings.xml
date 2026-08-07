@@ -72,4 +72,12 @@
         <item quantity="one">%1$d елемент вече е на това устройство</item>
         <item quantity="other">%1$d елемента вече са на това устройство</item>
     </plurals>
+
+    <string name="error_network">Сървърът е недостъпен. Проверете връзката и опитайте пак.</string>
+    <string name="error_unauthorized">Сесията ви е изтекла. Влезте отново, за да продължите.</string>
+    <string name="error_not_found_item">Този елемент вече не е на сървъра.</string>
+    <string name="error_not_found_library">Тази библиотека вече не е на сървъра.</string>
+    <string name="error_server">Сървърът върна грешка.</string>
+    <string name="error_server_with_code">Сървърът върна грешка (%1$d).</string>
+    <string name="error_storage">Не можаха да се прочетат локалните данни.</string>
 </resources>

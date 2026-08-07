@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin rimanenti</string>
     <string name="home_quick_access_offline">Offline</string>
+
+    <string name="home_error_unknown">Si è verificato un errore durante il caricamento della schermata Home.</string>
 </resources>

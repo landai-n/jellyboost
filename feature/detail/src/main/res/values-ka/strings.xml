@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">ეს წაშლის მას ამ მოწყობილობიდან. შეგიძლიათ ისევ გადმოწეროთ ნებისმიერ დროს.</string>
     <string name="detail_delete_download_dialog_confirm">წაშლა</string>
     <string name="detail_delete_download_dialog_cancel">გაუქმება</string>
+
+    <string name="detail_error_unknown">ამ ერთეულის ჩატვირთვისას რაღაც შეცდომა მოხდა.</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">مسح عوامل التصفية</string>
     <string name="library_retry">إعادة المحاولة</string>
 
-    <string name="library_error_network">تعذّر الوصول إلى خادمك. تحقّق من اتصالك وحاول مرة أخرى.</string>
-    <string name="library_error_unauthorized">انتهت صلاحية جلستك. سجّل الدخول مرة أخرى للمتابعة.</string>
-    <string name="library_error_not_found">هذه المكتبة لم تعد على الخادم.</string>
-    <string name="library_error_server">أعاد الخادم خطأ.</string>
-    <string name="library_error_server_with_code">أعاد الخادم خطأ (%1$d).</string>
-    <string name="library_error_storage">تعذّرت قراءة البيانات المحلية.</string>
     <string name="library_error_unknown">حدث خطأ ما أثناء تحميل هذه المكتبة.</string>
 </resources>

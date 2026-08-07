@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">This removes it from this device. You can download it again anytime.</string>
     <string name="detail_delete_download_dialog_confirm">Delete</string>
     <string name="detail_delete_download_dialog_cancel">Cancel</string>
+
+    <string name="detail_error_unknown">Something went wrong loading this item.</string>
 </resources>

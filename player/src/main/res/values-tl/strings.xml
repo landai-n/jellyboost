@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">Umalis sa grupo ng SyncPlay para mag-cast sa %1$s.</string>
     <string name="player_message_cast_failed">Hindi ma-play iyon sa %1$s.</string>
     <string name="player_casting_to">Nagka-cast sa %1$s</string>
+
+    <string name="player_error_server">Hindi masimulan ng server ang playback.</string>
+    <string name="player_error_server_with_code">Hindi masimulan ng server ang playback (%1$d).</string>
+    <string name="player_error_unknown">May nangyaring mali sa pagsisimula ng playback.</string>
+    <string name="player_error_unsupported_source">Hindi mapapatugtog ang item na ito sa device na ito.</string>
 </resources>

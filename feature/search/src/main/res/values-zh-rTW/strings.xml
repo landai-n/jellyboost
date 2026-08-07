@@ -13,11 +13,5 @@
     <string name="search_prompt">輸入內容以搜尋你的媒體庫。</string>
     <string name="search_no_results">沒有符合「%1$s」的項目。</string>
 
-    <string name="search_error_network">無法連線到你的伺服器。請檢查網路連線後再試一次。</string>
-    <string name="search_error_unauthorized">你的工作階段已過期。請重新登入以繼續。</string>
-    <string name="search_error_not_found">這個項目已不在伺服器上。</string>
-    <string name="search_error_server">伺服器回應了錯誤。</string>
-    <string name="search_error_server_with_code">伺服器回應了錯誤 (%1$d)。</string>
-    <string name="search_error_storage">無法讀取本機資料。</string>
     <string name="search_error_unknown">搜尋時發生問題。</string>
 </resources>

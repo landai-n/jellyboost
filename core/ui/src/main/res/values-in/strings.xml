@@ -57,4 +57,12 @@
     <plurals name="selection_result_download_all_skipped">
         <item quantity="other">%1$d item sudah ada di perangkat ini</item>
     </plurals>
+
+    <string name="error_network">Tidak dapat menjangkau server Anda. Periksa koneksi Anda dan coba lagi.</string>
+    <string name="error_unauthorized">Sesi Anda telah berakhir. Masuk lagi untuk melanjutkan.</string>
+    <string name="error_not_found_item">Item itu sudah tidak ada di server.</string>
+    <string name="error_not_found_library">Perpustakaan itu sudah tidak ada di server.</string>
+    <string name="error_server">Server mengembalikan kesalahan.</string>
+    <string name="error_server_with_code">Server mengembalikan kesalahan (%1$d).</string>
+    <string name="error_storage">Tidak dapat membaca data lokal.</string>
 </resources>

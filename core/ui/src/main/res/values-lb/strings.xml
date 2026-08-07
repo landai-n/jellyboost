@@ -72,4 +72,12 @@
         <item quantity="one">%1$d Element ass schonn op dësem Apparat</item>
         <item quantity="other">%1$d Elementer sinn schonn op dësem Apparat</item>
     </plurals>
+
+    <string name="error_network">Däi Server ass net erreechbar. Iwwerpréif deng Verbindung a probéier nach eng Kéier.</string>
+    <string name="error_unauthorized">Deng Sessioun ass ofgelaf. Mell dech nach eng Kéier un, fir weiderzefueren.</string>
+    <string name="error_not_found_item">Dëst Element ass net méi um Server.</string>
+    <string name="error_not_found_library">Dës Bibliothéik ass net méi um Server.</string>
+    <string name="error_server">De Server huet e Feeler zréckginn.</string>
+    <string name="error_server_with_code">De Server huet e Feeler zréckginn (%1$d).</string>
+    <string name="error_storage">Lokal Donnéeën konnten net gelies ginn.</string>
 </resources>

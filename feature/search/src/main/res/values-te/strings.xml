@@ -14,11 +14,5 @@
     <string name="search_prompt">మీ లైబ్రరీలను శోధించడానికి టైప్ చేయండి.</string>
     <string name="search_no_results">“%1$s”కు ఏమీ సరిపోలలేదు.</string>
 
-    <string name="search_error_network">మీ సర్వర్‌ను చేరుకోలేకపోయాం. మీ కనెక్షన్‌ను తనిఖీ చేసి మళ్లీ ప్రయత్నించండి.</string>
-    <string name="search_error_unauthorized">మీ సెషన్ గడువు ముగిసింది. కొనసాగించడానికి మళ్లీ సైన్ ఇన్ అవ్వండి.</string>
-    <string name="search_error_not_found">ఆ అంశం ఇకపై సర్వర్‌లో లేదు.</string>
-    <string name="search_error_server">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది.</string>
-    <string name="search_error_server_with_code">సర్వర్ దోషాన్ని తిరిగి ఇచ్చింది (%1$d).</string>
-    <string name="search_error_storage">స్థానిక డేటాను చదవలేకపోయాం.</string>
     <string name="search_error_unknown">శోధిస్తున్నప్పుడు ఏదో తప్పు జరిగింది.</string>
 </resources>

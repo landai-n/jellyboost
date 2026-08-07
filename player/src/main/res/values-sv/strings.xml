@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Kunde inte spela upp det på %1$s.</string>
 
     <string name="player_casting_to">Castar till %1$s</string>
+
+    <string name="player_error_server">Servern kunde inte starta uppspelningen.</string>
+    <string name="player_error_server_with_code">Servern kunde inte starta uppspelningen (%1$d).</string>
+    <string name="player_error_unknown">Något gick fel när uppspelningen skulle starta.</string>
+    <string name="player_error_unsupported_source">Det här objektet kan inte spelas upp på den här enheten.</string>
 </resources>

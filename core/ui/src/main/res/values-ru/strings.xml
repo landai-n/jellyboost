@@ -90,4 +90,12 @@
         <item quantity="many">%1$d элементов уже на этом устройстве</item>
         <item quantity="other">%1$d элементов уже на этом устройстве</item>
     </plurals>
+
+    <string name="error_network">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
+    <string name="error_unauthorized">Срок действия сеанса истёк. Войдите снова, чтобы продолжить.</string>
+    <string name="error_not_found_item">Этого элемента больше нет на сервере.</string>
+    <string name="error_not_found_library">Этой библиотеки больше нет на сервере.</string>
+    <string name="error_server">Сервер вернул ошибку.</string>
+    <string name="error_server_with_code">Сервер вернул ошибку (%1$d).</string>
+    <string name="error_storage">Не удалось прочитать локальные данные.</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Filter zurücksetzen</string>
     <string name="library_retry">Erneut versuchen</string>
 
-    <string name="library_error_network">Dein Server ist nicht erreichbar. Überprüfe deine Verbindung und versuche es erneut.</string>
-    <string name="library_error_unauthorized">Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.</string>
-    <string name="library_error_not_found">Diese Bibliothek ist nicht mehr auf dem Server vorhanden.</string>
-    <string name="library_error_server">Der Server hat einen Fehler zurückgegeben.</string>
-    <string name="library_error_server_with_code">Der Server hat einen Fehler zurückgegeben (%1$d).</string>
-    <string name="library_error_storage">Lokale Daten konnten nicht gelesen werden.</string>
     <string name="library_error_unknown">Beim Laden dieser Bibliothek ist etwas schiefgegangen.</string>
 </resources>

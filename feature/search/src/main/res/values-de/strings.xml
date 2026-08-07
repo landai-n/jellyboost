@@ -14,11 +14,5 @@
     <string name="search_prompt">Tippe, um deine Bibliotheken zu durchsuchen.</string>
     <string name="search_no_results">Keine Treffer für „%1$s“.</string>
 
-    <string name="search_error_network">Dein Server ist nicht erreichbar. Überprüfe deine Verbindung und versuche es erneut.</string>
-    <string name="search_error_unauthorized">Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.</string>
-    <string name="search_error_not_found">Dieser Titel ist nicht mehr auf dem Server.</string>
-    <string name="search_error_server">Der Server hat einen Fehler zurückgegeben.</string>
-    <string name="search_error_server_with_code">Der Server hat einen Fehler zurückgegeben (%1$d).</string>
-    <string name="search_error_storage">Lokale Daten konnten nicht gelesen werden.</string>
     <string name="search_error_unknown">Bei der Suche ist etwas schiefgegangen.</string>
 </resources>

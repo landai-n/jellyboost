@@ -119,4 +119,9 @@
     <string name="player_message_cast_left_syncplay">Saliste de SyncPlay para transmitir a %1$s.</string>
     <string name="player_message_cast_failed">No se pudo reproducir eso en %1$s.</string>
     <string name="player_casting_to">Transmitiendo a %1$s</string>
+
+    <string name="player_error_server">El servidor no pudo iniciar la reproducción.</string>
+    <string name="player_error_server_with_code">El servidor no pudo iniciar la reproducción (%1$d).</string>
+    <string name="player_error_unknown">Algo salió mal al iniciar la reproducción.</string>
+    <string name="player_error_unsupported_source">Este elemento no se puede reproducir en este dispositivo.</string>
 </resources>

@@ -90,4 +90,12 @@
         <item quantity="many">%1$d pozycji jest już na tym urządzeniu</item>
         <item quantity="other">%1$d pozycji jest już na tym urządzeniu</item>
     </plurals>
+
+    <string name="error_network">Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="error_unauthorized">Twoja sesja wygasła. Zaloguj się ponownie, aby kontynuować.</string>
+    <string name="error_not_found_item">Tego elementu nie ma już na serwerze.</string>
+    <string name="error_not_found_library">Tej biblioteki nie ma już na serwerze.</string>
+    <string name="error_server">Serwer zwrócił błąd.</string>
+    <string name="error_server_with_code">Serwer zwrócił błąd (%1$d).</string>
+    <string name="error_storage">Nie udało się odczytać danych lokalnych.</string>
 </resources>

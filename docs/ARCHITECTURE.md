@@ -609,3 +609,53 @@ or test double changed. `:player` also gained `androidx.appcompat` and `androidx
 cast button is an AppCompat view, which is why `MainActivity` is a `FragmentActivity` and the app
 theme is AppCompat-derived (DECISIONS.md 2026-07-31).
 <!-- END: Chromecast (M12) -->
+
+<!-- BEGIN: Error copy (audit H8) -->
+## Error copy
+
+Full detail on the translation machinery: [`docs/features/localization.md`](features/localization.md).
+
+One mapping from the `AppError` taxonomy to the sentence a user reads, in `:core:ui`. Before this
+there were five — `LibraryErrorMessage`, `SearchErrorMessage`, and one apiece inside
+`HomeViewModel`, `ItemDetailViewModel` and `PlayerViewModel` — and the last three returned English
+Kotlin literals, which `MissingTranslation` cannot see. Home, detail and playback therefore showed
+untranslated error copy on all 68 non-English locales while the i18n gate reported green
+(audit H8 = DUP-1 = CPX-13; the debt was logged as "M9 polish" in DECISIONS.md, 2026-07-28).
+
+| piece | where | role |
+|---|---|---|
+| `UiText` | `:core:ui` `text/UiText.kt` | `Res(id, args)` — a resource id a `ViewModel` can decide on and a screen resolves at draw time; `Raw(value)` for wording that came from outside the app (an ExoPlayer or Cast error) and has no resource. |
+| `AppErrorCopy` | `:core:ui` `error/AppErrorCopy.kt` | The three branches a screen may override: `unknown` (required), `notFound`, `server`/`serverWithCode`. |
+| `AppError.toUiText(copy)` | same file | The mapping. Network, unauthorized, storage and the item wording of not-found are `:core:ui` resources no screen can override. |
+
+```
+:core:common   AppError (the taxonomy — no copy, no Android)
+      ▲
+:core:ui       toUiText(AppErrorCopy) ──► UiText ──► UiText.resolve()  @Composable
+      ▲                  ▲                                    ▲
+      │   HomeErrorCopy ─┤ DetailErrorCopy   PlayerErrorCopy   │ screens resolve at draw time
+      └── LibraryErrorCopy   SearchErrorCopy                   │
+```
+
+**What counts as an override.** Only copy that genuinely differs, and each difference is load-bearing:
+
+- **`unknown` is always the screen's own** — an unclassified failure can only be described by naming
+  what was being done ("loading this library", "starting playback"), and only the screen knows that.
+- **not-found has two wordings**, item and library, because home and the libraries tab asked about a
+  library and a 404 there is not a missing title. Both are `:core:ui` resources
+  (`error_not_found_item` / `error_not_found_library`), so the two screens that need the library
+  wording share one translation rather than keeping two.
+- **the player overrides both server branches.** A server that answered and refused to *open a
+  stream* is a different failure from a browse request coming back with an error, with a different
+  remedy (try another quality, not pull-to-refresh).
+
+Everything else — "can't reach your server", "your session expired", "couldn't read local data" —
+is one sentence, translated once. `AppError.ServerResolution` deliberately shares the network copy:
+to a user, an address that answers nothing usable and a server that is unreachable are the same dead
+end with the same first thing to try.
+
+**The one place that still holds English in Kotlin** is `DownloadErrorCopy` (`:data:downloads`), and
+for a reason that does not apply here: its message is written to Room at failure time and read back
+days later, so it could not be re-resolved against the device's current locale anyway. Moving it
+needs the row to store a key rather than a sentence — a schema migration, not a copy change.
+<!-- END: Error copy (audit H8) -->

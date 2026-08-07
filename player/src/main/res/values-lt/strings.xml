@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Nepavyko to paleisti įrenginyje %1$s.</string>
 
     <string name="player_casting_to">Transliuojama į %1$s</string>
+
+    <string name="player_error_server">Serveris negalėjo pradėti leidimo.</string>
+    <string name="player_error_server_with_code">Serveris negalėjo pradėti leidimo (%1$d).</string>
+    <string name="player_error_unknown">Pradedant leidimą kažkas nutiko ne taip.</string>
+    <string name="player_error_unsupported_source">Šio elemento šiame įrenginyje paleisti negalima.</string>
 </resources>

@@ -1,5 +1,6 @@
 package dev.jellyboost.player.ui
 
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackSpeed
@@ -21,7 +22,7 @@ import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
  */
 data class PlayerUiState(
     val isLoading: Boolean = true,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val title: String = "",
     /**
      * The item's artwork, or `null` while it is still being fetched — or when the server has none.

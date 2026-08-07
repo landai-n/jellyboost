@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">Bu, onu bu cihazdan kaldırır. İstediğiniz zaman tekrar indirebilirsiniz.</string>
     <string name="detail_delete_download_dialog_confirm">Sil</string>
     <string name="detail_delete_download_dialog_cancel">İptal</string>
+
+    <string name="detail_error_unknown">Bu öğe yüklenirken bir şeyler ters gitti.</string>
 </resources>

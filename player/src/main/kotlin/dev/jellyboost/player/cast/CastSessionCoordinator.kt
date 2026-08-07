@@ -1,6 +1,6 @@
 package dev.jellyboost.player.cast
 
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.report.PlaybackReporter

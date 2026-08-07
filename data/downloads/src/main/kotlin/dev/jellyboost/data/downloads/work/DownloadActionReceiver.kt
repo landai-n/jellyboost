@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import dagger.hilt.android.AndroidEntryPoint
-import dev.jellyboost.core.network.di.ApplicationScope
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.data.downloads.DownloadRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

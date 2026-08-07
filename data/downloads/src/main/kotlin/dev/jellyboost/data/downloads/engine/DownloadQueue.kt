@@ -1,6 +1,7 @@
 package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.Ticks
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -8,7 +9,6 @@ import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadWithFiles
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner

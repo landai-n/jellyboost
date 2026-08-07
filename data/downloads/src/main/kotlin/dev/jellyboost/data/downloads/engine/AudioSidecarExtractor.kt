@@ -12,7 +12,7 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext

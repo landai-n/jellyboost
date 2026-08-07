@@ -8,12 +8,12 @@ import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.LibraryViewEntity
 import dev.jellyboost.core.database.entities.UserDataEntity
+import dev.jellyboost.core.network.toSdkInstant
 import dev.jellyboost.data.mapper.ArtworkRequestWidths
 import dev.jellyboost.data.mapper.ImageKind
 import dev.jellyboost.data.mapper.ImageUrlFactory
 import dev.jellyboost.data.mapper.ItemMapper
 import dev.jellyboost.data.mapper.toItemType
-import dev.jellyboost.data.toSdkInstant
 import dev.jellyboost.data.userdata.toDomain
 import kotlinx.serialization.json.Json
 import org.jellyfin.sdk.model.api.BaseItemDto

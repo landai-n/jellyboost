@@ -1,9 +1,9 @@
 package dev.jellyboost.player.syncplay
 
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.network.SessionStateHolder
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
-import dev.jellyboost.core.network.di.MainDispatcher
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.session.PlayerEvent

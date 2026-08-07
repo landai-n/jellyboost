@@ -2,6 +2,7 @@ package dev.jellyboost.core.network
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.getOrNull
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.database.dao.UserDao
@@ -10,7 +11,6 @@ import dev.jellyboost.core.database.entities.ServerEntity
 import dev.jellyboost.core.database.entities.UserEntity
 import dev.jellyboost.core.datastore.SecureCredentialStore
 import dev.jellyboost.core.datastore.StoredSession
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.model.AuthenticatedSession
 import dev.jellyboost.core.network.model.LoginContext
 import dev.jellyboost.core.network.model.PublicUserInfo

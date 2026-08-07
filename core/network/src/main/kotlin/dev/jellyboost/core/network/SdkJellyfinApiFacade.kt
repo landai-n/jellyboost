@@ -1,6 +1,6 @@
 package dev.jellyboost.core.network
 
-import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn

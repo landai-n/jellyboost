@@ -1,7 +1,7 @@
 package dev.jellyboost.data.downloads
 
 import dev.jellyboost.core.common.AppResult
-import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.data.runCatchingApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext

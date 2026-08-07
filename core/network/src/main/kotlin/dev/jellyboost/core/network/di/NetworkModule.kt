@@ -70,6 +70,14 @@ internal object NetworkDispatchersModule {
     fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 
     /**
+     * The main thread, for the Media3 components that assert they are driven from one thread with a
+     * `Looper`. See [MainDispatcher] — it is a seam for tests as much as a binding.
+     */
+    @Provides
+    @MainDispatcher
+    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+
+    /**
      * The process-lifetime scope for work that outlives any screen: the connectivity monitor, the
      * reachability probe loop, and the fire-and-forget browse-cache write-through.
      *

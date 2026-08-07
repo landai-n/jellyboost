@@ -1,5 +1,31 @@
 # Quality audit — 2026-08-06 (code quality, duplication, complexity, architecture)
 
+## Remediation — CLOSED 2026-08-07
+
+All four tiers of §6 landed across four waves; the findings below are the record of what was
+found, not a backlog. See `STATUS.md` for each wave and `DECISIONS.md` (2026-08-06 / 08-07) for
+the judgement calls.
+
+| tier | findings | outcome |
+|---|---|---|
+| 1 — correctness | H1–H4, HYG-5, HYG-8/DUP-3, HYG-9 | done. Cache eviction wired (30-day TTL), the merge is one transaction, sign-out clears this account's rows, all 14 SyncPlay `runCatching` sites rethrow cancellation. |
+| 2 — gates & governance | **H7**, **ARCH-4**, H8, DUP-11 | done. Detekt un-blinded: `ReturnCount` 6→3, `LongMethod`/`LongParameterList` Composable+Inject exemptions dropped (12 composables decomposed, 6+11+34 targeted suppressions); `ForbiddenImport` makes "no `org.jellyfin.*` in `:app`/`:core:ui`/`feature/*`" build-failing. |
+| 3 — structural | H5, H6, CPX-4/5/6/7/9/10/11/12/15, DUP-2/5/9, ARCH-1/2/3/6/7/8/9/10 | done. `GroupSessionState` boxing, the rejoin-policy and recovery-net extractions, `ActiveSession`, the detail delegate, one `MediaCard`, and the visibility sweeps (`:player` 129 public → 25). |
+| 4 — opportunistic | DUP-6, DUP-10, DUP-12..15, HYG-6, HYG-10, HYG-11, ARCH-5 | done. |
+
+**Three deliberate leave-opens**, each logged rather than fixed:
+1. **`DownloadErrorCopy` stays Kotlin, not `strings.xml`** — the copy is written to Room at failure
+   time and read back days later, so it could not be re-resolved against the device's current
+   locale anyway (DECISIONS.md:374). H8 consolidated everything that *can* be resource-backed.
+2. **`JellyfinItem.displaySubtitle`/`.episodeLabel` survive** as the non-composable fallback for
+   `:player`'s `MediaSession` metadata. Every *drawing* surface goes through `:core:ui`.
+3. **The `DownloadedMetadataRefresher`/`DownloadedMediaProvider` interface seam is still backlog** —
+   ARCH-3 narrowed the leak from two public engine classes to two internal constructors, no more.
+   Related: the `CastPlaybackHost` cluster cannot go internal while `:app` injects
+   `CastSessionCoordinator` directly (compiler-verified 2026-08-07); that needs a starter seam.
+
+---
+
 Third full audit. Unlike the two diff audits (`audit-2026-07.md`, `audit-2026-08.md`),
 this one is a *whole-tree structural* pass over production source (334 files, ~58k lines,
 `*/src/main/*`, worktrees/build excluded): architecture conformance vs `docs/PLAN.md`,

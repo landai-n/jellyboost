@@ -6,7 +6,6 @@ import org.jellyfin.sdk.model.api.DeviceProfile
 import org.jellyfin.sdk.model.api.DirectPlayProfile
 import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
-import org.jellyfin.sdk.model.api.ProfileCondition
 import org.jellyfin.sdk.model.api.ProfileConditionType
 import org.jellyfin.sdk.model.api.ProfileConditionValue
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
@@ -75,16 +74,11 @@ object CastDeviceProfile {
             containerProfiles = emptyList(),
             codecProfiles = CODEC_PROFILES,
             subtitleProfiles = SUBTITLE_PROFILES,
-            maxStreamingBitrate = MAX_STREAMING_BITRATE,
-            maxStaticBitrate = MAX_STATIC_BITRATE,
-            musicStreamingTranscodingBitrate = MAX_MUSIC_TRANSCODING_BITRATE,
+            maxStreamingBitrate = DeviceProfileDefaults.MAX_STREAMING_BITRATE,
+            maxStaticBitrate = DeviceProfileDefaults.MAX_STATIC_BITRATE,
+            musicStreamingTranscodingBitrate = DeviceProfileDefaults.MAX_MUSIC_TRANSCODING_BITRATE,
         )
     }
-
-    /** The same ceiling the local profile takes from jellyfin-web's `browserDeviceProfile.js`. */
-    const val MAX_STREAMING_BITRATE: Int = 120_000_000
-    private const val MAX_STATIC_BITRATE = 100_000_000
-    private const val MAX_MUSIC_TRANSCODING_BITRATE = 384_000
 
     /** The one H.264 level every Cast receiver decodes, expressed the way the server compares it. */
     const val MAX_H264_LEVEL: String = "42"
@@ -142,18 +136,26 @@ object CastDeviceProfile {
                 applyConditions = emptyList(),
                 conditions =
                     listOf(
-                        condition(
+                        DeviceProfileDefaults.condition(
                             ProfileConditionType.EQUALS_ANY,
                             ProfileConditionValue.VIDEO_PROFILE,
                             "high|main|baseline|constrained baseline",
                         ),
-                        condition(
+                        DeviceProfileDefaults.condition(
                             ProfileConditionType.LESS_THAN_EQUAL,
                             ProfileConditionValue.VIDEO_LEVEL,
                             MAX_H264_LEVEL,
                         ),
-                        condition(ProfileConditionType.LESS_THAN_EQUAL, ProfileConditionValue.WIDTH, MAX_WIDTH),
-                        condition(ProfileConditionType.LESS_THAN_EQUAL, ProfileConditionValue.HEIGHT, MAX_HEIGHT),
+                        DeviceProfileDefaults.condition(
+                            ProfileConditionType.LESS_THAN_EQUAL,
+                            ProfileConditionValue.WIDTH,
+                            MAX_WIDTH,
+                        ),
+                        DeviceProfileDefaults.condition(
+                            ProfileConditionType.LESS_THAN_EQUAL,
+                            ProfileConditionValue.HEIGHT,
+                            MAX_HEIGHT,
+                        ),
                     ),
             ),
             CodecProfile(
@@ -162,7 +164,7 @@ object CastDeviceProfile {
                 applyConditions = emptyList(),
                 conditions =
                     listOf(
-                        condition(
+                        DeviceProfileDefaults.condition(
                             ProfileConditionType.LESS_THAN_EQUAL,
                             ProfileConditionValue.AUDIO_CHANNELS,
                             MAX_AUDIO_CHANNELS,
@@ -175,7 +177,7 @@ object CastDeviceProfile {
                 applyConditions = emptyList(),
                 conditions =
                     listOf(
-                        condition(
+                        DeviceProfileDefaults.condition(
                             ProfileConditionType.LESS_THAN_EQUAL,
                             ProfileConditionValue.AUDIO_CHANNELS,
                             MAX_AUDIO_CHANNELS,
@@ -232,16 +234,4 @@ object CastDeviceProfile {
      */
     private val SUBTITLE_PROFILES =
         listOf("vtt", "webvtt").map { SubtitleProfile(format = it, method = SubtitleDeliveryMethod.EXTERNAL) }
-
-    private fun condition(
-        condition: ProfileConditionType,
-        property: ProfileConditionValue,
-        value: String,
-    ): ProfileCondition =
-        ProfileCondition(
-            condition = condition,
-            property = property,
-            value = value,
-            isRequired = false,
-        )
 }

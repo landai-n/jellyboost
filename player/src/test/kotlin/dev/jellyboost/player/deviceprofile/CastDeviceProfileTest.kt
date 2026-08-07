@@ -134,7 +134,7 @@ class CastDeviceProfileTest {
 
     @Test
     fun `the quality picker's cap replaces the profile's own ceiling`() {
-        CastDeviceProfile.build().maxStreamingBitrate shouldBe CastDeviceProfile.MAX_STREAMING_BITRATE
+        CastDeviceProfile.build().maxStreamingBitrate shouldBe DeviceProfileDefaults.MAX_STREAMING_BITRATE
         CastDeviceProfile.build(maxStreamingBitrate = 4_000_000).maxStreamingBitrate shouldBe 4_000_000
     }
 

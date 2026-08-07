@@ -7,7 +7,6 @@ import org.jellyfin.sdk.model.api.DeviceProfile
 import org.jellyfin.sdk.model.api.DirectPlayProfile
 import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
-import org.jellyfin.sdk.model.api.ProfileCondition
 import org.jellyfin.sdk.model.api.ProfileConditionType
 import org.jellyfin.sdk.model.api.ProfileConditionValue
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
@@ -123,9 +122,9 @@ class DeviceProfileBuilder
                 containerProfiles = containerProfiles,
                 codecProfiles = codecProfiles,
                 subtitleProfiles = subtitleProfiles(directPlayAss),
-                maxStreamingBitrate = MAX_STREAMING_BITRATE,
-                maxStaticBitrate = MAX_STATIC_BITRATE,
-                musicStreamingTranscodingBitrate = MAX_MUSIC_TRANSCODING_BITRATE,
+                maxStreamingBitrate = DeviceProfileDefaults.MAX_STREAMING_BITRATE,
+                maxStaticBitrate = DeviceProfileDefaults.MAX_STATIC_BITRATE,
+                musicStreamingTranscodingBitrate = DeviceProfileDefaults.MAX_MUSIC_TRANSCODING_BITRATE,
             )
         }
 
@@ -146,11 +145,10 @@ class DeviceProfileBuilder
                 applyConditions = emptyList(),
                 conditions =
                     listOf(
-                        ProfileCondition(
-                            condition = ProfileConditionType.EQUALS_ANY,
-                            property = ProfileConditionValue.VIDEO_PROFILE,
-                            value = profiles.joinToString("|"),
-                            isRequired = false,
+                        DeviceProfileDefaults.condition(
+                            ProfileConditionType.EQUALS_ANY,
+                            ProfileConditionValue.VIDEO_PROFILE,
+                            profiles.joinToString("|"),
                         ),
                     ),
             )
@@ -175,11 +173,6 @@ class DeviceProfileBuilder
              * direct-playable content, which is a far worse default on a tablet.
              */
             const val DEFAULT_DIRECT_PLAY_ASS: Boolean = true
-
-            /** From jellyfin-web's `browserDeviceProfile.js`. */
-            const val MAX_STREAMING_BITRATE: Int = 120_000_000
-            private const val MAX_STATIC_BITRATE = 100_000_000
-            private const val MAX_MUSIC_TRANSCODING_BITRATE = 384_000
 
             /**
              * Containers ExoPlayer can demux.

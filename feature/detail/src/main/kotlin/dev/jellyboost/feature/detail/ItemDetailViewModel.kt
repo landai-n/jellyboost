@@ -10,12 +10,10 @@ import dev.jellyboost.core.common.getOrNull
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
-import dev.jellyboost.core.common.selection.BatchOutcome
 import dev.jellyboost.core.common.selection.BatchReport
 import dev.jellyboost.core.common.selection.ItemSelection
-import dev.jellyboost.core.common.selection.SelectionAction
 import dev.jellyboost.core.common.selection.SelectionIntent
-import dev.jellyboost.core.common.selection.runBatch
+import dev.jellyboost.core.common.selection.runSelectionBatch
 import dev.jellyboost.core.common.syncplay.SyncPlayGroupHandle
 import dev.jellyboost.core.common.syncplay.SyncPlaySession
 import dev.jellyboost.core.ui.error.AppErrorCopy
@@ -24,6 +22,7 @@ import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
+import dev.jellyboost.data.downloads.observeBadgeStates
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -163,26 +162,19 @@ class ItemDetailViewModel
          * Keeps the Download button — and the badge on every season, episode and related card —
          * in step with the pipeline.
          *
-         * One subscription to the whole map rather than one per visible item: an episode list can
-         * hold forty rows, and forty Room Flows re-emitting on every throttled progress write is
-         * exactly the cost `observeStates()` exists to avoid.
+         * One subscription to the whole map rather than one per visible item, error-guarded so a
+         * collapse clears the badges rather than freezing them — both rules, and why, live in
+         * [observeBadgeStates].
          */
         private fun observeDownloadState() {
             viewModelScope.launch {
-                downloads
-                    .observeStates()
-                    // Degrade to no badges rather than freezing them — see
-                    // `HomeViewModel.observeDownloadStates` (audit STAB-10).
-                    .catch { error ->
-                        Timber.w(error, "The download-state flow failed; clearing the detail badges")
-                        emit(emptyMap())
-                    }.collect { states ->
-                        // Held so that a later load — which replaces every item in the state — can
-                        // re-apply them. `observeStates()` is distinct-until-changed and would not
-                        // re-emit just because this screen refetched.
-                        downloadStates = states
-                        _uiState.update { it.withDownloadStates(states) }
-                    }
+                downloads.observeBadgeStates(screen = "detail").collect { states ->
+                    // Held so that a later load — which replaces every item in the state — can
+                    // re-apply them. `observeStates()` is distinct-until-changed and would not
+                    // re-emit just because this screen refetched.
+                    downloadStates = states
+                    _uiState.update { it.withDownloadStates(states) }
+                }
             }
         }
 
@@ -340,11 +332,9 @@ class ItemDetailViewModel
          * came back — because a reload here is a background refresh (a connectivity change), not
          * something the user asked for.
          *
-         * The batch itself: *Mark watched / unwatched* is `UserDataRepository`, local-first, so it
-         * works with no network; *Download* skips episodes already on the device or already queued
-         * ([DownloadState.isDownloadable]) — the same rule `DownloadEnqueuer` applies when it
-         * expands a season — and reports the count it skipped. Selection mode ends before the work
-         * starts; the snackbar says when it finished.
+         * The batch itself is `runSelectionBatch`, shared with the library grid — the skip rule and
+         * the container carve-out live there. Selection mode ends before the work starts; the
+         * snackbar says when it finished.
          */
         fun onSelection(intent: SelectionIntent) {
             val ids = _selection.value.ids.toList()
@@ -364,7 +354,14 @@ class ItemDetailViewModel
 
             if (action == null || ids.isEmpty()) return
             viewModelScope.launch {
-                val outcome = runSelectionBatch(action, ids, downloadStates, userDataRepository, downloads)
+                val outcome =
+                    runSelectionBatch(
+                        action = action,
+                        ids = ids,
+                        downloadStates = downloadStates,
+                        setPlayed = userDataRepository::setPlayed,
+                        enqueue = downloads::enqueue,
+                    )
                 _uiState.update { it.copy(userMessage = UserMessage.BatchFinished(BatchReport(action, outcome))) }
             }
         }
@@ -410,9 +407,9 @@ class ItemDetailViewModel
         /**
          * Sends one *queue* action for whatever this page's Play button resolves to (M11 Phase 4).
          *
-         * One entry point rather than a method per action, exactly as [onSelection] is — and for the
-         * same reason as `runSelectionBatch` below, the dispatch itself is a top-level function: this
-         * class is at the project's function-count ceiling (detekt `TooManyFunctions`, threshold 20).
+         * One entry point rather than a method per action, exactly as [onSelection] is — and the
+         * dispatch itself is the top-level `sendGroupAction` below: this class is at the project's
+         * function-count ceiling (detekt `TooManyFunctions`, threshold 20).
          *
          * Nothing local happens, and nothing here waits to see whether it worked in the sense of the
          * group actually moving: the call is a request, the group's queue is the server's, and its
@@ -514,9 +511,9 @@ class ItemDetailViewModel
  * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its slowest
  * request rather than by the sum of three.
  *
- * A top-level function for the same reason `runSelectionBatch` and `sendGroupAction` are ones:
- * `ItemDetailViewModel` is at detekt's function-count ceiling (`TooManyFunctions`, threshold 20),
- * and this depends on nothing but its arguments.
+ * A top-level function for the same reason `sendGroupAction` below is one: `ItemDetailViewModel`
+ * is at detekt's function-count ceiling (`TooManyFunctions`, threshold 20), and this depends on
+ * nothing but its arguments.
  */
 private suspend fun fetchRelated(
     item: JellyfinItem,
@@ -566,41 +563,10 @@ private data class Related(
 private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
 
 /**
- * Runs one batch action over [ids] and reports how it went.
- *
- * A top-level function rather than a method: `ItemDetailViewModel` is already at the project's
- * function-count ceiling (detekt `TooManyFunctions`, threshold 20), and this dispatch depends on
- * nothing but its arguments — which also makes it readable on its own.
- *
- * - **watched / unwatched** — `UserDataRepository`, which writes Room and publishes on the event bus
- *   *before* it contacts the server, so the whole batch works with no network and the ticks appear
- *   from the local write (docs/PLAN.md, "Data layer").
- * - **download** — episodes already on the device or already queued are not passed to the enqueuer
- *   at all ([DownloadState.isDownloadable]) and are counted as `skipped`; a failed one *is* passed,
- *   because re-enqueueing is how a failure is retried. Offline, each enqueue fails exactly as a
- *   single tap on the same row does today, and the summary reports the failures.
- */
-private suspend fun runSelectionBatch(
-    action: SelectionAction,
-    ids: List<String>,
-    downloadStates: Map<String, DownloadState>,
-    userDataRepository: UserDataRepository,
-    downloads: DownloadRepository,
-): BatchOutcome =
-    when (action) {
-        SelectionAction.MARK_WATCHED -> runBatch(ids) { userDataRepository.setPlayed(it, played = true) }
-        SelectionAction.MARK_UNWATCHED -> runBatch(ids) { userDataRepository.setPlayed(it, played = false) }
-        SelectionAction.DOWNLOAD -> {
-            val targets = ids.filter { (downloadStates[it] ?: DownloadState.NotDownloaded).isDownloadable }
-            runBatch(targets, skipped = ids.size - targets.size) { downloads.enqueue(it) }
-        }
-    }
-
-/**
  * Turns one [GroupAction] into the SyncPlay request that carries it.
  *
- * A top-level function for the same reason `runSelectionBatch` is one: `ItemDetailViewModel` is at
- * detekt's function-count ceiling, and this dispatch depends on nothing but its arguments.
+ * A top-level function for the same reason `fetchRelated` above is one: `ItemDetailViewModel` is
+ * at detekt's function-count ceiling, and this dispatch depends on nothing but its arguments.
  *
  * Neither queue action carries a resume position, deliberately: an item added to a queue is not a
  * resume, and the group would be surprised to find it starting in the middle. Playing something

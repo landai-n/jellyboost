@@ -43,6 +43,8 @@ import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.MPillBadge
 import dev.jellyboost.core.ui.component.PrimaryPillButton
+import dev.jellyboost.core.ui.component.describeParts
+import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
@@ -335,20 +337,23 @@ private fun HeroMeta(
     modifier: Modifier = Modifier,
 ) {
     val remaining = item.remainingMinutes
-    if (item.episodeLabel == null && item.officialRating == null && remaining == null) return
+    val episodeLabel = item.episodeNumberLabel()
+    if (episodeLabel == null && item.officialRating == null && remaining == null) return
 
     val certificate = item.officialRating
     val ratedText = certificate?.let { stringResource(R.string.home_hero_rated, it) }
     val remainingText = remaining?.let { pluralStringResource(R.plurals.home_minutes_left, it, it) }
-    val description =
-        listOfNotNull(item.episodeLabel, ratedText, remainingText).joinToString(META_DESCRIPTION_SEPARATOR)
+    // `describeParts` rather than a plain join: this line was the one of the three assemblers
+    // without the blank-trim, so a certificate the server returned as `""` was announced as
+    // "Rated , 22 minutes left" (audit DUP-8).
+    val description = describeParts(episodeLabel, ratedText, remainingText)
 
     FlowRow(
         modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(MetaGap),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        item.episodeLabel?.let { label ->
+        episodeLabel?.let { label ->
             HeroMetaText(text = label, modifier = Modifier.align(Alignment.CenterVertically))
         }
         certificate?.let {
@@ -359,9 +364,6 @@ private fun HeroMeta(
         }
     }
 }
-
-/** A comma and a space — a pause in every screen reader, where the row draws a gap. */
-private const val META_DESCRIPTION_SEPARATOR = ", "
 
 @Composable
 private fun HeroMetaText(

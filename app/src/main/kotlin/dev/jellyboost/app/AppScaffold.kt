@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
@@ -56,7 +55,7 @@ import dev.chrisbanes.haze.hazeSource
 import dev.jellyboost.core.common.Routes
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.model.SessionState
-import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.LocalAppChromePadding
@@ -253,19 +252,10 @@ internal fun AppScaffold(
                 )
             }
 
-            SnackbarHost(
+            JellyboostSnackbarHost(
                 hostState = snackbarHostState,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .snackbarInset(
-                            chromePadding = chromePadding,
-                            navigationBarInset =
-                                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
-                        ),
-            ) { data ->
-                PillSnackbar(snackbarData = data)
-            }
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
     }
 }
@@ -344,37 +334,6 @@ private fun TopChromeScrim(
                 .height(height)
                 .background(JellyfinGradients.TopChromeScrim),
     )
-}
-
-/**
- * Keeps the snackbar clear of whatever is at the bottom of the window.
- *
- * With the floating nav pill up that is the chrome's own bottom padding — the pill's height, its
- * margin and the navigation-bar inset — so the snackbar floats just above it. Everywhere else the
- * frame consumes no insets at all, so the host keeps itself off the gesture bar with the
- * navigation-bar inset it is handed. The two are combined as a *max* read inside [SnackbarInset]'s
- * `calculateBottomPadding`, i.e. in the layout phase: the chrome padding animates every frame of a
- * navigation, and reading it here in composition used to re-invalidate the whole scaffold scope
- * per frame (and made the snackbar dip under the gesture bar mid-animation, then jump back up).
- */
-private fun Modifier.snackbarInset(
-    chromePadding: PaddingValues,
-    navigationBarInset: Dp,
-): Modifier = padding(SnackbarInset(chromePadding, navigationBarInset))
-
-/** See [snackbarInset]; the deferred read lives in [calculateBottomPadding]. */
-@Stable
-internal class SnackbarInset(
-    private val chromePadding: PaddingValues,
-    private val navigationBarInset: Dp,
-) : PaddingValues {
-    override fun calculateBottomPadding(): Dp = maxOf(chromePadding.calculateBottomPadding(), navigationBarInset)
-
-    override fun calculateTopPadding(): Dp = 0.dp
-
-    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
-
-    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
 }
 
 /**

@@ -25,8 +25,6 @@
     <string name="detail_type_series">シリーズ</string>
     <string name="detail_type_season">シーズン</string>
     <string name="detail_type_episode">エピソード</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">第%1$d話</string>
     <string name="detail_meta_rating">評価 %1$s</string>
     <string name="detail_meta_rated">視聴年齢 %1$s</string>

@@ -25,8 +25,6 @@
     <string name="detail_type_series">Serie</string>
     <string name="detail_type_season">Staffel</string>
     <string name="detail_type_episode">Episod</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Episod %1$d</string>
     <string name="detail_meta_rating">Bewäertung %1$s</string>
     <string name="detail_meta_rated">Alterfräigab %1$s</string>

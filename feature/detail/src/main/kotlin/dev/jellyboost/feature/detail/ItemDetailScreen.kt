@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -26,8 +25,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -57,13 +54,14 @@ import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.GlassIconTint
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
-import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.batchOutcomeText
+import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
@@ -105,15 +103,11 @@ fun ItemDetailScreen(
     // the set here would recompose the page (and re-create the episode list's content lambda) on
     // every toggle; the count is read inside [SelectionOverlay]'s own scope.
     val isSelecting by remember(selectionState) { derivedStateOf { selectionState.value.isActive } }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { userMessageText(it) }
-
-    LaunchedEffect(message) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.consumeMessage()
-        }
-    }
+    val snackbarHostState =
+        rememberOneShotSnackbar(
+            message = state.userMessage,
+            onShown = viewModel::consumeMessage,
+        ) { userMessageText(it) }
 
     // A play tap resolves to a navigation only when it is a *solo* play; in a group the ViewModel
     // sends the group a queue instead and the player is opened by the group's answer, through
@@ -190,10 +184,10 @@ fun ItemDetailScreen(
             )
         }
 
-        SnackbarHost(
+        JellyboostSnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding(),
-        ) { data -> PillSnackbar(snackbarData = data) }
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
 
         if (state.showDeleteConfirmation) {
             DeleteDownloadDialog(

@@ -25,8 +25,6 @@
     <string name="detail_type_series">Цуврал</string>
     <string name="detail_type_season">Улирал</string>
     <string name="detail_type_episode">Анги</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Анги %1$d</string>
     <string name="detail_meta_rating">Үнэлгээ %1$s</string>
     <string name="detail_meta_rated">насны ангилал %1$s</string>

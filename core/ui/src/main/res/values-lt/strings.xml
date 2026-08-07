@@ -98,4 +98,6 @@
     <string name="error_server">Serveris grąžino klaidą.</string>
     <string name="error_server_with_code">Serveris grąžino klaidą (%1$d).</string>
     <string name="error_storage">Nepavyko nuskaityti vietinių duomenų.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

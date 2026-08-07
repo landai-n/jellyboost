@@ -25,8 +25,6 @@
     <string name="detail_type_series">Seriál</string>
     <string name="detail_type_season">Řada</string>
     <string name="detail_type_episode">Epizoda</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">Epizoda %1$d</string>
     <string name="detail_meta_rating">Hodnocení %1$s</string>
     <string name="detail_meta_rated">přístupnost %1$s</string>

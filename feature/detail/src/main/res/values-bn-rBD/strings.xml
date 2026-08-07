@@ -24,8 +24,6 @@
     <string name="detail_type_series">সিরিজ</string>
     <string name="detail_type_season">সিজন</string>
     <string name="detail_type_episode">পর্ব</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">পর্ব %1$d</string>
     <string name="detail_meta_rating">রেটিং %1$s</string>
     <string name="detail_meta_rated">বয়স রেটিং %1$s</string>

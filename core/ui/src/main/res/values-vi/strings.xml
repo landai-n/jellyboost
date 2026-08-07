@@ -65,4 +65,6 @@
     <string name="error_server">Máy chủ đã trả về lỗi.</string>
     <string name="error_server_with_code">Máy chủ đã trả về lỗi (%1$d).</string>
     <string name="error_storage">Không thể đọc dữ liệu cục bộ.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

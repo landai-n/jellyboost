@@ -19,24 +19,24 @@ import dev.jellyboost.core.common.selection.BatchReport
 import dev.jellyboost.core.common.selection.ItemSelection
 import dev.jellyboost.core.common.selection.SelectionAction
 import dev.jellyboost.core.common.selection.SelectionIntent
-import dev.jellyboost.core.common.selection.runBatch
+import dev.jellyboost.core.common.selection.runSelectionBatch
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
+import dev.jellyboost.data.downloads.observeBadgeStates
+import dev.jellyboost.data.downloads.withDownloadState
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -94,7 +94,7 @@ class LibraryViewModel
         val selection: StateFlow<ItemSelection> = _selection.asStateFlow()
 
         /**
-         * The app-wide download-state map, mirrored here.
+         * The app-wide download-state map, mirrored here by [observeDownloadStates].
          *
          * Collected once and shared, rather than subscribed separately by the grid and by the batch
          * *Download* action: `observeStates()` is a Room Flow, and two collectors would be two
@@ -128,10 +128,7 @@ class LibraryViewModel
                     repository.getItemsPaged(query) { total -> publishTotalCount(query, total) }
                 }.cachedIn(viewModelScope)
                 .combine(downloadStates) { paging, states ->
-                    paging.map { item ->
-                        val next = states[item.id] ?: DownloadState.NotDownloaded
-                        if (next == item.downloadState) item else item.copy(downloadState = next)
-                    }
+                    paging.map { item -> item.withDownloadState(states) }
                 }.combine(userDataPatches) { paging, patches ->
                     if (patches.isEmpty()) {
                         paging
@@ -166,16 +163,19 @@ class LibraryViewModel
             observeUserDataChanges()
         }
 
+        /**
+         * Mirrors the shared, error-guarded badge map into [downloadStates] — see
+         * [observeBadgeStates] for the one-subscription and degrade-to-empty rules.
+         *
+         * Mirrored into a `MutableStateFlow` rather than combined straight into [items] because the
+         * batch *Download* action reads the same map synchronously, and two collectors would be two
+         * Room queries re-running on every throttled progress write.
+         */
         private fun observeDownloadStates() {
             viewModelScope.launch {
-                downloads
-                    .observeStates()
-                    // Degrade to no badges rather than freezing them — see
-                    // `HomeViewModel.observeDownloadStates` (audit STAB-10).
-                    .catch { error ->
-                        Timber.w(error, "The download-state flow failed; clearing the library badges")
-                        emit(emptyMap())
-                    }.collect { states -> downloadStates.value = states }
+                downloads.observeBadgeStates(screen = "library").collect { states ->
+                    downloadStates.value = states
+                }
             }
         }
 
@@ -334,16 +334,9 @@ class LibraryViewModel
          * and leaving the bar up over a live grid invites a second tap on the same selection. The
          * snackbar is what says when it finished.
          *
-         * *Mark watched / unwatched* goes through `UserDataRepository`, which writes Room first and
-         * publishes on the event bus before it contacts the server — so the whole batch works
-         * offline, and the ticks appear from the local write.
-         *
-         * *Download* skips what is already on the device or already queued
-         * ([DownloadState.isDownloadable]) and reports the count it skipped. A **series** never has
-         * a download row of its own — the pipeline expands it into episodes — so it always looks
-         * downloadable here and is always handed to `DownloadRepository.enqueue`, which does the
-         * per-episode skipping itself (DECISIONS.md, 2026-07-29). Offline, an enqueue fails exactly
-         * as a single tap on the same card would: the summary reports the failures.
+         * The batch itself is [runSelectionBatch], shared with the detail screen's episode list —
+         * the local-first watched write, the "already downloaded is skipped, not failed" rule and
+         * the series carve-out all live there.
          */
         private fun runSelection(action: SelectionAction) {
             val ids = _selection.value.ids.toList()
@@ -352,20 +345,13 @@ class LibraryViewModel
 
             viewModelScope.launch {
                 val outcome =
-                    when (action) {
-                        SelectionAction.MARK_WATCHED ->
-                            runBatch(ids) { userDataRepository.setPlayed(it, played = true) }
-
-                        SelectionAction.MARK_UNWATCHED ->
-                            runBatch(ids) { userDataRepository.setPlayed(it, played = false) }
-
-                        SelectionAction.DOWNLOAD -> {
-                            val states = downloadStates.value
-                            val targets =
-                                ids.filter { (states[it] ?: DownloadState.NotDownloaded).isDownloadable }
-                            runBatch(targets, skipped = ids.size - targets.size) { downloads.enqueue(it) }
-                        }
-                    }
+                    runSelectionBatch(
+                        action = action,
+                        ids = ids,
+                        downloadStates = downloadStates.value,
+                        setPlayed = userDataRepository::setPlayed,
+                        enqueue = downloads::enqueue,
+                    )
                 _uiState.update { it.copy(userMessage = BatchReport(action, outcome)) }
             }
         }

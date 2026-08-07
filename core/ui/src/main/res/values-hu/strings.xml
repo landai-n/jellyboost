@@ -80,4 +80,6 @@
     <string name="error_server">A szerver hibát adott vissza.</string>
     <string name="error_server_with_code">A szerver hibát adott vissza (%1$d).</string>
     <string name="error_storage">Nem sikerült beolvasni a helyi adatokat.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -24,8 +24,6 @@
     <string name="detail_type_series">කතා මාලාව</string>
     <string name="detail_type_season">වාරය</string>
     <string name="detail_type_episode">කථාංගය</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">කථාංගය %1$d</string>
     <string name="detail_meta_rating">ශ්‍රේණිගත කිරීම %1$s</string>
     <string name="detail_meta_rated">වයස් සීමාව %1$s</string>

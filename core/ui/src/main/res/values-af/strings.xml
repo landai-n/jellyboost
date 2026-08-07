@@ -80,4 +80,6 @@
     <string name="error_server">Die bediener het \'n fout teruggestuur.</string>
     <string name="error_server_with_code">Die bediener het \'n fout teruggestuur (%1$d).</string>
     <string name="error_storage">Kon nie plaaslike data lees nie.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

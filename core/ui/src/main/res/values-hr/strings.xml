@@ -89,4 +89,6 @@
     <string name="error_server">Poslužitelj je vratio pogrešku.</string>
     <string name="error_server_with_code">Poslužitelj je vratio pogrešku (%1$d).</string>
     <string name="error_storage">Nije moguće pročitati lokalne podatke.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

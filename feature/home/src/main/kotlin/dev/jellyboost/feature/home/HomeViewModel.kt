@@ -17,6 +17,7 @@ import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
+import dev.jellyboost.data.downloads.observeBadgeStates
 import dev.jellyboost.data.homelayout.HomeLayoutRepository
 import dev.jellyboost.data.userdata.UserDataEventBus
 import kotlinx.coroutines.FlowPreview
@@ -28,11 +29,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 import dev.jellyboost.core.ui.R as CoreUiR
 
@@ -111,24 +110,15 @@ class HomeViewModel
         /**
          * Keeps the `DownloadBadge` on every home card current (M7).
          *
-         * One subscription for the whole screen: the home rows can hold sixty cards between them,
-         * and the badge map re-emits on every throttled progress write.
+         * One subscription for the whole screen, error-guarded so a collapse clears the badges
+         * rather than freezing them — both rules, and why, live in [observeBadgeStates].
          */
         private fun observeDownloadStates() {
             viewModelScope.launch {
-                downloads
-                    .observeStates()
-                    // A badge is decoration; the screen behind it is not. An unguarded throw here
-                    // used to freeze every badge on the screen at its last value with no way back
-                    // (audit STAB-10), so a collapsed flow degrades to "nothing is downloaded"
-                    // rather than to stale marks the user cannot trust.
-                    .catch { error ->
-                        Timber.w(error, "The download-state flow failed; clearing the home badges")
-                        emit(emptyMap())
-                    }.collect { states ->
-                        downloadStates = states
-                        _uiState.update { it.withDownloadStates(states) }
-                    }
+                downloads.observeBadgeStates(screen = "home").collect { states ->
+                    downloadStates = states
+                    _uiState.update { it.withDownloadStates(states) }
+                }
             }
         }
 

@@ -63,6 +63,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.network.model.DiscoveredServer
 import dev.jellyboost.core.ui.component.ErrorBanner
+import dev.jellyboost.core.ui.component.FieldLabel
+import dev.jellyboost.core.ui.component.FieldState
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.theme.Dimens
@@ -397,22 +399,25 @@ private fun ManualAddressSection(
                 onValueChange = onAddressChange,
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                // "Server address" — was the panel's own heading; now the field's own caption,
+                // drawn uppercased and *spoken* in sentence case (`FieldLabel.eyebrow`).
+                label = FieldLabel.eyebrow(stringResource(R.string.server_setup_manual_title)),
                 // Stays enabled while the probe runs (accessibility audit 2026-08-05, F17):
                 // disabling a focused field drops accessibility focus with no anchor to fall back
                 // to, so a TalkBack user pressing Connect was thrown back to the top of the screen.
                 // The field cannot be *changed* mid-probe either — `ServerSetupViewModel` ignores
                 // edits while `isConnecting`, which is a stronger guarantee than a greyed-out box.
-                // `readOnly` says the same thing to the platform: keep the node, keep the name,
-                // keep the value, refuse the keystroke. The state-holder guard stays as well; it
-                // is the one a JVM test can hold still.
-                readOnly = state.isConnecting,
-                isError = state.error != null,
-                // "Server address" — was the panel's own heading; now the field's own caption.
-                label = { Text(text = stringResource(R.string.server_setup_manual_title).uppercase()) },
-                // Sentence case, not the caption's uppercase: this one is spoken, not read.
-                labelText = stringResource(R.string.server_setup_manual_title),
+                // `FieldState.InFlight` says the same thing to the platform: keep the node, keep
+                // the name, keep the value, refuse the keystroke. The state-holder guard stays as
+                // well; it is the one a JVM test can hold still. The two states never overlap —
+                // `ServerSetupViewModel` clears the error when a probe starts.
+                state =
+                    when {
+                        state.error != null -> FieldState.Error(authErrorText(state.error))
+                        state.isConnecting -> FieldState.InFlight
+                        else -> FieldState.Editable
+                    },
                 placeholder = { Text(text = stringResource(R.string.server_setup_address_placeholder)) },
-                errorMessage = state.error?.let { authErrorText(it) },
                 keyboardOptions =
                     KeyboardOptions(
                         keyboardType = KeyboardType.Uri,

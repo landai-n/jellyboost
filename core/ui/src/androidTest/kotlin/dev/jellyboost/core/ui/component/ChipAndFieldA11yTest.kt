@@ -1,7 +1,6 @@
 package dev.jellyboost.core.ui.component
 
 import androidx.activity.ComponentActivity
-import androidx.compose.material3.Text
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -92,8 +91,7 @@ class ChipAndFieldA11yTest {
                 JellyfinTextField(
                     value = ADDRESS,
                     onValueChange = {},
-                    label = { Text(text = LABEL.uppercase()) },
-                    labelText = LABEL,
+                    label = FieldLabel.eyebrow(LABEL),
                 )
             }
         }
@@ -113,8 +111,8 @@ class ChipAndFieldA11yTest {
                 JellyfinTextField(
                     value = typed,
                     onValueChange = { typed = it },
-                    readOnly = true,
-                    labelText = LABEL,
+                    label = FieldLabel(text = LABEL),
+                    state = FieldState.InFlight,
                 )
             }
         }
@@ -141,9 +139,8 @@ class ChipAndFieldA11yTest {
                 JellyfinTextField(
                     value = ADDRESS,
                     onValueChange = {},
-                    isError = true,
-                    labelText = LABEL,
-                    errorMessage = FAILURE,
+                    label = FieldLabel(text = LABEL),
+                    state = FieldState.Error(FAILURE),
                 )
             }
         }

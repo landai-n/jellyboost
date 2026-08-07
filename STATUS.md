@@ -182,6 +182,49 @@ DECISIONS entry: structural remediation of logged audit findings, no divergence 
 test tablet in landscape (bar capped at 1000 dp, labels on) and confirm the six chips plus the clock
 do not clip; repeat at font scale 1.0 only, since ≥1.15 already forces icon-only at that width.
 
+## Audit CPX-10 + four deferred migrations (2026-08-07 — landed, gate green)
+
+`docs/notes/audit-2026-08-06-quality.md` §3, plus the tail the duplication wave deferred. All
+structural; no behaviour change intended except one snackbar inset, which is a fix.
+
+- **CPX-10 — `ItemDetailViewModel` split.** The class sat *on* detekt's `TooManyFunctions` ceiling
+  (19 of 20) and had started paying for it in design: `fetchRelated`, `sendGroupAction` and
+  `groupPlayQueue` were exiled to file scope, re-taking `repository`/`syncPlaySession` as parameters
+  the class already held, and the bytes-on-disk Room collector was inlined into `init` — each with a
+  comment naming the ceiling as the reason. The download half is now `DetailDownloadsDelegate`
+  (`onDownloadClick`, `confirmDeleteDownload`, `dismissDeleteConfirmation`, `enqueue`,
+  `cancelDownloads`, `removeDownloads`, both Room subscriptions, and the `states` map): a plain class
+  constructed by the ViewModel with its collaborators — state, item id, `viewModelScope` — in the
+  constructor, the shape `:player`'s `SyncPlayRejoinPolicy` already uses. The three exiled functions
+  are back as private methods of the ViewModel, and every ceiling-dodging comment is gone.
+  `report(result, failure, success)` became a `MutableStateFlow<ItemDetailUiState>.report` extension
+  next to the state, since both halves raise a `UserMessage` by the same rule.
+  **Result: 17 functions in the ViewModel, 9 in the delegate — the split clears the ceiling on its
+  own, with no `@Suppress` and no detekt-config change.** The screen is untouched: all three download
+  entry points stay on the ViewModel as one-line forwarders, so its public API is byte-identical.
+  **No test changed** — all 21 `ItemDetailDownloadTest` cases and the other 71 detail tests pass
+  unmodified, which is the evidence the split was behaviour-preserving.
+- **DUP-3 tail — the last two snackbar migrations.** `PlayerScreen` and `SyncPlayGroupsScreen` now
+  use `:core:ui`'s `JellyboostSnackbarHost` + `rememberOneShotSnackbar`. The player passes its 96 dp
+  `SNACKBAR_PADDING` as `minimumBottomInset` (it consumes no window insets, so the floor is what
+  applies — the parameter exists for this screen). **SyncPlayGroupsScreen's is a real fix:** its
+  `Scaffold` takes `WindowInsets(0)`, so the snackbar slot got no inset either and the pill sat under
+  the gesture bar. Both keep their exact consume semantics, and both inherit the HYG-8 keying fix
+  (keyed on the message, not its resolved copy).
+- **CPX-8 tail — the deprecated `JellyfinTextField` overload is gone.** `SearchScreen` and
+  SyncPlay's create-group dialog migrated to `label = FieldLabel(text = …)`; both are fields whose
+  name is spoken but never drawn, so neither takes a caption. The `labelText` overload is deleted.
+- **`displaySubtitle`/`episodeLabel` — assessed, deliberately kept.** The call was to swap them for
+  `:core:ui`'s localized `subtitleLine()` if resources were reachable. They are not, consistently:
+  **no ViewModel in this app takes a `Context`**, and `UiText` exists precisely so none has to. The
+  properties now carry a KDoc naming all three surviving readers and grading them: only
+  `CastMetadata.subtitle` (→ the Cast receiver's `MediaMetadata`) is *genuinely* composition-free.
+  The other two — the join into `PlayerUiState.title` and `SyncPlayQueueRow.subtitle` — **are drawn
+  by Compose**, so the localized form is reachable there in principle; what blocks it is that both UI
+  states carry an already-resolved `String`, so it needs those two states reshaped. That reshape is
+  the follow-up, and it should be scheduled with the next `:player` UI-state touch rather than raced
+  against one. No DECISIONS entry: nothing here diverges from PLAN.md.
+
 ## Accessibility audit + full remediation (2026-08-05 — landed, gate green; TalkBack walk owed)
 
 Full-app a11y audit (report: `docs/audits/accessibility-audit-2026-08-05.md`, ~90 findings)

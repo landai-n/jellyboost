@@ -73,6 +73,8 @@ data class JellyfinItem(
 
     /**
      * Second line on a card: `S1:E4 · Episode title` for episodes, the production year otherwise.
+     *
+     * **Not the drawing surfaces' form — see [episodeLabel] for what still reads this and why.**
      */
     val displaySubtitle: String?
         get() =
@@ -82,7 +84,30 @@ data class JellyfinItem(
                 else -> productionYear?.toString()
             }
 
-    /** Compact `S1:E4` label, or `null` when the season/episode numbers are unknown. */
+    /**
+     * Compact `S1:E4` label, or `null` when the season/episode numbers are unknown.
+     *
+     * ### Why this and [displaySubtitle] are still here
+     * `S` and `E` are the initials of words, and these build them from Kotlin string templates —
+     * invisible to the `MissingTranslation` gate, and untranslatable in a 69-locale app. Every
+     * *drawing* surface therefore goes through `:core:ui`'s `JellyfinItem.episodeNumberLabel()` /
+     * `subtitleLine()`, which read the `media_episode_label` resources instead (audit DUP-7). These
+     * two survive as the non-composable fallback, and are read from exactly three places:
+     *
+     * - `PlayerViewModel.loadTitleAndArtwork` → `CastMetadata.subtitle`, which becomes the Cast
+     *   receiver's `MediaMetadata.KEY_SUBTITLE` (`CastMediaItemConverter`). **Genuinely
+     *   composition-free** — the string leaves the device.
+     * - `PlayerViewModel.loadTitleAndArtwork` → the join into `PlayerUiState.title`, and
+     *   - `SyncPlayQueueViewModel.toUiState` → `SyncPlayQueueRow.subtitle`.
+     *
+     *   Those last two *are* drawn by Compose (`PlayerControls.asTitleAndSubtitle`, the SyncPlay
+     *   queue sheet), so the localized form is reachable in principle — but only by reshaping the
+     *   two UI states, since both currently carry an already-resolved `String`. Doing it by
+     *   injecting a `Context` into the ViewModels instead was considered and rejected: no ViewModel
+     *   in this app takes one, and `UiText` exists precisely so they need not (`:core:ui`'s
+     *   `UiText`, and `ItemDetailUiState.UserMessage`'s "a type rather than a string so the
+     *   ViewModel stays free of resources"). The reshape is the follow-up; this note is the debt.
+     */
     val episodeLabel: String?
         get() =
             when {

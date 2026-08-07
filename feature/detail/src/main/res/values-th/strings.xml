@@ -64,4 +64,6 @@
     <string name="detail_delete_download_dialog_message">การดำเนินการนี้จะลบออกจากอุปกรณ์นี้ คุณสามารถดาวน์โหลดใหม่ได้ทุกเมื่อ</string>
     <string name="detail_delete_download_dialog_confirm">ลบ</string>
     <string name="detail_delete_download_dialog_cancel">ยกเลิก</string>
+
+    <string name="detail_error_unknown">เกิดข้อผิดพลาดขณะโหลดรายการนี้</string>
 </resources>

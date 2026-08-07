@@ -72,4 +72,12 @@
         <item quantity="one">%1$d مورد از قبل روی این دستگاه موجود است</item>
         <item quantity="other">%1$d مورد از قبل روی این دستگاه موجود است</item>
     </plurals>
+
+    <string name="error_network">دسترسی به سرور شما ممکن نیست. اتصال خود را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="error_unauthorized">نشست شما منقضی شده است. برای ادامه دوباره وارد شوید.</string>
+    <string name="error_not_found_item">این مورد دیگر روی سرور نیست.</string>
+    <string name="error_not_found_library">این کتابخانه دیگر روی سرور نیست.</string>
+    <string name="error_server">سرور خطایی برگرداند.</string>
+    <string name="error_server_with_code">سرور خطایی برگرداند (%1$d).</string>
+    <string name="error_storage">خواندن داده‌های محلی ممکن نبود.</string>
 </resources>

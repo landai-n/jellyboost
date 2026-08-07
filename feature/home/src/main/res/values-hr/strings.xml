@@ -18,4 +18,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin preostalo</string>
     <string name="home_quick_access_offline">Izvanmrežno</string>
+
+    <string name="home_error_unknown">Došlo je do pogreške prilikom učitavanja početnog zaslona.</string>
 </resources>

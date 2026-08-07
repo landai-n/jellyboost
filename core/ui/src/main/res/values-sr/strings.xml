@@ -81,4 +81,12 @@
         <item quantity="few">%1$d ставке су већ на овом уређају</item>
         <item quantity="other">%1$d ставки је већ на овом уређају</item>
     </plurals>
+
+    <string name="error_network">Сервер није доступан. Проверите везу и покушајте поново.</string>
+    <string name="error_unauthorized">Ваша сесија је истекла. Пријавите се поново да наставите.</string>
+    <string name="error_not_found_item">Та ставка више није на серверу.</string>
+    <string name="error_not_found_library">Та библиотека више није на серверу.</string>
+    <string name="error_server">Сервер је вратио грешку.</string>
+    <string name="error_server_with_code">Сервер је вратио грешку (%1$d).</string>
+    <string name="error_storage">Није могуће прочитати локалне податке.</string>
 </resources>

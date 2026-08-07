@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">%1$s дээр үүнийг тоглуулж чадсангүй.</string>
 
     <string name="player_casting_to">%1$s рүү дамжуулж байна</string>
+
+    <string name="player_error_server">Сервер тоглуулалтыг эхлүүлж чадсангүй.</string>
+    <string name="player_error_server_with_code">Сервер тоглуулалтыг эхлүүлж чадсангүй (%1$d).</string>
+    <string name="player_error_unknown">Тоглуулалтыг эхлүүлэхэд алдаа гарлаа.</string>
+    <string name="player_error_unsupported_source">Энэ зүйлийг энэ төхөөрөмж дээр тоглуулах боломжгүй.</string>
 </resources>

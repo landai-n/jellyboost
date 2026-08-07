@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin rămase</string>
     <string name="home_quick_access_offline">Offline</string>
+
+    <string name="home_error_unknown">Ceva nu a mers bine la încărcarea ecranului principal.</string>
 </resources>

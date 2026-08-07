@@ -39,7 +39,7 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
-## Quality audit — whole-tree structural pass (2026-08-06 — report committed, no fixes yet)
+## Quality audit — whole-tree structural pass (2026-08-06 — report committed; H8 remediated)
 
 Third full audit (`docs/notes/audit-2026-08-06-quality.md`), and the first *structural*
 one: code quality, duplication, complexity/spaghetti, architecture conformance over all
@@ -66,7 +66,39 @@ verbatim, no SDK types in UI); the Highs cluster in four areas:
 
 Report ends with a 4-tier remediation plan (Tier 1 correctness ≈ one session; Tier 2
 gates/governance; Tier 3 structural, scheduled with the next touch of each area).
-**No fixes applied yet** — findings only.
+**Remediation started**: H8 (the drifted `AppError` copy) is landed — see the next
+entry. The rest are findings only.
+
+## Audit H8 — one `AppError`→copy mapper, and the end of English error text on home/detail/player (2026-08-06 — landed, gate green)
+
+`docs/notes/audit-2026-08-06-quality.md`, H8 (= DUP-1 = CPX-13). Five mappings of the
+`AppError` taxonomy onto user copy; three of them (`HomeViewModel`, `ItemDetailViewModel`,
+`PlayerViewModel`) returned English Kotlin literals, which `MissingTranslation` cannot see —
+so those three screens showed untranslated error text on all 68 non-English locales while
+the i18n gate reported green. The copies had also drifted (`Server`, `NotFound`). Pays the
+debt DECISIONS.md logged as "M9 polish" on 2026-07-28; conformance, not divergence, so no
+new DECISIONS entry.
+
+Now one `AppError.toUiText(AppErrorCopy)` in `:core:ui` (`error/AppErrorCopy.kt`) returning
+a `UiText` (`text/UiText.kt`) — a resource id the ViewModel decides on and the screen
+resolves at draw time, with `UiText.Raw` as the single escape hatch for wording that came
+from outside the app (an ExoPlayer/Cast error string). Home, detail and player `UiState`
+error fields went from `String?` to `UiText?`. Overrides are only where copy genuinely
+differs: `unknown` always (it names what failed to load), not-found's library wording for
+home + libraries, and the player's two server branches ("could not start playback").
+
+Strings: 7 shared ones moved out of `:feature:library`/`:feature:search` into `:core:ui`
+with all 69 locales intact (no re-translation); 6 new ones — `home_error_unknown`,
+`detail_error_unknown`, `player_error_{server,server_with_code,unknown,unsupported_source}`
+— authored in all 69 locales. `player_message_failed` was reused for the old
+`PLAYBACK_FAILED` literal rather than adding a seventh. `scripts/validate_i18n.py`: 759
+files, 0 problems.
+
+Tests: new `AppErrorCopyTest` in `:core:ui` (11 cases, asserting resource ids rather than
+English sentences — an English literal in a test is exactly how the old mappers passed
+while showing untranslated copy); home/detail/player ViewModel tests strengthened from
+`shouldContain "server"` to the exact `UiText` value. Docs: ARCHITECTURE.md ("Error copy"),
+features/localization.md. Not device-walked — no visual change in English.
 
 ## Accessibility audit + full remediation (2026-08-05 — landed, gate green; TalkBack walk owed)
 

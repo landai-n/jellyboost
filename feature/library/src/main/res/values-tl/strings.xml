@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Walang item na tumutugma sa mga filter na ito.</string>
     <string name="library_empty_clear_filters">I-clear ang mga filter</string>
     <string name="library_retry">Subukan muli</string>
-    <string name="library_error_network">Hindi ma-reach ang server mo. Suriin ang koneksyon mo at subukan ulit.</string>
-    <string name="library_error_unauthorized">Nag-expire na ang session mo. Mag-sign in ulit para magpatuloy.</string>
-    <string name="library_error_not_found">Wala na sa server ang aklatan na iyon.</string>
-    <string name="library_error_server">Nagbalik ang server ng error.</string>
-    <string name="library_error_server_with_code">Nagbalik ang server ng error (%1$d).</string>
-    <string name="library_error_storage">Hindi mabasa ang lokal na data.</string>
     <string name="library_error_unknown">May nangyaring mali sa pag-load ng aklatan na ito.</string>
 </resources>

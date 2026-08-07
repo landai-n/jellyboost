@@ -72,4 +72,12 @@
         <item quantity="one">%1$d στοιχείο υπάρχει ήδη σε αυτή τη συσκευή</item>
         <item quantity="other">%1$d στοιχεία υπάρχουν ήδη σε αυτή τη συσκευή</item>
     </plurals>
+
+    <string name="error_network">Δεν είναι δυνατή η πρόσβαση στον διακομιστή σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
+    <string name="error_unauthorized">Η περίοδος σύνδεσής σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε.</string>
+    <string name="error_not_found_item">Αυτό το στοιχείο δεν είναι πλέον στον διακομιστή.</string>
+    <string name="error_not_found_library">Αυτή η βιβλιοθήκη δεν είναι πλέον στον διακομιστή.</string>
+    <string name="error_server">Ο διακομιστής επέστρεψε σφάλμα.</string>
+    <string name="error_server_with_code">Ο διακομιστής επέστρεψε σφάλμα (%1$d).</string>
+    <string name="error_storage">Δεν ήταν δυνατή η ανάγνωση των τοπικών δεδομένων.</string>
 </resources>

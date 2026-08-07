@@ -19,4 +19,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin pozostało</string>
     <string name="home_quick_access_offline">Offline</string>
+
+    <string name="home_error_unknown">Coś poszło nie tak podczas wczytywania ekranu głównego.</string>
 </resources>

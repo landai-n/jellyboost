@@ -15,4 +15,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmnt tersisa</string>
     <string name="home_quick_access_offline">Offline</string>
+
+    <string name="home_error_unknown">Terjadi kesalahan saat memuat layar beranda.</string>
 </resources>

@@ -14,11 +14,5 @@
     <string name="search_prompt">Skriva fyri at leita í savnunum.</string>
     <string name="search_no_results">Einki passaði við “%1$s”.</string>
 
-    <string name="search_error_network">Fær ikki samband við ambætaran. Kanna sambandið og royn aftur.</string>
-    <string name="search_error_unauthorized">Tín seta er útrunnin. Innrita teg aftur fyri at halda áfram.</string>
-    <string name="search_error_not_found">Hesin luturin er ikki longur á ambætaranum.</string>
-    <string name="search_error_server">Ambætarin gav eina villu aftur.</string>
-    <string name="search_error_server_with_code">Ambætarin gav eina villu aftur (%1$d).</string>
-    <string name="search_error_storage">Kundi ikki lesa staðbundnu dátuna.</string>
     <string name="search_error_unknown">Naka fór skeivt undir leiting.</string>
 </resources>

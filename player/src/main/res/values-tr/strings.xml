@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">SyncPlay grubundan çıkılarak %1$s cihazına yayın başlatıldı.</string>
     <string name="player_message_cast_failed">Bu, %1$s üzerinde oynatılamadı.</string>
     <string name="player_casting_to">%1$s\'e yayınlanıyor</string>
+
+    <string name="player_error_server">Sunucu oynatmayı başlatamadı.</string>
+    <string name="player_error_server_with_code">Sunucu oynatmayı başlatamadı (%1$d).</string>
+    <string name="player_error_unknown">Oynatma başlatılırken bir şeyler ters gitti.</string>
+    <string name="player_error_unsupported_source">Bu öğe bu cihazda oynatılamıyor.</string>
 </resources>

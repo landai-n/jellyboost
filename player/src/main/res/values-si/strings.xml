@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">%1$s වෙත විකාශනය කිරීමට SyncPlay කණ්ඩායමෙන් ඉවත් විය.</string>
     <string name="player_message_cast_failed">%1$s මත එය වාදනය කළ නොහැකි විය.</string>
     <string name="player_casting_to">%1$s වෙත විකාශනය කරමින්</string>
+
+    <string name="player_error_server">සේවාදායකයට වාදනය ආරම්භ කළ නොහැකි විය.</string>
+    <string name="player_error_server_with_code">සේවාදායකයට වාදනය ආරම්භ කළ නොහැකි විය (%1$d).</string>
+    <string name="player_error_unknown">වාදනය ආරම්භ කිරීමේදී යම් දෙයක් වැරදුණි.</string>
+    <string name="player_error_unsupported_source">මෙම අයිතමය මෙම උපාංගයේ වාදනය කළ නොහැක.</string>
 </resources>

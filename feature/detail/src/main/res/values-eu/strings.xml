@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">Honek gailu honetatik kentzen du. Nahi duzunean berriz deskarga dezakezu.</string>
     <string name="detail_delete_download_dialog_confirm">Ezabatu</string>
     <string name="detail_delete_download_dialog_cancel">Utzi</string>
+
+    <string name="detail_error_unknown">Zerbait gaizki joan da elementu hau kargatzean.</string>
 </resources>

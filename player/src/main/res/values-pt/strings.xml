@@ -119,4 +119,9 @@
     <string name="player_message_cast_left_syncplay">Saiu do grupo SyncPlay para transmitir para %1$s.</string>
     <string name="player_message_cast_failed">Não foi possível reproduzir isso em %1$s.</string>
     <string name="player_casting_to">A transmitir para %1$s</string>
+
+    <string name="player_error_server">O servidor não conseguiu iniciar a reprodução.</string>
+    <string name="player_error_server_with_code">O servidor não conseguiu iniciar a reprodução (%1$d).</string>
+    <string name="player_error_unknown">Algo correu mal ao iniciar a reprodução.</string>
+    <string name="player_error_unsupported_source">Este item não pode ser reproduzido neste dispositivo.</string>
 </resources>

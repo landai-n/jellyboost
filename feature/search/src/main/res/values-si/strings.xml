@@ -11,11 +11,5 @@
     </plurals>
     <string name="search_prompt">ඔබගේ පුස්තකාල සෙවීමට ටයිප් කරන්න.</string>
     <string name="search_no_results">“%1$s” ට ගැලපෙන කිසිවක් නැත.</string>
-    <string name="search_error_network">ඔබගේ සේවාදායකයට ළඟා විය නොහැක. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
-    <string name="search_error_unauthorized">ඔබගේ සැසිය කල් ඉකුත් විය. දිගටම කරගෙන යාමට නැවත පිවිසෙන්න.</string>
-    <string name="search_error_not_found">එම අයිතමය තවදුරටත් සේවාදායකයේ නොමැත.</string>
-    <string name="search_error_server">සේවාදායකය දෝෂයක් ලබා දුන්නේය.</string>
-    <string name="search_error_server_with_code">සේවාදායකය දෝෂයක් (%1$d) ලබා දුන්නේය.</string>
-    <string name="search_error_storage">දේශීය දත්ත කියවිය නොහැකි විය.</string>
     <string name="search_error_unknown">සෙවීමේදී යම් දෙයක් වැරදුණි.</string>
 </resources>

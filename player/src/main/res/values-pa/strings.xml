@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">ਉਹ %1$s ਉੱਤੇ ਨਹੀਂ ਚਲਾਇਆ ਜਾ ਸਕਿਆ।</string>
 
     <string name="player_casting_to">%1$s ਉੱਤੇ ਕਾਸਟ ਹੋ ਰਿਹਾ ਹੈ</string>
+
+    <string name="player_error_server">ਸਰਵਰ ਪਲੇਬੈਕ ਸ਼ੁਰੂ ਨਹੀਂ ਕਰ ਸਕਿਆ।</string>
+    <string name="player_error_server_with_code">ਸਰਵਰ ਪਲੇਬੈਕ ਸ਼ੁਰੂ ਨਹੀਂ ਕਰ ਸਕਿਆ (%1$d)।</string>
+    <string name="player_error_unknown">ਪਲੇਬੈਕ ਸ਼ੁਰੂ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
+    <string name="player_error_unsupported_source">ਇਹ ਆਈਟਮ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਨਹੀਂ ਚਲਾਈ ਜਾ ਸਕਦੀ।</string>
 </resources>

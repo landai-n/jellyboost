@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">ამ ფილტრებს ვერცერთი ერთეული ვერ ერგება.</string>
     <string name="library_empty_clear_filters">ფილტრების გასუფთავება</string>
     <string name="library_retry">ხელახლა ცდა</string>
-    <string name="library_error_network">თქვენს სერვერთან დაკავშირება ვერ ხერხდება. შეამოწმეთ თქვენი კავშირი და სცადეთ ხელახლა.</string>
-    <string name="library_error_unauthorized">თქვენი სესია ვადაგასულია. გასაგრძელებლად ხელახლა შედით.</string>
-    <string name="library_error_not_found">ეს ბიბლიოთეკა აღარ არის სერვერზე.</string>
-    <string name="library_error_server">სერვერმა შეცდომა დააბრუნა.</string>
-    <string name="library_error_server_with_code">სერვერმა შეცდომა დააბრუნა (%1$d).</string>
-    <string name="library_error_storage">ლოკალური მონაცემების წაკითხვა ვერ მოხერხდა.</string>
     <string name="library_error_unknown">ამ ბიბლიოთეკის ჩატვირთვისას რაღაც შეცდომა მოხდა.</string>
 </resources>

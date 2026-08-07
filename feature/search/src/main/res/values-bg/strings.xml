@@ -14,11 +14,5 @@
     <string name="search_prompt">Пишете, за да търсите в библиотеките си.</string>
     <string name="search_no_results">Няма съвпадения за „%1$s“.</string>
 
-    <string name="search_error_network">Сървърът е недостъпен. Проверете връзката и опитайте пак.</string>
-    <string name="search_error_unauthorized">Сесията ви е изтекла. Влезте отново, за да продължите.</string>
-    <string name="search_error_not_found">Този елемент вече не е на сървъра.</string>
-    <string name="search_error_server">Сървърът върна грешка.</string>
-    <string name="search_error_server_with_code">Сървърът върна грешка (%1$d).</string>
-    <string name="search_error_storage">Не можаха да се прочетат локалните данни.</string>
     <string name="search_error_unknown">Нещо се обърка при търсенето.</string>
 </resources>

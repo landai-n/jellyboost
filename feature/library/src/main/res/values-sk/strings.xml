@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Vymazať filtre</string>
     <string name="library_retry">Skúsiť znova</string>
 
-    <string name="library_error_network">Server nie je dostupný. Skontrolujte pripojenie a skúste to znova.</string>
-    <string name="library_error_unauthorized">Vaša relácia vypršala. Prihláste sa znova, aby ste mohli pokračovať.</string>
-    <string name="library_error_not_found">Táto knižnica sa už na serveri nenachádza.</string>
-    <string name="library_error_server">Server vrátil chybu.</string>
-    <string name="library_error_server_with_code">Server vrátil chybu (%1$d).</string>
-    <string name="library_error_storage">Nepodarilo sa načítať lokálne dáta.</string>
     <string name="library_error_unknown">Pri načítavaní tejto knižnice sa niečo pokazilo.</string>
 </resources>

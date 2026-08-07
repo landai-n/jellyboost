@@ -71,6 +71,7 @@ import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.PillSnackbar
+import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -224,7 +225,7 @@ fun PlayerScreen(
         when {
             state.errorMessage != null ->
                 ErrorState(
-                    message = requireNotNull(state.errorMessage),
+                    message = requireNotNull(state.errorMessage).resolve(),
                     // Assertive: the film has stopped and the only thing left on the screen is this
                     // panel, so it is worth interrupting whatever is being read (audit CR-3).
                     modifier =

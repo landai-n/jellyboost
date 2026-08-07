@@ -63,4 +63,12 @@
     <plurals name="selection_result_download_all_skipped">
         <item quantity="other">%1$d 項已喺呢部裝置上</item>
     </plurals>
+
+    <string name="error_network">連唔到你嘅伺服器。請檢查網絡連線再試一次。</string>
+    <string name="error_unauthorized">你嘅登入時效已過期。請重新登入先可以繼續。</string>
+    <string name="error_not_found_item">呢個項目已經唔喺伺服器度。</string>
+    <string name="error_not_found_library">呢個媒體庫已經唔喺伺服器度。</string>
+    <string name="error_server">伺服器回覆咗一個錯誤。</string>
+    <string name="error_server_with_code">伺服器回覆咗一個錯誤 (%1$d)。</string>
+    <string name="error_storage">冇辦法讀取本機資料。</string>
 </resources>

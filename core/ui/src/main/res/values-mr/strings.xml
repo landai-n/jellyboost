@@ -72,4 +72,12 @@
         <item quantity="one">%1$d आयटम आधीच या डिव्हाइसवर आहे</item>
         <item quantity="other">%1$d आयटम आधीच या डिव्हाइसवर आहेत</item>
     </plurals>
+
+    <string name="error_network">आपल्या सर्व्हरशी संपर्क होऊ शकत नाही. आपले कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.</string>
+    <string name="error_unauthorized">आपले सत्र कालबाह्य झाले. सुरू ठेवण्यासाठी पुन्हा साइन इन करा.</string>
+    <string name="error_not_found_item">तो आयटम आता सर्व्हरवर नाही.</string>
+    <string name="error_not_found_library">ती लायब्ररी आता सर्व्हरवर नाही.</string>
+    <string name="error_server">सर्व्हरने त्रुटी दिली.</string>
+    <string name="error_server_with_code">सर्व्हरने त्रुटी दिली (%1$d).</string>
+    <string name="error_storage">स्थानिक डेटा वाचता आला नाही.</string>
 </resources>

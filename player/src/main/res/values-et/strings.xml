@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Ei õnnestunud esitada seda seadmes %1$s.</string>
 
     <string name="player_casting_to">Kantakse üle seadmesse %1$s</string>
+
+    <string name="player_error_server">Server ei suutnud esitust alustada.</string>
+    <string name="player_error_server_with_code">Server ei suutnud esitust alustada (%1$d).</string>
+    <string name="player_error_unknown">Esituse alustamisel läks midagi valesti.</string>
+    <string name="player_error_unsupported_source">Seda üksust ei saa selles seadmes esitada.</string>
 </resources>

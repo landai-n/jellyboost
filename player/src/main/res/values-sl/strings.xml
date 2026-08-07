@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Predvajanje na %1$s ni uspelo.</string>
 
     <string name="player_casting_to">Predvajanje na %1$s</string>
+
+    <string name="player_error_server">Strežnik ni mogel začeti predvajanja.</string>
+    <string name="player_error_server_with_code">Strežnik ni mogel začeti predvajanja (%1$d).</string>
+    <string name="player_error_unknown">Pri zagonu predvajanja je prišlo do napake.</string>
+    <string name="player_error_unsupported_source">Tega predmeta na tej napravi ni mogoče predvajati.</string>
 </resources>

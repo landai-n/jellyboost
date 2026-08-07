@@ -75,4 +75,12 @@
         <item quantity="few">%1$d elemente sunt deja pe acest dispozitiv</item>
         <item quantity="other">%1$d de elemente sunt deja pe acest dispozitiv</item>
     </plurals>
+
+    <string name="error_network">Serverul nu poate fi contactat. Verificați conexiunea și încercați din nou.</string>
+    <string name="error_unauthorized">Sesiunea a expirat. Autentificați-vă din nou pentru a continua.</string>
+    <string name="error_not_found_item">Acest element nu mai este pe server.</string>
+    <string name="error_not_found_library">Această bibliotecă nu mai este pe server.</string>
+    <string name="error_server">Serverul a returnat o eroare.</string>
+    <string name="error_server_with_code">Serverul a returnat o eroare (%1$d).</string>
+    <string name="error_storage">Datele locale nu au putut fi citite.</string>
 </resources>

@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">މިކަމުން މި ޑިވައިސްއިން އެ ނަގާނެ. ކޮންމެ ވަގުތެއްގައިވެސް އަލުން ޑައުންލޯޑްކުރެވިދާނެ.</string>
     <string name="detail_delete_download_dialog_confirm">ފޮހެލާ</string>
     <string name="detail_delete_download_dialog_cancel">ކެންސަލްކުރޭ</string>
+
+    <string name="detail_error_unknown">މި އައިޓަމް ލޯޑްކުރުމުގައި ގޯހެއް ދިމާވެއްޖެ.</string>
 </resources>

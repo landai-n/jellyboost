@@ -72,4 +72,12 @@
         <item quantity="one">%1$d зүйл аль хэдийн энэ төхөөрөмж дээр байна</item>
         <item quantity="other">%1$d зүйл аль хэдийн энэ төхөөрөмж дээр байна</item>
     </plurals>
+
+    <string name="error_network">Серверт холбогдож чадсангүй. Холболтоо шалгаад дахин оролдоно уу.</string>
+    <string name="error_unauthorized">Таны сесс дууссан байна. Үргэлжлүүлэхийн тулд дахин нэвтэрнэ үү.</string>
+    <string name="error_not_found_item">Тухайн зүйл серверт байхгүй боллоо.</string>
+    <string name="error_not_found_library">Тухайн сан серверт байхгүй боллоо.</string>
+    <string name="error_server">Сервер алдаа буцаалаа.</string>
+    <string name="error_server_with_code">Сервер алдаа буцаалаа (%1$d).</string>
+    <string name="error_storage">Локал өгөгдлийг уншиж чадсангүй.</string>
 </resources>

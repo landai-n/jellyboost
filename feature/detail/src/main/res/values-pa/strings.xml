@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">ਇਹ ਇਸਨੂੰ ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਹਟਾ ਦੇਵੇਗਾ। ਤੁਸੀਂ ਇਸਨੂੰ ਕਿਸੇ ਵੀ ਸਮੇਂ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</string>
     <string name="detail_delete_download_dialog_confirm">ਮਿਟਾਓ</string>
     <string name="detail_delete_download_dialog_cancel">ਰੱਦ ਕਰੋ</string>
+
+    <string name="detail_error_unknown">ਇਹ ਆਈਟਮ ਲੋਡ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
 </resources>

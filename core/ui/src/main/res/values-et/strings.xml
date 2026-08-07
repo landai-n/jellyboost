@@ -72,4 +72,12 @@
         <item quantity="one">%1$d üksus on juba selles seadmes</item>
         <item quantity="other">%1$d üksust on juba selles seadmes</item>
     </plurals>
+
+    <string name="error_network">Serveriga ei saa ühendust. Kontrolli oma ühendust ja proovi uuesti.</string>
+    <string name="error_unauthorized">Sinu seanss aegus. Jätkamiseks logi uuesti sisse.</string>
+    <string name="error_not_found_item">Seda üksust pole enam serveris.</string>
+    <string name="error_not_found_library">Seda teeki pole enam serveris.</string>
+    <string name="error_server">Server tagastas vea.</string>
+    <string name="error_server_with_code">Server tagastas vea (%1$d).</string>
+    <string name="error_storage">Kohalikke andmeid ei õnnestunud lugeda.</string>
 </resources>

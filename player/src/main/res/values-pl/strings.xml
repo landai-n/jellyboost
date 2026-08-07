@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Nie udało się odtworzyć tego na %1$s.</string>
 
     <string name="player_casting_to">Przesyłanie na %1$s</string>
+
+    <string name="player_error_server">Serwer nie mógł rozpocząć odtwarzania.</string>
+    <string name="player_error_server_with_code">Serwer nie mógł rozpocząć odtwarzania (%1$d).</string>
+    <string name="player_error_unknown">Coś poszło nie tak podczas rozpoczynania odtwarzania.</string>
+    <string name="player_error_unsupported_source">Tego elementu nie można odtworzyć na tym urządzeniu.</string>
 </resources>

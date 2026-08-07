@@ -90,4 +90,12 @@
         <item quantity="many">%1$d элементаў ужо на гэтай прыладзе</item>
         <item quantity="other">%1$d элементаў ужо на гэтай прыладзе</item>
     </plurals>
+
+    <string name="error_network">Не ўдаецца звязацца з вашым серверам. Праверце злучэнне і паспрабуйце зноў.</string>
+    <string name="error_unauthorized">Тэрмін дзеяння сесіі скончыўся. Увайдзіце зноў, каб працягнуць.</string>
+    <string name="error_not_found_item">Гэтага элемента больш няма на серверы.</string>
+    <string name="error_not_found_library">Гэтай бібліятэкі больш няма на серверы.</string>
+    <string name="error_server">Сервер вярнуў памылку.</string>
+    <string name="error_server_with_code">Сервер вярнуў памылку (%1$d).</string>
+    <string name="error_storage">Не ўдалося прачытаць лакальныя дадзеныя.</string>
 </resources>

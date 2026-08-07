@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Tidak ada item yang cocok dengan filter ini.</string>
     <string name="library_empty_clear_filters">Hapus filter</string>
     <string name="library_retry">Coba lagi</string>
-    <string name="library_error_network">Tidak dapat menjangkau server Anda. Periksa koneksi Anda dan coba lagi.</string>
-    <string name="library_error_unauthorized">Sesi Anda telah berakhir. Masuk lagi untuk melanjutkan.</string>
-    <string name="library_error_not_found">Perpustakaan itu sudah tidak ada di server.</string>
-    <string name="library_error_server">Server mengembalikan kesalahan.</string>
-    <string name="library_error_server_with_code">Server mengembalikan kesalahan (%1$d).</string>
-    <string name="library_error_storage">Tidak dapat membaca data lokal.</string>
     <string name="library_error_unknown">Terjadi kesalahan saat memuat perpustakaan ini.</string>
 </resources>

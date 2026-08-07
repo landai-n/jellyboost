@@ -66,4 +66,12 @@
         <item quantity="one">%1$d elemento xa está neste dispositivo</item>
         <item quantity="other">%1$d elementos xa están neste dispositivo</item>
     </plurals>
+
+    <string name="error_network">Non é posible contactar co teu servidor. Comproba a túa conexión e téntao de novo.</string>
+    <string name="error_unauthorized">A túa sesión caducou. Inicia sesión de novo para continuar.</string>
+    <string name="error_not_found_item">Ese elemento xa non está no servidor.</string>
+    <string name="error_not_found_library">Esa biblioteca xa non está no servidor.</string>
+    <string name="error_server">O servidor devolveu un erro.</string>
+    <string name="error_server_with_code">O servidor devolveu un erro (%1$d).</string>
+    <string name="error_storage">Non foi posible ler os datos locais.</string>
 </resources>

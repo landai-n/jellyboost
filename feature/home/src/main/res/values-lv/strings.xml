@@ -18,4 +18,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin atlikušas</string>
     <string name="home_quick_access_offline">Bezsaistē</string>
+
+    <string name="home_error_unknown">Ielādējot sākuma ekrānu, kaut kas nogāja greizi.</string>
 </resources>

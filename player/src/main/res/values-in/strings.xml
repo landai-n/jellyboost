@@ -111,4 +111,9 @@
     <string name="player_message_cast_left_syncplay">Keluar dari grup SyncPlay untuk melakukan cast ke %1$s.</string>
     <string name="player_message_cast_failed">Tidak dapat memutar itu di %1$s.</string>
     <string name="player_casting_to">Melakukan cast ke %1$s</string>
+
+    <string name="player_error_server">Server tidak dapat memulai pemutaran.</string>
+    <string name="player_error_server_with_code">Server tidak dapat memulai pemutaran (%1$d).</string>
+    <string name="player_error_unknown">Terjadi kesalahan saat memulai pemutaran.</string>
+    <string name="player_error_unsupported_source">Item ini tidak dapat diputar di perangkat ini.</string>
 </resources>

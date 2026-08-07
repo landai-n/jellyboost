@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">وہ %1$s پر چلانا ممکن نہیں تھا۔</string>
 
     <string name="player_casting_to">%1$s پر کاسٹ ہو رہا ہے</string>
+
+    <string name="player_error_server">سرور پلے بیک شروع نہیں کر سکا۔</string>
+    <string name="player_error_server_with_code">سرور پلے بیک شروع نہیں کر سکا (%1$d)۔</string>
+    <string name="player_error_unknown">پلے بیک شروع کرتے وقت کچھ غلط ہو گیا۔</string>
+    <string name="player_error_unsupported_source">یہ آئٹم اس ڈیوائس پر نہیں چلایا جا سکتا۔</string>
 </resources>

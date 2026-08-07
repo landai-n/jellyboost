@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dநி மீதம்</string>
     <string name="home_quick_access_offline">ஆஃப்லைன்</string>
+
+    <string name="home_error_unknown">முகப்புத் திரையை ஏற்றுவதில் ஏதோ தவறு நடந்தது.</string>
 </resources>

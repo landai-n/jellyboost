@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Ningún elemento coincide con estes filtros.</string>
     <string name="library_empty_clear_filters">Limpar filtros</string>
     <string name="library_retry">Reintentar</string>
-    <string name="library_error_network">Non é posible contactar co teu servidor. Comproba a túa conexión e téntao de novo.</string>
-    <string name="library_error_unauthorized">A túa sesión caducou. Inicia sesión de novo para continuar.</string>
-    <string name="library_error_not_found">Esa biblioteca xa non está no servidor.</string>
-    <string name="library_error_server">O servidor devolveu un erro.</string>
-    <string name="library_error_server_with_code">O servidor devolveu un erro (%1$d).</string>
-    <string name="library_error_storage">Non foi posible ler os datos locais.</string>
     <string name="library_error_unknown">Algo fallou ao cargar esta biblioteca.</string>
 </resources>

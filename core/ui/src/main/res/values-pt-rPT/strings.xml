@@ -66,4 +66,12 @@
         <item quantity="one">%1$d item já está neste dispositivo</item>
         <item quantity="other">%1$d itens já estão neste dispositivo</item>
     </plurals>
+
+    <string name="error_network">Não é possível contactar o seu servidor. Verifique a sua ligação e tente novamente.</string>
+    <string name="error_unauthorized">A sua sessão expirou. Inicie sessão novamente para continuar.</string>
+    <string name="error_not_found_item">Esse item já não está no servidor.</string>
+    <string name="error_not_found_library">Essa biblioteca já não está no servidor.</string>
+    <string name="error_server">O servidor devolveu um erro.</string>
+    <string name="error_server_with_code">O servidor devolveu um erro (%1$d).</string>
+    <string name="error_storage">Não foi possível ler os dados locais.</string>
 </resources>

@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Bu filtrelere uyan öğe yok.</string>
     <string name="library_empty_clear_filters">Filtreleri temizle</string>
     <string name="library_retry">Tekrar dene</string>
-    <string name="library_error_network">Sunucunuza ulaşılamıyor. Bağlantınızı kontrol edin ve tekrar deneyin.</string>
-    <string name="library_error_unauthorized">Oturumunuzun süresi doldu. Devam etmek için tekrar giriş yapın.</string>
-    <string name="library_error_not_found">O kitaplık artık sunucuda değil.</string>
-    <string name="library_error_server">Sunucu bir hata döndürdü.</string>
-    <string name="library_error_server_with_code">Sunucu bir hata döndürdü (%1$d).</string>
-    <string name="library_error_storage">Yerel veriler okunamadı.</string>
     <string name="library_error_unknown">Bu kitaplık yüklenirken bir şeyler ters gitti.</string>
 </resources>

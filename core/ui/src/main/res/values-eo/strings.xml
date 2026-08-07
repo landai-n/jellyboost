@@ -66,4 +66,12 @@
         <item quantity="one">%1$d ero jam estas sur ĉi tiu aparato</item>
         <item quantity="other">%1$d eroj jam estas sur ĉi tiu aparato</item>
     </plurals>
+
+    <string name="error_network">Ne eblas atingi vian servilon. Kontrolu vian konekton kaj reprovu.</string>
+    <string name="error_unauthorized">Via seanco eksvalidiĝis. Ensalutu denove por daŭrigi.</string>
+    <string name="error_not_found_item">Tiu ero ne plu estas sur la servilo.</string>
+    <string name="error_not_found_library">Tiu biblioteko ne plu estas sur la servilo.</string>
+    <string name="error_server">La servilo redonis eraron.</string>
+    <string name="error_server_with_code">La servilo redonis eraron (%1$d).</string>
+    <string name="error_storage">Ne eblis legi lokajn datumojn.</string>
 </resources>

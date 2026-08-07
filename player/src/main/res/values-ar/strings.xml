@@ -154,4 +154,9 @@
     <string name="player_message_cast_failed">تعذّر تشغيل ذلك على %1$s.</string>
 
     <string name="player_casting_to">جارٍ البث إلى %1$s</string>
+
+    <string name="player_error_server">تعذّر على الخادم بدء التشغيل.</string>
+    <string name="player_error_server_with_code">تعذّر على الخادم بدء التشغيل (%1$d).</string>
+    <string name="player_error_unknown">حدث خطأ ما أثناء بدء التشغيل.</string>
+    <string name="player_error_unsupported_source">لا يمكن تشغيل هذا العنصر على هذا الجهاز.</string>
 </resources>

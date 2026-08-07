@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Počisti filtre</string>
     <string name="library_retry">Poskusi znova</string>
 
-    <string name="library_error_network">Strežnika ni mogoče doseči. Preverite povezavo in poskusite znova.</string>
-    <string name="library_error_unauthorized">Vaša seja je potekla. Za nadaljevanje se znova prijavite.</string>
-    <string name="library_error_not_found">Te knjižnice ni več na strežniku.</string>
-    <string name="library_error_server">Strežnik je vrnil napako.</string>
-    <string name="library_error_server_with_code">Strežnik je vrnil napako (%1$d).</string>
-    <string name="library_error_storage">Lokalnih podatkov ni bilo mogoče prebrati.</string>
     <string name="library_error_unknown">Pri nalaganju te knjižnice je prišlo do napake.</string>
 </resources>

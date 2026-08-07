@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Filteren zrécksetzen</string>
     <string name="library_retry">Nach eng Kéier probéieren</string>
 
-    <string name="library_error_network">Däi Server ass net erreechbar. Iwwerpréif deng Verbindung a probéier nach eng Kéier.</string>
-    <string name="library_error_unauthorized">Deng Sessioun ass ofgelaf. Mell dech nach eng Kéier un, fir weiderzefueren.</string>
-    <string name="library_error_not_found">Dës Bibliothéik ass net méi um Server.</string>
-    <string name="library_error_server">De Server huet e Feeler zréckginn.</string>
-    <string name="library_error_server_with_code">De Server huet e Feeler zréckginn (%1$d).</string>
-    <string name="library_error_storage">Lokal Donnéeën konnten net gelies ginn.</string>
     <string name="library_error_unknown">Beim Lueden vun dëser Bibliothéik ass eppes schif gelaf.</string>
 </resources>

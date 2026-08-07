@@ -4,6 +4,7 @@ import androidx.media3.common.PlaybackException
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.model.PlaybackQuality
@@ -16,7 +17,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * Unit tests for [PlayerViewModel].
@@ -90,7 +91,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.uiState.value.errorMessage!! shouldContain "server"
+            model.uiState.value.errorMessage shouldBe UiText.res(CoreUiR.string.error_network)
             model.uiState.value.isLoading shouldBe false
         }
 
@@ -221,7 +222,7 @@ internal class PlayerViewModelTest : PlayerViewModelFixture() {
             playerHandle.emit(PlayerEvent.Error(PlaybackException.ERROR_CODE_DECODING_FAILED, "boom again"))
             advanceUntilIdle()
 
-            model.uiState.value.errorMessage shouldBe "boom again"
+            model.uiState.value.errorMessage shouldBe UiText.Raw("boom again")
             model.uiState.value.userMessage shouldBe PlayerMessage.PlaybackFailed
         }
 

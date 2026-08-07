@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Не можеше да се пушти тоа на %1$s.</string>
 
     <string name="player_casting_to">Пренесување на %1$s</string>
+
+    <string name="player_error_server">Серверот не можеше да ја започне репродукцијата.</string>
+    <string name="player_error_server_with_code">Серверот не можеше да ја започне репродукцијата (%1$d).</string>
+    <string name="player_error_unknown">Нешто тргна наопаку при започнувањето на репродукцијата.</string>
+    <string name="player_error_unsupported_source">Оваа ставка не може да се репродуцира на овој уред.</string>
 </resources>

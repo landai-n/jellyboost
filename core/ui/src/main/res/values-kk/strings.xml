@@ -72,4 +72,12 @@
         <item quantity="one">%1$d элемент бұл құрылғыда бұрыннан бар</item>
         <item quantity="other">%1$d элемент бұл құрылғыда бұрыннан бар</item>
     </plurals>
+
+    <string name="error_network">Серверіңізге қосыла алмады. Қосылымыңызды тексеріп, қайта көріңіз.</string>
+    <string name="error_unauthorized">Сеансыңыздың мерзімі өтті. Жалғастыру үшін қайта кіріңіз.</string>
+    <string name="error_not_found_item">Бұл элемент серверде енді жоқ.</string>
+    <string name="error_not_found_library">Бұл кітапхана серверде енді жоқ.</string>
+    <string name="error_server">Сервер қате қайтарды.</string>
+    <string name="error_server_with_code">Сервер қате қайтарды (%1$d).</string>
+    <string name="error_storage">Жергілікті деректерді оқу мүмкін болмады.</string>
 </resources>

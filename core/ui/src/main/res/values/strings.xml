@@ -104,4 +104,20 @@
         <item quantity="one">%1$d item is already on this device</item>
         <item quantity="other">%1$d items are already on this device</item>
     </plurals>
+
+    <!--
+      The failure taxonomy's shared copy (`AppError.toUiText`). It lives here, not per feature,
+      because "can't reach your server" is the same sentence whichever screen asked: five copies
+      were five chances to drift, and three of them had already drifted into Kotlin literals no
+      translator could see (audit H8). A screen overrides a branch only where its wording genuinely
+      differs — the player's server/unknown copy, and every screen's "unknown", which names what
+      failed to load.
+    -->
+    <string name="error_network">Can\'t reach your server. Check your connection and try again.</string>
+    <string name="error_unauthorized">Your session expired. Sign in again to continue.</string>
+    <string name="error_not_found_item">That item is no longer on the server.</string>
+    <string name="error_not_found_library">That library is no longer on the server.</string>
+    <string name="error_server">The server returned an error.</string>
+    <string name="error_server_with_code">The server returned an error (%1$d).</string>
+    <string name="error_storage">Couldn\'t read local data.</string>
 </resources>

@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">Odstraní se to z tohoto zařízení. Kdykoli si to můžete stáhnout znovu.</string>
     <string name="detail_delete_download_dialog_confirm">Smazat</string>
     <string name="detail_delete_download_dialog_cancel">Zrušit</string>
+
+    <string name="detail_error_unknown">Při načítání této položky se něco pokazilo.</string>
 </resources>

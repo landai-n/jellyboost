@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">הפעולה תסיר אותה מהמכשיר הזה. תוכל להוריד אותה שוב בכל עת.</string>
     <string name="detail_delete_download_dialog_confirm">מחיקה</string>
     <string name="detail_delete_download_dialog_cancel">ביטול</string>
+
+    <string name="detail_error_unknown">משהו השתבש בטעינת הפריט הזה.</string>
 </resources>

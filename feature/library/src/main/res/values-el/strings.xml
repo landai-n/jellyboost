@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Απαλοιφή φίλτρων</string>
     <string name="library_retry">Επανάληψη</string>
 
-    <string name="library_error_network">Δεν είναι δυνατή η πρόσβαση στον διακομιστή σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
-    <string name="library_error_unauthorized">Η περίοδος σύνδεσής σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε.</string>
-    <string name="library_error_not_found">Αυτή η βιβλιοθήκη δεν είναι πλέον στον διακομιστή.</string>
-    <string name="library_error_server">Ο διακομιστής επέστρεψε σφάλμα.</string>
-    <string name="library_error_server_with_code">Ο διακομιστής επέστρεψε σφάλμα (%1$d).</string>
-    <string name="library_error_storage">Δεν ήταν δυνατή η ανάγνωση των τοπικών δεδομένων.</string>
     <string name="library_error_unknown">Κάτι πήγε στραβά κατά τη φόρτωση αυτής της βιβλιοθήκης.</string>
 </resources>

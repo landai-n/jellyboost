@@ -11,6 +11,9 @@ import dev.jellyboost.core.common.model.HomeSectionType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.ui.error.AppErrorCopy
+import dev.jellyboost.core.ui.error.toUiText
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
@@ -31,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * State holder for the home screen.
@@ -387,14 +391,18 @@ class HomeViewModel
         }
     }
 
+/**
+ * What this screen calls the two branches it does not share.
+ *
+ * Home asks the server for the user's *views*, so a 404 here is a missing library, not a missing
+ * title; an unclassified failure happened loading the home screen itself. Everything else comes
+ * from `:core:ui`.
+ */
+internal val HomeErrorCopy =
+    AppErrorCopy(
+        unknown = R.string.home_error_unknown,
+        notFound = CoreUiR.string.error_not_found_library,
+    )
+
 /** Turns the domain failure taxonomy into copy a user can act on. */
-internal fun AppError.toMessage(): String =
-    when (this) {
-        is AppError.Network -> "Can't reach your server. Check your connection and try again."
-        is AppError.ServerResolution -> "Can't reach your server. Check your connection and try again."
-        is AppError.Unauthorized -> "Your session expired. Sign in again to continue."
-        is AppError.NotFound -> "That library is no longer on the server."
-        is AppError.Server -> "The server returned an error${statusCode?.let { " ($it)" }.orEmpty()}."
-        is AppError.Storage -> "Couldn't read local data."
-        is AppError.Unknown -> "Something went wrong loading your home screen."
-    }
+internal fun AppError.toMessage(): UiText = toUiText(HomeErrorCopy)

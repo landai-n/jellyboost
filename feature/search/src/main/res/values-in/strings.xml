@@ -10,11 +10,5 @@
     </plurals>
     <string name="search_prompt">Ketik untuk mencari di perpustakaan Anda.</string>
     <string name="search_no_results">Tidak ada yang cocok dengan “%1$s”.</string>
-    <string name="search_error_network">Tidak dapat menjangkau server Anda. Periksa koneksi Anda dan coba lagi.</string>
-    <string name="search_error_unauthorized">Sesi Anda telah berakhir. Masuk lagi untuk melanjutkan.</string>
-    <string name="search_error_not_found">Item itu sudah tidak ada di server.</string>
-    <string name="search_error_server">Server mengembalikan kesalahan.</string>
-    <string name="search_error_server_with_code">Server mengembalikan kesalahan (%1$d).</string>
-    <string name="search_error_storage">Tidak dapat membaca data lokal.</string>
     <string name="search_error_unknown">Terjadi kesalahan saat mencari.</string>
 </resources>

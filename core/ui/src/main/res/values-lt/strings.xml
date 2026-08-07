@@ -90,4 +90,12 @@
         <item quantity="many">%1$d elementų jau yra šiame įrenginyje</item>
         <item quantity="other">%1$d elementų jau yra šiame įrenginyje</item>
     </plurals>
+
+    <string name="error_network">Nepavyksta pasiekti jūsų serverio. Patikrinkite ryšį ir bandykite dar kartą.</string>
+    <string name="error_unauthorized">Jūsų seansas baigėsi. Prisijunkite iš naujo, kad tęstumėte.</string>
+    <string name="error_not_found_item">Šio elemento serveryje nebėra.</string>
+    <string name="error_not_found_library">Šios bibliotekos serveryje nebėra.</string>
+    <string name="error_server">Serveris grąžino klaidą.</string>
+    <string name="error_server_with_code">Serveris grąžino klaidą (%1$d).</string>
+    <string name="error_storage">Nepavyko nuskaityti vietinių duomenų.</string>
 </resources>

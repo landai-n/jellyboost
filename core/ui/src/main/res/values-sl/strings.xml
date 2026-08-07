@@ -90,4 +90,12 @@
         <item quantity="few">%1$d elementi so že na tej napravi</item>
         <item quantity="other">%1$d elementov je že na tej napravi</item>
     </plurals>
+
+    <string name="error_network">Strežnika ni mogoče doseči. Preverite povezavo in poskusite znova.</string>
+    <string name="error_unauthorized">Vaša seja je potekla. Za nadaljevanje se znova prijavite.</string>
+    <string name="error_not_found_item">Tega predmeta ni več na strežniku.</string>
+    <string name="error_not_found_library">Te knjižnice ni več na strežniku.</string>
+    <string name="error_server">Strežnik je vrnil napako.</string>
+    <string name="error_server_with_code">Strežnik je vrnil napako (%1$d).</string>
+    <string name="error_storage">Lokalnih podatkov ni bilo mogoče prebrati.</string>
 </resources>

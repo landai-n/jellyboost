@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">SyncPlay ჯგუფი დატოვებულია %1$s-ზე გადასაცემად.</string>
     <string name="player_message_cast_failed">ვერ დაუკრავს ამას %1$s-ზე.</string>
     <string name="player_casting_to">მიმდინარეობს გადაცემა %1$s-ზე</string>
+
+    <string name="player_error_server">სერვერმა ვერ დაიწყო დაკვრა.</string>
+    <string name="player_error_server_with_code">სერვერმა ვერ დაიწყო დაკვრა (%1$d).</string>
+    <string name="player_error_unknown">დაკვრის დაწყებისას რაღაც შეცდომა მოხდა.</string>
+    <string name="player_error_unsupported_source">ამ ერთეულის დაკვრა ამ მოწყობილობაზე შეუძლებელია.</string>
 </resources>

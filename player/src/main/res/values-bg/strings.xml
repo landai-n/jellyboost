@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Не можа да се пусне това на %1$s.</string>
 
     <string name="player_casting_to">Прехвърляне на %1$s</string>
+
+    <string name="player_error_server">Сървърът не можа да започне възпроизвеждането.</string>
+    <string name="player_error_server_with_code">Сървърът не можа да започне възпроизвеждането (%1$d).</string>
+    <string name="player_error_unknown">Нещо се обърка при започването на възпроизвеждането.</string>
+    <string name="player_error_unsupported_source">Този елемент не може да се възпроизведе на това устройство.</string>
 </resources>

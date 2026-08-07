@@ -111,4 +111,9 @@
     <string name="player_message_cast_left_syncplay">Đã rời nhóm SyncPlay để truyền tới %1$s.</string>
     <string name="player_message_cast_failed">Không thể phát nội dung đó trên %1$s.</string>
     <string name="player_casting_to">Đang truyền tới %1$s</string>
+
+    <string name="player_error_server">Máy chủ không thể bắt đầu phát.</string>
+    <string name="player_error_server_with_code">Máy chủ không thể bắt đầu phát (%1$d).</string>
+    <string name="player_error_unknown">Đã xảy ra lỗi khi bắt đầu phát.</string>
+    <string name="player_error_unsupported_source">Không thể phát mục này trên thiết bị này.</string>
 </resources>

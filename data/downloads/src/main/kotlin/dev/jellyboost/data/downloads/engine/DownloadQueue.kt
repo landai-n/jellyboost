@@ -34,7 +34,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** What the queue tells its host (the worker) as it moves through an item. */
-interface DownloadQueueListener {
+internal interface DownloadQueueListener {
     /** A new item started, or its progress advanced. Called on every throttled Room write. */
     suspend fun onProgress(
         download: DownloadEntity,
@@ -53,7 +53,7 @@ interface DownloadQueueListener {
  * [INCOMPLETE]) and the ones it must *re-run* ([RETRY], [NO_SESSION]): a queue that could not run,
  * or one that stopped on something that may work in a minute, is not a queue that ran badly.
  */
-enum class DrainOutcome {
+internal enum class DrainOutcome {
     /** Everything runnable finished. */
     COMPLETED,
 

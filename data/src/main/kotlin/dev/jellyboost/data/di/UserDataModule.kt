@@ -20,7 +20,7 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-interface UserDataModule {
+internal interface UserDataModule {
     /** Binds the local-first user-data repository. */
     @Binds
     @Singleton

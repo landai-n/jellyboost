@@ -31,13 +31,13 @@ import kotlin.coroutines.resumeWithException
  * user's `enableContentDownloading` policy is off, and the queue answers it by re-planning that one
  * file onto the static video stream instead of failing the item.
  */
-class DownloadHttpException(
+internal class DownloadHttpException(
     val code: Int,
     url: String,
 ) : IOException("Unexpected response $code for $url")
 
 /** Reported every [FileDownloader.BUFFER_BYTES]; the caller decides how often it reaches Room. */
-fun interface ProgressCallback {
+internal fun interface ProgressCallback {
     /**
      * @param bytesDownloaded total bytes of the file present locally, *including* whatever a
      *   previous run had already written — not the bytes of this run.
@@ -57,7 +57,7 @@ fun interface ProgressCallback {
  * transform: the bytes have already been written to disk when this is called, nothing here can
  * change them, and an implementation must not block — it runs inside the copy loop.
  */
-fun interface MediaChunkSink {
+internal fun interface MediaChunkSink {
     /** [length] bytes of the body, starting at [offset] in [buffer]. The array is reused. */
     fun onChunk(
         buffer: ByteArray,
@@ -103,7 +103,7 @@ fun interface MediaChunkSink {
  * immediately instead of waiting out the socket (audit DL-01).
  */
 @Singleton
-class FileDownloader
+internal class FileDownloader
     @Inject
     constructor(
         @DownloadHttpClient private val callFactory: Call.Factory,

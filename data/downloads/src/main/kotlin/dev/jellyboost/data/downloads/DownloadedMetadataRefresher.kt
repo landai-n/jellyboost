@@ -98,7 +98,7 @@ import javax.inject.Singleton
 @Singleton
 class DownloadedMetadataRefresher
     @Inject
-    constructor(
+    internal constructor(
         private val connectionState: ConnectionStateProvider,
         private val sessionGate: SessionGate,
         private val api: DownloadApi,

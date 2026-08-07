@@ -61,7 +61,7 @@ import javax.inject.Singleton
  * re-decide what it should have been.
  */
 @Singleton
-class SubtitleSidecarTopUp
+internal class SubtitleSidecarTopUp
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

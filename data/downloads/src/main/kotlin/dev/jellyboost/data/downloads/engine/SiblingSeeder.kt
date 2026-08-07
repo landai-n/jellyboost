@@ -38,7 +38,7 @@ import javax.inject.Singleton
  * additive or it is nothing.
  */
 @Singleton
-class SiblingSeeder
+internal class SiblingSeeder
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

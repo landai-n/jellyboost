@@ -17,7 +17,7 @@ import java.util.Locale
  * Everything here is pure: no `Context`, no filesystem. That is deliberate — the naming is the
  * fiddliest part of the file plan and it is fully unit-tested.
  */
-object DownloadPaths {
+internal object DownloadPaths {
     /**
      * Characters no common Android filesystem accepts.
      *

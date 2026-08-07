@@ -27,7 +27,7 @@ import javax.inject.Singleton
  * percentage, and the two actions that make a queue feel controllable.
  */
 @Singleton
-class DownloadNotifier
+internal class DownloadNotifier
     @Inject
     constructor(
         @ApplicationContext private val context: Context,

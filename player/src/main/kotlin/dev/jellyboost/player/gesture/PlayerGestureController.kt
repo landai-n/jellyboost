@@ -16,7 +16,7 @@ package dev.jellyboost.player.gesture
  *   the top/bottom edge belongs to the system, and claiming it makes the player feel broken in a way
  *   the user will blame on the app.
  */
-class PlayerGestureController(
+internal class PlayerGestureController(
     private val config: GestureConfig = GestureConfig(),
 ) {
     /** Where a vertical swipe that started at [xPx] sends its delta, or `null` if it is excluded. */
@@ -66,7 +66,7 @@ class PlayerGestureController(
 }
 
 /** Which of the two vertical-swipe gestures a touch drives. */
-enum class SwipeTarget {
+internal enum class SwipeTarget {
     BRIGHTNESS,
     VOLUME,
 }
@@ -83,7 +83,7 @@ enum class SwipeTarget {
  *   on-screen skip buttons (−10 s / +30 s) rather than being symmetric: two controls that claim to
  *   do the same thing and do not would be worse than an asymmetry the user can see on the buttons.
  */
-data class GestureConfig(
+internal data class GestureConfig(
     val fullSwipeRange: Float = 0.66f,
     val verticalExclusionPx: Float = 0f,
     val horizontalExclusionPx: Float = 0f,

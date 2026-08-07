@@ -27,7 +27,7 @@ enum class SyncPlayGroupState {
 }
 
 /** What the server told us to do, `SendCommandType`. */
-enum class SyncPlayCommandType {
+internal enum class SyncPlayCommandType {
     /** The SDK's name for "play" — the group leaves the paused/waiting state. */
     Unpause,
 
@@ -37,13 +37,13 @@ enum class SyncPlayCommandType {
 }
 
 /** `GroupShuffleMode`. */
-enum class SyncPlayShuffleMode { Sorted, Shuffle }
+internal enum class SyncPlayShuffleMode { Sorted, Shuffle }
 
 /** `GroupRepeatMode`. */
-enum class SyncPlayRepeatMode { None, One, All }
+internal enum class SyncPlayRepeatMode { None, One, All }
 
 /** Where new items land when added to a group queue, `GroupQueueMode`. */
-enum class SyncPlayQueueMode {
+internal enum class SyncPlayQueueMode {
     /** Append to the end of the queue. */
     Queue,
 
@@ -52,7 +52,7 @@ enum class SyncPlayQueueMode {
 }
 
 /** Why the server re-sent the queue, `PlayQueueUpdateReason`. */
-enum class SyncPlayQueueUpdateReason {
+internal enum class SyncPlayQueueUpdateReason {
     NewPlaylist,
     SetCurrentItem,
     RemoveItems,
@@ -72,7 +72,7 @@ enum class SyncPlayQueueUpdateReason {
  * one caused by `Seek` (everyone is repositioning) look identical without it, and re-widening the
  * mapping boundary later is exactly what this seam exists to avoid.
  */
-enum class SyncPlayRequestKind {
+internal enum class SyncPlayRequestKind {
     Play,
     SetPlaylistItem,
     RemoveFromPlaylist,
@@ -109,7 +109,7 @@ data class SyncPlayGroupSummary(
  * episode queued twice is two playlist items, and a command naming only [itemId] would be
  * ambiguous.
  */
-data class SyncPlayQueueEntry(
+internal data class SyncPlayQueueEntry(
     val itemId: UUID,
     val playlistItemId: UUID,
 )
@@ -120,7 +120,7 @@ data class SyncPlayQueueEntry(
  * The server identifies the playing slot by *index*, not by playlist-item id (verified against SDK
  * 1.8.12's `PlayQueueUpdate`); [playingEntry] is the convenience the rest of the app actually wants.
  */
-data class SyncPlayGroupQueue(
+internal data class SyncPlayGroupQueue(
     val entries: List<SyncPlayQueueEntry>,
     val playingItemIndex: Int,
     val startPositionTicks: Long,
@@ -155,7 +155,7 @@ data class SyncPlayGroupQueue(
  * future, which is what lets every member act at the same wall-clock instant. Converting it to a
  * local instant is the job of the time-sync offset, not of this model.
  */
-data class SyncPlayCommand(
+internal data class SyncPlayCommand(
     val type: SyncPlayCommandType,
     val whenInstant: Instant,
     val positionTicks: Long?,
@@ -164,7 +164,7 @@ data class SyncPlayCommand(
 )
 
 /** Everything the group websocket can tell us, `GroupUpdate` and its subtypes. */
-sealed interface SyncPlayGroupEvent {
+internal sealed interface SyncPlayGroupEvent {
     /** We are in the group now; carries its full state. */
     data class Joined(
         val group: SyncPlayGroupSummary,
@@ -213,7 +213,7 @@ sealed interface SyncPlayGroupEvent {
  * the device clock, [serverReceived] and [serverSent] from the server's — so the pair difference
  * cancels the network delay out of the offset.
  */
-data class TimeSyncSample(
+internal data class TimeSyncSample(
     val requestSent: Instant,
     val serverReceived: Instant,
     val serverSent: Instant,

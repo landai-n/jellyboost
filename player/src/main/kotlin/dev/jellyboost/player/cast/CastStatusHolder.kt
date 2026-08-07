@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * Written only by [CastSessionCoordinator]; read by anyone.
  */
 @Singleton
-class CastStatusHolder
+internal class CastStatusHolder
     @Inject
     constructor() {
         private val _connection = MutableStateFlow<CastConnection>(CastConnection.None)
@@ -42,7 +42,7 @@ class CastStatusHolder
  * button draws (are there devices, is one connecting), while this one is about the only distinction
  * playback makes.
  */
-sealed interface CastConnection {
+internal sealed interface CastConnection {
     /** Playing here. */
     data object None : CastConnection
 

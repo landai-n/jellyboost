@@ -22,7 +22,7 @@ import javax.inject.Inject
  * the round trip.
  */
 @AndroidEntryPoint
-class SyncPlayPresenceReceiver : BroadcastReceiver() {
+internal class SyncPlayPresenceReceiver : BroadcastReceiver() {
     @Inject
     lateinit var controller: SyncPlayController
 

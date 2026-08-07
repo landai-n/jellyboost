@@ -29,7 +29,7 @@ import kotlin.math.abs
  * small drift invisibly; this monitor stays as the safety net underneath it.
  */
 @Singleton
-class SyncPlayDriftMonitor
+internal class SyncPlayDriftMonitor
     @Inject
     constructor(
         private val playerHandle: PlayerHandle,

@@ -22,7 +22,7 @@ import java.util.UUID
  * server about this client, and the rest is group/queue administration.
  */
 @Suppress("TooManyFunctions") // The SyncPlay protocol has 22 operations; a partial facade is worse.
-interface SyncPlayApi {
+internal interface SyncPlayApi {
     // Group membership --------------------------------------------------------------------------
 
     /** `GET /SyncPlay/List` — groups on this server the user may join. */

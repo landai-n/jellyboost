@@ -20,7 +20,7 @@ package dev.jellyboost.player.cast
  * @property durationMs the item's runtime, `0` when the server does not know it.
  * @property startPositionMs where the server was asked to start.
  */
-data class CastMediaSpec(
+internal data class CastMediaSpec(
     val mediaId: String,
     val contentId: String,
     val contentType: String,
@@ -32,7 +32,7 @@ data class CastMediaSpec(
 )
 
 /** Whether the receiver should treat the content as a seekable file or as a live feed. */
-enum class CastStreamType {
+internal enum class CastStreamType {
     Buffered,
     Live,
 }
@@ -46,7 +46,7 @@ enum class CastStreamType {
  *   index it was given without a lookup table in between.
  * @property mimeType always `text/vtt`; see `CastDeviceProfile`'s subtitle profiles.
  */
-data class CastTrackSpec(
+internal data class CastTrackSpec(
     val id: Int,
     val uri: String,
     val mimeType: String,
@@ -62,7 +62,7 @@ data class CastTrackSpec(
  * `PlaybackInfo` response carries neither. Every field is optional — a receiver with no metadata
  * shows its idle backdrop, which is a cosmetic loss and never a playback failure.
  */
-data class CastMetadata(
+internal data class CastMetadata(
     val title: String? = null,
     val subtitle: String? = null,
     val posterUrl: String? = null,

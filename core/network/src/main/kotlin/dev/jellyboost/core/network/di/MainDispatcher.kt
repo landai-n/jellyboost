@@ -20,11 +20,8 @@ import javax.inject.Qualifier
  * its dispatcher qualifiers — `:core:common` deliberately has no DI dependency (DECISIONS.md,
  * 2026-07-30, structural batch, divergence 6), and moving all three is the separately-logged ARCH-1.
  *
- * **`:player` has its own `MainDispatcher`, still.** Same name, same meaning, same binding value.
- * Collapsing the two is a pure import swap in five files, but one of them is `SyncPlayController`,
- * which a structural wave owns and which must not be touched in passing. When that wave lands, delete
- * `dev.jellyboost.player.di.MainDispatcher` and its `PlayerModule` provider and re-point the five
- * imports here.
+ * This is the app's only main-thread qualifier: `:player`'s same-named twin was collapsed onto this
+ * one when the SyncPlay structural wave landed (audit HYG-11's plan, executed with HYG-4's sweep).
  */
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

@@ -1,9 +1,10 @@
 package dev.jellyboost.player.syncplay
 
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.network.SessionStateHolder
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
+import dev.jellyboost.core.network.di.MainDispatcher
 import dev.jellyboost.core.network.model.SessionState
-import dev.jellyboost.player.di.MainDispatcher
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.PlayerHandle
@@ -508,7 +509,7 @@ class SyncPlayController
                 launchInSession {
                     if (session.ignoreWaitSent) {
                         session.ignoreWaitSent = false
-                        runCatching { api.setIgnoreWait(false) }
+                        runCatchingUnlessCancelled { api.setIgnoreWait(false) }
                             .onFailure { Timber.w(it, "Could not clear SyncPlay ignore-wait") }
                     }
                     current.queue?.let { reconcile(it) }
@@ -549,7 +550,7 @@ class SyncPlayController
                 session.loadedPlaylistItemId = null
                 session.skippedSlots.clear()
                 if (_state.value !is SyncPlayState.InGroup) return@launch
-                runCatching { api.setIgnoreWait(true) }
+                runCatchingUnlessCancelled { api.setIgnoreWait(true) }
                     .onSuccess { session.ignoreWaitSent = true }
                     .onFailure { Timber.w(it, "Could not set SyncPlay ignore-wait") }
             }
@@ -581,7 +582,7 @@ class SyncPlayController
                 oweReady(entry, fallbackMillis = null)
                 launchInSession {
                     val snapshot = hostSnapshot()
-                    runCatching {
+                    runCatchingUnlessCancelled {
                         api.reportBuffering(
                             timeSync.serverNow(),
                             snapshot?.positionTicks ?: 0L,
@@ -641,7 +642,7 @@ class SyncPlayController
             warmClock()
 
             val joined =
-                runCatching {
+                runCatchingUnlessCancelled {
                     if (existing != null) {
                         api.joinGroup(existing.id)
                         existing
@@ -719,7 +720,7 @@ class SyncPlayController
             // start gating the group again.
             if (host == null && session.ignoreWaitSent) {
                 openedSession.launch {
-                    runCatching { api.setIgnoreWait(true) }
+                    runCatchingUnlessCancelled { api.setIgnoreWait(true) }
                         .onFailure { Timber.w(it, "Could not restore SyncPlay ignore-wait after rejoining") }
                 }
             }
@@ -830,7 +831,7 @@ class SyncPlayController
 
         private suspend fun leaveOnServer() {
             if (_state.value is SyncPlayState.Idle) return
-            runCatching { api.leaveGroup() }
+            runCatchingUnlessCancelled { api.leaveGroup() }
                 .onFailure { Timber.w(it, "Could not leave the SyncPlay group cleanly") }
         }
 
@@ -1181,7 +1182,7 @@ class SyncPlayController
                 if (_state.value !is SyncPlayState.Rejoining) return@withLock RejoinOutcome.Aborted
                 _state.value = SyncPlayState.Rejoining(target, attempt)
                 val groups =
-                    runCatching { api.getGroups() }
+                    runCatchingUnlessCancelled { api.getGroups() }
                         .onFailure { Timber.w(it, "Could not list the SyncPlay groups while rejoining") }
                         .getOrElse { return@withLock RejoinOutcome.Failed }
                 if (groups.none { it.id == target.id }) return@withLock RejoinOutcome.Dissolved
@@ -1457,7 +1458,7 @@ class SyncPlayController
             // server's post-ready re-send must not be mistaken for a repeat (see onHostBuffering).
             scheduler.forgetApplied()
             oweReady(entry, fallbackMillis = null)
-            runCatching {
+            runCatchingUnlessCancelled {
                 api.reportBuffering(
                     timeSync.serverNow(),
                     queue.startPositionTicks,
@@ -1513,7 +1514,7 @@ class SyncPlayController
         ) {
             setPhase(SyncPlayPhase.Buffering)
             oweReady(entry, fallbackMillis = SETTLED_READY_FALLBACK_MS)
-            runCatching {
+            runCatchingUnlessCancelled {
                 api.reportBuffering(
                     timeSync.serverNow(),
                     snapshot.positionTicks,
@@ -1567,7 +1568,7 @@ class SyncPlayController
                 Timber.w("Not skipping past SyncPlay slot %s twice", entry.playlistItemId)
                 return
             }
-            runCatching { api.requestNextItem(entry.playlistItemId) }
+            runCatchingUnlessCancelled { api.requestNextItem(entry.playlistItemId) }
                 .onFailure { Timber.w(it, "Could not skip past an unplayable SyncPlay item") }
         }
 
@@ -1847,11 +1848,17 @@ class SyncPlayController
                     ?: withContext(mainDispatcher) { playerHandle.snapshot() }.positionTicks
             val isPlaying = reportedIsPlaying(snapshot)
             oweReady(entry, fallbackMillis = SETTLED_READY_FALLBACK_MS)
-            runCatching { api.reportBuffering(timeSync.serverNow(), positionTicks, isPlaying, entry.playlistItemId) }
-                .onFailure { error ->
-                    Timber.w(error, "Could not report SyncPlay buffering")
-                    if (error.isMembershipRefused()) onMembershipGone()
-                }
+            runCatchingUnlessCancelled {
+                api.reportBuffering(
+                    timeSync.serverNow(),
+                    positionTicks,
+                    isPlaying,
+                    entry.playlistItemId,
+                )
+            }.onFailure { error ->
+                Timber.w(error, "Could not report SyncPlay buffering")
+                if (error.isMembershipRefused()) onMembershipGone()
+            }
         }
 
         /** A `403` from a SyncPlay call: this session may not act on that group any more. */
@@ -1864,7 +1871,7 @@ class SyncPlayController
          */
         private suspend fun onPlaybackEnded() {
             val entry = currentEntry() ?: return
-            runCatching { api.requestNextItem(entry.playlistItemId) }
+            runCatchingUnlessCancelled { api.requestNextItem(entry.playlistItemId) }
                 .onFailure { Timber.w(it, "Could not request the next SyncPlay item") }
         }
 
@@ -1898,7 +1905,7 @@ class SyncPlayController
                 parked.positionTicks,
                 parked.parked,
             )
-            runCatching {
+            runCatchingUnlessCancelled {
                 api.reportReady(timeSync.serverNow(), parked.positionTicks, false, entry.playlistItemId)
             }.onFailure { Timber.w(it, "Could not report SyncPlay ready") }
             if ((_state.value as? SyncPlayState.InGroup)?.phase == SyncPlayPhase.Buffering) {
@@ -1993,7 +2000,7 @@ class SyncPlayController
                 return
             }
             scope.launch {
-                runCatching { block() }.onFailure { Timber.w(it, "A SyncPlay request failed") }
+                runCatchingUnlessCancelled { block() }.onFailure { Timber.w(it, "A SyncPlay request failed") }
             }
         }
 

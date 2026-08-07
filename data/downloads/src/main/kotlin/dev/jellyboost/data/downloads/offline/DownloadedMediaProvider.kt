@@ -143,6 +143,10 @@ class DownloadedMediaProvider
          * older build left tiles of a second resolution behind, which would otherwise interleave
          * two grids into one nonsensical strip.
          */
+        @Suppress(
+            // Trickplay needs four facts on disk; a missing one means no trickplay, not a partial result.
+            "ReturnCount",
+        )
         private fun List<DownloadFileEntity>.toTrickplay(dto: BaseItemDto?): DownloadedTrickplay? {
             val tiles = filter { it.type == DownloadFileType.TRICKPLAY_TILE && it.tileWidth != null }
             val width = tiles.mapNotNull { it.tileWidth }.maxOrNull() ?: return null

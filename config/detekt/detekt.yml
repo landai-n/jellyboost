@@ -13,14 +13,25 @@ comments:
     active: false
 
 complexity:
-  # Repositories and DAOs legitimately grow large.
+  # Two deliberate, measured relaxations — see DECISIONS.md 2026-08-07 for the counts that
+  # justify each. Everything else the M0 bootstrap raised has been reverted; the fallout is
+  # carried by targeted, commented `@Suppress` at each offender instead.
   TooManyFunctions:
+    # Repository/DAO/handle interfaces are wide by contract, not by neglect (25 offenders at
+    # the default 11; none is a design smell). 20 still catches genuine sprawl.
     thresholdInInterfaces: 20
     thresholdInClasses: 20
+    # Same number for files, for the same reason plus one: a screen file is a set of small drawing
+    # functions and `LazyListScope` extensions — the shape the audit called a model for the UI layer
+    # (`DownloadsScreen`) — and only `HomeScreen.kt` reaches even 11 non-`@Composable` ones.
+    thresholdInFiles: 20
+    # A Compose file is idiomatically many small private composables plus previews; the
+    # file-level threshold measures nesting depth, not complexity (15 offenders without this).
     ignoreAnnotatedFunctions: ['Composable']
   LongParameterList:
-    ignoreAnnotated: ['Composable', 'Inject']
-  LongMethod:
+    # Composable parameter counts are partly structural — modifier, slots, and hoisted
+    # state each cost a parameter (52 offenders without this). `Inject` is NOT exempt:
+    # constructor coupling is exactly what the gate should show.
     ignoreAnnotated: ['Composable']
 
 naming:
@@ -37,8 +48,23 @@ style:
     comments:
       - reason: 'STOPSHIP markers must never reach a commit.'
         value: 'STOPSHIP:'
+  # ARCH-4 (audit 2026-08-06): PLAN.md's core mechanism — the Jellyfin SDK stops at `:data`,
+  # the UI layer only ever sees `dev.jellyboost` domain models — held by discipline alone.
+  # `includes` scopes the rule to the production sources of the UI layer; `:data`, `:player`
+  # and `:core:network` are the layers allowed to name SDK types, and tests may fake them.
+  ForbiddenImport:
+    active: true
+    includes:
+      - '**/app/src/main/**'
+      - '**/core/ui/src/main/**'
+      - '**/feature/*/src/main/**'
+    imports:
+      - reason: 'The Jellyfin SDK stops at :data — the UI layer speaks dev.jellyboost models only (PLAN.md, ARCH-4).'
+        value: 'org.jellyfin.*'
   ReturnCount:
-    max: 6
+    # detekt's default of 2 is unreachable in Kotlin guard-clause style (86 offenders);
+    # 3 keeps the rule honest without a codebase-wide suppression sweep. See DECISIONS.md.
+    max: 3
   MaxLineLength:
     maxLineLength: 120
   MagicNumber:

@@ -122,6 +122,10 @@ internal class TrackSelectionController(
      * positional matching; a subtitle the server burned into the video has neither and forces a
      * re-resolve.
      */
+    @Suppress(
+        // Mirrors `CastPlayerHandle.selectSubtitleTrack` deliberately — the two must pick the same track.
+        "ReturnCount",
+    )
     fun selectSubtitle(
         source: PlaybackMediaSource,
         jellyfinIndex: Int?,

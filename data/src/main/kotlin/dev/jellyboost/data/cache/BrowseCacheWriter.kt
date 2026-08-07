@@ -104,6 +104,11 @@ import javax.inject.Singleton
  */
 @Singleton
 class BrowseCacheWriter
+    @Suppress(
+        // Eight DI collaborators: the write-through merge needs three DAOs plus the transaction runner that makes the
+        // read-merge-write atomic (audit H3).
+        "LongParameterList",
+    )
     @Inject
     constructor(
         private val itemDao: ItemDao,

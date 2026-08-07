@@ -127,6 +127,12 @@ import kotlinx.coroutines.launch
  * dark glass instead of `glassSurface` ([JellyfinNavHost] nulls `LocalHazeState` for that subtree).
  * Detaching the source hands the capture cost back to the screen where GPU headroom matters most.
  */
+@Suppress(
+    // 106 lines of slot wiring, and the wiring is the content: every block binds one Scaffold slot to one inset rule,
+    // and which slot owns which inset is exactly what the KDoc above spends its length establishing. Extracting a slot
+    // moves its rule away from the other five it trades with.
+    "LongMethod",
+)
 @Composable
 internal fun AppScaffold(
     startsSignedIn: Boolean,

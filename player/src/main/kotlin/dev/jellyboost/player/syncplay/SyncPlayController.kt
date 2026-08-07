@@ -183,6 +183,11 @@ import javax.inject.Singleton
     // the same handshake bookkeeping and the same lock, and publishing that state to another
     // collaborator would be a larger surface than the lines it saves.
     "LargeClass",
+    // Thirteen constructor collaborators, the visible cost of the "LargeClass" trade above: each
+    // one is a protocol organ (socket, time sync, scheduler, drift monitor, pinger…) the
+    // membership lifecycle drives directly. The gate stopped exempting `@Inject` constructors in
+    // the 2026-08-07 un-blinding, so this is now stated rather than assumed.
+    "LongParameterList",
 )
 class SyncPlayController
     @Inject

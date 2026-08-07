@@ -79,6 +79,11 @@ class PackageDependencyTest {
         val settled = mutableSetOf<String>()
         val path = mutableListOf<String>()
 
+        @Suppress(
+            // A depth-first walk: "already on the path" (a cycle), "already settled", the bubbled-up cycle from a
+            // child, and "clean" are four genuinely different outcomes.
+            "ReturnCount",
+        )
         fun walk(node: String): String? {
             val seenAt = path.indexOf(node)
             if (seenAt >= 0) return (path.drop(seenAt) + node).joinToString(" -> ")

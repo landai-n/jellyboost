@@ -25,12 +25,14 @@ internal class PlayerGestureController(
         yPx: Float,
         widthPx: Float,
         heightPx: Float,
-    ): SwipeTarget? {
-        if (widthPx <= 0f || heightPx <= 0f) return null
-        if (yPx < config.verticalExclusionPx || yPx > heightPx - config.verticalExclusionPx) return null
-        if (xPx < config.horizontalExclusionPx || xPx > widthPx - config.horizontalExclusionPx) return null
-        return if (xPx > widthPx / 2f) SwipeTarget.VOLUME else SwipeTarget.BRIGHTNESS
-    }
+    ): SwipeTarget? =
+        when {
+            widthPx <= 0f || heightPx <= 0f -> null
+            yPx < config.verticalExclusionPx || yPx > heightPx - config.verticalExclusionPx -> null
+            xPx < config.horizontalExclusionPx || xPx > widthPx - config.horizontalExclusionPx -> null
+            xPx > widthPx / 2f -> SwipeTarget.VOLUME
+            else -> SwipeTarget.BRIGHTNESS
+        }
 
     /**
      * The fraction of the full 0..1 range a drag of [dragPx] represents.

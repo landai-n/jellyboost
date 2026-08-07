@@ -58,6 +58,10 @@ fun batchOutcomeText(
  * 4. **some done, some skipped** ([BatchMessage.DoneWithSkipped]) — *Download* only;
  * 5. **clean** ([BatchMessage.Done]) — the count, nothing failed or skipped.
  */
+@Suppress(
+    // One resource per outcome shape; a `when` over two independent counts would nest, not flatten.
+    "ReturnCount",
+)
 internal fun resolveBatchMessage(
     action: SelectionAction,
     outcome: BatchOutcome,

@@ -69,6 +69,12 @@ import kotlin.math.roundToInt
  *   while the film is being decoded in a television, whose volume rides the hardware keys through
  *   the Cast framework. The taps are unconditional, because they are how the controls come back.
  */
+@Suppress(
+    // One gesture arena. The tap, double-tap and vertical-drag detectors must share a single `pointerInput` scope to
+    // resolve against each other — split across composables they would each consume the same events independently,
+    // which is the bug this layer was written to avoid.
+    "LongMethod",
+)
 @Composable
 internal fun PlayerGestureLayer(
     onToggleControls: () -> Unit,

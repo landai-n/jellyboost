@@ -42,6 +42,10 @@ internal class ExoMediaSourceFactory
                 is RemotePlaybackMediaSource -> source.toSpec()
             }
 
+        @Suppress(
+            // One return per container/protocol the factory knows; a dispatch table written as guards.
+            "ReturnCount",
+        )
         private fun RemotePlaybackMediaSource.toSpec(): PlaybackMediaItemSpec? {
             val (uri, mimeType) =
                 when (playMethod) {

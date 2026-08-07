@@ -97,6 +97,11 @@ import javax.inject.Singleton
  */
 @Singleton
 class DownloadedMetadataRefresher
+    @Suppress(
+        // Ten DI collaborators: the refresher is the join point between the download rows, the item cache and the
+        // server, and it is gated on both connectivity and session.
+        "LongParameterList",
+    )
     @Inject
     internal constructor(
         private val connectionState: ConnectionStateProvider,

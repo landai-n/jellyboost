@@ -57,6 +57,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
@@ -97,9 +98,28 @@ import kotlinx.coroutines.delay
  * visibility: an intro arrives while the controls are hidden, which is exactly when the offer is
  * worth something. In picture-in-picture none of it is drawn — the window is a few hundred pixels
  * wide and the transport controls that belong there are the media notification's.
+ *
+ * This is the module's entry point, and it mints its own ViewModel: `PlayerViewModel` is `internal`
+ * (audit ARCH-2), so `:app` names the destination and nothing else.
  */
 @Composable
 fun PlayerScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    PlayerScreen(viewModel = hiltViewModel(), onBack = onBack, modifier = modifier)
+}
+
+/** The screen proper — see the public overload above. Separate so tests can supply a ViewModel. */
+@Suppress(
+    // The longest composable left (127). Its shape is audit CPX-9's finding, not a formatting one: three independent
+    // sheet booleans and a `return@Box` PiP guard that silently drops any sibling appended after it. The fix is one
+    // `openPanel: PlayerPanel?` and an inverted guard — scheduled with the next player wave — and shaving lines out of
+    // it first would only make that fix harder.
+    "LongMethod",
+)
+@Composable
+internal fun PlayerScreen(
     viewModel: PlayerViewModel,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,

@@ -57,6 +57,11 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class DownloadEnqueuer
+    @Suppress(
+        // Eight DI collaborators: enqueueing spans the API, both DAOs, the deleter (replace flow) and the sibling
+        // seeder, all in one transaction-shaped call.
+        "LongParameterList",
+    )
     @Inject
     constructor(
         private val api: DownloadApi,
@@ -115,6 +120,10 @@ internal class DownloadEnqueuer
          * - **Order is the server's**, which is broadcast order, so a queue drained top-to-bottom
          *   plays back in the order the user would watch.
          */
+        @Suppress(
+            // Six refusal reasons, each returning its own `AppError`; folding them loses which one fired.
+            "ReturnCount",
+        )
         private suspend fun enqueueContainer(
             container: BaseItemDto,
             userId: UUID,
@@ -361,6 +370,10 @@ internal class DownloadEnqueuer
          * `bytesTotal`, `sizeIsExact`, the projector gate and the file plan all describe the same
          * download.
          */
+        @Suppress(
+            // Quality planning walks the source list and returns the first plan that fits; the walk is the shape.
+            "ReturnCount",
+        )
         private fun BaseItemDto.planQuality(preferred: DownloadQuality): PlannedQuality {
             val chosen = PlannedQuality(preferred, sizeEstimate(preferred))
             if (!preferred.isTranscoded) return chosen
@@ -407,6 +420,10 @@ internal class DownloadEnqueuer
          *   with no runtime. Reporting the *source's* size there would promise a number for a file
          *   the user is not going to receive.
          */
+        @Suppress(
+            // Each return is a different estimate source (server, bitrate, none), tried in falling confidence.
+            "ReturnCount",
+        )
         private fun BaseItemDto.sizeEstimate(quality: DownloadQuality): SizeEstimate {
             val cap =
                 quality.totalBitRate
@@ -531,6 +548,10 @@ internal class DownloadEnqueuer
          * figure to a hedged one for nothing. Films get `null` too: there are no siblings, and a
          * director's other work is not evidence.
          */
+        @Suppress(
+            // Guard chain over the sibling's own row state; every exit is "already handled elsewhere".
+            "ReturnCount",
+        )
         private suspend fun BaseItemDto.siblingSeed(
             quality: DownloadQuality,
             estimate: SizeEstimate,

@@ -60,6 +60,12 @@ package dev.jellyboost.data.downloads.engine
  * Not thread-safe, and not meant to be: one instance belongs to one file transfer, on the one
  * thread copying it.
  */
+@Suppress(
+    // Class-level, replacing the single function-level copy this file already carried: like `MatroskaSeekIndexRepair`,
+    // every helper is a guard chain over untrusted bytes where each early return names a distinct malformation
+    // (2026-08-07 detekt un-blinding).
+    "ReturnCount",
+)
 internal class MkvClusterScanner {
     private val carry = ByteArray(WINDOW - 1)
     private var carryLength = 0
@@ -146,7 +152,6 @@ internal class MkvClusterScanner {
      * @return the cluster's start time in media milliseconds, or `null` when anything failed to
      *   check out — including "not all the bytes are here yet", which the carry buffer retries.
      */
-    @Suppress("ReturnCount")
     private fun readClusterMillis(
         buffer: ByteArray,
         start: Int,

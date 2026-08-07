@@ -132,6 +132,11 @@ internal class MissingMetadataException(
  */
 @Singleton
 internal class DownloadQueue
+    @Suppress(
+        // Twelve DI collaborators: the download engine ring (planner, storage, downloader, extractor, seeder, sweeper)
+        // is assembled here and nowhere else.
+        "LongParameterList",
+    )
     @Inject
     constructor(
         private val downloadDao: DownloadDao,
@@ -555,6 +560,10 @@ internal class DownloadQueue
          * the meantime wins; the returned row carries the seed so the in-memory `ItemProgress`
          * starts from it too, instead of waiting for the next drain to pick it up from Room.
          */
+        @Suppress(
+            // Guard chain: each early exit is a distinct "nothing to seed" reason with its own log line.
+            "ReturnCount",
+        )
         private suspend fun seedIfUnseeded(
             download: DownloadEntity,
             dto: BaseItemDto,

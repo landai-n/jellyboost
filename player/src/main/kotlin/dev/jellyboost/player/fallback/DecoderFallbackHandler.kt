@@ -75,6 +75,10 @@ internal class DecoderFallbackHandler
          * error rather than looping over bytes that have already failed, which is what
          * `PlaybackSourceResolver` uses `enableDirectPlay = false` to mean.
          */
+        @Suppress(
+            // Each exit is a rung of the bitrate ladder, including the two that mean "no rung below this".
+            "ReturnCount",
+        )
         private fun lowerBitrate(
             source: PlaybackMediaSource,
             positionTicks: Long,

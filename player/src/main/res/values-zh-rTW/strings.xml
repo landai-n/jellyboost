@@ -129,4 +129,9 @@
     <string name="player_message_cast_failed">無法在 %1$s 上播放這個內容。</string>
 
     <string name="player_casting_to">正在投放到 %1$s</string>
+
+    <string name="player_error_server">伺服器無法開始播放。</string>
+    <string name="player_error_server_with_code">伺服器無法開始播放 (%1$d)。</string>
+    <string name="player_error_unknown">開始播放時發生問題。</string>
+    <string name="player_error_unsupported_source">這個項目無法在這部裝置上播放。</string>
 </resources>

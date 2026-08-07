@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Wyczyść filtry</string>
     <string name="library_retry">Spróbuj ponownie</string>
 
-    <string name="library_error_network">Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.</string>
-    <string name="library_error_unauthorized">Twoja sesja wygasła. Zaloguj się ponownie, aby kontynuować.</string>
-    <string name="library_error_not_found">Tej biblioteki nie ma już na serwerze.</string>
-    <string name="library_error_server">Serwer zwrócił błąd.</string>
-    <string name="library_error_server_with_code">Serwer zwrócił błąd (%1$d).</string>
-    <string name="library_error_storage">Nie udało się odczytać danych lokalnych.</string>
     <string name="library_error_unknown">Coś poszło nie tak podczas wczytywania tej biblioteki.</string>
 </resources>

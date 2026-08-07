@@ -64,6 +64,7 @@ import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.batchOutcomeText
+import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
@@ -331,7 +332,7 @@ fun ItemDetailContent(
 
         state.errorMessage != null ->
             ErrorState(
-                message = state.errorMessage,
+                message = state.errorMessage.resolve(),
                 modifier = modifier,
                 onRetry = onRetry,
                 announce = LiveRegionMode.Assertive,

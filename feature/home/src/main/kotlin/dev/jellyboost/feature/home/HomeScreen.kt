@@ -56,6 +56,7 @@ import dev.jellyboost.core.ui.component.MediaRow
 import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.libraryIcon
+import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -128,7 +129,7 @@ fun HomeContent(
         // under the reader's finger simply vanished (accessibility audit 2026-08-05, CR-3).
         state.errorMessage != null ->
             ErrorState(
-                message = state.errorMessage,
+                message = state.errorMessage.resolve(),
                 modifier = modifier,
                 onRetry = onRetry,
                 announce = LiveRegionMode.Assertive,

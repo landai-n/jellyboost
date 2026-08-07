@@ -16,11 +16,5 @@
     <string name="search_prompt">Rašykite, kad ieškotumėte savo bibliotekose.</string>
     <string name="search_no_results">Pagal „%1$s“ nieko nerasta.</string>
 
-    <string name="search_error_network">Nepavyksta pasiekti jūsų serverio. Patikrinkite ryšį ir bandykite dar kartą.</string>
-    <string name="search_error_unauthorized">Jūsų seansas baigėsi. Prisijunkite iš naujo, kad tęstumėte.</string>
-    <string name="search_error_not_found">Šio elemento serveryje nebėra.</string>
-    <string name="search_error_server">Serveris grąžino klaidą.</string>
-    <string name="search_error_server_with_code">Serveris grąžino klaidą (%1$d).</string>
-    <string name="search_error_storage">Nepavyko nuskaityti vietinių duomenų.</string>
     <string name="search_error_unknown">Ieškant kažkas nutiko ne taip.</string>
 </resources>

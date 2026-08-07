@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Kon nie dit op %1$s speel nie.</string>
 
     <string name="player_casting_to">Stuur tans na %1$s</string>
+
+    <string name="player_error_server">Die bediener kon nie terugspeel begin nie.</string>
+    <string name="player_error_server_with_code">Die bediener kon nie terugspeel begin nie (%1$d).</string>
+    <string name="player_error_unknown">Iets het verkeerd geloop met die begin van terugspeel.</string>
+    <string name="player_error_unsupported_source">Hierdie item kan nie op hierdie toestel gespeel word nie.</string>
 </resources>

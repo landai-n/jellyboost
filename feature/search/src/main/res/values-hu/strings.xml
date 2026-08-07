@@ -14,11 +14,5 @@
     <string name="search_prompt">Kezdj el gépelni a könyvtáraid átkereséséhez.</string>
     <string name="search_no_results">Nincs találat erre: „%1$s”.</string>
 
-    <string name="search_error_network">A szerver nem érhető el. Ellenőrizd a kapcsolatot, és próbáld újra.</string>
-    <string name="search_error_unauthorized">A munkameneted lejárt. Jelentkezz be újra a folytatáshoz.</string>
-    <string name="search_error_not_found">Ez az elem már nincs a szerveren.</string>
-    <string name="search_error_server">A szerver hibát adott vissza.</string>
-    <string name="search_error_server_with_code">A szerver hibát adott vissza (%1$d).</string>
-    <string name="search_error_storage">Nem sikerült beolvasni a helyi adatokat.</string>
     <string name="search_error_unknown">Hiba történt a keresés közben.</string>
 </resources>

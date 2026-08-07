@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Nuk u luajt dot te %1$s.</string>
 
     <string name="player_casting_to">Duke transmetuar te %1$s</string>
+
+    <string name="player_error_server">Serveri nuk mundi ta nisë riprodhimin.</string>
+    <string name="player_error_server_with_code">Serveri nuk mundi ta nisë riprodhimin (%1$d).</string>
+    <string name="player_error_unknown">Diçka shkoi keq gjatë nisjes së riprodhimit.</string>
+    <string name="player_error_unsupported_source">Ky artikull nuk mund të riprodhohet në këtë pajisje.</string>
 </resources>

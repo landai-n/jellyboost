@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">清除筛选条件</string>
     <string name="library_retry">重试</string>
 
-    <string name="library_error_network">无法连接到你的服务器。请检查网络连接后重试。</string>
-    <string name="library_error_unauthorized">你的会话已过期。请重新登录以继续。</string>
-    <string name="library_error_not_found">该媒体库已不在服务器上。</string>
-    <string name="library_error_server">服务器返回了一个错误。</string>
-    <string name="library_error_server_with_code">服务器返回了一个错误 (%1$d)。</string>
-    <string name="library_error_storage">无法读取本地数据。</string>
     <string name="library_error_unknown">加载此媒体库时出现问题。</string>
 </resources>

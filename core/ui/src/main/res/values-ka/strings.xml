@@ -66,4 +66,12 @@
         <item quantity="one">%1$d ერთეული უკვე ამ მოწყობილობაზეა</item>
         <item quantity="other">%1$d ერთეული უკვე ამ მოწყობილობაზეა</item>
     </plurals>
+
+    <string name="error_network">თქვენს სერვერთან დაკავშირება ვერ ხერხდება. შეამოწმეთ თქვენი კავშირი და სცადეთ ხელახლა.</string>
+    <string name="error_unauthorized">თქვენი სესია ვადაგასულია. გასაგრძელებლად ხელახლა შედით.</string>
+    <string name="error_not_found_item">ეს ერთეული აღარ არის სერვერზე.</string>
+    <string name="error_not_found_library">ეს ბიბლიოთეკა აღარ არის სერვერზე.</string>
+    <string name="error_server">სერვერმა შეცდომა დააბრუნა.</string>
+    <string name="error_server_with_code">სერვერმა შეცდომა დააბრუნა (%1$d).</string>
+    <string name="error_storage">ლოკალური მონაცემების წაკითხვა ვერ მოხერხდა.</string>
 </resources>

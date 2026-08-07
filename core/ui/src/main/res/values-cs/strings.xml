@@ -90,4 +90,12 @@
         <item quantity="many">%1$d položek už je v tomto zařízení</item>
         <item quantity="other">%1$d položek už je v tomto zařízení</item>
     </plurals>
+
+    <string name="error_network">Server není dostupný. Zkontrolujte připojení a zkuste to znovu.</string>
+    <string name="error_unauthorized">Vaše relace vypršela. Přihlaste se znovu, abyste mohli pokračovat.</string>
+    <string name="error_not_found_item">Tato položka už na serveru není.</string>
+    <string name="error_not_found_library">Tato knihovna už na serveru není.</string>
+    <string name="error_server">Server vrátil chybu.</string>
+    <string name="error_server_with_code">Server vrátil chybu (%1$d).</string>
+    <string name="error_storage">Nepodařilo se načíst místní data.</string>
 </resources>

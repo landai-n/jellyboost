@@ -64,4 +64,6 @@
     <string name="detail_delete_download_dialog_message">Thao tác này sẽ xóa khỏi thiết bị này. Bạn có thể tải xuống lại bất cứ lúc nào.</string>
     <string name="detail_delete_download_dialog_confirm">Xóa</string>
     <string name="detail_delete_download_dialog_cancel">Hủy</string>
+
+    <string name="detail_error_unknown">Đã xảy ra lỗi khi tải mục này.</string>
 </resources>

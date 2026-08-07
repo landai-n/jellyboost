@@ -75,4 +75,6 @@
     <string name="detail_delete_download_dialog_message">Ovo će ga ukloniti s ovog uređaja. Možete ga ponovno preuzeti bilo kada.</string>
     <string name="detail_delete_download_dialog_confirm">Izbriši</string>
     <string name="detail_delete_download_dialog_cancel">Otkaži</string>
+
+    <string name="detail_error_unknown">Došlo je do pogreške prilikom učitavanja ove stavke.</string>
 </resources>

@@ -13,11 +13,5 @@
     <string name="search_prompt">입력하여 라이브러리를 검색하세요.</string>
     <string name="search_no_results">“%1$s”와(과) 일치하는 항목이 없습니다.</string>
 
-    <string name="search_error_network">서버에 연결할 수 없습니다. 연결을 확인한 후 다시 시도하세요.</string>
-    <string name="search_error_unauthorized">세션이 만료되었습니다. 계속하려면 다시 로그인하세요.</string>
-    <string name="search_error_not_found">해당 항목은 더 이상 서버에 없습니다.</string>
-    <string name="search_error_server">서버에서 오류를 반환했습니다.</string>
-    <string name="search_error_server_with_code">서버에서 오류를 반환했습니다 (%1$d).</string>
-    <string name="search_error_storage">로컬 데이터를 읽을 수 없습니다.</string>
     <string name="search_error_unknown">검색 중 문제가 발생했습니다.</string>
 </resources>

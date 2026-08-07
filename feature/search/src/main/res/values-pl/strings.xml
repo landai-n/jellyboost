@@ -16,11 +16,5 @@
     <string name="search_prompt">Zacznij pisać, aby przeszukać swoje biblioteki.</string>
     <string name="search_no_results">Nic nie pasuje do „%1$s”.</string>
 
-    <string name="search_error_network">Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.</string>
-    <string name="search_error_unauthorized">Twoja sesja wygasła. Zaloguj się ponownie, aby kontynuować.</string>
-    <string name="search_error_not_found">Tego elementu nie ma już na serwerze.</string>
-    <string name="search_error_server">Serwer zwrócił błąd.</string>
-    <string name="search_error_server_with_code">Serwer zwrócił błąd (%1$d).</string>
-    <string name="search_error_storage">Nie udało się odczytać danych lokalnych.</string>
     <string name="search_error_unknown">Coś poszło nie tak podczas wyszukiwania.</string>
 </resources>

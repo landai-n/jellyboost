@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Nessun elemento corrisponde a questi filtri.</string>
     <string name="library_empty_clear_filters">Cancella filtri</string>
     <string name="library_retry">Riprova</string>
-    <string name="library_error_network">Impossibile raggiungere il tuo server. Controlla la connessione e riprova.</string>
-    <string name="library_error_unauthorized">La tua sessione è scaduta. Accedi di nuovo per continuare.</string>
-    <string name="library_error_not_found">Questa libreria non è più sul server.</string>
-    <string name="library_error_server">Il server ha restituito un errore.</string>
-    <string name="library_error_server_with_code">Il server ha restituito un errore (%1$d).</string>
-    <string name="library_error_storage">Impossibile leggere i dati locali.</string>
     <string name="library_error_unknown">Si è verificato un errore durante il caricamento di questa libreria.</string>
 </resources>

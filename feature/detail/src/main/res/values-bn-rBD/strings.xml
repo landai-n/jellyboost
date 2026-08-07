@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">এটি এই ডিভাইস থেকে সরিয়ে দেবে। আপনি যেকোনো সময় আবার এটি ডাউনলোড করতে পারবেন।</string>
     <string name="detail_delete_download_dialog_confirm">মুছুন</string>
     <string name="detail_delete_download_dialog_cancel">বাতিল করুন</string>
+
+    <string name="detail_error_unknown">এই আইটেম লোড করতে কিছু ভুল হয়েছে।</string>
 </resources>

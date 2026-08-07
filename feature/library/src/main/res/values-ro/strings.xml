@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Niciun element nu corespunde acestor filtre.</string>
     <string name="library_empty_clear_filters">Șterge filtrele</string>
     <string name="library_retry">Reîncearcă</string>
-    <string name="library_error_network">Serverul nu poate fi contactat. Verificați conexiunea și încercați din nou.</string>
-    <string name="library_error_unauthorized">Sesiunea a expirat. Autentificați-vă din nou pentru a continua.</string>
-    <string name="library_error_not_found">Această bibliotecă nu mai este pe server.</string>
-    <string name="library_error_server">Serverul a returnat o eroare.</string>
-    <string name="library_error_server_with_code">Serverul a returnat o eroare (%1$d).</string>
-    <string name="library_error_storage">Datele locale nu au putut fi citite.</string>
     <string name="library_error_unknown">Ceva nu a mers bine la încărcarea acestei biblioteci.</string>
 </resources>

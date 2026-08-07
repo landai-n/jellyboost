@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Nepodařilo se to přehrát na %1$s.</string>
 
     <string name="player_casting_to">Odesíláno na %1$s</string>
+
+    <string name="player_error_server">Server nedokázal spustit přehrávání.</string>
+    <string name="player_error_server_with_code">Server nedokázal spustit přehrávání (%1$d).</string>
+    <string name="player_error_unknown">Při spouštění přehrávání se něco pokazilo.</string>
+    <string name="player_error_unsupported_source">Tuto položku nelze na tomto zařízení přehrát.</string>
 </resources>

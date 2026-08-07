@@ -119,4 +119,9 @@
     <string name="player_message_cast_left_syncplay">Has sortit de SyncPlay per transmetre a %1$s.</string>
     <string name="player_message_cast_failed">No s\'ha pogut reproduir això a %1$s.</string>
     <string name="player_casting_to">Transmetent a %1$s</string>
+
+    <string name="player_error_server">El servidor no ha pogut iniciar la reproducció.</string>
+    <string name="player_error_server_with_code">El servidor no ha pogut iniciar la reproducció (%1$d).</string>
+    <string name="player_error_unknown">Alguna cosa ha fallat en iniciar la reproducció.</string>
+    <string name="player_error_unsupported_source">Aquest element no es pot reproduir en aquest dispositiu.</string>
 </resources>

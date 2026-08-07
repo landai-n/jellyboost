@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">%1$s-এ কাস্ট করতে SyncPlay গ্রুপ ত্যাগ করা হয়েছে।</string>
     <string name="player_message_cast_failed">%1$s-এ সেটি চালানো যায়নি।</string>
     <string name="player_casting_to">%1$s-এ কাস্ট করা হচ্ছে</string>
+
+    <string name="player_error_server">সার্ভার প্লেব্যাক শুরু করতে পারেনি।</string>
+    <string name="player_error_server_with_code">সার্ভার প্লেব্যাক শুরু করতে পারেনি (%1$d)।</string>
+    <string name="player_error_unknown">প্লেব্যাক শুরু করতে কিছু ভুল হয়েছে।</string>
+    <string name="player_error_unsupported_source">এই আইটেম এই ডিভাইসে চালানো যাবে না।</string>
 </resources>

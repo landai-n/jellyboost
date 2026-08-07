@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dm left</string>
     <string name="home_quick_access_offline">Offline</string>
+
+    <string name="home_error_unknown">Something went wrong loading your home screen.</string>
 </resources>

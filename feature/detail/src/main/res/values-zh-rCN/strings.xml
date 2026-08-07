@@ -69,4 +69,6 @@
     <string name="detail_delete_download_dialog_message">这将从此设备上移除该内容。你可以随时重新下载。</string>
     <string name="detail_delete_download_dialog_confirm">删除</string>
     <string name="detail_delete_download_dialog_cancel">取消</string>
+
+    <string name="detail_error_unknown">加载此内容时出现问题。</string>
 </resources>

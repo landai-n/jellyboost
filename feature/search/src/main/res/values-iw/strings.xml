@@ -15,11 +15,5 @@
     <string name="search_prompt">הקלד כדי לחפש בספריות שלך.</string>
     <string name="search_no_results">לא נמצאה התאמה עבור ״%1$s״.</string>
 
-    <string name="search_error_network">לא ניתן להתחבר לשרת שלך. בדוק את החיבור שלך ונסה שוב.</string>
-    <string name="search_error_unauthorized">ההתחברות שלך פגה. התחבר מחדש כדי להמשיך.</string>
-    <string name="search_error_not_found">הפריט הזה כבר לא נמצא בשרת.</string>
-    <string name="search_error_server">השרת החזיר שגיאה.</string>
-    <string name="search_error_server_with_code">השרת החזיר שגיאה (%1$d).</string>
-    <string name="search_error_storage">לא ניתן היה לקרוא נתונים מקומיים.</string>
     <string name="search_error_unknown">משהו השתבש בזמן החיפוש.</string>
 </resources>

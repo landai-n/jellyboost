@@ -69,4 +69,6 @@
     <string name="detail_delete_download_dialog_message">この端末から削除されます。いつでも再度ダウンロードできます。</string>
     <string name="detail_delete_download_dialog_confirm">削除</string>
     <string name="detail_delete_download_dialog_cancel">キャンセル</string>
+
+    <string name="detail_error_unknown">このアイテムの読み込み中に問題が発生しました。</string>
 </resources>

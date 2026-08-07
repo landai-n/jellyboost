@@ -72,4 +72,12 @@
         <item quantity="one">%1$d आइटम पहले से इस डिवाइस पर मौजूद है</item>
         <item quantity="other">%1$d आइटम पहले से इस डिवाइस पर मौजूद हैं</item>
     </plurals>
+
+    <string name="error_network">आपके सर्वर तक नहीं पहुँचा जा सका। अपना कनेक्शन जांचें और फिर से कोशिश करें।</string>
+    <string name="error_unauthorized">आपका सत्र समाप्त हो गया। जारी रखने के लिए फिर से साइन इन करें।</string>
+    <string name="error_not_found_item">वह आइटम अब सर्वर पर नहीं है।</string>
+    <string name="error_not_found_library">वह लाइब्रेरी अब सर्वर पर नहीं है।</string>
+    <string name="error_server">सर्वर ने त्रुटि लौटाई।</string>
+    <string name="error_server_with_code">सर्वर ने त्रुटि (%1$d) लौटाई।</string>
+    <string name="error_storage">स्थानीय डेटा नहीं पढ़ा जा सका।</string>
 </resources>

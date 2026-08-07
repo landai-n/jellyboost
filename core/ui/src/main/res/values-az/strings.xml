@@ -66,4 +66,12 @@
         <item quantity="one">%1$d element artıq bu cihazdadır</item>
         <item quantity="other">%1$d element artıq bu cihazdadır</item>
     </plurals>
+
+    <string name="error_network">Serverinizə çatmaq mümkün deyil. Bağlantınızı yoxlayın və yenidən cəhd edin.</string>
+    <string name="error_unauthorized">Sessiyanızın müddəti bitib. Davam etmək üçün yenidən daxil olun.</string>
+    <string name="error_not_found_item">Bu element artıq serverdə yoxdur.</string>
+    <string name="error_not_found_library">Bu kitabxana artıq serverdə yoxdur.</string>
+    <string name="error_server">Server xəta qaytardı.</string>
+    <string name="error_server_with_code">Server xəta qaytardı (%1$d).</string>
+    <string name="error_storage">Yerli data oxuna bilmədi.</string>
 </resources>

@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.model.HomeSectionType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.homelayout.DEFAULT_HOME_SECTIONS
 
 /**
@@ -34,7 +35,7 @@ data class HomeUiState(
      * Set only when the screen has nothing to show. A row that fails on its own is left empty
      * rather than blanking the whole screen.
      */
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
 ) {
     /** `true` when the load succeeded but the server returned nothing to show. */
     val isEmpty: Boolean

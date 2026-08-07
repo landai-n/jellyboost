@@ -90,4 +90,12 @@
         <item quantity="many">%1$d פריטים כבר נמצאים במכשיר זה</item>
         <item quantity="other">%1$d פריטים כבר נמצאים במכשיר זה</item>
     </plurals>
+
+    <string name="error_network">לא ניתן להתחבר לשרת שלך. בדוק את החיבור שלך ונסה שוב.</string>
+    <string name="error_unauthorized">ההתחברות שלך פגה. התחבר מחדש כדי להמשיך.</string>
+    <string name="error_not_found_item">הפריט הזה כבר לא נמצא בשרת.</string>
+    <string name="error_not_found_library">הספרייה הזאת כבר לא נמצאת בשרת.</string>
+    <string name="error_server">השרת החזיר שגיאה.</string>
+    <string name="error_server_with_code">השרת החזיר שגיאה (%1$d).</string>
+    <string name="error_storage">לא ניתן היה לקרוא נתונים מקומיים.</string>
 </resources>

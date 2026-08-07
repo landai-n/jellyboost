@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">%1$s वर ते प्ले करता आले नाही.</string>
 
     <string name="player_casting_to">%1$s वर कास्ट करत आहे</string>
+
+    <string name="player_error_server">सर्व्हरला प्लेबॅक सुरू करता आला नाही.</string>
+    <string name="player_error_server_with_code">सर्व्हरला प्लेबॅक सुरू करता आला नाही (%1$d).</string>
+    <string name="player_error_unknown">प्लेबॅक सुरू करताना काहीतरी चुकले.</string>
+    <string name="player_error_unsupported_source">हा आयटम या डिव्हाइसवर चालवता येत नाही.</string>
 </resources>

@@ -81,4 +81,12 @@
         <item quantity="few">%1$d stavke su već na ovom uređaju</item>
         <item quantity="other">%1$d stavki je već na ovom uređaju</item>
     </plurals>
+
+    <string name="error_network">Poslužitelj nedostupan. Provjerite vezu i pokušajte ponovno.</string>
+    <string name="error_unauthorized">Sesija je istekla. Prijavite se ponovno za nastavak.</string>
+    <string name="error_not_found_item">Ta stavka više nije na poslužitelju.</string>
+    <string name="error_not_found_library">Ta biblioteka više nije na poslužitelju.</string>
+    <string name="error_server">Poslužitelj je vratio pogrešku.</string>
+    <string name="error_server_with_code">Poslužitelj je vratio pogrešku (%1$d).</string>
+    <string name="error_storage">Nije moguće pročitati lokalne podatke.</string>
 </resources>

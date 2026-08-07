@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Не удалось воспроизвести это на %1$s.</string>
 
     <string name="player_casting_to">Трансляция на %1$s</string>
+
+    <string name="player_error_server">Серверу не удалось начать воспроизведение.</string>
+    <string name="player_error_server_with_code">Серверу не удалось начать воспроизведение (%1$d).</string>
+    <string name="player_error_unknown">Что-то пошло не так при запуске воспроизведения.</string>
+    <string name="player_error_unsupported_source">Этот элемент нельзя воспроизвести на этом устройстве.</string>
 </resources>

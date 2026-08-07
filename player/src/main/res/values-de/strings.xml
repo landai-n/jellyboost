@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Wiedergabe auf %1$s fehlgeschlagen.</string>
 
     <string name="player_casting_to">Wird auf %1$s übertragen</string>
+
+    <string name="player_error_server">Der Server konnte die Wiedergabe nicht starten.</string>
+    <string name="player_error_server_with_code">Der Server konnte die Wiedergabe nicht starten (%1$d).</string>
+    <string name="player_error_unknown">Beim Starten der Wiedergabe ist etwas schiefgegangen.</string>
+    <string name="player_error_unsupported_source">Dieser Titel kann auf diesem Gerät nicht wiedergegeben werden.</string>
 </resources>

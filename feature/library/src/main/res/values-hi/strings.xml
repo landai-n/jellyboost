@@ -44,11 +44,5 @@
     <string name="library_retry">फिर से कोशिश करें</string>
 
     <!-- Errors -->
-    <string name="library_error_network">आपके सर्वर तक नहीं पहुँचा जा सका। अपना कनेक्शन जांचें और फिर से कोशिश करें।</string>
-    <string name="library_error_unauthorized">आपका सत्र समाप्त हो गया। जारी रखने के लिए फिर से साइन इन करें।</string>
-    <string name="library_error_not_found">वह लाइब्रेरी अब सर्वर पर नहीं है।</string>
-    <string name="library_error_server">सर्वर ने त्रुटि लौटाई।</string>
-    <string name="library_error_server_with_code">सर्वर ने त्रुटि (%1$d) लौटाई।</string>
-    <string name="library_error_storage">स्थानीय डेटा नहीं पढ़ा जा सका।</string>
     <string name="library_error_unknown">इस लाइब्रेरी को लोड करने में कुछ गड़बड़ हुई।</string>
 </resources>

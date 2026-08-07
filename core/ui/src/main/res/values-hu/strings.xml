@@ -72,4 +72,12 @@
         <item quantity="one">%1$d elem már ezen az eszközön van</item>
         <item quantity="other">%1$d elem már ezen az eszközön van</item>
     </plurals>
+
+    <string name="error_network">A szerver nem érhető el. Ellenőrizd a kapcsolatot, és próbáld újra.</string>
+    <string name="error_unauthorized">A munkameneted lejárt. Jelentkezz be újra a folytatáshoz.</string>
+    <string name="error_not_found_item">Ez az elem már nincs a szerveren.</string>
+    <string name="error_not_found_library">Ez a könyvtár már nincs a szerveren.</string>
+    <string name="error_server">A szerver hibát adott vissza.</string>
+    <string name="error_server_with_code">A szerver hibát adott vissza (%1$d).</string>
+    <string name="error_storage">Nem sikerült beolvasni a helyi adatokat.</string>
 </resources>

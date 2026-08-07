@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">Aalisin nito ito sa device na ito. Puwede mo itong i-download ulit anumang oras.</string>
     <string name="detail_delete_download_dialog_confirm">Tanggalin</string>
     <string name="detail_delete_download_dialog_cancel">Kanselahin</string>
+
+    <string name="detail_error_unknown">May nangyaring mali sa pag-load ng item na ito.</string>
 </resources>

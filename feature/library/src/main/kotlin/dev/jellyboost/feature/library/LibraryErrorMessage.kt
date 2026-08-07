@@ -4,23 +4,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.appErrorOrNull
+import dev.jellyboost.core.ui.error.AppErrorCopy
+import dev.jellyboost.core.ui.error.toUiText
+import dev.jellyboost.core.ui.text.resolve
+import dev.jellyboost.core.ui.R as CoreUiR
+
+/**
+ * What this screen calls the two branches it does not share.
+ *
+ * It asked about a *library*, so a missing thing is a missing library, and an unclassified failure
+ * happened while loading one. Everything else comes from `:core:ui`.
+ */
+internal val LibraryErrorCopy =
+    AppErrorCopy(
+        unknown = R.string.library_error_unknown,
+        notFound = CoreUiR.string.error_not_found_library,
+    )
 
 /** Turns the domain failure taxonomy into copy a user can act on. */
 @Composable
-internal fun AppError.toMessage(): String =
-    when (this) {
-        is AppError.Network -> stringResource(R.string.library_error_network)
-        is AppError.ServerResolution -> stringResource(R.string.library_error_network)
-        is AppError.Unauthorized -> stringResource(R.string.library_error_unauthorized)
-        is AppError.NotFound -> stringResource(R.string.library_error_not_found)
-        is AppError.Server ->
-            statusCode
-                ?.let { stringResource(R.string.library_error_server_with_code, it) }
-                ?: stringResource(R.string.library_error_server)
-
-        is AppError.Storage -> stringResource(R.string.library_error_storage)
-        is AppError.Unknown -> stringResource(R.string.library_error_unknown)
-    }
+internal fun AppError.toMessage(): String = toUiText(LibraryErrorCopy).resolve()
 
 /**
  * Copy for a Paging failure.

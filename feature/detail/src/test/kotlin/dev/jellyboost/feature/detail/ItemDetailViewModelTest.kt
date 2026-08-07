@@ -8,6 +8,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.common.syncplay.SyncPlaySession
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
@@ -18,7 +19,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /** Unit tests for [ItemDetailViewModel] — load shapes, toggles and the event-bus patch. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -170,7 +171,7 @@ class ItemDetailViewModelTest {
 
             val state = model.uiState.value
             state.isLoading shouldBe false
-            state.errorMessage!! shouldContain "server"
+            state.errorMessage shouldBe UiText.res(CoreUiR.string.error_network)
             state.item.shouldBeNull()
         }
 
@@ -196,7 +197,7 @@ class ItemDetailViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.uiState.value.errorMessage!! shouldContain "server"
+            model.uiState.value.errorMessage shouldBe UiText.res(CoreUiR.string.error_network)
 
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
             model.refresh()

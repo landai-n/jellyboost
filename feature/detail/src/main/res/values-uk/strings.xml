@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">Це видалить його з цього пристрою. Ви можете завантажити знову будь-коли.</string>
     <string name="detail_delete_download_dialog_confirm">Видалити</string>
     <string name="detail_delete_download_dialog_cancel">Скасувати</string>
+
+    <string name="detail_error_unknown">Під час завантаження цього елемента сталася помилка.</string>
 </resources>

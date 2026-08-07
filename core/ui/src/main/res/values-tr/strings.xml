@@ -66,4 +66,12 @@
         <item quantity="one">%1$d öğe zaten bu cihazda</item>
         <item quantity="other">%1$d öğe zaten bu cihazda</item>
     </plurals>
+
+    <string name="error_network">Sunucunuza ulaşılamıyor. Bağlantınızı kontrol edin ve tekrar deneyin.</string>
+    <string name="error_unauthorized">Oturumunuzun süresi doldu. Devam etmek için tekrar giriş yapın.</string>
+    <string name="error_not_found_item">O öğe artık sunucuda değil.</string>
+    <string name="error_not_found_library">O kitaplık artık sunucuda değil.</string>
+    <string name="error_server">Sunucu bir hata döndürdü.</string>
+    <string name="error_server_with_code">Sunucu bir hata döndürdü (%1$d).</string>
+    <string name="error_storage">Yerel veriler okunamadı.</string>
 </resources>

@@ -57,4 +57,12 @@
     <plurals name="selection_result_download_all_skipped">
         <item quantity="other">%1$d mục đã có sẵn trên thiết bị này</item>
     </plurals>
+
+    <string name="error_network">Không thể kết nối máy chủ của bạn. Kiểm tra kết nối và thử lại.</string>
+    <string name="error_unauthorized">Phiên đăng nhập của bạn đã hết hạn. Đăng nhập lại để tiếp tục.</string>
+    <string name="error_not_found_item">Mục đó không còn trên máy chủ.</string>
+    <string name="error_not_found_library">Thư viện đó không còn trên máy chủ.</string>
+    <string name="error_server">Máy chủ đã trả về lỗi.</string>
+    <string name="error_server_with_code">Máy chủ đã trả về lỗi (%1$d).</string>
+    <string name="error_storage">Không thể đọc dữ liệu cục bộ.</string>
 </resources>

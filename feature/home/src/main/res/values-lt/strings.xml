@@ -19,4 +19,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin liko</string>
     <string name="home_quick_access_offline">Neprisijungus</string>
+
+    <string name="home_error_unknown">Įkeliant pradžios ekraną kažkas nutiko ne taip.</string>
 </resources>

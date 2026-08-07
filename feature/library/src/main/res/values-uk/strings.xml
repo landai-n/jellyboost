@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Очистити фільтри</string>
     <string name="library_retry">Повторити</string>
 
-    <string name="library_error_network">Не вдалося з’єднатися із сервером. Перевірте підключення і спробуйте ще раз.</string>
-    <string name="library_error_unauthorized">Термін дії сесії минув. Увійдіть знову, щоб продовжити.</string>
-    <string name="library_error_not_found">Цієї бібліотеки більше немає на сервері.</string>
-    <string name="library_error_server">Сервер повернув помилку.</string>
-    <string name="library_error_server_with_code">Сервер повернув помилку (%1$d).</string>
-    <string name="library_error_storage">Не вдалося прочитати локальні дані.</string>
     <string name="library_error_unknown">Під час завантаження бібліотеки сталася помилка.</string>
 </resources>

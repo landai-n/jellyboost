@@ -67,4 +67,6 @@
     <string name="detail_delete_download_dialog_message">Bu onu bu cihazdan siləcək. İstənilən vaxt yenidən yükləyə bilərsiniz.</string>
     <string name="detail_delete_download_dialog_confirm">Sil</string>
     <string name="detail_delete_download_dialog_cancel">Ləğv et</string>
+
+    <string name="detail_error_unknown">Bu elementin yüklənməsi zamanı xəta baş verdi.</string>
 </resources>

@@ -72,4 +72,12 @@
         <item quantity="one">%1$d Element ist bereits auf diesem Gerät</item>
         <item quantity="other">%1$d Elemente sind bereits auf diesem Gerät</item>
     </plurals>
+
+    <string name="error_network">Dein Server ist nicht erreichbar. Überprüfe deine Verbindung und versuche es erneut.</string>
+    <string name="error_unauthorized">Deine Sitzung ist abgelaufen. Melde dich erneut an, um fortzufahren.</string>
+    <string name="error_not_found_item">Dieser Titel ist nicht mehr auf dem Server.</string>
+    <string name="error_not_found_library">Diese Bibliothek ist nicht mehr auf dem Server vorhanden.</string>
+    <string name="error_server">Der Server hat einen Fehler zurückgegeben.</string>
+    <string name="error_server_with_code">Der Server hat einen Fehler zurückgegeben (%1$d).</string>
+    <string name="error_storage">Lokale Daten konnten nicht gelesen werden.</string>
 </resources>

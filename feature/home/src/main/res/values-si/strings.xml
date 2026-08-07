@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dමි ඉතිරිය</string>
     <string name="home_quick_access_offline">ඕෆ්ලයින්</string>
+
+    <string name="home_error_unknown">මුල් පිටුව පූරණය කිරීමේදී යම් දෙයක් වැරදුණි.</string>
 </resources>

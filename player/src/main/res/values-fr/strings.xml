@@ -119,4 +119,9 @@
     <string name="player_message_cast_left_syncplay">Groupe SyncPlay quitté pour diffuser vers %1$s.</string>
     <string name="player_message_cast_failed">Impossible de lire cela sur %1$s.</string>
     <string name="player_casting_to">Diffusion vers %1$s</string>
+
+    <string name="player_error_server">Le serveur n\'a pas pu démarrer la lecture.</string>
+    <string name="player_error_server_with_code">Le serveur n\'a pas pu démarrer la lecture (%1$d).</string>
+    <string name="player_error_unknown">Une erreur est survenue au démarrage de la lecture.</string>
+    <string name="player_error_unsupported_source">Cet élément ne peut pas être lu sur cet appareil.</string>
 </resources>

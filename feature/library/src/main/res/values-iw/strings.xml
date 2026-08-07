@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">ניקוי מסננים</string>
     <string name="library_retry">ניסיון חוזר</string>
 
-    <string name="library_error_network">לא ניתן להתחבר לשרת שלך. בדוק את החיבור שלך ונסה שוב.</string>
-    <string name="library_error_unauthorized">ההתחברות שלך פגה. התחבר מחדש כדי להמשיך.</string>
-    <string name="library_error_not_found">הספרייה הזאת כבר לא נמצאת בשרת.</string>
-    <string name="library_error_server">השרת החזיר שגיאה.</string>
-    <string name="library_error_server_with_code">השרת החזיר שגיאה (%1$d).</string>
-    <string name="library_error_storage">לא ניתן היה לקרוא נתונים מקומיים.</string>
     <string name="library_error_unknown">משהו השתבש בטעינת הספרייה הזאת.</string>
 </resources>

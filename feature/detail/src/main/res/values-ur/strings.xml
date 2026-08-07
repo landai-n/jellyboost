@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">یہ اسے اس ڈیوائس سے ہٹا دے گا۔ آپ اسے کسی بھی وقت دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</string>
     <string name="detail_delete_download_dialog_confirm">حذف کریں</string>
     <string name="detail_delete_download_dialog_cancel">منسوخ کریں</string>
+
+    <string name="detail_error_unknown">اس آئٹم کو لوڈ کرتے وقت کچھ غلط ہو گیا۔</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">ފިލްޓަރތައް ސާފުކުރޭ</string>
     <string name="library_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
 
-    <string name="library_error_network">ތިޔަ ސަރވަރއަށް ނުދެވުނު. ގުޅުން ބައްލަވާފައި އަލުން މަސައްކަތްކުރައްވާ.</string>
-    <string name="library_error_unauthorized">ތިޔަ ސެޝަން ހަމަވެއްޖެ. ކުރިއަށްދިއުމަށް އަލުން ސައިން އިން ކުރައްވާ.</string>
-    <string name="library_error_not_found">އެ ލައިބްރަރީ މިހާރު ސަރވަރގައި ނެތް.</string>
-    <string name="library_error_server">ސަރވަރއިން ގޯހެއް ފޮނުވިއެވެ.</string>
-    <string name="library_error_server_with_code">ސަރވަރއިން ގޯހެއް ފޮނުވިއެވެ (%1$d).</string>
-    <string name="library_error_storage">ލޯކަލް ޑޭޓާ ކިޔޭގޮތެއް ނުވި.</string>
     <string name="library_error_unknown">މި ލައިބްރަރީ ލޯޑްކުރުމުގައި ގޯހެއް ދިމާވެއްޖެ.</string>
 </resources>

@@ -103,8 +103,9 @@ fun LoadingState(modifier: Modifier = Modifier) {
 /**
  * Full-screen failure state with an optional retry.
  *
- * Callers pass a message already translated from `AppError`, so `:core:ui` never has to know the
- * failure taxonomy.
+ * Callers pass a resolved sentence. Screens showing a domain failure get theirs from
+ * `AppError.toUiText` (`error/AppErrorCopy.kt`), resolved at draw time — this composable stays
+ * ignorant of the taxonomy so it can equally state a failure that has nothing to do with it.
  *
  * @param actionLabel what the button says. Defaults to "Retry", which is what [onRetry] means
  *   almost everywhere — but not everywhere: a screen whose only recovery is to leave (the player's

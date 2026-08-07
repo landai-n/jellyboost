@@ -129,4 +129,9 @@
     <string name="player_message_cast_failed">%1$sでの再生に失敗しました。</string>
 
     <string name="player_casting_to">%1$s にキャスト中</string>
+
+    <string name="player_error_server">サーバーが再生を開始できませんでした。</string>
+    <string name="player_error_server_with_code">サーバーが再生を開始できませんでした (%1$d)。</string>
+    <string name="player_error_unknown">再生の開始中に問題が発生しました。</string>
+    <string name="player_error_unsupported_source">このアイテムはこの端末では再生できません。</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Изчисти филтрите</string>
     <string name="library_retry">Опитай пак</string>
 
-    <string name="library_error_network">Сървърът е недостъпен. Проверете връзката и опитайте пак.</string>
-    <string name="library_error_unauthorized">Сесията ви е изтекла. Влезте отново, за да продължите.</string>
-    <string name="library_error_not_found">Тази библиотека вече не е на сървъра.</string>
-    <string name="library_error_server">Сървърът върна грешка.</string>
-    <string name="library_error_server_with_code">Сървърът върна грешка (%1$d).</string>
-    <string name="library_error_storage">Не можаха да се прочетат локалните данни.</string>
     <string name="library_error_unknown">Нещо се обърка при зареждането на тази библиотека.</string>
 </resources>

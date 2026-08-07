@@ -119,4 +119,9 @@
     <string name="player_message_cast_left_syncplay">Gruppo SyncPlay abbandonato per trasmettere a %1$s.</string>
     <string name="player_message_cast_failed">Impossibile riprodurre su %1$s.</string>
     <string name="player_casting_to">Trasmissione a %1$s</string>
+
+    <string name="player_error_server">Il server non è riuscito ad avviare la riproduzione.</string>
+    <string name="player_error_server_with_code">Il server non è riuscito ad avviare la riproduzione (%1$d).</string>
+    <string name="player_error_unknown">Si è verificato un errore durante l\'avvio della riproduzione.</string>
+    <string name="player_error_unsupported_source">Questo elemento non può essere riprodotto su questo dispositivo.</string>
 </resources>

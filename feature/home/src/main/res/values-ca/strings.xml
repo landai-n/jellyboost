@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin restants</string>
     <string name="home_quick_access_offline">Sense connexió</string>
+
+    <string name="home_error_unknown">Alguna cosa ha fallat en carregar la pantalla d\'inici.</string>
 </resources>

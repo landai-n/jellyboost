@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Ez dago iragazki hauekin bat datorren elementurik.</string>
     <string name="library_empty_clear_filters">Garbitu iragazkiak</string>
     <string name="library_retry">Berriz saiatu</string>
-    <string name="library_error_network">Ezin da zure zerbitzaria erdietsi. Egiaztatu zure konexioa eta saiatu berriro.</string>
-    <string name="library_error_unauthorized">Zure saioa iraungi da. Hasi saioa berriro jarraitzeko.</string>
-    <string name="library_error_not_found">Liburutegi hori ez dago jada zerbitzarian.</string>
-    <string name="library_error_server">Zerbitzariak errore bat itzuli du.</string>
-    <string name="library_error_server_with_code">Zerbitzariak errore bat itzuli du (%1$d).</string>
-    <string name="library_error_storage">Ezin izan dira datu lokalak irakurri.</string>
     <string name="library_error_unknown">Zerbait gaizki joan da liburutegi hau kargatzean.</string>
 </resources>

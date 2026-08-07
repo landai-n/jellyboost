@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Tühjenda filtrid</string>
     <string name="library_retry">Proovi uuesti</string>
 
-    <string name="library_error_network">Serveriga ei saa ühendust. Kontrolli oma ühendust ja proovi uuesti.</string>
-    <string name="library_error_unauthorized">Sinu seanss aegus. Jätkamiseks logi uuesti sisse.</string>
-    <string name="library_error_not_found">Seda teeki pole enam serveris.</string>
-    <string name="library_error_server">Server tagastas vea.</string>
-    <string name="library_error_server_with_code">Server tagastas vea (%1$d).</string>
-    <string name="library_error_storage">Kohalikke andmeid ei õnnestunud lugeda.</string>
     <string name="library_error_unknown">Selle teegi laadimisel läks midagi valesti.</string>
 </resources>

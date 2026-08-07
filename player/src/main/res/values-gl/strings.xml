@@ -116,4 +116,9 @@
     <string name="player_message_cast_left_syncplay">Saíches do grupo SyncPlay para emitir a %1$s.</string>
     <string name="player_message_cast_failed">Non foi posible reproducir iso en %1$s.</string>
     <string name="player_casting_to">Emitindo a %1$s</string>
+
+    <string name="player_error_server">O servidor non puido iniciar a reprodución.</string>
+    <string name="player_error_server_with_code">O servidor non puido iniciar a reprodución (%1$d).</string>
+    <string name="player_error_unknown">Algo fallou ao iniciar a reprodución.</string>
+    <string name="player_error_unsupported_source">Este elemento non se pode reproducir neste dispositivo.</string>
 </resources>

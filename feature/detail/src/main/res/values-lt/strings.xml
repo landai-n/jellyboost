@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">Tai pašalins jį iš šio įrenginio. Galite bet kada atsisiųsti jį iš naujo.</string>
     <string name="detail_delete_download_dialog_confirm">Ištrinti</string>
     <string name="detail_delete_download_dialog_cancel">Atšaukti</string>
+
+    <string name="detail_error_unknown">Įkeliant šį elementą kažkas nutiko ne taip.</string>
 </resources>

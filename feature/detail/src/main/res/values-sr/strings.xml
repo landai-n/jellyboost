@@ -75,4 +75,6 @@
     <string name="detail_delete_download_dialog_message">Ово га уклања са овог уређаја. Можете га поново преузети било када.</string>
     <string name="detail_delete_download_dialog_confirm">Обриши</string>
     <string name="detail_delete_download_dialog_cancel">Откажи</string>
+
+    <string name="detail_error_unknown">Нешто није у реду приликом учитавања ове ставке.</string>
 </resources>

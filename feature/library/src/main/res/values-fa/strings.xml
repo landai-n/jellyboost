@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">پاک کردن فیلترها</string>
     <string name="library_retry">تلاش دوباره</string>
 
-    <string name="library_error_network">دسترسی به سرور شما ممکن نیست. اتصال خود را بررسی کنید و دوباره تلاش کنید.</string>
-    <string name="library_error_unauthorized">نشست شما منقضی شده است. برای ادامه دوباره وارد شوید.</string>
-    <string name="library_error_not_found">این کتابخانه دیگر روی سرور نیست.</string>
-    <string name="library_error_server">سرور خطایی برگرداند.</string>
-    <string name="library_error_server_with_code">سرور خطایی برگرداند (%1$d).</string>
-    <string name="library_error_storage">خواندن داده‌های محلی ممکن نبود.</string>
     <string name="library_error_unknown">هنگام بارگذاری این کتابخانه مشکلی پیش آمد.</string>
 </resources>

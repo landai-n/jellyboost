@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import timber.log.Timber
+import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 
@@ -130,7 +131,7 @@ class SyncPlayGroupsViewModel
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: InvalidStatusException) {
-                if (error.status == HTTP_FORBIDDEN) {
+                if (error.status == HttpURLConnection.HTTP_FORBIDDEN) {
                     Timber.i("SyncPlay is disabled for this account")
                     SyncPlayGroupsPoll.Disabled
                 } else {
@@ -154,8 +155,6 @@ class SyncPlayGroupsViewModel
 
             /** Same grace period `DownloadsViewModel`/`SyncPlayQueueViewModel` give a rotation. */
             const val STOP_TIMEOUT_MS = 5_000L
-
-            const val HTTP_FORBIDDEN = 403
         }
     }
 

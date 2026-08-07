@@ -6,6 +6,7 @@ import org.jellyfin.sdk.api.client.HttpClientOptions
 import org.jellyfin.sdk.api.client.extensions.systemApi
 import org.jellyfin.sdk.model.serializer.toUUIDOrNull
 import timber.log.Timber
+import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -57,7 +58,7 @@ internal class SdkServerProbeApi
                         httpClientOptions = PROBE_CLIENT_OPTIONS,
                     )
                 val response = client.systemApi.getPublicSystemInfo()
-                if (response.status == HTTP_OK) response.content.id?.toUUIDOrNull() else null
+                if (response.status == HttpURLConnection.HTTP_OK) response.content.id?.toUUIDOrNull() else null
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (
@@ -68,8 +69,6 @@ internal class SdkServerProbeApi
             }
 
         private companion object {
-            const val HTTP_OK = 200
-
             /**
              * Every timeout pinned to the probe budget, so the call cannot outlive the
              * `withTimeoutOrNull` around it even if the transport declines to be cancelled.

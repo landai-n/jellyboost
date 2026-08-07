@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -394,46 +395,13 @@ private fun ManualAddressSection(
             modifier = Modifier.padding(Dimens.PanelPadding),
             verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
         ) {
-            JellyfinTextField(
-                value = state.address,
-                onValueChange = onAddressChange,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                // "Server address" — was the panel's own heading; now the field's own caption,
-                // drawn uppercased and *spoken* in sentence case (`FieldLabel.eyebrow`).
-                label = FieldLabel.eyebrow(stringResource(R.string.server_setup_manual_title)),
-                // Stays enabled while the probe runs (accessibility audit 2026-08-05, F17):
-                // disabling a focused field drops accessibility focus with no anchor to fall back
-                // to, so a TalkBack user pressing Connect was thrown back to the top of the screen.
-                // The field cannot be *changed* mid-probe either — `ServerSetupViewModel` ignores
-                // edits while `isConnecting`, which is a stronger guarantee than a greyed-out box.
-                // `FieldState.InFlight` says the same thing to the platform: keep the node, keep
-                // the name, keep the value, refuse the keystroke. The state-holder guard stays as
-                // well; it is the one a JVM test can hold still. The two states never overlap —
-                // `ServerSetupViewModel` clears the error when a probe starts.
-                state =
-                    when {
-                        state.error != null -> FieldState.Error(authErrorText(state.error))
-                        state.isConnecting -> FieldState.InFlight
-                        else -> FieldState.Editable
-                    },
-                placeholder = { Text(text = stringResource(R.string.server_setup_address_placeholder)) },
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        // Uri alone still leaves the IME's correction machinery on (the
-                        // KeyboardOptions default), and an autocorrected hostname is a typo the
-                        // user cannot see — the probe just fails.
-                        autoCorrectEnabled = false,
-                        imeAction = ImeAction.Done,
-                    ),
-                keyboardActions =
-                    KeyboardActions(
-                        onDone = {
-                            keyboardController?.hide()
-                            onConnect()
-                        },
-                    ),
+            ManualAddressField(
+                state = state,
+                onAddressChange = onAddressChange,
+                onDone = {
+                    keyboardController?.hide()
+                    onConnect()
+                },
             )
 
             PrimaryPillButton(
@@ -472,6 +440,52 @@ private fun ManualAddressSection(
             }
         }
     }
+}
+
+/**
+ * The address field itself: its caption, its three states, and the URI keyboard it asks for.
+ *
+ * It stays *enabled* while the probe runs (accessibility audit 2026-08-05, F17): disabling a focused
+ * field drops accessibility focus with no anchor to fall back to, so a TalkBack user pressing Connect
+ * was thrown back to the top of the screen. The field cannot be *changed* mid-probe either —
+ * `ServerSetupViewModel` ignores edits while `isConnecting`, which is a stronger guarantee than a
+ * greyed-out box. [FieldState.InFlight] says the same thing to the platform: keep the node, keep the
+ * name, keep the value, refuse the keystroke. The state-holder guard stays as well; it is the one a
+ * JVM test can hold still. The error and in-flight states never overlap — the ViewModel clears the
+ * error when a probe starts.
+ */
+@Composable
+private fun ManualAddressField(
+    state: ServerSetupUiState,
+    onAddressChange: (String) -> Unit,
+    onDone: () -> Unit,
+) {
+    JellyfinTextField(
+        value = state.address,
+        onValueChange = onAddressChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        // "Server address" — was the panel's own heading; now the field's own caption,
+        // drawn uppercased and *spoken* in sentence case (`FieldLabel.eyebrow`).
+        label = FieldLabel.eyebrow(stringResource(R.string.server_setup_manual_title)),
+        state =
+            when {
+                state.error != null -> FieldState.Error(authErrorText(state.error))
+                state.isConnecting -> FieldState.InFlight
+                else -> FieldState.Editable
+            },
+        placeholder = { Text(text = stringResource(R.string.server_setup_address_placeholder)) },
+        keyboardOptions =
+            KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                // Uri alone still leaves the IME's correction machinery on (the KeyboardOptions
+                // default), and an autocorrected hostname is a typo the user cannot see — the
+                // probe just fails.
+                autoCorrectEnabled = false,
+                imeAction = ImeAction.Done,
+            ),
+        keyboardActions = KeyboardActions(onDone = { onDone() }),
+    )
 }
 
 /**
@@ -540,24 +554,7 @@ internal fun AuthScreenScaffold(
             // scrolling (the two-pane branch never sees this — it always passes `false` below).
             val compact = maxWidth < 600.dp
 
-            // Drawn under the insets on purpose: the halo bleeding behind the status bar is what
-            // makes it read as part of the background rather than as a banner. Side by side, the
-            // halo hangs over the branding pane instead of the empty centre (claude.ai/design,
-            // "Login (landscape tablet)").
-            Box(
-                modifier =
-                    if (isTwoPane) {
-                        Modifier
-                            .fillMaxSize()
-                            .background(JellyfinGradients.BrandGlowSide)
-                    } else {
-                        Modifier
-                            .fillMaxWidth()
-                            .height(AuthGlowHeight)
-                            .align(Alignment.TopCenter)
-                            .background(JellyfinGradients.BrandGlow)
-                    },
-            )
+            AuthBrandGlow(isTwoPane = isTwoPane)
 
             Box(
                 modifier =
@@ -602,6 +599,31 @@ internal fun AuthScreenScaffold(
             }
         }
     }
+}
+
+/**
+ * The brand halo behind the auth screens.
+ *
+ * Drawn under the insets on purpose: bleeding behind the status bar is what makes it read as part of
+ * the background rather than as a banner. Side by side it hangs over the branding pane instead of
+ * the empty centre (claude.ai/design, "Login (landscape tablet)").
+ */
+@Composable
+private fun BoxScope.AuthBrandGlow(isTwoPane: Boolean) {
+    Box(
+        modifier =
+            if (isTwoPane) {
+                Modifier
+                    .fillMaxSize()
+                    .background(JellyfinGradients.BrandGlowSide)
+            } else {
+                Modifier
+                    .fillMaxWidth()
+                    .height(AuthGlowHeight)
+                    .align(Alignment.TopCenter)
+                    .background(JellyfinGradients.BrandGlow)
+            },
+    )
 }
 
 /** Where the hairline between the two panes starts and stops fading, as a fraction of its run. */

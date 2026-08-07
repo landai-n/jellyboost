@@ -48,8 +48,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.common.model.Person
 import dev.jellyboost.core.common.selection.ItemSelection
 import dev.jellyboost.core.common.selection.SelectionIntent
+import dev.jellyboost.core.common.syncplay.SyncPlayGroupHandle
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
@@ -133,56 +135,22 @@ fun ItemDetailScreen(
             onRetry = viewModel::refresh,
             onItemClick = onItemClick,
             onPlay = viewModel::onPlay,
-            actions =
-                DetailActionHandlers(
-                    onPlay = { state.playTarget?.let(viewModel::onPlay) },
-                    onDownload = viewModel::onDownloadClick,
-                    onToggleWatched = viewModel::toggleWatched,
-                    onToggleFavorite = viewModel::toggleFavorite,
-                    // Set only when there is a group *and* something a group can play: a series
-                    // page resolves to its next-up episode, a library folder to nothing
-                    // (`ItemDetailUiState.groupTarget`). Non-null is therefore also exactly when a
-                    // tap on Play is a group play, which is what the header labels itself from.
-                    group =
-                        activeGroup
-                            ?.takeIf { state.groupTarget != null }
-                            ?.let { DetailGroupActions(it.name, viewModel::onGroupAction) },
-                ),
+            actions = detailActions(state = state, activeGroup = activeGroup, viewModel = viewModel),
             selection = selectionState,
             onSelection = viewModel::onSelection,
         )
 
-        // This screen is a pushed destination, so per `AppScaffold`'s inset contract it gets none
-        // of its own — the inset has to live on the overlay rather than the surrounding `Box`,
-        // since the backdrop behind it is meant to draw edge-to-edge under the status bar.
-        //
-        // Home sits beside Back because a detail chain is the one place in the app that gets deep:
-        // series → season → episode → "More like this" → … with no app bar to escape through, so
-        // the only way out used to be tapping Back once per hop. The favourite heart joins them on
-        // compact, where the action row below keeps one worded button and two circles and has no
-        // room for a third (spec section 4c); on wide it stays in that row instead.
-        //
-        // While episodes are selected the contextual bar takes this overlay's place rather than
-        // sitting beside or below it. This screen has no top bar of its own, so the overlaid pair
-        // *is* its bar, and a contextual bar's whole job is to replace one: the close (X) lands
-        // exactly where Back was, and Home is deliberately gone for the duration — leaving the
-        // screen mid-selection is what Back and X are for.
-        if (isSelecting) {
-            SelectionOverlay(
-                selection = selectionState,
-                onIntent = viewModel::onSelection,
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
-        } else {
-            OverlayNav(
-                favorite = state.item?.userData?.isFavorite,
-                showFavorite = state.item != null && !isWide,
-                onBack = onBack,
-                onHome = onHome,
-                onToggleFavorite = viewModel::toggleFavorite,
-                modifier = Modifier.align(Alignment.TopCenter),
-            )
-        }
+        DetailTopOverlay(
+            isSelecting = isSelecting,
+            selection = selectionState,
+            favorite = state.item?.userData?.isFavorite,
+            showFavorite = state.item != null && !isWide,
+            onSelection = viewModel::onSelection,
+            onBack = onBack,
+            onHome = onHome,
+            onToggleFavorite = viewModel::toggleFavorite,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
 
         JellyboostSnackbarHost(
             hostState = snackbarHostState,
@@ -195,6 +163,75 @@ fun ItemDetailScreen(
                 onConfirm = viewModel::confirmDeleteDownload,
             )
         }
+    }
+}
+
+/**
+ * The action bundle the header and its rows fire into, bound to [viewModel].
+ *
+ * [DetailActionHandlers.group] is set only when there is a group *and* something a group can play:
+ * a series page resolves to its next-up episode, a library folder to nothing
+ * ([ItemDetailUiState.groupTarget]). Non-null is therefore also exactly when a tap on Play is a
+ * group play, which is what the header labels itself from.
+ */
+private fun detailActions(
+    state: ItemDetailUiState,
+    activeGroup: SyncPlayGroupHandle?,
+    viewModel: ItemDetailViewModel,
+): DetailActionHandlers =
+    DetailActionHandlers(
+        onPlay = { state.playTarget?.let(viewModel::onPlay) },
+        onDownload = viewModel::onDownloadClick,
+        onToggleWatched = viewModel::toggleWatched,
+        onToggleFavorite = viewModel::toggleFavorite,
+        group =
+            activeGroup
+                ?.takeIf { state.groupTarget != null }
+                ?.let { DetailGroupActions(it.name, viewModel::onGroupAction) },
+    )
+
+/**
+ * What sits over the top of the backdrop: the floating navigation, or — while episodes are
+ * selected — the contextual bar that replaces it.
+ *
+ * This screen is a pushed destination, so per `AppScaffold`'s inset contract it gets none of its
+ * own; the inset has to live on the overlay rather than the surrounding `Box`, since the backdrop
+ * behind it is meant to draw edge-to-edge under the status bar.
+ *
+ * Home sits beside Back because a detail chain is the one place in the app that gets deep: series →
+ * season → episode → "More like this" → … with no app bar to escape through, so the only way out
+ * used to be tapping Back once per hop. The favourite heart joins them on compact, where the action
+ * row below keeps one worded button and two circles and has no room for a third (spec section 4c);
+ * on wide it stays in that row instead.
+ *
+ * The contextual bar *replaces* this pair rather than sitting beside or below it. The screen has no
+ * top bar of its own, so the overlaid pair *is* its bar, and a contextual bar's whole job is to
+ * replace one: the close (X) lands exactly where Back was, and Home is deliberately gone for the
+ * duration — leaving the screen mid-selection is what Back and X are for.
+ */
+@Composable
+private fun DetailTopOverlay(
+    isSelecting: Boolean,
+    selection: State<ItemSelection>,
+    favorite: Boolean?,
+    showFavorite: Boolean,
+    onSelection: (SelectionIntent) -> Unit,
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onToggleFavorite: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (isSelecting) {
+        SelectionOverlay(selection = selection, onIntent = onSelection, modifier = modifier)
+    } else {
+        OverlayNav(
+            favorite = favorite,
+            showFavorite = showFavorite,
+            onBack = onBack,
+            onHome = onHome,
+            onToggleFavorite = onToggleFavorite,
+            modifier = modifier,
+        )
     }
 }
 
@@ -370,6 +407,13 @@ private fun DetailSections(
     selection: State<ItemSelection>,
     onSelection: (SelectionIntent) -> Unit,
 ) {
+    val handlers =
+        EpisodeHandlers(
+            onItemClick = onItemClick,
+            onPlay = onPlay,
+            selection = selection,
+            onSelection = onSelection,
+        )
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
@@ -410,32 +454,31 @@ private fun DetailSections(
             }
         }
 
-        episodeSection(
-            episodes = state.episodes,
-            isWide = isWide,
-            handlers =
-                EpisodeHandlers(
-                    onItemClick = onItemClick,
-                    onPlay = onPlay,
-                    selection = selection,
-                    onSelection = onSelection,
-                ),
-        )
+        episodeSection(episodes = state.episodes, isWide = isWide, handlers = handlers)
 
-        if (detail.people.isNotEmpty()) {
-            item(key = SECTION_CAST, contentType = DetailContentType.SECTION) {
-                CastRail(people = detail.people)
-            }
+        relatedSections(people = detail.people, similar = state.similar, onItemClick = onItemClick)
+    }
+}
+
+/** The two sections that close every detail page, when the server has anything for them. */
+private fun LazyListScope.relatedSections(
+    people: List<Person>,
+    similar: List<JellyfinItem>,
+    onItemClick: (JellyfinItem) -> Unit,
+) {
+    if (people.isNotEmpty()) {
+        item(key = SECTION_CAST, contentType = DetailContentType.SECTION) {
+            CastRail(people = people)
         }
+    }
 
-        if (state.similar.isNotEmpty()) {
-            item(key = SECTION_SIMILAR, contentType = DetailContentType.SECTION) {
-                MediaRow(
-                    title = stringResource(R.string.detail_section_similar),
-                    items = state.similar,
-                    key = JellyfinItem::id,
-                ) { related -> PosterCard(item = related, onClick = { onItemClick(related) }) }
-            }
+    if (similar.isNotEmpty()) {
+        item(key = SECTION_SIMILAR, contentType = DetailContentType.SECTION) {
+            MediaRow(
+                title = stringResource(R.string.detail_section_similar),
+                items = similar,
+                key = JellyfinItem::id,
+            ) { related -> PosterCard(item = related, onClick = { onItemClick(related) }) }
         }
     }
 }

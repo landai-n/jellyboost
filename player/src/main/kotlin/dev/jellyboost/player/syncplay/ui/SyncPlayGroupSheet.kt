@@ -1,8 +1,8 @@
 package dev.jellyboost.player.syncplay.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -14,7 +14,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -22,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.PillChip
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
@@ -102,72 +99,16 @@ private fun GroupSheetContent(
                 .padding(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        Text(text = state.groupName, style = MaterialTheme.typography.titleLarge)
-        Text(
-            text =
-                pluralStringResource(
-                    R.plurals.player_syncplay_participants,
-                    state.participants.size,
-                    state.participants.size,
-                ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        state.participants.forEach { name ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Outlined.Person,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = Dimens.SpaceMedium),
-                )
-            }
-        }
+        GroupParticipants(groupName = state.groupName, participants = state.participants)
 
         HorizontalDivider()
 
-        // The settings rows' pattern, which this row should have used from the start (audit
-        // A11Y-P-19): the whole row is the switch — one node, "Shuffle queue, on", the full width as
-        // its target — and the control inside it is inert so it contributes nothing of its own. An
-        // unlabelled Switch beside a Text is two stops, the second of them nameless.
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = Dimens.MinTouchTarget)
-                    .toggleable(
-                        value = state.isShuffled,
-                        role = Role.Switch,
-                        onValueChange = onSetShuffle,
-                    ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.player_syncplay_shuffle),
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(checked = state.isShuffled, onCheckedChange = null)
-        }
-
-        Text(
-            text = stringResource(R.string.player_syncplay_repeat),
-            style = MaterialTheme.typography.bodyLarge,
+        GroupPlaybackToggles(
+            isShuffled = state.isShuffled,
+            repeatMode = state.repeatMode,
+            onSetShuffle = onSetShuffle,
+            onSetRepeat = onSetRepeat,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
-            SyncPlayRepeatMode.entries.forEach { mode ->
-                PillChip(
-                    text = stringResource(mode.labelRes()),
-                    selected = mode == state.repeatMode,
-                    onClick = { onSetRepeat(mode) },
-                )
-            }
-        }
 
         HorizontalDivider()
 
@@ -180,31 +121,94 @@ private fun GroupSheetContent(
     }
 
     if (confirmingLeave) {
-        AlertDialog(
-            onDismissRequest = { confirmingLeave = false },
-            modifier =
-                Modifier.border(
-                    width = GlassDefaults.HairlineWidth,
-                    color = GlassDefaults.PanelHairline,
-                    shape = MaterialTheme.shapes.extraLarge,
-                ),
-            containerColor = MaterialTheme.colorScheme.surface,
-            title = { Text(text = stringResource(R.string.player_syncplay_leave_title)) },
-            text = { Text(text = stringResource(R.string.player_syncplay_leave_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmingLeave = false
-                        onLeave()
-                    },
-                ) { Text(text = stringResource(R.string.player_syncplay_leave)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingLeave = false }) {
-                    Text(text = stringResource(R.string.player_syncplay_cancel))
-                }
+        LeaveGroupDialog(
+            onDismiss = { confirmingLeave = false },
+            onConfirm = {
+                confirmingLeave = false
+                onLeave()
             },
         )
+    }
+}
+
+/** Who is in the group: the name, the count, then one row per participant. */
+@Composable
+private fun ColumnScope.GroupParticipants(
+    groupName: String,
+    participants: List<String>,
+) {
+    Text(text = groupName, style = MaterialTheme.typography.titleLarge)
+    Text(
+        text =
+            pluralStringResource(
+                R.plurals.player_syncplay_participants,
+                participants.size,
+                participants.size,
+            ),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+
+    participants.forEach { name ->
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = Dimens.SpaceMedium),
+            )
+        }
+    }
+}
+
+/** The two group-wide playback settings: shuffle, and the repeat mode. */
+@Composable
+private fun ColumnScope.GroupPlaybackToggles(
+    isShuffled: Boolean,
+    repeatMode: SyncPlayRepeatMode,
+    onSetShuffle: (Boolean) -> Unit,
+    onSetRepeat: (SyncPlayRepeatMode) -> Unit,
+) {
+    // The settings rows' pattern, which this row should have used from the start (audit
+    // A11Y-P-19): the whole row is the switch — one node, "Shuffle queue, on", the full width as
+    // its target — and the control inside it is inert so it contributes nothing of its own. An
+    // unlabelled Switch beside a Text is two stops, the second of them nameless.
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = Dimens.MinTouchTarget)
+                .toggleable(
+                    value = isShuffled,
+                    role = Role.Switch,
+                    onValueChange = onSetShuffle,
+                ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.player_syncplay_shuffle),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = isShuffled, onCheckedChange = null)
+    }
+
+    Text(
+        text = stringResource(R.string.player_syncplay_repeat),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+        SyncPlayRepeatMode.entries.forEach { mode ->
+            PillChip(
+                text = stringResource(mode.labelRes()),
+                selected = mode == repeatMode,
+                onClick = { onSetRepeat(mode) },
+            )
+        }
     }
 }
 

@@ -59,6 +59,12 @@ internal const val NAV_TRANSITION_MILLIS = 300
  *   combined app bar and the system navigation bar on the four top-level destinations, animating
  *   both over [NAV_TRANSITION_MILLIS] so the frame moves with the transitions below.
  */
+@Suppress(
+    // A flat table: one `composable<Route>` entry per destination, each a handful of lines binding a screen to its
+    // arguments. The route list read top to bottom *is* the app's map, and splitting it into per-area hosts would hide
+    // the one property worth checking at a glance — that it is complete.
+    "LongMethod",
+)
 @Composable
 internal fun JellyfinNavHost(
     startsSignedIn: Boolean,
@@ -182,16 +188,12 @@ internal fun JellyfinNavHost(
             // the local instead routes the player's glass onto `glassSurface`'s documented
             // fallback: a flat fill of whatever tint the control asked for.
             CompositionLocalProvider(LocalHazeState provides null) {
-                PlayerScreen(
-                    viewModel = hiltViewModel(),
-                    onBack = { navController.popBackStack() },
-                )
+                PlayerScreen(onBack = { navController.popBackStack() })
             }
         }
 
         composable<Routes.SyncPlay> {
             SyncPlayGroupsScreen(
-                viewModel = hiltViewModel(),
                 onBack = { navController.popBackStack() },
                 onHome = { navController.navigateHome() },
                 onOpenPlayer = { itemId, startPositionTicks ->

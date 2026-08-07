@@ -274,6 +274,7 @@ internal fun MediaStream.toTrack(
  * extracts on the fly while transcoding; either way the delivery URL and a MIME type ExoPlayer
  * understands are both required, so a PGS or DVB stream never becomes one of these.
  */
+@Suppress("ReturnCount") // A sideloaded subtitle needs four fields from the SDK; any missing one drops the track.
 private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
     if (deliveryMethod != SubtitleDeliveryMethod.EXTERNAL) return null
     val url = deliveryUrl ?: return null

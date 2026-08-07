@@ -44,6 +44,11 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Singleton
 class AuthRepository
+    @Suppress(
+        // Seven DI collaborators: sign-in touches the API, both DAOs, the credential store and the session holder in
+        // one flow. Boxing them would rename the coupling, not remove it.
+        "LongParameterList",
+    )
     @Inject
     internal constructor(
         private val apiFacade: JellyfinApiFacade,

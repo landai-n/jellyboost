@@ -79,6 +79,13 @@ import javax.inject.Singleton
  * bug and one that no longer parses is a lost gigabyte.
  */
 @Singleton
+@Suppress(
+    // Class-level rather than six identical function-level copies (2026-08-07 detekt un-blinding): this is a byte-level
+    // EBML walker over an untrusted file, and every private helper here is the same shape — read a header, bail out the
+    // moment the bytes stop making sense. Each early return names a distinct malformation, which is precisely what must
+    // not be collapsed into one exit.
+    "ReturnCount",
+)
 internal class MatroskaSeekIndexRepair
     @Inject
     constructor() {

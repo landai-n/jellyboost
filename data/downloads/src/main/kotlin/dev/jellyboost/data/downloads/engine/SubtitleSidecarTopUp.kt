@@ -62,6 +62,11 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class SubtitleSidecarTopUp
+    @Suppress(
+        // Seven DI collaborators: fetching one sidecar reuses the whole download engine ring, and the
+        // metered/preference gate is what keeps it off the user's data plan.
+        "LongParameterList",
+    )
     @Inject
     constructor(
         private val downloadDao: DownloadDao,

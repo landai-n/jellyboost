@@ -281,6 +281,10 @@ internal class SyncPlayRecoveryNets(
         Fallback,
     }
 
+    @Suppress(
+        // Guard chain over the group state a self-sync needs; each exit means the net has nothing to do.
+        "ReturnCount",
+    )
     private suspend fun selfSyncToGroup() {
         val current = driver.state() as? SyncPlayState.InGroup ?: return
         if (current.phase is SyncPlayPhase.Playing) return

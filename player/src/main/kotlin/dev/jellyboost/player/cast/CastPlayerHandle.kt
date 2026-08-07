@@ -259,6 +259,10 @@ internal class CastPlayerHandle
          * (audit CAST-03). A rejection the receiver only announces asynchronously is logged; the
          * cases it adds beyond this check are the ones a re-negotiation could not fix either.
          */
+        @Suppress(
+            // Track selection tries the explicit index, then the language match, then off; order is the rule.
+            "ReturnCount",
+        )
         override fun selectSubtitleTrack(
             source: PlaybackMediaSource,
             jellyfinIndex: Int?,

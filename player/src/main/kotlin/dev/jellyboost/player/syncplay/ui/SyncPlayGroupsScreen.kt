@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
@@ -77,14 +78,32 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * which forwards them to `SyncPlayController` — the only thing that owns the socket and the join
  * handshake (key decision 11 again: this screen only ever *asks*).
  *
- * @param viewModel passed in rather than resolved here so `:app` owns the `hiltViewModel()` call,
- *   the same convention every other pushed screen follows.
+ * The ViewModel is resolved here rather than by the caller: [SyncPlayGroupsViewModel] is `internal`
+ * (audit ARCH-2), so `:app` names the destination and nothing else.
+ *
  * @param onOpenPlayer opens the full-screen player for the pinned group's current item — the same
  *   `(itemId, startPositionTicks)` shape the app NavHost's own launch-request collector uses, so a
  *   tap here and a `PlayQueueUpdate` arriving with nobody watching land on the exact same route.
  */
 @Composable
 fun SyncPlayGroupsScreen(
+    onBack: () -> Unit,
+    onHome: () -> Unit,
+    onOpenPlayer: (itemId: String, startPositionTicks: Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SyncPlayGroupsScreen(
+        viewModel = hiltViewModel(),
+        onBack = onBack,
+        onHome = onHome,
+        onOpenPlayer = onOpenPlayer,
+        modifier = modifier,
+    )
+}
+
+/** The screen proper — see the public overload above. Separate so tests can supply a ViewModel. */
+@Composable
+internal fun SyncPlayGroupsScreen(
     viewModel: SyncPlayGroupsViewModel,
     onBack: () -> Unit,
     onHome: () -> Unit,
@@ -109,7 +128,7 @@ fun SyncPlayGroupsScreen(
 
 /** Stateless rendering — a pure function of [state], previewable without a ViewModel. */
 @Composable
-fun SyncPlayGroupsContent(
+internal fun SyncPlayGroupsContent(
     state: SyncPlayGroupsUiState,
     onBack: () -> Unit,
     onHome: () -> Unit,
@@ -160,29 +179,13 @@ fun SyncPlayGroupsContent(
                 // the test tablet puts a row's name and its state hint a hand-span apart.
                 modifier = Modifier.widthIn(max = ContentMaxWidth).fillMaxSize(),
             ) {
-                when {
-                    state.isLoading -> LoadingState()
-                    state.disabled -> EmptyState(message = stringResource(R.string.player_syncplay_groups_disabled))
-                    // Full-screen only when there is nothing else worth keeping on screen: with a
-                    // membership standing, the pinned card — this screen's only Leave affordance —
-                    // must survive a single failed 10 s poll, which lands precisely in the flaky
-                    // network the user wants to leave from (audit SP-05). The membership comes
-                    // from the controller, not the poll, so it was never in doubt; the error shows
-                    // inline in [GroupsList] instead.
-                    state.transientError && state.membership == SyncPlayGroupsMembership.None ->
-                        ErrorState(message = stringResource(R.string.player_syncplay_groups_error), onRetry = onRetry)
-
-                    state.isEmpty -> EmptyState(message = stringResource(R.string.player_syncplay_groups_empty))
-
-                    else ->
-                        GroupsList(
-                            state = state,
-                            onJoin = onJoin,
-                            onLeaveClick = { confirmingLeave = true },
-                            onOpenPlayer = onOpenPlayer,
-                            onRetry = onRetry,
-                        )
-                }
+                GroupsBody(
+                    state = state,
+                    onJoin = onJoin,
+                    onLeaveClick = { confirmingLeave = true },
+                    onOpenPlayer = onOpenPlayer,
+                    onRetry = onRetry,
+                )
             }
         }
     }
@@ -198,31 +201,50 @@ fun SyncPlayGroupsContent(
     }
 
     if (confirmingLeave) {
-        AlertDialog(
-            onDismissRequest = { confirmingLeave = false },
-            modifier =
-                Modifier.border(
-                    width = GlassDefaults.HairlineWidth,
-                    color = GlassDefaults.PanelHairline,
-                    shape = MaterialTheme.shapes.extraLarge,
-                ),
-            containerColor = MaterialTheme.colorScheme.surface,
-            title = { Text(text = stringResource(R.string.player_syncplay_leave_title)) },
-            text = { Text(text = stringResource(R.string.player_syncplay_leave_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        confirmingLeave = false
-                        onLeave()
-                    },
-                ) { Text(text = stringResource(R.string.player_syncplay_leave)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingLeave = false }) {
-                    Text(text = stringResource(R.string.player_syncplay_cancel))
-                }
+        LeaveGroupDialog(
+            onDismiss = { confirmingLeave = false },
+            onConfirm = {
+                confirmingLeave = false
+                onLeave()
             },
         )
+    }
+}
+
+/**
+ * Which of the five bodies this screen is showing — the single `when` that decides, kept as one
+ * function so the precedence between its arms is readable in one place (the `DownloadsScreen`
+ * body-selection pattern).
+ */
+@Composable
+private fun GroupsBody(
+    state: SyncPlayGroupsUiState,
+    onJoin: (SyncPlayGroupSummary) -> Unit,
+    onLeaveClick: () -> Unit,
+    onOpenPlayer: (SyncPlayLaunchRequest) -> Unit,
+    onRetry: () -> Unit,
+) {
+    when {
+        state.isLoading -> LoadingState()
+        state.disabled -> EmptyState(message = stringResource(R.string.player_syncplay_groups_disabled))
+        // Full-screen only when there is nothing else worth keeping on screen: with a membership
+        // standing, the pinned card — this screen's only Leave affordance — must survive a single
+        // failed 10 s poll, which lands precisely in the flaky network the user wants to leave from
+        // (audit SP-05). The membership comes from the controller, not the poll, so it was never in
+        // doubt; the error shows inline in [GroupsList] instead.
+        state.transientError && state.membership == SyncPlayGroupsMembership.None ->
+            ErrorState(message = stringResource(R.string.player_syncplay_groups_error), onRetry = onRetry)
+
+        state.isEmpty -> EmptyState(message = stringResource(R.string.player_syncplay_groups_empty))
+
+        else ->
+            GroupsList(
+                state = state,
+                onJoin = onJoin,
+                onLeaveClick = onLeaveClick,
+                onOpenPlayer = onOpenPlayer,
+                onRetry = onRetry,
+            )
     }
 }
 

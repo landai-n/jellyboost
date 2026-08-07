@@ -57,6 +57,10 @@ class ServerDiscoveryRepository
          * reached and those that answered but are not a compatible Jellyfin server, which is what
          * the setup screen's error copy is built from.
          */
+        @Suppress(
+            // Six ways an address can resolve or fail to; each is a separate probe, not a branch of one.
+            "ReturnCount",
+        )
         suspend fun resolveServerAddress(input: String): AppResult<ResolvedServer> {
             // Debug, and host only, on every line below that holds an address (audit HYG-10): this
             // is the path that knows where a user's server lives, and its logs are the ones that end

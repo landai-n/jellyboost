@@ -487,6 +487,7 @@ private fun DownloadItem.statusLine(speedBytesPerSecond: Long?): String =
  * number in the days, which reads as broken rather than as an honest estimate and is better left
  * blank than shown.
  */
+@Suppress("ReturnCount") // Four `?: return null` elvis guards; the KDoc above enumerates exactly what each one covers.
 internal fun DownloadItem.etaSeconds(speedBytesPerSecond: Long?): Long? {
     val speed = speedBytesPerSecond?.takeIf { it > 0L } ?: return null
     val total = displayTotalBytes.takeIf { it > 0L } ?: return null

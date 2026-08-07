@@ -46,6 +46,11 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class UserDataRepositoryImpl
+    @Suppress(
+        // Eight DI collaborators: one optimistic write spans the DAO, the API, the event bus that fans the change out
+        // to open screens, and the retry scheduler.
+        "LongParameterList",
+    )
     @Inject
     constructor(
         private val userDataDao: UserDataDao,
@@ -145,6 +150,10 @@ internal class UserDataRepositoryImpl
          * @param edit applies the operation to the current row (or to a fresh, empty one).
          * @param push delivers the resulting row to the server.
          */
+        @Suppress(
+            // The optimistic-write path exits early on no session, no change, and offline — three real states.
+            "ReturnCount",
+        )
         private suspend fun write(
             itemId: String,
             edit: (UserDataEntity) -> UserDataEntity,

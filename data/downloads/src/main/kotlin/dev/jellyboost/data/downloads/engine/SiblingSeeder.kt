@@ -56,6 +56,10 @@ internal class SiblingSeeder
          * @param ceilingBytes the enqueue-time upper bound the answer is clamped to.
          * @return the projection, in bytes, or `null`.
          */
+        @Suppress(
+            // Guard chain over a partly-written download set; each exit means a different already-handled state.
+            "ReturnCount",
+        )
         suspend fun seedFor(
             itemId: UUID,
             seriesName: String?,
@@ -85,6 +89,10 @@ internal class SiblingSeeder
          * scanner has begun measuring, cannot be dragged back to a guess. `bytesTotal` is never
          * touched: the ceiling is a promise the enqueue step made.
          */
+        @Suppress(
+            // As `seedFor`: the exits are the states in which seeding a sibling would be wrong, not branches.
+            "ReturnCount",
+        )
         suspend fun seedPendingSiblingsOf(completed: DownloadEntity) {
             val series = completed.seriesName?.takeIf { it.isNotBlank() } ?: return
             if (!completed.quality.isTranscoded) return

@@ -50,6 +50,10 @@ internal sealed interface ReconcileAction {
  * @param snapshot the host's reading, or `null` when none is attached (the controller only takes
  *   one when the decision can need it: host attached and the playing slot not already open).
  */
+@Suppress(
+    // A pure decision function: one return per `ReconcileAction`, which is the point of the sealed type.
+    "ReturnCount",
+)
 internal fun decideReconcile(
     queue: SyncPlayGroupQueue,
     loadedPlaylistItemId: UUID?,

@@ -32,13 +32,15 @@ internal class ProgressThrottle(
         bytesDownloaded: Long,
         bytesTotal: Long,
         now: Long,
-    ): Boolean {
-        // The first sample always lands: it is what flips the row from "queued" to a live number.
-        if (lastWriteBytes < 0L) return true
-        if (now - lastWriteAt >= intervalMillis) return true
-        if (bytesTotal <= 0L) return false
-        return (bytesDownloaded - lastWriteBytes) >= bytesTotal * fraction
-    }
+    ): Boolean =
+        when {
+            // The first sample always lands: it is what flips the row from "queued" to a live number.
+            lastWriteBytes < 0L -> true
+            now - lastWriteAt >= intervalMillis -> true
+            // Nothing to measure a percentage against until the server declares a length.
+            bytesTotal <= 0L -> false
+            else -> (bytesDownloaded - lastWriteBytes) >= bytesTotal * fraction
+        }
 
     /** Records that a sample was written, so the next decision is measured from here. */
     fun recordWrite(

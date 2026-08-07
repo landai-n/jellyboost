@@ -129,6 +129,10 @@ internal class FileDownloadStorage
                 .map { it.name }
         }
 
+        @Suppress(
+            // Filesystem guards: each exit distinguishes "nothing there" from "refused to touch it".
+            "ReturnCount",
+        )
         override fun deleteItemDirectory(directoryName: String): Long {
             val root = root() ?: return 0L
             val directory = File(root, directoryName)

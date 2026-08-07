@@ -32,6 +32,11 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Singleton
 class SessionRepository
+    @Suppress(
+        // Eleven DI collaborators: sign-out has to reach every store holding user-scoped state (audit H2), and the
+        // plug-in `SignOutHook` set is how other modules join that sweep.
+        "LongParameterList",
+    )
     @Inject
     internal constructor(
         private val apiFacade: JellyfinApiFacade,

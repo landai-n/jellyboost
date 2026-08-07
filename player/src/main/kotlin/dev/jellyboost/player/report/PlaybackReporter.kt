@@ -242,6 +242,10 @@ internal class PlaybackReporter
          * Remote sources only, group or no group: a [LocalPlaybackMediaSource] is direct play off
          * this device's storage, so there is no ffmpeg process anywhere to kill.
          */
+        @Suppress(
+            // Guard chain over what a stop report needs; a missing piece means don't report, not report empty.
+            "ReturnCount",
+        )
         suspend fun stopTranscoding(source: PlaybackMediaSource) {
             if (source !is RemotePlaybackMediaSource) return
             val target = source.serverTarget() ?: return

@@ -109,6 +109,13 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * @param onHome leaves the whole pushed chain at once and lands on the Home tab; see
  *   `AppScaffold.navigateHome`.
  */
+@Suppress(
+    // Screen-level wiring: every visible piece is already a named composable (`LibraryHeader`, `LibraryFilterRow`,
+    // `LibraryGridContent`, `SelectionOverlay`) and what is left is the plumbing that binds them — including two
+    // `sortAction` slots whose whole point is that the same control appears in one place or the other. A wrapper around
+    // it would need ten parameters to say less.
+    "LongMethod",
+)
 @Composable
 fun LibraryGridScreen(
     viewModel: LibraryViewModel,

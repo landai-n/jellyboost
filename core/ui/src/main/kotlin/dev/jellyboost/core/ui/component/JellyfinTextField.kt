@@ -108,6 +108,12 @@ private val FieldSupportingStyle =
  * @param supportingText drawn below in [MaterialTheme] error colour while [state] is a
  *   [FieldState.Error], muted otherwise.
  */
+@Suppress(
+    // One Material text field plus the label/error/password wiring its value types resolve. The decomposition the audit
+    // wants here is CPX-8's — `FieldLabel`/`FieldState`/`FieldContent` growing to absorb the remaining correlated
+    // parameters — which shortens this by changing its API, not by moving lines out of it. Tracked, not line-shaved.
+    "LongMethod",
+)
 @Composable
 fun JellyfinTextField(
     value: String,

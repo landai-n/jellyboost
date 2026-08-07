@@ -121,8 +121,11 @@ import kotlin.time.Duration.Companion.milliseconds
     // collaborator would publish `source`/session state to it — a larger surface than it saves,
     // the same trade SyncPlayController documents. Logged in DECISIONS.md (2026-08-03).
     "LargeClass",
+    // Sixteen constructor collaborators — the same trade as "LargeClass": this is the façade the
+    // M10 decomposition left behind, so every extracted machine reappears here as a parameter.
+    "LongParameterList",
 )
-class PlayerViewModel
+internal class PlayerViewModel
     @Inject
     internal constructor(
         private val repository: JellyfinRepository,

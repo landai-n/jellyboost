@@ -51,7 +51,7 @@ import javax.inject.Inject
  * debounced probe.
  */
 @HiltViewModel
-class SyncPlayGroupsViewModel
+internal class SyncPlayGroupsViewModel
     @Inject
     internal constructor(
         private val api: SyncPlayApi,

@@ -140,6 +140,10 @@ class ItemEntityMapper
          * stretched into a poster frame. Everything else is deliberately left at its default —
          * a synthesised card carries only what an episode actually knows about its show.
          */
+        @Suppress(
+            // A mapper that yields `null` on any missing field; the guards name which field was missing.
+            "ReturnCount",
+        )
         fun toSeriesCardOrNull(entity: ItemEntity): JellyfinItem? {
             val dto = toDtoOrNull(entity) ?: return null
             val seriesId = dto.seriesId ?: return null

@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
@@ -371,7 +372,7 @@ private fun MetaRow(
         }
         if (facts.isNotEmpty()) {
             MetaText(
-                text = facts.joinToString(SEPARATOR),
+                text = facts.joinToString(Separators.DOT),
                 modifier = Modifier.align(Alignment.CenterVertically),
             )
         }
@@ -823,7 +824,7 @@ internal fun JellyfinItem.episodeNumberLabel(): String? {
 /** `S1:E4 · Trompe L'Oeil` for an episode, the series name for a season, nothing otherwise. */
 private fun JellyfinItem.subtitleLine(): String? =
     when (type) {
-        ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(SEPARATOR).ifBlank { null }
+        ItemType.EPISODE -> listOfNotNull(episodeLabel, name).joinToString(Separators.DOT).ifBlank { null }
         ItemType.SEASON -> seriesName
         else -> null
     }
@@ -842,14 +843,11 @@ private fun JellyfinItem.creditLine(): String? {
             director?.let { add(stringResource(R.string.detail_directed_by, it)) }
             if (cast.isNotEmpty()) add(cast.joinToString(", "))
         }
-    return parts.joinToString(SEPARATOR).ifBlank { null }
+    return parts.joinToString(Separators.DOT).ifBlank { null }
 }
 
 /** How many actors the credit line names before it stops. */
 private const val TOP_BILLED = 4
-
-/** Interpunct with hair spaces — the separator jellyfin-web uses between metadata facts. */
-internal const val SEPARATOR = " · "
 
 /** Screen gutter of the lockup and of everything under it (the mocks' 20dp detail padding). */
 internal val DetailEdgePadding = 20.dp

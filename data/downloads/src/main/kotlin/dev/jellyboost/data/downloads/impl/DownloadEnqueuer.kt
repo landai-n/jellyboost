@@ -3,6 +3,7 @@ package dev.jellyboost.data.downloads.impl
 import android.database.sqlite.SQLiteException
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -536,7 +537,7 @@ internal class DownloadEnqueuer
         ): Long? {
             if (!quality.isTranscoded || estimate.exact) return null
             val ceiling = estimate.bytes?.takeIf { it > 0L } ?: return null
-            val runtimeMillis = runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return null
+            val runtimeMillis = Ticks.positiveMillisOrNull(runTimeTicks) ?: return null
 
             return seeder.seedFor(
                 itemId = id,
@@ -558,9 +559,6 @@ internal class DownloadEnqueuer
         private companion object {
             /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
             const val TICKS_PER_SECOND = 10_000_000.0
-
-            /** The same tick, per millisecond. */
-            const val TICKS_PER_MILLI = 10_000L
 
             /** The one input container `CanStreamCopyVideo` has a special case for. */
             const val AVI_CONTAINER = "avi"

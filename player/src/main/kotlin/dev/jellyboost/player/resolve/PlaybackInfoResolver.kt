@@ -2,6 +2,7 @@ package dev.jellyboost.player.resolve
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
@@ -20,6 +21,7 @@ import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
 import timber.log.Timber
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -82,7 +84,7 @@ class PlaybackInfoResolver
                 throw error
             } catch (error: InvalidStatusException) {
                 AppResult.Failure(
-                    if (error.status == HTTP_UNAUTHORIZED) {
+                    if (error.status == HttpURLConnection.HTTP_UNAUTHORIZED) {
                         AppError.Unauthorized(error)
                     } else {
                         AppError.Server(statusCode = error.status, cause = error)
@@ -234,10 +236,6 @@ class PlaybackInfoResolver
                         ?: defaultSubtitleStreamIndex.takeIf { request.subtitleStreamIndex == null },
             )
         }
-
-        private companion object {
-            const val HTTP_UNAUTHORIZED = 401
-        }
     }
 
 /**
@@ -288,9 +286,6 @@ private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
         language = language ?: UNDEFINED_LANGUAGE,
     )
 }
-
-/** ISO 639-2 code the Jellyfin server uses when a stream declares no language. */
-private const val UNDEFINED_LANGUAGE = "und"
 
 /** Small helper so callers can build a request from the route's string item id. */
 fun playbackResolveRequest(

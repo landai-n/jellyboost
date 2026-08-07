@@ -1,5 +1,6 @@
 package dev.jellyboost.player.resolve
 
+import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
 import dev.jellyboost.data.downloads.offline.DownloadedAudio
 import dev.jellyboost.data.downloads.offline.DownloadedMedia
 import dev.jellyboost.data.downloads.offline.DownloadedMediaProvider
@@ -279,9 +280,6 @@ class LocalPlaybackResolver
                 )
             }
     }
-
-/** ISO 639-2 code the Jellyfin server uses when a stream declares no language. */
-private const val UNDEFINED_LANGUAGE = "und"
 
 /** The download pipeline's trickplay description, in the player's own vocabulary. */
 private fun DownloadedTrickplay.toLocalTrickplay(): LocalTrickplay =

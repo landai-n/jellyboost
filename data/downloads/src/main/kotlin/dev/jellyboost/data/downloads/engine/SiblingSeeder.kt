@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.engine
 
+import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
@@ -136,7 +137,7 @@ class SiblingSeeder
             itemDao
                 .getItems(ids)
                 .mapNotNull { entity ->
-                    entity.runTimeTicks?.takeIf { it > 0L }?.let { entity.id to it / TICKS_PER_MILLI }
+                    entity.runTimeTicks?.takeIf { it > 0L }?.let { entity.id to it / Ticks.PER_MILLISECOND }
                 }.filter { (_, millis) -> millis > 0L }
                 .toMap()
 
@@ -147,9 +148,6 @@ class SiblingSeeder
         ): Long = (this * runtimeMillis).toLong().coerceIn(0L, ceilingBytes)
 
         private companion object {
-            /** A `runTimeTicks` tick is 100 ns, so there are ten thousand of them in a millisecond. */
-            const val TICKS_PER_MILLI = 10_000L
-
             /**
              * How many finished siblings the seed is taken from.
              *

@@ -26,7 +26,6 @@ import dev.jellyboost.player.session.ExoPlayerHandle
 import dev.jellyboost.player.session.JellyfinAuthInterceptor
 import dev.jellyboost.player.session.PlayerHandle
 import dev.jellyboost.player.session.RoutingPlayerHandle
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -116,16 +115,6 @@ internal object PlayerProvidersModule {
                     Timber.e(error, "Uncaught exception in a detached player-scope coroutine")
                 },
         )
-
-    /**
-     * The thread every `PlayerHandle` transport call has to be made on.
-     *
-     * See [MainDispatcher]: SyncPlay drives the shared player from a background scope, and Media3
-     * will throw if a seek or a pause arrives on any thread but the one the player was built on.
-     */
-    @Provides
-    @MainDispatcher
-    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
     /**
      * OkHttp client for media requests only.

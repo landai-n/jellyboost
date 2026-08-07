@@ -7,7 +7,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.getOrNull
-import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.selection.BatchReport
@@ -22,7 +21,6 @@ import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
-import dev.jellyboost.data.downloads.observeBadgeStates
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -31,11 +29,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -51,6 +47,13 @@ import javax.inject.Inject
  * Watched and favourite toggles go through [UserDataRepository], which writes locally and
  * publishes on the user-data event bus this ViewModel collects — so the button flips from the
  * local write, not from a server round-trip.
+ *
+ * The **download** half of the page — the button, its confirmation dialog, and the two Room
+ * subscriptions behind them — lives in [DetailDownloadsDelegate] (audit CPX-10). It is the one
+ * slice of this screen with state of its own that nothing else here reads, and keeping it in this
+ * class had begun to cost: four functions were exiled to file scope and a Room collector inlined
+ * into `init`, each with a comment naming detekt's function count as the reason. Those are back
+ * where they belong, as methods of whichever half owns them.
  */
 @HiltViewModel
 class ItemDetailViewModel
@@ -74,8 +77,21 @@ class ItemDetailViewModel
 
         private val _uiState = MutableStateFlow(ItemDetailUiState())
 
-        /** Last download-state map seen, re-applied whenever the loaded items are replaced. */
-        private var downloadStates: Map<String, DownloadState> = emptyMap()
+        /**
+         * The download button, its confirmation, and the two Room subscriptions behind them.
+         *
+         * Constructed here rather than injected: three of its four collaborators — the state, the
+         * route's item id and the scope — are this instance's, and no graph can supply them. The
+         * three entry points below forward to it so the screen keeps one ViewModel to talk to
+         * (audit CPX-10; see [DetailDownloadsDelegate] for what the split is for).
+         */
+        private val downloadsDelegate =
+            DetailDownloadsDelegate(
+                downloads = downloads,
+                state = _uiState,
+                itemId = itemId,
+                scope = viewModelScope,
+            )
 
         /** The single source of truth for [ItemDetailScreen]. */
         val uiState: StateFlow<ItemDetailUiState> = _uiState.asStateFlow()
@@ -119,28 +135,8 @@ class ItemDetailViewModel
         init {
             load(isRefresh = false)
             observeUserDataChanges()
-            observeDownloadState()
+            downloadsDelegate.start()
             observeConnectivityChanges()
-
-            // Keeps the metadata line's *N on device* figure in step with the download files
-            // actually written, so a finished transfer's real footprint replaces the server's
-            // reported size (`ItemDetailHeader.MetaRow`). A separate Room projection from
-            // `observeDownloadState` on purpose: this is a byte count, not a status, and the
-            // container case (`DownloadState.Downloaded` aggregated from episodes) has no row of
-            // its own to sum — that is what makes its bytes come back `null` and the header fall
-            // back to the server size for a fully-downloaded series. Inlined here rather than
-            // given its own function — this class already sits on detekt's function-count ceiling
-            // (`TooManyFunctions`, threshold 20).
-            viewModelScope.launch {
-                downloads
-                    .observeBytesOnDisk(itemId)
-                    .catch { error ->
-                        Timber.w(error, "The bytes-on-disk flow failed; falling back to the server size")
-                        emit(null)
-                    }.collect { bytes ->
-                        _uiState.update { it.copy(downloadedBytes = bytes) }
-                    }
-            }
         }
 
         /**
@@ -158,26 +154,6 @@ class ItemDetailViewModel
             }
         }
 
-        /**
-         * Keeps the Download button — and the badge on every season, episode and related card —
-         * in step with the pipeline.
-         *
-         * One subscription to the whole map rather than one per visible item, error-guarded so a
-         * collapse clears the badges rather than freezing them — both rules, and why, live in
-         * [observeBadgeStates].
-         */
-        private fun observeDownloadState() {
-            viewModelScope.launch {
-                downloads.observeBadgeStates(screen = "detail").collect { states ->
-                    // Held so that a later load — which replaces every item in the state — can
-                    // re-apply them. `observeStates()` is distinct-until-changed and would not
-                    // re-emit just because this screen refetched.
-                    downloadStates = states
-                    _uiState.update { it.withDownloadStates(states) }
-                }
-            }
-        }
-
         /** Re-fetches the item and its rows; backs pull-to-refresh and the error state's retry. */
         fun refresh() {
             load(isRefresh = true)
@@ -187,7 +163,10 @@ class ItemDetailViewModel
         fun toggleWatched() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
-                report(userDataRepository.setPlayed(item.id, !item.userData.played), UserMessage.UserDataWriteFailed)
+                _uiState.report(
+                    userDataRepository.setPlayed(item.id, !item.userData.played),
+                    UserMessage.UserDataWriteFailed,
+                )
             }
         }
 
@@ -195,130 +174,21 @@ class ItemDetailViewModel
         fun toggleFavorite() {
             val item = _uiState.value.item ?: return
             viewModelScope.launch {
-                report(
+                _uiState.report(
                     userDataRepository.setFavorite(item.id, !item.userData.isFavorite),
                     UserMessage.UserDataWriteFailed,
                 )
             }
         }
 
-        /**
-         * The Download button. One button, several meanings, decided by the current state:
-         *
-         * - not on the device → enqueue it (M7's pipeline takes it from there);
-         * - failed → put it back in the queue, which resumes from the bytes already on disk rather
-         *   than starting the transfer over;
-         * - queued, downloading or paused → cancel it. Nothing finished is lost — on a container
-         *   the episodes that already completed are explicitly kept — so this stays immediate;
-         * - downloaded → ask for confirmation before removing it (docs/POLISH.md — deleting a
-         *   finished download straight away, with no way back, was too easy to trigger by accident).
-         *   [confirmDeleteDownload] does the actual removal once the user confirms.
-         *
-         * A separate "delete" affordance next to it would be dead most of the time, and "tap again
-         * to undo" is what the same button already means everywhere else on this screen (watched,
-         * favourite).
-         *
-         * On a **season or series** page every one of those meanings is about the episodes under it
-         * rather than the item itself (DECISIONS.md, 2026-07-29): enqueue expands the container in
-         * `:data:downloads`, and remove/cancel act on each episode row. *Failed* on a container is
-         * an enqueue too, not a resume — the container has no row of its own to put back in the
-         * queue, and enqueueing is what retries the episodes that failed.
-         */
-        fun onDownloadClick() {
-            val state = _uiState.value
-            val item = state.item ?: return
+        /** The Download button — see [DetailDownloadsDelegate.onDownloadClick] for what it decides. */
+        fun onDownloadClick() = downloadsDelegate.onDownloadClick()
 
-            when (state.downloadState) {
-                is DownloadState.NotDownloaded -> enqueue(item.id)
-
-                is DownloadState.Failed ->
-                    if (state.isDownloadContainer) {
-                        enqueue(item.id)
-                    } else {
-                        viewModelScope.launch {
-                            report(
-                                downloads.resume(item.id),
-                                success = UserMessage.DownloadQueued,
-                                failure = UserMessage.DownloadFailed,
-                            )
-                        }
-                    }
-
-                is DownloadState.Downloaded -> _uiState.update { it.copy(showDeleteConfirmation = true) }
-
-                else -> cancelDownloads()
-            }
-        }
-
-        /**
-         * The delete-download dialog was confirmed — actually remove the item from this device.
-         *
-         * One row for a movie or an episode; for a season, every episode of it that has a row — the
-         * ones that do not are skipped rather than deleted as no-ops, so cancelling a season that is
-         * three episodes in does not run twenty pointless cascades through WorkManager.
-         */
-        fun confirmDeleteDownload() {
-            _uiState.update { it.copy(showDeleteConfirmation = false) }
-            removeDownloads(
-                targets = _uiState.value.downloadTargets.filter { downloadStates.containsKey(it) },
-                keptCount = 0,
-            )
-        }
-
-        private fun enqueue(itemId: String) {
-            viewModelScope.launch {
-                report(
-                    downloads.enqueue(itemId),
-                    success = UserMessage.DownloadQueued,
-                    failure = UserMessage.DownloadFailed,
-                )
-            }
-        }
-
-        /**
-         * Cancels a download that is still in flight, **keeping whatever already finished**.
-         *
-         * On a season, Cancel used to run the same delete as Remove and take the episodes that had
-         * completed with it (docs/POLISH.md) — a user stopping a season three episodes in lost those
-         * three. Cancel now only touches rows that are queued, transferring, paused or failed. A
-         * partly-kept season then aggregates back to *NotDownloaded* (the deliberate
-         * some-episodes-missing behaviour), so the button offers *Download* for the rest; removing
-         * the kept episodes goes through the Downloads screen's confirmed delete
-         * (DECISIONS.md, 2026-07-29).
-         */
-        private fun cancelDownloads() {
-            val targets = _uiState.value.downloadTargets.mapNotNull { id -> downloadStates[id]?.let { id to it } }
-            val (finished, inFlight) = targets.partition { (_, state) -> state is DownloadState.Downloaded }
-
-            removeDownloads(targets = inFlight.map { (id, _) -> id }, keptCount = finished.size)
-        }
-
-        /**
-         * Deletes [targets] and reports how it went. [keptCount] is the number of finished downloads
-         * this call deliberately left alone, which is what the snackbar tells the user about.
-         */
-        private fun removeDownloads(
-            targets: List<String>,
-            keptCount: Int,
-        ) {
-            if (_uiState.value.item == null || targets.isEmpty()) return
-
-            viewModelScope.launch {
-                val failed = targets.map { downloads.delete(it) }.any { it is AppResult.Failure }
-                val message =
-                    when {
-                        failed -> UserMessage.DownloadDeleteFailed
-                        keptCount > 0 -> UserMessage.DownloadCancelledKeepingFinished(keptCount)
-                        else -> UserMessage.DownloadDeleted
-                    }
-                _uiState.update { it.copy(userMessage = message) }
-            }
-        }
+        /** The delete-download dialog was confirmed; [DetailDownloadsDelegate] does the removal. */
+        fun confirmDeleteDownload() = downloadsDelegate.confirmDeleteDownload()
 
         /** The delete-download dialog was dismissed without confirming — the download is untouched. */
-        fun dismissDeleteConfirmation() {
-            _uiState.update { it.copy(showDeleteConfirmation = false) }
-        }
+        fun dismissDeleteConfirmation() = downloadsDelegate.dismissDeleteConfirmation()
 
         /**
          * Everything the contextual selection bar over the episode list can ask for.
@@ -358,7 +228,7 @@ class ItemDetailViewModel
                     runSelectionBatch(
                         action = action,
                         ids = ids,
-                        downloadStates = downloadStates,
+                        downloadStates = downloadsDelegate.states,
                         setPlayed = userDataRepository::setPlayed,
                         enqueue = downloads::enqueue,
                     )
@@ -397,7 +267,7 @@ class ItemDetailViewModel
 
             viewModelScope.launch {
                 syncPlaySession.playForGroup(
-                    itemIds = groupPlayQueue(target, repository),
+                    itemIds = groupPlayQueue(target),
                     startPositionTicks = startPositionTicks,
                 )
                 _uiState.update { it.copy(userMessage = UserMessage.GroupPlayRequested) }
@@ -405,11 +275,36 @@ class ItemDetailViewModel
         }
 
         /**
+         * [target] and, when it is an episode, everything the series runs after it — the queue a
+         * group play is sent as ([onPlay]).
+         *
+         * This looks like a UI decision and is really an interop one. jellyfin-web's
+         * `translateItemsForPlayback` intercepts a group queue holding exactly one episode and — with
+         * `EnableNextEpisodeAutoPlay`, the default — replaces it locally with that episode plus every
+         * following one across seasons; `QueueCore` then walks the server's playlist by the
+         * *expanded* length to copy the playlist-item ids over, reads past the end of our one-entry
+         * playlist, throws, and drops the update, so nobody's playback ever starts. Web never trips
+         * this on itself because it expands *before* it calls `SetNewQueue`. Sending the same
+         * expansion makes the two lengths agree. Movies are untouched: web leaves a single one alone,
+         * and a single-item movie queue is verified good.
+         *
+         * A failed lookup, or an episode the series listing does not contain, falls back to the lone
+         * id: a group queue that web may reject beats no request at all, and the caller's snackbar is
+         * about the ask going out either way.
+         */
+        private suspend fun groupPlayQueue(target: JellyfinItem): List<String> {
+            val seriesId = target.seriesId
+            if (target.type != ItemType.EPISODE || seriesId == null) return listOf(target.id)
+
+            val episodes = repository.getSeriesEpisodes(seriesId).getOrNull().orEmpty()
+            val index = episodes.indexOfFirst { it.id == target.id }
+            return if (index >= 0) episodes.drop(index).map { it.id } else listOf(target.id)
+        }
+
+        /**
          * Sends one *queue* action for whatever this page's Play button resolves to (M11 Phase 4).
          *
-         * One entry point rather than a method per action, exactly as [onSelection] is — and the
-         * dispatch itself is the top-level `sendGroupAction` below: this class is at the project's
-         * function-count ceiling (detekt `TooManyFunctions`, threshold 20).
+         * One entry point rather than a method per action, exactly as [onSelection] is.
          *
          * Nothing local happens, and nothing here waits to see whether it worked in the sense of the
          * group actually moving: the call is a request, the group's queue is the server's, and its
@@ -424,31 +319,31 @@ class ItemDetailViewModel
             if (syncPlaySession.activeGroup.value == null) return
 
             viewModelScope.launch {
-                sendGroupAction(action, target, syncPlaySession)
+                sendGroupAction(action, target)
                 _uiState.update { it.copy(userMessage = UserMessage.GroupActionSent(action)) }
+            }
+        }
+
+        /**
+         * Turns one [GroupAction] into the SyncPlay request that carries it.
+         *
+         * Neither queue action carries a resume position, deliberately: an item added to a queue is
+         * not a resume, and the group would be surprised to find it starting in the middle. Playing
+         * something *now* does carry one, and that is [onPlay]'s business.
+         */
+        private suspend fun sendGroupAction(
+            action: GroupAction,
+            target: JellyfinItem,
+        ) {
+            when (action) {
+                GroupAction.PLAY_NEXT -> syncPlaySession.addToGroupQueue(target.id, next = true)
+                GroupAction.ADD_TO_QUEUE -> syncPlaySession.addToGroupQueue(target.id, next = false)
             }
         }
 
         /** Clears the one-shot message once the snackbar has shown it. */
         fun consumeMessage() {
             _uiState.update { it.copy(userMessage = null) }
-        }
-
-        /**
-         * Turns one repository result into the snackbar, or into silence.
-         *
-         * One helper for both kinds of write this screen makes (audit: the class sits on detekt's
-         * function-count ceiling, so two near-identical reporters were one too many). A `null`
-         * [success] is what the watched / favourite toggles want: they are already visible on the
-         * page from the local write, so saying so again would be noise — only a failure is news.
-         */
-        private fun report(
-            result: AppResult<*>,
-            failure: UserMessage,
-            success: UserMessage? = null,
-        ) {
-            val message = if (result is AppResult.Success) success else failure
-            message?.let { next -> _uiState.update { it.copy(userMessage = next) } }
         }
 
         private fun observeUserDataChanges() {
@@ -480,8 +375,43 @@ class ItemDetailViewModel
             }
         }
 
+        /**
+         * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its
+         * slowest request rather than by the sum of three.
+         */
+        private suspend fun fetchRelated(item: JellyfinItem): Related =
+            coroutineScope {
+                val isSeries = item.type == ItemType.SERIES
+                val seasonId = item.id.takeIf { item.type == ItemType.SEASON }
+                val seriesId = item.seriesId
+
+                val seasons =
+                    if (isSeries) async { repository.getSeasons(item.id).getOrNull().orEmpty() } else null
+                val nextUp =
+                    if (isSeries) async { repository.getNextUpForSeries(item.id).getOrNull() } else null
+                val episodes =
+                    if (seasonId != null && seriesId != null) {
+                        async { repository.getEpisodes(seriesId, seasonId).getOrNull().orEmpty() }
+                    } else {
+                        null
+                    }
+                val similar =
+                    if (item.type in SIMILAR_TYPES) {
+                        async { repository.getSimilarItems(item.id).getOrNull().orEmpty() }
+                    } else {
+                        null
+                    }
+
+                Related(
+                    seasons = seasons?.await().orEmpty(),
+                    episodes = episodes?.await().orEmpty(),
+                    nextUp = nextUp?.await(),
+                    similar = similar?.await().orEmpty(),
+                )
+            }
+
         private suspend fun emitDetail(item: JellyfinItem) {
-            val related = fetchRelated(item, repository)
+            val related = fetchRelated(item)
             // A reload here is a background refresh — a connectivity edge, not a user action — so an
             // open selection is kept rather than dropped. Episodes the server no longer returns fall
             // out of it, because a batch must never act on a row that is not on the screen.
@@ -497,7 +427,7 @@ class ItemDetailViewModel
                         nextUp = related.nextUp,
                         similar = related.similar,
                         errorMessage = null,
-                    ).withDownloadStates(downloadStates)
+                    ).withDownloadStates(downloadsDelegate.states)
             }
         }
 
@@ -507,48 +437,7 @@ class ItemDetailViewModel
         }
     }
 
-/**
- * Fetches the rows [item]'s type calls for, all at once: a series page is bound by its slowest
- * request rather than by the sum of three.
- *
- * A top-level function for the same reason `sendGroupAction` below is one: `ItemDetailViewModel`
- * is at detekt's function-count ceiling (`TooManyFunctions`, threshold 20), and this depends on
- * nothing but its arguments.
- */
-private suspend fun fetchRelated(
-    item: JellyfinItem,
-    repository: JellyfinRepository,
-): Related =
-    coroutineScope {
-        val isSeries = item.type == ItemType.SERIES
-        val seasonId = item.id.takeIf { item.type == ItemType.SEASON }
-        val seriesId = item.seriesId
-
-        val seasons =
-            if (isSeries) async { repository.getSeasons(item.id).getOrNull().orEmpty() } else null
-        val nextUp =
-            if (isSeries) async { repository.getNextUpForSeries(item.id).getOrNull() } else null
-        val episodes =
-            if (seasonId != null && seriesId != null) {
-                async { repository.getEpisodes(seriesId, seasonId).getOrNull().orEmpty() }
-            } else {
-                null
-            }
-        val similar =
-            if (item.type in SIMILAR_TYPES) {
-                async { repository.getSimilarItems(item.id).getOrNull().orEmpty() }
-            } else {
-                null
-            }
-
-        Related(
-            seasons = seasons?.await().orEmpty(),
-            episodes = episodes?.await().orEmpty(),
-            nextUp = nextUp?.await(),
-            similar = similar?.await().orEmpty(),
-        )
-    }
-
+/** What one [ItemDetailViewModel.fetchRelated] fan-out came back with. */
 private data class Related(
     val seasons: List<JellyfinItem>,
     val episodes: List<JellyfinItem>,
@@ -561,57 +450,6 @@ private data class Related(
  * "more like this season" would be noise.
  */
 private val SIMILAR_TYPES = setOf(ItemType.MOVIE, ItemType.SERIES, ItemType.EPISODE)
-
-/**
- * Turns one [GroupAction] into the SyncPlay request that carries it.
- *
- * A top-level function for the same reason `fetchRelated` above is one: `ItemDetailViewModel` is
- * at detekt's function-count ceiling, and this dispatch depends on nothing but its arguments.
- *
- * Neither queue action carries a resume position, deliberately: an item added to a queue is not a
- * resume, and the group would be surprised to find it starting in the middle. Playing something
- * *now* does carry one, and that is [ItemDetailViewModel.onPlay]'s business.
- */
-private suspend fun sendGroupAction(
-    action: GroupAction,
-    target: JellyfinItem,
-    session: SyncPlaySession,
-) {
-    when (action) {
-        GroupAction.PLAY_NEXT -> session.addToGroupQueue(target.id, next = true)
-        GroupAction.ADD_TO_QUEUE -> session.addToGroupQueue(target.id, next = false)
-    }
-}
-
-/**
- * [target] and, when it is an episode, everything the series runs after it — the queue a group play
- * is sent as ([ItemDetailViewModel.onPlay]).
- *
- * This looks like a UI decision and is really an interop one. jellyfin-web's
- * `translateItemsForPlayback` intercepts a group queue holding exactly one episode and — with
- * `EnableNextEpisodeAutoPlay`, the default — replaces it locally with that episode plus every
- * following one across seasons; `QueueCore` then walks the server's playlist by the *expanded*
- * length to copy the playlist-item ids over, reads past the end of our one-entry playlist, throws,
- * and drops the update, so nobody's playback ever starts. Web never trips this on itself because it
- * expands *before* it calls `SetNewQueue`. Sending the same expansion makes the two lengths agree.
- * Movies are untouched: web leaves a single one alone, and a single-item movie queue is verified
- * good.
- *
- * A failed lookup, or an episode the series listing does not contain, falls back to the lone id:
- * a group queue that web may reject beats no request at all, and the caller's snackbar is about the
- * ask going out either way.
- */
-private suspend fun groupPlayQueue(
-    target: JellyfinItem,
-    repository: JellyfinRepository,
-): List<String> {
-    val seriesId = target.seriesId
-    if (target.type != ItemType.EPISODE || seriesId == null) return listOf(target.id)
-
-    val episodes = repository.getSeriesEpisodes(seriesId).getOrNull().orEmpty()
-    val index = episodes.indexOfFirst { it.id == target.id }
-    return if (index >= 0) episodes.drop(index).map { it.id } else listOf(target.id)
-}
 
 /**
  * What this screen calls the one branch it does not share: an unclassified failure here happened

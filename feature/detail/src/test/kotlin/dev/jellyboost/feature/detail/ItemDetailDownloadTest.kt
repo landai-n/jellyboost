@@ -39,6 +39,11 @@ import org.junit.jupiter.api.Test
  * Its own class rather than more of [ItemDetailViewModelTest], which is at detekt's `LargeClass`
  * ceiling — the same split [ItemDetailGroupActionsTest] and [ItemDetailSelectionTest] already make
  * for SyncPlay and batch selection.
+ *
+ * This file is [DetailDownloadsDelegate]'s coverage since the CPX-10 split, and it is deliberately
+ * still driven through [ItemDetailViewModel]: the delegate writes into the ViewModel's own state
+ * and the screen only ever sees the ViewModel, so the boundary worth holding still is the one these
+ * tests already exercise. Not one of them changed when the implementation moved, which is the point.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ItemDetailDownloadTest {

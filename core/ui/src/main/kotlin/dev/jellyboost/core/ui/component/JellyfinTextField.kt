@@ -38,7 +38,6 @@ import androidx.compose.ui.semantics.password
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,59 +88,39 @@ private val FieldSupportingStyle =
  * different components wearing the same name, so this one owns its layout and only borrows
  * Material's colours and text cursor.
  *
- * The parameter list deliberately mirrors the `OutlinedTextField` call sites in `:feature:auth` so
- * that swapping one for the other is a rename — the label and placeholder stay `@Composable`
- * lambdas for the same reason, even though every current caller passes a bare `Text`.
+ * ### Three values, not nineteen parameters
+ * The field's accessibility guarantees used to rest on four pairs of parameters a caller had to
+ * keep in agreement by hand — `label`/`labelText`, `isError`/`errorMessage`,
+ * `password`/`visualTransformation`, `enabled`/`readOnly` — none of them checked by anything
+ * (docs/notes/audit-2026-08-06-quality.md, CPX-8). Each pair is now one value that cannot be
+ * half-passed: [FieldLabel], [FieldState], [FieldContent]. What each of them guarantees, and which
+ * audit finding it descends from, is documented on the type rather than repeated here.
  *
- * @param label drawn above the field as a caption, not floated into it.
- * @param labelText the same words as [label], in the case a *person* reads them — the caption is
- *   uppercased by its callers, and "USERNAME" spelled at a screen-reader user is not a label
- *   (accessibility audit 2026-08-05, CR-2/F16). It becomes the field node's `contentDescription`,
- *   which is what an editable node uses as its name (its value stays the text it holds), and the
- *   visible caption is then muted with `clearAndSetSemantics` so the pair is announced once. A
- *   field with no [labelText] is exactly as unlabelled as it was before — but every call site in
- *   the app passes one.
+ * The placeholder and the icons stay `@Composable` lambdas: they are decoration, they carry no
+ * semantics of their own, and one of them (the trailing icon) is a real control the caller owns.
+ *
+ * @param label the field's name, drawn above the well as a caption and spoken by the field node
+ *   itself. `null` for a field with no name at all, which every call site in this app avoids.
  * @param leadingIcon drawn before the well's content, in the muted [MaterialTheme.colorScheme]
  *   `onSurfaceVariant` tint — added for `:feature:search`'s field (2026 refresh, Phase 5 sweep),
  *   which wants a search glyph the way every `OutlinedTextField` call site it replaces already had
  *   one. `null` (the default) leaves every existing caller's layout untouched.
- * @param supportingText drawn below in [MaterialTheme] error colour when [isError], muted otherwise.
- * @param errorMessage what went wrong, in words. Draws nothing — [supportingText] and the screens'
- *   own error blocks own the visuals — but while [isError] it is attached to the field node as
- *   `error(…)` semantics, so TalkBack says *what* is wrong rather than only that something is.
- *   Pass the same sentence the screen shows.
- * @param readOnly the field keeps its focus, its name and its value and refuses to be typed into.
- *   This is what an in-flight request wants, not `enabled = false`: disabling destroys the node the
- *   user is standing on at the exact moment they pressed the button, and a screen reader dropped
- *   mid-form has nowhere to land (accessibility audit 2026-08-05, F17). The auth screens guard the
- *   edit in their state holders as well — belt and braces, and the guard is the part a JVM test can
- *   hold still (DECISIONS.md, "an in-flight auth field stays enabled").
- * @param password marks the field node as holding a secret, so a screen reader speaks it the way
- *   the platform speaks passwords instead of reading the value out loud (audit F5). Independent of
- *   [visualTransformation], which is what hides the characters on screen.
- * @param autofillContentType what the platform's autofill service should offer here — a username,
- *   a password. `null` (the default) leaves the field out of autofill entirely, which is right for
- *   a search box and wrong for a credential.
+ * @param supportingText drawn below in [MaterialTheme] error colour while [state] is a
+ *   [FieldState.Error], muted otherwise.
  */
 @Composable
 fun JellyfinTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    readOnly: Boolean = false,
-    isError: Boolean = false,
+    label: FieldLabel? = null,
+    state: FieldState = FieldState.Editable,
+    content: FieldContent = FieldContent.Plain(),
     singleLine: Boolean = true,
-    label: (@Composable () -> Unit)? = null,
-    labelText: String? = null,
     placeholder: (@Composable () -> Unit)? = null,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
     supportingText: (@Composable () -> Unit)? = null,
-    errorMessage: String? = null,
-    password: Boolean = false,
-    autofillContentType: ContentType? = null,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
@@ -150,36 +129,28 @@ fun JellyfinTextField(
     val shape = RoundedCornerShape(Dimens.CardCornerRadius)
     val borderColor =
         when {
-            isError -> MaterialTheme.colorScheme.error
+            state.isError -> MaterialTheme.colorScheme.error
             focused || value.isNotEmpty() -> FieldActiveBorder
             else -> GlassDefaults.Hairline
-        }
-    val contentColor =
-        if (enabled) {
-            MaterialTheme.colorScheme.onSurface
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_CONTENT_ALPHA)
         }
 
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
     ) {
-        if (label != null) {
+        val caption = label?.caption
+        if (caption != null) {
             // The caption is the shared eyebrow style: the mocks' field labels and their section
             // eyebrows are the same tracked-out 11dp caption, and callers uppercase the text.
-            Box(
-                // Muted for the screen reader when the field itself carries the name: the caption
-                // and the field would otherwise be two stops saying the same word, the first of
-                // them spelled out letter by letter.
-                modifier = if (labelText != null) Modifier.clearAndSetSemantics {} else Modifier,
-            ) {
-                CompositionLocalProvider(
-                    LocalTextStyle provides JellyfinTypeExtras.Eyebrow,
-                    LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                    content = label,
-                )
-            }
+            Text(
+                text = caption,
+                style = JellyfinTypeExtras.Eyebrow,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // Muted for the screen reader, because the field itself carries the name: the
+                // caption and the field would otherwise be two stops saying the same word, the
+                // first of them spelled out letter by letter.
+                modifier = Modifier.clearAndSetSemantics {},
+            )
         }
 
         BasicTextField(
@@ -192,18 +163,17 @@ fun JellyfinTextField(
                     .background(color = FieldFill, shape = shape)
                     .border(width = GlassDefaults.HairlineWidth, color = borderColor, shape = shape)
                     .fieldNodeSemantics(
-                        labelText = labelText,
-                        password = password,
-                        errorMessage = errorMessage.takeIf { isError },
-                        autofillContentType = autofillContentType,
+                        labelText = label?.text,
+                        password = content.isSecret,
+                        errorMessage = state.errorMessage,
+                        autofillContentType = content.autofillContentType,
                     ).padding(FieldPadding),
-            enabled = enabled,
-            readOnly = readOnly,
-            textStyle = FieldTextStyle.copy(color = contentColor),
+            readOnly = state.isReadOnly,
+            textStyle = FieldTextStyle.copy(color = MaterialTheme.colorScheme.onSurface),
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
-            visualTransformation = visualTransformation,
+            visualTransformation = content.visualTransformation,
             interactionSource = interactionSource,
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             decorationBox = { innerTextField ->
@@ -239,12 +209,55 @@ fun JellyfinTextField(
             CompositionLocalProvider(
                 LocalTextStyle provides FieldSupportingStyle,
                 LocalContentColor provides
-                    if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    if (state.isError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 content = supportingText,
             )
         }
     }
 }
+
+/**
+ * The pre-[FieldLabel] signature, kept alive for the two call sites this wave was not allowed to
+ * touch: `:feature:search`'s query box and `:player`'s SyncPlay create-group dialog.
+ *
+ * Both pass a bare `labelText` and nothing else from the old correlated pairs, so both become
+ * `label = FieldLabel(…)` and this overload goes away — a mechanical follow-up, and one the
+ * deprecation warning will keep asking for. `labelText` has no default on purpose: it is the one
+ * parameter the new signature does not have, which is what makes every call resolve to exactly one
+ * of the two.
+ */
+@Deprecated(
+    message = "Pass label = FieldLabel(text) instead; this overload exists only for the unmigrated call sites.",
+    replaceWith = ReplaceWith("JellyfinTextField(value, onValueChange, modifier, FieldLabel(labelText))"),
+)
+@Composable
+fun JellyfinTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    labelText: String,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    placeholder: (@Composable () -> Unit)? = null,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+) = JellyfinTextField(
+    value = value,
+    onValueChange = onValueChange,
+    modifier = modifier,
+    label = FieldLabel(text = labelText),
+    singleLine = singleLine,
+    placeholder = placeholder,
+    leadingIcon = leadingIcon,
+    trailingIcon = trailingIcon,
+    keyboardOptions = keyboardOptions,
+    keyboardActions = keyboardActions,
+)
 
 /**
  * Everything a screen reader needs from the field itself.
@@ -270,9 +283,6 @@ private fun Modifier.fieldNodeSemantics(
             errorMessage?.let { error(it) }
         }
 
-/** A disabled field still shows what it holds, just without claiming to be editable. */
-private const val DISABLED_CONTENT_ALPHA = 0.5f
-
 @Preview(name = "JellyfinTextField", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)
 @Composable
 private fun JellyfinTextFieldPreview() {
@@ -284,23 +294,27 @@ private fun JellyfinTextFieldPreview() {
             JellyfinTextField(
                 value = "",
                 onValueChange = {},
-                label = { Text(text = "SERVER ADDRESS") },
-                labelText = "Server address",
+                label = FieldLabel.eyebrow("Server address"),
                 placeholder = { Text(text = "http://192.168.1.10:8096") },
             )
             JellyfinTextField(
                 value = "claude",
                 onValueChange = {},
-                label = { Text(text = "USERNAME") },
-                labelText = "Username",
+                label = FieldLabel.eyebrow("Username"),
+                state = FieldState.InFlight,
+            )
+            JellyfinTextField(
+                value = "•••••",
+                onValueChange = {},
+                label = FieldLabel.eyebrow("Password"),
+                content = FieldContent.Password(),
             )
             JellyfinTextField(
                 value = "nope",
                 onValueChange = {},
-                isError = true,
-                labelText = "Server address",
+                label = FieldLabel.eyebrow("Server address"),
+                state = FieldState.Error("That server did not answer."),
                 supportingText = { Text(text = "That server did not answer.") },
-                errorMessage = "That server did not answer.",
             )
         }
     }

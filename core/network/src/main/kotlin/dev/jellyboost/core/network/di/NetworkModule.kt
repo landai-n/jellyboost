@@ -6,6 +6,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.Multibinds
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.di.DefaultDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.core.network.ApiClientProvider
 import dev.jellyboost.core.network.JellyfinApiFacade
 import dev.jellyboost.core.network.SdkJellyfinApiFacade
@@ -55,7 +59,13 @@ internal interface NetworkModule {
     fun signOutHooks(): Set<SignOutHook>
 }
 
-/** Provides the dispatchers and scopes `:core:network` runs its background work on. */
+/**
+ * Provides the dispatchers and scopes the app runs its background work on.
+ *
+ * The qualifiers themselves live in `:core:common` (audit ARCH-1) — they are pure `javax.inject`
+ * annotations every module can name — while the bindings stay here, because a `@Provides` needs
+ * Hilt and `:core:common` is a plain JVM module with no Android or Dagger processor on it.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 internal object NetworkDispatchersModule {

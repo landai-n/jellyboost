@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
-import dev.jellyboost.core.network.di.DefaultDispatcher
+import dev.jellyboost.core.common.di.DefaultDispatcher
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.model.DownloadItem
 import kotlinx.coroutines.CoroutineDispatcher

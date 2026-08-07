@@ -11,7 +11,7 @@ import java.util.UUID
 // 1. No SDK types. The `org.jellyfin.sdk.model.api` DTOs stop at
 //    `dev.jellyboost.player.syncplay.SyncPlayDtoMapping`.
 // 2. No `LocalDateTime`. The SDK's date fields are *local wall-clock* readings (see
-//    `dev.jellyboost.data.toSdkInstant`); the moment one escapes the mapping boundary every
+//    `dev.jellyboost.core.network.toSdkInstant`); the moment one escapes the mapping boundary every
 //    scheduled command is off by the device's UTC offset. Timestamps here are `Instant`, always.
 
 /** Where the server thinks the group is, `GroupStateType`. */

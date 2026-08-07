@@ -1,6 +1,6 @@
 package dev.jellyboost.player.syncplay.api
 
-import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.player.syncplay.model.SyncPlayGroupSummary
 import dev.jellyboost.player.syncplay.model.SyncPlayQueueMode
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode

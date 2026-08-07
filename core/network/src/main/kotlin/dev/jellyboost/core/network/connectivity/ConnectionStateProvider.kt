@@ -1,9 +1,9 @@
 package dev.jellyboost.core.network.connectivity
 
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.SessionStateHolder
-import dev.jellyboost.core.network.di.ApplicationScope
 import dev.jellyboost.core.network.model.SessionState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

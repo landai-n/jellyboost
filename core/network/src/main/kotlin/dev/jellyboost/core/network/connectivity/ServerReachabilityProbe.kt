@@ -1,9 +1,9 @@
 package dev.jellyboost.core.network.connectivity
 
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.network.ApiClientProvider
 import dev.jellyboost.core.network.SessionStateHolder
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.core.network.hostForLog
 import dev.jellyboost.core.network.model.SessionState
 import kotlinx.coroutines.CoroutineDispatcher

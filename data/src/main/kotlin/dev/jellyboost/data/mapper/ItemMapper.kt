@@ -7,7 +7,7 @@ import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.Person
 import dev.jellyboost.core.common.model.PersonKind
 import dev.jellyboost.core.common.model.UserData
-import dev.jellyboost.data.toSdkInstant
+import dev.jellyboost.core.network.toSdkInstant
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.BaseItemPerson

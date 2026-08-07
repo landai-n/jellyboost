@@ -1,6 +1,6 @@
 package dev.jellyboost.player.syncplay
 
-import dev.jellyboost.core.network.di.MainDispatcher
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.session.PlayerHandle
 import dev.jellyboost.player.syncplay.time.SyncPlayTimeSync
 import kotlinx.coroutines.CoroutineDispatcher

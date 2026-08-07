@@ -2,7 +2,7 @@ package dev.jellyboost.core.network
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
-import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.network.model.DiscoveredServer
 import dev.jellyboost.core.network.model.ResolvedServer
 import kotlinx.coroutines.CoroutineDispatcher

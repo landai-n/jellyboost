@@ -1,10 +1,10 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.ItemSource
-import dev.jellyboost.core.network.di.ApplicationScope
-import dev.jellyboost.core.network.di.IoDispatcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

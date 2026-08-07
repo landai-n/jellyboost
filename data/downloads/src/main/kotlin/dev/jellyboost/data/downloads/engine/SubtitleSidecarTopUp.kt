@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.engine
 
+import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.runCatchingUnlessCancelled
@@ -8,7 +9,6 @@ import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import dev.jellyboost.core.database.entities.DownloadWithFiles
 import dev.jellyboost.core.datastore.AppPreferences
-import dev.jellyboost.core.network.di.IoDispatcher
 import dev.jellyboost.data.downloads.plan.DownloadFilePlanner
 import dev.jellyboost.data.downloads.plan.PlannedFile
 import dev.jellyboost.data.downloads.storage.DownloadStorage

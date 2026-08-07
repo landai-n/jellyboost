@@ -1,6 +1,7 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
@@ -9,7 +10,6 @@ import dev.jellyboost.core.database.entities.ItemCacheKey
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.network.SessionRepository
-import dev.jellyboost.core.network.di.ApplicationScope
 import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.data.userdata.toEntity
 import kotlinx.coroutines.CancellationException

@@ -1,4 +1,4 @@
-package dev.jellyboost.core.network.di
+package dev.jellyboost.core.common.di
 
 import javax.inject.Qualifier
 

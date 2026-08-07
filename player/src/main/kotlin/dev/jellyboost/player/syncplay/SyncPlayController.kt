@@ -220,57 +220,119 @@ class SyncPlayController
         @Volatile
         private var host: SyncPlayPlaybackHost? = null
 
-        /** The slot the host currently has open, so a repeated `PlayQueueUpdate` reloads nothing. */
-        private var loadedPlaylistItemId: UUID? = null
-
         /**
-         * Slots this device could not open and has already asked the group to move past.
+         * Every field one group session owns, boxed so that ending a session is one assignment.
          *
-         * The loop guard for [onEntryUnplayable]: skipping is itself a request that produces another
-         * `PlayQueueUpdate`, so without a memory a queue of unplayable items would cycle for ever.
-         * Cleared as soon as anything opens successfully.
-         */
-        private val skippedSlots = mutableSetOf<UUID>()
-
-        /** `true` once the group has been told to stop waiting on us, so re-attaching can undo it. */
-        private var ignoreWaitSent = false
-
-        /** Group updates that arrived before the join call returned; replayed by [enterGroup]. */
-        private var pendingGroup: SyncPlayGroupSummary? = null
-        private var pendingQueue: SyncPlayGroupQueue? = null
-
-        /**
-         * The slot the group is waiting on a `ready` for, or `null` when it is waiting on nothing.
+         * The box exists because its two endings used to be twelve byte-identical reset statements
+         * kept in step by hand ([teardown] and [standDown]), and every new session-scoped field had
+         * to be added to both lists — missing one left a rejoin carrying stale state into a fresh
+         * group, the exact bug shape of B2/B3 and invisible in review (audit CPX-2). Now a field
+         * added here is reset by construction, and the semantic difference between the two endings
+         * is the named factory below plus [SyncPlayController.teardown]'s explicit `timeSync.reset()`.
          *
-         * The whole of the anti-storm rule (see the class docs): a `PlayerEvent.Ready` is only worth
-         * reporting when the server has actually reset this member to buffering.
+         * Confined to the single-threaded `@SyncPlayScope` like everything else the controller
+         * mutates; plain `var`s are safe there.
          */
-        private var readyOwedFor: UUID? = null
+        private class GroupSessionState(
+            /**
+             * `true` once the group has been told to stop waiting on us, so re-attaching can undo
+             * it. Survives a stand-down: a member with no player must go on being one after the
+             * rejoin ([enterGroup] re-sends it).
+             */
+            var ignoreWaitSent: Boolean = false,
+            /**
+             * When the connection last misbehaved, on the server clock.
+             *
+             * What tells "the server dropped us because the connection went" apart from "the server
+             * dropped us on purpose": only the first is worth rejoining, and only the first is
+             * preceded by connectivity going away, a ping failing, or the socket leaving
+             * `Connected`. Kept for [REJOIN_TROUBLE_WINDOW_MS], because the removal is discovered
+             * by the *next* request rather than at the moment of the trouble — which is also why it
+             * survives a stand-down.
+             */
+            var troubledAt: Instant? = null,
+        ) {
+            /** The slot the host has open, so a repeated `PlayQueueUpdate` reloads nothing. */
+            var loadedPlaylistItemId: UUID? = null
 
-        /** Reports the owed `ready` when the player will not re-buffer to announce itself. */
-        private var readyFallbackJob: Job? = null
+            /**
+             * Slots this device could not open and has already asked the group to move past.
+             *
+             * The loop guard for [onEntryUnplayable]: skipping is itself a request that produces
+             * another `PlayQueueUpdate`, so without a memory a queue of unplayable items would
+             * cycle for ever. Cleared as soon as anything opens successfully.
+             */
+            val skippedSlots = mutableSetOf<UUID>()
 
-        /** The B3 safety net: fires when a completed handshake produced no command. */
-        private var selfSyncJob: Job? = null
+            /** Group updates that arrived before the join call returned; replayed by [enterGroup]. */
+            var pendingGroup: SyncPlayGroupSummary? = null
+            var pendingQueue: SyncPlayGroupQueue? = null
 
-        /** The other half of it: fires when a paused group produced no pause command. */
-        private var pauseNetJob: Job? = null
+            /**
+             * The slot the group is waiting on a `ready` for, or `null` when it is waiting on
+             * nothing.
+             *
+             * The whole of the anti-storm rule (see the class docs): a `PlayerEvent.Ready` is only
+             * worth reporting when the server has actually reset this member to buffering.
+             */
+            var readyOwedFor: UUID? = null
 
-        /** The B9 grace window: fires when connectivity did not come back in time. */
-        private var connectivityGraceJob: Job? = null
+            /** Reports the owed `ready` when the player will not re-buffer to announce itself. */
+            var readyFallbackJob: Job? = null
 
-        /** Ping cycles that have failed in a row; [PING_FAILURE_STREAK] of them is a confirmed loss. */
-        private var pingFailures = 0
+            /** The B3 safety net: fires when a completed handshake produced no command. */
+            var selfSyncJob: Job? = null
 
-        /**
-         * Where the *group* is on its own timeline, as of the last time it said it was playing.
-         *
-         * Not the same thing as the anchor in [SyncPlayPhase.Playing]: that one is established by an
-         * applied unpause and is exact, this one is inferred from the group's state updates and is
-         * only ever used when no unpause arrived at all ([selfSyncToGroup]). `null` whenever the
-         * group is not known to be playing.
-         */
-        private var groupPlayingAnchor: SyncPlayAnchor? = null
+            /** The other half of it: fires when a paused group produced no pause command. */
+            var pauseNetJob: Job? = null
+
+            /** The B9 grace window: fires when connectivity did not come back in time. */
+            var connectivityGraceJob: Job? = null
+
+            /** Failed ping cycles in a row; [PING_FAILURE_STREAK] of them is a confirmed loss. */
+            var pingFailures = 0
+
+            /**
+             * Where the *group* is on its own timeline, as of the last time it said it was playing.
+             *
+             * Not the same thing as the anchor in [SyncPlayPhase.Playing]: that one is established
+             * by an applied unpause and is exact, this one is inferred from the group's state
+             * updates and is only ever used when no unpause arrived at all ([selfSyncToGroup]).
+             * `null` whenever the group is not known to be playing.
+             */
+            var groupPlayingAnchor: SyncPlayAnchor? = null
+
+            /**
+             * Cancels every timer this session armed.
+             *
+             * Explicit rather than left to [closeSession]'s scope cancellation (audit CPX-2): the
+             * jobs are launched via [launchInSession], which falls back to the singleton scope when
+             * no session scope is open, and a reset that only nils the handles would leave such a
+             * job running with nothing able to reach it.
+             */
+            fun cancelJobs() {
+                readyFallbackJob?.cancel()
+                selfSyncJob?.cancel()
+                pauseNetJob?.cancel()
+                connectivityGraceJob?.cancel()
+            }
+
+            companion object {
+                /**
+                 * The [standDown] ending: the server ended the *session*, nobody ended the
+                 * *membership* — so the ignore-wait promise and the trouble memory carry over,
+                 * and (unlike [teardown]) the clock offset is left standing too.
+                 */
+                fun carriedAcrossStandDown(previous: GroupSessionState) =
+                    GroupSessionState(
+                        ignoreWaitSent = previous.ignoreWaitSent,
+                        troubledAt = previous.troubledAt,
+                    )
+            }
+        }
+
+        /** The state of the current group session; replaced wholesale when the session ends. */
+        private var session = GroupSessionState()
 
         /**
          * The group to take back if the server drops this session, or `null` if leaving would be
@@ -300,17 +362,6 @@ class SyncPlayController
          * [rememberLoss] and [forgetLoss].
          */
         private var lostMembership: LostMembership? = null
-
-        /**
-         * When the connection last misbehaved, on the server clock.
-         *
-         * What tells "the server dropped us because the connection went" apart from "the server
-         * dropped us on purpose": only the first is worth rejoining, and only the first is preceded
-         * by connectivity going away, a ping failing, or the socket leaving `Connected`. Kept for
-         * [REJOIN_TROUBLE_WINDOW_MS], because the removal is discovered by the *next* request rather
-         * than at the moment of the trouble.
-         */
-        private var troubledAt: Instant? = null
 
         init {
             // On the singleton scope rather than a group session, because a rejoin attempt stands the
@@ -455,8 +506,8 @@ class SyncPlayController
                 this@SyncPlayController.host = host
                 val current = _state.value as? SyncPlayState.InGroup ?: return@launch
                 launchInSession {
-                    if (ignoreWaitSent) {
-                        ignoreWaitSent = false
+                    if (session.ignoreWaitSent) {
+                        session.ignoreWaitSent = false
                         runCatching { api.setIgnoreWait(false) }
                             .onFailure { Timber.w(it, "Could not clear SyncPlay ignore-wait") }
                     }
@@ -488,18 +539,18 @@ class SyncPlayController
          *   detach the player that replaced it.
          */
         fun detachHost(host: SyncPlayPlaybackHost) {
-            // Hopped like [attachHost], and for a sharper reason: `skippedSlots.clear()` from the
+            // Hopped like [attachHost], and for a sharper reason: `session.skippedSlots.clear()` from the
             // main thread raced the collectors' own `add`/`clear` on a plain `HashSet` (audit
             // SP-07) — a `ConcurrentModificationException` inside the group-updates collector reads
             // as a lost connection.
             scope.launch {
                 if (this@SyncPlayController.host !== host) return@launch
                 this@SyncPlayController.host = null
-                loadedPlaylistItemId = null
-                skippedSlots.clear()
+                session.loadedPlaylistItemId = null
+                session.skippedSlots.clear()
                 if (_state.value !is SyncPlayState.InGroup) return@launch
                 runCatching { api.setIgnoreWait(true) }
-                    .onSuccess { ignoreWaitSent = true }
+                    .onSuccess { session.ignoreWaitSent = true }
                     .onFailure { Timber.w(it, "Could not set SyncPlay ignore-wait") }
             }
         }
@@ -573,15 +624,15 @@ class SyncPlayController
             existing: SyncPlayGroupSummary?,
             newGroupName: String?,
         ): Boolean {
-            pendingGroup = null
-            pendingQueue = null
-            val session = openSession()
-            session.launch {
+            session.pendingGroup = null
+            session.pendingQueue = null
+            val openedSession = openSession()
+            openedSession.launch {
                 collectStream("group updates") {
                     socket.groupUpdates.collect { handleStreamEvent("group update", it, ::onGroupUpdate) }
                 }
             }
-            session.launch {
+            openedSession.launch {
                 collectStream("commands") {
                     socket.commands.collect { handleStreamEvent("command", it) { command -> onCommand(command) } }
                 }
@@ -599,7 +650,7 @@ class SyncPlayController
                     }
                 }
             return joined
-                .onSuccess { enterGroup(it, session) }
+                .onSuccess { enterGroup(it, openedSession) }
                 .onFailure { Timber.w(it, "Could not join a SyncPlay group") }
                 .isSuccess
         }
@@ -640,23 +691,23 @@ class SyncPlayController
 
         private suspend fun enterGroup(
             group: SyncPlayGroupSummary,
-            session: CoroutineScope,
+            openedSession: CoroutineScope,
         ) {
-            val entered = pendingGroup ?: group
+            val entered = session.pendingGroup ?: group
             _state.value = SyncPlayState.InGroup(entered, null, entered.state, SyncPlayPhase.Waiting)
-            pendingGroup = null
+            session.pendingGroup = null
             rejoinTarget = group
-            troubledAt = null
+            session.troubledAt = null
             // Whatever was lost has been recovered, or replaced by a group the user chose.
             forgetLoss()
             statusHolder.setInGroup(true)
 
-            session.launch { pinger.run(::onPingOutcome) }
-            session.launch { playerHandle.events.collect(::onPlayerEvent) }
-            session.launch { scheduler.applied.collect(::onCommandApplied) }
-            session.launch { observeAnchor() }
-            session.launch { watchConnectivity() }
-            session.launch { watchSocket() }
+            openedSession.launch { pinger.run(::onPingOutcome) }
+            openedSession.launch { playerHandle.events.collect(::onPlayerEvent) }
+            openedSession.launch { scheduler.applied.collect(::onCommandApplied) }
+            openedSession.launch { observeAnchor() }
+            openedSession.launch { watchConnectivity() }
+            openedSession.launch { watchSocket() }
 
             // A group already paused when we arrived gets the same net as one that pauses while we
             // are in it: nothing here can tell "paused before we joined" from "paused a moment ago
@@ -666,8 +717,8 @@ class SyncPlayController
             // A rejoin lands on a new server session, which knows nothing of the ignore-wait this
             // client sent when it gave the player back — so a member with no player would silently
             // start gating the group again.
-            if (host == null && ignoreWaitSent) {
-                session.launch {
+            if (host == null && session.ignoreWaitSent) {
+                openedSession.launch {
                     runCatching { api.setIgnoreWait(true) }
                         .onFailure { Timber.w(it, "Could not restore SyncPlay ignore-wait after rejoining") }
                 }
@@ -675,9 +726,9 @@ class SyncPlayController
 
             // Off the join path deliberately: opening an item can take a while, and nothing else
             // should be waiting behind it on the membership lock.
-            pendingQueue?.let { queued ->
-                pendingQueue = null
-                session.launch { onQueueChanged(queued) }
+            session.pendingQueue?.let { queued ->
+                session.pendingQueue = null
+                openedSession.launch { onQueueChanged(queued) }
             }
         }
 
@@ -718,26 +769,28 @@ class SyncPlayController
             sessionMutex.withLock {
                 if (_state.value is SyncPlayState.Idle) return@withLock
                 _state.value = SyncPlayState.Idle
-                statusHolder.setInGroup(false)
-                statusHolder.setMintedPlaySessionId(null)
-                scheduler.cancel()
-                closeSession()
+                releaseSession()
                 timeSync.reset()
-                loadedPlaylistItemId = null
-                skippedSlots.clear()
-                ignoreWaitSent = false
-                pendingGroup = null
-                pendingQueue = null
-                // A launch request held for replay dies with the group it was raised for.
-                _launchRequests.resetReplayCache()
-                forgetHandshake()
-                connectivityGraceJob = null
-                pingFailures = 0
-                troubledAt = null
-                groupPlayingAnchor = null
+                session = GroupSessionState()
                 if (pausePlayer) withContext(mainDispatcher) { playerHandle.pause() }
                 message?.let { _messages.tryEmit(it) }
             }
+        }
+
+        /**
+         * The reset both endings share: collaborators stood down, timers cancelled, replay cleared.
+         *
+         * The caller replaces [session] right after — [teardown] with a fresh box, [standDown] with
+         * [GroupSessionState.carriedAcrossStandDown] — which is what resets the fields themselves.
+         */
+        private fun releaseSession() {
+            statusHolder.setInGroup(false)
+            statusHolder.setMintedPlaySessionId(null)
+            scheduler.cancel()
+            session.cancelJobs()
+            closeSession()
+            // A launch request held for replay dies with the group it was raised for.
+            _launchRequests.resetReplayCache()
         }
 
         /** Forgets the group and stops any attempt to take it back. */
@@ -886,14 +939,14 @@ class SyncPlayController
          */
         private fun onConnectivityGone() {
             markTrouble()
-            if (connectivityGraceJob != null) return
+            if (session.connectivityGraceJob != null) return
             Timber.w("Connectivity lost while in a SyncPlay group; freezing for %d ms", CONNECTIVITY_GRACE_MS)
-            connectivityGraceJob =
+            session.connectivityGraceJob =
                 launchInSession {
                     withContext(mainDispatcher) { playerHandle.pause() }
                     setPhase(SyncPlayPhase.Waiting)
                     delay(CONNECTIVITY_GRACE_MS)
-                    connectivityGraceJob = null
+                    session.connectivityGraceJob = null
                     Timber.w("Connectivity did not return within the SyncPlay grace window")
                     confirmLoss()
                 }
@@ -901,8 +954,8 @@ class SyncPlayController
 
         /** Connectivity came back inside the window: keep the group, and ask it to re-sync us. */
         private fun onConnectivityBack() {
-            val grace = connectivityGraceJob ?: return
-            connectivityGraceJob = null
+            val grace = session.connectivityGraceJob ?: return
+            session.connectivityGraceJob = null
             grace.cancel()
             Timber.i("Connectivity returned inside the SyncPlay grace window; re-negotiating")
             launchInSession { renegotiate() }
@@ -918,13 +971,13 @@ class SyncPlayController
          */
         private fun onPingOutcome(succeeded: Boolean) {
             if (succeeded) {
-                pingFailures = 0
+                session.pingFailures = 0
                 return
             }
             markTrouble()
-            pingFailures++
-            if (pingFailures < PING_FAILURE_STREAK) return
-            Timber.w("SyncPlay: %d ping cycles failed in a row; treating it as a lost connection", pingFailures)
+            session.pingFailures++
+            if (session.pingFailures < PING_FAILURE_STREAK) return
+            Timber.w("SyncPlay: %d ping cycles failed in a row; treating it as a lost connection", session.pingFailures)
             confirmLoss()
         }
 
@@ -944,12 +997,12 @@ class SyncPlayController
 
         /** Records that the connection misbehaved just now; see [troubledAt]. */
         private fun markTrouble() {
-            troubledAt = timeSync.serverNow()
+            session.troubledAt = timeSync.serverNow()
         }
 
         /** Whether the connection misbehaved recently enough to explain a removal. */
         private fun recentlyTroubled(): Boolean {
-            val at = troubledAt ?: return false
+            val at = session.troubledAt ?: return false
             return Duration.between(at, timeSync.serverNow()).toMillis() <= REJOIN_TROUBLE_WINDOW_MS
         }
 
@@ -998,7 +1051,7 @@ class SyncPlayController
         }
 
         private fun onJoined(group: SyncPlayGroupSummary) {
-            if (_state.value is SyncPlayState.InGroup) updateGroup { group } else pendingGroup = group
+            if (_state.value is SyncPlayState.InGroup) updateGroup { group } else session.pendingGroup = group
         }
 
         private fun onLeft(groupId: UUID) {
@@ -1143,27 +1196,15 @@ class SyncPlayController
         /**
          * Ends the group session that the server has already ended, keeping [rejoinTarget].
          *
-         * Everything [teardown] resets except two things: the clock offset, because it is the same
-         * server and the rejoin handshake needs it immediately, and [ignoreWaitSent], because a
-         * member with no player must go on being one after the rejoin ([enterGroup] re-sends it).
+         * Everything [teardown] resets except what [GroupSessionState.carriedAcrossStandDown]
+         * names — and the clock offset, because it is the same server and the rejoin handshake
+         * needs it immediately.
          */
         private suspend fun standDown(target: SyncPlayGroupSummary) {
             Timber.w("Lost the SyncPlay membership of %s server-side; taking it back", target.id)
             _state.value = SyncPlayState.Rejoining(target, attempt = 1)
-            statusHolder.setInGroup(false)
-            statusHolder.setMintedPlaySessionId(null)
-            scheduler.cancel()
-            closeSession()
-            loadedPlaylistItemId = null
-            skippedSlots.clear()
-            pendingGroup = null
-            pendingQueue = null
-            // The rejoin's own queue update raises a fresh one if the group still needs a player.
-            _launchRequests.resetReplayCache()
-            forgetHandshake()
-            connectivityGraceJob = null
-            pingFailures = 0
-            groupPlayingAnchor = null
+            releaseSession()
+            session = GroupSessionState.carriedAcrossStandDown(session)
             // Frozen, never resumed: the rejoin does not start playback, the group does.
             withContext(mainDispatcher) { playerHandle.pause() }
         }
@@ -1218,7 +1259,7 @@ class SyncPlayController
                     if (_state.value !is SyncPlayState.Idle) return@withLock false
                     Timber.i("Back in the foreground; asking for the SyncPlay group %s back", target.id)
                     _state.value = SyncPlayState.Rejoining(target, attempt = 1)
-                    ignoreWaitSent = host == null
+                    session.ignoreWaitSent = host == null
                     true
                 }
             if (!standing) return
@@ -1285,14 +1326,15 @@ class SyncPlayController
                 (_state.value as? SyncPlayState.InGroup)?.groupState == SyncPlayGroupState.Paused
             setGroupState(groupState)
             if (groupState == SyncPlayGroupState.Playing) {
-                groupPlayingAnchor = (if (resumedFromPause) parkedPlayerAnchor() else null) ?: inferredGroupAnchor()
+                session.groupPlayingAnchor =
+                    (if (resumedFromPause) parkedPlayerAnchor() else null) ?: inferredGroupAnchor()
                 cancelPauseNet()
                 // Either order is possible — the state update can beat this member's own `ready` or
                 // trail it — so the net is armed from both ends. It disarms on the first command.
                 armSelfSync()
                 return
             }
-            groupPlayingAnchor = null
+            session.groupPlayingAnchor = null
             // Structural rather than incidental: a self-sync armed while the group was playing must
             // never start playback in a group that has since stopped.
             cancelSelfSync()
@@ -1340,7 +1382,7 @@ class SyncPlayController
          * nothing loaded: both fall back to the queue.
          */
         private suspend fun parkedPlayerAnchor(): SyncPlayAnchor? {
-            if (loadedPlaylistItemId == null) return null
+            if (session.loadedPlaylistItemId == null) return null
             val snapshot = withContext(mainDispatcher) { playerHandle.snapshot() }
             if (snapshot.isPlaying) return null
             return SyncPlayAnchor(snapshot.positionMs, timeSync.serverNow())
@@ -1349,7 +1391,7 @@ class SyncPlayController
         private suspend fun onQueueChanged(queue: SyncPlayGroupQueue) {
             val current = _state.value as? SyncPlayState.InGroup
             if (current == null) {
-                pendingQueue = queue
+                session.pendingQueue = queue
                 return
             }
             // Queues can arrive out of order — most concretely the pre-join stash replayed by
@@ -1364,7 +1406,7 @@ class SyncPlayController
             // `update`, not read-copy-write: a phase the scheduler's collector applies between this
             // function's read and its write must never be reverted by the queue (audit SP-08).
             _state.update { if (it is SyncPlayState.InGroup) it.copy(queue = queue) else it }
-            if (queue.isPlaying) groupPlayingAnchor = inferredGroupAnchor()
+            if (queue.isPlaying) session.groupPlayingAnchor = inferredGroupAnchor()
             reconcile(queue)
         }
 
@@ -1387,29 +1429,29 @@ class SyncPlayController
         private suspend fun reconcile(queue: SyncPlayGroupQueue) {
             val entry = queue.playingEntry
             if (entry == null) {
-                loadedPlaylistItemId = null
+                session.loadedPlaylistItemId = null
                 return
             }
-            if (entry.playlistItemId == loadedPlaylistItemId) {
+            if (entry.playlistItemId == session.loadedPlaylistItemId) {
                 onSameSlotUpdate(entry, queue)
                 return
             }
 
             val attached = host
             if (attached == null) {
-                loadedPlaylistItemId = null
+                session.loadedPlaylistItemId = null
                 _launchRequests.tryEmit(SyncPlayLaunchRequest(entry.itemId, queue.startPositionTicks))
                 return
             }
 
             val snapshot = hostSnapshot()
-            if (loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
+            if (session.loadedPlaylistItemId == null && snapshot?.itemId == entry.itemId) {
                 onEntryOpened(entry)
                 adoptOpenItem(entry, snapshot)
                 return
             }
 
-            loadedPlaylistItemId = entry.playlistItemId
+            session.loadedPlaylistItemId = entry.playlistItemId
             setPhase(SyncPlayPhase.Buffering)
             // A new slot is a new player: what the old one applied means nothing here, and the
             // server's post-ready re-send must not be mistaken for a repeat (see onHostBuffering).
@@ -1435,7 +1477,7 @@ class SyncPlayController
                     // cancellation of this coroutine still propagates.
                     currentCoroutineContext().ensureActive()
                     Timber.d(cancellation, "A SyncPlay item load was cancelled; leaving the queue alone")
-                    loadedPlaylistItemId = null
+                    session.loadedPlaylistItemId = null
                     return
                 } catch (
                     @Suppress("TooGenericExceptionCaught") error: Throwable,
@@ -1500,8 +1542,8 @@ class SyncPlayController
 
         /** A slot is open on the host; whatever was skipped to get here is forgiven. */
         private fun onEntryOpened(entry: SyncPlayQueueEntry) {
-            loadedPlaylistItemId = entry.playlistItemId
-            skippedSlots.clear()
+            session.loadedPlaylistItemId = entry.playlistItemId
+            session.skippedSlots.clear()
         }
 
         /**
@@ -1519,9 +1561,9 @@ class SyncPlayController
          */
         private suspend fun onEntryUnplayable(entry: SyncPlayQueueEntry) {
             Timber.w("SyncPlay could not open item %s", entry.itemId)
-            loadedPlaylistItemId = null
+            session.loadedPlaylistItemId = null
             _messages.tryEmit(SyncPlayMessage.ItemUnavailable)
-            if (!skippedSlots.add(entry.playlistItemId)) {
+            if (!session.skippedSlots.add(entry.playlistItemId)) {
                 Timber.w("Not skipping past SyncPlay slot %s twice", entry.playlistItemId)
                 return
             }
@@ -1548,7 +1590,7 @@ class SyncPlayController
          */
         private suspend fun onPlayerReady() {
             val entry = currentEntry() ?: return
-            if (readyOwedFor != entry.playlistItemId) {
+            if (session.readyOwedFor != entry.playlistItemId) {
                 Timber.v("Player ready with no SyncPlay handshake outstanding; saying nothing")
                 return
             }
@@ -1568,27 +1610,19 @@ class SyncPlayController
             entry: SyncPlayQueueEntry,
             fallbackMillis: Long?,
         ) {
-            readyOwedFor = entry.playlistItemId
-            readyFallbackJob?.cancel()
-            readyFallbackJob =
+            session.readyOwedFor = entry.playlistItemId
+            session.readyFallbackJob?.cancel()
+            session.readyFallbackJob =
                 fallbackMillis?.let { millis ->
                     launchInSession {
                         delay(millis)
-                        readyFallbackJob = null
+                        session.readyFallbackJob = null
                         val current = currentEntry() ?: return@launchInSession
-                        if (readyOwedFor != current.playlistItemId) return@launchInSession
+                        if (session.readyOwedFor != current.playlistItemId) return@launchInSession
                         Timber.d("Player never re-buffered; reporting SyncPlay ready from where it stands")
                         reportReady(current)
                     }
                 }
-        }
-
-        private fun forgetHandshake() {
-            readyOwedFor = null
-            readyFallbackJob?.cancel()
-            readyFallbackJob = null
-            cancelSelfSync()
-            cancelPauseNet()
         }
 
         /**
@@ -1615,19 +1649,19 @@ class SyncPlayController
          * a report — the server answers it with a command, not with a wait.
          */
         private fun armSelfSync(stage: NetStage = NetStage.Elicit) {
-            selfSyncJob?.cancel()
-            selfSyncJob =
+            session.selfSyncJob?.cancel()
+            session.selfSyncJob =
                 launchInSession {
                     delay(if (stage == NetStage.Elicit) SELF_SYNC_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                    selfSyncJob = null
+                    session.selfSyncJob = null
                     val asked = stage == NetStage.Elicit && elicitUnpauseRepeat()
                     if (asked) armSelfSync(NetStage.Fallback) else selfSyncToGroup()
                 }
         }
 
         private fun cancelSelfSync() {
-            selfSyncJob?.cancel()
-            selfSyncJob = null
+            session.selfSyncJob?.cancel()
+            session.selfSyncJob = null
         }
 
         /**
@@ -1722,7 +1756,7 @@ class SyncPlayController
             // waiting on it (key decision 5), and starting the shared ExoPlayer behind nothing at
             // all would be sound from nowhere.
             if (host == null) return
-            val anchor = groupPlayingAnchor ?: return
+            val anchor = session.groupPlayingAnchor ?: return
             val expected =
                 (anchor.positionMs + Duration.between(anchor.at, timeSync.serverNow()).toMillis())
                     .coerceAtLeast(0L)
@@ -1758,19 +1792,19 @@ class SyncPlayController
          * rather than merely stopping it where it happens to be.
          */
         private fun armPauseNet(stage: NetStage = NetStage.Elicit) {
-            pauseNetJob?.cancel()
-            pauseNetJob =
+            session.pauseNetJob?.cancel()
+            session.pauseNetJob =
                 launchInSession {
                     delay(if (stage == NetStage.Elicit) PAUSE_NET_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                    pauseNetJob = null
+                    session.pauseNetJob = null
                     val asked = stage == NetStage.Elicit && elicitPauseRepeat()
                     if (asked) armPauseNet(NetStage.Fallback) else pauseToGroup()
                 }
         }
 
         private fun cancelPauseNet() {
-            pauseNetJob?.cancel()
-            pauseNetJob = null
+            session.pauseNetJob?.cancel()
+            session.pauseNetJob = null
         }
 
         private suspend fun pauseToGroup() {
@@ -1855,9 +1889,9 @@ class SyncPlayController
          * the truth. Parking is idempotent: a player already stopped is not touched.
          */
         private suspend fun reportReady(entry: SyncPlayQueueEntry) {
-            readyOwedFor = null
-            readyFallbackJob?.cancel()
-            readyFallbackJob = null
+            session.readyOwedFor = null
+            session.readyFallbackJob?.cancel()
+            session.readyFallbackJob = null
             val parked = parkForReady()
             Timber.d(
                 "Reporting SyncPlay ready at %d ticks (parked the player: %b)",

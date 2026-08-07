@@ -25,12 +25,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.FieldLabel
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
-import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PrimaryPillButton
+import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -124,24 +123,24 @@ fun SyncPlayGroupsContent(
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var confirmingLeave by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { stringResource(it.textRes()) }
-
-    LaunchedEffect(message) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            onMessageShown()
-        }
-    }
+    // The shared one-shot idiom, keyed on the message rather than on its copy (audit DUP-3/HYG-8):
+    // two `SyncPlayMessage`s that happen to resolve to the same sentence are still two messages, and
+    // the copy-keyed version this replaces would have shown neither the second one nor consumed it.
+    val snackbarHostState =
+        rememberOneShotSnackbar(
+            message = state.userMessage,
+            onShown = onMessageShown,
+        ) { message -> stringResource(message.textRes()) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         // The header below carries its own status-bar padding, the same way `LibraryGridScreen`'s
         // does — nothing here reserves space for a `TopAppBar` any more.
         contentWindowInsets = WindowInsets(0),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data -> PillSnackbar(snackbarData = data) }
-        },
+        // The shared host, which is also the fix for this screen's missing inset: taking no window
+        // insets at all (above) meant the `Scaffold` handed its snackbar slot none either, so the
+        // pill sat under the gesture bar (audit DUP-3).
+        snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
@@ -522,7 +521,8 @@ private fun CreateGroupDialog(
                 // holds. The dialog's own title is a separate node and does not name it
                 // (accessibility audit 2026-08-05, CR-2). No error state exists here — the confirm
                 // button is simply disabled until the name is non-blank — so no `errorMessage`.
-                labelText = stringResource(R.string.player_syncplay_groups_create_hint),
+                // No caption: the name is spoken, never drawn — the placeholder already draws it.
+                label = FieldLabel(text = stringResource(R.string.player_syncplay_groups_create_hint)),
                 modifier = Modifier.fillMaxWidth(),
             )
         },

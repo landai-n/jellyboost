@@ -38,6 +38,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.FieldLabel
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
@@ -233,7 +234,8 @@ private fun SearchField(
         placeholder = { Text(text = stringResource(R.string.search_field_label)) },
         // The placeholder is the only thing naming this field on screen, and a placeholder vanishes
         // the moment there is a query — so the node carries the same words itself (audit CR-2).
-        labelText = stringResource(R.string.search_field_label),
+        // No caption: the name is spoken, never drawn — the placeholder already draws it.
+        label = FieldLabel(text = stringResource(R.string.search_field_label)),
         leadingIcon = { Icon(imageVector = Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {

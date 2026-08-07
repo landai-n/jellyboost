@@ -467,14 +467,15 @@ internal class DownloadQueue
                 // of the item is a term of the enqueue-time ceiling (`DownloadEnqueuer.sizeEstimate`)
                 // rather than something to project: one projector per item measures the media file.
                 val fileProjector = projector.takeIf { file.type == DownloadFileType.MEDIA }
+                val publisher = ProgressPublisher(download, file, progress, fileProjector, listener)
                 if (file.type.essential) {
-                    downloadEssential(download, dto, file, progress, fileProjector, listener)
+                    downloadEssential(dto, publisher)
                 } else {
                     // try/catch(Exception), not runCatching: the latter catches Throwable, so an
                     // OutOfMemoryError from an optional file would be logged as "optional file
                     // failed" and the drain would carry on in an undefined state (audit DL-12).
                     try {
-                        downloadOne(download, file, progress, fileProjector, listener)
+                        downloadOne(publisher)
                     } catch (cancellation: CancellationException) {
                         throw cancellation
                     } catch (
@@ -511,7 +512,7 @@ internal class DownloadQueue
 
                 // try/catch(Exception) for the same reason as the ordinary lane (audit DL-12).
                 try {
-                    downloadOne(download, file, progress, projector = null, listener)
+                    downloadOne(ProgressPublisher(download, file, progress, projector = null, listener))
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (
@@ -610,17 +611,13 @@ internal class DownloadQueue
          * `/Items/{id}/Download` in the first place, so a `403` on one is a real refusal and
          * re-planning would only re-issue the identical URL.
          */
-        @Suppress("LongParameterList")
         private suspend fun downloadEssential(
-            download: DownloadEntity,
             dto: BaseItemDto,
-            file: DownloadFileEntity,
-            progress: ItemProgress,
-            projector: TranscodeSizeProjector?,
-            listener: DownloadQueueListener,
+            publisher: ProgressPublisher,
         ) {
+            val download = publisher.download
             try {
-                downloadOne(download, file, progress, projector, listener)
+                downloadOne(publisher)
             } catch (error: DownloadHttpException) {
                 if (error.code != HttpURLConnection.HTTP_FORBIDDEN || download.quality.isTranscoded) throw error
 
@@ -633,9 +630,11 @@ internal class DownloadQueue
                             downloadAllowed = false,
                             audioStreamIndex = download.bakedAudioStreamIndex,
                         ).first { it.type == DownloadFileType.MEDIA }
-                val retried = file.copy(url = fallback.url)
+                val retried = publisher.file.copy(url = fallback.url)
                 downloadDao.updateFile(retried)
-                downloadOne(download, retried, progress, projector, listener)
+                // A second attempt is a second transfer: it gets a publisher of its own, so its
+                // throttle starts where the first one's did rather than mid-cadence.
+                downloadOne(publisher.forFile(retried))
             }
         }
 
@@ -644,26 +643,19 @@ internal class DownloadQueue
          * row names.
          *
          * ### The audio sidecar's two files
-         * An extra audio language is *fetched* as a video+audio mkv, because that is the only shape
-         * the server will hand a named `audioStreamIndex` over in, and *stored* as an audio-only
-         * m4a. The fetch therefore lands beside the sidecar as `<name>.part.mkv` and is stripped
-         * into place by [AudioSidecarExtractor] before the row is completed
-         * (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2").
+         * An extra audio language is *fetched* as a video+audio mkv and *stored* as an audio-only
+         * m4a — [withFetchFile] owns the fetch file and the rule about its lifetime; what happens
+         * here is the [strip] between the two.
          *
-         * The row's bytes are then the **m4a's**, not the mkv's: the Downloaded tab sums file rows,
-         * and a row still claiming the junk video's size would overstate the item by the larger of
-         * the two numbers for as long as it exists on disk.
+         * The row's bytes are the **m4a's**, not the mkv's: the Downloaded tab sums file rows, and
+         * a row still claiming the junk video's size would overstate the item by the larger of the
+         * two numbers for as long as it exists on disk.
          */
-        private suspend fun downloadOne(
-            download: DownloadEntity,
-            file: DownloadFileEntity,
-            progress: ItemProgress,
-            projector: TranscodeSizeProjector?,
-            listener: DownloadQueueListener,
-        ) {
+        private suspend fun downloadOne(publisher: ProgressPublisher) {
+            val download = publisher.download
+            val file = publisher.file
             val target = storage.resolve(download.directoryName, file.fileName)
             requireStableRoot(file, target)
-            val audio = file.type == DownloadFileType.AUDIO
             if (isWholeFile(file, target)) {
                 // Already on disk and finished by an earlier run — re-entering the item must
                 // resume at *file* granularity. This matters most for a transcoded media file: an
@@ -672,66 +664,40 @@ internal class DownloadQueue
                 // completed multi-gigabyte encode was truncated and re-fetched from byte zero,
                 // because a live encode can never be resumed (audit DL-02). A finished sidecar is
                 // the same case — its fetch cannot be resumed either.
-                progress.update(file.id, target.length(), target.length())
-                publish(download, progress, listener)
+                publisher.alreadyWhole(target.length())
                 return
             }
 
-            // A sidecar whose strip never happened — the process died between the two — restarts its
-            // fetch, and the stale part file is truncated by `FileDownloader` rather than appended
-            // to, because the fetch is flagged un-resumable below.
-            val fetchTarget = if (audio) File(target.absolutePath + PART_SUFFIX) else target
             downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADING)
-            val throttle = ProgressThrottle()
-            val sink = projector?.let { MediaChunkSink(it::consume) }
             val transcoded = download.isLiveEncode(file)
 
-            try {
-                val fetched =
-                    downloader.download(file.url, fetchTarget, ioDispatcher, sink, transcoded) { bytes, total ->
-                        progress.update(file.id, bytes, total)
-                        val now = clock.millis()
-                        if (throttle.shouldWrite(bytes, total, now)) {
-                            throttle.recordWrite(bytes, now)
-                            // Recomputed on the existing throttle cadence, not per 64 KB callback:
-                            // the projection is only as fresh as the row it is written to.
-                            // A `null` here means "no cluster yet" and must not wipe a seed.
-                            projector?.project(bytes)?.let { progress.mediaProjection = it }
-                            downloadDao.updateFileProgress(file.id, bytes, total)
-                            publish(download, progress, listener)
-                        }
-                    }
+            withFetchFile(file, target) { fetchTarget ->
+                try {
+                    val fetched =
+                        downloader.download(
+                            url = file.url,
+                            target = fetchTarget,
+                            dispatcher = ioDispatcher,
+                            chunkSink = publisher.sink,
+                            transcoded = transcoded,
+                        ) { bytes, total -> publisher.sample(bytes, total) }
 
-                val written = if (audio) strip(fetchTarget, target) else fetched
+                    val written =
+                        if (file.type == DownloadFileType.AUDIO) strip(fetchTarget, target) else fetched
 
-                progress.update(file.id, written, written)
-                // The file is whole, so its size is no longer a question: drop the projection and
-                // let the exact sum of real sizes speak.
-                if (projector != null) progress.mediaProjection = null
-                downloadDao.updateFileProgress(file.id, written, written)
-                downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADED)
-                publish(download, progress, listener)
-            } catch (cancellation: CancellationException) {
-                // A cancelled file keeps its DOWNLOADING status and its bytes; the next run picks
-                // both up again. Marking it ERROR here would look like a real failure — and for a
-                // sidecar it would be one the retry never clears, since the audio lane is cancelled
-                // by design whenever the media file fails (see [transfer]).
-                //
-                // Its *bytes*, though, are worth nothing: a sidecar's fetch cannot be resumed, so
-                // the part file would be re-truncated on the next attempt anyway, and until then it
-                // is a junk video sitting in the item's directory — hundreds of megabytes, for a
-                // download the user may have paused for a week.
-                if (audio) fetchTarget.delete()
-                throw cancellation
-            } catch (
-                @Suppress("TooGenericExceptionCaught") error: Exception,
-            ) {
-                // A failed sidecar keeps nothing: the fetch file is a video nobody asked for, and
-                // the next attempt could not resume it anyway. (A failed *strip* has already
-                // removed both; this is the fetch's own half of the same rule.)
-                if (audio) fetchTarget.delete()
-                downloadDao.setFileStatus(file.id, DownloadStatus.ERROR)
-                throw error
+                    publisher.completed(written)
+                } catch (cancellation: CancellationException) {
+                    // A cancelled file keeps its DOWNLOADING status and its bytes; the next run
+                    // picks both up again. Marking it ERROR here would look like a real failure —
+                    // and for a sidecar it would be one the retry never clears, since the audio
+                    // lane is cancelled by design whenever the media file fails (see [transfer]).
+                    throw cancellation
+                } catch (
+                    @Suppress("TooGenericExceptionCaught") error: Exception,
+                ) {
+                    downloadDao.setFileStatus(file.id, DownloadStatus.ERROR)
+                    throw error
+                }
             }
         }
 
@@ -773,12 +739,14 @@ internal class DownloadQueue
         /**
          * Strips the fetched mkv into the sidecar the row names, and returns the sidecar's size.
          *
-         * A failure takes **both** files with it. The mkv is a video the user never asked for
-         * wrapped around a track that can simply be fetched again, and a part-written m4a is worse
-         * than none at all: the guard above would read it as a finished sidecar, and
-         * `DownloadedMediaProvider` would offer a truncated audio track to the player. The exception
-         * then travels the ordinary optional-file route — file row `ERROR`, item still
-         * `DOWNLOADED` — exactly as a failed subtitle does.
+         * A failure takes the half-written m4a with it: a part-written sidecar is worse than none
+         * at all, since [isWholeFile] would read it as a finished one and `DownloadedMediaProvider`
+         * would offer a truncated audio track to the player. The exception then travels the
+         * ordinary optional-file route — file row `ERROR`, item still `DOWNLOADED` — exactly as a
+         * failed subtitle does.
+         *
+         * The mkv itself is not this function's to delete however this ends: it is the fetch file,
+         * and [withFetchFile] owns it.
          */
         private suspend fun strip(
             part: File,
@@ -790,36 +758,105 @@ internal class DownloadQueue
                 // A cancelled strip has written part of the m4a; leaving it would occupy disk for
                 // as long as the pause lasts, for a file the next attempt re-creates from its
                 // first byte anyway (its row is still DOWNLOADING, so nothing reads it as whole).
-                // The part file is the fetch's own cancellation clean-up, in [downloadOne].
                 target.delete()
                 throw cancellation
             } catch (
                 @Suppress("TooGenericExceptionCaught") error: Exception,
             ) {
-                part.delete()
                 target.delete()
                 throw error
             }
-            part.delete()
             return target.length()
         }
 
-        /** One progress sample to Room and to the host, under [progressLease]. */
-        private suspend fun publish(
-            download: DownloadEntity,
-            progress: ItemProgress,
-            listener: DownloadQueueListener,
-        ) = progressLease.withLock {
-            val bytesDownloaded = progress.bytesDownloaded
-            val bytesTotal = progress.bytesTotal
-            downloadDao.updateProgress(
-                itemId = download.itemId,
-                bytesDownloaded = bytesDownloaded,
-                bytesTotal = bytesTotal,
-                projectedBytes = progress.projectedBytes,
-                updatedAt = clock.instant(),
-            )
-            listener.onProgress(download, bytesDownloaded, bytesTotal)
+        /**
+         * One file's transfer, from the progress side: everything the 64 KB callback used to do
+         * inline, as a value the transfer is handed instead of five parameters.
+         *
+         * Five concerns lived in that fourteen-line lambda and were forwarded, unchanged, through
+         * two signatures to reach it (docs/notes/audit-2026-08-06-quality.md, CPX-12): the item's
+         * running totals, the 500 ms/1 % write throttle, the live size projection, the file's own
+         * row, and the host's notification. They are one object now, and the transfer's own
+         * signatures name a *file* and a publisher rather than the publisher's parts.
+         *
+         * One per **file**, not per item: the [ProgressThrottle] and the [MediaChunkSink] are a
+         * file's own (a throttle carried across files would let one file's cadence decide the
+         * next one's first sample), while [progress] is deliberately the item's — it is what makes
+         * a card's percentage the item's and not the current file's, and it is shared by the two
+         * lanes an item is drained on (see [transfer]).
+         *
+         * @param projector `null` for every file but a transcoded row's media file — see
+         *   [drainOrdinary] for why one projector per item is the right number.
+         */
+        private inner class ProgressPublisher(
+            val download: DownloadEntity,
+            val file: DownloadFileEntity,
+            private val progress: ItemProgress,
+            private val projector: TranscodeSizeProjector?,
+            private val listener: DownloadQueueListener,
+        ) {
+            private val throttle = ProgressThrottle()
+
+            /**
+             * The tap on the body the projector reads its Matroska clusters from, or `null` when
+             * nothing is projecting this file. Held here so the transfer never has to know why.
+             */
+            val sink: MediaChunkSink? = projector?.let { MediaChunkSink(it::consume) }
+
+            /** The same publisher's collaborators, pointed at a re-planned [DownloadFileEntity]. */
+            fun forFile(file: DownloadFileEntity) = ProgressPublisher(download, file, progress, projector, listener)
+
+            /** One 64 KB callback: always counted, written only on the throttle's cadence. */
+            suspend fun sample(
+                bytes: Long,
+                total: Long,
+            ) {
+                progress.update(file.id, bytes, total)
+                val now = clock.millis()
+                if (!throttle.shouldWrite(bytes, total, now)) return
+                throttle.recordWrite(bytes, now)
+                // Recomputed on the existing throttle cadence, not per 64 KB callback: the
+                // projection is only as fresh as the row it is written to. A `null` here means
+                // "no cluster yet" and must not wipe a seed.
+                projector?.project(bytes)?.let { progress.mediaProjection = it }
+                downloadDao.updateFileProgress(file.id, bytes, total)
+                publish()
+            }
+
+            /** The file is whole at [written] bytes, and its row can say so. */
+            suspend fun completed(written: Long) {
+                progress.update(file.id, written, written)
+                // The file is whole, so its size is no longer a question: drop the projection and
+                // let the exact sum of real sizes speak.
+                if (projector != null) progress.mediaProjection = null
+                downloadDao.updateFileProgress(file.id, written, written)
+                downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADED)
+                publish()
+            }
+
+            /**
+             * The file was already finished on disk when the item was re-entered: its bytes join
+             * the item's total, and nothing about the row itself changes.
+             */
+            suspend fun alreadyWhole(length: Long) {
+                progress.update(file.id, length, length)
+                publish()
+            }
+
+            /** One progress sample to Room and to the host, under [progressLease]. */
+            private suspend fun publish() =
+                progressLease.withLock {
+                    val bytesDownloaded = progress.bytesDownloaded
+                    val bytesTotal = progress.bytesTotal
+                    downloadDao.updateProgress(
+                        itemId = download.itemId,
+                        bytesDownloaded = bytesDownloaded,
+                        bytesTotal = bytesTotal,
+                        projectedBytes = progress.projectedBytes,
+                        updatedAt = clock.instant(),
+                    )
+                    listener.onProgress(download, bytesDownloaded, bytesTotal)
+                }
         }
 
         private fun PlannedFile.toEntity(
@@ -858,6 +895,47 @@ internal class DownloadQueue
             const val MAX_ATTEMPTS = 5
         }
     }
+
+/**
+ * Runs a file's transfer against the file its *fetch* is written to, and takes that file with it.
+ *
+ * ### The rule, stated once
+ * A sidecar's fetch cannot be resumed, so its part file is worthless the moment the transfer stops
+ * needing it. An extra audio language is fetched as a video+audio mkv — the only shape the server
+ * will hand a named `audioStreamIndex` over in — and stored as an audio-only m4a, so the fetch
+ * lands beside the sidecar as `<name>.part.mkv` and is stripped into place
+ * (DECISIONS.md, 2026-07-31, "Offline multi-track Phase 2"). Whatever ends the transfer, that mkv
+ * has no future: a strip consumed it, a failure cannot resume it, and a cancellation would leave
+ * hundreds of megabytes of junk video in the item's directory for as long as the pause lasts —
+ * possibly a week. The next attempt truncates it from byte zero either way, because the fetch is
+ * flagged un-resumable.
+ *
+ * That rule used to be stated three times — the cancellation arm, the failure arm, and the strip's
+ * own success path — which is what made it a rule three places could drift out of
+ * (docs/notes/audit-2026-08-06-quality.md, CPX-12). As a `finally` it is also stated for the two
+ * exits the three arms did not cover: a `Throwable` that is not an `Exception`, and a strip that
+ * throws after the fetch succeeded.
+ *
+ * A part file that outlived a process death — the crash landed between the fetch and the strip —
+ * is not appended to either: `FileDownloader` truncates it, because the fetch is flagged
+ * un-resumable at the call site.
+ *
+ * Every other kind of file fetches straight into its target, so there is nothing to clean up and
+ * [block] is handed the target itself.
+ */
+private inline fun <T> withFetchFile(
+    file: DownloadFileEntity,
+    target: File,
+    block: (File) -> T,
+): T {
+    if (file.type != DownloadFileType.AUDIO) return block(target)
+    val fetchTarget = File(target.absolutePath + DownloadQueue.PART_SUFFIX)
+    try {
+        return block(fetchTarget)
+    } finally {
+        fetchTarget.delete()
+    }
+}
 
 /**
  * Fails the file when the active storage root no longer resolves to the row's own path.

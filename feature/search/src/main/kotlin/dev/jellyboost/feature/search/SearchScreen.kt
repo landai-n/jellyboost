@@ -34,7 +34,9 @@ import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
+import dev.jellyboost.core.ui.component.POSTER_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.PosterCard
+import dev.jellyboost.core.ui.component.THUMB_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -197,7 +199,7 @@ private fun SearchResults(
                     title = stringResource(R.string.search_section_movies),
                     items = state.movies,
                     key = JellyfinItem::id,
-                    contentType = CARD_POSTER,
+                    contentType = POSTER_CARD_CONTENT_TYPE,
                 ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
@@ -208,7 +210,7 @@ private fun SearchResults(
                     title = stringResource(R.string.search_section_series),
                     items = state.series,
                     key = JellyfinItem::id,
-                    contentType = CARD_POSTER,
+                    contentType = POSTER_CARD_CONTENT_TYPE,
                 ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
@@ -219,7 +221,7 @@ private fun SearchResults(
                     title = stringResource(R.string.search_section_episodes),
                     items = state.episodes,
                     key = JellyfinItem::id,
-                    contentType = CARD_THUMB,
+                    contentType = THUMB_CARD_CONTENT_TYPE,
                 ) { item -> ThumbCard(item = item, onClick = { onItemClick(item) }) }
             }
         }
@@ -231,10 +233,9 @@ private const val SECTION_SERIES = "section-series"
 private const val SECTION_EPISODES = "section-episodes"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
+// The card types (poster/thumb) come from `:core:ui`, beside the cards they describe (DUP-15).
 private const val ROW_POSTERS = "row-posters"
 private const val ROW_THUMBS = "row-thumbs"
-private const val CARD_POSTER = "card-poster"
-private const val CARD_THUMB = "card-thumb"
 
 @Preview(name = "Search", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 800)
 @Composable

@@ -75,6 +75,7 @@ import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
 import dev.jellyboost.core.ui.component.LoadingState
+import dev.jellyboost.core.ui.component.POSTER_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.PillChip
 import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PosterCard
@@ -568,7 +569,7 @@ private fun ItemGrid(
             key = items.itemKey { it.id },
             // Every cell is the same kind of node, so the grid can reuse one that scrolled off
             // instead of composing a new one — the single cheapest thing a lazy layout can be told.
-            contentType = items.itemContentType { POSTER_CELL_CONTENT_TYPE },
+            contentType = items.itemContentType { POSTER_CARD_CONTENT_TYPE },
         ) { index ->
             val item = items[index]
             if (item != null) {
@@ -713,8 +714,6 @@ private const val APPEND_KEY = "library-append-state"
 private const val CHIP_ALL_KEY = "chip-all"
 
 private const val CHIP_SHEET_KEY = "chip-filters"
-
-private const val POSTER_CELL_CONTENT_TYPE = "poster-card"
 
 @Preview(name = "Library header", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420)
 @Composable

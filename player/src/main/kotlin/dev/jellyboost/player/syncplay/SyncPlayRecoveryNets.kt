@@ -27,6 +27,20 @@ import java.time.Duration
  * command to this session alone ("Client got lost, sending current state") — and only when that
  * second window expires too, act locally. The re-sent command is strictly better than the local
  * guess, because it carries the group's own `when` and position.
+ *
+ * ### Cancellation discipline (audit CPX-4)
+ * A net's job **owns its handle until its work is done**. The bodies used to null their own
+ * handle the moment they woke, which made every later `cancel` a no-op against an orphaned job:
+ * a `cancelPauseNet()` racing the body's main-thread hop could no longer stop it, and the local
+ * fallback then paused (or started!) a player the group had just moved. Now the handle is
+ * cleared only under an identity guard (`=== coroutineContext[Job]`, the scheduler's proven
+ * SP-01 pattern), so a cancel always reaches the running body and takes effect at its next
+ * suspension point. Chosen deliberately over the audit's alternative — one sealed
+ * `RecoveryState` under a supervising coroutine — because that is a rewrite of a
+ * device-verified handshake (B1–B3), and the identity guard closes the same race in-family
+ * (DECISIONS.md 2026-08-07). The residual window — a cancel landing while the main-thread block
+ * itself is mid-flight — costs at most one action the very next state update corrects, exactly
+ * as before.
  */
 internal class SyncPlayRecoveryNets(
     private val playerHandle: PlayerHandle,
@@ -105,9 +119,18 @@ internal class SyncPlayRecoveryNets(
         selfSyncJob =
             driver.launchNet {
                 delay(if (stage == NetStage.Elicit) SELF_SYNC_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                selfSyncJob = null
+                // The handle deliberately still points at this job — see the class docs: a
+                // disarm arriving during the work below must be able to cancel it.
                 val asked = stage == NetStage.Elicit && elicitUnpauseRepeat()
-                if (asked) armSelfSync(NetStage.Fallback) else selfSyncToGroup()
+                if (asked) {
+                    if (selfSyncJob === coroutineContext[Job]) {
+                        selfSyncJob = null
+                        armSelfSync(NetStage.Fallback)
+                    }
+                } else {
+                    selfSyncToGroup()
+                    if (selfSyncJob === coroutineContext[Job]) selfSyncJob = null
+                }
             }
     }
 
@@ -144,9 +167,19 @@ internal class SyncPlayRecoveryNets(
         pauseNetJob =
             driver.launchNet {
                 delay(if (stage == NetStage.Elicit) PAUSE_NET_TIMEOUT_MS else COMMAND_REPEAT_TIMEOUT_MS)
-                pauseNetJob = null
+                // The handle deliberately still points at this job — see the class docs. The
+                // elicit stage suspends on the player probe, and a `cancelPauseNet` arriving
+                // during that hop must stop the ask and the fallback alike.
                 val asked = stage == NetStage.Elicit && elicitPauseRepeat()
-                if (asked) armPauseNet(NetStage.Fallback) else pauseToGroup()
+                if (asked) {
+                    if (pauseNetJob === coroutineContext[Job]) {
+                        pauseNetJob = null
+                        armPauseNet(NetStage.Fallback)
+                    }
+                } else {
+                    pauseToGroup()
+                    if (pauseNetJob === coroutineContext[Job]) pauseNetJob = null
+                }
             }
     }
 

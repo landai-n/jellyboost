@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.detail
 
+import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
@@ -8,6 +9,8 @@ import dev.jellyboost.core.common.selection.BatchReport
 import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.downloads.withDownloadState
 import dev.jellyboost.data.downloads.withDownloadStates
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Everything the item detail screen draws.
@@ -256,6 +259,26 @@ sealed interface UserMessage {
     data class BatchFinished(
         val report: BatchReport,
     ) : UserMessage
+}
+
+/**
+ * Turns one repository result into this state's one-shot message, or into silence.
+ *
+ * An operation on the state rather than a method on either half that raises one: both
+ * [ItemDetailViewModel] (the watched / favourite toggles) and [DetailDownloadsDelegate] (enqueue
+ * and resume) turn an [AppResult] into a snackbar by exactly this rule, and the rule is about what
+ * a [UserMessage] means, not about who happened to call.
+ *
+ * A `null` [success] is what the watched / favourite toggles want: they are already visible on the
+ * page from the local write, so saying so again would be noise — only a failure is news.
+ */
+internal fun MutableStateFlow<ItemDetailUiState>.report(
+    result: AppResult<*>,
+    failure: UserMessage,
+    success: UserMessage? = null,
+) {
+    val message = if (result is AppResult.Success) success else failure
+    message?.let { next -> update { it.copy(userMessage = next) } }
 }
 
 /**

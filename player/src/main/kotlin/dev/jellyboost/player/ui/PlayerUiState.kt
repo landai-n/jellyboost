@@ -1,5 +1,6 @@
 package dev.jellyboost.player.ui
 
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.model.PlaybackQuality
@@ -131,9 +132,12 @@ data class PlayerUiState(
  *
  * One constant rather than two literals because the split only works if it is spelled exactly like
  * the join: `PlayerViewModel.loadTitleAndArtwork` builds the label, `TitleStack` takes it apart, and
- * a stray space between them would silently collapse the bar back to one line.
+ * a stray space between them would silently collapse the bar back to one line. Points at the shared
+ * [Separators.DOT] (DUP-12) rather than its own literal, but stays a named constant here because
+ * both the join and the split sites need one symbol to import, not a value they could drift apart
+ * by retyping.
  */
-internal const val PLAYER_LABEL_SEPARATOR = " · "
+internal const val PLAYER_LABEL_SEPARATOR = Separators.DOT
 
 /**
  * The receiver, as much of it as the player screen draws (M12 Phase 3).

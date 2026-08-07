@@ -19,6 +19,12 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
 
 /**
+ * Lazy-list `contentType` for every [ThumbCard] (DUP-15) — lets a `LazyRow`/`LazyColumn` reuse a
+ * scrolled-off thumb node instead of composing a fresh one when the next item is also a thumb.
+ */
+const val THUMB_CARD_CONTENT_TYPE = "card-thumb"
+
+/**
  * A 16:9 thumbnail card — used wherever jellyfin-web shows landscape artwork: *Continue watching*,
  * *Next up* and episode lists.
  *

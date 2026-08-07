@@ -6,10 +6,8 @@ import org.jellyfin.sdk.api.client.exception.ApiClientException
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.jellyfin.sdk.api.client.exception.TimeoutException
 import java.io.IOException
+import java.net.HttpURLConnection
 import kotlin.coroutines.cancellation.CancellationException
-
-/** HTTP status the server answers with when credentials are missing or rejected. */
-private const val HTTP_UNAUTHORIZED = 401
 
 /**
  * Runs [block] and folds every failure mode of the Jellyfin SDK into an [AppError].
@@ -26,7 +24,7 @@ internal suspend fun <T> apiCall(block: suspend () -> T): AppResult<T> =
         throw error
     } catch (error: InvalidStatusException) {
         AppResult.Failure(
-            if (error.status == HTTP_UNAUTHORIZED) {
+            if (error.status == HttpURLConnection.HTTP_UNAUTHORIZED) {
                 AppError.Unauthorized(error)
             } else {
                 AppError.Server(statusCode = error.status, cause = error)

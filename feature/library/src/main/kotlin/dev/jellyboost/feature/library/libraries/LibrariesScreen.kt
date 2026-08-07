@@ -27,6 +27,7 @@ import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.LIBRARY_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.LibraryCard
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.theme.Dimens
@@ -153,7 +154,7 @@ private fun LibrariesGrid(
                 key = LibraryView::id,
                 // One content type for every cell: the grid can then reuse a scrolled-off card's node
                 // instead of building a new one (same reason `LibraryGridScreen`'s `ItemGrid` does it).
-                contentType = { LIBRARY_CELL_CONTENT_TYPE },
+                contentType = { LIBRARY_CARD_CONTENT_TYPE },
             ) { library ->
                 // `Dp.Unspecified` makes the card fill its column rather than take a fixed width, which
                 // is what a `GridCells.Adaptive` cell needs — and it costs no subcomposition, unlike the
@@ -221,8 +222,6 @@ private val COMPACT_MAX_WIDTH = 600.dp
  */
 internal fun librariesMinCellWidth(maxWidth: Dp): Dp =
     if (maxWidth < COMPACT_MAX_WIDTH) COMPACT_MIN_CELL_WIDTH else MIN_CELL_WIDTH
-
-private const val LIBRARY_CELL_CONTENT_TYPE = "library-card"
 
 private const val TITLE_ITEM_KEY = "libraries-title"
 

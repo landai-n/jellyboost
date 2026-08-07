@@ -1,5 +1,6 @@
 package dev.jellyboost.feature.detail
 
+import dev.jellyboost.core.common.Separators
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -59,8 +60,8 @@ class MetaRowDescriptionTest {
     @Test
     fun `the parts are separated by a pause, not by the interpunct the row draws`() {
         // `·` is read out as "dot" by some engines and swallowed by others; a comma is a pause in
-        // all of them. The row keeps drawing SEPARATOR.
+        // all of them. The row keeps drawing Separators.DOT.
         DESCRIPTION_SEPARATOR shouldBe ", "
-        SEPARATOR shouldBe " · "
+        Separators.DOT shouldBe " · "
     }
 }

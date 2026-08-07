@@ -151,6 +151,37 @@ spinner and stops taking taps while in flight. +5 unit tests (caller-cancellatio
 hung-server, hung-hook, popped-screen, busy-flag). Docs: features/settings.md ("A sign-out
 the screen cannot lose"), features/auth.md, ARCHITECTURE.md.
 
+## Retention: browse-cache eviction, sign-out cleanup, atomic merge (2026-08-06 — landed, gate green)
+
+The "dead retention paths" cluster from the 2026-08-06 quality audit
+(`docs/notes/audit-2026-08-06-quality.md` §2 H1–H3) — three findings that shared one root: the
+`items` table was written but never read *back out of existence*.
+
+- **HYG-1 — eviction was never wired.** `ItemDao.evictBrowseCacheOlderThan` had zero callers, so the
+  `items` table grew monotonically for the life of the install and server-deleted items kept
+  resolving offline forever. New `:data/cache/BrowseCacheMaintenance` sweeps once per process from
+  `JellyboostApplication.onCreate` (beside `UserDataSyncTrigger`/`DownloadedMetadataRefresher`), TTL
+  **30 days** as a documented named constant — PLAN.md:57 fixes the policy (`cachedAt` + "DOWNLOAD
+  rows never evicted") but no number. Downloads are excluded by *source*, never by age.
+- **HYG-2 — sign-out left every Room table intact.** `UserDataDao.deleteSynced` had zero callers.
+  `SessionRepository.signOut` now calls it plus the new `ItemDao.deleteAllBrowseCache`, after the
+  server goodbye and **before** `SessionState.LoggedOut` (which is also what supplies the user id).
+  `toBeSynced` rows deliberately survive — the plan's local-first promise — and downloads are
+  untouched. Not hung off `SignOutHook`: hooks are for work needing the still-valid token and share
+  the 5 s goodbye budget (NET-03); this is local work that must finish regardless.
+- **HYG-3 — the browse-cache merge raced `DownloadEnqueuer`.** `getCacheKeys` → merge → `upsert` were
+  three separate statements, so a `DOWNLOAD` upsert landing in between let the stale snapshot write
+  `BROWSE_CACHE` back over a real download with the lean list blob — the very bug the class exists to
+  prevent, and worse once eviction is live (the downgraded row becomes evictable while its files sit
+  on disk). New `TransactionRunner` seam in `:core:database` (one method over Room's
+  `withTransaction`) wraps the read *and* the write; the decision stayed a pure, JVM-testable
+  `mergeRows`.
+
++16 unit tests (`BrowseCacheMaintenanceTest` ×7, `BrowseCacheWriterTest` ×3 incl. a
+transaction-depth regression test that fails without the fix, `SessionRepositoryTest` ×6). No
+DECISIONS entry: all three complete the plan rather than diverge from it (same class as the ARCH-12
+home-layout clear). Docs: features/offline-read.md, features/user-data.md, ARCHITECTURE.md.
+
 ## Phone-size polish pass (2026-07-31 — DONE, device-verified both ways)
 
 User-requested, outside M9's tablet-only scope (task-level + per-fix DECISIONS entries).

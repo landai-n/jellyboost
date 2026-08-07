@@ -1,8 +1,11 @@
 package dev.jellyboost.core.network
 
 import app.cash.turbine.test
+import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.database.dao.UserDao
+import dev.jellyboost.core.database.dao.UserDataDao
+import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.ServerAddressEntity
 import dev.jellyboost.core.database.entities.ServerEntity
 import dev.jellyboost.core.database.entities.UserEntity
@@ -44,6 +47,8 @@ class SessionRepositoryTest {
     private val apiClientProvider = mockk<ApiClientProvider>(relaxed = true)
     private val serverDao = mockk<ServerDao>(relaxed = true)
     private val userDao = mockk<UserDao>(relaxed = true)
+    private val userDataDao = mockk<UserDataDao>(relaxed = true)
+    private val itemDao = mockk<ItemDao>(relaxed = true)
     private val secureCredentialStore = mockk<SecureCredentialStore>(relaxed = true)
     private val homeLayoutStore = mockk<HomeLayoutStore>(relaxed = true)
     private val sessionStateHolder = SessionStateHolder()
@@ -69,6 +74,8 @@ class SessionRepositoryTest {
             apiClientProvider = apiClientProvider,
             serverDao = serverDao,
             userDao = userDao,
+            userDataDao = userDataDao,
+            itemDao = itemDao,
             secureCredentialStore = secureCredentialStore,
             sessionStateHolder = sessionStateHolder,
             homeLayoutStore = homeLayoutStore,
@@ -287,6 +294,106 @@ class SessionRepositoryTest {
             coVerify(exactly = 1) { secureCredentialStore.clear() }
             coVerify(exactly = 1) { apiClientProvider.clearSession() }
             repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    // ---- sign-out clears this account's local data (audit HYG-2) --------------------------------
+
+    /** Signs in for real first, because the cleanup is keyed on the session that is still current. */
+    private suspend fun SessionRepository.signInThenOut() {
+        coEvery { secureCredentialStore.read() } returns storedSession
+        givenCompleteDatabaseRows()
+        restoreSession()
+        signOut()
+    }
+
+    @Test
+    @DisplayName("signing out drops this user's synced user-data rows")
+    fun signOutDropsSyncedUserData() =
+        runTest {
+            repository().signInThenOut()
+
+            coVerify(exactly = 1) { userDataDao.deleteSynced(USER_ID) }
+        }
+
+    @Test
+    @DisplayName("signing out keeps the rows the server has never accepted, so they can still be pushed")
+    fun signOutKeepsPendingUserData() =
+        runTest {
+            repository().signInThenOut()
+
+            // `deleteSynced` is the whole guarantee: a `toBeSynced` row is the only copy of a change
+            // made offline, and docs/PLAN.md's local-first story promises it is not lost. Signing
+            // out on a train and back in at home must still push it. Nothing may delete the table
+            // wholesale.
+            coVerify(exactly = 0) { userDataDao.getPendingSync() }
+            coVerify(exactly = 1) { userDataDao.deleteSynced(any()) }
+        }
+
+    @Test
+    @DisplayName("signing out wipes the browse cache, so the next account cannot read it")
+    fun signOutWipesTheBrowseCache() =
+        runTest {
+            repository().signInThenOut()
+
+            // The `items` table is keyed by item, not by user: on a shared tablet the previous
+            // account's cached browsing would otherwise serve the next one's offline read path.
+            coVerify(exactly = 1) { itemDao.deleteAllBrowseCache(ItemSource.BROWSE_CACHE) }
+        }
+
+    @Test
+    @DisplayName("signing out never touches a downloaded item's row")
+    fun signOutKeepsDownloads() =
+        runTest {
+            repository().signInThenOut()
+
+            // Deleting one would orphan the files on disk. Removing downloads is a separate,
+            // explicit choice on the sign-out screen (docs/PLAN.md, "Settings").
+            coVerify(exactly = 0) { itemDao.deleteDownloadsNotIn(any(), any()) }
+            coVerify(exactly = 0) { itemDao.deleteAllBrowseCache(ItemSource.DOWNLOAD) }
+        }
+
+    @Test
+    @DisplayName("the local data is gone before anything sees the LoggedOut state")
+    fun cleanupHappensBeforeLoggedOut() =
+        runTest {
+            val repository = repository()
+            var stateDuringCleanup: SessionState? = null
+            coEvery { itemDao.deleteAllBrowseCache(any()) } coAnswers {
+                stateDuringCleanup = repository.sessionState.value
+                0
+            }
+
+            repository.signInThenOut()
+
+            // Still LoggedIn while it runs — which is also what supplies the user id, and what stops
+            // an observer of the transition from reading a half-cleared database.
+            (stateDuringCleanup is SessionState.LoggedIn) shouldBe true
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    @Test
+    @DisplayName("a database that cannot be cleared still signs the user out")
+    fun signOutSurvivesCleanupFailure() =
+        runTest {
+            val repository = repository()
+            coEvery { itemDao.deleteAllBrowseCache(any()) } throws IOException("volume busy")
+
+            repository.signInThenOut()
+
+            coVerify(exactly = 1) { apiClientProvider.clearSession() }
+            repository.sessionState.value shouldBe SessionState.LoggedOut
+        }
+
+    @Test
+    @DisplayName("signing out with no session still wipes the shared browse cache")
+    fun signOutWithoutSessionStillWipesTheCache() =
+        runTest {
+            // Nothing restored: there is no user id to scope `user_data` by, but the item cache is
+            // not user-scoped in the first place and must still go.
+            repository().signOut()
+
+            coVerify(exactly = 1) { itemDao.deleteAllBrowseCache(ItemSource.BROWSE_CACHE) }
+            coVerify(exactly = 0) { userDataDao.deleteSynced(any()) }
         }
 
     // ---- pre-revocation hooks (audit NET-03) ----------------------------------------------------

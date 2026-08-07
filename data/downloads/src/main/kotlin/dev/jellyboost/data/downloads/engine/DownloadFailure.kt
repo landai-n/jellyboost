@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
 import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import dev.jellyboost.data.toAppError
+import java.net.HttpURLConnection
 
 /** Whether trying the same download again in a minute could plausibly work. */
 internal enum class FailureKind {
@@ -67,12 +68,12 @@ internal object DownloadFailureClassifier {
     private fun forStatus(statusCode: Int?): FailureKind =
         when {
             statusCode == null -> FailureKind.PERMANENT
-            statusCode == HTTP_REQUEST_TIMEOUT || statusCode == HTTP_TOO_MANY_REQUESTS -> FailureKind.TRANSIENT
-            statusCode >= HTTP_SERVER_ERROR -> FailureKind.TRANSIENT
+            statusCode == HttpURLConnection.HTTP_CLIENT_TIMEOUT || statusCode == HTTP_TOO_MANY_REQUESTS ->
+                FailureKind.TRANSIENT
+            statusCode >= HttpURLConnection.HTTP_INTERNAL_ERROR -> FailureKind.TRANSIENT
             else -> FailureKind.PERMANENT
         }
 
-    private const val HTTP_REQUEST_TIMEOUT = 408
+    // 429 has no HttpURLConnection constant (the JDK's HTTP_* table predates RFC 6585).
     private const val HTTP_TOO_MANY_REQUESTS = 429
-    private const val HTTP_SERVER_ERROR = 500
 }

@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.engine
 
+import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -25,6 +26,7 @@ import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
 import timber.log.Timber
 import java.io.File
+import java.net.HttpURLConnection
 import java.time.Clock
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -559,7 +561,7 @@ internal class DownloadQueue
             if (download.projectedBytes != null || !download.quality.isTranscoded || download.sizeIsExact) {
                 return download
             }
-            val runtimeMillis = dto.runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return download
+            val runtimeMillis = Ticks.positiveMillisOrNull(dto.runTimeTicks) ?: return download
             val ceiling = download.bytesTotal.takeIf { it > 0L } ?: return download
 
             val seed =
@@ -593,7 +595,7 @@ internal class DownloadQueue
             dto: BaseItemDto,
         ): TranscodeSizeProjector? {
             if (!download.quality.isTranscoded || download.sizeIsExact) return null
-            val runtimeMillis = dto.runTimeTicks?.div(TICKS_PER_MILLI)?.takeIf { it > 0L } ?: return null
+            val runtimeMillis = Ticks.positiveMillisOrNull(dto.runTimeTicks) ?: return null
             return TranscodeSizeProjector(runtimeMillis = runtimeMillis, ceilingBytes = download.bytesTotal)
         }
 
@@ -620,7 +622,7 @@ internal class DownloadQueue
             try {
                 downloadOne(download, file, progress, projector, listener)
             } catch (error: DownloadHttpException) {
-                if (error.code != HTTP_FORBIDDEN || download.quality.isTranscoded) throw error
+                if (error.code != HttpURLConnection.HTTP_FORBIDDEN || download.quality.isTranscoded) throw error
 
                 Timber.i("Download endpoint denied for %s; falling back to the video stream", download.itemName)
                 val fallback =
@@ -835,8 +837,6 @@ internal class DownloadQueue
         )
 
         internal companion object {
-            const val HTTP_FORBIDDEN = 403
-
             /**
              * What an audio sidecar's *fetch* is written to, next to the sidecar itself.
              *
@@ -845,9 +845,6 @@ internal class DownloadQueue
              * process death is swept with everything else and never needs a rule of its own.
              */
             const val PART_SUFFIX = ".part.mkv"
-
-            /** A `runTimeTicks` tick is 100 ns, so there are ten thousand of them in a millisecond. */
-            const val TICKS_PER_MILLI = 10_000L
 
             /**
              * How many attempts a transient failure is worth before the row is called failed.

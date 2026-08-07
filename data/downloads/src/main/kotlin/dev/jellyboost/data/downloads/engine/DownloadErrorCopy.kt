@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
 import dev.jellyboost.data.downloads.storage.StorageUnavailableException
 import dev.jellyboost.data.toAppError
+import java.net.HttpURLConnection
 
 /**
  * Turns a download failure into the sentence the Queue tab prints under the item.
@@ -47,8 +48,8 @@ internal object DownloadErrorCopy {
 
     private fun forStatus(statusCode: Int?): String =
         when (statusCode) {
-            HTTP_UNAUTHORIZED, HTTP_FORBIDDEN -> UNAUTHORIZED
-            HTTP_NOT_FOUND -> GONE
+            HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN -> UNAUTHORIZED
+            HttpURLConnection.HTTP_NOT_FOUND -> GONE
             null -> UNKNOWN
             else -> "The server couldn't send this download (error $statusCode)."
         }
@@ -76,8 +77,4 @@ internal object DownloadErrorCopy {
     // Unknown failures are classified PERMANENT (DownloadFailure.kt), so this must not promise a
     // retry the queue will not attempt — that was the exact lie an unclassified NPE used to tell.
     private const val UNKNOWN = "Something went wrong. Try the download again."
-
-    private const val HTTP_UNAUTHORIZED = 401
-    private const val HTTP_FORBIDDEN = 403
-    private const val HTTP_NOT_FOUND = 404
 }

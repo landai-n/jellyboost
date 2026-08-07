@@ -109,14 +109,13 @@ fun PlayerScreen(
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    // Hoisted above the controls, and above the auto-hide, because the sheet must survive the
-    // controls getting out of the way while the user is reading the participant list (M11).
-    var groupSheetVisible by remember { mutableStateOf(false) }
-    var queueSheetVisible by remember { mutableStateOf(false) }
-    // Hoisted for the same reason, and one more: it is the accessible alternative to the brightness
-    // and volume swipes (audit CR-8), so of all the panels this is the one that must not disappear
-    // while it is being used.
-    var displaySheetVisible by remember { mutableStateOf(false) }
+    // Hoisted above the controls, and above the auto-hide, because a panel must survive the controls
+    // getting out of the way while the user is reading the participant list (M11) — and, for the
+    // display sheet, because it is the accessible alternative to the brightness and volume swipes
+    // (audit CR-8), so of all three it is the one that must not disappear while it is being used.
+    //
+    // One field rather than three booleans (audit CPX-9): see [PlayerPanel].
+    var openPanel by remember { mutableStateOf<PlayerPanel?>(null) }
     // Rebuilt per composition, these method references are that many new unstable lambdas, and every
     // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
@@ -132,9 +131,9 @@ fun PlayerScreen(
                 onSelectSpeed = viewModel::selectSpeed,
                 onSkipSegment = viewModel::skipCurrentSegment,
                 onBack = onBack,
-                onOpenDisplaySheet = { displaySheetVisible = true },
-                onOpenGroupSheet = { groupSheetVisible = true },
-                onOpenQueueSheet = { queueSheetVisible = true },
+                onOpenDisplaySheet = { openPanel = PlayerPanel.DISPLAY },
+                onOpenGroupSheet = { openPanel = PlayerPanel.GROUP },
+                onOpenQueueSheet = { openPanel = PlayerPanel.QUEUE },
                 onSetGroupShuffle = viewModel::setGroupShuffle,
                 onSetGroupRepeat = viewModel::setGroupRepeat,
                 onLeaveGroup = viewModel::leaveGroup,
@@ -207,159 +206,147 @@ fun PlayerScreen(
             VideoSurface(player = player, modifier = Modifier.fillMaxSize())
         }
 
-        // Bare video in the floating window; the notification carries the transport controls.
-        if (inPictureInPicture) return@Box
+        // Bare video in the floating window; the notification carries the transport controls. A
+        // positive `if` around the skipped children rather than the `return@Box` this used to be
+        // (audit CPX-9): an early return in a layout scope silently swallows every sibling appended
+        // after it, so the next thing added to this screen would simply never be drawn in
+        // picture-in-picture — and nothing would say so.
+        if (!inPictureInPicture) {
+            PlayerGestureLayer(
+                onToggleControls = { controlsVisible = !controlsVisible },
+                onSeekBy = actions.onSeekBy,
+                // Both vertical swipes act on this device: one moves its media volume, the other its
+                // backlight. While a television has the film the first is inaudible and the second
+                // dims a still image — the receiver's volume is the hardware keys' job, which the
+                // Cast framework routes for as long as the session lasts. Taps and double-tap seeks
+                // stay: they are the controls' own, and a screen that could not bring them back
+                // would be a remote control with no buttons.
+                swipesEnabled = !state.cast.isCasting,
+            )
 
-        PlayerGestureLayer(
-            onToggleControls = { controlsVisible = !controlsVisible },
-            onSeekBy = actions.onSeekBy,
-            // Both vertical swipes act on this device: one moves its media volume, the other its
-            // backlight. While a television has the film the first is inaudible and the second dims
-            // a still image — the receiver's volume is the hardware keys' job, which the Cast
-            // framework routes for as long as the session lasts. Taps and double-tap seeks stay:
-            // they are the controls' own, and a screen that could not bring them back would be a
-            // remote control with no buttons.
-            swipesEnabled = !state.cast.isCasting,
-        )
+            when {
+                state.errorMessage != null ->
+                    ErrorState(
+                        message = requireNotNull(state.errorMessage).resolve(),
+                        // Assertive: the film has stopped and the only thing left on the screen is
+                        // this panel, so it is worth interrupting whatever is being read (audit
+                        // CR-3).
+                        modifier =
+                            Modifier
+                                .align(Alignment.Center)
+                                .semantics { liveRegion = LiveRegionMode.Assertive },
+                        onRetry = onBack,
+                        // Named for what it does, not for what an error screen's button usually
+                        // does: there is nothing to retry here — the session is gone and the only
+                        // way out is back to where the user came from (WCAG 2.5.3, accessibility
+                        // audit 2026-08-05). `player_back` is the same three words, already
+                        // translated everywhere, and describes the same action the top-left button
+                        // performs.
+                        actionLabel = stringResource(R.string.player_back),
+                    )
 
-        when {
-            state.errorMessage != null ->
-                ErrorState(
-                    message = requireNotNull(state.errorMessage).resolve(),
-                    // Assertive: the film has stopped and the only thing left on the screen is this
-                    // panel, so it is worth interrupting whatever is being read (audit CR-3).
+                state.isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
+
+                else ->
+                    AnimatedVisibility(
+                        visible = controlsVisible,
+                        modifier = Modifier.fillMaxSize(),
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        PlayerControls(state = state, position = viewModel.position, actions = actions)
+                    }
+            }
+
+            // Not while the session is still opening: that already draws a spinner, and two of them
+            // centred on top of each other say less than one.
+            if (state.syncPlay.isWaitingForGroup && state.isReady) {
+                WaitingForGroupOverlay(
+                    syncPlay = state.syncPlay,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+
+            BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
+
+            state.skippableSegment?.let { segment ->
+                SkipSegmentButton(
+                    kind = segment.kind,
+                    onClick = actions.onSkipSegment,
                     modifier =
                         Modifier
-                            .align(Alignment.Center)
-                            .semantics { liveRegion = LiveRegionMode.Assertive },
-                    onRetry = onBack,
-                    // Named for what it does, not for what an error screen's button usually does:
-                    // there is nothing to retry here — the session is gone and the only way out is
-                    // back to where the user came from (WCAG 2.5.3, accessibility audit
-                    // 2026-08-05). `player_back` is the same three words, already translated
-                    // everywhere, and describes the same action the top-left button performs.
-                    actionLabel = stringResource(R.string.player_back),
+                            .align(Alignment.BottomEnd)
+                            .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING)
+                            // The offer is time-boxed — it is gone once the segment is — so a user
+                            // who is not looking at the screen has to be *told* it exists, not left
+                            // to find it by traversal (audit CR-3). Polite: it is an offer, not an
+                            // emergency.
+                            .semantics { liveRegion = LiveRegionMode.Polite },
                 )
+            }
 
-            state.isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
-
-            else ->
-                AnimatedVisibility(
-                    visible = controlsVisible,
-                    modifier = Modifier.fillMaxSize(),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    PlayerControls(state = state, position = viewModel.position, actions = actions)
-                }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = SNACKBAR_PADDING),
+            ) { data -> PillSnackbar(snackbarData = data) }
         }
-
-        // Not while the session is still opening: that already draws a spinner, and two of them
-        // centred on top of each other say less than one.
-        if (state.syncPlay.isWaitingForGroup && state.isReady) {
-            WaitingForGroupOverlay(
-                syncPlay = state.syncPlay,
-                modifier = Modifier.align(Alignment.Center),
-            )
-        }
-
-        BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
-
-        state.skippableSegment?.let { segment ->
-            SkipSegmentButton(
-                kind = segment.kind,
-                onClick = actions.onSkipSegment,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = Dimens.SpaceExtraLarge, bottom = SKIP_BUTTON_BOTTOM_PADDING)
-                        // The offer is time-boxed — it is gone once the segment is — so a user who
-                        // is not looking at the screen has to be *told* it exists, not left to find
-                        // it by traversal (audit CR-3). Polite: it is an offer, not an emergency.
-                        .semantics { liveRegion = LiveRegionMode.Polite },
-            )
-        }
-
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = SNACKBAR_PADDING),
-        ) { data -> PillSnackbar(snackbarData = data) }
     }
 
     // Outside the video `Box`, so it is not covered by the controls and not drawn in the floating
     // window; never in picture-in-picture, where it would be wider than the window itself.
     if (!inPictureInPicture) {
-        DisplaySheetHost(visible = displaySheetVisible, onDismiss = { displaySheetVisible = false })
-
-        GroupSheetHost(
-            visible = groupSheetVisible,
+        PanelHost(
+            panel = openPanel,
             syncPlay = state.syncPlay,
             actions = actions,
-            onDismiss = { groupSheetVisible = false },
-        )
-
-        QueueSheetHost(
-            visible = queueSheetVisible,
-            syncPlay = state.syncPlay,
-            onDismiss = { queueSheetVisible = false },
+            onDismiss = { openPanel = null },
         )
     }
 }
 
-/** Draws the brightness/volume sheet, or nothing. */
-@Composable
-private fun DisplaySheetHost(
-    visible: Boolean,
-    onDismiss: () -> Unit,
-) {
-    if (!visible) return
-
-    PlayerDisplayDialog(onDismiss = onDismiss)
-}
-
 /**
- * Draws the group sheet, or nothing.
+ * Draws whichever of the screen's three panels is open, or nothing.
  *
- * Gated on membership as well as on the tap: a group that ends while the sheet is open takes the
- * sheet with it, rather than leaving a panel about a group that no longer exists.
+ * One `when` over [PlayerPanel] rather than three independently-gated hosts: the exhaustive branch is
+ * what makes "one panel at a time" a property of the code instead of a property of the call sites
+ * (audit CPX-9). The membership gates the group and queue panels carry are unchanged and stay
+ * *inside* their branches, because they answer a different question — not "did the user tap this"
+ * but "is the thing this panel is about still there".
  */
 @Composable
-private fun GroupSheetHost(
-    visible: Boolean,
+private fun PanelHost(
+    panel: PlayerPanel?,
     syncPlay: PlayerSyncPlayState,
     actions: PlayerActions,
     onDismiss: () -> Unit,
 ) {
-    if (!visible || !syncPlay.inGroup) return
+    when (panel) {
+        null -> Unit
 
-    SyncPlayGroupSheet(
-        state = syncPlay,
-        onSetShuffle = actions.onSetGroupShuffle,
-        onSetRepeat = actions.onSetGroupRepeat,
-        onLeave = {
-            actions.onLeaveGroup()
-            onDismiss()
-        },
-        onDismiss = onDismiss,
-    )
-}
+        PlayerPanel.DISPLAY -> PlayerDisplayDialog(onDismiss = onDismiss)
 
-/**
- * Draws the group queue sheet, or nothing.
- *
- * Gated on membership like the group sheet, for the same reason — a group that ends takes its queue
- * with it — and on there being a queue at all: the sheet's ViewModel reads the controller's queue,
- * and a group that has not been given anything to watch yet has none (M11 Phase 4).
- */
-@Composable
-private fun QueueSheetHost(
-    visible: Boolean,
-    syncPlay: PlayerSyncPlayState,
-    onDismiss: () -> Unit,
-) {
-    if (!visible || !syncPlay.inGroup) return
+        // Gated on membership as well as on the tap: a group that ends while the sheet is open takes
+        // the sheet with it, rather than leaving a panel about a group that no longer exists.
+        PlayerPanel.GROUP ->
+            if (syncPlay.inGroup) {
+                SyncPlayGroupSheet(
+                    state = syncPlay,
+                    onSetShuffle = actions.onSetGroupShuffle,
+                    onSetRepeat = actions.onSetGroupRepeat,
+                    onLeave = {
+                        actions.onLeaveGroup()
+                        onDismiss()
+                    },
+                    onDismiss = onDismiss,
+                )
+            }
 
-    SyncPlayQueueSheet(onDismiss = onDismiss)
+        // Gated on membership like the group sheet, for the same reason — a group that ends takes its
+        // queue with it. The sheet's own ViewModel reads the controller's queue, and a group that has
+        // not been given anything to watch yet has none (M11 Phase 4); the chip that opens this is
+        // only offered once it has (`sheetChipSpecs`).
+        PlayerPanel.QUEUE -> if (syncPlay.inGroup) SyncPlayQueueSheet(onDismiss = onDismiss)
+    }
 }
 
 /**

@@ -4,6 +4,7 @@ import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.network.ApiClientProvider
 import dev.jellyboost.core.network.SessionStateHolder
 import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.network.hostForLog
 import dev.jellyboost.core.network.model.SessionState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -68,10 +69,19 @@ class ServerReachabilityProbe
                             // Somebody answered, but not our server — a different Jellyfin
                             // instance, or anything at all squatting a reused LAN address.
                             // Never switch to it.
-                            Timber.w("Host at %s answered as server %s, not ours; skipping it", address, probedId)
+                            //
+                            // Debug, and host only, on this line and the two below (audit HYG-10):
+                            // the probe walks every address the user's server is known by, so its
+                            // log is a list of where that server lives, and it is exactly the log a
+                            // user pastes when connectivity misbehaves. See `hostForLog`.
+                            Timber.d(
+                                "Host %s answered as server %s, not ours; skipping it",
+                                hostForLog(address),
+                                probedId,
+                            )
                         else -> {
                             if (address != apiClientProvider.apiClient.baseUrl) {
-                                Timber.i("Server reachable at %s; switching the client over", address)
+                                Timber.d("Server reachable at %s; switching the client over", hostForLog(address))
                                 apiClientProvider.useAddress(address)
                             }
                             return@withContext true
@@ -79,7 +89,7 @@ class ServerReachabilityProbe
                     }
                 }
 
-                Timber.i("None of the %d known server addresses answered", candidates.size)
+                Timber.d("None of the %d known server addresses answered", candidates.size)
                 false
             }
 

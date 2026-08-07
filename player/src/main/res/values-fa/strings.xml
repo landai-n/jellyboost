@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">پخش آن روی %1$s ممکن نبود.</string>
 
     <string name="player_casting_to">در حال پخش روی %1$s</string>
+
+    <string name="player_error_server">سرور نتوانست پخش را آغاز کند.</string>
+    <string name="player_error_server_with_code">سرور نتوانست پخش را آغاز کند (%1$d).</string>
+    <string name="player_error_unknown">هنگام آغاز پخش مشکلی پیش آمد.</string>
+    <string name="player_error_unsupported_source">این مورد روی این دستگاه قابل پخش نیست.</string>
 </resources>

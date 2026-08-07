@@ -12,11 +12,5 @@
     </plurals>
     <string name="search_prompt">Escreva para pesquisar nas suas bibliotecas.</string>
     <string name="search_no_results">Nada correspondeu a “%1$s”.</string>
-    <string name="search_error_network">Não é possível contactar o seu servidor. Verifique a sua ligação e tente novamente.</string>
-    <string name="search_error_unauthorized">A sua sessão expirou. Inicie sessão novamente para continuar.</string>
-    <string name="search_error_not_found">Esse item já não está no servidor.</string>
-    <string name="search_error_server">O servidor devolveu um erro.</string>
-    <string name="search_error_server_with_code">O servidor devolveu um erro (%1$d).</string>
-    <string name="search_error_storage">Não foi possível ler os dados locais.</string>
     <string name="search_error_unknown">Algo correu mal durante a pesquisa.</string>
 </resources>

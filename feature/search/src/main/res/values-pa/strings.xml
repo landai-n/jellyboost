@@ -14,11 +14,5 @@
     <string name="search_prompt">ਆਪਣੀਆਂ ਲਾਇਬ੍ਰੇਰੀਆਂ ਖੋਜਣ ਲਈ ਟਾਈਪ ਕਰੋ।</string>
     <string name="search_no_results">“%1$s” ਨਾਲ ਕੁਝ ਮੇਲ ਨਹੀਂ ਖਾਂਦਾ।</string>
 
-    <string name="search_error_network">ਤੁਹਾਡੇ ਸਰਵਰ ਤੱਕ ਪਹੁੰਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
-    <string name="search_error_unauthorized">ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਮਿਆਦ ਪੁੱਗ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
-    <string name="search_error_not_found">ਉਹ ਆਈਟਮ ਹੁਣ ਸਰਵਰ ਉੱਤੇ ਨਹੀਂ ਹੈ।</string>
-    <string name="search_error_server">ਸਰਵਰ ਨੇ ਗਲਤੀ ਦਿੱਤੀ।</string>
-    <string name="search_error_server_with_code">ਸਰਵਰ ਨੇ ਗਲਤੀ (%1$d) ਦਿੱਤੀ।</string>
-    <string name="search_error_storage">ਲੋਕਲ ਡਾਟਾ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
     <string name="search_error_unknown">ਖੋਜ ਦੌਰਾਨ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">清除篩選條件</string>
     <string name="library_retry">重試</string>
 
-    <string name="library_error_network">無法連線到你的伺服器。請檢查網路連線後再試一次。</string>
-    <string name="library_error_unauthorized">你的工作階段已過期。請重新登入以繼續。</string>
-    <string name="library_error_not_found">這個媒體庫已不在伺服器上。</string>
-    <string name="library_error_server">伺服器回應了錯誤。</string>
-    <string name="library_error_server_with_code">伺服器回應了錯誤 (%1$d)。</string>
-    <string name="library_error_storage">無法讀取本機資料。</string>
     <string name="library_error_unknown">載入這個媒體庫時發生問題。</string>
 </resources>

@@ -15,4 +15,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dphút còn</string>
     <string name="home_quick_access_offline">Ngoại tuyến</string>
+
+    <string name="home_error_unknown">Đã xảy ra lỗi khi tải trang chủ.</string>
 </resources>

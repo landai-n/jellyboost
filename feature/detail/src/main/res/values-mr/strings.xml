@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">हे या डिव्हाइसवरून काढून टाकेल. आपण ते कधीही पुन्हा डाउनलोड करू शकता.</string>
     <string name="detail_delete_download_dialog_confirm">हटवा</string>
     <string name="detail_delete_download_dialog_cancel">रद्द करा</string>
+
+    <string name="detail_error_unknown">हा आयटम लोड करताना काहीतरी चुकले.</string>
 </resources>

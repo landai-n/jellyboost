@@ -10,11 +10,5 @@
     </plurals>
     <string name="search_prompt">พิมพ์เพื่อค้นหาในคลังของคุณ</string>
     <string name="search_no_results">ไม่พบรายการที่ตรงกับ “%1$s”</string>
-    <string name="search_error_network">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ของคุณได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
-    <string name="search_error_unauthorized">เซสชันของคุณหมดอายุแล้ว เข้าสู่ระบบอีกครั้งเพื่อดำเนินการต่อ</string>
-    <string name="search_error_not_found">รายการนั้นไม่มีอยู่บนเซิร์ฟเวอร์แล้ว</string>
-    <string name="search_error_server">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา</string>
-    <string name="search_error_server_with_code">เซิร์ฟเวอร์ส่งข้อผิดพลาดกลับมา (%1$d)</string>
-    <string name="search_error_storage">ไม่สามารถอ่านข้อมูลในเครื่องได้</string>
     <string name="search_error_unknown">เกิดข้อผิดพลาดขณะค้นหา</string>
 </resources>

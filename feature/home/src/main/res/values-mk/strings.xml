@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dмин уште</string>
     <string name="home_quick_access_offline">Офлајн</string>
+
+    <string name="home_error_unknown">Нешто тргна наопаку при вчитувањето на почетниот екран.</string>
 </resources>

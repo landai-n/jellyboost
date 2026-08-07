@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Očisti filtre</string>
     <string name="library_retry">Pokušaj ponovno</string>
 
-    <string name="library_error_network">Poslužitelj nedostupan. Provjerite vezu i pokušajte ponovno.</string>
-    <string name="library_error_unauthorized">Sesija je istekla. Prijavite se ponovno za nastavak.</string>
-    <string name="library_error_not_found">Ta biblioteka više nije na poslužitelju.</string>
-    <string name="library_error_server">Poslužitelj je vratio pogrešku.</string>
-    <string name="library_error_server_with_code">Poslužitelj je vratio pogrešku (%1$d).</string>
-    <string name="library_error_storage">Nije moguće pročitati lokalne podatke.</string>
     <string name="library_error_unknown">Došlo je do pogreške prilikom učitavanja ove biblioteke.</string>
 </resources>

@@ -16,11 +16,5 @@
     <string name="search_prompt">Zadejte text pro hledání ve vašich knihovnách.</string>
     <string name="search_no_results">Nic neodpovídá výrazu „%1$s“.</string>
 
-    <string name="search_error_network">Server není dostupný. Zkontrolujte připojení a zkuste to znovu.</string>
-    <string name="search_error_unauthorized">Vaše relace vypršela. Přihlaste se znovu, abyste mohli pokračovat.</string>
-    <string name="search_error_not_found">Tato položka už na serveru není.</string>
-    <string name="search_error_server">Server vrátil chybu.</string>
-    <string name="search_error_server_with_code">Server vrátil chybu (%1$d).</string>
-    <string name="search_error_storage">Nepodařilo se načíst místní data.</string>
     <string name="search_error_unknown">Při hledání se něco pokazilo.</string>
 </resources>

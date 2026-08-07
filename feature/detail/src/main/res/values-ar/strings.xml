@@ -84,4 +84,6 @@
     <string name="detail_delete_download_dialog_message">ستتم إزالته من هذا الجهاز. يمكنك تنزيله مرة أخرى في أي وقت.</string>
     <string name="detail_delete_download_dialog_confirm">حذف</string>
     <string name="detail_delete_download_dialog_cancel">إلغاء</string>
+
+    <string name="detail_error_unknown">حدث خطأ ما أثناء تحميل هذا العنصر.</string>
 </resources>

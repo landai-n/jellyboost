@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">%1$s இல் அதை இயக்க முடியவில்லை.</string>
 
     <string name="player_casting_to">%1$s க்கு கேஸ்ட் செய்கிறது</string>
+
+    <string name="player_error_server">சேவையகத்தால் பிளேபேக்கைத் தொடங்க முடியவில்லை.</string>
+    <string name="player_error_server_with_code">சேவையகத்தால் பிளேபேக்கைத் தொடங்க முடியவில்லை (%1$d).</string>
+    <string name="player_error_unknown">பிளேபேக்கைத் தொடங்குவதில் ஏதோ தவறு நடந்தது.</string>
+    <string name="player_error_unsupported_source">இந்த உருப்படியை இந்தச் சாதனத்தில் இயக்க முடியாது.</string>
 </resources>

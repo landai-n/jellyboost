@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">வடிகட்டிகளை அழி</string>
     <string name="library_retry">மீண்டும் முயற்சி</string>
 
-    <string name="library_error_network">உங்கள் சேவையகத்தை அடைய முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</string>
-    <string name="library_error_unauthorized">உங்கள் அமர்வு காலாவதியானது. தொடர மீண்டும் உள்நுழையவும்.</string>
-    <string name="library_error_not_found">அந்த நூலகம் இனி சேவையகத்தில் இல்லை.</string>
-    <string name="library_error_server">சேவையகம் ஒரு பிழையை அளித்தது.</string>
-    <string name="library_error_server_with_code">சேவையகம் ஒரு பிழையை அளித்தது (%1$d).</string>
-    <string name="library_error_storage">உள்ளூர் தரவைப் படிக்க முடியவில்லை.</string>
     <string name="library_error_unknown">இந்த நூலகத்தை ஏற்றுவதில் ஏதோ தவறு நடந்தது.</string>
 </resources>

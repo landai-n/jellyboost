@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$d分仲剩</string>
     <string name="home_quick_access_offline">離線</string>
+
+    <string name="home_error_unknown">載入主頁嗰陣出咗問題。</string>
 </resources>

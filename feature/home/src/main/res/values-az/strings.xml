@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$ddəq qalıb</string>
     <string name="home_quick_access_offline">Oflayn</string>
+
+    <string name="home_error_unknown">Əsas səhifənin yüklənməsi zamanı xəta baş verdi.</string>
 </resources>

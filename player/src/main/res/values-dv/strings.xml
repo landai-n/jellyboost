@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">އެ %1$s ގައި ޕްލޭކުރެވޭގޮތެއް ނުވި.</string>
 
     <string name="player_casting_to">%1$s އަށް ކާސްޓްކުރަނީ</string>
+
+    <string name="player_error_server">ސަރވަރއަށް ޕްލޭބެކް ފެށޭގޮތެއް ނުވި.</string>
+    <string name="player_error_server_with_code">ސަރވަރއަށް ޕްލޭބެކް ފެށޭގޮތެއް ނުވި (%1$d).</string>
+    <string name="player_error_unknown">ޕްލޭބެކް ފެށުމުގައި ގޯހެއް ދިމާވެއްޖެ.</string>
+    <string name="player_error_unsupported_source">މި އައިޓަމް މި ޑިވައިސްގައި ނުޖެއްސޭނެ.</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Išvalyti filtrus</string>
     <string name="library_retry">Bandyti dar kartą</string>
 
-    <string name="library_error_network">Nepavyksta pasiekti jūsų serverio. Patikrinkite ryšį ir bandykite dar kartą.</string>
-    <string name="library_error_unauthorized">Jūsų seansas baigėsi. Prisijunkite iš naujo, kad tęstumėte.</string>
-    <string name="library_error_not_found">Šios bibliotekos serveryje nebėra.</string>
-    <string name="library_error_server">Serveris grąžino klaidą.</string>
-    <string name="library_error_server_with_code">Serveris grąžino klaidą (%1$d).</string>
-    <string name="library_error_storage">Nepavyko nuskaityti vietinių duomenų.</string>
     <string name="library_error_unknown">Įkeliant šią biblioteką kažkas nutiko ne taip.</string>
 </resources>

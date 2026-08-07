@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">필터 지우기</string>
     <string name="library_retry">다시 시도</string>
 
-    <string name="library_error_network">서버에 연결할 수 없습니다. 연결을 확인한 후 다시 시도하세요.</string>
-    <string name="library_error_unauthorized">세션이 만료되었습니다. 계속하려면 다시 로그인하세요.</string>
-    <string name="library_error_not_found">해당 라이브러리는 더 이상 서버에 없습니다.</string>
-    <string name="library_error_server">서버에서 오류를 반환했습니다.</string>
-    <string name="library_error_server_with_code">서버에서 오류를 반환했습니다 (%1$d).</string>
-    <string name="library_error_storage">로컬 데이터를 읽을 수 없습니다.</string>
     <string name="library_error_unknown">이 라이브러리를 불러오는 중 문제가 발생했습니다.</string>
 </resources>

@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Мұны %1$s құрылғысында ойнату мүмкін болмады.</string>
 
     <string name="player_casting_to">%1$s құрылғысына таратылуда</string>
+
+    <string name="player_error_server">Сервер ойнатуды бастай алмады.</string>
+    <string name="player_error_server_with_code">Сервер ойнатуды бастай алмады (%1$d).</string>
+    <string name="player_error_unknown">Ойнатуды бастау кезінде бірдеңе дұрыс болмады.</string>
+    <string name="player_error_unsupported_source">Бұл элементті осы құрылғыда ойнату мүмкін емес.</string>
 </resources>

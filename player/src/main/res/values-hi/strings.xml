@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">वह %1$s पर नहीं चलाया जा सका।</string>
 
     <string name="player_casting_to">%1$s पर कास्ट हो रहा है</string>
+
+    <string name="player_error_server">सर्वर प्लेबैक शुरू नहीं कर सका।</string>
+    <string name="player_error_server_with_code">सर्वर प्लेबैक शुरू नहीं कर सका (%1$d)।</string>
+    <string name="player_error_unknown">प्लेबैक शुरू करने में कुछ गड़बड़ हुई।</string>
+    <string name="player_error_unsupported_source">यह आइटम इस डिवाइस पर नहीं चलाया जा सकता।</string>
 </resources>

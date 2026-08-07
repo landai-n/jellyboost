@@ -81,4 +81,12 @@
         <item quantity="one">%1$d vienums jau ir šajā ierīcē</item>
         <item quantity="other">%1$d vienumi jau ir šajā ierīcē</item>
     </plurals>
+
+    <string name="error_network">Nevar sasniegt jūsu serveri. Pārbaudiet savienojumu un mēģiniet vēlreiz.</string>
+    <string name="error_unauthorized">Jūsu sesija ir beigusies. Piesakieties vēlreiz, lai turpinātu.</string>
+    <string name="error_not_found_item">Šī vienuma serverī vairs nav.</string>
+    <string name="error_not_found_library">Šīs bibliotēkas serverī vairs nav.</string>
+    <string name="error_server">Serveris atgrieza kļūdu.</string>
+    <string name="error_server_with_code">Serveris atgrieza kļūdu (%1$d).</string>
+    <string name="error_storage">Neizdevās nolasīt lokālos datus.</string>
 </resources>

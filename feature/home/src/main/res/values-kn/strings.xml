@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dನಿ ಬಾಕಿ</string>
     <string name="home_quick_access_offline">ಆಫ್‌ಲೈನ್</string>
+
+    <string name="home_error_unknown">ಮುಖಪುಟವನ್ನು ಲೋಡ್ ಮಾಡುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
 </resources>

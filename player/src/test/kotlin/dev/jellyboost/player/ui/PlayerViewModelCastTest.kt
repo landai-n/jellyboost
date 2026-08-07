@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.cast.CastConnection
 import dev.jellyboost.player.cast.CastMetadata
@@ -403,7 +404,7 @@ internal class PlayerViewModelCastTest : PlayerViewModelFixture() {
             // Every rung of the ladder diagnoses *this device's* decoders, and the decoder is three
             // metres away in a television (decision 8).
             requests.shouldBeEmpty()
-            model.uiState.value.errorMessage shouldBe "boom"
+            model.uiState.value.errorMessage shouldBe UiText.Raw("boom")
             model.uiState.value.userMessage shouldBe PlayerMessage.CastPlaybackFailed
         }
 

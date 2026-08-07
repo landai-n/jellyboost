@@ -121,4 +121,9 @@
     <string name="player_message_cast_left_syncplay">Grup SyncPlay părăsit pentru a difuza pe %1$s.</string>
     <string name="player_message_cast_failed">Nu s-a putut reda pe %1$s.</string>
     <string name="player_casting_to">Se difuzează pe %1$s</string>
+
+    <string name="player_error_server">Serverul nu a putut porni redarea.</string>
+    <string name="player_error_server_with_code">Serverul nu a putut porni redarea (%1$d).</string>
+    <string name="player_error_unknown">Ceva nu a mers bine la pornirea redării.</string>
+    <string name="player_error_unsupported_source">Acest element nu poate fi redat pe acest dispozitiv.</string>
 </resources>

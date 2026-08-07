@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
     <string name="library_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
 
-    <string name="library_error_network">ನಿಮ್ಮ ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
-    <string name="library_error_unauthorized">ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ಮುಂದುವರಿಸಲು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
-    <string name="library_error_not_found">ಆ ಲೈಬ್ರರಿ ಇನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿಲ್ಲ.</string>
-    <string name="library_error_server">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು.</string>
-    <string name="library_error_server_with_code">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು (%1$d).</string>
-    <string name="library_error_storage">ಸ್ಥಳೀಯ ಡೇಟಾ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
     <string name="library_error_unknown">ಈ ಲೈಬ್ರರಿಯನ್ನು ಲೋಡ್ ಮಾಡುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
 </resources>

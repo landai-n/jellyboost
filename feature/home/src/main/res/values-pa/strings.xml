@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dਮਿੰ ਬਾਕੀ</string>
     <string name="home_quick_access_offline">ਆਫ਼ਲਾਈਨ</string>
+
+    <string name="home_error_unknown">ਹੋਮ ਸਕ੍ਰੀਨ ਲੋਡ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
 </resources>

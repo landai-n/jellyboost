@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dমি বাকি</string>
     <string name="home_quick_access_offline">অফলাইন</string>
+
+    <string name="home_error_unknown">হোম স্ক্রিন লোড করতে কিছু ভুল হয়েছে।</string>
 </resources>

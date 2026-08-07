@@ -129,4 +129,9 @@
     <string name="player_message_cast_failed">冇辦法喺 %1$s 度播嗰個。</string>
 
     <string name="player_casting_to">投放緊去 %1$s</string>
+
+    <string name="player_error_server">伺服器開唔到播放。</string>
+    <string name="player_error_server_with_code">伺服器開唔到播放 (%1$d)。</string>
+    <string name="player_error_unknown">開始播放嗰陣出咗問題。</string>
+    <string name="player_error_unsupported_source">呢個項目喺呢部裝置度播唔到。</string>
 </resources>

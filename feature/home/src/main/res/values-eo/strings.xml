@@ -16,4 +16,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmin restas</string>
     <string name="home_quick_access_offline">Eksterrete</string>
+
+    <string name="home_error_unknown">Io misfunkciis dum ŝargado de la hejma ekrano.</string>
 </resources>

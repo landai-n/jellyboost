@@ -72,4 +72,12 @@
         <item quantity="one">%1$d item is reeds op hierdie toestel</item>
         <item quantity="other">%1$d items is reeds op hierdie toestel</item>
     </plurals>
+
+    <string name="error_network">Kan nie jou bediener bereik nie. Gaan jou verbinding na en probeer weer.</string>
+    <string name="error_unauthorized">Jou sessie het verval. Meld weer aan om voort te gaan.</string>
+    <string name="error_not_found_item">Daardie item is nie meer op die bediener nie.</string>
+    <string name="error_not_found_library">Daardie biblioteek is nie meer op die bediener nie.</string>
+    <string name="error_server">Die bediener het \'n fout teruggestuur.</string>
+    <string name="error_server_with_code">Die bediener het \'n fout teruggestuur (%1$d).</string>
+    <string name="error_storage">Kon nie plaaslike data lees nie.</string>
 </resources>

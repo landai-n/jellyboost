@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">Dëst hëlt en vun dësem Apparat ewech. Du kanns en zu all Moment nach eng Kéier eroflueden.</string>
     <string name="detail_delete_download_dialog_confirm">Läschen</string>
     <string name="detail_delete_download_dialog_cancel">Ofbriechen</string>
+
+    <string name="detail_error_unknown">Beim Lueden vun dësem Element ass eppes schif gelaf.</string>
 </resources>

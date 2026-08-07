@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">فلٹرز صاف کریں</string>
     <string name="library_retry">دوبارہ کوشش کریں</string>
 
-    <string name="library_error_network">آپ کے سرور تک رسائی ممکن نہیں۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔</string>
-    <string name="library_error_unauthorized">آپ کا سیشن ختم ہوگیا۔ جاری رکھنے کے لیے دوبارہ سائن ان کریں۔</string>
-    <string name="library_error_not_found">وہ لائبریری اب سرور پر موجود نہیں ہے۔</string>
-    <string name="library_error_server">سرور نے ایک خرابی واپس بھیجی۔</string>
-    <string name="library_error_server_with_code">سرور نے ایک خرابی (%1$d) واپس بھیجی۔</string>
-    <string name="library_error_storage">مقامی ڈیٹا پڑھنا ممکن نہیں تھا۔</string>
     <string name="library_error_unknown">اس لائبریری کو لوڈ کرتے وقت کچھ غلط ہو گیا۔</string>
 </resources>

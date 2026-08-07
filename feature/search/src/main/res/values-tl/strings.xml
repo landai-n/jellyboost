@@ -11,11 +11,5 @@
     </plurals>
     <string name="search_prompt">Mag-type para maghanap sa mga aklatan mo.</string>
     <string name="search_no_results">Walang tumugma sa “%1$s”.</string>
-    <string name="search_error_network">Hindi ma-reach ang server mo. Suriin ang koneksyon mo at subukan ulit.</string>
-    <string name="search_error_unauthorized">Nag-expire na ang session mo. Mag-sign in ulit para magpatuloy.</string>
-    <string name="search_error_not_found">Wala na sa server ang item na iyon.</string>
-    <string name="search_error_server">Nagbalik ang server ng error.</string>
-    <string name="search_error_server_with_code">Nagbalik ang server ng error (%1$d).</string>
-    <string name="search_error_storage">Hindi mabasa ang lokal na data.</string>
     <string name="search_error_unknown">May nangyaring mali habang naghahanap.</string>
 </resources>

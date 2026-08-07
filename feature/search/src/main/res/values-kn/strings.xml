@@ -14,11 +14,5 @@
     <string name="search_prompt">ನಿಮ್ಮ ಲೈಬ್ರರಿಗಳನ್ನು ಹುಡುಕಲು ಟೈಪ್ ಮಾಡಿ.</string>
     <string name="search_no_results">“%1$s” ಗೆ ಯಾವುದೂ ಹೊಂದಿಕೆಯಾಗಲಿಲ್ಲ.</string>
 
-    <string name="search_error_network">ನಿಮ್ಮ ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
-    <string name="search_error_unauthorized">ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ಮುಂದುವರಿಸಲು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
-    <string name="search_error_not_found">ಆ ಐಟಂ ಇನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿಲ್ಲ.</string>
-    <string name="search_error_server">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು.</string>
-    <string name="search_error_server_with_code">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು (%1$d).</string>
-    <string name="search_error_storage">ಸ್ಥಳೀಯ ಡೇಟಾ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
     <string name="search_error_unknown">ಹುಡುಕುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
 </resources>

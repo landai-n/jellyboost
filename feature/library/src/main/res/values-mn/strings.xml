@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Шүүлтүүрийг цэвэрлэх</string>
     <string name="library_retry">Дахин оролдох</string>
 
-    <string name="library_error_network">Серверт холбогдож чадсангүй. Холболтоо шалгаад дахин оролдоно уу.</string>
-    <string name="library_error_unauthorized">Таны сесс дууссан байна. Үргэлжлүүлэхийн тулд дахин нэвтэрнэ үү.</string>
-    <string name="library_error_not_found">Тухайн сан серверт байхгүй боллоо.</string>
-    <string name="library_error_server">Сервер алдаа буцаалаа.</string>
-    <string name="library_error_server_with_code">Сервер алдаа буцаалаа (%1$d).</string>
-    <string name="library_error_storage">Локал өгөгдлийг уншиж чадсангүй.</string>
     <string name="library_error_unknown">Энэ санг ачаалахад алдаа гарлаа.</string>
 </resources>

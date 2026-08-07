@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dمنٹ باقی</string>
     <string name="home_quick_access_offline">آف لائن</string>
+
+    <string name="home_error_unknown">ہوم اسکرین لوڈ کرتے وقت کچھ غلط ہو گیا۔</string>
 </resources>

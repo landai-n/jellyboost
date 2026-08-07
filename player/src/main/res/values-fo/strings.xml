@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Kundi ikki spæla hetta á %1$s.</string>
 
     <string name="player_casting_to">Sendir til %1$s</string>
+
+    <string name="player_error_server">Ambætarin kundi ikki byrja avspælingina.</string>
+    <string name="player_error_server_with_code">Ambætarin kundi ikki byrja avspælingina (%1$d).</string>
+    <string name="player_error_unknown">Naka fór skeivt, tá avspælingin skuldi byrja.</string>
+    <string name="player_error_unsupported_source">Hesin luturin kann ikki spælast á hesum tólinum.</string>
 </resources>

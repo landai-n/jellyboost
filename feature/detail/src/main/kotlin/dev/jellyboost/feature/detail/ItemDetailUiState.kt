@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.common.selection.BatchReport
+import dev.jellyboost.core.ui.text.UiText
 
 /**
  * Everything the item detail screen draws.
@@ -48,7 +49,7 @@ data class ItemDetailUiState(
      */
     val downloadedBytes: Long? = null,
     /** Set only when the item itself could not be loaded — a related row failing is silent. */
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     /** A one-shot message for the snackbar; cleared by `ItemDetailViewModel.consumeMessage`. */
     val userMessage: UserMessage? = null,
     /**

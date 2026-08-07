@@ -63,4 +63,12 @@
     <plurals name="selection_result_download_all_skipped">
         <item quantity="other">%1$d 項已在此裝置上</item>
     </plurals>
+
+    <string name="error_network">無法連線到你的伺服器。請檢查網路連線後再試一次。</string>
+    <string name="error_unauthorized">你的工作階段已過期。請重新登入以繼續。</string>
+    <string name="error_not_found_item">這個項目已不在伺服器上。</string>
+    <string name="error_not_found_library">這個媒體庫已不在伺服器上。</string>
+    <string name="error_server">伺服器回應了錯誤。</string>
+    <string name="error_server_with_code">伺服器回應了錯誤 (%1$d)。</string>
+    <string name="error_storage">無法讀取本機資料。</string>
 </resources>

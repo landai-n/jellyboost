@@ -108,4 +108,12 @@
         <item quantity="many">يوجد %1$d عنصرًا بالفعل على هذا الجهاز</item>
         <item quantity="other">يوجد %1$d عنصر بالفعل على هذا الجهاز</item>
     </plurals>
+
+    <string name="error_network">تعذّر الوصول إلى خادمك. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="error_unauthorized">انتهت صلاحية جلستك. سجّل الدخول مرة أخرى للمتابعة.</string>
+    <string name="error_not_found_item">هذا العنصر لم يعد على الخادم.</string>
+    <string name="error_not_found_library">هذه المكتبة لم تعد على الخادم.</string>
+    <string name="error_server">أعاد الخادم خطأ.</string>
+    <string name="error_server_with_code">أعاد الخادم خطأ (%1$d).</string>
+    <string name="error_storage">تعذّرت قراءة البيانات المحلية.</string>
 </resources>

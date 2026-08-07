@@ -17,4 +17,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dmín. eftir</string>
     <string name="home_quick_access_offline">Ofline</string>
+
+    <string name="home_error_unknown">Naka fór skeivt, tá heimaskíggin varð heintur.</string>
 </resources>

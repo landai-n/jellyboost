@@ -141,4 +141,9 @@
     <string name="player_message_cast_failed">לא ניתן היה להפעיל את זה ב-%1$s.</string>
 
     <string name="player_casting_to">מעביר אל %1$s</string>
+
+    <string name="player_error_server">השרת לא הצליח להתחיל את ההפעלה.</string>
+    <string name="player_error_server_with_code">השרת לא הצליח להתחיל את ההפעלה (%1$d).</string>
+    <string name="player_error_unknown">משהו השתבש בהתחלת ההפעלה.</string>
+    <string name="player_error_unsupported_source">לא ניתן להפעיל את הפריט הזה במכשיר הזה.</string>
 </resources>

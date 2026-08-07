@@ -195,4 +195,16 @@
       receiver has the film. Takes the same unnamed-device fallback as the messages above.
     -->
     <string name="player_casting_to">Casting to %1$s</string>
+
+    <!--
+      The player's overrides on the shared failure copy (`AppError.toUiText`). A server that
+      answered but would not open a stream is a different sentence from a server that would not
+      answer a browse request, and the player says so; the rest of the taxonomy comes from
+      `:core:ui`. `player_error_unsupported_source` is the local verdict — nothing was asked of the
+      server at all. All four were Kotlin literals until audit H8.
+    -->
+    <string name="player_error_server">The server could not start playback.</string>
+    <string name="player_error_server_with_code">The server could not start playback (%1$d).</string>
+    <string name="player_error_unknown">Something went wrong starting playback.</string>
+    <string name="player_error_unsupported_source">This item cannot be played on this device.</string>
 </resources>

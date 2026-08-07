@@ -69,4 +69,6 @@
     <string name="detail_delete_download_dialog_message">這會從此裝置移除該項目。你可以隨時重新下載。</string>
     <string name="detail_delete_download_dialog_confirm">刪除</string>
     <string name="detail_delete_download_dialog_cancel">取消</string>
+
+    <string name="detail_error_unknown">載入這個項目時發生問題。</string>
 </resources>

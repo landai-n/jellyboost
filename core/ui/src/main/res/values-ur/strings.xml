@@ -72,4 +72,12 @@
         <item quantity="one">%1$d آئٹم پہلے سے اس ڈیوائس پر موجود ہے</item>
         <item quantity="other">%1$d آئٹمز پہلے سے اس ڈیوائس پر موجود ہیں</item>
     </plurals>
+
+    <string name="error_network">آپ کے سرور تک رسائی ممکن نہیں۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="error_unauthorized">آپ کا سیشن ختم ہوگیا۔ جاری رکھنے کے لیے دوبارہ سائن ان کریں۔</string>
+    <string name="error_not_found_item">وہ آئٹم اب سرور پر موجود نہیں ہے۔</string>
+    <string name="error_not_found_library">وہ لائبریری اب سرور پر موجود نہیں ہے۔</string>
+    <string name="error_server">سرور نے ایک خرابی واپس بھیجی۔</string>
+    <string name="error_server_with_code">سرور نے ایک خرابی (%1$d) واپس بھیجی۔</string>
+    <string name="error_storage">مقامی ڈیٹا پڑھنا ممکن نہیں تھا۔</string>
 </resources>

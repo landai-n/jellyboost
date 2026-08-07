@@ -16,11 +16,5 @@
     <string name="search_prompt">Почніть вводити текст для пошуку у ваших бібліотеках.</string>
     <string name="search_no_results">Немає збігів для «%1$s».</string>
 
-    <string name="search_error_network">Не вдалося з’єднатися із сервером. Перевірте підключення і спробуйте ще раз.</string>
-    <string name="search_error_unauthorized">Термін дії сесії минув. Увійдіть знову, щоб продовжити.</string>
-    <string name="search_error_not_found">Цього елемента більше немає на сервері.</string>
-    <string name="search_error_server">Сервер повернув помилку.</string>
-    <string name="search_error_server_with_code">Сервер повернув помилку (%1$d).</string>
-    <string name="search_error_storage">Не вдалося прочитати локальні дані.</string>
     <string name="search_error_unknown">Під час пошуку сталася помилка.</string>
 </resources>

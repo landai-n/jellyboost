@@ -72,4 +72,12 @@
         <item quantity="one">%1$d ставка веќе е на овој уред</item>
         <item quantity="other">%1$d ставки веќе се на овој уред</item>
     </plurals>
+
+    <string name="error_network">Серверот не е достапен. Проверете ја врската и обидете се повторно.</string>
+    <string name="error_unauthorized">Вашата сесија истече. Најавете се повторно за да продолжите.</string>
+    <string name="error_not_found_item">Таа ставка повеќе не е на серверот.</string>
+    <string name="error_not_found_library">Таа библиотека повеќе не е на серверот.</string>
+    <string name="error_server">Серверот врати грешка.</string>
+    <string name="error_server_with_code">Серверот врати грешка (%1$d).</string>
+    <string name="error_storage">Не можеа да се прочитаат локалните податоци.</string>
 </resources>

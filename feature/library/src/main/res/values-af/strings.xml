@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Maak filters skoon</string>
     <string name="library_retry">Probeer weer</string>
 
-    <string name="library_error_network">Kan nie jou bediener bereik nie. Gaan jou verbinding na en probeer weer.</string>
-    <string name="library_error_unauthorized">Jou sessie het verval. Meld weer aan om voort te gaan.</string>
-    <string name="library_error_not_found">Daardie biblioteek is nie meer op die bediener nie.</string>
-    <string name="library_error_server">Die bediener het \'n fout teruggestuur.</string>
-    <string name="library_error_server_with_code">Die bediener het \'n fout teruggestuur (%1$d).</string>
-    <string name="library_error_storage">Kon nie plaaslike data lees nie.</string>
     <string name="library_error_unknown">Iets het verkeerd geloop met die laai van hierdie biblioteek.</string>
 </resources>

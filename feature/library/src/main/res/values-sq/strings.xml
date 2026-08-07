@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Pastro filtrat</string>
     <string name="library_retry">Provo përsëri</string>
 
-    <string name="library_error_network">Serveri nuk mund të arrihet. Kontrollo lidhjen dhe provo përsëri.</string>
-    <string name="library_error_unauthorized">Sesioni yt skadoi. Identifikohu përsëri për të vazhduar.</string>
-    <string name="library_error_not_found">Ajo bibliotekë nuk është më në server.</string>
-    <string name="library_error_server">Serveri ktheu një gabim.</string>
-    <string name="library_error_server_with_code">Serveri ktheu një gabim (%1$d).</string>
-    <string name="library_error_storage">Të dhënat lokale nuk u lexuan dot.</string>
     <string name="library_error_unknown">Diçka shkoi keq gjatë ngarkimit të kësaj biblioteke.</string>
 </resources>

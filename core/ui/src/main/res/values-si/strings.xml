@@ -66,4 +66,12 @@
         <item quantity="one">%1$d අයිතමය දැනටමත් මෙම උපාංගයේ ඇත</item>
         <item quantity="other">%1$d අයිතම දැනටමත් මෙම උපාංගයේ ඇත</item>
     </plurals>
+
+    <string name="error_network">ඔබගේ සේවාදායකයට ළඟා විය නොහැක. ඔබගේ සම්බන්ධතාවය පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
+    <string name="error_unauthorized">ඔබගේ සැසිය කල් ඉකුත් විය. දිගටම කරගෙන යාමට නැවත පිවිසෙන්න.</string>
+    <string name="error_not_found_item">එම අයිතමය තවදුරටත් සේවාදායකයේ නොමැත.</string>
+    <string name="error_not_found_library">එම පුස්තකාලය තවදුරටත් සේවාදායකයේ නොමැත.</string>
+    <string name="error_server">සේවාදායකය දෝෂයක් ලබා දුන්නේය.</string>
+    <string name="error_server_with_code">සේවාදායකය දෝෂයක් (%1$d) ලබා දුන්නේය.</string>
+    <string name="error_storage">දේශීය දත්ත කියවිය නොහැකි විය.</string>
 </resources>

@@ -19,4 +19,6 @@
     </plurals>
     <string name="home_time_left_short">%1$dмін засталося</string>
     <string name="home_quick_access_offline">Аўтаномна</string>
+
+    <string name="home_error_unknown">Пры загрузцы галоўнага экрана нешта пайшло не так.</string>
 </resources>

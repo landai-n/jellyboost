@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Ачысціць фільтры</string>
     <string name="library_retry">Паўтарыць</string>
 
-    <string name="library_error_network">Не ўдаецца звязацца з вашым серверам. Праверце злучэнне і паспрабуйце зноў.</string>
-    <string name="library_error_unauthorized">Тэрмін дзеяння сесіі скончыўся. Увайдзіце зноў, каб працягнуць.</string>
-    <string name="library_error_not_found">Гэтай бібліятэкі больш няма на серверы.</string>
-    <string name="library_error_server">Сервер вярнуў памылку.</string>
-    <string name="library_error_server_with_code">Сервер вярнуў памылку (%1$d).</string>
-    <string name="library_error_storage">Не ўдалося прачытаць лакальныя дадзеныя.</string>
     <string name="library_error_unknown">Пры загрузцы гэтай бібліятэкі нешта пайшло не так.</string>
 </resources>

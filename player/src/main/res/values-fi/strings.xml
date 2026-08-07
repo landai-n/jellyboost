@@ -134,4 +134,9 @@
     <string name="player_message_cast_failed">Toisto laitteella %1$s epäonnistui.</string>
 
     <string name="player_casting_to">Striimataan laitteelle %1$s</string>
+
+    <string name="player_error_server">Palvelin ei voinut aloittaa toistoa.</string>
+    <string name="player_error_server_with_code">Palvelin ei voinut aloittaa toistoa (%1$d).</string>
+    <string name="player_error_unknown">Jokin meni pieleen toistoa aloitettaessa.</string>
+    <string name="player_error_unsupported_source">Tätä kohdetta ei voi toistaa tällä laitteella.</string>
 </resources>

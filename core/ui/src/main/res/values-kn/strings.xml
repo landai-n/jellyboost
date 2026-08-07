@@ -72,4 +72,12 @@
         <item quantity="one">%1$d ಐಟಂ ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿದೆ</item>
         <item quantity="other">%1$d ಐಟಂಗಳು ಈಗಾಗಲೇ ಈ ಸಾಧನದಲ್ಲಿವೆ</item>
     </plurals>
+
+    <string name="error_network">ನಿಮ್ಮ ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ. ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.</string>
+    <string name="error_unauthorized">ನಿಮ್ಮ ಸೆಷನ್ ಅವಧಿ ಮುಗಿದಿದೆ. ಮುಂದುವರಿಸಲು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
+    <string name="error_not_found_item">ಆ ಐಟಂ ಇನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿಲ್ಲ.</string>
+    <string name="error_not_found_library">ಆ ಲೈಬ್ರರಿ ಇನ್ನು ಸರ್ವರ್‌ನಲ್ಲಿಲ್ಲ.</string>
+    <string name="error_server">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು.</string>
+    <string name="error_server_with_code">ಸರ್ವರ್ ದೋಷವನ್ನು ಹಿಂತಿರುಗಿಸಿತು (%1$d).</string>
+    <string name="error_storage">ಸ್ಥಳೀಯ ಡೇಟಾ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
 </resources>

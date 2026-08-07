@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">To usunie je z tego urządzenia. Możesz pobrać je ponownie w dowolnym momencie.</string>
     <string name="detail_delete_download_dialog_confirm">Usuń</string>
     <string name="detail_delete_download_dialog_cancel">Anuluj</string>
+
+    <string name="detail_error_unknown">Coś poszło nie tak podczas wczytywania tego elementu.</string>
 </resources>

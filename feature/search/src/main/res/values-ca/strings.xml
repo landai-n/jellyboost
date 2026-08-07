@@ -12,11 +12,5 @@
     </plurals>
     <string name="search_prompt">Escriu per cercar a les teves biblioteques.</string>
     <string name="search_no_results">Res coincideix amb “%1$s”.</string>
-    <string name="search_error_network">No es pot contactar amb el teu servidor. Comprova la connexió i torna-ho a provar.</string>
-    <string name="search_error_unauthorized">La teva sessió ha caducat. Inicia la sessió de nou per continuar.</string>
-    <string name="search_error_not_found">Aquest element ja no és al servidor.</string>
-    <string name="search_error_server">El servidor ha retornat un error.</string>
-    <string name="search_error_server_with_code">El servidor ha retornat un error (%1$d).</string>
-    <string name="search_error_storage">No s\'han pogut llegir les dades locals.</string>
     <string name="search_error_unknown">Alguna cosa ha fallat en cercar.</string>
 </resources>

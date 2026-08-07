@@ -72,4 +72,12 @@
         <item quantity="one">%1$d artikull tashmë është në këtë pajisje</item>
         <item quantity="other">%1$d artikuj tashmë janë në këtë pajisje</item>
     </plurals>
+
+    <string name="error_network">Serveri nuk mund të arrihet. Kontrollo lidhjen dhe provo përsëri.</string>
+    <string name="error_unauthorized">Sesioni yt skadoi. Identifikohu përsëri për të vazhduar.</string>
+    <string name="error_not_found_item">Ai artikull nuk është më në server.</string>
+    <string name="error_not_found_library">Ajo bibliotekë nuk është më në server.</string>
+    <string name="error_server">Serveri ktheu një gabim.</string>
+    <string name="error_server_with_code">Serveri ktheu një gabim (%1$d).</string>
+    <string name="error_storage">Të dhënat lokale nuk u lexuan dot.</string>
 </resources>

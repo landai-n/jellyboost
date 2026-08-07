@@ -144,4 +144,9 @@
     <string name="player_message_cast_failed">Не ўдалося прайграць гэта на %1$s.</string>
 
     <string name="player_casting_to">Трансляцыя на %1$s</string>
+
+    <string name="player_error_server">Сервер не змог пачаць прайграванне.</string>
+    <string name="player_error_server_with_code">Сервер не змог пачаць прайграванне (%1$d).</string>
+    <string name="player_error_unknown">Пры запуску прайгравання нешта пайшло не так.</string>
+    <string name="player_error_unsupported_source">Гэты элемент немагчыма прайграць на гэтай прыладзе.</string>
 </resources>

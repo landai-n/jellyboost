@@ -14,11 +14,5 @@
     <string name="search_prompt">Пишете за да ги пребарате вашите библиотеки.</string>
     <string name="search_no_results">Нема совпаѓања за „%1$s”.</string>
 
-    <string name="search_error_network">Серверот не е достапен. Проверете ја врската и обидете се повторно.</string>
-    <string name="search_error_unauthorized">Вашата сесија истече. Најавете се повторно за да продолжите.</string>
-    <string name="search_error_not_found">Таа ставка повеќе не е на серверот.</string>
-    <string name="search_error_server">Серверот врати грешка.</string>
-    <string name="search_error_server_with_code">Серверот врати грешка (%1$d).</string>
-    <string name="search_error_storage">Не можеа да се прочитаат локалните податоци.</string>
     <string name="search_error_unknown">Нешто тргна наопаку при пребарувањето.</string>
 </resources>

@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Сүзгілерді тазалау</string>
     <string name="library_retry">Қайталау</string>
 
-    <string name="library_error_network">Серверіңізге қосыла алмады. Қосылымыңызды тексеріп, қайта көріңіз.</string>
-    <string name="library_error_unauthorized">Сеансыңыздың мерзімі өтті. Жалғастыру үшін қайта кіріңіз.</string>
-    <string name="library_error_not_found">Бұл кітапхана серверде енді жоқ.</string>
-    <string name="library_error_server">Сервер қате қайтарды.</string>
-    <string name="library_error_server_with_code">Сервер қате қайтарды (%1$d).</string>
-    <string name="library_error_storage">Жергілікті деректерді оқу мүмкін болмады.</string>
     <string name="library_error_unknown">Бұл кітапхананы жүктеу кезінде бірдеңе дұрыс болмады.</string>
 </resources>

@@ -72,4 +72,12 @@
         <item quantity="one">%1$d உருப்படி ஏற்கனவே இந்தச் சாதனத்தில் உள்ளது</item>
         <item quantity="other">%1$d உருப்படிகள் ஏற்கனவே இந்தச் சாதனத்தில் உள்ளன</item>
     </plurals>
+
+    <string name="error_network">உங்கள் சேவையகத்தை அடைய முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</string>
+    <string name="error_unauthorized">உங்கள் அமர்வு காலாவதியானது. தொடர மீண்டும் உள்நுழையவும்.</string>
+    <string name="error_not_found_item">அந்த உருப்படி இனி சேவையகத்தில் இல்லை.</string>
+    <string name="error_not_found_library">அந்த நூலகம் இனி சேவையகத்தில் இல்லை.</string>
+    <string name="error_server">சேவையகம் ஒரு பிழையை அளித்தது.</string>
+    <string name="error_server_with_code">சேவையகம் ஒரு பிழையை அளித்தது (%1$d).</string>
+    <string name="error_storage">உள்ளூர் தரவைப் படிக்க முடியவில்லை.</string>
 </resources>

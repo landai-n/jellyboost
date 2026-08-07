@@ -78,4 +78,6 @@
     <string name="detail_delete_download_dialog_message">Гэта выдаліць яе з гэтай прылады. Вы можаце спампаваць яе зноў у любы час.</string>
     <string name="detail_delete_download_dialog_confirm">Выдаліць</string>
     <string name="detail_delete_download_dialog_cancel">Скасаваць</string>
+
+    <string name="detail_error_unknown">Пры загрузцы гэтага элемента нешта пайшло не так.</string>
 </resources>

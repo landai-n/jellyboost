@@ -38,11 +38,5 @@
     <string name="library_empty_clear_filters">Strika filtir</string>
     <string name="library_retry">Royn aftur</string>
 
-    <string name="library_error_network">Fær ikki samband við ambætaran. Kanna sambandið og royn aftur.</string>
-    <string name="library_error_unauthorized">Tín seta er útrunnin. Innrita teg aftur fyri at halda áfram.</string>
-    <string name="library_error_not_found">Hetta savnið er ikki longur á ambætaranum.</string>
-    <string name="library_error_server">Ambætarin gav eina villu aftur.</string>
-    <string name="library_error_server_with_code">Ambætarin gav eina villu aftur (%1$d).</string>
-    <string name="library_error_storage">Kundi ikki lesa staðbundnu dátuna.</string>
     <string name="library_error_unknown">Naka fór skeivt, tá hetta savnið varð heint.</string>
 </resources>

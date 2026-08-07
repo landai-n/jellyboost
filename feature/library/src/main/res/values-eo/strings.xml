@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Neniu ero kongruas kun ĉi tiuj filtriloj.</string>
     <string name="library_empty_clear_filters">Forigi filtrilojn</string>
     <string name="library_retry">Reprovi</string>
-    <string name="library_error_network">Ne eblas atingi vian servilon. Kontrolu vian konekton kaj reprovu.</string>
-    <string name="library_error_unauthorized">Via seanco eksvalidiĝis. Ensalutu denove por daŭrigi.</string>
-    <string name="library_error_not_found">Tiu biblioteko ne plu estas sur la servilo.</string>
-    <string name="library_error_server">La servilo redonis eraron.</string>
-    <string name="library_error_server_with_code">La servilo redonis eraron (%1$d).</string>
-    <string name="library_error_storage">Ne eblis legi lokajn datumojn.</string>
     <string name="library_error_unknown">Io misfunkciis dum ŝargado de ĉi tiu biblioteko.</string>
 </resources>

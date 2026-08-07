@@ -72,4 +72,12 @@
         <item quantity="one">%1$d ਆਈਟਮ ਪਹਿਲਾਂ ਹੀ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹੈ</item>
         <item quantity="other">%1$d ਆਈਟਮਾਂ ਪਹਿਲਾਂ ਹੀ ਇਸ ਡਿਵਾਈਸ ਉੱਤੇ ਹਨ</item>
     </plurals>
+
+    <string name="error_network">ਤੁਹਾਡੇ ਸਰਵਰ ਤੱਕ ਪਹੁੰਚ ਨਹੀਂ ਹੋ ਸਕੀ। ਆਪਣਾ ਕਨੈਕਸ਼ਨ ਜਾਂਚੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
+    <string name="error_unauthorized">ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਮਿਆਦ ਪੁੱਗ ਗਿਆ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
+    <string name="error_not_found_item">ਉਹ ਆਈਟਮ ਹੁਣ ਸਰਵਰ ਉੱਤੇ ਨਹੀਂ ਹੈ।</string>
+    <string name="error_not_found_library">ਉਹ ਲਾਇਬ੍ਰੇਰੀ ਹੁਣ ਸਰਵਰ ਉੱਤੇ ਨਹੀਂ ਹੈ।</string>
+    <string name="error_server">ਸਰਵਰ ਨੇ ਗਲਤੀ ਦਿੱਤੀ।</string>
+    <string name="error_server_with_code">ਸਰਵਰ ਨੇ ਗਲਤੀ (%1$d) ਦਿੱਤੀ।</string>
+    <string name="error_storage">ਲੋਕਲ ਡਾਟਾ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
 </resources>

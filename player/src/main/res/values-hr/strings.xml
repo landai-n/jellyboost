@@ -139,4 +139,9 @@
     <string name="player_message_cast_failed">Nije moguće reproducirati na %1$s.</string>
 
     <string name="player_casting_to">Emitiranje na %1$s</string>
+
+    <string name="player_error_server">Poslužitelj nije mogao pokrenuti reprodukciju.</string>
+    <string name="player_error_server_with_code">Poslužitelj nije mogao pokrenuti reprodukciju (%1$d).</string>
+    <string name="player_error_unknown">Došlo je do pogreške prilikom pokretanja reprodukcije.</string>
+    <string name="player_error_unsupported_source">Ova se stavka ne može reproducirati na ovom uređaju.</string>
 </resources>

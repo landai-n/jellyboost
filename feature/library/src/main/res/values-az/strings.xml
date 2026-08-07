@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">Bu filtrlərə uyğun element yoxdur.</string>
     <string name="library_empty_clear_filters">Filtrləri təmizlə</string>
     <string name="library_retry">Yenidən cəhd et</string>
-    <string name="library_error_network">Serverinizə çatmaq mümkün deyil. Bağlantınızı yoxlayın və yenidən cəhd edin.</string>
-    <string name="library_error_unauthorized">Sessiyanızın müddəti bitib. Davam etmək üçün yenidən daxil olun.</string>
-    <string name="library_error_not_found">Bu kitabxana artıq serverdə yoxdur.</string>
-    <string name="library_error_server">Server xəta qaytardı.</string>
-    <string name="library_error_server_with_code">Server xəta qaytardı (%1$d).</string>
-    <string name="library_error_storage">Yerli data oxuna bilmədi.</string>
     <string name="library_error_unknown">Bu kitabxananın yüklənməsi zamanı xəta baş verdi.</string>
 </resources>

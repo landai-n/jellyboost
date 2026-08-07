@@ -72,4 +72,12 @@
         <item quantity="one">%1$d item staat al op dit apparaat</item>
         <item quantity="other">%1$d items staan al op dit apparaat</item>
     </plurals>
+
+    <string name="error_network">Kan je server niet bereiken. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="error_unauthorized">Je sessie is verlopen. Meld je opnieuw aan om door te gaan.</string>
+    <string name="error_not_found_item">Dat item staat niet meer op de server.</string>
+    <string name="error_not_found_library">Die bibliotheek staat niet meer op de server.</string>
+    <string name="error_server">De server gaf een fout terug.</string>
+    <string name="error_server_with_code">De server gaf een fout terug (%1$d).</string>
+    <string name="error_storage">Kon lokale gegevens niet lezen.</string>
 </resources>

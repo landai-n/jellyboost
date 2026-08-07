@@ -33,11 +33,5 @@
     <string name="library_empty_filtered">এই ফিল্টারগুলোর সাথে কোনো আইটেম মেলে না।</string>
     <string name="library_empty_clear_filters">ফিল্টার সাফ করুন</string>
     <string name="library_retry">আবার চেষ্টা করুন</string>
-    <string name="library_error_network">আপনার সার্ভারে পৌঁছানো যাচ্ছে না। আপনার সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।</string>
-    <string name="library_error_unauthorized">আপনার সেশনের মেয়াদ শেষ হয়ে গেছে। চালিয়ে যেতে আবার সাইন ইন করুন।</string>
-    <string name="library_error_not_found">সেই লাইব্রেরি আর সার্ভারে নেই।</string>
-    <string name="library_error_server">সার্ভার একটি ত্রুটি ফেরত দিয়েছে।</string>
-    <string name="library_error_server_with_code">সার্ভার একটি ত্রুটি ফেরত দিয়েছে (%1$d)।</string>
-    <string name="library_error_storage">স্থানীয় ডেটা পড়া যায়নি।</string>
     <string name="library_error_unknown">এই লাইব্রেরি লোড করতে কিছু ভুল হয়েছে।</string>
 </resources>

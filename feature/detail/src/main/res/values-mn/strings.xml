@@ -72,4 +72,6 @@
     <string name="detail_delete_download_dialog_message">Энэ нь тухайн зүйлийг төхөөрөмжөөс устгана. Та хүссэн үедээ дахин татаж болно.</string>
     <string name="detail_delete_download_dialog_confirm">Устгах</string>
     <string name="detail_delete_download_dialog_cancel">Цуцлах</string>
+
+    <string name="detail_error_unknown">Энэ зүйлийг ачаалахад алдаа гарлаа.</string>
 </resources>

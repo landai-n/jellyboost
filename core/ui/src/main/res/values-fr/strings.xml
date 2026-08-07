@@ -66,4 +66,12 @@
         <item quantity="one">%1$d élément est déjà sur cet appareil</item>
         <item quantity="other">%1$d éléments sont déjà sur cet appareil</item>
     </plurals>
+
+    <string name="error_network">Impossible de joindre votre serveur. Vérifiez votre connexion et réessayez.</string>
+    <string name="error_unauthorized">Votre session a expiré. Reconnectez-vous pour continuer.</string>
+    <string name="error_not_found_item">Cet élément n\'est plus sur le serveur.</string>
+    <string name="error_not_found_library">Cette bibliothèque n\'est plus sur le serveur.</string>
+    <string name="error_server">Le serveur a renvoyé une erreur.</string>
+    <string name="error_server_with_code">Le serveur a renvoyé une erreur (%1$d).</string>
+    <string name="error_storage">Impossible de lire les données locales.</string>
 </resources>

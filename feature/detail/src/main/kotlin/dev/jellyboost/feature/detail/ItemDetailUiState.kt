@@ -6,6 +6,8 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.common.selection.BatchReport
 import dev.jellyboost.core.ui.text.UiText
+import dev.jellyboost.data.downloads.withDownloadState
+import dev.jellyboost.data.downloads.withDownloadStates
 
 /**
  * Everything the item detail screen draws.
@@ -279,7 +281,9 @@ internal fun ItemDetailUiState.withUserData(
  *
  * `JellyfinItem.downloadState` is what `:core:ui`'s cards render their badge from, so patching the
  * items is what makes a season poster show a tick the moment its episodes finish downloading —
- * without the detail screen knowing anything about badges.
+ * without the detail screen knowing anything about badges. The per-item and per-list patching is
+ * `:data:downloads`' shared [withDownloadStates]; only [resolveDownloadState] below is this
+ * screen's own, because only this screen has a header button to answer for.
  */
 internal fun ItemDetailUiState.withDownloadStates(states: Map<String, DownloadState>): ItemDetailUiState =
     copy(
@@ -305,17 +309,6 @@ private fun ItemDetailUiState.resolveDownloadState(states: Map<String, DownloadS
         return aggregateDownloadState(episodes.map { states[it.id] ?: DownloadState.NotDownloaded })
     }
     return states[current.id] ?: DownloadState.NotDownloaded
-}
-
-private fun JellyfinItem.withDownloadState(states: Map<String, DownloadState>): JellyfinItem {
-    val next = states[id] ?: DownloadState.NotDownloaded
-    return if (next == downloadState) this else copy(downloadState = next)
-}
-
-/** Identity is preserved when nothing changed, so Compose can skip the whole row. */
-private fun List<JellyfinItem>.withDownloadStates(states: Map<String, DownloadState>): List<JellyfinItem> {
-    val patched = map { it.withDownloadState(states) }
-    return if (patched.indices.all { patched[it] === this[it] }) this else patched
 }
 
 private fun JellyfinItem.patch(

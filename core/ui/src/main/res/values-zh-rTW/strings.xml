@@ -71,4 +71,6 @@
     <string name="error_server">伺服器回應了錯誤。</string>
     <string name="error_server_with_code">伺服器回應了錯誤 (%1$d)。</string>
     <string name="error_storage">無法讀取本機資料。</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

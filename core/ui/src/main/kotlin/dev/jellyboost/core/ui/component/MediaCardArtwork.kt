@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.R
+import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
@@ -349,7 +350,7 @@ internal fun MediaCard(
         )
 
         if (showTitle) {
-            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
+            CardTitleBlock(title = item.displayTitle, subtitle = item.subtitleLine())
         }
     }
 }

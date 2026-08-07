@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -35,12 +34,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -80,13 +76,14 @@ import dev.jellyboost.core.ui.component.ActionPillChip
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.POSTER_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.PillChip
-import dev.jellyboost.core.ui.component.PillSnackbar
 import dev.jellyboost.core.ui.component.PosterCard
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.batchOutcomeText
+import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -130,15 +127,11 @@ fun LibraryGridScreen(
     val isSelecting by remember(selectionState) { derivedStateOf { selectionState.value.isActive } }
     val items = viewModel.items.collectAsLazyPagingItems()
     var sortMenuExpanded by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val message = state.userMessage?.let { batchOutcomeText(it.action, it.outcome) }
-
-    LaunchedEffect(message) {
-        if (message != null) {
-            snackbarHostState.showSnackbar(message)
-            viewModel.consumeMessage()
-        }
-    }
+    val snackbarHostState =
+        rememberOneShotSnackbar(
+            message = state.userMessage,
+            onShown = viewModel::consumeMessage,
+        ) { batchOutcomeText(it.action, it.outcome) }
 
     // Only intercepts while the mode is on, so the plain Back affordance and the system gesture
     // keep popping the destination exactly as before at every other moment.
@@ -149,11 +142,9 @@ fun LibraryGridScreen(
         // The screen draws under the system bars: the header carries the status-bar inset and the
         // grid's own contentPadding clears the navigation bar.
         contentWindowInsets = WindowInsets(0),
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState, modifier = Modifier.navigationBarsPadding()) { data ->
-                PillSnackbar(snackbarData = data)
-            }
-        },
+        // A pushed destination, so `LocalAppChromePadding` is zero and the shared host's policy
+        // resolves to the navigation-bar inset this screen used to apply by hand.
+        snackbarHost = { JellyboostSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         // One `BoxWithConstraints` for the whole screen — not per cell (see [ItemGrid]). It buys
         // the two places the layout differs on a wide window: the title's size, and whether sort is

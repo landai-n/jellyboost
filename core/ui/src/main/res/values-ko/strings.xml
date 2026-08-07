@@ -71,4 +71,6 @@
     <string name="error_server">서버에서 오류를 반환했습니다.</string>
     <string name="error_server_with_code">서버에서 오류를 반환했습니다 (%1$d).</string>
     <string name="error_storage">로컬 데이터를 읽을 수 없습니다.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

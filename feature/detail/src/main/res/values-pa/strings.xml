@@ -25,8 +25,6 @@
     <string name="detail_type_series">ਸੀਰੀਜ਼</string>
     <string name="detail_type_season">ਸੀਜ਼ਨ</string>
     <string name="detail_type_episode">ਐਪੀਸੋਡ</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">ਐਪੀਸੋਡ %1$d</string>
     <string name="detail_meta_rating">ਰੇਟਿੰਗ %1$s</string>
     <string name="detail_meta_rated">ਉਮਰ ਰੇਟਿੰਗ %1$s</string>

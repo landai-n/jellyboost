@@ -98,4 +98,6 @@
     <string name="error_server">Сервер вернул ошибку.</string>
     <string name="error_server_with_code">Сервер вернул ошибку (%1$d).</string>
     <string name="error_storage">Не удалось прочитать локальные данные.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

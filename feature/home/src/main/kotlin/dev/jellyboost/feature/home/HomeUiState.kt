@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.ui.text.UiText
+import dev.jellyboost.data.downloads.withDownloadStates
 import dev.jellyboost.data.homelayout.DEFAULT_HOME_SECTIONS
 
 /**
@@ -124,9 +125,8 @@ internal fun List<JellyfinItem>.mergeLocalUserData(known: Map<String, UserData>)
 /**
  * Stamps the app-wide download-state map onto every card the home screen holds (M7).
  *
- * `:core:ui`'s cards render their `DownloadBadge` from `JellyfinItem.downloadState`, so this one
- * function is the whole of "every item card shows a download badge" for this screen — the cards
- * themselves need no change.
+ * The per-list work — and the identity-preserving trick the rows depend on — is
+ * `:data:downloads`' shared [withDownloadStates]; this is only the map over *this* screen's shape.
  */
 internal fun HomeUiState.withDownloadStates(states: Map<String, DownloadState>): HomeUiState =
     copy(
@@ -138,13 +138,3 @@ internal fun HomeUiState.withDownloadStates(states: Map<String, DownloadState>):
                 if (patched === section.items) section else section.copy(items = patched)
             },
     )
-
-/** Identity is preserved when nothing changed, so Compose skips the untouched rows entirely. */
-private fun List<JellyfinItem>.withDownloadStates(states: Map<String, DownloadState>): List<JellyfinItem> {
-    val patched =
-        map { item ->
-            val next = states[item.id] ?: DownloadState.NotDownloaded
-            if (next == item.downloadState) item else item.copy(downloadState = next)
-        }
-    return if (patched.indices.all { patched[it] === this[it] }) this else patched
-}

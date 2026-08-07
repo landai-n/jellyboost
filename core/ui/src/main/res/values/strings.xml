@@ -120,4 +120,13 @@
     <string name="error_server">The server returned an error.</string>
     <string name="error_server_with_code">The server returned an error (%1$d).</string>
     <string name="error_storage">Couldn\'t read local data.</string>
+    <!--
+      The season/episode number, spelled once for the whole app: the detail header's Play button,
+      every card's top-left badge, the subtitle line under a card, and what a screen reader speaks
+      for all three. Two spellings used to exist — a hardcoded "S1:E4" on cards and this resource
+      on the header — so TalkBack said one thing while the screen drew the other (audit DUP-7).
+      A resource because the letters are initials of words that translate.
+    -->
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

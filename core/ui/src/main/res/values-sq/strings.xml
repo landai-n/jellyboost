@@ -80,4 +80,6 @@
     <string name="error_server">Serveri ktheu një gabim.</string>
     <string name="error_server_with_code">Serveri ktheu një gabim (%1$d).</string>
     <string name="error_storage">Të dhënat lokale nuk u lexuan dot.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -89,4 +89,6 @@
     <string name="error_server">Сервер је вратио грешку.</string>
     <string name="error_server_with_code">Сервер је вратио грешку (%1$d).</string>
     <string name="error_storage">Није могуће прочитати локалне податке.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

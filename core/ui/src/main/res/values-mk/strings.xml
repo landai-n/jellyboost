@@ -80,4 +80,6 @@
     <string name="error_server">Серверот врати грешка.</string>
     <string name="error_server_with_code">Серверот врати грешка (%1$d).</string>
     <string name="error_storage">Не можеа да се прочитаат локалните податоци.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -3,6 +3,7 @@ package dev.jellyboost.feature.search
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.data.downloads.withDownloadStates
 
 /**
  * Everything the search screen draws.
@@ -44,8 +45,8 @@ data class SearchUiState(
 /**
  * Stamps the app-wide download-state map onto every result card (M7).
  *
- * `:core:ui`'s cards render their `DownloadBadge` from `JellyfinItem.downloadState`, so this is all
- * search has to do to show which of its results are already on the device.
+ * The per-list work — and the identity preservation that lets an unaffected section skip
+ * recomposition — is `:data:downloads`' shared [withDownloadStates].
  */
 internal fun SearchUiState.withDownloadStates(states: Map<String, DownloadState>): SearchUiState =
     copy(
@@ -53,13 +54,3 @@ internal fun SearchUiState.withDownloadStates(states: Map<String, DownloadState>
         series = series.withDownloadStates(states),
         episodes = episodes.withDownloadStates(states),
     )
-
-/** Identity is preserved when nothing changed, so Compose skips the untouched sections. */
-private fun List<JellyfinItem>.withDownloadStates(states: Map<String, DownloadState>): List<JellyfinItem> {
-    val patched =
-        map { item ->
-            val next = states[item.id] ?: DownloadState.NotDownloaded
-            if (next == item.downloadState) item else item.copy(downloadState = next)
-        }
-    return if (patched.indices.all { patched[it] === this[it] }) this else patched
-}

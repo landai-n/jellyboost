@@ -74,4 +74,6 @@
     <string name="error_server">সার্ভার একটি ত্রুটি ফেরত দিয়েছে।</string>
     <string name="error_server_with_code">সার্ভার একটি ত্রুটি ফেরত দিয়েছে (%1$d)।</string>
     <string name="error_storage">স্থানীয় ডেটা পড়া যায়নি।</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

@@ -80,4 +80,6 @@
     <string name="error_server">ސަރވަރއިން ގޯހެއް ފޮނުވިއެވެ.</string>
     <string name="error_server_with_code">ސަރވަރއިން ގޯހެއް ފޮނުވިއެވެ (%1$d).</string>
     <string name="error_storage">ލޯކަލް ޑޭޓާ ކިޔޭގޮތެއް ނުވި.</string>
+    <string name="media_episode_label">S%1$d · E%2$d</string>
+    <string name="media_episode_label_short">E%1$d</string>
 </resources>

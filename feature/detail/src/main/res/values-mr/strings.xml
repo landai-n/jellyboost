@@ -25,8 +25,6 @@
     <string name="detail_type_series">मालिका</string>
     <string name="detail_type_season">सीझन</string>
     <string name="detail_type_episode">भाग</string>
-    <string name="detail_episode_label">S%1$d · E%2$d</string>
-    <string name="detail_episode_label_short">E%1$d</string>
     <string name="detail_episode_number">भाग %1$d</string>
     <string name="detail_meta_rating">रेटिंग %1$s</string>
     <string name="detail_meta_rated">वयोमर्यादा %1$s</string>

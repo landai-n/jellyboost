@@ -31,7 +31,6 @@ import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.tvShowsApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
 import org.jellyfin.sdk.api.client.extensions.userViewsApi
-import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
 import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.MediaType
@@ -414,13 +413,12 @@ internal class OnlineJellyfinRepository
             /**
              * The item kinds a library tile's count counts.
              *
-             * Top-level titles, whatever kind of library it is: a movie library answers with movies
-             * and a TV library with series, so one list serves both — which is exactly why
-             * `:feature:library`'s `LibraryUiState.GRID_ITEM_TYPES` is the same pair. Kept in step
-             * with it deliberately: the grid a tile opens must not report a different total than the
-             * tile did. (`:data` cannot depend on a feature module, hence the duplicate.)
+             * Projected from [ItemType.LIBRARY_TILE_TYPES] (DUP-11) via the same [toBaseItemKind]
+             * `:data` already maps query types through, rather than a second hand-written
+             * `BaseItemKind` pair: the grid a tile opens must not report a different total than the
+             * tile did, and `:data` cannot depend on `:feature:library` to share its list directly.
              */
-            val LIBRARY_COUNT_TYPES = listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
+            val LIBRARY_COUNT_TYPES = ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() }
 
             /** jellyfin-web's default "Days in Next Up" user setting. */
             const val NEXT_UP_WINDOW_DAYS = 365L

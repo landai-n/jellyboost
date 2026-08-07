@@ -20,4 +20,15 @@ enum class ItemType {
 
     /** `true` for the types that can actually be played back. */
     val isPlayable: Boolean get() = this == MOVIE || this == EPISODE
+
+    companion object {
+        /**
+         * The item kinds a library tile leads to, whatever kind of library it is: a movie library
+         * answers with movies and a TV library with series, so one list serves both (DUP-11).
+         *
+         * Shared by `:feature:library`'s grid query and `:data`'s tile-count query — they must
+         * agree, or a tile's count and the grid it opens disagree on what they are counting.
+         */
+        val LIBRARY_TILE_TYPES = listOf(MOVIE, SERIES)
+    }
 }

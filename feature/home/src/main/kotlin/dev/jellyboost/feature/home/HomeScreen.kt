@@ -50,10 +50,13 @@ import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
+import dev.jellyboost.core.ui.component.LIBRARY_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.LibraryCard
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.MediaRow
+import dev.jellyboost.core.ui.component.POSTER_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.PosterCard
+import dev.jellyboost.core.ui.component.THUMB_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.ThumbCard
 import dev.jellyboost.core.ui.component.libraryIcon
 import dev.jellyboost.core.ui.text.resolve
@@ -294,7 +297,7 @@ private fun LazyListScope.librariesRow(
             title = stringResource(R.string.home_section_my_media),
             items = state.libraries,
             key = LibraryView::id,
-            contentType = CARD_LIBRARY,
+            contentType = LIBRARY_CARD_CONTENT_TYPE,
         ) { library ->
             LibraryCard(
                 library = library,
@@ -411,7 +414,7 @@ private fun LazyListScope.resumeRow(
             title = stringResource(R.string.home_section_continue_watching),
             items = items,
             key = JellyfinItem::id,
-            contentType = CARD_THUMB,
+            contentType = THUMB_CARD_CONTENT_TYPE,
         ) { item ->
             ThumbCard(
                 item = item,
@@ -435,7 +438,7 @@ private fun LazyListScope.nextUpRow(
             title = stringResource(R.string.home_section_next_up),
             items = state.nextUp,
             key = JellyfinItem::id,
-            contentType = CARD_THUMB,
+            contentType = THUMB_CARD_CONTENT_TYPE,
         ) { item ->
             // No time chip: nothing in *Next up* has been started, so there is no time left to show.
             ThumbCard(
@@ -461,7 +464,7 @@ private fun LazyListScope.latestRows(
             title = stringResource(R.string.home_section_latest, section.library.name),
             items = section.items,
             key = JellyfinItem::id,
-            contentType = CARD_POSTER,
+            contentType = POSTER_CARD_CONTENT_TYPE,
             onSeeAll = { actions.onLibraryClick(section.library) },
         ) { item ->
             // Posters keep the overlays they already had (progress, watched); the star rating badge
@@ -606,14 +609,14 @@ private const val SECTION_RESUME = "section-resume"
 private const val SECTION_NEXT_UP = "section-next-up"
 
 // Content types: rows of the same shape are interchangeable nodes, whatever section they belong to.
+// The card types themselves (poster/thumb/library) come from `:core:ui`, beside the cards they
+// describe (DUP-15) — these row- and chip-level types don't name a core/ui component, so they stay
+// local.
 private const val ROW_HERO = "row-hero"
 private const val ROW_LIBRARIES = "row-libraries"
 private const val ROW_QUICK_ACCESS = "row-quick-access"
 private const val ROW_THUMBS = "row-thumbs"
 private const val ROW_POSTERS = "row-posters"
-private const val CARD_LIBRARY = "card-library"
-private const val CARD_THUMB = "card-thumb"
-private const val CARD_POSTER = "card-poster"
 private const val CHIP_QUICK_ACCESS = "chip-quick-access"
 private const val CHIP_OFFLINE = "chip-offline"
 

@@ -143,4 +143,13 @@ class QueryMapperTest {
         SortOrder.ASCENDING.toSdk() shouldBe SdkSortOrder.ASCENDING
         SortOrder.DESCENDING.toSdk() shouldBe SdkSortOrder.DESCENDING
     }
+
+    @Test
+    fun `the library-tile item types project onto movie and series (DUP-11)`() {
+        // OnlineJellyfinRepository.LIBRARY_COUNT_TYPES is this same projection of
+        // ItemType.LIBRARY_TILE_TYPES; pinning it here means a tile's count query and the grid it
+        // opens can never drift onto different BaseItemKind pairs.
+        ItemType.LIBRARY_TILE_TYPES.mapNotNull { it.toBaseItemKind() } shouldContainExactly
+            listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
+    }
 }

@@ -8,10 +8,7 @@ import org.jellyfin.sdk.api.client.exception.SecureConnectionException
 import org.jellyfin.sdk.api.client.exception.TimeoutException
 import timber.log.Timber
 import java.io.IOException
-
-private const val HTTP_UNAUTHORIZED = 401
-private const val HTTP_FORBIDDEN = 403
-private const val HTTP_NOT_FOUND = 404
+import java.net.HttpURLConnection
 
 /**
  * Runs an SDK call and folds every failure into the domain [AppError] taxonomy.
@@ -44,8 +41,8 @@ fun Throwable.toAppError(): AppError =
     when (this) {
         is InvalidStatusException ->
             when (status) {
-                HTTP_UNAUTHORIZED, HTTP_FORBIDDEN -> AppError.Unauthorized(this)
-                HTTP_NOT_FOUND -> AppError.NotFound(id = "")
+                HttpURLConnection.HTTP_UNAUTHORIZED, HttpURLConnection.HTTP_FORBIDDEN -> AppError.Unauthorized(this)
+                HttpURLConnection.HTTP_NOT_FOUND -> AppError.NotFound(id = "")
                 else -> AppError.Server(statusCode = status, cause = this)
             }
 

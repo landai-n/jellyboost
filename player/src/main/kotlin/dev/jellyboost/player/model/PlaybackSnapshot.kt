@@ -1,5 +1,7 @@
 package dev.jellyboost.player.model
 
+import dev.jellyboost.core.common.Ticks
+
 /**
  * A point-in-time reading of the player, taken on the main thread and then passed around freely.
  *
@@ -22,14 +24,18 @@ data class PlaybackSnapshot(
     val isValid: Boolean = true,
 ) {
     /** Position in Jellyfin ticks (100 ns units) — the unit every server-side report uses. */
-    val positionTicks: Long get() = positionMs.millisToTicks()
+    val positionTicks: Long get() = Ticks.millisToTicks(positionMs)
 }
 
-/** Converts Jellyfin ticks to milliseconds, the unit ExoPlayer seeks in. */
-fun Long.ticksToMillis(): Long = this / TICKS_PER_MILLISECOND
+/**
+ * Converts Jellyfin ticks to milliseconds, the unit ExoPlayer seeks in.
+ *
+ * Thin wrapper around [Ticks.ticksToMillis] (DUP-6) kept here, rather than switching every call
+ * site to `Ticks.ticksToMillis(x)` directly, because `SyncPlayController.kt` — frozen for a later
+ * wave — imports this extension by its `dev.jellyboost.player.model` package name; changing that
+ * import would count as editing that file.
+ */
+fun Long.ticksToMillis(): Long = Ticks.ticksToMillis(this)
 
-/** Converts milliseconds to Jellyfin ticks. */
-fun Long.millisToTicks(): Long = this * TICKS_PER_MILLISECOND
-
-/** A Jellyfin tick is 100 nanoseconds, so a millisecond is ten thousand of them. */
-private const val TICKS_PER_MILLISECOND = 10_000L
+/** See [ticksToMillis]; converts milliseconds to Jellyfin ticks. */
+fun Long.millisToTicks(): Long = Ticks.millisToTicks(this)

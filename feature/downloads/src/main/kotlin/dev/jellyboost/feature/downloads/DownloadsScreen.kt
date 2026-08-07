@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
@@ -1038,7 +1039,7 @@ private fun QueueStatPanel(
                         etaSeconds?.let {
                             stringResource(R.string.downloads_stat_eta_about, formatDurationSeconds(it))
                         },
-                    ).joinToString(" · "),
+                    ).joinToString(Separators.DOT),
                 style = StatCaption,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

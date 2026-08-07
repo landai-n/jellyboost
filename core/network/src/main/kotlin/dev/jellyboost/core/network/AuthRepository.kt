@@ -26,14 +26,12 @@ import kotlinx.coroutines.flow.flowOn
 import org.jellyfin.sdk.model.api.AuthenticationResult
 import org.jellyfin.sdk.model.api.UserDto
 import timber.log.Timber
+import java.net.HttpURLConnection
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-
-/** HTTP status the server answers with once a Quick Connect secret is gone. */
-private const val HTTP_NOT_FOUND = 404
 
 /**
  * Signs the user in — by password or by Quick Connect — and is the only writer of the
@@ -174,7 +172,7 @@ class AuthRepository
 
                         is AppResult.Failure -> {
                             val error = result.error
-                            if (error is AppError.Server && error.statusCode == HTTP_NOT_FOUND) {
+                            if (error is AppError.Server && error.statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
                                 // The server forgets a request once it expires or is denied.
                                 Timber.i("Quick Connect request no longer exists on the server")
                                 emit(QuickConnectState.Expired)

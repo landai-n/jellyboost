@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.engine
 
+import dev.jellyboost.core.network.jellyfinAuthorizationHeader
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
@@ -12,11 +13,11 @@ import okhttp3.Callback
 import okhttp3.Request
 import okhttp3.Response
 import org.jellyfin.sdk.api.client.ApiClient
-import org.jellyfin.sdk.api.client.util.AuthorizationHeaderBuilder
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.RandomAccessFile
+import java.net.HttpURLConnection
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -149,9 +150,10 @@ class FileDownloader
                                 existing
                             }
 
-                            HTTP_PARTIAL -> writeBody(response, target, resumeFrom, chunkSink, onProgress)
+                            HttpURLConnection.HTTP_PARTIAL ->
+                                writeBody(response, target, resumeFrom, chunkSink, onProgress)
 
-                            HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
+                            HttpURLConnection.HTTP_OK -> writeBody(response, target, 0L, chunkSink, onProgress)
 
                             else -> throw DownloadHttpException(response.code, url)
                         }
@@ -307,14 +309,13 @@ class FileDownloader
             return written
         }
 
-        private fun authorizationHeader(): String =
-            AuthorizationHeaderBuilder.buildHeader(
-                clientName = apiClient.clientInfo.name,
-                clientVersion = apiClient.clientInfo.version,
-                deviceId = apiClient.deviceInfo.id,
-                deviceName = apiClient.deviceInfo.name,
-                accessToken = apiClient.accessToken,
-            )
+        /**
+         * No same-origin guard around [jellyfinAuthorizationHeader] here (unlike
+         * `JellyfinAuthInterceptor`): [url] is always one `DownloadUrlFactory` built from this same
+         * [ApiClient]'s own base URL, never a caller-supplied or redirect-followed one, so there is
+         * no other origin the header could leak to.
+         */
+        private fun authorizationHeader(): String = jellyfinAuthorizationHeader(apiClient)
 
         companion object {
             /**
@@ -324,8 +325,7 @@ class FileDownloader
              */
             const val BUFFER_BYTES = 64 * 1024
 
-            private const val HTTP_OK = 200
-            private const val HTTP_PARTIAL = 206
+            // No HttpURLConnection constant for 416 (the JDK's HTTP_* table predates WebDAV/Range).
             private const val HTTP_RANGE_NOT_SATISFIABLE = 416
         }
     }

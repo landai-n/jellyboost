@@ -1,5 +1,6 @@
 package dev.jellyboost.data.downloads.offline
 
+import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -73,7 +74,7 @@ class DownloadedMediaProvider
 
                 // Idempotent, and a no-op in two reads for anything that already has a seek index —
                 // which after the first play of a given file is everything.
-                seekIndex.ensureSeekable(File(mediaFile.path), runTimeTicks / TICKS_PER_MILLISECOND)
+                seekIndex.ensureSeekable(File(mediaFile.path), Ticks.ticksToMillis(runTimeTicks))
 
                 DownloadedMedia(
                     itemId = itemId,
@@ -176,6 +177,3 @@ class DownloadedMediaProvider
         private fun DownloadFileEntity.takeIfOnDisk(): DownloadFileEntity? =
             takeIf { it.status == DownloadStatus.DOWNLOADED && File(it.path).isFile }
     }
-
-/** Jellyfin counts time in 100 ns ticks. */
-private const val TICKS_PER_MILLISECOND = 10_000L

@@ -1,5 +1,6 @@
 package dev.jellyboost.player.syncplay.socket
 
+import dev.jellyboost.core.network.jellyfinAuthorizationHeader
 import dev.jellyboost.player.syncplay.di.SyncPlayScope
 import dev.jellyboost.player.syncplay.di.SyncPlaySocketClient
 import dev.jellyboost.player.syncplay.model.SyncPlayCommand
@@ -35,7 +36,6 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.util.ApiSerializer
-import org.jellyfin.sdk.api.client.util.AuthorizationHeaderBuilder
 import org.jellyfin.sdk.model.api.ForceKeepAliveMessage
 import org.jellyfin.sdk.model.api.InboundKeepAliveMessage
 import org.jellyfin.sdk.model.api.OutboundWebSocketMessage
@@ -300,22 +300,18 @@ internal class OkHttpSyncPlaySocket
          * server switch, a re-issued token) is picked up by the next reconnect. The device id and
          * the access token are what make the server attach this socket to *our* session — a socket
          * authenticated as anything else is not sent this client's SyncPlay messages at all.
+         *
+         * No same-origin guard around [jellyfinAuthorizationHeader] here (unlike
+         * `JellyfinAuthInterceptor`): the URL comes straight from `apiClient.createUrl`, not from a
+         * caller-supplied or redirect-followed one, so it is always this same [ApiClient]'s own
+         * server and there is no other origin the header could leak to.
          */
-        private fun socketRequest(): Request {
-            val authorization =
-                AuthorizationHeaderBuilder.buildHeader(
-                    clientName = apiClient.clientInfo.name,
-                    clientVersion = apiClient.clientInfo.version,
-                    deviceId = apiClient.deviceInfo.id,
-                    deviceName = apiClient.deviceInfo.name,
-                    accessToken = apiClient.accessToken,
-                )
-            return Request
+        private fun socketRequest(): Request =
+            Request
                 .Builder()
                 .url(apiClient.createUrl(SOCKET_PATH))
-                .header("Authorization", authorization)
+                .header("Authorization", jellyfinAuthorizationHeader(apiClient))
                 .build()
-        }
 
         /**
          * The SDK's own decoder, off the socket thread.

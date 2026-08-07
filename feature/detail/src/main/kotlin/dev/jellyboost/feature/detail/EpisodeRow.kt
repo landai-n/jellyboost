@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.GlassIconButton
@@ -266,7 +267,7 @@ private fun EpisodeNumberLine(episode: JellyfinItem) {
         }
     if (parts.isEmpty()) return
     Text(
-        text = parts.joinToString(SEPARATOR).uppercase(),
+        text = parts.joinToString(Separators.DOT).uppercase(),
         style = EpisodeNumberStyle,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,

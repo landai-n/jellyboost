@@ -22,17 +22,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.PlaylistPlay
 import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
-import androidx.compose.material.icons.outlined.ClosedCaption
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.HighQuality
-import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -411,6 +404,7 @@ private fun BottomBar(
         // One subcomposition for the whole picker row, not one per button: the question — is there
         // room for words next to the icons? — is about the row's total width, and every button in it
         // has to answer it the same way.
+        val chips = visibleSheetChips(state)
         val values = sheetChipValues(state)
 
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -426,83 +420,13 @@ private fun BottomBar(
             ) {
                 Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
 
-                if (state.audioTracks.size > 1) {
+                chips.forEach { chip ->
                     SheetChip(
-                        label = stringResource(R.string.player_audio),
-                        onClick = { onOpenSheet(PlayerSheet.AUDIO) },
-                        icon = Icons.Outlined.MusicNote,
+                        label = chip.id.label(state),
+                        onClick = { chip.id.open(actions, onOpenSheet) },
+                        icon = chip.id.icon,
                         showLabel = showLabels,
-                        value = values.audio,
-                    )
-                }
-                if (state.subtitleTracks.isNotEmpty()) {
-                    SheetChip(
-                        label = stringResource(R.string.player_subtitles),
-                        onClick = { onOpenSheet(PlayerSheet.SUBTITLES) },
-                        icon = Icons.Outlined.ClosedCaption,
-                        showLabel = showLabels,
-                        value = values.subtitles,
-                    )
-                }
-                // No per-member playback rate exists in SyncPlay: playing faster than the group is
-                // drifting from it, so the control is not offered rather than offered and refused
-                // (docs/notes/syncplay-m11-plan.md, key decision 11). The same rule, for the same
-                // reason, when the player in charge has no rate at all — which while casting is the
-                // receiver's answer rather than ours (see [PlayerUiState.canSetSpeed]).
-                if (!state.syncPlay.inGroup && state.canSetSpeed) {
-                    SheetChip(
-                        // The current rate replaces the word once it is not 1×, so the control says what
-                        // it is doing without needing a second badge next to it.
-                        label = if (state.speed.isNormal) stringResource(R.string.player_speed) else state.speed.label,
-                        onClick = { onOpenSheet(PlayerSheet.SPEED) },
-                        icon = Icons.Outlined.Speed,
-                        showLabel = showLabels,
-                        value = values.speed,
-                    )
-                }
-                // Watching with other people is worth a permanent control, not a badge: it is where the
-                // participants, the group's shuffle/repeat and the way out live (M11 Phase 3).
-                if (state.syncPlay.inGroup) {
-                    SheetChip(
-                        label = stringResource(R.string.player_syncplay_group),
-                        onClick = actions.onOpenGroupSheet,
-                        icon = Icons.Outlined.Groups,
-                        showLabel = showLabels,
-                        value = values.group,
-                    )
-                }
-                // A control of its own rather than a row inside the group sheet: what the group watches
-                // next is edited far more often than its shuffle mode, and two taps to reach a queue is
-                // one too many while a film is running (M11 Phase 4). Offered only once the group has a
-                // queue — before the first `PlayQueueUpdate` the sheet would have nothing in it.
-                if (state.syncPlay.inGroup && state.syncPlay.hasQueue) {
-                    SheetChip(
-                        label = stringResource(R.string.player_syncplay_queue),
-                        onClick = actions.onOpenQueueSheet,
-                        icon = Icons.AutoMirrored.Outlined.PlaylistPlay,
-                        showLabel = showLabels,
-                        value = values.queue,
-                    )
-                }
-                // Brightness and volume as controls rather than as gestures (audit CR-8). Offered
-                // under exactly the condition the swipes are: both act on *this* device, and while a
-                // television has the film neither means anything.
-                if (!state.cast.isCasting) {
-                    SheetChip(
-                        label = stringResource(R.string.player_display),
-                        onClick = actions.onOpenDisplaySheet,
-                        icon = Icons.Outlined.Tune,
-                        showLabel = showLabels,
-                    )
-                }
-                // A downloaded file has no streaming bitrate to cap, so the picker would be inert.
-                if (!state.isLocalPlayback) {
-                    SheetChip(
-                        label = stringResource(R.string.player_quality),
-                        onClick = { onOpenSheet(PlayerSheet.QUALITY) },
-                        icon = Icons.Outlined.HighQuality,
-                        showLabel = showLabels,
-                        value = values.quality,
+                        value = chip.id.value(values),
                     )
                 }
             }
@@ -511,58 +435,24 @@ private fun BottomBar(
 }
 
 /**
- * What each picker is currently set to (audit A11Y-P-09).
- *
- * The chips announce "Audio", "Subtitles", "Quality" — which track, which language, which cap? The
- * answer becomes each chip's `stateDescription`, so a picker says what it is doing without anyone
- * having to open it, exactly as the settings rows do.
- *
- * Assembled in one place rather than at the six call sites so that the bottom bar keeps its shape:
- * the row is already a stack of conditionals, and six more `firstOrNull { … } ?: …` in it would bury
- * the layout.
- */
-private class SheetChipValues(
-    val audio: String?,
-    val subtitles: String,
-    val speed: String,
-    val quality: String,
-    val group: String,
-    val queue: String,
-)
-
-@Composable
-private fun sheetChipValues(state: PlayerUiState): SheetChipValues {
-    val subtitlesOff = stringResource(R.string.player_subtitles_off)
-    val quality = stringResource(state.quality.labelRes())
-    val queue =
-        pluralStringResource(
-            R.plurals.player_syncplay_queue_count,
-            state.syncPlay.queueSize,
-            state.syncPlay.queueSize,
-        )
-
-    return SheetChipValues(
-        audio = state.audioTracks.firstOrNull { it.index == state.selectedAudioIndex }?.label,
-        subtitles =
-            state.subtitleTracks.firstOrNull { it.index == state.selectedSubtitleIndex }?.label
-                ?: subtitlesOff,
-        speed = state.speed.label,
-        quality = quality,
-        group = state.syncPlay.groupName,
-        queue = queue,
-    )
-}
-
-/**
  * Whether the bottom bar's pickers have room to say what they are, given [maxWidth] — the width the
  * picker row itself was handed, inside the bar's padding — and [fontScale], the system text scale
  * those words are drawn at.
  *
- * A device sweep put the fullest bar — five pickers plus the clock — at near-zero slack once its row
- * drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first, and then the last
- * picker clips off the end. Phone landscape (roughly 640–800 dp of viewport) and tablet portrait
- * (711 dp) both land there, so both go icon-only rather than squeezing the readout out; tablet
- * landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled exactly as before.
+ * A device sweep put the fullest bar it knew of — five pickers plus the clock — at near-zero slack
+ * once its row drops much below [LABELLED_BUTTONS_MIN_WIDTH]: the clock is what gives first, and then
+ * the last picker clips off the end. Phone landscape (roughly 640–800 dp of viewport) and tablet
+ * portrait (711 dp) both land there, so both go icon-only rather than squeezing the readout out;
+ * tablet landscape, where the bar is capped at [MAX_BAR_WIDTH], stays labelled exactly as before.
+ *
+ * **The fullest bar is now [MAX_SHEET_CHIPS] pickers, not five**, and that is a fact rather than a
+ * guess since [sheetChipSpecs] made the rules enumerable: the accessibility audit's display picker
+ * (CR-8) landed after the sweep and pushed the in-a-group-with-a-queue case from five to six. The dp
+ * number below is left exactly where the sweep put it — moving a measured constant on the strength of
+ * arithmetic would be inventing a measurement — so the honest statement of where this stands is that
+ * the threshold is known to be right for five labelled chips and unverified for six, on a viewport
+ * between 840 dp and [MAX_BAR_WIDTH], in a SyncPlay group with a queue. `SheetChipSpecTest` pins the
+ * count so the next picker cannot widen the gap silently.
  *
  * The 2026 refresh's chips are *narrower* than the text buttons that sweep measured, so the
  * threshold is now conservative where it used to be tight. The dp number is deliberately unchanged:
@@ -1200,14 +1090,15 @@ private val MAX_BAR_WIDTH = 1000.dp
 
 /**
  * Below this much room for the picker row, the pickers drop their words — see
- * [showSheetButtonLabels] for what the sweep measured.
+ * [showSheetButtonLabels] for what the sweep measured, and [MAX_SHEET_CHIPS] for how many chips the
+ * row it measured can actually hold.
  */
 private val LABELLED_BUTTONS_MIN_WIDTH = 840.dp
 
 private val PREVIEW_GAP = 8.dp
 private val PREVIEW_LABEL_HEIGHT = 18.dp
 
-/** The fullest bar there is — five pickers plus the clock — at a phone's landscape width. */
+/** The fullest bar there is — [MAX_SHEET_CHIPS] pickers plus the clock — at a phone's landscape width. */
 @Preview(name = "Player controls · phone landscape", widthDp = 800, heightDp = 360)
 @Composable
 private fun PlayerControlsPhoneLandscapePreview() {
@@ -1224,9 +1115,9 @@ private fun PlayerControlsTabletLandscapePreview() {
 /**
  * The whole control surface, drawn without [PlayerControls] itself.
  *
- * The state is in a group on purpose, and not only for the five-picker worst case: the cast button
- * is composed out while in one, and it is an `AndroidView` behind a `hiltViewModel()` that no
- * preview can build.
+ * The state is in a group on purpose, and not only for the [MAX_SHEET_CHIPS]-picker worst case: the
+ * cast button is composed out while in one, and it is an `AndroidView` behind a `hiltViewModel()`
+ * that no preview can build.
  */
 @Composable
 private fun ControlsPreview() {
@@ -1243,8 +1134,8 @@ private fun ControlsPreview() {
                     previewTrack(index = 2, label = "Français"),
                 ),
             subtitleTracks = listOf(previewTrack(index = 3, label = "English (SDH)")),
-            // In a group with a queue: audio, subtitles, group, queue and quality — the five-picker
-            // worst case the narrow bar has to survive.
+            // In a group with a queue: audio, subtitles, group, queue, display and quality — the
+            // [MAX_SHEET_CHIPS] worst case the narrow bar has to survive.
             syncPlay = PlayerSyncPlayState(inGroup = true, groupName = "Film night", hasQueue = true),
         )
     val position =

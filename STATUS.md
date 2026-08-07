@@ -2445,3 +2445,57 @@ DECISIONS entry of the same date for the five judgement calls.
 - Still open from the same audit: H1–H6, HYG-4 proper, and the ARCH/DUP families.
 
 <!-- END quality audit — hygiene wave (2026-08-06) -->
+
+<!-- BEGIN quality audit — duplication wave (2026-08-06) -->
+
+## Quality audit remediation — duplication wave (2026-08-06)
+
+Five findings from `docs/notes/audit-2026-08-06-quality.md`, each a rule the project had decided
+once and then re-typed. See the DECISIONS entry of the same date for the eight judgement calls
+and the three deliberate behaviour changes.
+
+**Done**
+- **DUP-2** — `DownloadRepository.observeBadgeStates(screen)` and
+  `withDownloadState`/`withDownloadStates` live in `:data:downloads`; the STAB-10 degrade-to-empty
+  rationale is stated once instead of in four `catch` blocks. Home, search, detail and library all
+  source it; the library grid keeps its `MutableStateFlow`/`combine` shape (it needs the map
+  synchronously for the batch *Download* action). Seven new tests, including identity preservation.
+- **DUP-3 + HYG-8** — `JellyboostSnackbarHost` owns the bottom inset for the whole app as one
+  `maxOf(chromePadding.bottom, navigationBarInset)` read in the layout phase; `:app` delegates to
+  it, so the rule has one implementation. `rememberOneShotSnackbar` keys its effect on the
+  **message**, not its resolved copy — two distinct messages sharing wording used to wedge
+  `userMessage` non-null for the life of the screen. Migrated: detail, downloads, library grid.
+  Thirteen new tests.
+- **DUP-4** — `runSelectionBatch` sits next to `runBatch` in `:core:common`, with the two
+  repository writes inverted into suspend lambdas so the `isDownloadable` skip rule and the
+  series/season carve-out stay in one place. Both call sites delegate; no new function was added to
+  `ItemDetailViewModel`. Eight new tests pinning the skip arithmetic and the carve-out.
+- **DUP-7** — `episodeNumberLabel()`/`subtitleLine()` are `:core:ui` composable extensions on
+  `JellyfinItem`, and `detail_episode_label`/`_short` moved to `:core:ui` as
+  `media_episode_label`/`_short` (a move of 70 already-translated files). Cards, home badges, the
+  hero and the detail header all use them, so the badge, the subtitle, the Play button and what
+  TalkBack speaks are one spelling.
+- **DUP-8** — one `describeParts` beside `MediaCardFacts`: blank-trim, `distinct()`, `", "`.
+  `MediaCardFacts.describe`, `metaRowDescription` and the home hero's meta line all use it.
+
+**Behaviour changes, all deliberate**
+- **Movie detail pages now show a subtitle line** (the production year). `displaySubtitle` had the
+  fallback and the header's `subtitleLine` did not; nothing asked for the difference.
+- **TalkBack speaks "S1 · E4"**, the spelling the screen draws, instead of the hardcoded "S1:E4".
+- **The home hero drops blank facts** instead of announcing "Rated , 22 minutes left".
+- **The downloads snackbar clears the gesture bar on wide windows** — it read only the chrome
+  padding, which is zero on a tablet layout. Worth a look on the test tablet.
+
+**Known issues / next**
+- **Two snackbar hosts are still hand-written**, both in files a sibling agent owned this wave:
+  `PlayerScreen.kt` (hardcoded padding → pass `minimumBottomInset`) and `SyncPlayGroupsScreen.kt`
+  (**no** inset today, so its snackbar sits under the gesture bar — migrating it is also its fix).
+  Both are one-line swaps against the shared component.
+- **`JellyfinItem.displaySubtitle`/`.episodeLabel` survive** as the non-composable fallback for
+  `:player`'s `MediaSession` metadata (`PlayerViewModel.kt`, `SyncPlayQueueViewModel.kt`). Every
+  drawing surface goes through `:core:ui`; retiring the properties needs those three call sites.
+- The instrumented a11y suite was not run (device only). `MediaCardA11yTest`'s episode expectation
+  now reads the resource rather than a hardcoded spelling — worth a `connectedDebugAndroidTest`.
+- Still open from the same audit: H1–H6, HYG-4 proper, the rest of the ARCH/DUP/CPX families.
+
+<!-- END quality audit — duplication wave (2026-08-06) -->

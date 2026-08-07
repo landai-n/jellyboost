@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -145,6 +146,64 @@ class SyncPlayQueueViewModelTest {
             }
         }
 
+    /**
+     * The HYG-9 finding: only *successes* were memoized, and the server re-sends the whole queue on
+     * every transport action — so an item it will not describe was re-asked about on every play,
+     * pause and seek, for a row that can never fill in.
+     */
+    @Test
+    fun `an entry the server will not describe is asked about once, not once per queue update`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(secondItemId.toString()) } returns
+                AppResult.Failure(AppError.NotFound(secondItemId.toString()))
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                controllerState.value = inGroup(queue(playingIndex = 0))
+                awaitUntil { it.rows.firstOrNull()?.title != null }
+
+                // Same entries, only the group moved on: three more `PlayQueueUpdate`s, no new
+                // question to ask.
+                controllerState.value = inGroup(queue(playingIndex = 1))
+                awaitUntil { it.playingIndex == 1 }
+                controllerState.value = inGroup(queue(playingIndex = 0))
+                awaitUntil { it.playingIndex == 0 }
+                cancelAndIgnoreRemainingEvents()
+            }
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { repository.getItem(secondItemId.toString()) }
+        }
+
+    @Test
+    fun `a queue the group has actually changed earns the unresolvable entry one more attempt`() =
+        runTest(dispatcher) {
+            coEvery { repository.getItem(secondItemId.toString()) } returns
+                AppResult.Failure(AppError.NotFound(secondItemId.toString()))
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                controllerState.value = inGroup(queue(playingIndex = 0))
+                awaitUntil { it.rows.size == 2 }
+
+                // Membership changed twice — dropped, then re-queued. The second one is a genuinely
+                // different question: whatever made the item unavailable may have been fixed.
+                controllerState.value =
+                    inGroup(queue(playingIndex = 0, entries = listOf(SyncPlayQueueEntry(firstItemId, firstSlot))))
+                awaitUntil { it.rows.size == 1 }
+                controllerState.value = inGroup(queue(playingIndex = 0))
+                awaitUntil { it.rows.size == 2 }
+                cancelAndIgnoreRemainingEvents()
+            }
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { repository.getItem(secondItemId.toString()) }
+            // The one that *did* resolve is still remembered across all of it.
+            coVerify(exactly = 1) { repository.getItem(firstItemId.toString()) }
+        }
+
     @Test
     fun `every edit is a request to the group and touches nothing here`() =
         runTest(dispatcher) {
@@ -227,21 +286,23 @@ class SyncPlayQueueViewModelTest {
             phase = SyncPlayPhase.Paused,
         )
 
-    private fun queue(playingIndex: Int) =
-        SyncPlayGroupQueue(
-            entries =
-                listOf(
-                    SyncPlayQueueEntry(firstItemId, firstSlot),
-                    SyncPlayQueueEntry(secondItemId, secondSlot),
-                ),
-            playingItemIndex = playingIndex,
-            startPositionTicks = 0L,
-            isPlaying = false,
-            shuffleMode = SyncPlayShuffleMode.Sorted,
-            repeatMode = SyncPlayRepeatMode.None,
-            reason = SyncPlayQueueUpdateReason.NewPlaylist,
-            lastUpdate = Instant.parse("2026-07-30T18:00:00Z"),
-        )
+    private fun queue(
+        playingIndex: Int,
+        entries: List<SyncPlayQueueEntry> =
+            listOf(
+                SyncPlayQueueEntry(firstItemId, firstSlot),
+                SyncPlayQueueEntry(secondItemId, secondSlot),
+            ),
+    ) = SyncPlayGroupQueue(
+        entries = entries,
+        playingItemIndex = playingIndex,
+        startPositionTicks = 0L,
+        isPlaying = false,
+        shuffleMode = SyncPlayShuffleMode.Sorted,
+        repeatMode = SyncPlayRepeatMode.None,
+        reason = SyncPlayQueueUpdateReason.NewPlaylist,
+        lastUpdate = Instant.parse("2026-07-30T18:00:00Z"),
+    )
 
     private fun item(
         id: UUID,

@@ -58,7 +58,10 @@ class ServerDiscoveryRepository
          * the setup screen's error copy is built from.
          */
         suspend fun resolveServerAddress(input: String): AppResult<ResolvedServer> {
-            Timber.i("Resolving server address for input '%s'", input)
+            // Debug, and host only, on every line below that holds an address (audit HYG-10): this
+            // is the path that knows where a user's server lives, and its logs are the ones that end
+            // up pasted into a bug report. See [hostForLog].
+            Timber.d("Resolving server address for '%s'", hostForLog(input))
 
             val candidates =
                 when (val result = apiCall { apiFacade.getAddressCandidates(input) }) {
@@ -67,7 +70,7 @@ class ServerDiscoveryRepository
                 }
 
             if (candidates.isEmpty()) {
-                Timber.i("Input '%s' produced no address candidates", input)
+                Timber.d("Input '%s' produced no address candidates", hostForLog(input))
                 return AppResult.Failure(AppError.ServerResolution())
             }
 
@@ -81,7 +84,7 @@ class ServerDiscoveryRepository
                 when (val result = selectRecommendedServer(recommended)) {
                     is AppResult.Success -> result.value
                     is AppResult.Failure -> {
-                        Timber.i("No usable server among candidates %s", candidates)
+                        Timber.d("No usable server among candidates %s", candidates.map(::hostForLog))
                         return result
                     }
                 }
@@ -89,13 +92,15 @@ class ServerDiscoveryRepository
             val systemInfo = selected.systemInfo.getOrNull()
             val serverId = systemInfo?.id?.toUUIDOrNull()
             if (systemInfo == null || serverId == null) {
-                Timber.w("Server at %s answered without a usable id", selected.address)
+                // Stays a warning — it is a real server-side fault a maintainer must see — but the
+                // address it names is reduced to its host like every other line here.
+                Timber.w("Server at %s answered without a usable id", hostForLog(selected.address))
                 return AppResult.Failure(AppError.Server(statusCode = null))
             }
 
-            Timber.i(
+            Timber.d(
                 "Resolved %s (score %s, version %s)",
-                selected.address,
+                hostForLog(selected.address),
                 selected.score,
                 systemInfo.version,
             )

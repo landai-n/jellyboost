@@ -2371,3 +2371,45 @@ episode list: one stop per card, the Play button inside an episode row still rea
 the selection count announced as it changes.
 
 <!-- END a11y wave 2 (design-system semantics) -->
+
+
+<!-- BEGIN quality audit — hygiene wave (2026-08-06) -->
+
+## Quality audit remediation — hygiene wave (2026-08-06)
+
+Six findings from `docs/notes/audit-2026-08-06-quality.md`, all inside existing seams. See the
+DECISIONS entry of the same date for the five judgement calls.
+
+**Done**
+- **HYG-4 groundwork** — `runCatchingUnlessCancelled` is no longer bespoke: it lives in
+  `:core:common` as a drop-in `runCatching` that rethrows `CancellationException`, with unit
+  tests including a genuinely-cancelled coroutine. `SubtitleSidecarTopUp` uses it. The fourteen
+  `:player/syncplay` sites are **not** converted — `SyncPlayController` belongs to a later
+  structural wave.
+- **HYG-5** — the four broad catches in `DownloadRepositoryImpl` (`setStorageLocation`,
+  `deleteAll`, `mutate`, `mutateAll`) rethrow cancellation ahead of the fold. Five new tests.
+  They are deliberately *not* narrowed to `SQLiteException` (none is pure Room — see DECISIONS).
+- **HYG-6** — `LoginViewModel`'s Quick Connect initiation is an exhaustive `when`; the unchecked
+  `as AppResult.Success` is gone.
+- **HYG-9** — `SyncPlayQueueViewModel.hydrate` memoizes refusals as well as successes, so an
+  unresolvable queue entry is asked about once instead of once per `PlayQueueUpdate`. Refusals
+  are dropped when the queue's *membership* changes (not on reorder/play/pause). Two new tests.
+- **HYG-10** — every address-bearing log line in `ServerDiscoveryRepository` and
+  `ServerReachabilityProbe` is `Timber.d` and carries a host only, via a new unit-tested
+  `hostForLog` in `:core:network`.
+- **HYG-11** — a `@MainDispatcher` qualifier + provider now exists in `:core:network` beside
+  `@IoDispatcher`/`@DefaultDispatcher`; `AudioSidecarExtractor` injects it instead of hardcoding
+  `Dispatchers.Main`.
+
+**Known issues / next**
+- **Two `@MainDispatcher` qualifiers exist**, `:core:network`'s and `:player`'s, same name and
+  same value. Collapsing them is an import swap in five files, one of which is
+  `SyncPlayController` — do it with that file's structural wave, not before.
+- **The transmux path still has no JVM test.** The injection makes one possible; what blocks it
+  is `Transformer.Builder` reaching `Looper.getMainLooper()` with no Robolectric and no
+  `returnDefaultValues` in this project.
+- **`AuthRepository.kt:85`** logs `server.address` at INFO — same class as HYG-10, outside the
+  files the finding named. Next one to sweep.
+- Still open from the same audit: H1–H6, HYG-4 proper, and the ARCH/DUP families.
+
+<!-- END quality audit — hygiene wave (2026-08-06) -->

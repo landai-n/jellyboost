@@ -12,7 +12,8 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
+import dev.jellyboost.core.network.di.MainDispatcher
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -55,6 +56,11 @@ interface AudioSidecarExtractor {
  * can be sure of, so the whole exchange runs there — it is an I/O-free supervisor of the muxer's own
  * background threads, not the work itself. Cancellation arrives from an arbitrary thread, so it is
  * posted back rather than called where it lands.
+ *
+ * That hop is *injected* ([MainDispatcher]) rather than written as `Dispatchers.Main`: the hard-coded
+ * form has no main looper in a JVM unit test, so it made the whole transmux path device-only to
+ * exercise (audit HYG-11). The `Looper` the cancellation path posts to is still the real one — see
+ * [extract] — because that is `Transformer`'s own requirement and not a scheduling choice.
  */
 @Singleton
 @UnstableApi
@@ -62,11 +68,12 @@ internal class TransformerAudioSidecarExtractor
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        @MainDispatcher private val mainDispatcher: CoroutineDispatcher,
     ) : AudioSidecarExtractor {
         override suspend fun extract(
             source: File,
             target: File,
-        ) = withContext(Dispatchers.Main) {
+        ) = withContext(mainDispatcher) {
             suspendCancellableCoroutine { continuation ->
                 val transformer =
                     Transformer

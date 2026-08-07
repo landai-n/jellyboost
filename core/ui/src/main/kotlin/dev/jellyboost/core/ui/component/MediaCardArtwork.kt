@@ -2,6 +2,7 @@ package dev.jellyboost.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +21,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,9 +51,12 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import dev.jellyboost.core.common.model.DownloadState
+import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.R
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
+import dev.jellyboost.core.ui.theme.POSTER_ASPECT_RATIO
+import dev.jellyboost.core.ui.theme.THUMB_ASPECT_RATIO
 import dev.jellyboost.core.ui.theme.cardShadow
 import java.util.Locale
 
@@ -240,9 +247,122 @@ internal fun formatRatingBadge(
 ): String = String.format(locale, "%.1f", rating)
 
 /**
- * Shared artwork block behind [PosterCard] and [ThumbCard]: the image itself plus the overlays
- * every card carries — the resume progress bar, the watched tick, the download badge, the optional
- * metadata badges, and (while a list is in batch-selection mode) the selection tint and indicator.
+ * What makes a poster a poster and a thumb a thumb.
+ *
+ * The two cards were ~90% the same composable (docs/notes/audit-2026-08-06-quality.md,
+ * CPX-11/DUP-9), and they had drifted: the click-and-semantics block was spelled two different
+ * ways for what is meant to be identical behaviour. This is the *whole* remainder once they are
+ * one — three values, plus a default width that stays on each public signature because it is what
+ * a caller most often overrides.
+ */
+internal sealed interface CardShape {
+    /** 2:3 for a poster, 16:9 for a thumb — the shapes jellyfin-web uses for the same rows. */
+    val aspectRatio: Float
+
+    /** Drawn in place of artwork the server does not have. */
+    val placeholderIcon: ImageVector
+
+    /** Which of the item's images this shape asks for, in the order it will accept them. */
+    fun imageUrl(item: JellyfinItem): String?
+
+    data object Poster : CardShape {
+        override val aspectRatio = POSTER_ASPECT_RATIO
+        override val placeholderIcon = Icons.Outlined.Movie
+
+        override fun imageUrl(item: JellyfinItem) = item.primaryImageUrl
+    }
+
+    data object Thumb : CardShape {
+        override val aspectRatio = THUMB_ASPECT_RATIO
+        override val placeholderIcon = Icons.Outlined.Tv
+
+        /**
+         * Thumb → backdrop → primary, so a row never degrades into placeholders just because a
+         * server has no dedicated thumb image.
+         */
+        override fun imageUrl(item: JellyfinItem) = item.thumbImageUrl ?: item.backdropImageUrl ?: item.primaryImageUrl
+    }
+}
+
+/**
+ * The card both [PosterCard] and [ThumbCard] are: artwork with its overlays, an optional title
+ * block, and — as *one* node — everything a screen reader is told about the item.
+ *
+ * ### The one click-and-semantics shape
+ * Three arms, and each card meets the ones it can:
+ * - **no [onClick]** — `clearAndSetSemantics {}` and nothing else. This is `EpisodeRow`'s case: a
+ *   card inside something already clickable was a second traversal stop offering the row's own
+ *   action, the first of the two announcing nothing but a title (accessibility audit 2026-08-05,
+ *   A11Y-05). [PosterCard] never reaches this arm — its `onClick` is not nullable.
+ * - **no [onLongClick]** — a plain `clickable`, no combined-gesture detector at all.
+ * - **both** — [selectableCardClick], whose long press is labelled so batch selection is reachable
+ *   from TalkBack's actions menu (A11Y-19).
+ *
+ * The named, merged node comes *before* the click in the chain in all three, which is what makes
+ * the card one stop with an authored sentence rather than six — see [mediaCardSemantics], and
+ * `mediaCardDescription` for the sentence itself.
+ */
+@Composable
+internal fun MediaCard(
+    shape: CardShape,
+    item: JellyfinItem,
+    onClick: (() -> Unit)?,
+    modifier: Modifier,
+    width: Dp,
+    showTitle: Boolean,
+    onLongClick: (() -> Unit)?,
+    overlays: CardOverlayFacts,
+) {
+    val description =
+        mediaCardDescription(
+            item = item,
+            badge = overlays.topStartBadge,
+            timeChipText = overlays.timeChipText,
+            ratingBadge = overlays.ratingBadge,
+        )
+    Column(
+        modifier =
+            modifier
+                .cardWidth(width)
+                .then(
+                    when {
+                        onClick == null -> Modifier.clearAndSetSemantics {}
+                        onLongClick == null ->
+                            mediaCardSemantics(description = description, selected = overlays.selected)
+                                .clickable(role = Role.Button, onClick = onClick)
+
+                        else ->
+                            mediaCardSemantics(description = description, selected = overlays.selected)
+                                .selectableCardClick(onClick = onClick, onLongClick = onLongClick)
+                    },
+                ),
+    ) {
+        MediaCardArtwork(
+            imageUrl = shape.imageUrl(item),
+            contentDescription = null,
+            aspectRatio = shape.aspectRatio,
+            downloadState = item.downloadState,
+            played = item.userData.played,
+            progress = item.playbackProgress,
+            placeholderIcon = shape.placeholderIcon,
+            overlays = overlays,
+        )
+
+        if (showTitle) {
+            CardTitleBlock(title = item.displayTitle, subtitle = item.displaySubtitle)
+        }
+    }
+}
+
+/**
+ * The four values a caller decides about a card's overlays, as one thing to pass.
+ *
+ * They belong together because they are decided together and drawn together — the selection state
+ * *claims the corner* the badge would otherwise take (see [TopStartOverlay]), and all four end up
+ * in the card's spoken sentence via `mediaCardDescription`. Forwarded verbatim through four
+ * signature levels they were four chances to drop one on the way down
+ * (docs/notes/audit-2026-08-06-quality.md, CPX-11/DUP-9); as one value there is nothing to
+ * mistype and nothing to forget.
  *
  * @param selected `null` when the list is **not** in selection mode, which is the ordinary case and
  *   draws nothing extra; `false`/`true` put the card in the mode's unselected/selected state. One
@@ -254,6 +374,21 @@ internal fun formatRatingBadge(
  *   *number* comes from `JellyfinItem.remainingMinutes`; the wording is a caller's string resource,
  *   which is why this is a `String` and not an `Int`.
  * @param ratingBadge community rating for the bottom-left badge — see [formatRatingBadge].
+ */
+@Immutable
+internal data class CardOverlayFacts(
+    val selected: Boolean? = null,
+    val topStartBadge: String? = null,
+    val timeChipText: String? = null,
+    val ratingBadge: Float? = null,
+)
+
+/**
+ * Shared artwork block behind [PosterCard] and [ThumbCard]: the image itself plus the overlays
+ * every card carries — the resume progress bar, the watched tick, the download badge, the optional
+ * metadata badges, and (while a list is in batch-selection mode) the selection tint and indicator.
+ *
+ * @param overlays what the caller wants drawn over the image — see [CardOverlayFacts].
  * @param contentDescription label for the artwork itself. Both cards pass `null`: the card they sit
  *   in is one merged semantics node carrying an authored description of the whole item (see
  *   [mediaCardSemantics]), and an image description would be concatenated onto it rather than
@@ -270,10 +405,7 @@ internal fun MediaCardArtwork(
     progress: Float?,
     placeholderIcon: ImageVector?,
     modifier: Modifier = Modifier,
-    selected: Boolean? = null,
-    topStartBadge: String? = null,
-    timeChipText: String? = null,
-    ratingBadge: Float? = null,
+    overlays: CardOverlayFacts = CardOverlayFacts(),
 ) {
     val shape = RoundedCornerShape(Dimens.CardCornerRadius)
     JellyfinAsyncImage(
@@ -293,10 +425,7 @@ internal fun MediaCardArtwork(
                 downloadState = downloadState,
                 played = played,
                 progress = progress,
-                selected = selected,
-                topStartBadge = topStartBadge,
-                timeChipText = timeChipText,
-                ratingBadge = ratingBadge,
+                overlays = overlays,
             )
         },
     )
@@ -308,11 +437,9 @@ private fun BoxScope.CardOverlays(
     downloadState: DownloadState,
     played: Boolean,
     progress: Float?,
-    selected: Boolean?,
-    topStartBadge: String?,
-    timeChipText: String?,
-    ratingBadge: Float?,
+    overlays: CardOverlayFacts,
 ) {
+    val selected = overlays.selected
     // Drawn over the image rather than under it: on a background this close to black, artwork with
     // dark edges has no visible boundary at all unless the hairline sits on top of it.
     Box(
@@ -332,7 +459,7 @@ private fun BoxScope.CardOverlays(
         )
     }
 
-    TopStartOverlay(selected = selected, topStartBadge = topStartBadge)
+    TopStartOverlay(selected = selected, topStartBadge = overlays.topStartBadge)
 
     // The download badge and the watched tick share the top-right corner, stacked rather than
     // overlaid: both are facts about the same item and neither replaces the other, and the common
@@ -350,6 +477,7 @@ private fun BoxScope.CardOverlays(
         }
     }
 
+    val ratingBadge = overlays.ratingBadge
     if (ratingBadge != null) {
         RatingBadge(
             rating = ratingBadge,
@@ -357,6 +485,7 @@ private fun BoxScope.CardOverlays(
         )
     }
 
+    val timeChipText = overlays.timeChipText
     if (timeChipText != null) {
         TimeChip(
             text = timeChipText,

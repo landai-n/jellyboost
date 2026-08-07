@@ -2,6 +2,7 @@ package dev.jellyboost.core.ui.component
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -122,6 +123,52 @@ class MediaCardA11yTest {
         assertEquals("the row", rule.onlyCardDescription())
     }
 
+    @Test
+    fun aPosterAndAThumbAnnounceTheSameItemIdentically() {
+        // The two cards were ~90% the same composable, and the 10% that differed included two
+        // spellings of the same click-and-semantics block (audit CPX-11/DUP-9). They are one
+        // `MediaCard` now; this is the property that made merging them worth doing, and the one a
+        // future "just for the thumb" tweak would break silently.
+        rule.setContent {
+            JellyfinTheme {
+                Column {
+                    PosterCard(
+                        item = EPISODE,
+                        onClick = {},
+                        onLongClick = {},
+                        selected = false,
+                        topStartBadge = BADGE,
+                        timeChipText = TIME_LEFT,
+                        ratingBadge = RATING,
+                    )
+                    ThumbCard(
+                        item = EPISODE,
+                        onClick = {},
+                        onLongClick = {},
+                        selected = false,
+                        topStartBadge = BADGE,
+                        timeChipText = TIME_LEFT,
+                        ratingBadge = RATING,
+                    )
+                }
+            }
+        }
+
+        val nodes = rule.onAllNodes(hasClickAction()).fetchSemanticsNodes()
+        assertEquals("expected the two cards to be two nodes", 2, nodes.size)
+        val (poster, thumb) = nodes
+        assertEquals(
+            poster.config[SemanticsProperties.ContentDescription],
+            thumb.config[SemanticsProperties.ContentDescription],
+        )
+        assertEquals(poster.config[SemanticsProperties.Role], thumb.config[SemanticsProperties.Role])
+        assertEquals(poster.config[SemanticsProperties.Selected], thumb.config[SemanticsProperties.Selected])
+        assertEquals(
+            poster.config[SemanticsProperties.StateDescription],
+            thumb.config[SemanticsProperties.StateDescription],
+        )
+    }
+
     /**
      * The description of the one node the tree is supposed to contain — and a failure with a
      * readable message when it is not one node.
@@ -142,6 +189,11 @@ class MediaCardA11yTest {
         const val SERIES_TITLE = "Westworld"
         const val EPISODE_TITLE = "Dissonance Theory"
         const val LONG_TITLE = "The Assassination of Jesse James by the Coward Robert Ford"
+
+        /** The three overlay facts, so the comparison is between two *loaded* cards. */
+        const val BADGE = "S1 · E4"
+        const val TIME_LEFT = "27m left"
+        const val RATING = 8.4f
 
         /** Half of a two-hour runtime, in Jellyfin's 100-nanosecond ticks. */
         const val RUNTIME_TICKS = 72_000_000_000L

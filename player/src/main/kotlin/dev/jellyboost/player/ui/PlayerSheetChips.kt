@@ -150,23 +150,23 @@ internal fun SheetChipId.value(values: SheetChipValues): String? =
 /**
  * What a tap on this chip opens.
  *
- * Two destinations, and which is which is not cosmetic: the four sheets the control bar hosts itself
- * go through [onOpenSheet], while the three panels `PlayerScreen` hosts — display, group, queue — go
- * through [PlayerActions], because they have to survive the bar composing itself out four seconds
- * later (see [PlayerActions.onOpenDisplaySheet] and [PlayerPanel]).
+ * One destination for all seven since audit UI-1. It used to be two — four pickers hosted by the
+ * control bar itself, three panels hosted by `PlayerScreen` — and the difference was not cosmetic:
+ * only the second group survived the bar composing itself out four seconds later, so the first four
+ * were disposed mid-selection. Every chip now opens a [PlayerPanel] through [PlayerActions], and the
+ * mapping is total, so a chip added without a panel is a compile error rather than a dead tap.
  */
-internal fun SheetChipId.open(
-    actions: PlayerActions,
-    onOpenSheet: (PlayerSheet) -> Unit,
-) = when (this) {
-    SheetChipId.AUDIO -> onOpenSheet(PlayerSheet.AUDIO)
-    SheetChipId.SUBTITLES -> onOpenSheet(PlayerSheet.SUBTITLES)
-    SheetChipId.SPEED -> onOpenSheet(PlayerSheet.SPEED)
-    SheetChipId.QUALITY -> onOpenSheet(PlayerSheet.QUALITY)
-    SheetChipId.GROUP -> actions.onOpenGroupSheet()
-    SheetChipId.QUEUE -> actions.onOpenQueueSheet()
-    SheetChipId.DISPLAY -> actions.onOpenDisplaySheet()
-}
+internal val SheetChipId.panel: PlayerPanel
+    get() =
+        when (this) {
+            SheetChipId.AUDIO -> PlayerPanel.AUDIO
+            SheetChipId.SUBTITLES -> PlayerPanel.SUBTITLES
+            SheetChipId.SPEED -> PlayerPanel.SPEED
+            SheetChipId.QUALITY -> PlayerPanel.QUALITY
+            SheetChipId.GROUP -> PlayerPanel.GROUP
+            SheetChipId.QUEUE -> PlayerPanel.QUEUE
+            SheetChipId.DISPLAY -> PlayerPanel.DISPLAY
+        }
 
 /**
  * What each picker is currently set to (audit A11Y-P-09).

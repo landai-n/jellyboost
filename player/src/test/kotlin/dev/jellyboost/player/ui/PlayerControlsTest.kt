@@ -129,6 +129,18 @@ class SheetChipSpecTest {
     }
 
     @Test
+    fun `every chip opens a panel of its own, and every panel is one a chip opens`() {
+        // Audit UI-1: the four pickers the control bar used to host itself are panels now, hosted by
+        // the screen above the auto-hide like the other three always were. A chip whose panel is
+        // shared with another would open the wrong picker; a panel no chip names would be dead code
+        // in an exhaustive `when`. Both are one assertion each, and neither can drift silently.
+        val panels = SheetChipId.entries.map { it.panel }
+
+        panels.distinct().size shouldBe SheetChipId.entries.size
+        panels.toSet() shouldBe PlayerPanel.entries.toSet()
+    }
+
+    @Test
     fun `every chip the bar can draw has a rule, and the row order is the enum's`() {
         // A chip added to the enum without a rule would silently never appear.
         sheetChipSpecs(state()).map { it.id } shouldBe SheetChipId.entries.toList()

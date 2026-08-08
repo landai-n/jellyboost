@@ -65,15 +65,19 @@ data class LibraryUiState(
      * deliberately absent — they arrive only once the filter sheet has been opened
      * ([LibraryViewModel.openFilterSheet] fetches them), and a row that silently grew a dozen
      * genres after an unrelated interaction reads as a bug. The sheet remains the full editor.
+     *
+     * Built once, in the constructor body, rather than on each read (audit 2026-08-08, PERF-21 — the
+     * same fix `DownloadsUiState` took for PERF-06): a `get()` handed the `LazyRow` that draws these
+     * a *fresh* list on every read, and a list that is never equal to the last one is a list whose
+     * row can never skip — for a value that changes only when the user applies a filter.
      */
-    val filterChips: List<LibraryFilterChip>
-        get() =
-            buildList {
-                add(LibraryFilterChip.Unwatched)
-                add(LibraryFilterChip.Watched)
-                filters.genres.forEach { add(LibraryFilterChip.Genre(it)) }
-                filters.years.forEach { add(LibraryFilterChip.Year(it)) }
-            }
+    val filterChips: List<LibraryFilterChip> =
+        buildList {
+            add(LibraryFilterChip.Unwatched)
+            add(LibraryFilterChip.Watched)
+            filters.genres.forEach { add(LibraryFilterChip.Genre(it)) }
+            filters.years.forEach { add(LibraryFilterChip.Year(it)) }
+        }
 
     /** The server query the grid is currently paging over. */
     fun toQuery(libraryId: String): ItemQuery =

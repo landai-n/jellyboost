@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,6 +34,9 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
@@ -99,7 +103,10 @@ fun SearchContent(
     // permanently under the top nav (or under the compact layout's floating action cluster) if it
     // were left to the list's `contentPadding`. The BOTTOM half stays with the list — see
     // [SearchResults] — so results still scroll under the floating nav pill.
-    Column(modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding())) {
+    //
+    // Handed to `Modifier.padding` as an object rather than read here (audit 2026-08-08, PERF-20):
+    // see [ChromeAwarePadding].
+    Column(modifier = modifier.fillMaxSize().padding(chromeTopPadding())) {
         SearchField(
             query = state.query,
             onQueryChange = onQueryChange,
@@ -256,14 +263,12 @@ private fun SearchResults(
     state: SearchUiState,
     onItemClick: (JellyfinItem) -> Unit,
 ) {
-    // Only the bottom half of the chrome padding: the top half is already on the outer column, and
-    // taking it twice would push the first section a whole nav bar below the field.
-    val chromeBottom = LocalAppChromePadding.current.calculateBottomPadding()
-
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding =
-            PaddingValues(top = Dimens.SpaceLarge, bottom = Dimens.SpaceLarge + chromeBottom),
+        // Only the bottom half of the chrome padding: the top half is already on the outer column,
+        // and taking it twice would push the first section a whole nav bar below the field. Read in
+        // the layout phase rather than here — see [ChromeAwarePadding].
+        contentPadding = listContentPadding(),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
         // Sections in jellyfin-web's order; MediaRow renders nothing for an empty list, and an
@@ -304,6 +309,62 @@ private fun SearchResults(
             }
         }
     }
+}
+
+/** Just the chrome's top edge, resolved in the layout phase — see [ChromeAwarePadding]. */
+@Composable
+private fun chromeTopPadding(): PaddingValues {
+    val chrome = LocalAppChromePadding.current
+    return remember(chrome) { ChromeAwarePadding(chrome = chrome, takeChromeTop = true) }
+}
+
+/** The results list's padding: its own spacing, plus the chrome's bottom edge (deferred). */
+@Composable
+private fun listContentPadding(): PaddingValues {
+    val chrome = LocalAppChromePadding.current
+    return remember(chrome) {
+        ChromeAwarePadding(
+            chrome = chrome,
+            top = Dimens.SpaceLarge,
+            bottom = Dimens.SpaceLarge,
+            takeChromeBottom = true,
+        )
+    }
+}
+
+/**
+ * A fixed inset plus one edge of the app's chrome padding, with the chrome's half read in the
+ * **layout** phase rather than in composition (audit 2026-08-08, PERF-20).
+ *
+ * `AppScaffold` publishes `LocalAppChromePadding` as a stable object whose `calculate*` methods read
+ * two running animations, precisely so a consumer can defer the read — its own KDoc spells out that
+ * reading the values in composition invalidates the reading scope on every one of a navigation's
+ * ~18 frames, which here meant recomposing the whole screen (the field, its focus effects and the
+ * results list) per frame. `Modifier.padding` and a lazy list's `contentPadding` both resolve their
+ * `PaddingValues` inside their measure pass instead, so the animation now invalidates layout.
+ *
+ * `@Stable` and `remember`ed by its callers, so the identity a lazy list keys its measure policy on
+ * does not change either.
+ *
+ * The identical shape exists in `:feature:downloads` (`DownloadsScreen.kt`) and, for the snackbar,
+ * as `:core:ui`'s `SnackbarBottomInset`. A shared home beside `LocalAppChromePadding` in `:core:ui`
+ * is the obvious next step; that hoist is deliberately not part of this change.
+ */
+@Stable
+internal class ChromeAwarePadding(
+    private val chrome: PaddingValues,
+    private val top: Dp = 0.dp,
+    private val bottom: Dp = 0.dp,
+    private val takeChromeTop: Boolean = false,
+    private val takeChromeBottom: Boolean = false,
+) : PaddingValues {
+    override fun calculateTopPadding(): Dp = top + if (takeChromeTop) chrome.calculateTopPadding() else 0.dp
+
+    override fun calculateBottomPadding(): Dp = bottom + if (takeChromeBottom) chrome.calculateBottomPadding() else 0.dp
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
 }
 
 private const val SECTION_MOVIES = "section-movies"

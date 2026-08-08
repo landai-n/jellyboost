@@ -173,6 +173,20 @@ internal fun AppScaffold(
 
     val hazeState = remember { HazeState() }
 
+    // The six values both bars carry, as the two bundles they have always travelled as (audit
+    // 2026-08-08, DUP-10). The callbacks are `remember`ed on the two things they close over, so a
+    // connectivity change re-emits the *state* without also handing the bars four fresh lambdas.
+    val chrome = AppChromeState(connectionState = connectionState, hasActiveSyncPlayGroup = activeSyncPlayGroup != null)
+    val chromeActions =
+        remember(navController, connectionViewModel, showConnectionStatus) {
+            AppChromeActions(
+                onConnectionStatusClick = showConnectionStatus,
+                onOpenSyncPlayGroups = { navController.navigate(Routes.SyncPlay) },
+                onNavigateToSettings = { navController.navigate(Routes.Settings) },
+                onSetForceOffline = connectionViewModel::setForceOffline,
+            )
+        }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val bottomNav = useBottomNav(maxWidth)
         val chromePadding = chromePadding(isTopLevel = isTopLevel, bottomNav = bottomNav)
@@ -213,13 +227,9 @@ internal fun AppScaffold(
             ) {
                 GlassTopNav(
                     currentDestination = barDestination,
-                    connectionState = connectionState,
-                    hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
+                    chrome = chrome,
+                    actions = chromeActions,
                     onSelectTab = navController::navigateToTab,
-                    onConnectionStatusClick = showConnectionStatus,
-                    onOpenSyncPlayGroups = { navController.navigate(Routes.SyncPlay) },
-                    onNavigateToSettings = { navController.navigate(Routes.Settings) },
-                    onSetForceOffline = connectionViewModel::setForceOffline,
                 )
             }
 
@@ -229,14 +239,7 @@ internal fun AppScaffold(
                 exit = fadeOut(tween(NAV_TRANSITION_MILLIS / CHROME_EXIT_DIVISOR)),
                 modifier = Modifier.align(Alignment.TopEnd).topChromeTraversal(),
             ) {
-                AppActionCluster(
-                    connectionState = connectionState,
-                    hasActiveSyncPlayGroup = activeSyncPlayGroup != null,
-                    onConnectionStatusClick = showConnectionStatus,
-                    onOpenSyncPlayGroups = { navController.navigate(Routes.SyncPlay) },
-                    onNavigateToSettings = { navController.navigate(Routes.Settings) },
-                    onSetForceOffline = connectionViewModel::setForceOffline,
-                )
+                AppActionCluster(chrome = chrome, actions = chromeActions)
             }
 
             AnimatedVisibility(

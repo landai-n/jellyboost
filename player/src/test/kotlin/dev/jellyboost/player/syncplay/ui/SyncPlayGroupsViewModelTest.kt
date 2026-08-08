@@ -15,24 +15,21 @@ import dev.jellyboost.player.syncplay.model.SyncPlayQueueEntry
 import dev.jellyboost.player.syncplay.model.SyncPlayQueueUpdateReason
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.syncplay.model.SyncPlayShuffleMode
+import dev.jellyboost.player.ui.MainDispatcherExtension
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.io.IOException
 import java.time.Instant
 import java.util.UUID
@@ -62,15 +59,8 @@ class SyncPlayGroupsViewModelTest {
         }
     private val api = mockk<SyncPlayApi>()
 
-    @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
 
     @Test
     fun `the group list is fetched as soon as the screen is visible`() =

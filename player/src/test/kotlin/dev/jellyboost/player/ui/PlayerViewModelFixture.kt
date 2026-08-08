@@ -32,7 +32,6 @@ import dev.jellyboost.player.trickplay.TrickplayResolver
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -40,10 +39,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
  * The collaborators a [PlayerViewModel] needs, and the two builders that assemble one.
@@ -151,9 +148,11 @@ internal abstract class PlayerViewModelFixture {
             tileUris = listOf("https://server/t.0.jpg"),
         )
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         coEvery { repository.getItem(any()) } returns
             AppResult.Success(JellyfinItem(id = "x", name = "Arrival", type = ItemType.MOVIE))
         coEvery { resolver.resolve(any()) } returns AppResult.Success(source)
@@ -161,11 +160,6 @@ internal abstract class PlayerViewModelFixture {
         every { reporter.startReporting(any(), any(), any()) } returns Job()
         coEvery { trickplayResolver.resolve(any(), any()) } returns null
         coEvery { segmentLoader.load(any()) } returns emptyList()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     protected fun viewModel(savedStateHandle: SavedStateHandle = navArgs()) =

@@ -20,12 +20,9 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.Response
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
@@ -42,6 +39,7 @@ import org.jellyfin.sdk.model.api.request.GetItemsRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.io.IOException
 import java.util.UUID
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
@@ -74,9 +72,11 @@ class OnlineJellyfinRepositoryPagingTest {
 
     private val requests = mutableListOf<GetItemsRequest>()
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension()
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(UnconfinedTestDispatcher())
         mockkStatic("org.jellyfin.sdk.api.client.extensions.ApiClientExtensionsKt")
         every { apiClient.itemsApi } returns itemsApi
         every { apiClient.filterApi } returns filterApi
@@ -84,7 +84,6 @@ class OnlineJellyfinRepositoryPagingTest {
 
     @AfterEach
     fun tearDown() {
-        Dispatchers.resetMain()
         unmockkAll()
     }
 

@@ -1,6 +1,7 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.StartOnce
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.ItemDao
@@ -66,20 +67,13 @@ class BrowseCacheMaintenance
         @ApplicationScope private val scope: CoroutineScope,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
-        private val started = AtomicBoolean(false)
+        private val startOnce = StartOnce()
         private val writesSinceSweep = AtomicInteger(0)
         private val sweeping = AtomicBoolean(false)
 
-        /**
-         * Sweeps the browse cache, once.
-         *
-         * Idempotent — calling it twice does not sweep twice, which matters because `:app` calls it
-         * from `Application.onCreate` and a process can be re-created without the singleton being.
-         */
+        /** Sweeps the browse cache, once. Idempotent — see [StartOnce]. */
         fun start() {
-            if (!started.compareAndSet(false, true)) return
-
-            scope.launch { sweep() }
+            startOnce { scope.launch { sweep() } }
         }
 
         /**

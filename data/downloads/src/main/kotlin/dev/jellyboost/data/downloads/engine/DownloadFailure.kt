@@ -1,9 +1,9 @@
 package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.AppError
+import dev.jellyboost.core.network.toAppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
 import dev.jellyboost.data.downloads.storage.StorageUnavailableException
-import dev.jellyboost.data.toAppError
 import java.net.HttpURLConnection
 
 /** Whether trying the same download again in a minute could plausibly work. */
@@ -24,7 +24,7 @@ internal enum class FailureKind {
  * failed state, under a message that promised a retry nothing performed
  * (docs/notes/audit-2026-07.md, STAB-01).
  *
- * The taxonomy is `:data`'s [AppError] (via [toAppError]), deliberately the same one
+ * The taxonomy is `:core:network`'s [AppError] (via [toAppError]), deliberately the same one
  * [DownloadErrorCopy] reads: what the user is *told* about a failure and what the queue *does*
  * about it must be two readings of one classification, or the copy starts lying again the moment a
  * new transport exception appears.

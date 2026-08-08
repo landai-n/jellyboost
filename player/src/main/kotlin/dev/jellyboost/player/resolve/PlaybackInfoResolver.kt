@@ -3,6 +3,7 @@ package dev.jellyboost.player.resolve
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
+import dev.jellyboost.core.network.runCatchingApi
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
@@ -11,17 +12,12 @@ import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.model.ExternalSubtitle
 import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
-import org.jellyfin.sdk.api.client.exception.ApiClientException
-import org.jellyfin.sdk.api.client.exception.InvalidStatusException
-import org.jellyfin.sdk.api.client.exception.TimeoutException
 import org.jellyfin.sdk.model.api.MediaSourceInfo
 import org.jellyfin.sdk.model.api.MediaStream
 import org.jellyfin.sdk.model.api.MediaStreamType
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
 import timber.log.Timber
-import java.io.IOException
-import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,60 +41,55 @@ internal class PlaybackInfoResolver
         /**
          * Resolves [request] into something the player can open.
          *
-         * @return a [RemotePlaybackMediaSource], or an [AppError] describing why not. Transport
-         *   failures are folded the same way `:core:network` folds them, so the player's error
-         *   copy can be shared with the rest of the app.
+         * Transport failures fold through `:core:network`'s [runCatchingApi] — the app's one
+         * exception→[AppError] mapper. This used to hold a nineteen-line copy of it, made when that
+         * mapper was `internal` and unreachable from here, and the copy had drifted: a 403 was
+         * reported as a server fault rather than an authentication failure, so a revoked token
+         * discovered at `/PlaybackInfo` never reached the session layer (audit DUP-1).
+         *
+         * The whole negotiation, not just the call, sits inside it: building the device profile and
+         * reading the response are both places the SDK can throw, and both belong in the same
+         * taxonomy as the call itself.
+         *
+         * @return a [RemotePlaybackMediaSource], or an [AppError] describing why not.
          */
-        @Suppress("TooGenericExceptionCaught")
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> =
-            try {
-                val response =
-                    api.getPlaybackInfo(
-                        itemId = request.itemId,
-                        request = request.toPlaybackInfoDto(),
-                    )
-
-                val playSessionId = response.playSessionId
-                val source = response.mediaSources.pickFor(request)
-
-                when {
-                    playSessionId == null || source == null -> {
-                        Timber.w("Server returned no playable media source for %s", request.itemId)
-                        AppResult.Failure(AppError.NotFound(request.itemId.toString()))
-                    }
-
-                    else ->
-                        when (val method = source.playMethod()) {
-                            null -> {
-                                Timber.w("No supported play method for %s", request.itemId)
-                                AppResult.Failure(AppError.Server(statusCode = null))
-                            }
-
-                            else ->
-                                AppResult.Success(
-                                    source.toMediaSource(request, playSessionId, method),
-                                )
-                        }
-                }
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: InvalidStatusException) {
-                AppResult.Failure(
-                    if (error.status == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                        AppError.Unauthorized(error)
-                    } else {
-                        AppError.Server(statusCode = error.status, cause = error)
-                    },
-                )
-            } catch (error: TimeoutException) {
-                AppResult.Failure(AppError.Network(error))
-            } catch (error: IOException) {
-                AppResult.Failure(AppError.Network(error))
-            } catch (error: ApiClientException) {
-                AppResult.Failure(AppError.Network(error))
-            } catch (error: Exception) {
-                AppResult.Failure(AppError.Unknown(error))
+            when (val outcome = runCatchingApi { negotiate(request) }) {
+                is AppResult.Success -> outcome.value
+                is AppResult.Failure -> outcome
             }
+
+        /** The negotiation itself; every throw it makes is [resolve]'s to translate. */
+        private suspend fun negotiate(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> {
+            val response =
+                api.getPlaybackInfo(
+                    itemId = request.itemId,
+                    request = request.toPlaybackInfoDto(),
+                )
+
+            val playSessionId = response.playSessionId
+            val source = response.mediaSources.pickFor(request)
+
+            return when {
+                playSessionId == null || source == null -> {
+                    Timber.w("Server returned no playable media source for %s", request.itemId)
+                    AppResult.Failure(AppError.NotFound(request.itemId.toString()))
+                }
+
+                else ->
+                    when (val method = source.playMethod()) {
+                        null -> {
+                            Timber.w("No supported play method for %s", request.itemId)
+                            AppResult.Failure(AppError.Server(statusCode = null))
+                        }
+
+                        else ->
+                            AppResult.Success(
+                                source.toMediaSource(request, playSessionId, method),
+                            )
+                    }
+            }
+        }
 
         /**
          * Opens a play session for an item that will be played **off disk**, and nothing else.

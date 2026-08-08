@@ -214,7 +214,7 @@ class SessionRepository
                 }
             }
 
-            val reported = apiCall { apiFacade.reportSessionEnded() }
+            val reported = runCatchingApi { apiFacade.reportSessionEnded() }
             if (reported is AppResult.Failure) {
                 Timber.w("Could not report session end to the server: %s", reported.error)
             }

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">设置</string>
-    <string name="settings_back">返回</string>
-    <string name="settings_home">主页</string>
 
     <string name="settings_section_playback">播放</string>
     <string name="settings_skip_intro">跳过片头</string>
@@ -49,7 +47,6 @@
     <string name="settings_sign_out_dialog_title">退出登录？</string>
     <string name="settings_sign_out_dialog_message">你需要服务器地址和密码才能重新登录。</string>
     <string name="settings_sign_out_delete_downloads">同时删除此设备上的下载内容</string>
-    <string name="settings_cancel">取消</string>
     <string name="settings_section_about">关于</string>
     <string name="settings_version">应用版本</string>
 </resources>

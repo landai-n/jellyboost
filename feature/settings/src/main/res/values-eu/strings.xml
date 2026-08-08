@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Ezarpenak</string>
-    <string name="settings_back">Atzera</string>
-    <string name="settings_home">Hasiera</string>
     <string name="settings_section_playback">Erreprodukzioa</string>
     <string name="settings_skip_intro">Saltatu sarrera</string>
     <string name="settings_skip_outro">Saltatu amaiera</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Amaitu saioa?</string>
     <string name="settings_sign_out_dialog_message">Zerbitzariaren helbidea eta pasahitza beharko dituzu berriro saioa hasteko.</string>
     <string name="settings_sign_out_delete_downloads">Ezabatu gailu honetako deskargak ere</string>
-    <string name="settings_cancel">Utzi</string>
     <string name="settings_section_about">Aplikazioari buruz</string>
     <string name="settings_version">Aplikazioaren bertsioa</string>
 </resources>

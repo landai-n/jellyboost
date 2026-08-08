@@ -3,8 +3,6 @@
     <string name="libraries_empty">尚無媒體庫。請在伺服器上新增一個。</string>
     <string name="libraries_title">媒體庫</string>
 
-    <string name="library_back">返回</string>
-    <string name="library_home">首頁</string>
     <string name="library_sort">排序</string>
     <string name="library_filter">篩選</string>
     <string name="library_filter_all">全部</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">這裡沒有內容可顯示。</string>
     <string name="library_empty_filtered">沒有項目符合這些篩選條件。</string>
     <string name="library_empty_clear_filters">清除篩選條件</string>
-    <string name="library_retry">重試</string>
 
     <string name="library_error_unknown">載入這個媒體庫時發生問題。</string>
 </resources>

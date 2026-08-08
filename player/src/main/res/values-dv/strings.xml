@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">ޕްލޭޔަރ ބަންދުކުރޭ</string>
-    <string name="player_play">ޕްލޭ</string>
     <string name="player_pause">މެދުކަނޑާލާ</string>
     <string name="player_rewind">10 ސިކުންތު ފަހަތަށް</string>
     <string name="player_forward">30 ސިކުންތު ކުރިއަށް</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">މި ގްރޫޕުން ނިކުންނަންހޭ؟</string>
     <string name="player_syncplay_leave_body">ޕްލޭބެކް މިތާ، އަމިއްލައަށް ކުރިއަށްދާނެއެވެ. އަލުން ގުޅުމަކީ ގްރޫޕް އަލުން ހޮވުމެވެ.</string>
 
-    <string name="player_syncplay_cancel">ކެންސަލްކުރޭ</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d މީހަކު ބަލަނީ</item>
         <item quantity="other">%d މީހުން ބަލަނީ</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s މައްޗަށް ޖައްސާ</string>
     <string name="player_syncplay_queue_move_down_item">%1$s ދަށަށް ޖައްސާ</string>
     <string name="player_syncplay_queue_remove_item">%1$s ކިއޫއިން ނަގާ</string>
-    <string name="player_syncplay_queue_play">ޕްލޭ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d އައިޓަމް ކިއޫގައި</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">ގްރޫޕުން ބަލާ އެއްޗެއް ހުޅުވޭގޮތެއް ނުވި.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">ފަހަތަށް</string>
-    <string name="player_syncplay_groups_home">ހޯމް</string>
     <string name="player_syncplay_groups_create">ގްރޫޕެއް އުފައްދާ</string>
     <string name="player_syncplay_groups_create_title">ތިޔަ ގްރޫޕަށް ނަމެއް ދޭ</string>
     <string name="player_syncplay_groups_create_hint">ގްރޫޕުގެ ނަން</string>

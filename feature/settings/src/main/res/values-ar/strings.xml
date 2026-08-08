@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">الإعدادات</string>
-    <string name="settings_back">رجوع</string>
-    <string name="settings_home">الرئيسية</string>
 
     <string name="settings_section_playback">التشغيل</string>
     <string name="settings_skip_intro">تخطي المقدمة</string>
@@ -54,7 +52,6 @@
     <string name="settings_sign_out_dialog_title">تسجيل الخروج؟</string>
     <string name="settings_sign_out_dialog_message">ستحتاج إلى عنوان خادمك وكلمة المرور لتسجيل الدخول مرة أخرى.</string>
     <string name="settings_sign_out_delete_downloads">حذف التنزيلات من هذا الجهاز أيضًا</string>
-    <string name="settings_cancel">إلغاء</string>
     <string name="settings_section_about">حول التطبيق</string>
     <string name="settings_version">إصدار التطبيق</string>
 </resources>

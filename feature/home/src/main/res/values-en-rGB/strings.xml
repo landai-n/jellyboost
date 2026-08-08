@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Next Up</string>
     <string name="home_section_latest">Latest %1$s</string>
     <string name="home_hero_resume">Resume</string>
-    <string name="home_hero_play">Play</string>
     <string name="home_hero_details">Details</string>
     <string name="home_hero_rated">Rated %1$s</string>
     <plurals name="home_minutes_left">

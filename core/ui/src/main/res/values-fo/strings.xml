@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Aftur</string>
+    <string name="action_home">Heim</string>
+    <string name="action_cancel">Avlýs</string>
+    <string name="action_play">Spæl</string>
+
     <string name="badge_downloaded">Niðurhalað</string>
     <string name="badge_download_queued">Í bíðirøð til niðurhal</string>
     <string name="badge_download_paused">Niðurhal steðgað</string>

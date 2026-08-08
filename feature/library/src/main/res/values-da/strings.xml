@@ -3,8 +3,6 @@
     <string name="libraries_empty">Ingen biblioteker endnu. Tilføj et på serveren.</string>
     <string name="libraries_title">Biblioteker</string>
 
-    <string name="library_back">Tilbage</string>
-    <string name="library_home">Hjem</string>
     <string name="library_sort">Sorter</string>
     <string name="library_filter">Filtrer</string>
     <string name="library_filter_all">Alle</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Intet at vise her.</string>
     <string name="library_empty_filtered">Intet element matcher disse filtre.</string>
     <string name="library_empty_clear_filters">Ryd filtre</string>
-    <string name="library_retry">Prøv igen</string>
 
     <string name="library_error_unknown">Noget gik galt under indlæsning af dette bibliotek.</string>
 </resources>

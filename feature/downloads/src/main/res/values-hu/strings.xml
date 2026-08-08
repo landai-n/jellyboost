@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Felhasznált tárhely</string>
     <string name="downloads_usage_queue_label">A sor haladása</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Lejátszás</string>
 
     <string name="downloads_action_delete">Letöltés törlése</string>
     <string name="downloads_action_cancel">Letöltés megszakítása</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Törlöd ezt: %1$s?</string>
     <string name="downloads_delete_dialog_message">A letöltött fájlok törlődnek erről az eszközről. Később újra letöltheted.</string>
     <string name="downloads_delete_dialog_confirm">Törlés</string>
-    <string name="downloads_delete_dialog_cancel">Mégse</string>
 
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>

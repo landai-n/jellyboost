@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">رجوع</string>
+    <string name="action_home">الرئيسية</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_play">تشغيل</string>
+
     <string name="badge_downloaded">تم التنزيل</string>
     <string name="badge_download_queued">في قائمة انتظار التنزيل</string>
     <string name="badge_download_paused">تم إيقاف التنزيل مؤقتًا</string>

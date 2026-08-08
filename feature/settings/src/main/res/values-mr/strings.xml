@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">सेटिंग्ज</string>
-    <string name="settings_back">मागे</string>
-    <string name="settings_home">मुख्यपृष्ठ</string>
 
     <string name="settings_section_playback">प्लेबॅक</string>
     <string name="settings_skip_intro">इंट्रो वगळा</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">साइन आउट करायचे का?</string>
     <string name="settings_sign_out_dialog_message">पुन्हा साइन इन करण्यासाठी आपल्याला आपला सर्व्हर पत्ता आणि पासवर्ड लागेल.</string>
     <string name="settings_sign_out_delete_downloads">या डिव्हाइसवरील डाउनलोड्स देखील हटवा</string>
-    <string name="settings_cancel">रद्द करा</string>
     <string name="settings_section_about">अ‍ॅपबद्दल</string>
     <string name="settings_version">अ‍ॅप आवृत्ती</string>
 </resources>

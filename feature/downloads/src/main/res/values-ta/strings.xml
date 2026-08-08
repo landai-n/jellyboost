@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">பயன்படுத்திய சேமிப்பகம்</string>
     <string name="downloads_usage_queue_label">வரிசையின் முன்னேற்றம்</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">இயக்கு</string>
 
     <string name="downloads_action_delete">பதிவிறக்கத்தை நீக்கு</string>
     <string name="downloads_action_cancel">பதிவிறக்கத்தை ரத்துசெய்</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s ஐ நீக்கவா?</string>
     <string name="downloads_delete_dialog_message">பதிவிறக்கப்பட்ட கோப்புகள் இந்தச் சாதனத்திலிருந்து அகற்றப்படும். பின்னர் மீண்டும் பதிவிறக்கலாம்.</string>
     <string name="downloads_delete_dialog_confirm">நீக்கு</string>
-    <string name="downloads_delete_dialog_cancel">ரத்துசெய்</string>
 
     <string name="downloads_progress_of">%2$s இல் %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s இல் %1$s</string>

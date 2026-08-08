@@ -21,7 +21,6 @@
     <string name="offline_no_network">No network — showing downloaded media</string>
     <string name="offline_server_unreachable">Can\'t reach the server — showing downloaded media</string>
     <string name="offline_forced">Offline mode is on — showing downloaded media</string>
-    <string name="offline_retry">Retry</string>
     <string name="offline_go_online">Go online</string>
 
     <!-- Home top-bar SyncPlay action (M11 Phase 5) -->

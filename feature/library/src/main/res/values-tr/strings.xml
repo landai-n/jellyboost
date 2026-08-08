@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Henüz kitaplık yok. Sunucuda bir tane ekleyin.</string>
     <string name="libraries_title">Kitaplıklar</string>
-    <string name="library_back">Geri</string>
-    <string name="library_home">Ana Sayfa</string>
     <string name="library_sort">Sırala</string>
     <string name="library_filter">Filtrele</string>
     <string name="library_filter_all">Tümü</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Burada gösterilecek bir şey yok.</string>
     <string name="library_empty_filtered">Bu filtrelere uyan öğe yok.</string>
     <string name="library_empty_clear_filters">Filtreleri temizle</string>
-    <string name="library_retry">Tekrar dene</string>
     <string name="library_error_unknown">Bu kitaplık yüklenirken bir şeyler ters gitti.</string>
 </resources>

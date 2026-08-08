@@ -184,6 +184,15 @@ fun PrimaryPillButton(
  * @param loading as on [PrimaryPillButton]: swaps the leading icon for an inline spinner while the
  *   action is in flight (Settings' sign-out, waiting on the server). The caller still disables the
  *   button.
+ * @param progress the determinate sibling of [loading]: `0f..1f` draws a progress *ring* in the
+ *   leading slot instead of a spinner, `null` leaves the slot to [leadingIcon]. It exists for the
+ *   detail screen's wide Download pill, which used to be a static ghost pill while the phone's
+ *   circular button showed a live ring — the same transfer, reported on one layout and not the
+ *   other (audit 2026-08-08, UI-4). [loading] wins if both are set: an indeterminate wait is a
+ *   stronger statement than a stale fraction.
+ * @param leadingIconTint colours the leading glyph alone, leaving the label at the pill's own
+ *   content colour — the `tint` [GlassIconButton] has, for the same reason: a finished download's
+ *   glyph goes accent while the word beside it stays plain.
  */
 @Composable
 fun GhostPillButton(
@@ -195,6 +204,8 @@ fun GhostPillButton(
     leadingIcon: ImageVector? = null,
     tint: Color = GlassDefaults.Fill,
     loading: Boolean = false,
+    progress: Float? = null,
+    leadingIconTint: Color? = null,
 ) {
     PillFrame(
         onClick = onClick,
@@ -209,7 +220,14 @@ fun GhostPillButton(
         stateDescription = busyStateDescription(loading),
         modifier = modifier,
     ) {
-        PillContent(text = text, small = small, leadingIcon = leadingIcon, loading = loading)
+        PillContent(
+            text = text,
+            small = small,
+            leadingIcon = leadingIcon,
+            loading = loading,
+            progress = progress,
+            leadingIconTint = leadingIconTint,
+        )
     }
 }
 
@@ -351,20 +369,33 @@ private fun PillContent(
     small: Boolean,
     leadingIcon: ImageVector?,
     loading: Boolean = false,
+    progress: Float? = null,
+    leadingIconTint: Color? = null,
 ) {
     val iconSize = if (small) PillIconSizeSmall else PillIconSize
-    if (loading) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(iconSize),
-            color = LocalContentColor.current,
-            strokeWidth = PillSpinnerStroke,
-        )
-    } else if (leadingIcon != null) {
-        Icon(
-            imageVector = leadingIcon,
-            contentDescription = null,
-            modifier = Modifier.size(iconSize),
-        )
+    when {
+        loading ->
+            CircularProgressIndicator(
+                modifier = Modifier.size(iconSize),
+                color = LocalContentColor.current,
+                strokeWidth = PillSpinnerStroke,
+            )
+
+        progress != null ->
+            CircularProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.size(iconSize),
+                color = leadingIconTint ?: LocalContentColor.current,
+                strokeWidth = PillSpinnerStroke,
+            )
+
+        leadingIcon != null ->
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = null,
+                modifier = Modifier.size(iconSize),
+                tint = leadingIconTint ?: LocalContentColor.current,
+            )
     }
     Text(
         text = text,

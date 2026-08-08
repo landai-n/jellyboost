@@ -3,8 +3,6 @@
     <string name="libraries_empty">아직 라이브러리가 없습니다. 서버에서 하나를 추가하세요.</string>
     <string name="libraries_title">라이브러리</string>
 
-    <string name="library_back">뒤로</string>
-    <string name="library_home">홈</string>
     <string name="library_sort">정렬</string>
     <string name="library_filter">필터</string>
     <string name="library_filter_all">전체</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">표시할 내용이 없습니다.</string>
     <string name="library_empty_filtered">이 필터와 일치하는 항목이 없습니다.</string>
     <string name="library_empty_clear_filters">필터 지우기</string>
-    <string name="library_retry">다시 시도</string>
 
     <string name="library_error_unknown">이 라이브러리를 불러오는 중 문제가 발생했습니다.</string>
 </resources>

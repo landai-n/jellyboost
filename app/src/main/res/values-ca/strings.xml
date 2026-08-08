@@ -12,7 +12,6 @@
     <string name="offline_no_network">Sense connexió — es mostra contingut baixat</string>
     <string name="offline_server_unreachable">No es pot contactar amb el servidor — es mostra contingut baixat</string>
     <string name="offline_forced">El mode sense connexió està activat — es mostra contingut baixat</string>
-    <string name="offline_retry">Torna-ho a provar</string>
     <string name="offline_go_online">Connecta\'t</string>
     <string name="syncplay_groups_action">Grups de SyncPlay</string>
     <string name="syncplay_groups_action_active">Grups de SyncPlay — ets en un grup</string>

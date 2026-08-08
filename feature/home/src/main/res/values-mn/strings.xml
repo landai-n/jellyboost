@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Дараагийн</string>
     <string name="home_section_latest">Сүүлийн үеийн %1$s</string>
     <string name="home_hero_resume">Үргэлжлүүлэх</string>
-    <string name="home_hero_play">Тоглуулах</string>
     <string name="home_hero_details">Дэлгэрэнгүй</string>
     <string name="home_hero_rated">Насны ангилал %1$s</string>
     <plurals name="home_minutes_left">

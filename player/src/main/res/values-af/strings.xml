@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Maak speler toe</string>
-    <string name="player_play">Speel</string>
     <string name="player_pause">Pouseer</string>
     <string name="player_rewind">Spring 10 sekondes terug</string>
     <string name="player_forward">Spring 30 sekondes vorentoe</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Verlaat hierdie groep?</string>
     <string name="player_syncplay_leave_body">Terugspeel gaan hier op sy eie voort. Om weer aan te sluit beteken jy kies die groep weer.</string>
 
-    <string name="player_syncplay_cancel">Kanselleer</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persoon kyk</item>
         <item quantity="other">%d mense kyk</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Skuif %1$s op</string>
     <string name="player_syncplay_queue_move_down_item">Skuif %1$s af</string>
     <string name="player_syncplay_queue_remove_item">Verwyder %1$s uit die wagtou</string>
-    <string name="player_syncplay_queue_play">Speel</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item in wagtou</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Kon nie oopmaak wat die groep kyk nie.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Terug</string>
-    <string name="player_syncplay_groups_home">Tuis</string>
     <string name="player_syncplay_groups_create">Skep groep</string>
     <string name="player_syncplay_groups_create_title">Gee jou groep \'n naam</string>
     <string name="player_syncplay_groups_create_hint">Groepnaam</string>

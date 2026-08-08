@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">ఉపయోగించిన నిల్వ</string>
     <string name="downloads_usage_queue_label">క్యూ పురోగతి</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">ప్లే చేయండి</string>
 
     <string name="downloads_action_delete">డౌన్‌లోడ్‌ను తొలగించండి</string>
     <string name="downloads_action_cancel">డౌన్‌లోడ్‌ను రద్దు చేయండి</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$sను తొలగించాలా?</string>
     <string name="downloads_delete_dialog_message">డౌన్‌లోడ్ చేసిన ఫైళ్లు ఈ పరికరం నుండి తీసివేయబడతాయి. మీరు తర్వాత దీన్ని మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</string>
     <string name="downloads_delete_dialog_confirm">తొలగించండి</string>
-    <string name="downloads_delete_dialog_cancel">రద్దు చేయండి</string>
 
     <string name="downloads_progress_of">%2$sలో %1$s</string>
     <string name="downloads_progress_of_approx">సుమారు %2$sలో %1$s</string>

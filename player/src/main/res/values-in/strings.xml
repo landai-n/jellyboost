@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Tutup pemutar</string>
-    <string name="player_play">Putar</string>
     <string name="player_pause">Jeda</string>
     <string name="player_rewind">Mundur 10 detik</string>
     <string name="player_forward">Maju 30 detik</string>
@@ -58,7 +57,6 @@
     <string name="player_syncplay_leave">Tinggalkan grup</string>
     <string name="player_syncplay_leave_title">Tinggalkan grup ini?</string>
     <string name="player_syncplay_leave_body">Pemutaran akan tetap berlanjut di sini, secara mandiri. Bergabung kembali berarti memilih grup ini lagi.</string>
-    <string name="player_syncplay_cancel">Batal</string>
     <plurals name="player_syncplay_participants">
         <item quantity="other">%d orang menonton</item>
     </plurals>
@@ -72,7 +70,6 @@
     <string name="player_syncplay_queue_move_up_item">Naikkan %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Turunkan %1$s</string>
     <string name="player_syncplay_queue_remove_item">Hapus %1$s dari antrean</string>
-    <string name="player_syncplay_queue_play">Putar</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d item diantrekan</item>
     </plurals>
@@ -84,8 +81,6 @@
     <string name="player_message_syncplay_library_denied">Grup sedang menonton sesuatu yang tidak dapat Anda akses.</string>
     <string name="player_message_syncplay_item_unavailable">Tidak dapat membuka apa yang sedang ditonton grup.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Kembali</string>
-    <string name="player_syncplay_groups_home">Beranda</string>
     <string name="player_syncplay_groups_create">Buat grup</string>
     <string name="player_syncplay_groups_create_title">Beri nama grup Anda</string>
     <string name="player_syncplay_groups_create_hint">Nama grup</string>

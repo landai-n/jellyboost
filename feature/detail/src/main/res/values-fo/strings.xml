@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Aftur</string>
-    <string name="detail_home">Heim</string>
-    <string name="detail_play">Spæl</string>
     <string name="detail_resume">Halda áfram</string>
     <string name="detail_download">Hala niður</string>
-    <string name="detail_download_cancel">Avlýs</string>
     <string name="detail_download_remove">Tak burtur</string>
-    <string name="detail_download_retry">Royn aftur</string>
     <string name="detail_play_episode">Spæl hendan partin</string>
     <string name="detail_mark_watched">Merk sum sætt</string>
     <string name="detail_mark_unwatched">Merk sum ósætt</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Strika niðurhal?</string>
     <string name="detail_delete_download_dialog_message">Hetta tekur tað burtur frá hesum tólinum. Tú kanst hala tað niður aftur, tá ið tú vilt.</string>
     <string name="detail_delete_download_dialog_confirm">Strika</string>
-    <string name="detail_delete_download_dialog_cancel">Avlýs</string>
 
     <string name="detail_error_unknown">Naka fór skeivt, tá hesin luturin varð heintur.</string>
 </resources>

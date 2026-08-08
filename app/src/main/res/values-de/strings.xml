@@ -15,7 +15,6 @@
     <string name="offline_no_network">Kein Netzwerk – zeigt heruntergeladene Medien</string>
     <string name="offline_server_unreachable">Server nicht erreichbar – zeigt heruntergeladene Medien</string>
     <string name="offline_forced">Offlinemodus ist aktiv – zeigt heruntergeladene Medien</string>
-    <string name="offline_retry">Erneut versuchen</string>
     <string name="offline_go_online">Online gehen</string>
 
     <string name="syncplay_groups_action">SyncPlay-Gruppen</string>

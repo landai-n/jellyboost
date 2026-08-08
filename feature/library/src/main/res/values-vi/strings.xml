@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Chưa có thư viện nào. Thêm một thư viện trên máy chủ.</string>
     <string name="libraries_title">Thư viện</string>
-    <string name="library_back">Quay lại</string>
-    <string name="library_home">Trang chủ</string>
     <string name="library_sort">Sắp xếp</string>
     <string name="library_filter">Lọc</string>
     <string name="library_filter_all">Tất cả</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Không có gì để hiển thị ở đây.</string>
     <string name="library_empty_filtered">Không có mục nào khớp với các bộ lọc này.</string>
     <string name="library_empty_clear_filters">Xóa bộ lọc</string>
-    <string name="library_retry">Thử lại</string>
     <string name="library_error_unknown">Đã xảy ra lỗi khi tải thư viện này.</string>
 </resources>

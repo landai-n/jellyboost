@@ -3,8 +3,6 @@
     <string name="libraries_empty">Nog geen bibliotheken. Voeg er een toe op de server.</string>
     <string name="libraries_title">Bibliotheken</string>
 
-    <string name="library_back">Terug</string>
-    <string name="library_home">Start</string>
     <string name="library_sort">Sorteren</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Alle</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Hier is niets te zien.</string>
     <string name="library_empty_filtered">Geen item komt overeen met deze filters.</string>
     <string name="library_empty_clear_filters">Filters wissen</string>
-    <string name="library_retry">Opnieuw proberen</string>
 
     <string name="library_error_unknown">Er ging iets mis bij het laden van deze bibliotheek.</string>
 </resources>

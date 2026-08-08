@@ -3,8 +3,6 @@
     <string name="libraries_empty">Δεν υπάρχουν ακόμη βιβλιοθήκες. Προσθέστε μία στον διακομιστή.</string>
     <string name="libraries_title">Βιβλιοθήκες</string>
 
-    <string name="library_back">Πίσω</string>
-    <string name="library_home">Αρχική</string>
     <string name="library_sort">Ταξινόμηση</string>
     <string name="library_filter">Φίλτρο</string>
     <string name="library_filter_all">Όλα</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Δεν υπάρχει τίποτα να εμφανιστεί εδώ.</string>
     <string name="library_empty_filtered">Κανένα στοιχείο δεν ταιριάζει με αυτά τα φίλτρα.</string>
     <string name="library_empty_clear_filters">Απαλοιφή φίλτρων</string>
-    <string name="library_retry">Επανάληψη</string>
 
     <string name="library_error_unknown">Κάτι πήγε στραβά κατά τη φόρτωση αυτής της βιβλιοθήκης.</string>
 </resources>

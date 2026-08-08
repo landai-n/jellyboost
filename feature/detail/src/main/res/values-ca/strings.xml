@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Enrere</string>
-    <string name="detail_home">Inici</string>
-    <string name="detail_play">Reprodueix</string>
     <string name="detail_resume">Reprèn</string>
     <string name="detail_download">Baixa</string>
-    <string name="detail_download_cancel">Cancel·la</string>
     <string name="detail_download_remove">Elimina</string>
-    <string name="detail_download_retry">Torna-ho a provar</string>
     <string name="detail_play_episode">Reprodueix aquest episodi</string>
     <string name="detail_mark_watched">Marca com a vist</string>
     <string name="detail_mark_unwatched">Marca com a no vist</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">Vols eliminar la baixada?</string>
     <string name="detail_delete_download_dialog_message">Això l\'elimina d\'aquest dispositiu. La pots tornar a baixar quan vulguis.</string>
     <string name="detail_delete_download_dialog_confirm">Elimina</string>
-    <string name="detail_delete_download_dialog_cancel">Cancel·la</string>
 
     <string name="detail_error_unknown">Alguna cosa ha fallat en carregar aquest element.</string>
 </resources>

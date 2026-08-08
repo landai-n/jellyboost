@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">ย้อนกลับ</string>
+    <string name="action_home">หน้าแรก</string>
+    <string name="action_cancel">ยกเลิก</string>
+    <string name="action_play">เล่น</string>
+
     <string name="badge_downloaded">ดาวน์โหลดแล้ว</string>
     <string name="badge_download_queued">อยู่ในคิวดาวน์โหลด</string>
     <string name="badge_download_paused">หยุดดาวน์โหลดชั่วคราว</string>

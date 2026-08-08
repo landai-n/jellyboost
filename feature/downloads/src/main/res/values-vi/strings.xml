@@ -19,7 +19,6 @@
     <string name="downloads_usage_storage_label">Bộ nhớ đã dùng</string>
     <string name="downloads_usage_queue_label">Tiến độ hàng đợi</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Phát</string>
     <string name="downloads_action_delete">Xóa tải xuống</string>
     <string name="downloads_action_cancel">Hủy tải xuống</string>
     <string name="downloads_action_pause">Tạm dừng tải xuống</string>
@@ -38,7 +37,6 @@
     <string name="downloads_delete_dialog_title">Xóa %1$s?</string>
     <string name="downloads_delete_dialog_message">Các tệp đã tải xuống sẽ bị xóa khỏi thiết bị này. Bạn có thể tải xuống lại sau.</string>
     <string name="downloads_delete_dialog_confirm">Xóa</string>
-    <string name="downloads_delete_dialog_cancel">Hủy</string>
     <string name="downloads_progress_of">%1$s trên %2$s</string>
     <string name="downloads_progress_of_approx">%1$s trên ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s trên tối đa %2$s</string>

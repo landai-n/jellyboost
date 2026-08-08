@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">סגירת הנגן</string>
-    <string name="player_play">הפעלה</string>
     <string name="player_pause">השהיה</string>
     <string name="player_rewind">10 שניות אחורה</string>
     <string name="player_forward">30 שניות קדימה</string>
@@ -71,8 +70,6 @@
     <string name="player_syncplay_leave_title">לעזוב את הקבוצה הזאת?</string>
     <string name="player_syncplay_leave_body">ההפעלה תימשך כאן, באופן עצמאי. הצטרפות מחדש פירושה בחירת הקבוצה מחדש.</string>
 
-    <string name="player_syncplay_cancel">ביטול</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">צופה אחד</item>
         <item quantity="two">שני צופים</item>
@@ -91,7 +88,6 @@
     <string name="player_syncplay_queue_move_up_item">הזזת %1$s למעלה</string>
     <string name="player_syncplay_queue_move_down_item">הזזת %1$s למטה</string>
     <string name="player_syncplay_queue_remove_item">הסרת %1$s מהתור</string>
-    <string name="player_syncplay_queue_play">הפעלה</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">פריט אחד בתור</item>
@@ -109,8 +105,6 @@
     <string name="player_message_syncplay_item_unavailable">לא ניתן היה לפתוח את מה שהקבוצה צופה בו.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">חזרה</string>
-    <string name="player_syncplay_groups_home">בית</string>
     <string name="player_syncplay_groups_create">יצירת קבוצה</string>
     <string name="player_syncplay_groups_create_title">תן שם לקבוצה שלך</string>
     <string name="player_syncplay_groups_create_hint">שם הקבוצה</string>

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Quay lại</string>
-    <string name="detail_home">Trang chủ</string>
-    <string name="detail_play">Phát</string>
     <string name="detail_resume">Tiếp tục</string>
     <string name="detail_download">Tải xuống</string>
-    <string name="detail_download_cancel">Hủy</string>
     <string name="detail_download_remove">Xóa</string>
-    <string name="detail_download_retry">Thử lại</string>
     <string name="detail_play_episode">Phát tập này</string>
     <string name="detail_mark_watched">Đánh dấu đã xem</string>
     <string name="detail_mark_unwatched">Đánh dấu chưa xem</string>
@@ -61,7 +56,6 @@
     <string name="detail_delete_download_dialog_title">Xóa tải xuống?</string>
     <string name="detail_delete_download_dialog_message">Thao tác này sẽ xóa khỏi thiết bị này. Bạn có thể tải xuống lại bất cứ lúc nào.</string>
     <string name="detail_delete_download_dialog_confirm">Xóa</string>
-    <string name="detail_delete_download_dialog_cancel">Hủy</string>
 
     <string name="detail_error_unknown">Đã xảy ra lỗi khi tải mục này.</string>
 </resources>

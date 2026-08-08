@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Mbrapa</string>
+    <string name="action_home">Kryefaqja</string>
+    <string name="action_cancel">Anulo</string>
+    <string name="action_play">Luaj</string>
+
     <string name="badge_downloaded">Shkarkuar</string>
     <string name="badge_download_queued">Në pritje për shkarkim</string>
     <string name="badge_download_paused">Shkarkimi u ndal përkohësisht</string>

@@ -21,7 +21,6 @@
     <string name="downloads_usage_storage_label">已用存储空间</string>
     <string name="downloads_usage_queue_label">队列进度</string>
     <string name="downloads_queue_row_description">%1$s，%2$d%%，%3$s</string>
-    <string name="downloads_action_play">播放</string>
 
     <string name="downloads_action_delete">删除下载</string>
     <string name="downloads_action_cancel">取消下载</string>
@@ -44,7 +43,6 @@
     <string name="downloads_delete_dialog_title">删除 %1$s？</string>
     <string name="downloads_delete_dialog_message">已下载的文件将从此设备移除。你可以稍后重新下载。</string>
     <string name="downloads_delete_dialog_confirm">删除</string>
-    <string name="downloads_delete_dialog_cancel">取消</string>
 
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / 约 %2$s</string>

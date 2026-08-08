@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import dev.jellyboost.core.ui.theme.ChromeAwarePadding
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 

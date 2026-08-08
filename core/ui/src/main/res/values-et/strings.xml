@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Tagasi</string>
+    <string name="action_home">Avaleht</string>
+    <string name="action_cancel">Tühista</string>
+    <string name="action_play">Esita</string>
+
     <string name="badge_downloaded">Alla laaditud</string>
     <string name="badge_download_queued">Allalaadimise järjekorras</string>
     <string name="badge_download_paused">Allalaadimine peatatud</string>

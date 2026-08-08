@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Χρησιμοποιημένος αποθηκευτικός χώρος</string>
     <string name="downloads_usage_queue_label">Πρόοδος της ουράς</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Αναπαραγωγή</string>
 
     <string name="downloads_action_delete">Διαγραφή λήψης</string>
     <string name="downloads_action_cancel">Ακύρωση λήψης</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Διαγραφή %1$s;</string>
     <string name="downloads_delete_dialog_message">Τα ληφθέντα αρχεία αφαιρούνται από αυτή τη συσκευή. Μπορείτε να το κατεβάσετε ξανά αργότερα.</string>
     <string name="downloads_delete_dialog_confirm">Διαγραφή</string>
-    <string name="downloads_delete_dialog_cancel">Άκυρο</string>
 
     <string name="downloads_progress_of">%1$s από %2$s</string>
     <string name="downloads_progress_of_approx">%1$s από ~%2$s</string>

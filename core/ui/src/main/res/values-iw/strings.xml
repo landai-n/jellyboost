@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">חזרה</string>
+    <string name="action_home">בית</string>
+    <string name="action_cancel">ביטול</string>
+    <string name="action_play">הפעלה</string>
+
     <string name="badge_downloaded">הורד</string>
     <string name="badge_download_queued">בתור להורדה</string>
     <string name="badge_download_paused">ההורדה הושהתה</string>

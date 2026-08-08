@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Brugt lagerplads</string>
     <string name="downloads_usage_queue_label">Køens fremgang</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Afspil</string>
 
     <string name="downloads_action_delete">Slet download</string>
     <string name="downloads_action_cancel">Annuller download</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Slet %1$s?</string>
     <string name="downloads_delete_dialog_message">De downloadede filer fjernes fra denne enhed. Du kan downloade den igen senere.</string>
     <string name="downloads_delete_dialog_confirm">Slet</string>
-    <string name="downloads_delete_dialog_cancel">Annuller</string>
 
     <string name="downloads_progress_of">%1$s af %2$s</string>
     <string name="downloads_progress_of_approx">%1$s af ~%2$s</string>

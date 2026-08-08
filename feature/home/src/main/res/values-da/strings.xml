@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Op næste</string>
     <string name="home_section_latest">Nyeste %1$s</string>
     <string name="home_hero_resume">Genoptag</string>
-    <string name="home_hero_play">Afspil</string>
     <string name="home_hero_details">Detaljer</string>
     <string name="home_hero_rated">Aldersmærket %1$s</string>
     <plurals name="home_minutes_left">

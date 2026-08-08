@@ -15,7 +15,6 @@
     <string name="offline_no_network">Няма връзка — показва се изтеглено съдържание</string>
     <string name="offline_server_unreachable">Сървърът е недостъпен — показва се изтеглено съдържание</string>
     <string name="offline_forced">Офлайн режимът е включен — показва се изтеглено съдържание</string>
-    <string name="offline_retry">Опитай пак</string>
     <string name="offline_go_online">Свързване с мрежата</string>
 
     <string name="syncplay_groups_action">SyncPlay групи</string>

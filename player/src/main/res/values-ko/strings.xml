@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">플레이어 닫기</string>
-    <string name="player_play">재생</string>
     <string name="player_pause">일시정지</string>
     <string name="player_rewind">10초 뒤로</string>
     <string name="player_forward">30초 앞으로</string>
@@ -65,8 +64,6 @@
     <string name="player_syncplay_leave_title">이 그룹을 나갈까요?</string>
     <string name="player_syncplay_leave_body">재생은 여기서 단독으로 계속됩니다. 다시 참여하려면 그룹을 다시 선택해야 합니다.</string>
 
-    <string name="player_syncplay_cancel">취소</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="other">%d명이 시청 중</item>
     </plurals>
@@ -82,7 +79,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s 위로 이동</string>
     <string name="player_syncplay_queue_move_down_item">%1$s 아래로 이동</string>
     <string name="player_syncplay_queue_remove_item">%1$s 대기열에서 제거</string>
-    <string name="player_syncplay_queue_play">재생</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d개가 대기열에 있음</item>
@@ -97,8 +93,6 @@
     <string name="player_message_syncplay_item_unavailable">그룹이 시청 중인 콘텐츠를 열 수 없습니다.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">뒤로</string>
-    <string name="player_syncplay_groups_home">홈</string>
     <string name="player_syncplay_groups_create">그룹 만들기</string>
     <string name="player_syncplay_groups_create_title">그룹 이름 짓기</string>
     <string name="player_syncplay_groups_create_hint">그룹 이름</string>

@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Maach Jellyfin op engem Apparat op, op deem s du schonn ugemellt bass, geh op Quick Connect a gëff dëse Code an.</string>
     <string name="login_quick_connect_code_description">Däi Code ass %1$s</string>
     <string name="login_quick_connect_waiting">Waart op Bestätegung…</string>
-    <string name="login_quick_connect_cancel">Ofbriechen</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d méiglech Adress ausprobéiert, ouni Erfolleg.</item>

@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Næsta</string>
     <string name="home_section_latest">Nýggjastu %1$s</string>
     <string name="home_hero_resume">Halda áfram</string>
-    <string name="home_hero_play">Spæl</string>
     <string name="home_hero_details">Frágreiðing</string>
     <string name="home_hero_rated">Aldursmark %1$s</string>
     <plurals name="home_minutes_left">

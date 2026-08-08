@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Налаштування</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Головна</string>
 
     <string name="settings_section_playback">Відтворення</string>
     <string name="settings_skip_intro">Пропускати заставку</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Вийти?</string>
     <string name="settings_sign_out_dialog_message">Вам знадобляться адреса сервера та пароль, щоб увійти знову.</string>
     <string name="settings_sign_out_delete_downloads">Також видалити завантаження з цього пристрою</string>
-    <string name="settings_cancel">Скасувати</string>
     <string name="settings_section_about">Про застосунок</string>
     <string name="settings_version">Версія застосунку</string>
 </resources>

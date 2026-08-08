@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Terug</string>
-    <string name="detail_home">Start</string>
-    <string name="detail_play">Afspelen</string>
     <string name="detail_resume">Doorgaan</string>
     <string name="detail_download">Downloaden</string>
-    <string name="detail_download_cancel">Annuleren</string>
     <string name="detail_download_remove">Verwijderen</string>
-    <string name="detail_download_retry">Opnieuw proberen</string>
     <string name="detail_play_episode">Deze aflevering afspelen</string>
     <string name="detail_mark_watched">Als bekeken markeren</string>
     <string name="detail_mark_unwatched">Als onbekeken markeren</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Download verwijderen?</string>
     <string name="detail_delete_download_dialog_message">Dit verwijdert het van dit apparaat. Je kunt het altijd opnieuw downloaden.</string>
     <string name="detail_delete_download_dialog_confirm">Verwijderen</string>
-    <string name="detail_delete_download_dialog_cancel">Annuleren</string>
 
     <string name="detail_error_unknown">Er ging iets mis bij het laden van dit item.</string>
 </resources>

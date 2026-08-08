@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Πίσω</string>
+    <string name="action_home">Αρχική</string>
+    <string name="action_cancel">Άκυρο</string>
+    <string name="action_play">Αναπαραγωγή</string>
+
     <string name="badge_downloaded">Έγινε λήψη</string>
     <string name="badge_download_queued">Σε αναμονή για λήψη</string>
     <string name="badge_download_paused">Η λήψη διακόπηκε</string>

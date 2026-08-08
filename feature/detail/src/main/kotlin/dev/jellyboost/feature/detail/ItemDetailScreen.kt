@@ -23,10 +23,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -52,6 +50,7 @@ import dev.jellyboost.core.common.model.Person
 import dev.jellyboost.core.common.selection.ItemSelection
 import dev.jellyboost.core.common.selection.SelectionIntent
 import dev.jellyboost.core.common.syncplay.SyncPlayGroupHandle
+import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.GlassIconButton
@@ -68,6 +67,7 @@ import dev.jellyboost.core.ui.text.resolve
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The movie / series / season detail screen (docs/PLAN.md, "Screens" → ItemDetail).
@@ -128,7 +128,7 @@ fun ItemDetailScreen(
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         // The overlay needs the same answer the content does, because the favourite heart is only
         // *up here* on the shapes whose action row has no room for it (spec section 4c).
-        val isWide = isWideLayout(maxWidth = maxWidth, maxHeight = maxHeight)
+        val layout = detailLayoutFor(maxWidth = maxWidth, maxHeight = maxHeight)
 
         ItemDetailContent(
             state = state,
@@ -144,7 +144,7 @@ fun ItemDetailScreen(
             isSelecting = isSelecting,
             selection = selectionState,
             favorite = state.item?.userData?.isFavorite,
-            showFavorite = state.item != null && !isWide,
+            showFavorite = state.item != null && layout != DetailLayout.WIDE,
             onSelection = viewModel::onSelection,
             onBack = onBack,
             onHome = onHome,
@@ -239,6 +239,13 @@ private fun DetailTopOverlay(
  * The floating navigation the detail screen wears instead of a top bar: glass circles over the
  * backdrop, Back at the start and the page's own affordances at the end.
  *
+ * Not `:core:ui`'s `ScreenHeader`, deliberately (audit 2026-08-08, DUP-4): this row draws no title
+ * and puts Home at the *end*, behind the favourite heart, because it floats over a full-bleed
+ * backdrop rather than sitting above a list. Expressing both arrangements in one composable would
+ * take a boolean saying which end Home belongs at, which is the kind of representable nonsense the
+ * same audit's UI-8 is about. What is genuinely shared it does share: the `action_back`/`action_home`
+ * labels (DUP-6), and `ChromeFill` — the tint `ScreenHeader.surfaceTint` exists to accept.
+ *
  * @param showFavorite `false` on the wide layout, whose action row hosts the heart, and before the
  *   item has loaded — there is nothing to favourite yet.
  */
@@ -264,7 +271,7 @@ private fun OverlayNav(
         // which is exactly the bright-artwork case GlassDefaults.ChromeFill exists for.
         GlassIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.detail_back),
+            contentDescription = stringResource(CoreUiR.string.action_back),
             onClick = onBack,
             surfaceTint = GlassDefaults.ChromeFill,
         )
@@ -284,7 +291,7 @@ private fun OverlayNav(
         }
         GlassIconButton(
             icon = Icons.Filled.Home,
-            contentDescription = stringResource(R.string.detail_home),
+            contentDescription = stringResource(CoreUiR.string.action_home),
             onClick = onHome,
             surfaceTint = GlassDefaults.ChromeFill,
         )
@@ -315,27 +322,23 @@ private fun SelectionOverlay(
  * Confirms removing a download from this screen's Download button (docs/POLISH.md — deleting a
  * downloaded file from the detail screen used to happen with no confirmation at all).
  *
- * Precedent: `SignOutDialog` in `:feature:settings`.
+ * It cited `SignOutDialog` in `:feature:settings` as its precedent and then copied only half of it:
+ * a bare `AlertDialog` with none of the hairline every other dialog in the app draws, so this one
+ * appeared as default M3 chrome over the backdrop it opens on (audit 2026-08-08, DUP-2). `:core:ui`'s
+ * [ConfirmDialog] owns that edge now, and this dialog looks like the rest of the app — a deliberate
+ * visual change, DECISIONS.md 2026-08-08.
  */
 @Composable
 private fun DeleteDownloadDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.detail_delete_download_dialog_title)) },
-        text = { Text(text = stringResource(R.string.detail_delete_download_dialog_message)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.detail_delete_download_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.detail_delete_download_dialog_cancel))
-            }
-        },
+    ConfirmDialog(
+        title = stringResource(R.string.detail_delete_download_dialog_title),
+        text = stringResource(R.string.detail_delete_download_dialog_message),
+        confirmLabel = stringResource(R.string.detail_delete_download_dialog_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }
 
@@ -381,9 +384,8 @@ fun ItemDetailContent(
                 DetailSections(
                     state = state,
                     detail = detail,
-                    isWide = isWideLayout(maxWidth = maxWidth, maxHeight = maxHeight),
+                    layout = detailLayoutFor(maxWidth = maxWidth, maxHeight = maxHeight),
                     backdropHeight = backdropHeight(maxWidth = maxWidth, maxHeight = maxHeight),
-                    compact = maxWidth < COMPACT_MAX_WIDTH,
                     onItemClick = onItemClick,
                     onPlay = onPlay,
                     actions = actions,
@@ -398,9 +400,8 @@ fun ItemDetailContent(
 private fun DetailSections(
     state: ItemDetailUiState,
     detail: JellyfinItem,
-    isWide: Boolean,
+    layout: DetailLayout,
     backdropHeight: Dp,
-    compact: Boolean,
     onItemClick: (JellyfinItem) -> Unit,
     onPlay: (JellyfinItem) -> Unit,
     actions: DetailActionHandlers,
@@ -425,12 +426,11 @@ private fun DetailSections(
             DetailHero(
                 item = detail,
                 playTarget = state.playTarget,
-                isWide = isWide,
+                layout = layout,
                 backdropHeight = backdropHeight,
                 downloadState = state.downloadState,
                 actions = actions,
                 downloadedBytes = state.downloadedBytes,
-                compact = compact,
             )
         }
 
@@ -454,7 +454,7 @@ private fun DetailSections(
             }
         }
 
-        episodeSection(episodes = state.episodes, isWide = isWide, handlers = handlers)
+        episodeSection(episodes = state.episodes, layout = layout, handlers = handlers)
 
         relatedSections(people = detail.people, similar = state.similar, onItemClick = onItemClick)
     }
@@ -493,12 +493,12 @@ private fun LazyListScope.relatedSections(
  */
 private fun LazyListScope.episodeSection(
     episodes: List<JellyfinItem>,
-    isWide: Boolean,
+    layout: DetailLayout,
     handlers: EpisodeHandlers,
 ) {
     if (episodes.isEmpty()) return
 
-    if (isWide) {
+    if (layout == DetailLayout.WIDE) {
         item(key = SECTION_EPISODES, contentType = DetailContentType.SECTION) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 DetailSectionTitle(text = stringResource(R.string.detail_section_episodes))
@@ -663,18 +663,66 @@ private const val SECTION_CAST = "section-cast"
 private const val SECTION_SIMILAR = "section-similar"
 
 /**
- * Whether the header lays out side by side (poster beside facts) rather than stacked.
+ * The three shapes the detail screen lays out in, derived **once** from the viewport.
  *
- * Width alone used to decide this, but a phone in landscape (e.g. 800×360dp) clears
- * [WIDE_BREAKPOINT] on width while being far too short to afford a side-by-side header on top of
- * a fixed-height banner — the pair together left the header crammed into ~30dp of remaining
- * height. [WIDE_MIN_HEIGHT] rules that shape out: every tablet orientation clears it, phone
- * landscape never does.
+ * It used to be two independent booleans read at two different call sites — `isWideLayout(w, h)` for
+ * the header, and a bare `maxWidth < COMPACT_MAX_WIDTH` for the overview clamp — from two different
+ * breakpoints (720dp and 480dp). Two consequences, both of them bugs (audit 2026-08-08, UI-8):
+ *
+ * - The **480–720dp band** — a small tablet in portrait, a large phone in landscape, a freeform or
+ *   split-screen window — came out `isWide = false, compact = false`, so it took the stacked header
+ *   (right) *and* lost the overview clamp (wrong): a full unclamped synopsis on a viewport with no
+ *   more room for one than a phone has. [MEDIUM] is that band, and it clamps.
+ * - `isWide = true, compact = true` was **representable and undefined**. Nothing produced it, because
+ *   720 > 480 — but nothing said so either, and `WideStage` silently drops `compact`, so the day a
+ *   breakpoint moved the screen would have had a state with no defined rendering. Three named cases
+ *   cannot express it at all.
+ *
+ * @see clampsOverview
  */
-internal fun isWideLayout(
+internal enum class DetailLayout {
+    /** Phone width: stacked header, overview clamped to a tappable few lines. */
+    COMPACT,
+
+    /**
+     * Too wide for the compact treatment, too small for the side-by-side stage: the stacked header,
+     * still clamped. The band the two-boolean version had no answer for.
+     */
+    MEDIUM,
+
+    /** The side-by-side stage — poster beside facts — and the overview in full. */
+    WIDE,
+}
+
+/**
+ * Which shape a viewport of [maxWidth] × [maxHeight] gets.
+ *
+ * [DetailLayout.WIDE] needs width *and* height: a phone in landscape (e.g. 800×360dp) clears
+ * [WIDE_BREAKPOINT] on width while being far too short to afford a side-by-side header on top of a
+ * fixed-height banner — the pair together left the header crammed into ~30dp of remaining height.
+ * [WIDE_MIN_HEIGHT] rules that shape out; every tablet orientation clears it, phone landscape never
+ * does. A viewport that is wide but short therefore lands in [DetailLayout.MEDIUM] rather than
+ * falling all the way back to [DetailLayout.COMPACT] — it is not a phone-width screen, and the
+ * banner fraction it gets already accounts for the short height.
+ */
+internal fun detailLayoutFor(
     maxWidth: Dp,
     maxHeight: Dp,
-): Boolean = maxWidth >= WIDE_BREAKPOINT && maxHeight >= WIDE_MIN_HEIGHT
+): DetailLayout =
+    when {
+        maxWidth >= WIDE_BREAKPOINT && maxHeight >= WIDE_MIN_HEIGHT -> DetailLayout.WIDE
+        maxWidth < COMPACT_MAX_WIDTH -> DetailLayout.COMPACT
+        else -> DetailLayout.MEDIUM
+    }
+
+/**
+ * Whether the overview is clamped to a tappable few lines rather than run in full.
+ *
+ * Both non-stage layouts clamp. [DetailLayout.MEDIUM] is the behaviour change: that band used to
+ * get the full paragraph because the clamp was keyed on the compact *width* alone.
+ */
+internal val DetailLayout.clampsOverview: Boolean
+    get() = this != DetailLayout.WIDE
 
 /**
  * How tall the backdrop banner is for a viewport of [maxWidth] × [maxHeight].

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Bumalik</string>
-    <string name="detail_home">Home</string>
-    <string name="detail_play">I-play</string>
     <string name="detail_resume">Ipagpatuloy</string>
     <string name="detail_download">I-download</string>
-    <string name="detail_download_cancel">Kanselahin</string>
     <string name="detail_download_remove">Alisin</string>
-    <string name="detail_download_retry">Subukan muli</string>
     <string name="detail_play_episode">I-play ang episode na ito</string>
     <string name="detail_mark_watched">Markahang napanood na</string>
     <string name="detail_mark_unwatched">Markahang hindi pa napapanood</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">Tanggalin ang download?</string>
     <string name="detail_delete_download_dialog_message">Aalisin nito ito sa device na ito. Puwede mo itong i-download ulit anumang oras.</string>
     <string name="detail_delete_download_dialog_confirm">Tanggalin</string>
-    <string name="detail_delete_download_dialog_cancel">Kanselahin</string>
 
     <string name="detail_error_unknown">May nangyaring mali sa pag-load ng item na ito.</string>
 </resources>

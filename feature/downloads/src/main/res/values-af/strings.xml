@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Berging gebruik</string>
     <string name="downloads_usage_queue_label">Wagtouvordering</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Speel</string>
 
     <string name="downloads_action_delete">Skrap aflaai</string>
     <string name="downloads_action_cancel">Kanselleer aflaai</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Skrap %1$s?</string>
     <string name="downloads_delete_dialog_message">Die afgelaaide lêers word van hierdie toestel verwyder. Jy kan dit later weer aflaai.</string>
     <string name="downloads_delete_dialog_confirm">Skrap</string>
-    <string name="downloads_delete_dialog_cancel">Kanselleer</string>
 
     <string name="downloads_progress_of">%1$s van %2$s</string>
     <string name="downloads_progress_of_approx">%1$s van ~%2$s</string>

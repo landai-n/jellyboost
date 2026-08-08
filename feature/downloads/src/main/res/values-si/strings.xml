@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">භාවිත කළ ආචයනය</string>
     <string name="downloads_usage_queue_label">පෝලිමේ ප්‍රගතිය</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">වාදනය කරන්න</string>
     <string name="downloads_action_delete">බාගත කිරීම මකන්න</string>
     <string name="downloads_action_cancel">බාගත කිරීම අවලංගු කරන්න</string>
     <string name="downloads_action_pause">බාගත කිරීම විරාම කරන්න</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">%1$s මකන්නද?</string>
     <string name="downloads_delete_dialog_message">බාගත කළ ගොනු මෙම උපාංගයෙන් ඉවත් කරනු ලැබේ. ඔබට පසුව එය නැවත බාගත කළ හැක.</string>
     <string name="downloads_delete_dialog_confirm">මකන්න</string>
-    <string name="downloads_delete_dialog_cancel">අවලංගු කරන්න</string>
     <string name="downloads_progress_of">%2$s න් %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s න් %1$s</string>
     <string name="downloads_progress_of_capped">%2$s දක්වා ප්‍රමාණයෙන් %1$s</string>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Oynatıcıyı kapat</string>
-    <string name="player_play">Oynat</string>
     <string name="player_pause">Duraklat</string>
     <string name="player_rewind">10 saniye geri sar</string>
     <string name="player_forward">30 saniye ileri sar</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Gruptan ayrıl</string>
     <string name="player_syncplay_leave_title">Bu gruptan ayrılınsın mı?</string>
     <string name="player_syncplay_leave_body">Oynatma burada, kendi başına devam eder. Yeniden katılmak, grubu tekrar seçmek anlamına gelir.</string>
-    <string name="player_syncplay_cancel">İptal</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d kişi izliyor</item>
         <item quantity="other">%d kişi izliyor</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s ögesini yukarı taşı</string>
     <string name="player_syncplay_queue_move_down_item">%1$s ögesini aşağı taşı</string>
     <string name="player_syncplay_queue_remove_item">%1$s ögesini kuyruktan kaldır</string>
-    <string name="player_syncplay_queue_play">Oynat</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d öğe kuyruğa eklendi</item>
         <item quantity="other">%d öğe kuyruğa eklendi</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">Grup, erişiminiz olmayan bir şeyi izliyor.</string>
     <string name="player_message_syncplay_item_unavailable">Grubun izlediği şey açılamadı.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Geri</string>
-    <string name="player_syncplay_groups_home">Ana Sayfa</string>
     <string name="player_syncplay_groups_create">Grup oluştur</string>
     <string name="player_syncplay_groups_create_title">Grubunuza ad verin</string>
     <string name="player_syncplay_groups_create_hint">Grup adı</string>

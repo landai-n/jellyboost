@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Agordoj</string>
-    <string name="settings_back">Reen</string>
-    <string name="settings_home">Hejmo</string>
     <string name="settings_section_playback">Ludado</string>
     <string name="settings_skip_intro">Preterlasi la enkondukon</string>
     <string name="settings_skip_outro">Preterlasi la finaĵon</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Ĉu adiaŭi?</string>
     <string name="settings_sign_out_dialog_message">Vi bezonos vian servil-adreson kaj pasvorton por reensaluti.</string>
     <string name="settings_sign_out_delete_downloads">Ankaŭ forigi elŝutojn de ĉi tiu aparato</string>
-    <string name="settings_cancel">Nuligi</string>
     <string name="settings_section_about">Pri la aplikaĵo</string>
     <string name="settings_version">Versio de la aplikaĵo</string>
 </resources>

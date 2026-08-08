@@ -3,8 +3,6 @@
     <string name="libraries_empty">Nog geen biblioteke nie. Voeg een by op die bediener.</string>
     <string name="libraries_title">Biblioteke</string>
 
-    <string name="library_back">Terug</string>
-    <string name="library_home">Tuis</string>
     <string name="library_sort">Sorteer</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Alles</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Niks om hier te wys nie.</string>
     <string name="library_empty_filtered">Geen item pas by hierdie filters nie.</string>
     <string name="library_empty_clear_filters">Maak filters skoon</string>
-    <string name="library_retry">Probeer weer</string>
 
     <string name="library_error_unknown">Iets het verkeerd geloop met die laai van hierdie biblioteek.</string>
 </resources>

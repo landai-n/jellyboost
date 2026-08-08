@@ -23,7 +23,6 @@
     <string name="downloads_usage_storage_label">Искоришћено складиште</string>
     <string name="downloads_usage_queue_label">Напредак реда чекања</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Пусти</string>
 
     <string name="downloads_action_delete">Обриши преузимање</string>
     <string name="downloads_action_cancel">Откажи преузимање</string>
@@ -48,7 +47,6 @@
     <string name="downloads_delete_dialog_title">Обрисати %1$s?</string>
     <string name="downloads_delete_dialog_message">Преузети фајлови се уклањају са овог уређаја. Можете га поново преузети касније.</string>
     <string name="downloads_delete_dialog_confirm">Обриши</string>
-    <string name="downloads_delete_dialog_cancel">Откажи</string>
 
     <string name="downloads_progress_of">%1$s од %2$s</string>
     <string name="downloads_progress_of_approx">%1$s од ~%2$s</string>

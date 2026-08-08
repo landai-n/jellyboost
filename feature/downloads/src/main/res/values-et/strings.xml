@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Kasutatud salvestusruum</string>
     <string name="downloads_usage_queue_label">Järjekorra edenemine</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Esita</string>
 
     <string name="downloads_action_delete">Kustuta allalaadimine</string>
     <string name="downloads_action_cancel">Tühista allalaadimine</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Kustutada %1$s?</string>
     <string name="downloads_delete_dialog_message">Allalaaditud failid eemaldatakse sellest seadmest. Saad selle hiljem uuesti alla laadida.</string>
     <string name="downloads_delete_dialog_confirm">Kustuta</string>
-    <string name="downloads_delete_dialog_cancel">Tühista</string>
 
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>

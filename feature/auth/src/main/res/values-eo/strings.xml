@@ -29,7 +29,6 @@
     <string name="login_quick_connect_instructions">Malfermu Jellyfin sur aparato, kie vi jam estas ensalutinta, iru al Rapida Konekto kaj enigu ĉi tiun kodon.</string>
     <string name="login_quick_connect_code_description">Via kodo estas %1$s</string>
     <string name="login_quick_connect_waiting">Atendante aprobon…</string>
-    <string name="login_quick_connect_cancel">Nuligi</string>
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Provita %d kandidata adreso, sen sukceso.</item>
         <item quantity="other">Provitaj %d kandidataj adresoj, sen sukceso.</item>

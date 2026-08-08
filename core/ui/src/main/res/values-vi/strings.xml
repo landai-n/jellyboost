@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Quay lại</string>
+    <string name="action_home">Trang chủ</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="action_play">Phát</string>
+
     <string name="badge_downloaded">Đã tải xuống</string>
     <string name="badge_download_queued">Đang chờ tải xuống</string>
     <string name="badge_download_paused">Đã tạm dừng tải xuống</string>

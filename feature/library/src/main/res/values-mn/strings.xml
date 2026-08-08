@@ -3,8 +3,6 @@
     <string name="libraries_empty">Одоогоор сан алга. Сервер дээр сан нэмнэ үү.</string>
     <string name="libraries_title">Сангууд</string>
 
-    <string name="library_back">Буцах</string>
-    <string name="library_home">Нүүр</string>
     <string name="library_sort">Эрэмбэлэх</string>
     <string name="library_filter">Шүүлтүүр</string>
     <string name="library_filter_all">Бүгд</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Энд харуулах зүйл алга.</string>
     <string name="library_empty_filtered">Эдгээр шүүлтүүрт тохирох зүйл алга.</string>
     <string name="library_empty_clear_filters">Шүүлтүүрийг цэвэрлэх</string>
-    <string name="library_retry">Дахин оролдох</string>
 
     <string name="library_error_unknown">Энэ санг ачаалахад алдаа гарлаа.</string>
 </resources>

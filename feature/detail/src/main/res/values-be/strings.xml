@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Назад</string>
-    <string name="detail_home">Галоўная</string>
-    <string name="detail_play">Прайграць</string>
     <string name="detail_resume">Працягнуць</string>
     <string name="detail_download">Спампаваць</string>
-    <string name="detail_download_cancel">Скасаваць</string>
     <string name="detail_download_remove">Выдаліць</string>
-    <string name="detail_download_retry">Паўтарыць</string>
     <string name="detail_play_episode">Прайграць гэты эпізод</string>
     <string name="detail_mark_watched">Пазначыць прагледжаным</string>
     <string name="detail_mark_unwatched">Пазначыць непрагледжаным</string>
@@ -75,7 +70,6 @@
     <string name="detail_delete_download_dialog_title">Выдаліць спампоўку?</string>
     <string name="detail_delete_download_dialog_message">Гэта выдаліць яе з гэтай прылады. Вы можаце спампаваць яе зноў у любы час.</string>
     <string name="detail_delete_download_dialog_confirm">Выдаліць</string>
-    <string name="detail_delete_download_dialog_cancel">Скасаваць</string>
 
     <string name="detail_error_unknown">Пры загрузцы гэтага элемента нешта пайшло не так.</string>
 </resources>

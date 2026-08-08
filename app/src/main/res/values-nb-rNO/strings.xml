@@ -15,7 +15,6 @@
     <string name="offline_no_network">Ingen nettverk – viser nedlastet innhold</string>
     <string name="offline_server_unreachable">Får ikke kontakt med serveren – viser nedlastet innhold</string>
     <string name="offline_forced">Offline-modus er på – viser nedlastet innhold</string>
-    <string name="offline_retry">Prøv igjen</string>
     <string name="offline_go_online">Gå online</string>
 
     <string name="syncplay_groups_action">SyncPlay-grupper</string>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">प्लेयर बंद करा</string>
-    <string name="player_play">प्ले करा</string>
     <string name="player_pause">थांबवा</string>
     <string name="player_rewind">10 सेकंद मागे जा</string>
     <string name="player_forward">30 सेकंद पुढे जा</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">हा गट सोडायचा का?</string>
     <string name="player_syncplay_leave_body">प्लेबॅक इथे स्वतंत्रपणे सुरू राहील. पुन्हा सामील होण्यासाठी गट पुन्हा निवडावा लागेल.</string>
 
-    <string name="player_syncplay_cancel">रद्द करा</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d व्यक्ती पाहत आहे</item>
         <item quantity="other">%d व्यक्ती पाहत आहेत</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s वर हलवा</string>
     <string name="player_syncplay_queue_move_down_item">%1$s खाली हलवा</string>
     <string name="player_syncplay_queue_remove_item">%1$s रांगेतून काढून टाका</string>
-    <string name="player_syncplay_queue_play">प्ले करा</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d आयटम रांगेत आहे</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">गट जे पाहत आहे ते उघडता आले नाही.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">मागे</string>
-    <string name="player_syncplay_groups_home">मुख्यपृष्ठ</string>
     <string name="player_syncplay_groups_create">गट तयार करा</string>
     <string name="player_syncplay_groups_create_title">आपल्या गटाला नाव द्या</string>
     <string name="player_syncplay_groups_create_hint">गटाचे नाव</string>

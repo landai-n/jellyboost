@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Player zoumaachen</string>
-    <string name="player_play">Ofspillen</string>
     <string name="player_pause">Paus</string>
     <string name="player_rewind">10 Sekonnen zréckspréngen</string>
     <string name="player_forward">30 Sekonnen no vir sprangen</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Dës Grupp verloossen?</string>
     <string name="player_syncplay_leave_body">D\'Widderginn geet hei eleng weider. Fir nees bäizekommen, muss d\'Grupp nees ausgewielt ginn.</string>
 
-    <string name="player_syncplay_cancel">Ofbriechen</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d Persoun kuckt mat</item>
         <item quantity="other">%d Persounen kucken mat</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s no uewen réckelen</string>
     <string name="player_syncplay_queue_move_down_item">%1$s no ënnen réckelen</string>
     <string name="player_syncplay_queue_remove_item">%1$s aus der Warteschlaang ewechhuelen</string>
-    <string name="player_syncplay_queue_play">Ofspillen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d Element an der Warteschlaang</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Konnt net opmaachen, wat d\'Grupp kuckt.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Zréck</string>
-    <string name="player_syncplay_groups_home">Start</string>
     <string name="player_syncplay_groups_create">Grupp erstellen</string>
     <string name="player_syncplay_groups_create_title">Gëff denger Grupp en Numm</string>
     <string name="player_syncplay_groups_create_hint">Gruppennumm</string>

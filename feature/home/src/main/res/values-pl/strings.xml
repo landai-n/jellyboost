@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Następne</string>
     <string name="home_section_latest">Najnowsze: %1$s</string>
     <string name="home_hero_resume">Wznów</string>
-    <string name="home_hero_play">Odtwórz</string>
     <string name="home_hero_details">Szczegóły</string>
     <string name="home_hero_rated">Kategoria wiekowa %1$s</string>
     <plurals name="home_minutes_left">

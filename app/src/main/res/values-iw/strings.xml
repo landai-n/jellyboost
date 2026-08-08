@@ -15,7 +15,6 @@
     <string name="offline_no_network">אין רשת — מוצג תוכן שהורד</string>
     <string name="offline_server_unreachable">לא ניתן להתחבר לשרת — מוצג תוכן שהורד</string>
     <string name="offline_forced">מצב לא מקוון פעיל — מוצג תוכן שהורד</string>
-    <string name="offline_retry">ניסיון חוזר</string>
     <string name="offline_go_online">התחברות לאינטרנט</string>
 
     <string name="syncplay_groups_action">קבוצות SyncPlay</string>

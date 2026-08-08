@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Назад</string>
-    <string name="detail_home">Начало</string>
-    <string name="detail_play">Пусни</string>
     <string name="detail_resume">Продължи</string>
     <string name="detail_download">Изтегли</string>
-    <string name="detail_download_cancel">Отказ</string>
     <string name="detail_download_remove">Премахни</string>
-    <string name="detail_download_retry">Опитай отново</string>
     <string name="detail_play_episode">Пусни този епизод</string>
     <string name="detail_mark_watched">Маркирай като гледано</string>
     <string name="detail_mark_unwatched">Маркирай като негледано</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Да се изтрие ли изтеглянето?</string>
     <string name="detail_delete_download_dialog_message">Това го премахва от устройството. Можете да го изтеглите отново по всяко време.</string>
     <string name="detail_delete_download_dialog_confirm">Изтрий</string>
-    <string name="detail_delete_download_dialog_cancel">Отказ</string>
 
     <string name="detail_error_unknown">Нещо се обърка при зареждането на този елемент.</string>
 </resources>

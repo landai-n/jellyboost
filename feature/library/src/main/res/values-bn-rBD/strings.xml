@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">এখনও কোনো লাইব্রেরি নেই। সার্ভারে একটি যোগ করুন।</string>
     <string name="libraries_title">লাইব্রেরি</string>
-    <string name="library_back">ফিরে যান</string>
-    <string name="library_home">হোম</string>
     <string name="library_sort">সাজান</string>
     <string name="library_filter">ফিল্টার</string>
     <string name="library_filter_all">সব</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">এখানে দেখানোর মতো কিছু নেই।</string>
     <string name="library_empty_filtered">এই ফিল্টারগুলোর সাথে কোনো আইটেম মেলে না।</string>
     <string name="library_empty_clear_filters">ফিল্টার সাফ করুন</string>
-    <string name="library_retry">আবার চেষ্টা করুন</string>
     <string name="library_error_unknown">এই লাইব্রেরি লোড করতে কিছু ভুল হয়েছে।</string>
 </resources>

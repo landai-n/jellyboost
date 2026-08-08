@@ -15,7 +15,6 @@
     <string name="offline_no_network">Žádné připojení — zobrazují se stažená média</string>
     <string name="offline_server_unreachable">Server není dostupný — zobrazují se stažená média</string>
     <string name="offline_forced">Offline režim je zapnutý — zobrazují se stažená média</string>
-    <string name="offline_retry">Zkusit znovu</string>
     <string name="offline_go_online">Přejít online</string>
 
     <string name="syncplay_groups_action">Skupiny SyncPlay</string>

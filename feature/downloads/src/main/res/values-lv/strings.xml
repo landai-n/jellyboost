@@ -23,7 +23,6 @@
     <string name="downloads_usage_storage_label">Izmantotā krātuve</string>
     <string name="downloads_usage_queue_label">Rindas norise</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Atskaņot</string>
 
     <string name="downloads_action_delete">Dzēst lejupielādi</string>
     <string name="downloads_action_cancel">Atcelt lejupielādi</string>
@@ -48,7 +47,6 @@
     <string name="downloads_delete_dialog_title">Dzēst %1$s?</string>
     <string name="downloads_delete_dialog_message">Lejupielādētie faili tiek noņemti no šīs ierīces. Varat to lejupielādēt vēlreiz vēlāk.</string>
     <string name="downloads_delete_dialog_confirm">Dzēst</string>
-    <string name="downloads_delete_dialog_cancel">Atcelt</string>
 
     <string name="downloads_progress_of">%1$s no %2$s</string>
     <string name="downloads_progress_of_approx">%1$s no ~%2$s</string>

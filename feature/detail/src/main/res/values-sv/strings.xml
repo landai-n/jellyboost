@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Tillbaka</string>
-    <string name="detail_home">Hem</string>
-    <string name="detail_play">Spela upp</string>
     <string name="detail_resume">Återuppta</string>
     <string name="detail_download">Ladda ner</string>
-    <string name="detail_download_cancel">Avbryt</string>
     <string name="detail_download_remove">Ta bort</string>
-    <string name="detail_download_retry">Försök igen</string>
     <string name="detail_play_episode">Spela upp det här avsnittet</string>
     <string name="detail_mark_watched">Markera som sedd</string>
     <string name="detail_mark_unwatched">Markera som osedd</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Ta bort nedladdning?</string>
     <string name="detail_delete_download_dialog_message">Det här tar bort den från den här enheten. Du kan ladda ner den igen när som helst.</string>
     <string name="detail_delete_download_dialog_confirm">Ta bort</string>
-    <string name="detail_delete_download_dialog_cancel">Avbryt</string>
 
     <string name="detail_error_unknown">Något gick fel när objektet lästes in.</string>
 </resources>

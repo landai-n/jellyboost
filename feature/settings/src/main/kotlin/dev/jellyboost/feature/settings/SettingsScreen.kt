@@ -1,24 +1,16 @@
 package dev.jellyboost.feature.settings
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -44,15 +36,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
+import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.GhostPillButton
-import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.JellyboostAlertDialog
+import dev.jellyboost.core.ui.component.ScreenHeader
+import dev.jellyboost.core.ui.component.ScreenHeaderTitle
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
-import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.data.downloads.model.StorageLocations
 import dev.jellyboost.data.downloads.model.StorageUsage
 import dev.jellyboost.data.downloads.model.StorageVolumeOption
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The Settings screen (docs/PLAN.md, "Screens" → Settings): preferences, account and sign-out.
@@ -194,36 +188,10 @@ private fun SettingsHeader(
     onBack: () -> Unit,
     onHome: () -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.settings_back),
-            onClick = onBack,
-        )
-        GlassIconButton(
-            icon = Icons.Filled.Home,
-            contentDescription = stringResource(R.string.settings_home),
-            onClick = onHome,
-        )
-        Text(
-            text = stringResource(R.string.settings_title),
-            style = JellyfinTypeExtras.ScreenTitle,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(start = Dimens.SpaceExtraSmall),
-        )
+    ScreenHeader(onBack = onBack, onHome = onHome) {
+        ScreenHeaderTitle(text = stringResource(R.string.settings_title))
     }
 }
-
-/** Side padding of the header — the same 20dp `LibraryGridScreen`'s header uses. */
-private val HeaderPadding = 20.dp
 
 /** How wide the list is allowed to get; wider than a login form, narrow enough to stay one column. */
 internal val SettingsContentMaxWidth: Dp = 640.dp
@@ -384,36 +352,17 @@ private fun SwitchStorageDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
+    ConfirmDialog(
+        title = stringResource(R.string.settings_storage_switch_title),
+        text =
+            pluralStringResource(
+                R.plurals.settings_storage_switch_message,
+                downloadCount,
+                downloadCount,
             ),
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = { Text(text = stringResource(R.string.settings_storage_switch_title)) },
-        text = {
-            Text(
-                text =
-                    pluralStringResource(
-                        R.plurals.settings_storage_switch_message,
-                        downloadCount,
-                        downloadCount,
-                    ),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.settings_storage_switch_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.settings_cancel))
-            }
-        },
+        confirmLabel = stringResource(R.string.settings_storage_switch_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }
 
@@ -587,25 +536,8 @@ private fun SignOutDialog(
 ) {
     var deleteDownloads by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
-            ),
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = { Text(text = stringResource(R.string.settings_sign_out_dialog_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
-                Text(text = stringResource(R.string.settings_sign_out_dialog_message))
-                DeleteDownloadsCheckbox(
-                    checked = deleteDownloads,
-                    onCheckedChange = { deleteDownloads = it },
-                )
-            }
-        },
         confirmButton = {
             TextButton(onClick = { onConfirm(deleteDownloads) }) {
                 Text(text = stringResource(R.string.settings_sign_out))
@@ -613,7 +545,19 @@ private fun SignOutDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.settings_cancel))
+                Text(text = stringResource(CoreUiR.string.action_cancel))
+            }
+        },
+        title = { Text(text = stringResource(R.string.settings_sign_out_dialog_title)) },
+        // Not a [ConfirmDialog]: the body carries a checkbox as well as a sentence, and the choice
+        // it offers is part of what the confirm button then does.
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
+                Text(text = stringResource(R.string.settings_sign_out_dialog_message))
+                DeleteDownloadsCheckbox(
+                    checked = deleteDownloads,
+                    onCheckedChange = { deleteDownloads = it },
+                )
             }
         },
     )

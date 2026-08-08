@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Close player</string>
-    <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Skip back 10 seconds</string>
     <string name="player_forward">Skip forward 30 seconds</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Leave group</string>
     <string name="player_syncplay_leave_title">Leave this group?</string>
     <string name="player_syncplay_leave_body">Playback carries on here, on its own. Rejoining means picking the group again.</string>
-    <string name="player_syncplay_cancel">Cancel</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person watching</item>
         <item quantity="other">%d people watching</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">Move %1$s up</string>
     <string name="player_syncplay_queue_move_down_item">Move %1$s down</string>
     <string name="player_syncplay_queue_remove_item">Remove %1$s from the queue</string>
-    <string name="player_syncplay_queue_play">Play</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item queued</item>
         <item quantity="other">%d items queued</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">The group is watching something you don\'t have access to.</string>
     <string name="player_message_syncplay_item_unavailable">Couldn\'t open what the group is watching.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Back</string>
-    <string name="player_syncplay_groups_home">Home</string>
     <string name="player_syncplay_groups_create">Create group</string>
     <string name="player_syncplay_groups_create_title">Name your group</string>
     <string name="player_syncplay_groups_create_hint">Group name</string>

@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">ยังไม่มีคลังสื่อ เพิ่มคลังบนเซิร์ฟเวอร์</string>
     <string name="libraries_title">คลังสื่อ</string>
-    <string name="library_back">ย้อนกลับ</string>
-    <string name="library_home">หน้าแรก</string>
     <string name="library_sort">จัดเรียง</string>
     <string name="library_filter">กรอง</string>
     <string name="library_filter_all">ทั้งหมด</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">ไม่มีอะไรให้แสดงที่นี่</string>
     <string name="library_empty_filtered">ไม่มีรายการที่ตรงกับตัวกรองเหล่านี้</string>
     <string name="library_empty_clear_filters">ล้างตัวกรอง</string>
-    <string name="library_retry">ลองอีกครั้ง</string>
     <string name="library_error_unknown">เกิดข้อผิดพลาดขณะโหลดคลังนี้</string>
 </resources>

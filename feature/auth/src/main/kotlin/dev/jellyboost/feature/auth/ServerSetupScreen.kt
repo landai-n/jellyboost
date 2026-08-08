@@ -411,58 +411,48 @@ private fun ManualAddressSection(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
-    ) {
-        Column(
-            modifier = Modifier.padding(Dimens.PanelPadding),
-            verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
-        ) {
-            ManualAddressField(
-                state = state,
-                onAddressChange = onAddressChange,
-                onDone = {
-                    keyboardController?.hide()
-                    onConnect()
-                },
-            )
+    AuthPanel {
+        ManualAddressField(
+            state = state,
+            onAddressChange = onAddressChange,
+            onDone = {
+                keyboardController?.hide()
+                onConnect()
+            },
+        )
 
-            PrimaryPillButton(
-                text = stringResource(R.string.server_setup_connect),
-                onClick = {
-                    keyboardController?.hide()
-                    onConnect()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = state.canConnect,
-            )
+        PrimaryPillButton(
+            text = stringResource(R.string.server_setup_connect),
+            onClick = {
+                keyboardController?.hide()
+                onConnect()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = state.canConnect,
+        )
 
-            if (state.isConnecting) {
-                // Bar and caption as one polite live region, so "Contacting the server…" is spoken
-                // when it appears instead of being a line the user has to go looking for
-                // (accessibility audit 2026-08-05, F4). The inner spacing repeats the panel's own
-                // [AuthPanelInnerGap] so grouping the two costs no layout change.
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-                    verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
-                ) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth().height(ConnectingProgressHeight),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = ProgressTrackColor,
-                    )
-                    Text(
-                        text = stringResource(R.string.server_setup_connecting),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+        if (state.isConnecting) {
+            // Bar and caption as one polite live region, so "Contacting the server…" is spoken
+            // when it appears instead of being a line the user has to go looking for
+            // (accessibility audit 2026-08-05, F4). The inner spacing repeats the panel's own
+            // [AuthPanelInnerGap] so grouping the two costs no layout change.
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
+                verticalArrangement = Arrangement.spacedBy(AuthPanelInnerGap),
+            ) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().height(ConnectingProgressHeight),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = ProgressTrackColor,
+                )
+                Text(
+                    text = stringResource(R.string.server_setup_connecting),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -544,6 +534,39 @@ private fun HintRow(
             text = text,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * The "m-panel" both auth screens group a form onto: a solid surface, the app's panel hairline, and
+ * one interior gutter (claude.ai/design, "Login (landscape tablet)").
+ *
+ * It was written twice — this screen's manual-address panel and `LoginScreen`'s sign-in card — kept
+ * in step by a comment on each saying it matched the other, and they had drifted anyway: the inner
+ * gap was [AuthPanelInnerGap] here and `Dimens.SpaceLarge` (16dp) there (audit 2026-08-08, DUP-9).
+ * The 14dp wins, because it is the number the spec gives and the one the comments claimed both
+ * screens were using; the sign-in card therefore tightens by 2dp between its fields.
+ *
+ * @param verticalArrangement overridable for a panel whose children space themselves, but the
+ *   default is the spec's and is what both current callers want.
+ */
+@Composable
+internal fun AuthPanel(
+    modifier: Modifier = Modifier,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(AuthPanelInnerGap),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
+    ) {
+        Column(
+            modifier = Modifier.padding(Dimens.PanelPadding),
+            verticalArrangement = verticalArrangement,
+            content = content,
         )
     }
 }

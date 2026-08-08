@@ -3,8 +3,6 @@
     <string name="libraries_empty">Inga bibliotek än. Lägg till ett på servern.</string>
     <string name="libraries_title">Bibliotek</string>
 
-    <string name="library_back">Tillbaka</string>
-    <string name="library_home">Hem</string>
     <string name="library_sort">Sortera</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Alla</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Inget att visa här.</string>
     <string name="library_empty_filtered">Inget objekt matchar dessa filter.</string>
     <string name="library_empty_clear_filters">Rensa filter</string>
-    <string name="library_retry">Försök igen</string>
 
     <string name="library_error_unknown">Något gick fel när biblioteket lästes in.</string>
 </resources>

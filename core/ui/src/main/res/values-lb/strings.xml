@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Zréck</string>
+    <string name="action_home">Start</string>
+    <string name="action_cancel">Ofbriechen</string>
+    <string name="action_play">Ofspillen</string>
+
     <string name="badge_downloaded">Erofgeluede</string>
     <string name="badge_download_queued">An der Downloadwarteschlaang</string>
     <string name="badge_download_paused">Download pauséiert</string>

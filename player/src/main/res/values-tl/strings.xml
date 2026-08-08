@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Isara ang player</string>
-    <string name="player_play">I-play</string>
     <string name="player_pause">I-pause</string>
     <string name="player_rewind">Bumalik ng 10 segundo</string>
     <string name="player_forward">Sumulong ng 30 segundo</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Umalis sa grupo</string>
     <string name="player_syncplay_leave_title">Umalis sa grupong ito?</string>
     <string name="player_syncplay_leave_body">Magpapatuloy ang playback dito, nang mag-isa. Ang muling pagsali ay nangangahulugan ng pagpili ulit sa grupo.</string>
-    <string name="player_syncplay_cancel">Kanselahin</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d taong nanonood</item>
         <item quantity="other">%d taong nanonood</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">Ilipat pataas ang %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Ilipat pababa ang %1$s</string>
     <string name="player_syncplay_queue_remove_item">Alisin ang %1$s sa pila</string>
-    <string name="player_syncplay_queue_play">I-play</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item ang nasa pila</item>
         <item quantity="other">%d item ang nasa pila</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">Nanonood ang grupo ng isang bagay na wala kang access.</string>
     <string name="player_message_syncplay_item_unavailable">Hindi mabuksan ang pinapanood ng grupo.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Bumalik</string>
-    <string name="player_syncplay_groups_home">Home</string>
     <string name="player_syncplay_groups_create">Gumawa ng grupo</string>
     <string name="player_syncplay_groups_create_title">Pangalanan ang grupo mo</string>
     <string name="player_syncplay_groups_create_hint">Pangalan ng grupo</string>

@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Sekve</string>
     <string name="home_section_latest">Plej novaj: %1$s</string>
     <string name="home_hero_resume">Daŭrigi</string>
-    <string name="home_hero_play">Ludi</string>
     <string name="home_hero_details">Detaloj</string>
     <string name="home_hero_rated">Klasita %1$s</string>
     <plurals name="home_minutes_left">

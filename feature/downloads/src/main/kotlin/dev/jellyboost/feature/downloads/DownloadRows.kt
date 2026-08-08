@@ -45,6 +45,7 @@ import dev.jellyboost.core.ui.theme.mSurface
 import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
 import kotlin.math.roundToInt
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /** Artwork corner radius for every row on this screen — the "m-surface card" language's own radius. */
 private val ROW_ART_RADIUS = 8.dp
@@ -112,7 +113,7 @@ internal fun DownloadedRow(
                 // used to be a role-less `clickable`, so the one thing tapping a downloaded film
                 // does — play it, from where it was left — announced as nothing at all.
                 .clickable(
-                    onClickLabel = stringResource(R.string.downloads_action_play),
+                    onClickLabel = stringResource(CoreUiR.string.action_play),
                     role = Role.Button,
                     onClick = onPlay,
                 ).padding(Dimens.SpaceMedium),

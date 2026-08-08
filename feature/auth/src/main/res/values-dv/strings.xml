@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">ތިޔަ މިހާރުވެސް ސައިން އިންވެފައިވާ ޑިވައިސްއެއްގައި Jellyfin ހުޅުވާ، Quick Connect އަށް ގޮސް، މި ކޯޑު ޖަހާ.</string>
     <string name="login_quick_connect_code_description">ތިޔަ ކޯޑަކީ %1$s</string>
     <string name="login_quick_connect_waiting">ހުއްދައަށް އިންތިޒާރުކުރަނީ…</string>
-    <string name="login_quick_connect_cancel">ކެންސަލްކުރޭ</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d އެޑްރެސް ބަލައި، ކާމިޔާބެއް ނުވި.</item>

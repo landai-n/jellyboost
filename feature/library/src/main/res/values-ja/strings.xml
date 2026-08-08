@@ -3,8 +3,6 @@
     <string name="libraries_empty">ライブラリがまだありません。サーバーで追加してください。</string>
     <string name="libraries_title">ライブラリ</string>
 
-    <string name="library_back">戻る</string>
-    <string name="library_home">ホーム</string>
     <string name="library_sort">並べ替え</string>
     <string name="library_filter">フィルター</string>
     <string name="library_filter_all">すべて</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">表示できるものがありません。</string>
     <string name="library_empty_filtered">これらのフィルターに一致する項目がありません。</string>
     <string name="library_empty_clear_filters">フィルターをクリア</string>
-    <string name="library_retry">再試行</string>
 
     <string name="library_error_unknown">このライブラリの読み込み中に問題が発生しました。</string>
 </resources>

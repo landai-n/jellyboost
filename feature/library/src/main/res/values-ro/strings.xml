@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Nicio bibliotecă încă. Adăugați una pe server.</string>
     <string name="libraries_title">Biblioteci</string>
-    <string name="library_back">Înapoi</string>
-    <string name="library_home">Acasă</string>
     <string name="library_sort">Sortează</string>
     <string name="library_filter">Filtrează</string>
     <string name="library_filter_all">Tot</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Nimic de afișat aici.</string>
     <string name="library_empty_filtered">Niciun element nu corespunde acestor filtre.</string>
     <string name="library_empty_clear_filters">Șterge filtrele</string>
-    <string name="library_retry">Reîncearcă</string>
     <string name="library_error_unknown">Ceva nu a mers bine la încărcarea acestei biblioteci.</string>
 </resources>

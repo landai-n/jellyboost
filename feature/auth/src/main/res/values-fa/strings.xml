@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Jellyfin را روی دستگاهی که قبلاً در آن وارد شده‌اید باز کنید، به Quick Connect بروید و این کد را وارد کنید.</string>
     <string name="login_quick_connect_code_description">کد شما %1$s است</string>
     <string name="login_quick_connect_waiting">در انتظار تأیید…</string>
-    <string name="login_quick_connect_cancel">لغو</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d آدرس نامزد بدون موفقیت امتحان شد.</item>

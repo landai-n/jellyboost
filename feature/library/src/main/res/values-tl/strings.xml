@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Wala pang aklatan. Magdagdag ng isa sa server.</string>
     <string name="libraries_title">Mga Aklatan</string>
-    <string name="library_back">Bumalik</string>
-    <string name="library_home">Home</string>
     <string name="library_sort">Ayusin</string>
     <string name="library_filter">I-filter</string>
     <string name="library_filter_all">Lahat</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Walang maipapakita dito.</string>
     <string name="library_empty_filtered">Walang item na tumutugma sa mga filter na ito.</string>
     <string name="library_empty_clear_filters">I-clear ang mga filter</string>
-    <string name="library_retry">Subukan muli</string>
     <string name="library_error_unknown">May nangyaring mali sa pag-load ng aklatan na ito.</string>
 </resources>

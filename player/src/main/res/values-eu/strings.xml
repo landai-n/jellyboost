@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Itxi erreproduzigailua</string>
-    <string name="player_play">Erreproduzitu</string>
     <string name="player_pause">Pausatu</string>
     <string name="player_rewind">Atzera egin 10 segundo</string>
     <string name="player_forward">Aurrera egin 30 segundo</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Utzi taldea</string>
     <string name="player_syncplay_leave_title">Talde hau utzi?</string>
     <string name="player_syncplay_leave_body">Erreprodukzioak hemen jarraitzen du, bere kabuz. Berriz elkartzeko taldea berriro aukeratu beharko duzu.</string>
-    <string name="player_syncplay_cancel">Utzi</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">Pertsona %d ikusten</item>
         <item quantity="other">%d pertsona ikusten</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">Igo %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Jaitsi %1$s</string>
     <string name="player_syncplay_queue_remove_item">Kendu %1$s ilaratik</string>
-    <string name="player_syncplay_queue_play">Erreproduzitu</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">Elementu %d ilaran</item>
         <item quantity="other">%d elementu ilaran</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">Taldea sarbiderik ez duzun zerbait ikusten ari da.</string>
     <string name="player_message_syncplay_item_unavailable">Ezin izan da taldeak ikusten ari dena ireki.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Atzera</string>
-    <string name="player_syncplay_groups_home">Hasiera</string>
     <string name="player_syncplay_groups_create">Sortu taldea</string>
     <string name="player_syncplay_groups_create_title">Jarri izena zure taldeari</string>
     <string name="player_syncplay_groups_create_hint">Taldearen izena</string>

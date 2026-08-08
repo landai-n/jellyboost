@@ -8,7 +8,6 @@
     <string name="home_section_next_up">அடுத்தது</string>
     <string name="home_section_latest">சமீபத்திய %1$s</string>
     <string name="home_hero_resume">தொடர்</string>
-    <string name="home_hero_play">இயக்கு</string>
     <string name="home_hero_details">விவரங்கள்</string>
     <string name="home_hero_rated">வயது தரம் %1$s</string>
     <plurals name="home_minutes_left">

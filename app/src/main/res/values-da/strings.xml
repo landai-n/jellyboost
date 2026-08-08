@@ -15,7 +15,6 @@
     <string name="offline_no_network">Intet netværk – viser downloadet indhold</string>
     <string name="offline_server_unreachable">Kan ikke få forbindelse til serveren – viser downloadet indhold</string>
     <string name="offline_forced">Offlinetilstand er slået til – viser downloadet indhold</string>
-    <string name="offline_retry">Prøv igen</string>
     <string name="offline_go_online">Gå online</string>
 
     <string name="syncplay_groups_action">SyncPlay-grupper</string>

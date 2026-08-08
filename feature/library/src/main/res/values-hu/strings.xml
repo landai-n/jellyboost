@@ -3,8 +3,6 @@
     <string name="libraries_empty">Még nincs könyvtár. Adj hozzá egyet a szerveren.</string>
     <string name="libraries_title">Könyvtárak</string>
 
-    <string name="library_back">Vissza</string>
-    <string name="library_home">Kezdőlap</string>
     <string name="library_sort">Rendezés</string>
     <string name="library_filter">Szűrő</string>
     <string name="library_filter_all">Összes</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Itt nincs mit megjeleníteni.</string>
     <string name="library_empty_filtered">Egyik elem sem felel meg a szűrőknek.</string>
     <string name="library_empty_clear_filters">Szűrők törlése</string>
-    <string name="library_retry">Újra</string>
 
     <string name="library_error_unknown">Hiba történt a könyvtár betöltése közben.</string>
 </resources>

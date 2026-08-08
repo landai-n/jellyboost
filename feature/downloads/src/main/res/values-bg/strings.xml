@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Използвано хранилище</string>
     <string name="downloads_usage_queue_label">Напредък на опашката</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Пусни</string>
 
     <string name="downloads_action_delete">Изтрий изтеглянето</string>
     <string name="downloads_action_cancel">Отказ на изтеглянето</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Да се изтрие ли %1$s?</string>
     <string name="downloads_delete_dialog_message">Изтеглените файлове се премахват от това устройство. Можете да го изтеглите отново по-късно.</string>
     <string name="downloads_delete_dialog_confirm">Изтрий</string>
-    <string name="downloads_delete_dialog_cancel">Отказ</string>
 
     <string name="downloads_progress_of">%1$s от %2$s</string>
     <string name="downloads_progress_of_approx">%1$s от ~%2$s</string>

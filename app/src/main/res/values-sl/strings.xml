@@ -15,7 +15,6 @@
     <string name="offline_no_network">Brez omrežja — prikazana je prenesena vsebina</string>
     <string name="offline_server_unreachable">Strežnika ni mogoče doseči — prikazana je prenesena vsebina</string>
     <string name="offline_forced">Način brez povezave je vklopljen — prikazana je prenesena vsebina</string>
-    <string name="offline_retry">Poskusi znova</string>
     <string name="offline_go_online">Poveži se</string>
 
     <string name="syncplay_groups_action">Skupine SyncPlay</string>

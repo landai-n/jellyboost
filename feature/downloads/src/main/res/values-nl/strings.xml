@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Gebruikte opslag</string>
     <string name="downloads_usage_queue_label">Voortgang van de wachtrij</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Afspelen</string>
 
     <string name="downloads_action_delete">Download verwijderen</string>
     <string name="downloads_action_cancel">Download annuleren</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s verwijderen?</string>
     <string name="downloads_delete_dialog_message">De gedownloade bestanden worden van dit apparaat verwijderd. Je kunt het later opnieuw downloaden.</string>
     <string name="downloads_delete_dialog_confirm">Verwijderen</string>
-    <string name="downloads_delete_dialog_cancel">Annuleren</string>
 
     <string name="downloads_progress_of">%1$s van %2$s</string>
     <string name="downloads_progress_of_approx">%1$s van ~%2$s</string>

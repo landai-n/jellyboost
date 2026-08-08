@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Буцах</string>
+    <string name="action_home">Нүүр</string>
+    <string name="action_cancel">Цуцлах</string>
+    <string name="action_play">Тоглуулах</string>
+
     <string name="badge_downloaded">Татагдсан</string>
     <string name="badge_download_queued">Татахаар дараалалд орсон</string>
     <string name="badge_download_paused">Татаж авалт түр зогссон</string>

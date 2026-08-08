@@ -15,7 +15,6 @@
     <string name="offline_no_network">لا يوجد اتصال بالشبكة — يتم عرض الوسائط التي تم تنزيلها</string>
     <string name="offline_server_unreachable">تعذّر الوصول إلى الخادم — يتم عرض الوسائط التي تم تنزيلها</string>
     <string name="offline_forced">وضع عدم الاتصال مفعّل — يتم عرض الوسائط التي تم تنزيلها</string>
-    <string name="offline_retry">إعادة المحاولة</string>
     <string name="offline_go_online">الاتصال بالإنترنت</string>
 
     <string name="syncplay_groups_action">مجموعات SyncPlay</string>

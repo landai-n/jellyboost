@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Als Nächst</string>
     <string name="home_section_latest">Nei an %1$s</string>
     <string name="home_hero_resume">Weiderfueren</string>
-    <string name="home_hero_play">Ofspillen</string>
     <string name="home_hero_details">Detailer</string>
     <string name="home_hero_rated">Alterfräigab %1$s</string>
     <plurals name="home_minutes_left">

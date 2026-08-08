@@ -3,8 +3,6 @@
     <string name="libraries_empty">Noch keine Bibliotheken. Füge eine auf dem Server hinzu.</string>
     <string name="libraries_title">Bibliotheken</string>
 
-    <string name="library_back">Zurück</string>
-    <string name="library_home">Start</string>
     <string name="library_sort">Sortieren</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Alle</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Hier gibt es nichts anzuzeigen.</string>
     <string name="library_empty_filtered">Kein Titel entspricht diesen Filtern.</string>
     <string name="library_empty_clear_filters">Filter zurücksetzen</string>
-    <string name="library_retry">Erneut versuchen</string>
 
     <string name="library_error_unknown">Beim Laden dieser Bibliothek ist etwas schiefgegangen.</string>
 </resources>

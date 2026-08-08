@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">پلیئر بند کریں</string>
-    <string name="player_play">چلائیں</string>
     <string name="player_pause">موقوف کریں</string>
     <string name="player_rewind">10 سیکنڈ پیچھے جائیں</string>
     <string name="player_forward">30 سیکنڈ آگے جائیں</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">یہ گروپ چھوڑیں؟</string>
     <string name="player_syncplay_leave_body">پلے بیک یہاں، اپنے طور پر جاری رہتا ہے۔ دوبارہ شامل ہونے کا مطلب دوبارہ گروپ منتخب کرنا ہے۔</string>
 
-    <string name="player_syncplay_cancel">منسوخ کریں</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d شخص دیکھ رہا ہے</item>
         <item quantity="other">%d لوگ دیکھ رہے ہیں</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s کو اوپر منتقل کریں</string>
     <string name="player_syncplay_queue_move_down_item">%1$s کو نیچے منتقل کریں</string>
     <string name="player_syncplay_queue_remove_item">%1$s کو قطار سے ہٹائیں</string>
-    <string name="player_syncplay_queue_play">چلائیں</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d آئٹم قطار میں ہے</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">گروپ جو دیکھ رہا ہے اسے کھولنا ممکن نہیں تھا۔</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">واپس</string>
-    <string name="player_syncplay_groups_home">ہوم</string>
     <string name="player_syncplay_groups_create">گروپ بنائیں</string>
     <string name="player_syncplay_groups_create_title">اپنے گروپ کا نام رکھیں</string>
     <string name="player_syncplay_groups_create_hint">گروپ کا نام</string>

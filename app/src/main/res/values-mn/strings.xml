@@ -15,7 +15,6 @@
     <string name="offline_no_network">Сүлжээ алга — татсан медиаг харуулж байна</string>
     <string name="offline_server_unreachable">Серверт холбогдож чадсангүй — татсан медиаг харуулж байна</string>
     <string name="offline_forced">Оффлайн горим асаалттай байна — татсан медиаг харуулж байна</string>
-    <string name="offline_retry">Дахин оролдох</string>
     <string name="offline_go_online">Онлайн болох</string>
 
     <string name="syncplay_groups_action">SyncPlay бүлгүүд</string>

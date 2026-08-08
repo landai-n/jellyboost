@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Настройки</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Главная</string>
 
     <string name="settings_section_playback">Воспроизведение</string>
     <string name="settings_skip_intro">Пропуск заставки</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Выйти из аккаунта?</string>
     <string name="settings_sign_out_dialog_message">Для повторного входа вам понадобятся адрес сервера и пароль.</string>
     <string name="settings_sign_out_delete_downloads">Также удалить загрузки с этого устройства</string>
-    <string name="settings_cancel">Отмена</string>
     <string name="settings_section_about">О приложении</string>
     <string name="settings_version">Версия приложения</string>
 </resources>

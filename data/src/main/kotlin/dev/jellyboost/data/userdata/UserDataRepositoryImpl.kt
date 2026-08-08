@@ -11,7 +11,7 @@ import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.network.model.SessionState
-import dev.jellyboost.data.runCatchingApi
+import dev.jellyboost.core.network.runCatchingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow

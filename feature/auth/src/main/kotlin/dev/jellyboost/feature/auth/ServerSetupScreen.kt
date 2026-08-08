@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -222,6 +223,8 @@ private fun ServerSetupContent(
             onConnect = onConnect,
         )
 
+        state.cleartextWarningHost?.let { host -> CleartextWarningBanner(host = host) }
+
         state.error?.let { error -> AuthErrorBlock(message = error) }
 
         Spacer(modifier = Modifier.height(Dimens.SpaceLarge))
@@ -282,6 +285,29 @@ private fun SessionLostBanner() {
     ErrorBanner(
         message = stringResource(R.string.server_setup_session_lost),
         modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+/**
+ * The server answered, but in the clear and from off the local network (audit SEC-10).
+ *
+ * Below the form rather than above it, unlike [SessionLostBanner]: this is about the attempt that
+ * just succeeded, and the next thing the user does about it is press the Connect button directly
+ * above. It is advisory — `ServerSetupViewModel` takes that second press as the acknowledgement and
+ * goes on to Login — so nothing here is a control; the banner is the whole of it.
+ *
+ * [ErrorBanner]'s error colouring is deliberate over a softer warning treatment. An unencrypted
+ * sign-in over a network the user does not control hands the access token to whoever is on the
+ * path, and the screen has no way to know that they are not; a yellow note reads as a formality.
+ * The banner is already an assertive live region, which is what makes it reach a TalkBack user who
+ * is still on the Connect button.
+ */
+@Composable
+private fun CleartextWarningBanner(host: String) {
+    ErrorBanner(
+        message = stringResource(R.string.server_setup_cleartext_warning, host),
+        modifier = Modifier.fillMaxWidth(),
+        icon = Icons.Outlined.LockOpen,
     )
 }
 

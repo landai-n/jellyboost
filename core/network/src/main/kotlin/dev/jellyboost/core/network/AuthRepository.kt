@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.flowOn
 import org.jellyfin.sdk.model.api.AuthenticationResult
 import org.jellyfin.sdk.model.api.UserDto
 import timber.log.Timber
-import java.net.HttpURLConnection
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
@@ -71,23 +70,26 @@ class AuthRepository
             apiClientProvider.useServer(server.address)
 
             val publicUsers =
-                when (val result = apiCall { apiFacade.getPublicUsers() }) {
+                when (val result = runCatchingApi { apiFacade.getPublicUsers() }) {
                     is AppResult.Success -> result.value
                     is AppResult.Failure -> return result
                 }
 
             val disclaimer =
-                apiCall { apiFacade.getBrandingOptions() }
+                runCatchingApi { apiFacade.getBrandingOptions() }
                     .getOrNull()
                     ?.loginDisclaimer
                     ?.takeIf { it.isNotBlank() }
 
             val quickConnectEnabled =
-                apiCall { apiFacade.getQuickConnectEnabled() }.getOrNull() ?: false
+                runCatchingApi { apiFacade.getQuickConnectEnabled() }.getOrNull() ?: false
 
-            Timber.i(
+            // Host only, at debug (audit SEC-11): this is the sign-in flow, so it is the log a user
+            // captures when sign-in misbehaves and pastes into a bug report — the same reason the
+            // git history had to be scrubbed on 2026-08-01. See `hostForLog`.
+            Timber.d(
                 "Login context for %s: %d public user(s), quickConnect=%b, disclaimer=%b",
-                server.address,
+                hostForLog(server.address),
                 publicUsers.size,
                 quickConnectEnabled,
                 disclaimer != null,
@@ -121,7 +123,7 @@ class AuthRepository
             password: String,
         ): AppResult<AuthenticatedSession> {
             apiClientProvider.useServer(server.address)
-            return when (val result = apiCall { apiFacade.authenticateUserByName(username, password) }) {
+            return when (val result = runCatchingApi { apiFacade.authenticateUserByName(username, password) }) {
                 is AppResult.Success -> completeAuthentication(server, result.value)
                 is AppResult.Failure -> {
                     // The username value is deliberately not logged (audit SEC-05): what the user
@@ -140,7 +142,7 @@ class AuthRepository
          * [loginWithQuickConnect] once it reports [QuickConnectState.Approved].
          */
         suspend fun initiateQuickConnect(): AppResult<QuickConnectSession> =
-            when (val result = apiCall { apiFacade.initiateQuickConnect() }) {
+            when (val result = runCatchingApi { apiFacade.initiateQuickConnect() }) {
                 is AppResult.Success -> {
                     val secret = result.value.secret
                     val code = result.value.code
@@ -165,7 +167,7 @@ class AuthRepository
             flow {
                 var elapsed = Duration.ZERO
                 while (elapsed < QUICK_CONNECT_TIMEOUT) {
-                    when (val result = apiCall { apiFacade.getQuickConnectState(secret) }) {
+                    when (val result = runCatchingApi { apiFacade.getQuickConnectState(secret) }) {
                         is AppResult.Success -> {
                             if (result.value.authenticated) {
                                 Timber.i("Quick Connect request approved")
@@ -177,8 +179,10 @@ class AuthRepository
 
                         is AppResult.Failure -> {
                             val error = result.error
-                            if (error is AppError.Server && error.statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                                // The server forgets a request once it expires or is denied.
+                            if (error is AppError.NotFound) {
+                                // The server forgets a request once it expires or is denied. A 404
+                                // reaches here as `NotFound` since DUP-1 unified the mapper; it was
+                                // `Server(404)` while this module had a mapper of its own.
                                 Timber.i("Quick Connect request no longer exists on the server")
                                 emit(QuickConnectState.Expired)
                             } else {
@@ -206,7 +210,7 @@ class AuthRepository
             secret: String,
         ): AppResult<AuthenticatedSession> {
             apiClientProvider.useServer(server.address)
-            return when (val result = apiCall { apiFacade.authenticateWithQuickConnect(secret) }) {
+            return when (val result = runCatchingApi { apiFacade.authenticateWithQuickConnect(secret) }) {
                 is AppResult.Success -> completeAuthentication(server, result.value)
                 is AppResult.Failure -> {
                     Timber.w("Quick Connect login failed: %s", result.error)

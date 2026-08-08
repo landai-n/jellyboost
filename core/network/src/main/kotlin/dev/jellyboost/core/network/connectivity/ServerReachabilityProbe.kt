@@ -1,6 +1,7 @@
 package dev.jellyboost.core.network.connectivity
 
 import dev.jellyboost.core.common.di.IoDispatcher
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.database.dao.ServerDao
 import dev.jellyboost.core.network.ApiClientProvider
 import dev.jellyboost.core.network.SessionStateHolder
@@ -98,8 +99,11 @@ class ServerReachabilityProbe
          * other address stored for this server. Rotating only matters once the current one failed.
          */
         private suspend fun candidateAddresses(session: SessionState.LoggedIn): List<String> {
+            // `runCatchingUnlessCancelled`, not `runCatching` (audit QUAL-2): the Room read is a
+            // suspend call, and the plain one would swallow the CancellationException that unwinds
+            // a cancelled probe — turning "the caller gave up" into "the server has no addresses".
             val stored =
-                runCatching { serverDao.getAddresses(session.serverId).map { it.address } }
+                runCatchingUnlessCancelled { serverDao.getAddresses(session.serverId).map { it.address } }
                     .onFailure { Timber.w(it, "Could not read the server's addresses") }
                     .getOrDefault(emptyList())
             return (listOfNotNull(apiClientProvider.apiClient.baseUrl) + stored).distinct()

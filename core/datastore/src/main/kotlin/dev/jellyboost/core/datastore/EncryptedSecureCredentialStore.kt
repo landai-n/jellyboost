@@ -5,7 +5,8 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
+import dev.jellyboost.core.common.di.IoDispatcher
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.UUID
@@ -22,7 +23,9 @@ import javax.inject.Singleton
  * swap to a hand-rolled Android Keystore AES-GCM implementation only touches this class.
  *
  * Opening (or first creating) the encrypted preferences does disk I/O and talks to the Android
- * Keystore, so every operation — including the lazy creation itself — runs on [Dispatchers.IO].
+ * Keystore, so every operation — including the lazy creation itself — runs on the injected
+ * [IoDispatcher] (audit QUAL-3; it was a hard-coded `Dispatchers.IO` until the qualifier became
+ * visible from this module, and an injected dispatcher is a test seam as much as a policy).
  *
  * What happens when it will not open is [EncryptedPreferencesOpener]'s decision, and it is not one
  * decision but two: an undecryptable file is deleted and recreated (better than crashing on every
@@ -35,6 +38,7 @@ class EncryptedSecureCredentialStore
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : SecureCredentialStore {
         @Volatile
         private var prefs: SharedPreferences? = null
@@ -50,7 +54,7 @@ class EncryptedSecureCredentialStore
             )
 
         override suspend fun save(session: StoredSession) {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 preferences()
                     .edit()
                     .putString(KEY_SERVER_ID, session.serverId.toString())
@@ -61,7 +65,7 @@ class EncryptedSecureCredentialStore
         }
 
         override suspend fun read(): StoredSession? =
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 val current = preferences()
                 val serverId = current.getString(KEY_SERVER_ID, null)
                 val userId = current.getString(KEY_USER_ID, null)
@@ -86,7 +90,7 @@ class EncryptedSecureCredentialStore
             }
 
         override suspend fun clear() {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 clear(preferences())
             }
         }
@@ -101,7 +105,7 @@ class EncryptedSecureCredentialStore
             target.edit().clear().apply()
         }
 
-        /** Must only be called while already dispatched on [Dispatchers.IO]. */
+        /** Must only be called while already dispatched on [ioDispatcher]. */
         private fun preferences(): SharedPreferences =
             prefs ?: synchronized(this) {
                 prefs ?: opener.open().also { prefs = it }

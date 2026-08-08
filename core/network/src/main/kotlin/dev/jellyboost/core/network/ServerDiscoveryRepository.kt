@@ -68,7 +68,7 @@ class ServerDiscoveryRepository
             Timber.d("Resolving server address for '%s'", hostForLog(input))
 
             val candidates =
-                when (val result = apiCall { apiFacade.getAddressCandidates(input) }) {
+                when (val result = runCatchingApi { apiFacade.getAddressCandidates(input) }) {
                     is AppResult.Success -> result.value
                     is AppResult.Failure -> return result
                 }
@@ -79,7 +79,7 @@ class ServerDiscoveryRepository
             }
 
             val recommended =
-                when (val result = apiCall { apiFacade.getRecommendedServers(candidates) }) {
+                when (val result = runCatchingApi { apiFacade.getRecommendedServers(candidates) }) {
                     is AppResult.Success -> result.value
                     is AppResult.Failure -> return result
                 }

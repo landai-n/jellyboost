@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import java.net.HttpURLConnection
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -174,4 +175,9 @@ private fun AppError.isTransportFailure(): Boolean =
         else -> false
     }
 
-private val UNREACHABLE_STATUS_CODES = setOf(502, 503, 504)
+private val UNREACHABLE_STATUS_CODES =
+    setOf(
+        HttpURLConnection.HTTP_BAD_GATEWAY,
+        HttpURLConnection.HTTP_UNAVAILABLE,
+        HttpURLConnection.HTTP_GATEWAY_TIMEOUT,
+    )

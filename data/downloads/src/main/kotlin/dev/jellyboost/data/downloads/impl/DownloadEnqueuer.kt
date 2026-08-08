@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadEntity
@@ -58,8 +59,8 @@ import javax.inject.Singleton
 @Singleton
 internal class DownloadEnqueuer
     @Suppress(
-        // Eight DI collaborators: enqueueing spans the API, both DAOs, the deleter (replace flow) and the sibling
-        // seeder, all in one transaction-shaped call.
+        // Nine DI collaborators: enqueueing spans the API, both DAOs, the deleter (replace flow), the sibling seeder
+        // and the transaction runner that makes the metadata and the rows land together.
         "LongParameterList",
     )
     @Inject
@@ -71,6 +72,7 @@ internal class DownloadEnqueuer
         private val mapper: ItemEntityMapper,
         private val appPreferences: AppPreferences,
         private val seeder: SiblingSeeder,
+        private val transactionRunner: TransactionRunner,
         private val clock: Clock,
     ) {
         /**
@@ -114,9 +116,8 @@ internal class DownloadEnqueuer
          *   definition, so the cascade runs on it (files, rows, orphaned metadata) before the real
          *   downloads are queued.
          * - **Episodes already spoken for are skipped**, so re-tapping Download on a season the user
-         *   half-downloaded does not restart it. `ERROR` is the exception: a failed episode is
-         *   exactly what a second tap is meant to retry, and re-enqueueing keeps its queue position
-         *   and the bytes already on disk.
+         *   half-downloaded does not restart it. `ERROR` and `CANCELLED` are the exceptions — see
+         *   [isRetryable] for what each of them means.
          * - **Order is the server's**, which is broadcast order, so a queue drained top-to-bottom
          *   plays back in the order the user would watch.
          */
@@ -189,6 +190,11 @@ internal class DownloadEnqueuer
             Timber.i("Removing the unusable download row of %s", container.name)
             @Suppress("TooGenericExceptionCaught")
             try {
+                // The cascade only removes rows that are out of the queue's reach
+                // (`DownloadDao.deleteUnlessRunnable`), and a doomed container row is usually
+                // `QUEUED` — it is a row that can never be transferred, so it never leaves that
+                // status on its own. Claiming it first is what makes the delete take.
+                downloadDao.demoteRunnable(listOf(container.id), DownloadStatus.CANCELLED, clock.instant())
                 deleter.delete(container.id)
             } catch (error: Exception) {
                 // Best effort: a stuck row that could not be cleaned up must not stop the episodes
@@ -238,6 +244,22 @@ internal class DownloadEnqueuer
          *
          * The one thing decided *per row* is whether that quality is worth asking the server for at
          * all — see [planQuality].
+         *
+         * ### One transaction
+         * The metadata upsert and the queue rows land together or not at all, and the reads that
+         * decide them sit inside the same block. Three things depended on that and had none of it
+         * (audit 2026-08-08, CORR-4 and CORR-6):
+         *
+         * - a concurrent delete's orphan prune (`DownloadDeleter.pruneOrphanedItems`) reads "which
+         *   items still have a download row" and deletes every `DOWNLOAD` item row outside that
+         *   answer. Landing between this method's `itemDao.upsert` and its `downloadDao.upsert`, it
+         *   deleted the metadata of an item whose row was one statement away — and the drain that
+         *   later picked the row up failed with `MissingMetadataException`, which is *permanent*;
+         * - `maxQueuePosition()` is read once and counted from, which only holds if no other
+         *   enqueue can commit a row in between. Two taps in the same second used to produce two
+         *   downloads at the same queue position;
+         * - the per-row `downloadDao.get` is now the value the write is guarded on rather than a
+         *   snapshot the write ignores — see [isRetryable].
          */
         private suspend fun write(
             userId: UUID,
@@ -245,48 +267,12 @@ internal class DownloadEnqueuer
             targets: List<BaseItemDto>,
         ): AppResult<List<DownloadEntity>> {
             val now = clock.instant()
+            // Read before the transaction opens: a DataStore flow is not database work, and a
+            // transaction is not the place to wait on one.
             val quality = appPreferences.downloadQuality.first()
 
             return try {
-                // The items and their parents in one upsert: a partially-cached hierarchy is the
-                // state that makes offline navigation dead-end halfway up.
-                //
-                // Deliberately straight to the DAO and not through `BrowseCacheWriter`: these DTOs
-                // came from `DownloadApi.DOWNLOAD_FIELDS`, so the blob written here is the rich one
-                // every later lean browse write is forbidden from replacing.
-                itemDao.upsert(cache.distinctBy { it.id }.map { mapper.toEntity(it, ItemSource.DOWNLOAD, now) })
-
-                // Counted here rather than re-read per row: `maxQueuePosition()` only moves once the
-                // previous row is committed, and a season enqueued in one go would otherwise pile
-                // twenty episodes onto the same position.
-                var nextPosition = (downloadDao.maxQueuePosition() ?: 0) + 1
-                val rows =
-                    targets.map { dto ->
-                        val existing = downloadDao.get(dto.id)
-                        // Per row, not per tap: a season's 4K episode can be worth transcoding
-                        // while the SD one next to it is not.
-                        val (rowQuality, estimate) = dto.planQuality(quality)
-                        val row =
-                            dto.toDownloadRow(
-                                userId = userId,
-                                quality = rowQuality,
-                                now = now,
-                                existing = existing,
-                                position = existing?.queuePosition ?: nextPosition++,
-                                estimate = estimate,
-                                // The seed is read per row, after the ones before it were written,
-                                // so the second episode of a season enqueued in one go is seeded
-                                // from whatever finished *before* the tap — never from a sibling
-                                // this same expansion queued and has not downloaded yet. That is
-                                // why enqueue time is not the only moment seeding happens:
-                                // `SiblingSeeder.seedPendingSiblingsOf` comes back to these rows
-                                // as each episode lands (docs/features/download-quality.md).
-                                projected = dto.siblingSeed(rowQuality, estimate),
-                            )
-                        downloadDao.upsert(row)
-                        row
-                    }
-                AppResult.Success(rows)
+                AppResult.Success(transactionRunner.inTransaction { writeRows(userId, cache, targets, quality, now) })
             } catch (cancellation: CancellationException) {
                 // The enqueue runs in the caller's coroutine — a ViewModel scope that dies with the
                 // screen. Reporting a cancelled scope as `AppError.Storage` would put a "could not
@@ -300,6 +286,67 @@ internal class DownloadEnqueuer
                 // should surface as a crash instead of a swallowed "could not enqueue".
                 Timber.e(error, "Could not enqueue %s", targets.firstOrNull()?.id)
                 AppResult.Failure(AppError.Storage(error))
+            }
+        }
+
+        /**
+         * [write]'s body, run inside the transaction — the metadata for [cache] and a queue row for
+         * every target that still wants one.
+         */
+        private suspend fun writeRows(
+            userId: UUID,
+            cache: List<BaseItemDto>,
+            targets: List<BaseItemDto>,
+            quality: DownloadQuality,
+            now: java.time.Instant,
+        ): List<DownloadEntity> {
+            // The items and their parents in one upsert: a partially-cached hierarchy is the state
+            // that makes offline navigation dead-end halfway up.
+            //
+            // Deliberately straight to the DAO and not through `BrowseCacheWriter`: these DTOs came
+            // from `DownloadApi.DOWNLOAD_FIELDS`, so the blob written here is the rich one every
+            // later lean browse write is forbidden from replacing.
+            itemDao.upsert(cache.distinctBy { it.id }.map { mapper.toEntity(it, ItemSource.DOWNLOAD, now) })
+
+            // Counted here rather than re-read per row: `maxQueuePosition()` only moves once the
+            // previous row is committed, and a season enqueued in one go would otherwise pile
+            // twenty episodes onto the same position.
+            var nextPosition = (downloadDao.maxQueuePosition() ?: 0) + 1
+
+            return targets.mapNotNull { dto ->
+                val existing = downloadDao.get(dto.id)
+                // The same rule the container path applies before fetching, applied here to every
+                // target and inside the transaction, which is the only place it holds. Without it a
+                // second tap on a *single* item — a badge one tick stale, a double tap — rewrote a
+                // finished or in-flight row's quality, size and `sizeIsExact` from the current
+                // preference, describing a file that had already been fetched under the old plan
+                // (audit CORR-6).
+                if (!existing.isRetryable()) {
+                    Timber.i("%s is already downloaded or in flight; leaving its row alone", dto.name)
+                    return@mapNotNull null
+                }
+                // Per row, not per tap: a season's 4K episode can be worth transcoding while the SD
+                // one next to it is not.
+                val (rowQuality, estimate) = dto.planQuality(quality)
+                val row =
+                    dto.toDownloadRow(
+                        userId = userId,
+                        quality = rowQuality,
+                        now = now,
+                        existing = existing,
+                        position = existing?.queuePosition ?: nextPosition++,
+                        estimate = estimate,
+                        // The seed is read per row, after the ones before it were written, so the
+                        // second episode of a season enqueued in one go is seeded from whatever
+                        // finished *before* the tap — never from a sibling this same expansion
+                        // queued and has not downloaded yet. That is why enqueue time is not the
+                        // only moment seeding happens: `SiblingSeeder.seedPendingSiblingsOf` comes
+                        // back to these rows as each episode lands
+                        // (docs/features/download-quality.md).
+                        projected = dto.siblingSeed(rowQuality, estimate),
+                    )
+                downloadDao.upsert(row)
+                row
             }
         }
 
@@ -570,12 +617,23 @@ internal class DownloadEnqueuer
         }
 
         /**
-         * `true` when expanding a container should (re)queue this episode.
+         * `true` when a tap should (re)queue this item — the rule both [enqueueContainer]'s filter
+         * and [writeRows]'s per-row guard apply.
          *
-         * No row at all, or a row that failed — anything else is already downloaded, downloading,
-         * paused or waiting, and a second tap on the season must not disturb it.
+         * Three states qualify, and everything else is a row a second tap must not disturb (already
+         * downloaded, downloading, paused or waiting):
+         *
+         * - **no row at all** — a first download;
+         * - **`ERROR`** — the failure a second tap is meant to retry, keeping the queue position
+         *   and the bytes already on disk;
+         * - **`CANCELLED`** — the status a row holds between a cancel and its deletion. The UI maps
+         *   it to *not downloaded* and offers **Download** again while the cascade behind it is
+         *   still waiting out `DownloadScheduler.stop()`, so this is the ordinary re-download and it
+         *   has to write: the row goes back to `QUEUED`, and the cascade arriving afterwards finds
+         *   it runnable and leaves it alone (`DownloadDao.deleteUnlessRunnable`, audit CORR-1).
          */
-        private fun DownloadEntity?.isRetryable(): Boolean = this == null || status == DownloadStatus.ERROR
+        private fun DownloadEntity?.isRetryable(): Boolean =
+            this == null || status == DownloadStatus.ERROR || status == DownloadStatus.CANCELLED
 
         private companion object {
             /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */

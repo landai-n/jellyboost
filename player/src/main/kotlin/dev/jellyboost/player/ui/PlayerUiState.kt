@@ -365,46 +365,88 @@ internal data class PlayerActions(
     val onSkipSegment: () -> Unit,
     val onBack: () -> Unit,
     /**
-     * Opens the brightness/volume sheet — the non-gesture way to both (accessibility audit
-     * 2026-08-05, CR-8).
-     *
-     * Hosted by `PlayerScreen` rather than by the control bar, like the two SyncPlay sheets and for
-     * the same reason: the bar composes itself out four seconds after it appears, and a panel that
-     * vanishes mid-adjustment would be no alternative at all for the users this exists for.
+     * Opens one of the player's seven panels — every one of them hosted by `PlayerScreen`, above the
+     * control bar and above its auto-hide (audit UI-1). See [PlayerPanel].
      */
-    val onOpenDisplaySheet: () -> Unit = {},
-    /** Opens the group sheet; only ever reachable while [PlayerSyncPlayState.inGroup] (M11). */
-    val onOpenGroupSheet: () -> Unit = {},
-    /** Opens the group queue sheet; only reachable once the group actually has a queue (M11). */
-    val onOpenQueueSheet: () -> Unit = {},
+    val onOpenPanel: (PlayerPanel) -> Unit = {},
     val onSetGroupShuffle: (Boolean) -> Unit = {},
     val onSetGroupRepeat: (SyncPlayRepeatMode) -> Unit = {},
     val onLeaveGroup: () -> Unit = {},
 )
 
-/** The four pickers the player offers. */
-internal enum class PlayerSheet {
-    AUDIO,
-    SUBTITLES,
-    QUALITY,
-    SPEED,
-}
+/**
+ * The same actions, each of which also says "the user is still here" before it acts.
+ *
+ * The auto-hide timer restarts on every interaction (audit UI-3), and *this* is what makes that
+ * true for the whole surface at once: every way a user can act on the player — the transport
+ * buttons, the gesture layer's double-tap seeks, the keyboard runner, a chip tap, a choice made in
+ * a picker — goes through exactly one of these lambdas. Wrapping the bundle rather than bumping at
+ * each call site is what stops the next action added to [PlayerActions] from silently not counting:
+ * `copy` here is exhaustive by construction, and `PlayerActionsInteractionTest` pins that.
+ *
+ * [onBack] is wrapped too, though nothing is left to hide by then; a rule with no exceptions is
+ * cheaper to keep true than one with a defensible one.
+ */
+internal fun PlayerActions.reportingInteraction(onInteraction: () -> Unit): PlayerActions =
+    copy(
+        onPlayPause = reporting(onInteraction, onPlayPause),
+        onSeekTo = reporting(onInteraction, onSeekTo),
+        onSeekBy = reporting(onInteraction, onSeekBy),
+        onSelectAudio = reporting(onInteraction, onSelectAudio),
+        onSelectSubtitle = reporting(onInteraction, onSelectSubtitle),
+        onSelectQuality = reporting(onInteraction, onSelectQuality),
+        onSelectSpeed = reporting(onInteraction, onSelectSpeed),
+        onSkipSegment = reporting(onInteraction, onSkipSegment),
+        onBack = reporting(onInteraction, onBack),
+        onOpenPanel = reporting(onInteraction, onOpenPanel),
+        onSetGroupShuffle = reporting(onInteraction, onSetGroupShuffle),
+        onSetGroupRepeat = reporting(onInteraction, onSetGroupRepeat),
+        onLeaveGroup = reporting(onInteraction, onLeaveGroup),
+    )
+
+/** [action], preceded by the interaction report. */
+private fun reporting(
+    onInteraction: () -> Unit,
+    action: () -> Unit,
+): () -> Unit =
+    {
+        onInteraction()
+        action()
+    }
+
+/** The one-argument form — the seeks, the pickers and the panel opener. */
+private fun <T> reporting(
+    onInteraction: () -> Unit,
+    action: (T) -> Unit,
+): (T) -> Unit =
+    { value ->
+        onInteraction()
+        action(value)
+    }
 
 /**
- * The three panels `PlayerScreen` hosts above the controls — **one at a time** (audit CPX-9).
+ * The seven panels `PlayerScreen` hosts above the controls — **one at a time** (audit CPX-9, UI-1).
  *
- * One nullable field rather than the three independent booleans this used to be, following
- * `PlayerControls`' own [PlayerSheet] precedent: three booleans are eight states of which only four
- * are legal, and the other four — a display sheet and a group sheet up together, or all three — were
- * unreachable only by the accident that an open sheet covers the very chips that open the next one.
- * Making them unrepresentable is cheaper than relying on that.
+ * One nullable field rather than the independent booleans this used to be: booleans are 2^n states
+ * of which only n + 1 are legal, and the illegal ones — a display sheet and a group sheet up
+ * together — were unreachable only by the accident that an open panel covers the very chips that
+ * open the next one. Making them unrepresentable is cheaper than relying on that.
  *
- * Separate from [PlayerSheet] rather than folded into it because the hosting is genuinely different:
- * these three are hoisted to the *screen* so they survive the control bar composing itself out four
- * seconds after it appears, which for the display sheet is the whole reason it exists as the
- * accessible alternative to the brightness and volume swipes (accessibility audit 2026-08-05, CR-8).
+ * ### Why all seven, and not the three this started as
+ * DISPLAY/GROUP/QUEUE were hoisted to the screen so they would survive the control bar composing
+ * itself out four seconds after it appears — for the display sheet that is the whole reason it
+ * exists, as the accessible alternative to the brightness and volume swipes (accessibility audit
+ * 2026-08-05, CR-8). The other four pickers were left in the bar, held in a `remember` *inside* the
+ * `AnimatedVisibility(controlsVisible)` that the auto-hide drives, so the Audio/Subtitles/Speed/
+ * Quality dialog was disposed mid-selection — within a second or two of the tap, since the timer had
+ * been running since before it (audit UI-1). The reasoning was right and had stopped at three of
+ * seven; the split it justified is gone, and one panel enum now describes the whole set.
  */
 internal enum class PlayerPanel {
+    AUDIO,
+    SUBTITLES,
+    SPEED,
+    QUALITY,
     DISPLAY,
     GROUP,
     QUEUE,

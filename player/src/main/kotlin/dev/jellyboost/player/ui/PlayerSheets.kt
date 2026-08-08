@@ -41,74 +41,91 @@ import dev.jellyboost.player.model.PlaybackTrack
 import kotlin.math.roundToInt
 
 /**
- * Renders whichever picker is open.
+ * The four track/quality/rate pickers, one composable each.
  *
  * A dialog rather than a bottom sheet: the player runs in landscape, where a sheet rising from the
  * bottom edge covers the seek bar the user just came from, and dialogs need no experimental API.
+ *
+ * They used to be branches of a `PlayerSheetHost` the *control bar* called, which is what audit UI-1
+ * was about — the bar disposes itself four seconds after it appears and took the open picker with
+ * it. The `when` that chooses between them is now `PlayerScreen`'s `PanelHost`, one exhaustive
+ * branch per [PlayerPanel], so every panel on this screen is hosted in the same place and outlives
+ * the bar. Nothing about the dialogs themselves changed.
  */
 @Composable
-internal fun PlayerSheetHost(
-    sheet: PlayerSheet?,
+internal fun PlayerAudioDialog(
     state: PlayerUiState,
-    actions: PlayerActions,
+    onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    when (sheet) {
-        null -> Unit
+    OptionDialog(
+        title = stringResource(R.string.player_audio),
+        options = state.audioTracks.map { it.asOption(selected = it.index == state.selectedAudioIndex) },
+        onSelect = { index -> index?.let(onSelect) },
+        onDismiss = onDismiss,
+    )
+}
 
-        PlayerSheet.AUDIO ->
-            OptionDialog(
-                title = stringResource(R.string.player_audio),
-                options = state.audioTracks.map { it.asOption(selected = it.index == state.selectedAudioIndex) },
-                onSelect = { index -> index?.let(actions.onSelectAudio) },
-                onDismiss = onDismiss,
-            )
+/** The subtitle picker — "off" is the first row, because it is a real choice, not an absence. */
+@Composable
+internal fun PlayerSubtitleDialog(
+    state: PlayerUiState,
+    onSelect: (Int?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    OptionDialog(
+        title = stringResource(R.string.player_subtitles),
+        options =
+            listOf(
+                Option(
+                    key = null,
+                    label = stringResource(R.string.player_subtitles_off),
+                    selected = state.selectedSubtitleIndex == null,
+                ),
+            ) + state.subtitleTracks.map { it.asOption(selected = it.index == state.selectedSubtitleIndex) },
+        onSelect = onSelect,
+        onDismiss = onDismiss,
+    )
+}
 
-        PlayerSheet.SUBTITLES ->
-            OptionDialog(
-                title = stringResource(R.string.player_subtitles),
-                options =
-                    listOf(
-                        Option(
-                            key = null,
-                            label = stringResource(R.string.player_subtitles_off),
-                            selected = state.selectedSubtitleIndex == null,
-                        ),
-                    ) + state.subtitleTracks.map { it.asOption(selected = it.index == state.selectedSubtitleIndex) },
-                onSelect = actions.onSelectSubtitle,
-                onDismiss = onDismiss,
-            )
+/** The streaming bitrate cap; never offered while the bytes come off the disk (`sheetChipSpecs`). */
+@Composable
+internal fun PlayerQualityDialog(
+    state: PlayerUiState,
+    onSelect: (PlaybackQuality) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    OptionDialog(
+        title = stringResource(R.string.player_quality),
+        options =
+            PlaybackQuality.entries.map { quality ->
+                Option(
+                    key = quality.ordinal,
+                    label = stringResource(quality.labelRes()),
+                    selected = quality == state.quality,
+                )
+            },
+        onSelect = { ordinal -> ordinal?.let { onSelect(PlaybackQuality.entries[it]) } },
+        onDismiss = onDismiss,
+    )
+}
 
-        PlayerSheet.QUALITY ->
-            OptionDialog(
-                title = stringResource(R.string.player_quality),
-                options =
-                    PlaybackQuality.entries.map { quality ->
-                        Option(
-                            key = quality.ordinal,
-                            label = stringResource(quality.labelRes()),
-                            selected = quality == state.quality,
-                        )
-                    },
-                onSelect = { ordinal ->
-                    ordinal?.let { actions.onSelectQuality(PlaybackQuality.entries[it]) }
-                },
-                onDismiss = onDismiss,
-            )
-
-        PlayerSheet.SPEED ->
-            OptionDialog(
-                title = stringResource(R.string.player_speed),
-                options =
-                    PlaybackSpeed.entries.map { speed ->
-                        Option(key = speed.ordinal, label = speed.label, selected = speed == state.speed)
-                    },
-                onSelect = { ordinal ->
-                    ordinal?.let { actions.onSelectSpeed(PlaybackSpeed.entries[it]) }
-                },
-                onDismiss = onDismiss,
-            )
-    }
+/** The playback rate; never offered in a SyncPlay group, which has no per-member rate. */
+@Composable
+internal fun PlayerSpeedDialog(
+    state: PlayerUiState,
+    onSelect: (PlaybackSpeed) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    OptionDialog(
+        title = stringResource(R.string.player_speed),
+        options =
+            PlaybackSpeed.entries.map { speed ->
+                Option(key = speed.ordinal, label = speed.label, selected = speed == state.speed)
+            },
+        onSelect = { ordinal -> ordinal?.let { onSelect(PlaybackSpeed.entries[it]) } },
+        onDismiss = onDismiss,
+    )
 }
 
 /**

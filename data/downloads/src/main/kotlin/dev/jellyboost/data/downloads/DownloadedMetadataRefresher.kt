@@ -2,6 +2,7 @@ package dev.jellyboost.data.downloads
 
 import android.database.sqlite.SQLiteException
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.StartOnce
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.DownloadDao
@@ -9,14 +10,13 @@ import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
+import dev.jellyboost.core.network.connectivity.onEachOnlineStretch
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
 import dev.jellyboost.data.downloads.engine.SubtitleSidecarTopUp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -69,11 +69,9 @@ import javax.inject.Singleton
  * online, holds current DTOs for every downloaded item, and runs at a cadence a repair can afford.
  *
  * ### When it runs
- * The shape is [dev.jellyboost.data.userdata.UserDataSyncTrigger]'s, deliberately: collect
- * [ConnectionStateProvider.state], map to online-ness, `distinctUntilChanged`, and act on **every**
- * `true` — including the flow's initial value, which is the app-start check (DECISIONS.md,
- * 2026-07-29, on why that trigger does not `drop(1)` where the screen-refresh signal does). One code
- * path therefore covers both "the app started online" and "the connection came back".
+ * On [onEachOnlineStretch], the same signal `UserDataSyncTrigger` starts from: every stretch of
+ * connectivity including the one the app launched in, which is what makes "the app started online"
+ * and "the connection came back" one code path. That helper carries the reasoning.
  *
  * ### Once per online stretch
  * A flag is set when a refresh is attempted and cleared when the connection drops, so a stretch of
@@ -115,24 +113,18 @@ class DownloadedMetadataRefresher
         @ApplicationScope private val scope: CoroutineScope,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
-        private val started = AtomicBoolean(false)
+        private val startOnce = StartOnce()
         private val refreshedThisStretch = AtomicBoolean(false)
 
-        /**
-         * Begins watching the connection. Idempotent, for the same reason `UserDataSyncTrigger.start`
-         * is: `:app` calls it from `Application.onCreate`, and a process can be re-created without
-         * the singleton being.
-         */
+        /** Begins watching the connection. Idempotent — see [StartOnce]. */
         fun start() {
-            if (!started.compareAndSet(false, true)) return
-
-            scope.launch {
-                connectionState.state
-                    .map { it.isOnline }
-                    .distinctUntilChanged()
-                    .collect { isOnline ->
-                        if (isOnline) refresh() else refreshedThisStretch.set(false)
-                    }
+            startOnce {
+                scope.launch {
+                    connectionState.onEachOnlineStretch(
+                        onOffline = { refreshedThisStretch.set(false) },
+                        onOnline = { refresh() },
+                    )
+                }
             }
         }
 

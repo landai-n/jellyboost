@@ -1,5 +1,8 @@
 package dev.jellyboost.feature.downloads
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -16,6 +19,11 @@ import org.junit.jupiter.api.Test
  * summary and tab row are pinned above an inner-scrolling list, or scroll with it as one page. It
  * needs height as well as width — the two were fused until a landscape phone pinned chrome over a
  * list with no room left to scroll in.
+ *
+ * [ChromeAwarePadding] is the third: what the screen hands `Modifier.padding` and its lists'
+ * `contentPadding` so that the app chrome's *animating* inset is resolved in the layout phase rather
+ * than read in composition (audit 2026-08-08, PERF-20). Its arithmetic is checkable here for the
+ * same reason the breakpoints are — no Compose harness needed to state what the numbers should be.
  */
 class DownloadsScreenTest {
     @Test
@@ -73,4 +81,68 @@ class DownloadsScreenTest {
     fun `height alone never pins a compact width`() {
         chromePinned(maxWidth = 479.dp, maxHeight = 2000.dp) shouldBe false
     }
+
+    // ---- The deferred chrome padding (audit 2026-08-08, PERF-20) --------------------------------
+
+    @Test
+    fun `the chrome's top edge is taken alone for the outer box`() {
+        val padding = ChromeAwarePadding(chrome = chrome(top = 96.dp, bottom = 104.dp), takeChromeTop = true)
+
+        padding.calculateTopPadding() shouldBe 96.dp
+        // The bottom half belongs to whichever list is drawn, so the box must not also reserve it.
+        padding.calculateBottomPadding() shouldBe 0.dp
+    }
+
+    @Test
+    fun `a list's padding adds its own spacing to the chrome's bottom edge`() {
+        val padding =
+            ChromeAwarePadding(
+                chrome = chrome(top = 96.dp, bottom = 104.dp),
+                top = 8.dp,
+                bottom = 12.dp,
+                takeChromeBottom = true,
+            )
+
+        // The list's own top is its own: the chrome's top is already on the outer box.
+        padding.calculateTopPadding() shouldBe 8.dp
+        padding.calculateBottomPadding() shouldBe 116.dp
+    }
+
+    @Test
+    fun `the read follows the chrome rather than being captured`() {
+        // The whole point: `AppScaffold` publishes a padding whose values animate every frame of a
+        // navigation, and this class exists so that read happens in the layout phase. A captured
+        // value would freeze the padding at whatever the transition's first frame happened to be.
+        var top = 96.dp
+        val animating =
+            object : PaddingValues {
+                override fun calculateTopPadding(): Dp = top
+
+                override fun calculateBottomPadding(): Dp = 0.dp
+
+                override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+                override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+            }
+        val padding = ChromeAwarePadding(chrome = animating, takeChromeTop = true)
+
+        padding.calculateTopPadding() shouldBe 96.dp
+        top = 0.dp
+        padding.calculateTopPadding() shouldBe 0.dp
+    }
+
+    @Test
+    fun `this screen never pads horizontally`() {
+        val padding = ChromeAwarePadding(chrome = chrome(top = 96.dp, bottom = 104.dp), takeChromeTop = true)
+
+        padding.calculateLeftPadding(LayoutDirection.Ltr) shouldBe 0.dp
+        padding.calculateRightPadding(LayoutDirection.Ltr) shouldBe 0.dp
+        padding.calculateLeftPadding(LayoutDirection.Rtl) shouldBe 0.dp
+        padding.calculateRightPadding(LayoutDirection.Rtl) shouldBe 0.dp
+    }
+
+    private fun chrome(
+        top: Dp,
+        bottom: Dp,
+    ): PaddingValues = PaddingValues(top = top, bottom = bottom)
 }

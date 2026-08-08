@@ -19,7 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** How a drain ended — what [UserDataSyncWorker] turns into a WorkManager result. */
-enum class SyncOutcome {
+internal enum class SyncOutcome {
     /** Nothing was waiting; the worker had nothing to do. */
     NOTHING_PENDING,
 
@@ -80,7 +80,7 @@ internal enum class SyncResolution {
  * rather than guessing.
  */
 @Singleton
-class UserDataSyncer
+internal class UserDataSyncer
     @Inject
     constructor(
         private val userDataDao: UserDataDao,

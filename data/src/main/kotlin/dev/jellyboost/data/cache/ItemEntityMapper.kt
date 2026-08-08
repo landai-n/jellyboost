@@ -44,7 +44,7 @@ import javax.inject.Singleton
 @Singleton
 class ItemEntityMapper
     @Inject
-    constructor(
+    internal constructor(
         private val itemMapper: ItemMapper,
         private val imageUrls: ImageUrlFactory,
         private val widths: ArtworkRequestWidths = ArtworkRequestWidths.Default,

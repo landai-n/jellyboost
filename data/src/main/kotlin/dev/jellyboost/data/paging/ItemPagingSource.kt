@@ -15,7 +15,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
  *   reports no total, since the number of items *on the device* is not the number of items in the
  *   library.
  */
-data class ItemPage(
+internal data class ItemPage(
     val items: List<JellyfinItem>,
     val totalCount: Int? = null,
 )
@@ -47,7 +47,7 @@ data class ItemPage(
  * @param loadItems fetches `limit` items starting at `startIndex`; `withTotalCount` asks it to
  *   report [ItemPage.totalCount] as well, and is `true` only for the first load.
  */
-class ItemPagingSource(
+internal class ItemPagingSource(
     private val pageSize: Int,
     private val onTotalCount: (Int) -> Unit = {},
     private val loadItems: suspend (startIndex: Int, limit: Int, withTotalCount: Boolean) -> AppResult<ItemPage>,

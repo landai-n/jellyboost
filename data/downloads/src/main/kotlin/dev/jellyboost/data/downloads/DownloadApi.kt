@@ -16,7 +16,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** The server calls the download pipeline makes, behind a seam so enqueueing is unit-testable. */
-interface DownloadApi {
+internal interface DownloadApi {
     /**
      * Re-fetches items with every field the file plan needs.
      *

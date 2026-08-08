@@ -46,7 +46,7 @@ val DEFAULT_HOME_SECTIONS: List<HomeSectionType> = resolveHomeSections(emptyMap(
  * first occurrence winning, because the same section configured twice is one row in two places and
  * the home list keys rows by section.
  */
-fun resolveHomeSections(customPrefs: Map<String, String?>): List<HomeSectionType> =
+internal fun resolveHomeSections(customPrefs: Map<String, String?>): List<HomeSectionType> =
     DEFAULT_SLOTS
         .mapIndexed { slot, default ->
             HomeSectionType.fromServerValue(customPrefs["$HOME_SECTION_KEY_PREFIX$slot"]) ?: default

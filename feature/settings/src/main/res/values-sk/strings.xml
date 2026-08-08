@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Nastavenia</string>
-    <string name="settings_back">Späť</string>
-    <string name="settings_home">Domov</string>
 
     <string name="settings_section_playback">Prehrávanie</string>
     <string name="settings_skip_intro">Preskočiť úvod</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Odhlásiť sa?</string>
     <string name="settings_sign_out_dialog_message">Na opätovné prihlásenie budete potrebovať adresu servera a heslo.</string>
     <string name="settings_sign_out_delete_downloads">Odstrániť aj stiahnutia z tohto zariadenia</string>
-    <string name="settings_cancel">Zrušiť</string>
     <string name="settings_section_about">O aplikácii</string>
     <string name="settings_version">Verzia aplikácie</string>
 </resources>

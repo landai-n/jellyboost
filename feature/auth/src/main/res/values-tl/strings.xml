@@ -29,7 +29,6 @@
     <string name="login_quick_connect_instructions">Buksan ang Jellyfin sa device kung saan naka-sign in ka na, pumunta sa Quick Connect at ilagay ang code na ito.</string>
     <string name="login_quick_connect_code_description">Ang code mo ay %1$s</string>
     <string name="login_quick_connect_waiting">Naghihintay ng approval…</string>
-    <string name="login_quick_connect_cancel">Kanselahin</string>
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Sinubukan ang %d kandidatong address, walang tagumpay.</item>
         <item quantity="other">Sinubukan ang %d kandidatong address, walang tagumpay.</item>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Fermer le lecteur</string>
-    <string name="player_play">Lecture</string>
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Reculer de 10 secondes</string>
     <string name="player_forward">Avancer de 30 secondes</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Quitter le groupe</string>
     <string name="player_syncplay_leave_title">Quitter ce groupe ?</string>
     <string name="player_syncplay_leave_body">La lecture se poursuit ici, seule. Pour revenir, il faudra choisir à nouveau le groupe.</string>
-    <string name="player_syncplay_cancel">Annuler</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d personne regarde</item>
         <item quantity="other">%d personnes regardent</item>
@@ -79,7 +77,6 @@
     <string name="player_syncplay_queue_move_up_item">Monter %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Descendre %1$s</string>
     <string name="player_syncplay_queue_remove_item">Retirer %1$s de la file d\'attente</string>
-    <string name="player_syncplay_queue_play">Lecture</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d élément en attente</item>
         <item quantity="other">%d éléments en attente</item>
@@ -92,8 +89,6 @@
     <string name="player_message_syncplay_library_denied">Le groupe regarde un contenu auquel vous n\'avez pas accès.</string>
     <string name="player_message_syncplay_item_unavailable">Impossible d\'ouvrir ce que le groupe regarde.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Retour</string>
-    <string name="player_syncplay_groups_home">Accueil</string>
     <string name="player_syncplay_groups_create">Créer un groupe</string>
     <string name="player_syncplay_groups_create_title">Nommez votre groupe</string>
     <string name="player_syncplay_groups_create_hint">Nom du groupe</string>

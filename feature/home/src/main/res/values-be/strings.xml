@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Далей</string>
     <string name="home_section_latest">Апошнія %1$s</string>
     <string name="home_hero_resume">Працягнуць</string>
-    <string name="home_hero_play">Прайграць</string>
     <string name="home_hero_details">Падрабязнасці</string>
     <string name="home_hero_rated">Узроставы рэйтынг %1$s</string>
     <plurals name="home_minutes_left">

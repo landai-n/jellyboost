@@ -3,8 +3,6 @@
     <string name="libraries_empty">Još nema biblioteka. Dodajte jednu na poslužitelju.</string>
     <string name="libraries_title">Biblioteke</string>
 
-    <string name="library_back">Natrag</string>
-    <string name="library_home">Početna</string>
     <string name="library_sort">Razvrstaj</string>
     <string name="library_filter">Filtar</string>
     <string name="library_filter_all">Sve</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Ovdje nema ničega za prikaz.</string>
     <string name="library_empty_filtered">Nijedna stavka ne odgovara ovim filtrima.</string>
     <string name="library_empty_clear_filters">Očisti filtre</string>
-    <string name="library_retry">Pokušaj ponovno</string>
 
     <string name="library_error_unknown">Došlo je do pogreške prilikom učitavanja ove biblioteke.</string>
 </resources>

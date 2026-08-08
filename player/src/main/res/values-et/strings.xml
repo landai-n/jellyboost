@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Sulge mängija</string>
-    <string name="player_play">Esita</string>
     <string name="player_pause">Peata</string>
     <string name="player_rewind">Keri 10 sekundit tagasi</string>
     <string name="player_forward">Keri 30 sekundit edasi</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Kas lahkuda sellest grupist?</string>
     <string name="player_syncplay_leave_body">Esitamine jätkub siin, iseseisvalt. Taasliitumine tähendab grupi uuesti valimist.</string>
 
-    <string name="player_syncplay_cancel">Tühista</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d inimene vaatab</item>
         <item quantity="other">%d inimest vaatab</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Liiguta %1$s üles</string>
     <string name="player_syncplay_queue_move_down_item">Liiguta %1$s alla</string>
     <string name="player_syncplay_queue_remove_item">Eemalda %1$s järjekorrast</string>
-    <string name="player_syncplay_queue_play">Esita</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d üksus järjekorras</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Ei õnnestunud avada seda, mida grupp vaatab.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Tagasi</string>
-    <string name="player_syncplay_groups_home">Avaleht</string>
     <string name="player_syncplay_groups_create">Loo grupp</string>
     <string name="player_syncplay_groups_create_title">Nimeta oma grupp</string>
     <string name="player_syncplay_groups_create_hint">Grupi nimi</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">تنظیمات</string>
-    <string name="settings_back">بازگشت</string>
-    <string name="settings_home">خانه</string>
 
     <string name="settings_section_playback">پخش</string>
     <string name="settings_skip_intro">رد کردن مقدمه</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">خارج شوید؟</string>
     <string name="settings_sign_out_dialog_message">برای ورود دوباره به آدرس سرور و گذرواژه خود نیاز خواهید داشت.</string>
     <string name="settings_sign_out_delete_downloads">دانلودها از این دستگاه هم حذف شوند</string>
-    <string name="settings_cancel">لغو</string>
     <string name="settings_section_about">درباره برنامه</string>
     <string name="settings_version">نسخه برنامه</string>
 </resources>

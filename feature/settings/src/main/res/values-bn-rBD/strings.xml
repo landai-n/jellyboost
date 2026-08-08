@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">সেটিংস</string>
-    <string name="settings_back">ফিরে যান</string>
-    <string name="settings_home">হোম</string>
     <string name="settings_section_playback">প্লেব্যাক</string>
     <string name="settings_skip_intro">ইন্ট্রো এড়িয়ে যান</string>
     <string name="settings_skip_outro">আউট্রো এড়িয়ে যান</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">সাইন আউট করবেন?</string>
     <string name="settings_sign_out_dialog_message">আবার সাইন ইন করতে আপনার সার্ভার ঠিকানা এবং পাসওয়ার্ড প্রয়োজন হবে।</string>
     <string name="settings_sign_out_delete_downloads">এই ডিভাইস থেকে ডাউনলোডও মুছে ফেলুন</string>
-    <string name="settings_cancel">বাতিল করুন</string>
     <string name="settings_section_about">অ্যাপ সম্পর্কে</string>
     <string name="settings_version">অ্যাপ সংস্করণ</string>
 </resources>

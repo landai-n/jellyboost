@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Lat spælara aftur</string>
-    <string name="player_play">Spæl</string>
     <string name="player_pause">Steðga</string>
     <string name="player_rewind">Flyt 10 sekund aftur</string>
     <string name="player_forward">Flyt 30 sekund fram</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Fara úr hesum bólki?</string>
     <string name="player_syncplay_leave_body">Avspæling heldur áfram her, sjálvstøðugt. Fyri at koma aftur mást tú velja bólkin uppaftur.</string>
 
-    <string name="player_syncplay_cancel">Avlýs</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persónur hyggur at</item>
         <item quantity="other">%d fólk hyggja at</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Flyt %1$s upp</string>
     <string name="player_syncplay_queue_move_down_item">Flyt %1$s niður</string>
     <string name="player_syncplay_queue_remove_item">Tak %1$s úr bíðirøðini</string>
-    <string name="player_syncplay_queue_play">Spæl</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d lutur í bíðirøð</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Kundi ikki opna tað, sum bólkurin hyggur at.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Aftur</string>
-    <string name="player_syncplay_groups_home">Heim</string>
     <string name="player_syncplay_groups_create">Stovna bólk</string>
     <string name="player_syncplay_groups_create_title">Gev bólkinum navn</string>
     <string name="player_syncplay_groups_create_hint">Bólksnavn</string>

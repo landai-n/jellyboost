@@ -3,8 +3,6 @@
     <string name="libraries_empty">עדיין אין ספריות. הוסף אחת בשרת.</string>
     <string name="libraries_title">ספריות</string>
 
-    <string name="library_back">חזרה</string>
-    <string name="library_home">בית</string>
     <string name="library_sort">מיון</string>
     <string name="library_filter">סינון</string>
     <string name="library_filter_all">הכול</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">אין מה להציג כאן.</string>
     <string name="library_empty_filtered">אין פריט התואם למסננים האלה.</string>
     <string name="library_empty_clear_filters">ניקוי מסננים</string>
-    <string name="library_retry">ניסיון חוזר</string>
 
     <string name="library_error_unknown">משהו השתבש בטעינת הספרייה הזאת.</string>
 </resources>

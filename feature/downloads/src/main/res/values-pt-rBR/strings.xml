@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Armazenamento usado</string>
     <string name="downloads_usage_queue_label">Progresso da fila</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Reproduzir</string>
     <string name="downloads_action_delete">Excluir download</string>
     <string name="downloads_action_cancel">Cancelar download</string>
     <string name="downloads_action_pause">Pausar download</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Excluir %1$s?</string>
     <string name="downloads_delete_dialog_message">Os arquivos baixados são removidos deste dispositivo. Você pode baixá-lo novamente depois.</string>
     <string name="downloads_delete_dialog_confirm">Excluir</string>
-    <string name="downloads_delete_dialog_cancel">Cancelar</string>
     <string name="downloads_progress_of">%1$s de %2$s</string>
     <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s de até %2$s</string>

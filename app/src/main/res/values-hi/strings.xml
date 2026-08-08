@@ -15,7 +15,6 @@
     <string name="offline_no_network">नेटवर्क नहीं है — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
     <string name="offline_server_unreachable">सर्वर तक नहीं पहुँचा जा सका — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
     <string name="offline_forced">ऑफ़लाइन मोड चालू है — डाउनलोड किया गया मीडिया दिखाया जा रहा है</string>
-    <string name="offline_retry">फिर से कोशिश करें</string>
     <string name="offline_go_online">ऑनलाइन जाएँ</string>
 
     <string name="syncplay_groups_action">SyncPlay समूह</string>

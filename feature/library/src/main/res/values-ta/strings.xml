@@ -3,8 +3,6 @@
     <string name="libraries_empty">இதுவரை நூலகங்கள் இல்லை. சேவையகத்தில் ஒன்றைச் சேர்க்கவும்.</string>
     <string name="libraries_title">நூலகங்கள்</string>
 
-    <string name="library_back">பின்</string>
-    <string name="library_home">முகப்பு</string>
     <string name="library_sort">வரிசைப்படுத்து</string>
     <string name="library_filter">வடிகட்டி</string>
     <string name="library_filter_all">அனைத்தும்</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">இங்கே காட்ட எதுவும் இல்லை.</string>
     <string name="library_empty_filtered">இந்த வடிகட்டிகளுக்குப் பொருந்தும் உருப்படி இல்லை.</string>
     <string name="library_empty_clear_filters">வடிகட்டிகளை அழி</string>
-    <string name="library_retry">மீண்டும் முயற்சி</string>
 
     <string name="library_error_unknown">இந்த நூலகத்தை ஏற்றுவதில் ஏதோ தவறு நடந்தது.</string>
 </resources>

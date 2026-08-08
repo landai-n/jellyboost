@@ -3,7 +3,6 @@ package dev.jellyboost.player.ui
 import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
@@ -31,14 +29,15 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import dev.jellyboost.core.ui.component.JellyboostAlertDialog
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.player.R
 import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackSpeed
 import dev.jellyboost.player.model.PlaybackTrack
 import kotlin.math.roundToInt
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The four track/quality/rate pickers, one composable each.
@@ -155,15 +154,11 @@ internal fun PlayerDisplayDialog(onDismiss: () -> Unit) {
     var brightness by remember { mutableFloatStateOf(activity.brightnessFraction()) }
     var volume by remember { mutableFloatStateOf(audioManager.volumeFraction()) }
 
-    AlertDialog(
+    JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
-            ),
-        containerColor = MaterialTheme.colorScheme.surface,
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.player_done)) }
+        },
         title = { Text(text = stringResource(R.string.player_display), style = JellyfinTypeExtras.SectionTitle) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
@@ -184,9 +179,6 @@ internal fun PlayerDisplayDialog(onDismiss: () -> Unit) {
                     },
                 )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.player_done)) }
         },
     )
 }
@@ -235,15 +227,16 @@ private fun OptionDialog(
     onSelect: (Int?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
-            ),
-        containerColor = MaterialTheme.colorScheme.surface,
+        // The app's own "Cancel" rather than `android.R.string.cancel`: the platform string follows
+        // the *device* locale, so a picker on a French device showed "Annuler" beside this app's
+        // English rows. Every other dialog in the app already used a resource of its own for that
+        // reason (`player/strings.xml`, B10); this one was the last platform string left, and there
+        // is now one app-wide label to point it at (audit 2026-08-08, DUP-6).
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(CoreUiR.string.action_cancel)) }
+        },
         title = { Text(text = title, style = JellyfinTypeExtras.SectionTitle) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -275,9 +268,6 @@ private fun OptionDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.cancel)) }
         },
     )
 }

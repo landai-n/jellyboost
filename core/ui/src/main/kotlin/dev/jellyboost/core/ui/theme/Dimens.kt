@@ -42,6 +42,24 @@ object Dimens {
     /** Interior padding of a form / feedback panel, wider than [SpaceLarge] so the panel breathes. */
     val PanelPadding: Dp = 20.dp
 
+    /**
+     * Side gutter of a pushed screen's glass header (`ScreenHeader`) — and of whatever lines up
+     * under it, which on the library grid is the filter-chip row and the grid itself, so the first
+     * poster sits directly below the title.
+     *
+     * 20dp rather than [ScreenPadding]: the refresh's headers sit a touch wider than the
+     * content-only screens.
+     *
+     * The same 20dp as [PanelPadding], and deliberately a token of its own rather than a reuse of
+     * it: one is the *interior* of a surface, the other the *margin* of a screen's chrome, and the
+     * two would move independently the moment either did. It lived as a `private val HeaderPadding
+     * = 20.dp` in three separate files, kept in step by three prose comments each saying "the same
+     * 20dp `LibraryGridScreen`'s header uses" (audit 2026-08-08, DUP-4) — which is a synchronisation
+     * mechanism only as long as somebody reads it. Same argument as `GlassDefaults.ChromeFill` and
+     * `GlassDefaults.BottomNavFill`, which are equal by reasoning rather than by coincidence.
+     */
+    val HeaderPadding: Dp = 20.dp
+
     /** Height of a full-size pill button (primary actions), a comfortable touch target. */
     val PillHeight: Dp = 44.dp
 

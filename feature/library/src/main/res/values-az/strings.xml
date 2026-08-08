@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Hələ kitabxana yoxdur. Serverdə bir dənə əlavə edin.</string>
     <string name="libraries_title">Kitabxanalar</string>
-    <string name="library_back">Geri</string>
-    <string name="library_home">Əsas səhifə</string>
     <string name="library_sort">Sırala</string>
     <string name="library_filter">Filtrlə</string>
     <string name="library_filter_all">Hamısı</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Burada göstəriləcək heç nə yoxdur.</string>
     <string name="library_empty_filtered">Bu filtrlərə uyğun element yoxdur.</string>
     <string name="library_empty_clear_filters">Filtrləri təmizlə</string>
-    <string name="library_retry">Yenidən cəhd et</string>
     <string name="library_error_unknown">Bu kitabxananın yüklənməsi zamanı xəta baş verdi.</string>
 </resources>

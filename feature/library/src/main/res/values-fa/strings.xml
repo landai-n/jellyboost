@@ -3,8 +3,6 @@
     <string name="libraries_empty">هنوز کتابخانه‌ای وجود ندارد. یکی در سرور اضافه کنید.</string>
     <string name="libraries_title">کتابخانه‌ها</string>
 
-    <string name="library_back">بازگشت</string>
-    <string name="library_home">خانه</string>
     <string name="library_sort">مرتب‌سازی</string>
     <string name="library_filter">فیلتر</string>
     <string name="library_filter_all">همه</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">چیزی برای نمایش وجود ندارد.</string>
     <string name="library_empty_filtered">هیچ موردی با این فیلترها مطابقت ندارد.</string>
     <string name="library_empty_clear_filters">پاک کردن فیلترها</string>
-    <string name="library_retry">تلاش دوباره</string>
 
     <string name="library_error_unknown">هنگام بارگذاری این کتابخانه مشکلی پیش آمد.</string>
 </resources>

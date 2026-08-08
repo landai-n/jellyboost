@@ -5,8 +5,6 @@
     <string name="libraries_title">Libraries</string>
 
     <!-- Header -->
-    <string name="library_back">Back</string>
-    <string name="library_home">Home</string>
     <string name="library_sort">Sort</string>
     <string name="library_filter">Filter</string>
 
@@ -43,7 +41,6 @@
     <string name="library_empty">Nothing to show here.</string>
     <string name="library_empty_filtered">No item matches these filters.</string>
     <string name="library_empty_clear_filters">Clear filters</string>
-    <string name="library_retry">Retry</string>
 
     <!-- Errors -->
     <string name="library_error_unknown">Something went wrong loading this library.</string>

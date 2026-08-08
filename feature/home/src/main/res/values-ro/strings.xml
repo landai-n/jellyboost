@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Urmează</string>
     <string name="home_section_latest">Cele mai recente din %1$s</string>
     <string name="home_hero_resume">Continuă</string>
-    <string name="home_hero_play">Redă</string>
     <string name="home_hero_details">Detalii</string>
     <string name="home_hero_rated">Clasificare %1$s</string>
     <plurals name="home_minutes_left">

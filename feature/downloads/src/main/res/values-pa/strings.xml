@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">ਵਰਤੀ ਗਈ ਸਟੋਰੇਜ</string>
     <string name="downloads_usage_queue_label">ਕਤਾਰ ਦੀ ਪ੍ਰਗਤੀ</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">ਚਲਾਓ</string>
 
     <string name="downloads_action_delete">ਡਾਊਨਲੋਡ ਮਿਟਾਓ</string>
     <string name="downloads_action_cancel">ਡਾਊਨਲੋਡ ਰੱਦ ਕਰੋ</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s ਮਿਟਾਈਏ?</string>
     <string name="downloads_delete_dialog_message">ਡਾਊਨਲੋਡ ਕੀਤੀਆਂ ਫਾਈਲਾਂ ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਹਟਾ ਦਿੱਤੀਆਂ ਜਾਣਗੀਆਂ। ਤੁਸੀਂ ਇਸਨੂੰ ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</string>
     <string name="downloads_delete_dialog_confirm">ਮਿਟਾਓ</string>
-    <string name="downloads_delete_dialog_cancel">ਰੱਦ ਕਰੋ</string>
 
     <string name="downloads_progress_of">%2$s ਵਿੱਚੋਂ %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s ਵਿੱਚੋਂ %1$s</string>

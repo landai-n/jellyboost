@@ -3,8 +3,6 @@
     <string name="libraries_empty">अद्याप कोणतीही लायब्ररी नाही. सर्व्हरवर एक जोडा.</string>
     <string name="libraries_title">लायब्ररी</string>
 
-    <string name="library_back">मागे</string>
-    <string name="library_home">मुख्यपृष्ठ</string>
     <string name="library_sort">क्रमवारी लावा</string>
     <string name="library_filter">फिल्टर</string>
     <string name="library_filter_all">सर्व</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">इथे दाखवण्यासारखे काही नाही.</string>
     <string name="library_empty_filtered">या फिल्टर्सशी जुळणारा कोणताही आयटम नाही.</string>
     <string name="library_empty_clear_filters">फिल्टर्स साफ करा</string>
-    <string name="library_retry">पुन्हा प्रयत्न करा</string>
 
     <string name="library_error_unknown">ही लायब्ररी लोड करताना काहीतरी चुकले.</string>
 </resources>

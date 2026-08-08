@@ -12,7 +12,6 @@
     <string name="offline_no_network">কোনো নেটওয়ার্ক নেই — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
     <string name="offline_server_unreachable">সার্ভারে পৌঁছানো যাচ্ছে না — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
     <string name="offline_forced">অফলাইন মোড চালু আছে — ডাউনলোড করা মিডিয়া দেখানো হচ্ছে</string>
-    <string name="offline_retry">আবার চেষ্টা করুন</string>
     <string name="offline_go_online">অনলাইনে যান</string>
     <string name="syncplay_groups_action">SyncPlay গ্রুপ</string>
     <string name="syncplay_groups_action_active">SyncPlay গ্রুপ — আপনি একটি গ্রুপে আছেন</string>

@@ -15,7 +15,6 @@
     <string name="offline_no_network">Einki net — sýnir niðurhalað tilfar</string>
     <string name="offline_server_unreachable">Fær ikki samband við ambætaran — sýnir niðurhalað tilfar</string>
     <string name="offline_forced">Frákoplaður háttur er kveiktur — sýnir niðurhalað tilfar</string>
-    <string name="offline_retry">Royn aftur</string>
     <string name="offline_go_online">Kom á net</string>
 
     <string name="syncplay_groups_action">SyncPlay bólkar</string>

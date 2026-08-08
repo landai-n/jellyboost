@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Näst på tur</string>
     <string name="home_section_latest">Senaste %1$s</string>
     <string name="home_hero_resume">Återuppta</string>
-    <string name="home_hero_play">Spela upp</string>
     <string name="home_hero_details">Detaljer</string>
     <string name="home_hero_rated">Åldersgräns %1$s</string>
     <plurals name="home_minutes_left">

@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">ஏற்கனவே உள்நுழைந்துள்ள சாதனத்தில் Jellyfin ஐத் திறந்து, Quick Connect க்குச் சென்று இந்தக் குறியீட்டை உள்ளிடவும்.</string>
     <string name="login_quick_connect_code_description">உங்கள் குறியீடு %1$s</string>
     <string name="login_quick_connect_waiting">ஒப்புதலுக்காகக் காத்திருக்கிறது…</string>
-    <string name="login_quick_connect_cancel">ரத்துசெய்</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d வேட்பாளர் முகவரியை முயற்சித்தது, வெற்றியடையவில்லை.</item>

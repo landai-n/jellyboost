@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">பின்</string>
-    <string name="detail_home">முகப்பு</string>
-    <string name="detail_play">இயக்கு</string>
     <string name="detail_resume">தொடர்</string>
     <string name="detail_download">பதிவிறக்கு</string>
-    <string name="detail_download_cancel">ரத்துசெய்</string>
     <string name="detail_download_remove">அகற்று</string>
-    <string name="detail_download_retry">மீண்டும் முயற்சி</string>
     <string name="detail_play_episode">இந்த எபிசோடை இயக்கு</string>
     <string name="detail_mark_watched">பார்த்ததாகக் குறி</string>
     <string name="detail_mark_unwatched">பார்க்காததாகக் குறி</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">பதிவிறக்கத்தை நீக்கவா?</string>
     <string name="detail_delete_download_dialog_message">இது இதை இந்தச் சாதனத்திலிருந்து அகற்றும். எப்போது வேண்டுமானாலும் மீண்டும் பதிவிறக்கலாம்.</string>
     <string name="detail_delete_download_dialog_confirm">நீக்கு</string>
-    <string name="detail_delete_download_dialog_cancel">ரத்துசெய்</string>
 
     <string name="detail_error_unknown">இந்த உருப்படியை ஏற்றுவதில் ஏதோ தவறு நடந்தது.</string>
 </resources>

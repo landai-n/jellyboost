@@ -3,8 +3,6 @@
     <string name="libraries_empty">ಇನ್ನೂ ಯಾವುದೇ ಲೈಬ್ರರಿಗಳಿಲ್ಲ. ಸರ್ವರ್‌ನಲ್ಲಿ ಒಂದನ್ನು ಸೇರಿಸಿ.</string>
     <string name="libraries_title">ಗ್ರಂಥಾಲಯಗಳು</string>
 
-    <string name="library_back">ಹಿಂದೆ</string>
-    <string name="library_home">ಮುಖಪುಟ</string>
     <string name="library_sort">ವಿಂಗಡಿಸಿ</string>
     <string name="library_filter">ಫಿಲ್ಟರ್</string>
     <string name="library_filter_all">ಎಲ್ಲಾ</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">ಇಲ್ಲಿ ತೋರಿಸಲು ಏನೂ ಇಲ್ಲ.</string>
     <string name="library_empty_filtered">ಈ ಫಿಲ್ಟರ್‌ಗಳಿಗೆ ಯಾವುದೇ ಐಟಂ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ.</string>
     <string name="library_empty_clear_filters">ಫಿಲ್ಟರ್‌ಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
-    <string name="library_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
 
     <string name="library_error_unknown">ಈ ಲೈಬ್ರರಿಯನ್ನು ಲೋಡ್ ಮಾಡುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
 </resources>

@@ -3,8 +3,6 @@
     <string name="libraries_empty">Teeke pole veel. Lisa üks serveris.</string>
     <string name="libraries_title">Teegid</string>
 
-    <string name="library_back">Tagasi</string>
-    <string name="library_home">Avaleht</string>
     <string name="library_sort">Sordi</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Kõik</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Siin pole midagi näidata.</string>
     <string name="library_empty_filtered">Ükski üksus ei vasta neile filtritele.</string>
     <string name="library_empty_clear_filters">Tühjenda filtrid</string>
-    <string name="library_retry">Proovi uuesti</string>
 
     <string name="library_error_unknown">Selle teegi laadimisel läks midagi valesti.</string>
 </resources>

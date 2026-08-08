@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Tiếp theo</string>
     <string name="home_section_latest">%1$s mới nhất</string>
     <string name="home_hero_resume">Tiếp tục</string>
-    <string name="home_hero_play">Phát</string>
     <string name="home_hero_details">Chi tiết</string>
     <string name="home_hero_rated">Phân loại độ tuổi %1$s</string>
     <plurals name="home_minutes_left">

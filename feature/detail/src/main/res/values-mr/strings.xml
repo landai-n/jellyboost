@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">मागे</string>
-    <string name="detail_home">मुख्यपृष्ठ</string>
-    <string name="detail_play">प्ले करा</string>
     <string name="detail_resume">पुन्हा सुरू करा</string>
     <string name="detail_download">डाउनलोड करा</string>
-    <string name="detail_download_cancel">रद्द करा</string>
     <string name="detail_download_remove">काढून टाका</string>
-    <string name="detail_download_retry">पुन्हा प्रयत्न करा</string>
     <string name="detail_play_episode">हा भाग प्ले करा</string>
     <string name="detail_mark_watched">पाहिले म्हणून चिन्हांकित करा</string>
     <string name="detail_mark_unwatched">न पाहिलेले म्हणून चिन्हांकित करा</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">डाउनलोड हटवायचा का?</string>
     <string name="detail_delete_download_dialog_message">हे या डिव्हाइसवरून काढून टाकेल. आपण ते कधीही पुन्हा डाउनलोड करू शकता.</string>
     <string name="detail_delete_download_dialog_confirm">हटवा</string>
-    <string name="detail_delete_download_dialog_cancel">रद्द करा</string>
 
     <string name="detail_error_unknown">हा आयटम लोड करताना काहीतरी चुकले.</string>
 </resources>

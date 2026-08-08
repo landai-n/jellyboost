@@ -12,7 +12,6 @@
     <string name="offline_no_network">ქსელი არ არის — ნაჩვენებია გადმოწერილი მედია</string>
     <string name="offline_server_unreachable">სერვერთან დაკავშირება ვერ ხერხდება — ნაჩვენებია გადმოწერილი მედია</string>
     <string name="offline_forced">ოფლაინ რეჟიმი ჩართულია — ნაჩვენებია გადმოწერილი მედია</string>
-    <string name="offline_retry">ხელახლა ცდა</string>
     <string name="offline_go_online">ონლაინში გადასვლა</string>
     <string name="syncplay_groups_action">SyncPlay ჯგუფები</string>
     <string name="syncplay_groups_action_active">SyncPlay ჯგუფები — თქვენ ჯგუფში ხართ</string>

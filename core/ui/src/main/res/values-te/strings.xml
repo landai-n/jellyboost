@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">వెనుకకు</string>
+    <string name="action_home">హోమ్</string>
+    <string name="action_cancel">రద్దు చేయండి</string>
+    <string name="action_play">ప్లే చేయండి</string>
+
     <string name="badge_downloaded">డౌన్‌లోడ్ చేయబడింది</string>
     <string name="badge_download_queued">డౌన్‌లోడ్ కోసం క్యూలో ఉంది</string>
     <string name="badge_download_paused">డౌన్‌లోడ్ పాజ్ చేయబడింది</string>

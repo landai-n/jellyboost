@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Назад</string>
-    <string name="detail_home">Главная</string>
-    <string name="detail_play">Воспроизвести</string>
     <string name="detail_resume">Продолжить</string>
     <string name="detail_download">Скачать</string>
-    <string name="detail_download_cancel">Отмена</string>
     <string name="detail_download_remove">Удалить</string>
-    <string name="detail_download_retry">Повторить</string>
     <string name="detail_play_episode">Воспроизвести этот эпизод</string>
     <string name="detail_mark_watched">Отметить просмотренным</string>
     <string name="detail_mark_unwatched">Отметить непросмотренным</string>
@@ -75,7 +70,6 @@
     <string name="detail_delete_download_dialog_title">Удалить загрузку?</string>
     <string name="detail_delete_download_dialog_message">Она будет удалена с этого устройства. Вы можете загрузить её снова в любой момент.</string>
     <string name="detail_delete_download_dialog_confirm">Удалить</string>
-    <string name="detail_delete_download_dialog_cancel">Отмена</string>
 
     <string name="detail_error_unknown">Что-то пошло не так при загрузке этого элемента.</string>
 </resources>

@@ -15,7 +15,6 @@
     <string name="offline_no_network">Nema mreže — prikazuju se preuzeti sadržaji</string>
     <string name="offline_server_unreachable">Poslužitelj nedostupan — prikazuju se preuzeti sadržaji</string>
     <string name="offline_forced">Izvanmrežni način je uključen — prikazuju se preuzeti sadržaji</string>
-    <string name="offline_retry">Pokušaj ponovno</string>
     <string name="offline_go_online">Poveži se na mrežu</string>
 
     <string name="syncplay_groups_action">SyncPlay grupe</string>

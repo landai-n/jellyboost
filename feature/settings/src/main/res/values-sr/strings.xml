@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Подешавања</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Почетна</string>
 
     <string name="settings_section_playback">Репродукција</string>
     <string name="settings_skip_intro">Прескочи уводну шпицу</string>
@@ -51,7 +49,6 @@
     <string name="settings_sign_out_dialog_title">Одјавити се?</string>
     <string name="settings_sign_out_dialog_message">Биће вам потребна адреса сервера и лозинка да се поново пријавите.</string>
     <string name="settings_sign_out_delete_downloads">Такође обриши преузимања са овог уређаја</string>
-    <string name="settings_cancel">Откажи</string>
     <string name="settings_section_about">О апликацији</string>
     <string name="settings_version">Верзија апликације</string>
 </resources>

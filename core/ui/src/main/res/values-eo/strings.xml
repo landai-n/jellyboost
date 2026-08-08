@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Reen</string>
+    <string name="action_home">Hejmo</string>
+    <string name="action_cancel">Nuligi</string>
+    <string name="action_play">Ludi</string>
+
     <string name="badge_downloaded">Elŝutita</string>
     <string name="badge_download_queued">En atendo por elŝuto</string>
     <string name="badge_download_paused">Elŝuto paŭzigita</string>

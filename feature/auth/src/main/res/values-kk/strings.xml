@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Бұрын кірген құрылғыда Jellyfin қолданбасын ашып, Жылдам қосылу бөліміне өтіп, осы кодты енгізіңіз.</string>
     <string name="login_quick_connect_code_description">Сіздің кодыңыз — %1$s</string>
     <string name="login_quick_connect_waiting">Растау күтілуде…</string>
-    <string name="login_quick_connect_cancel">Бас тарту</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d мекенжай сынап көрілді, нәтиже болмады.</item>

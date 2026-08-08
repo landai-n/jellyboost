@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">ފަހަތަށް</string>
-    <string name="detail_home">ހޯމް</string>
-    <string name="detail_play">ޕްލޭ</string>
     <string name="detail_resume">ކުރިއަށް ގެންދޭ</string>
     <string name="detail_download">ޑައުންލޯޑް</string>
-    <string name="detail_download_cancel">ކެންސަލްކުރޭ</string>
     <string name="detail_download_remove">ނަގާ</string>
-    <string name="detail_download_retry">ދެވަނަ ފަހަރަށް މަސައްކަތްކުރޭ</string>
     <string name="detail_play_episode">މި އެޕިސޯޑް ޕްލޭކުރޭ</string>
     <string name="detail_mark_watched">ބަލައިފި ކަމަށް ފާހަގަކުރޭ</string>
     <string name="detail_mark_unwatched">ނުބަލާ ކަމަށް ފާހަގަކުރޭ</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">ޑައުންލޯޑް ފޮހެލަންހޭ؟</string>
     <string name="detail_delete_download_dialog_message">މިކަމުން މި ޑިވައިސްއިން އެ ނަގާނެ. ކޮންމެ ވަގުތެއްގައިވެސް އަލުން ޑައުންލޯޑްކުރެވިދާނެ.</string>
     <string name="detail_delete_download_dialog_confirm">ފޮހެލާ</string>
-    <string name="detail_delete_download_dialog_cancel">ކެންސަލްކުރޭ</string>
 
     <string name="detail_error_unknown">މި އައިޓަމް ލޯޑްކުރުމުގައި ގޯހެއް ދިމާވެއްޖެ.</string>
 </resources>

@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Seuraavaksi</string>
     <string name="home_section_latest">Uusimmat %1$s</string>
     <string name="home_hero_resume">Jatka</string>
-    <string name="home_hero_play">Toista</string>
     <string name="home_hero_details">Tiedot</string>
     <string name="home_hero_rated">Ikäraja %1$s</string>
     <plurals name="home_minutes_left">

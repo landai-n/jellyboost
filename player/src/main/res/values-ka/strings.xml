@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">პლეერის დახურვა</string>
-    <string name="player_play">დაკვრა</string>
     <string name="player_pause">შეჩერება</string>
     <string name="player_rewind">10 წამით უკან გადახვევა</string>
     <string name="player_forward">30 წამით წინ გადახვევა</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">ჯგუფის დატოვება</string>
     <string name="player_syncplay_leave_title">დავტოვოთ ეს ჯგუფი?</string>
     <string name="player_syncplay_leave_body">დაკვრა აქ გაგრძელდება, დამოუკიდებლად. ხელახლა შეერთება ნიშნავს ჯგუფის ხელახლა არჩევას.</string>
-    <string name="player_syncplay_cancel">გაუქმება</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d ადამიანი უყურებს</item>
         <item quantity="other">%d ადამიანი უყურებს</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s-ის აწევა</string>
     <string name="player_syncplay_queue_move_down_item">%1$s-ის ჩამოწევა</string>
     <string name="player_syncplay_queue_remove_item">%1$s-ის წაშლა რიგიდან</string>
-    <string name="player_syncplay_queue_play">დაკვრა</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ერთეული რიგშია</item>
         <item quantity="other">%d ერთეული რიგშია</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">ჯგუფი უყურებს რაღაცას, რაზეც წვდომა არ გაქვთ.</string>
     <string name="player_message_syncplay_item_unavailable">ვერ გაიხსნა ის, რასაც ჯგუფი უყურებს.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">უკან</string>
-    <string name="player_syncplay_groups_home">მთავარი</string>
     <string name="player_syncplay_groups_create">ჯგუფის შექმნა</string>
     <string name="player_syncplay_groups_create_title">დაარქვით სახელი თქვენს ჯგუფს</string>
     <string name="player_syncplay_groups_create_hint">ჯგუფის სახელი</string>

@@ -12,7 +12,6 @@
     <string name="offline_no_network">Nessuna rete — visualizzazione dei contenuti scaricati</string>
     <string name="offline_server_unreachable">Impossibile raggiungere il server — visualizzazione dei contenuti scaricati</string>
     <string name="offline_forced">Modalità offline attiva — visualizzazione dei contenuti scaricati</string>
-    <string name="offline_retry">Riprova</string>
     <string name="offline_go_online">Torna online</string>
     <string name="syncplay_groups_action">Gruppi SyncPlay</string>
     <string name="syncplay_groups_action_active">Gruppi SyncPlay — sei in un gruppo</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Settings</string>
-    <string name="settings_back">Back</string>
-    <string name="settings_home">Home</string>
     <string name="settings_section_playback">Playback</string>
     <string name="settings_skip_intro">Skip intro</string>
     <string name="settings_skip_outro">Skip outro</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Sign out?</string>
     <string name="settings_sign_out_dialog_message">You\'ll need your server address and password to sign back in.</string>
     <string name="settings_sign_out_delete_downloads">Also delete downloads from this device</string>
-    <string name="settings_cancel">Cancel</string>
     <string name="settings_section_about">About</string>
     <string name="settings_version">App version</string>
 </resources>

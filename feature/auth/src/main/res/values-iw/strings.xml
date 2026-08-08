@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">פתח את Jellyfin במכשיר שבו אתה כבר מחובר, עבור אל Quick Connect והזן קוד זה.</string>
     <string name="login_quick_connect_code_description">הקוד שלך הוא %1$s</string>
     <string name="login_quick_connect_waiting">ממתין לאישור…</string>
-    <string name="login_quick_connect_cancel">ביטול</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">נוסתה כתובת מועמדת אחת, ללא הצלחה.</item>

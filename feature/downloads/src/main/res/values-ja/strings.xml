@@ -21,7 +21,6 @@
     <string name="downloads_usage_storage_label">使用中のストレージ</string>
     <string name="downloads_usage_queue_label">キューの進捗</string>
     <string name="downloads_queue_row_description">%1$s、%2$d%%、%3$s</string>
-    <string name="downloads_action_play">再生</string>
 
     <string name="downloads_action_delete">ダウンロードを削除</string>
     <string name="downloads_action_cancel">ダウンロードをキャンセル</string>
@@ -44,7 +43,6 @@
     <string name="downloads_delete_dialog_title">%1$s を削除しますか？</string>
     <string name="downloads_delete_dialog_message">ダウンロード済みのファイルはこの端末から削除されます。後でもう一度ダウンロードできます。</string>
     <string name="downloads_delete_dialog_confirm">削除</string>
-    <string name="downloads_delete_dialog_cancel">キャンセル</string>
 
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / 約%2$s</string>

@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Келесі</string>
     <string name="home_section_latest">Соңғы %1$s</string>
     <string name="home_hero_resume">Жалғастыру</string>
-    <string name="home_hero_play">Ойнату</string>
     <string name="home_hero_details">Толығырақ</string>
     <string name="home_hero_rated">Жас шектеуі %1$s</string>
     <plurals name="home_minutes_left">

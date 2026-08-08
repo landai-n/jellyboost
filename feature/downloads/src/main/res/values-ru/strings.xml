@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">Занято в хранилище</string>
     <string name="downloads_usage_queue_label">Прогресс очереди</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Воспроизвести</string>
 
     <string name="downloads_action_delete">Удалить загрузку</string>
     <string name="downloads_action_cancel">Отменить загрузку</string>
@@ -50,7 +49,6 @@
     <string name="downloads_delete_dialog_title">Удалить %1$s?</string>
     <string name="downloads_delete_dialog_message">Загруженные файлы будут удалены с этого устройства. Вы можете загрузить их снова позже.</string>
     <string name="downloads_delete_dialog_confirm">Удалить</string>
-    <string name="downloads_delete_dialog_cancel">Отмена</string>
 
     <string name="downloads_progress_of">%1$s из %2$s</string>
     <string name="downloads_progress_of_approx">%1$s из ~%2$s</string>

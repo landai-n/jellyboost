@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Tilbake</string>
-    <string name="detail_home">Hjem</string>
-    <string name="detail_play">Spill av</string>
     <string name="detail_resume">Fortsett</string>
     <string name="detail_download">Last ned</string>
-    <string name="detail_download_cancel">Avbryt</string>
     <string name="detail_download_remove">Fjern</string>
-    <string name="detail_download_retry">Prøv igjen</string>
     <string name="detail_play_episode">Spill av denne episoden</string>
     <string name="detail_mark_watched">Merk som sett</string>
     <string name="detail_mark_unwatched">Merk som usett</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Slette nedlasting?</string>
     <string name="detail_delete_download_dialog_message">Dette fjerner den fra denne enheten. Du kan laste den ned igjen når som helst.</string>
     <string name="detail_delete_download_dialog_confirm">Slett</string>
-    <string name="detail_delete_download_dialog_cancel">Avbryt</string>
 
     <string name="detail_error_unknown">Noe gikk galt under lasting av dette elementet.</string>
 </resources>

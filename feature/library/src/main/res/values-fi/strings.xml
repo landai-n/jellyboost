@@ -3,8 +3,6 @@
     <string name="libraries_empty">Ei vielä kirjastoja. Lisää yksi palvelimelle.</string>
     <string name="libraries_title">Kirjastot</string>
 
-    <string name="library_back">Takaisin</string>
-    <string name="library_home">Koti</string>
     <string name="library_sort">Lajittele</string>
     <string name="library_filter">Suodatin</string>
     <string name="library_filter_all">Kaikki</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Ei mitään näytettävää täällä.</string>
     <string name="library_empty_filtered">Mikään kohde ei vastaa näitä suodattimia.</string>
     <string name="library_empty_clear_filters">Tyhjennä suodattimet</string>
-    <string name="library_retry">Yritä uudelleen</string>
 
     <string name="library_error_unknown">Jokin meni pieleen tätä kirjastoa ladattaessa.</string>
 </resources>

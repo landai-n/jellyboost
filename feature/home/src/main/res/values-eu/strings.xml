@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Hurrengoa</string>
     <string name="home_section_latest">%1$s berrienak</string>
     <string name="home_hero_resume">Jarraitu</string>
-    <string name="home_hero_play">Erreproduzitu</string>
     <string name="home_hero_details">Xehetasunak</string>
     <string name="home_hero_rated">Adin-sailkapena %1$s</string>
     <plurals name="home_minutes_left">

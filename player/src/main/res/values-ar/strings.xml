@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">إغلاق المشغّل</string>
-    <string name="player_play">تشغيل</string>
     <string name="player_pause">إيقاف مؤقت</string>
     <string name="player_rewind">الرجوع 10 ثوانٍ</string>
     <string name="player_forward">التقدّم 30 ثانية</string>
@@ -80,8 +79,6 @@
     <string name="player_syncplay_leave_title">مغادرة هذه المجموعة؟</string>
     <string name="player_syncplay_leave_body">يستمر التشغيل هنا بمفرده. الانضمام مرة أخرى يعني اختيار المجموعة من جديد.</string>
 
-    <string name="player_syncplay_cancel">إلغاء</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="zero">لا أحد يشاهد</item>
         <item quantity="one">شخص واحد يشاهد</item>
@@ -102,7 +99,6 @@
     <string name="player_syncplay_queue_move_up_item">تحريك %1$s للأعلى</string>
     <string name="player_syncplay_queue_move_down_item">تحريك %1$s للأسفل</string>
     <string name="player_syncplay_queue_remove_item">إزالة %1$s من قائمة الانتظار</string>
-    <string name="player_syncplay_queue_play">تشغيل</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="zero">لا عناصر في قائمة الانتظار</item>
@@ -122,8 +118,6 @@
     <string name="player_message_syncplay_item_unavailable">تعذّر فتح ما تشاهده المجموعة.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">رجوع</string>
-    <string name="player_syncplay_groups_home">الرئيسية</string>
     <string name="player_syncplay_groups_create">إنشاء مجموعة</string>
     <string name="player_syncplay_groups_create_title">سمِّ مجموعتك</string>
     <string name="player_syncplay_groups_create_hint">اسم المجموعة</string>

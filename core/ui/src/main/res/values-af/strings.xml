@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Terug</string>
+    <string name="action_home">Tuis</string>
+    <string name="action_cancel">Kanselleer</string>
+    <string name="action_play">Speel</string>
+
     <string name="badge_downloaded">Afgelaai</string>
     <string name="badge_download_queued">In wagry vir aflaai</string>
     <string name="badge_download_paused">Aflaai gepouseer</string>

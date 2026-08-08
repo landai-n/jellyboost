@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Chiudi il player</string>
-    <string name="player_play">Riproduci</string>
     <string name="player_pause">Pausa</string>
     <string name="player_rewind">Indietro di 10 secondi</string>
     <string name="player_forward">Avanti di 30 secondi</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Esci dal gruppo</string>
     <string name="player_syncplay_leave_title">Uscire da questo gruppo?</string>
     <string name="player_syncplay_leave_body">La riproduzione continua qui, da sola. Per rientrare dovrai selezionare di nuovo il gruppo.</string>
-    <string name="player_syncplay_cancel">Annulla</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persona sta guardando</item>
         <item quantity="other">%d persone stanno guardando</item>
@@ -79,7 +77,6 @@
     <string name="player_syncplay_queue_move_up_item">Sposta %1$s su</string>
     <string name="player_syncplay_queue_move_down_item">Sposta %1$s giù</string>
     <string name="player_syncplay_queue_remove_item">Rimuovi %1$s dalla coda</string>
-    <string name="player_syncplay_queue_play">Riproduci</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elemento in coda</item>
         <item quantity="other">%d elementi in coda</item>
@@ -92,8 +89,6 @@
     <string name="player_message_syncplay_library_denied">Il gruppo sta guardando qualcosa a cui non hai accesso.</string>
     <string name="player_message_syncplay_item_unavailable">Impossibile aprire ciò che il gruppo sta guardando.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Indietro</string>
-    <string name="player_syncplay_groups_home">Home</string>
     <string name="player_syncplay_groups_create">Crea gruppo</string>
     <string name="player_syncplay_groups_create_title">Assegna un nome al tuo gruppo</string>
     <string name="player_syncplay_groups_create_hint">Nome del gruppo</string>

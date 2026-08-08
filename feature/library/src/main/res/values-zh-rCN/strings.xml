@@ -3,8 +3,6 @@
     <string name="libraries_empty">暂无媒体库。请在服务器上添加一个。</string>
     <string name="libraries_title">媒体库</string>
 
-    <string name="library_back">返回</string>
-    <string name="library_home">主页</string>
     <string name="library_sort">排序</string>
     <string name="library_filter">筛选</string>
     <string name="library_filter_all">全部</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">这里没有内容可显示。</string>
     <string name="library_empty_filtered">没有内容匹配这些筛选条件。</string>
     <string name="library_empty_clear_filters">清除筛选条件</string>
-    <string name="library_retry">重试</string>
 
     <string name="library_error_unknown">加载此媒体库时出现问题。</string>
 </resources>

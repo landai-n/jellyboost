@@ -3,8 +3,6 @@
     <string name="libraries_empty">Все още няма библиотеки. Добавете такава на сървъра.</string>
     <string name="libraries_title">Библиотеки</string>
 
-    <string name="library_back">Назад</string>
-    <string name="library_home">Начало</string>
     <string name="library_sort">Сортиране</string>
     <string name="library_filter">Филтър</string>
     <string name="library_filter_all">Всички</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Тук няма нищо за показване.</string>
     <string name="library_empty_filtered">Няма елемент, отговарящ на тези филтри.</string>
     <string name="library_empty_clear_filters">Изчисти филтрите</string>
-    <string name="library_retry">Опитай пак</string>
 
     <string name="library_error_unknown">Нещо се обърка при зареждането на тази библиотека.</string>
 </resources>

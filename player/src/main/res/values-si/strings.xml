@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">වාදකය වසන්න</string>
-    <string name="player_play">වාදනය කරන්න</string>
     <string name="player_pause">විරාම කරන්න</string>
     <string name="player_rewind">තත්පර 10 ක් පසුපසට යන්න</string>
     <string name="player_forward">තත්පර 30 ක් ඉදිරියට යන්න</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">කණ්ඩායමෙන් ඉවත් වන්න</string>
     <string name="player_syncplay_leave_title">මෙම කණ්ඩායමෙන් ඉවත් වන්නද?</string>
     <string name="player_syncplay_leave_body">වාදනය මෙහි තනිවම දිගටම කරගෙන යයි. නැවත එකතු වීම යනු කණ්ඩායම නැවත තේරීමයි.</string>
-    <string name="player_syncplay_cancel">අවලංගු කරන්න</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d දෙනෙක් නරඹනවා</item>
         <item quantity="other">%d දෙනෙක් නරඹනවා</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s ඉහළට ගෙන යන්න</string>
     <string name="player_syncplay_queue_move_down_item">%1$s පහළට ගෙන යන්න</string>
     <string name="player_syncplay_queue_remove_item">%1$s පෝලිමෙන් ඉවත් කරන්න</string>
-    <string name="player_syncplay_queue_play">වාදනය කරන්න</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d අයිතමයක් පෝලිමේ ඇත</item>
         <item quantity="other">%d අයිතම පෝලිමේ ඇත</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">ඔබට ප්‍රවේශය නොමැති දෙයක් කණ්ඩායම නරඹමින් සිටී.</string>
     <string name="player_message_syncplay_item_unavailable">කණ්ඩායම නරඹන දේ විවෘත කළ නොහැකි විය.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">ආපසු</string>
-    <string name="player_syncplay_groups_home">මුල් පිටුව</string>
     <string name="player_syncplay_groups_create">කණ්ඩායමක් සාදන්න</string>
     <string name="player_syncplay_groups_create_title">ඔබගේ කණ්ඩායමට නමක් දෙන්න</string>
     <string name="player_syncplay_groups_create_hint">කණ්ඩායමේ නම</string>

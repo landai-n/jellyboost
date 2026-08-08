@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">حافظه استفاده‌شده</string>
     <string name="downloads_usage_queue_label">پیشرفت صف</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
-    <string name="downloads_action_play">پخش</string>
 
     <string name="downloads_action_delete">حذف دانلود</string>
     <string name="downloads_action_cancel">لغو دانلود</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s حذف شود؟</string>
     <string name="downloads_delete_dialog_message">فایل‌های دانلودشده از این دستگاه حذف می‌شوند. می‌توانید بعداً دوباره آن را دانلود کنید.</string>
     <string name="downloads_delete_dialog_confirm">حذف</string>
-    <string name="downloads_delete_dialog_cancel">لغو</string>
 
     <string name="downloads_progress_of">%1$s از %2$s</string>
     <string name="downloads_progress_of_approx">%1$s از ~%2$s</string>

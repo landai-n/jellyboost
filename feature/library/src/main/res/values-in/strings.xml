@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Belum ada perpustakaan. Tambahkan satu di server.</string>
     <string name="libraries_title">Perpustakaan</string>
-    <string name="library_back">Kembali</string>
-    <string name="library_home">Beranda</string>
     <string name="library_sort">Urutkan</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Semua</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Tidak ada yang bisa ditampilkan di sini.</string>
     <string name="library_empty_filtered">Tidak ada item yang cocok dengan filter ini.</string>
     <string name="library_empty_clear_filters">Hapus filter</string>
-    <string name="library_retry">Coba lagi</string>
     <string name="library_error_unknown">Terjadi kesalahan saat memuat perpustakaan ini.</string>
 </resources>

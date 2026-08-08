@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Tagasi</string>
-    <string name="detail_home">Avaleht</string>
-    <string name="detail_play">Esita</string>
     <string name="detail_resume">Jätka</string>
     <string name="detail_download">Laadi alla</string>
-    <string name="detail_download_cancel">Tühista</string>
     <string name="detail_download_remove">Eemalda</string>
-    <string name="detail_download_retry">Proovi uuesti</string>
     <string name="detail_play_episode">Esita see osa</string>
     <string name="detail_mark_watched">Märgi vaadatuks</string>
     <string name="detail_mark_unwatched">Märgi vaatamata</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Kustuta allalaadimine?</string>
     <string name="detail_delete_download_dialog_message">See eemaldab selle sellest seadmest. Sa saad selle igal ajal uuesti alla laadida.</string>
     <string name="detail_delete_download_dialog_confirm">Kustuta</string>
-    <string name="detail_delete_download_dialog_cancel">Tühista</string>
 
     <string name="detail_error_unknown">Selle üksuse laadimisel läks midagi valesti.</string>
 </resources>

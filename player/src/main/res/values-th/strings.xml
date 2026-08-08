@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">ปิดตัวเล่น</string>
-    <string name="player_play">เล่น</string>
     <string name="player_pause">หยุดชั่วคราว</string>
     <string name="player_rewind">ย้อนกลับ 10 วินาที</string>
     <string name="player_forward">ข้ามไปข้างหน้า 30 วินาที</string>
@@ -58,7 +57,6 @@
     <string name="player_syncplay_leave">ออกจากกลุ่ม</string>
     <string name="player_syncplay_leave_title">ออกจากกลุ่มนี้หรือไม่?</string>
     <string name="player_syncplay_leave_body">การเล่นจะดำเนินต่อที่นี่ด้วยตัวเอง การเข้าร่วมอีกครั้งหมายถึงต้องเลือกกลุ่มใหม่</string>
-    <string name="player_syncplay_cancel">ยกเลิก</string>
     <plurals name="player_syncplay_participants">
         <item quantity="other">มีผู้ชม %d คน</item>
     </plurals>
@@ -72,7 +70,6 @@
     <string name="player_syncplay_queue_move_up_item">เลื่อน %1$s ขึ้น</string>
     <string name="player_syncplay_queue_move_down_item">เลื่อน %1$s ลง</string>
     <string name="player_syncplay_queue_remove_item">ลบ %1$s ออกจากคิว</string>
-    <string name="player_syncplay_queue_play">เล่น</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">มี %d รายการในคิว</item>
     </plurals>
@@ -84,8 +81,6 @@
     <string name="player_message_syncplay_library_denied">กลุ่มกำลังดูสิ่งที่คุณไม่มีสิทธิ์เข้าถึง</string>
     <string name="player_message_syncplay_item_unavailable">ไม่สามารถเปิดรายการที่กลุ่มกำลังดูได้</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">ย้อนกลับ</string>
-    <string name="player_syncplay_groups_home">หน้าแรก</string>
     <string name="player_syncplay_groups_create">สร้างกลุ่ม</string>
     <string name="player_syncplay_groups_create_title">ตั้งชื่อกลุ่มของคุณ</string>
     <string name="player_syncplay_groups_create_hint">ชื่อกลุ่ม</string>

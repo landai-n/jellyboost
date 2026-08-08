@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Назад</string>
+    <string name="action_home">Галоўная</string>
+    <string name="action_cancel">Скасаваць</string>
+    <string name="action_play">Прайграць</string>
+
     <string name="badge_downloaded">Спампавана</string>
     <string name="badge_download_queued">У чарзе на спампоўку</string>
     <string name="badge_download_paused">Спампоўка прыпынена</string>

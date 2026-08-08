@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Susunod</string>
     <string name="home_section_latest">Pinakabagong %1$s</string>
     <string name="home_hero_resume">Ipagpatuloy</string>
-    <string name="home_hero_play">I-play</string>
     <string name="home_hero_details">Detalye</string>
     <string name="home_hero_rated">Klasipikasyon %1$s</string>
     <plurals name="home_minutes_left">

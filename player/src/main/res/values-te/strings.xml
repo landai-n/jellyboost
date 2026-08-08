@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">ప్లేయర్‌ను మూసివేయండి</string>
-    <string name="player_play">ప్లే చేయండి</string>
     <string name="player_pause">పాజ్ చేయండి</string>
     <string name="player_rewind">10 సెకన్లు వెనక్కి దాటవేయండి</string>
     <string name="player_forward">30 సెకన్లు ముందుకు దాటవేయండి</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">ఈ గ్రూప్ నుండి వైదొలగాలా?</string>
     <string name="player_syncplay_leave_body">ప్లేబ్యాక్ ఇక్కడ, స్వతంత్రంగా కొనసాగుతుంది. తిరిగి చేరాలంటే గ్రూప్‌ను మళ్లీ ఎంచుకోవాలి.</string>
 
-    <string name="player_syncplay_cancel">రద్దు చేయండి</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d వ్యక్తి చూస్తున్నారు</item>
         <item quantity="other">%d మంది చూస్తున్నారు</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$sను పైకి జరపండి</string>
     <string name="player_syncplay_queue_move_down_item">%1$sను కిందికి జరపండి</string>
     <string name="player_syncplay_queue_remove_item">%1$sను క్యూ నుండి తీసివేయండి</string>
-    <string name="player_syncplay_queue_play">ప్లే చేయండి</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d అంశం క్యూలో ఉంది</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">గ్రూప్ చూస్తున్న దాన్ని తెరవలేకపోయాం.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">వెనుకకు</string>
-    <string name="player_syncplay_groups_home">హోమ్</string>
     <string name="player_syncplay_groups_create">గ్రూప్‌ను సృష్టించండి</string>
     <string name="player_syncplay_groups_create_title">మీ గ్రూప్‌కు పేరు పెట్టండి</string>
     <string name="player_syncplay_groups_create_hint">గ్రూప్ పేరు</string>

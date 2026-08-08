@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">אחסון בשימוש</string>
     <string name="downloads_usage_queue_label">התקדמות התור</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">הפעלה</string>
 
     <string name="downloads_action_delete">מחיקת הורדה</string>
     <string name="downloads_action_cancel">ביטול הורדה</string>
@@ -50,7 +49,6 @@
     <string name="downloads_delete_dialog_title">למחוק את %1$s?</string>
     <string name="downloads_delete_dialog_message">הקבצים שהורדו יוסרו מהמכשיר הזה. תוכל להוריד אותם שוב מאוחר יותר.</string>
     <string name="downloads_delete_dialog_confirm">מחיקה</string>
-    <string name="downloads_delete_dialog_cancel">ביטול</string>
 
     <string name="downloads_progress_of">%1$s מתוך %2$s</string>
     <string name="downloads_progress_of_approx">%1$s מתוך ~%2$s</string>

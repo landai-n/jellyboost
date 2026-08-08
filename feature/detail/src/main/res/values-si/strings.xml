@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">ආපසු</string>
-    <string name="detail_home">මුල් පිටුව</string>
-    <string name="detail_play">වාදනය කරන්න</string>
     <string name="detail_resume">නැවත ආරම්භ කරන්න</string>
     <string name="detail_download">බාගත කරන්න</string>
-    <string name="detail_download_cancel">අවලංගු කරන්න</string>
     <string name="detail_download_remove">ඉවත් කරන්න</string>
-    <string name="detail_download_retry">යළි උත්සාහ කරන්න</string>
     <string name="detail_play_episode">මෙම කථාංගය වාදනය කරන්න</string>
     <string name="detail_mark_watched">නරඹන ලද ලෙස සලකුණු කරන්න</string>
     <string name="detail_mark_unwatched">නොනරඹන ලද ලෙස සලකුණු කරන්න</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">බාගත කිරීම මකන්නද?</string>
     <string name="detail_delete_download_dialog_message">මෙය එය මෙම උපාංගයෙන් ඉවත් කරයි. ඔබට ඕනෑම වේලාවක එය නැවත බාගත කළ හැක.</string>
     <string name="detail_delete_download_dialog_confirm">මකන්න</string>
-    <string name="detail_delete_download_dialog_cancel">අවලංගු කරන්න</string>
 
     <string name="detail_error_unknown">මෙම අයිතමය පූරණය කිරීමේදී යම් දෙයක් වැරදුණි.</string>
 </resources>

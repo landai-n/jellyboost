@@ -15,7 +15,6 @@
     <string name="offline_no_network">Χωρίς δίκτυο — εμφανίζονται τα ληφθέντα μέσα</string>
     <string name="offline_server_unreachable">Ο διακομιστής δεν είναι προσβάσιμος — εμφανίζονται τα ληφθέντα μέσα</string>
     <string name="offline_forced">Η λειτουργία εκτός σύνδεσης είναι ενεργή — εμφανίζονται τα ληφθέντα μέσα</string>
-    <string name="offline_retry">Επανάληψη</string>
     <string name="offline_go_online">Σύνδεση στο δίκτυο</string>
 
     <string name="syncplay_groups_action">Ομάδες SyncPlay</string>

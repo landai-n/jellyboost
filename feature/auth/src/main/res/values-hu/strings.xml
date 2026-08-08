@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Nyisd meg a Jellyfint egy olyan eszközön, ahol már be vagy jelentkezve, lépj a Quick Connect menübe, és add meg ezt a kódot.</string>
     <string name="login_quick_connect_code_description">A kódod: %1$s</string>
     <string name="login_quick_connect_waiting">Jóváhagyásra várakozás…</string>
-    <string name="login_quick_connect_cancel">Mégse</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d lehetséges cím kipróbálva, sikertelenül.</item>

@@ -15,7 +15,6 @@
     <string name="offline_no_network">Ei verkkoyhteyttä – näytetään ladattua sisältöä</string>
     <string name="offline_server_unreachable">Palvelinta ei tavoiteta – näytetään ladattua sisältöä</string>
     <string name="offline_forced">Offline-tila on käytössä – näytetään ladattua sisältöä</string>
-    <string name="offline_retry">Yritä uudelleen</string>
     <string name="offline_go_online">Siirry verkkoon</string>
 
     <string name="syncplay_groups_action">SyncPlay-ryhmät</string>

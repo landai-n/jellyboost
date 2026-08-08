@@ -16,6 +16,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -111,10 +113,16 @@ internal class PlaybackService :
         mediaSession = session
         // The mode buttons follow the queue rather than being set once: the icons *are* the state
         // (shuffle on/off, the three repeat icons), so every change has to reach the notification.
+        // Distinct on the *derived button list*, not the state: the state ticks every second with
+        // the playback position, and re-stamping identical buttons onto the session per tick is
+        // sixty pointless notification updates a minute (`CommandButton` has value equality).
         serviceScope.launch {
-            musicController.state.collect { state ->
-                session.setMediaButtonPreferences(musicSessionCallback.buttonsFor(state))
-            }
+            musicController.state
+                .map(musicSessionCallback::buttonsFor)
+                .distinctUntilChanged()
+                .collect { buttons ->
+                    session.setMediaButtonPreferences(buttons)
+                }
         }
         // Media3's default provider ships its own generic small icon; the status bar shows only that
         // icon, so without this the media notification is the one surface that does not identify the

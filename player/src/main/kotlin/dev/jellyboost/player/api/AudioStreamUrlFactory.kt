@@ -43,7 +43,10 @@ interface AudioStreamUrlFactory {
  * @param transcodingContainer the container a transcode is delivered in; paired with HLS by the
  *   implementation, because the alternative — the device profile's mp3-over-HTTP audio transcoding
  *   profile — cannot be seeked and lands in the video resolver's HLS-only gate.
- * @param maxStreamingBitrate the ceiling a transcode is encoded to.
+ * @param maxStreamingBitrate the **direct-play** ceiling: a source above it is transcoded however
+ *   playable its container is. Not the transcode's quality — that is [audioBitRate], and confusing
+ *   the two is what once sent every flac through the encoder.
+ * @param audioBitRate what a transcode is encoded at.
  */
 data class AudioStreamRequest(
     val itemId: UUID,
@@ -53,4 +56,5 @@ data class AudioStreamRequest(
     val audioCodec: String,
     val transcodingContainer: String,
     val maxStreamingBitrate: Int,
+    val audioBitRate: Int,
 )

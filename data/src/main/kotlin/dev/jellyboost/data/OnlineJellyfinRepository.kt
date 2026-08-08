@@ -492,6 +492,13 @@ internal class OnlineJellyfinRepository
          * `/Playlists/{id}/Items` rather than a `parentId` items query: the plan's Phase 2 note
          * flags that a generic items query is not guaranteed to preserve playlist order, while the
          * dedicated endpoint is built exactly for that (docs/notes/music-m13-plan.md, Phase 2).
+         *
+         * Filtered to audio, because a Jellyfin playlist may legally mix in episodes and films and
+         * every consumer of this member is the audio-only pipeline — `PlaylistDetailScreen` hands
+         * the whole list to the music queue, whose resolver would build `/Audio/{id}/universal`
+         * URLs for video items. M13 is a view-only music app; a playlist's video members are out
+         * of its scope, exactly as `SdkDownloadApi.getPlaylistTrackIds` already drops them on the
+         * download path (DECISIONS.md, 2026-08-09).
          */
         override suspend fun getPlaylistItems(playlistId: String): AppResult<List<JellyfinItem>> =
             onIo {
@@ -506,8 +513,9 @@ internal class OnlineJellyfinRepository
                             enableUserData = true,
                         ),
                     )
-                browseCache.cacheItems(response.content.items)
-                mapper.toDomain(response.content.items)
+                val tracks = response.content.items.filter { it.type == BaseItemKind.AUDIO }
+                browseCache.cacheItems(tracks)
+                mapper.toDomain(tracks)
             }
 
         // ---- end M13 Phase 2 ------------------------------------------------------------------

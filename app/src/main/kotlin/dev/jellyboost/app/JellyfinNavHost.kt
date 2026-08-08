@@ -153,10 +153,18 @@ internal fun JellyfinNavHost(
         composable<Routes.Downloads> {
             DownloadsScreen(
                 viewModel = hiltViewModel(),
-                onPlay = { itemId, startPositionTicks ->
-                    navController.navigate(
-                        Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
-                    )
+                onPlay = { itemId, startPositionTicks, item ->
+                    // A downloaded track goes to the music queue, not the immersive video screen
+                    // (M13): Routes.Player cannot play audio, and the queue is what gives the tap
+                    // its album context, mini-player and notification. Only when the cached item
+                    // was wiped (type unknowable) does the video route remain the fallback.
+                    if (item != null && item.type == ItemType.AUDIO) {
+                        music.playDownloadedAudio(item, startPositionTicks)
+                    } else {
+                        navController.navigate(
+                            Routes.Player(itemId = itemId, startPositionTicks = startPositionTicks),
+                        )
+                    }
                 },
             )
         }

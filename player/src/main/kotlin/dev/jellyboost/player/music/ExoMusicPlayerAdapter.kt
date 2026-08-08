@@ -5,10 +5,12 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import dev.jellyboost.core.common.music.MusicRepeatMode
+import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.session.ExoPlayerHandle
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -59,6 +61,19 @@ internal class ExoMusicPlayerAdapter
         override val events: Flow<MusicPlayerEvent> = _events.asSharedFlow()
 
         private var claimed = false
+
+        /**
+         * The exact instance [claim] configured.
+         *
+         * `ExoPlayerHandle.release()` (the playback service's teardown, a video session's own
+         * teardown) destroys the player and `requirePlayer()` silently builds a fresh one — with
+         * no listener of ours, movie audio attributes, and an empty playlist. A boolean alone
+         * cannot see that: `claimed` would stay `true` against a player the claim never touched,
+         * and every transport call would land in a configured-looking void. Identity is checked
+         * on every [player] resolution; a mismatch resets the claim so the next [setQueue] runs
+         * the full claim again (listener, attributes, service start).
+         */
+        private var claimedPlayer: Player? = null
 
         private val listener =
             object : Player.Listener {
@@ -179,16 +194,28 @@ internal class ExoMusicPlayerAdapter
                     positionMs = currentPosition.coerceAtLeast(0L),
                     durationMs = duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
                     isPlaying = isPlaying,
+                    mediaItemCount = mediaItemCount,
                 )
             }
 
+        override fun retryPrepare() {
+            player().prepare()
+        }
+
         override fun release() {
             if (!claimed) return
+            val player = player() // Resolving may clear a claim the handle rebuilt out from under.
+            if (!claimed) return
             claimed = false
-            with(player()) {
+            claimedPlayer = null
+            with(player) {
+                // The listener goes *first*: `stop()`/`clearMediaItems()` fire it synchronously
+                // (a playlist change is a media-item transition), and that echo arriving after
+                // the controller considers itself relinquished would reset state the new owner
+                // is about to build on.
+                removeListener(listener)
                 stop()
                 clearMediaItems()
-                removeListener(listener)
                 setAudioAttributes(audioAttributes(C.AUDIO_CONTENT_TYPE_MOVIE), true)
             }
             Timber.d("Music released the shared player")
@@ -201,17 +228,32 @@ internal class ExoMusicPlayerAdapter
 
         /** Idempotent: every transport call is allowed to assume the player is already claimed. */
         private fun claim() {
+            val player = player() // Clears a stale claim first if the instance changed underneath.
             if (claimed) return
             claimed = true
+            claimedPlayer = player
             playerHandle.startPlaybackService()
-            with(player()) {
+            with(player) {
                 addListener(listener)
                 setAudioAttributes(audioAttributes(C.AUDIO_CONTENT_TYPE_MUSIC), true)
             }
             Timber.d("Music claimed the shared player")
         }
 
-        private fun player(): Player = playerHandle.requirePlayer()
+        /**
+         * The shared player, with the claim's identity check (see [claimedPlayer]): a rebuilt
+         * instance is treated as unclaimed, so nothing here ever operates on a player believing
+         * it configured it when it configured its predecessor.
+         */
+        private fun player(): Player {
+            val current = playerHandle.requirePlayer()
+            if (claimed && current !== claimedPlayer) {
+                Timber.i("The shared player was rebuilt underneath the music claim; treating it as unclaimed")
+                claimed = false
+                claimedPlayer = null
+            }
+            return current
+        }
 
         private fun audioAttributes(contentType: Int): AudioAttributes =
             AudioAttributes
@@ -231,12 +273,19 @@ internal class ExoMusicPlayerAdapter
  * The metadata is what the media notification and the lock screen draw, and it is the only place
  * they get it from — the session reads `MediaItem.mediaMetadata` off the timeline, so there is no
  * separate notification-building step anywhere in this milestone.
+ *
+ * A transcoded entry names its mime type explicitly: the universal URL carries no `.m3u8` path
+ * segment for ExoPlayer's inference to read, so without the hint `DefaultMediaSourceFactory`
+ * builds a `ProgressiveMediaSource` and hands an HLS playlist to the progressive extractors —
+ * unplayable. Direct-play URLs and `file://` downloads are left to content sniffing, which
+ * handles every container in [MusicStreamResolver.DIRECT_CONTAINERS].
  */
 private fun MusicQueueEntry.toMediaItem(): MediaItem =
     MediaItem
         .Builder()
         .setMediaId(mediaId)
         .setUri(uri.toUri())
+        .apply { if (playMethod == PlayMethod.TRANSCODE) setMimeType(MimeTypes.APPLICATION_M3U8) }
         .setMediaMetadata(
             MediaMetadata
                 .Builder()

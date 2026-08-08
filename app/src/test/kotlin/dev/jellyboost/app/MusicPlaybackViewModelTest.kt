@@ -94,6 +94,47 @@ class MusicPlaybackViewModelTest {
             verify(exactly = 1) { controller.next() }
         }
 
+    // ---- playDownloadedAudio (Downloads tab, M13 review fix) -----------------------------------
+
+    @Test
+    fun `playDownloadedAudio plays the downloaded album context, starting at the tapped track`() =
+        runTest(dispatcher) {
+            val tapped = track().copy(id = "t2", albumId = "album-1")
+            val albumTracks = listOf(track(), tapped, track().copy(id = "t3"))
+            coEvery { repository.getAlbumTracks("album-1") } returns AppResult.Success(albumTracks)
+
+            // 42 seconds, in Jellyfin's 100ns ticks — the Downloads row's resume position.
+            viewModel().playDownloadedAudio(tapped, startPositionTicks = 420_000_000L)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { controller.play(albumTracks, 1, false, 42_000L) }
+        }
+
+    @Test
+    fun `playDownloadedAudio falls back to a single-item queue when the track has no album`() =
+        runTest(dispatcher) {
+            val tapped = track() // albumId defaults to null
+
+            viewModel().playDownloadedAudio(tapped)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { controller.play(listOf(tapped), 0, false, 0L) }
+            coVerify(exactly = 0) { repository.getAlbumTracks(any()) }
+        }
+
+    @Test
+    fun `playDownloadedAudio falls back to a single-item queue when the album fetch fails`() =
+        runTest(dispatcher) {
+            val tapped = track().copy(albumId = "album-1")
+            coEvery { repository.getAlbumTracks("album-1") } returns AppResult.Failure(AppError.Network())
+
+            viewModel().playDownloadedAudio(tapped)
+            advanceUntilIdle()
+
+            // Offline with no album rows cached, a server hiccup — either way the tap still plays.
+            coVerify(exactly = 1) { controller.play(listOf(tapped), 0, false, 0L) }
+        }
+
     // ---- startRadio (M13 Phase 6) --------------------------------------------------------------
 
     @Test

@@ -133,6 +133,25 @@ means a keep rule is missing; add a **targeted** rule and log it in DECISIONS.md
 widening `app/proguard-rules.pro` broadly.
 `[ ] PASS  [ ] FAIL`
 
+## Review-fix spot-checks (added 2026-08-09, after the max-review fix wave)
+
+Three fixes from the 15-finding review are unit-tested but deserve a device glance during the
+walk (each folds into an existing item):
+
+- **R1 — transcoded track actually plays (with item 6):** play a CD-quality flac. Expected since
+  the fix: the dashboard shows **DirectPlay** (the direct ceiling is now 120 Mbps, not 384 kbps).
+  Then force a transcode (a container outside opus/mp3/aac/m4a/flac/webma/webm/wav/ogg, or
+  temporarily lower the bitrate in a test build) — it must *play* (HLS mime fix), dashboard
+  Transcode at ~384 kbps.
+- **R2 — film notification stays clean (with item 7):** while music plays, start a film. The
+  film's notification/lock-screen must show **no shuffle/repeat buttons** (parked-queue fix);
+  the mini-player still shows the parked track and resumes it afterwards.
+- **R3 — external shuffle is a no-op (with item 3):** with a queue playing, say "Hey Google,
+  turn on shuffle" (or toggle from a BT controller that offers it). Expected: playback order does
+  **not** change and the app's shuffle stays off (commands stripped; in-app and notification
+  buttons remain the way to shuffle).
+`[ ] PASS  [ ] FAIL`
+
 ## After this walk
 
 - Every item PASS: update this file's checkboxes, note the result in `STATUS.md`'s M13 section, and

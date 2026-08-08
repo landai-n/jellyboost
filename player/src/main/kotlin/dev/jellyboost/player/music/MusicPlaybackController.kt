@@ -37,6 +37,9 @@ import org.jellyfin.sdk.model.api.RepeatMode
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -111,6 +114,12 @@ internal class MusicPlaybackController
         /** `true` after the queue ran out — the next play restarts it rather than doing nothing. */
         private var atQueueEnd = false
 
+        /**
+         * `true` after a player error: ExoPlayer parks in `IDLE`, where `play()` is a no-op, so
+         * the next transport intent routes through [MusicPlayerPort.retryPrepare] first.
+         */
+        private var needsPrepare = false
+
         private var ticker: Job? = null
 
         init {
@@ -135,9 +144,71 @@ internal class MusicPlaybackController
                     // Play on an exhausted queue means "start it again", which is what Media3's own
                     // play-button handling does for an ended player: a bare play() would do nothing.
                     atQueueEnd -> restartQueue()
-                    else -> onPlayer { play() }
+                    else -> resumePlayback()
                 }
             }
+        }
+
+        /**
+         * Resume on a paused queue, with the two cases a bare `play()` silently no-ops on: an
+         * errored player is re-prepared first, and a player that was released and rebuilt
+         * underneath the queue (empty playlist while this state says `Active`) is re-prepared
+         * from this class's own state — the mirror of [reclaimAndResume]'s re-prepare.
+         *
+         * Guarded against SyncPlay like [startQueue]: resume is how a refused `play()` would
+         * otherwise sneak music into a group through the mini-player.
+         */
+        private suspend fun resumePlayback() {
+            if (refuseInSyncPlayGroup()) return
+            when {
+                needsPrepare -> {
+                    needsPrepare = false
+                    onPlayer {
+                        retryPrepare()
+                        play()
+                    }
+                    publish(isPlaying = true)
+                    // The error handler closed the track's session; the retry re-opens it so the
+                    // resumed playback reports again. A second failure closes it again.
+                    if (openSession == null) {
+                        openSessionFor(
+                            currentIndex,
+                            positionTicks = _state.value.positionMsOrZero().millisToTicks(),
+                            isPaused = false,
+                        )
+                    }
+                    startTicker()
+                }
+
+                onPlayer { snapshot() }.mediaItemCount == 0 -> reprepareFromState()
+                else -> onPlayer { play() }
+            }
+        }
+
+        /** Rebuilds the player's playlist from this class's state, keeping the open session. */
+        private suspend fun reprepareFromState() {
+            val resumeAt = _state.value.positionMsOrZero()
+            Timber.i("The player lost the queue (rebuild); re-preparing %d entries", entries.size)
+            onPlayer {
+                setShuffleEnabled(shuffleEnabled)
+                setRepeatMode(repeatMode)
+                setQueue(entries, currentIndex, startPositionMs = resumeAt, playWhenReady = true)
+            }
+            publish(isPlaying = true, positionMs = resumeAt)
+            // The session survives a rebuild — same track, same playSessionId — so it is only
+            // opened when none is: re-reporting a start would double the dashboard row.
+            if (openSession == null) {
+                openSessionFor(currentIndex, positionTicks = resumeAt.millisToTicks(), isPaused = false)
+            }
+            startTicker()
+        }
+
+        /** Emits [MusicMessage.RefusedInSyncPlayGroup] and answers `true` while in a group. */
+        private fun refuseInSyncPlayGroup(): Boolean {
+            if (!syncPlay.inGroup.value) return false
+            Timber.i("Refusing to resume music: this device is in a SyncPlay group")
+            _messages.tryEmit(MusicMessage.RefusedInSyncPlayGroup)
+            return true
         }
 
         override fun next() = onSession { next() }
@@ -188,6 +259,13 @@ internal class MusicPlaybackController
                 if (index !in entries.indices) return@launchOnSession
                 items = items.toMutableList().apply { removeAt(index) }
                 entries = entries.toMutableList().apply { removeAt(index) }
+                // Removing the entry that holds the open session closes it *before* the player
+                // removal: the transition Media3 fires for the track that slides in must find no
+                // open session (and no stale openIndex to match), so it opens the new track's own
+                // rather than being swallowed as the echo of the one just removed.
+                if (index == openIndex) {
+                    closeOpenSession(hasEnded = false, positionMs = _state.value.positionMsOrZero())
+                }
                 onPlayer { removeItem(index) }
                 if (entries.isEmpty()) {
                     endSession()
@@ -208,7 +286,18 @@ internal class MusicPlaybackController
                 items = items.toMutableList().apply { add(to, removeAt(from)) }
                 entries = entries.toMutableList().apply { add(to, removeAt(from)) }
                 onPlayer { moveItem(from, to) }
-                openIndex = entries.indexOfFirst { it.playSessionId == openSession?.playSessionId }.takeIf { it >= 0 }
+                // Pure index arithmetic, the same displacement the player applies. Looking the
+                // session up by playSessionId cannot work here: a downloaded track's is null, and
+                // null matches the *first* downloaded entry, wherever the session really is.
+                openIndex =
+                    openIndex?.let { open ->
+                        when {
+                            open == from -> to
+                            open in (from + 1)..to -> open - 1
+                            open in to until from -> open + 1
+                            else -> open
+                        }
+                    }
                 publish(index = onPlayer { snapshot() }.currentItemIndex)
             }
         }
@@ -266,6 +355,7 @@ internal class MusicPlaybackController
             shuffleEnabled = shuffled
             relinquished = false
             atQueueEnd = false
+            needsPrepare = false
 
             onPlayer {
                 setShuffleEnabled(shuffled)
@@ -297,6 +387,7 @@ internal class MusicPlaybackController
         /** Play on a queue that has run out: back to the top, from the beginning. */
         private suspend fun restartQueue() {
             atQueueEnd = false
+            needsPrepare = false
             currentIndex = 0
             onPlayer { setQueue(entries, 0, startPositionMs = 0L, playWhenReady = true) }
             publish(index = 0, isPlaying = true, positionMs = 0L)
@@ -304,12 +395,20 @@ internal class MusicPlaybackController
             startTicker()
         }
 
-        /** Takes the player back after video borrowed it, at the position music left off at. */
+        /**
+         * Takes the player back after video borrowed it, at the position music left off at.
+         *
+         * Refused in a SyncPlay group: [startQueue]'s guard covers a *new* queue, but resuming a
+         * parked one reaches the player through here without ever passing it, and a parked queue
+         * must not sneak music into a group either.
+         */
         private suspend fun reclaimAndResume() {
+            if (refuseInSyncPlayGroup()) return
             val resumeAt = _state.value.positionMsOrZero()
             handover.claim(PlaybackKind.MUSIC, ::relinquishToOther)
             relinquished = false
             atQueueEnd = false
+            needsPrepare = false
             onPlayer {
                 setShuffleEnabled(shuffleEnabled)
                 setRepeatMode(repeatMode)
@@ -328,23 +427,37 @@ internal class MusicPlaybackController
          * music session on the server, and a `PlaybackInfo` for the film arriving first is exactly
          * the double session the arbiter exists to prevent.
          *
+         * The arbiter invokes it inline in the *claimant's* context (that is what "completed
+         * before `claim` returns" means), so the body hops onto the session dispatcher first:
+         * that serialises it with every command already queued on [MusicSessionScope] — a `next()`
+         * tapped a frame before the film started runs *after* this and finds [relinquished] set,
+         * instead of racing the park on another thread. Setting the flag is the first act on that
+         * dispatcher for the same reason. Player calls inside still marshal through [onPlayer];
+         * the arbiter never dictates a thread ([PlaybackHandover]'s contract).
+         *
          * The queue is not thrown away — it becomes a paused [MusicPlaybackState.Active] snapshot,
          * so the mini-player still shows what was playing and one tap resumes it where it was
          * (key decision 3).
          */
         private suspend fun relinquishToOther() {
-            if (_state.value !is MusicPlaybackState.Active) return
-            Timber.i("Music is handing the player over; parking the queue at index %d", currentIndex)
-            stopTicker()
-            val snapshot = onPlayer { snapshot() }
-            closeOpenSession(hasEnded = false, positionMs = snapshot.positionMs)
-            currentIndex = snapshot.currentItemIndex.coerceIn(entries.indices)
-            relinquished = true
-            publish(index = currentIndex, isPlaying = false, positionMs = snapshot.positionMs)
-            // The playlist goes, the service does not: whoever is claiming is about to prepare on
-            // this same player and `ExoPlayerHandle.prepare` starts the service itself.
-            onPlayer { release() }
+            withContext(sessionDispatcher()) {
+                if (_state.value !is MusicPlaybackState.Active) return@withContext
+                relinquished = true
+                Timber.i("Music is handing the player over; parking the queue at index %d", currentIndex)
+                stopTicker()
+                val snapshot = onPlayer { snapshot() }
+                closeOpenSession(hasEnded = false, positionMs = snapshot.positionMs)
+                currentIndex = snapshot.currentItemIndex.coerceIn(entries.indices)
+                publish(index = currentIndex, isPlaying = false, positionMs = snapshot.positionMs)
+                // The playlist goes, the service does not: whoever is claiming is about to prepare
+                // on this same player and `ExoPlayerHandle.prepare` starts the service itself.
+                onPlayer { release() }
+            }
         }
+
+        /** The session scope's own dispatcher, for completing work *on* the queue's serial lane. */
+        private fun sessionDispatcher(): CoroutineContext =
+            scope.coroutineContext[ContinuationInterceptor] ?: EmptyCoroutineContext
 
         /**
          * The session ends for good: final report, player and notification gone, back to Idle.
@@ -366,6 +479,7 @@ internal class MusicPlaybackController
             currentIndex = 0
             relinquished = false
             atQueueEnd = false
+            needsPrepare = false
             _state.value = MusicPlaybackState.Idle
         }
 
@@ -385,11 +499,19 @@ internal class MusicPlaybackController
          *
          * The echo of our own `setMediaItems` is ignored: Media3 fires a transition for the
          * playlist change too, and its entry already has the session [startQueue] opened for it.
+         *
+         * Ignored outright while [relinquished]: the adapter's teardown detaches its listener
+         * before it clears the playlist, but this event flow is buffered and [relinquishToOther]
+         * suspends — an echo emitted just before the detach can still be waiting here after the
+         * park, and processing it would re-open a session the handover just closed (defence in
+         * depth for the release-echo bug; the listener-before-clear ordering is the first line).
          */
         private suspend fun onTransition(event: MusicPlayerEvent.ItemTransition) {
+            if (relinquished) return
             if (entries.isEmpty()) return
             if (event.index == openIndex) return
             atQueueEnd = false
+            needsPrepare = false
             // The outgoing track's own position is gone the moment the player moved, so a *skip*
             // is reported at the last position the one-second ticker saw. A track that finished
             // does not need one: its stop report carries the item's full runtime.
@@ -425,6 +547,9 @@ internal class MusicPlaybackController
         private suspend fun onError(event: MusicPlayerEvent.Error) {
             Timber.w("Music playback failed (%d): %s", event.code, event.message)
             stopTicker()
+            // The player is now parked in IDLE; a bare play() there is a silent no-op, so the
+            // next resume or skip routes through retryPrepare() first.
+            needsPrepare = true
             closeOpenSession(hasEnded = false, positionMs = _state.value.positionMsOrZero())
             _messages.tryEmit(MusicMessage.PlaybackFailed(items.getOrNull(currentIndex)?.name.orEmpty()))
             publish(isPlaying = false)
@@ -535,6 +660,7 @@ internal class MusicPlaybackController
                     durationMs = durationMs ?: previous?.durationMs ?: 0L,
                     shuffleEnabled = shuffleEnabled,
                     repeatMode = repeatMode,
+                    parked = relinquished,
                 )
         }
 
@@ -554,6 +680,12 @@ internal class MusicPlaybackController
                     return@launchOnSession
                 }
                 atQueueEnd = false
+                // A skip after an error must revive the IDLE player first, or the seek lands in a
+                // player that will never play it (finding: post-error transport no-ops).
+                if (needsPrepare) {
+                    needsPrepare = false
+                    onPlayer { retryPrepare() }
+                }
                 onPlayer(block)
             }
         }

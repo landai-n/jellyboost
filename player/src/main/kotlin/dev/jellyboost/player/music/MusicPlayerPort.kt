@@ -68,6 +68,16 @@ internal interface MusicPlayerPort {
     fun snapshot(): MusicPortSnapshot
 
     /**
+     * Re-prepares the playlist the player already holds, at its current position.
+     *
+     * The recovery verb for a player error: ExoPlayer parks in `IDLE` after `onPlayerError`, and
+     * in that state `play()` is a no-op — `prepare()` is Media3's own documented retry, keeping
+     * playlist and position. Distinct from [setQueue], which *replaces* the playlist and would
+     * reset the shuffle order.
+     */
+    fun retryPrepare()
+
+    /**
      * Lets the player go: the playlist is cleared, the listener detached and the video path's
      * audio attributes restored, but the shared player itself is **not** released — whoever is
      * claiming it next is about to prepare on it.
@@ -78,13 +88,22 @@ internal interface MusicPlayerPort {
     fun stopAndRelease()
 }
 
-/** The player's position, as the controller's state and its progress reports need it. */
+/**
+ * The player's position, as the controller's state and its progress reports need it.
+ *
+ * @param mediaItemCount how many entries the player's own playlist holds right now. Zero while
+ *   the controller's state says `Active` is the signature of a player that was released and
+ *   rebuilt underneath the queue (the shared handle does that whenever the playback service is
+ *   torn down) — the controller re-prepares from its own state instead of issuing transport
+ *   calls into an empty player.
+ */
 internal data class MusicPortSnapshot(
     val currentItemIndex: Int = 0,
     val currentMediaId: String? = null,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,
     val isPlaying: Boolean = false,
+    val mediaItemCount: Int = 0,
 )
 
 /** What the player tells the queue's orchestration. */

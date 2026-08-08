@@ -29,6 +29,15 @@ import javax.inject.Singleton
  * [release] from inside one would deadlock. In practice a relinquish is exactly three steps — stop
  * report, snapshot what was playing, let go of the player — and none of them is a handover.
  *
+ * ### What a relinquish may not assume
+ * **A thread.** The callback is invoked inline in whichever context the displacing [claim] was
+ * called from — video claims from the player screen's main-thread scope, music from its own
+ * background session dispatcher — and this class deliberately does not hop anywhere: it cannot
+ * know what each owner's teardown needs (Media3 calls must be on main; a stop report must not
+ * be). Every relinquish therefore owns its own marshalling — the player-touching steps hop to the
+ * main dispatcher themselves, and both registered closures (`PlaybackSessionController.open`'s
+ * and `MusicPlaybackController.relinquishToOther`) do exactly that.
+ *
  * ### Re-claiming
  * Claiming for the kind that already owns the player is *not* a handover: it replaces the
  * relinquish callback and nothing else. A video re-negotiation (a quality change, a fallback

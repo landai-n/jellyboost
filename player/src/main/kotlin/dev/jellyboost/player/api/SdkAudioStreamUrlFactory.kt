@@ -53,6 +53,7 @@ internal class SdkAudioStreamUrlFactory
                     maxAudioChannels = MAX_AUDIO_CHANNELS,
                     transcodingAudioChannels = MAX_AUDIO_CHANNELS,
                     maxStreamingBitrate = request.maxStreamingBitrate,
+                    audioBitRate = request.audioBitRate,
                     transcodingContainer = request.transcodingContainer,
                     // HLS, not the device profile's mp3-over-HTTP audio transcoding profile: HLS is
                     // seekable, ExoPlayer plays it natively, and it sidesteps the video resolver's

@@ -1777,7 +1777,7 @@ orchestrator-merged and gated: **748 tests, 0 failures** (forced rerun; 645 → 
 - **Settings screen:** all four sections render (portrait + landscape, content capped
   ~640 dp); every pref row is whole-row tappable (verified by tapping labels, not
   controls: segment-skip radios + PiP switch); storage line + fixed location shown;
-  Account shows Alex / test-server; sign-out dialog opens with the
+  Account shows the owner user / test-server; sign-out dialog opens with the
   "Also delete downloads" checkbox — **cancelled, not confirmed** (signing out would
   strand the session; the flow below the dialog is pinned by `coVerifyOrder` tests).
 - **Hit-target fixes (M7 note closed):** Downloads Wi-Fi-only row toggles from a tap
@@ -1795,7 +1795,7 @@ orchestrator-merged and gated: **748 tests, 0 failures** (forced rerun; 645 → 
 
 **Not device-verifiable on this setup** (recorded, pinned by unit tests instead):
 - Trickplay scrubber *positive* path: test-server has trickplay generated for zero
-  items, and Alex's token is not admin (403 on `/ScheduledTasks`), so tiles
+  items, and the owner account's token is not admin (403 on `/ScheduledTasks`), so tiles
   cannot be generated. Absence path verified live (plain bar, no crash);
   tile-selection math pinned by `TrickplayResolverTest`/`TrickplayTiles` tests.
 - Segment-skip *positive* path (button/auto-skip): no intro-detection plugin on the
@@ -2006,7 +2006,7 @@ which is what Dashboard renders):
   deferred to M7 per DECISIONS), `LibrariesScreen` + tests, NavHost wiring for
   LibraryGrid/Search/ItemDetail, home click-through, auth screens restyled onto
   `:core:ui`. WorkManager/Hilt in `:app` was already wired at M0.
-- Device DoD walked so far (test tablet, signed in as Alex):
+- Device DoD walked so far (test tablet, signed in as the owner account):
   - M3 paging: Films grid (184 items) scrolls to the bottom cleanly with exactly one
     request per page — offsets 0/50/100/150, each requested once (logcat-verified).
     Note: no library on test-server exceeds 500 top-level items (Films 184, Séries 28);
@@ -2079,7 +2079,7 @@ which is what Dashboard renders):
 ## Previous milestone: M2 — Design system + Home (online) (DONE, tagged m2)
 
 **DoD walk on test tablet (2026-07-28), side-by-side vs jellyfin-web as the same user
-('Alex'), all rows compared item-by-item to the end via UI-dump row walks — pass:**
+(the owner account), all rows compared item-by-item to the end via UI-dump row walks — pass:**
 - My Media: Films, Séries (web also shows Musique — excluded by v1 scope, pre-approved).
 - Continue Watching: 12/12 items identical, same order (Sans un bruit : Jour 1 → Wonder Man).
 - Next Up: 9/9 identical, same order (House of the Dragon S3:E1 → Zero Day S1:E5).
@@ -2093,7 +2093,7 @@ which is what Dashboard renders):
   (Malcolm S1:E2, Emily in Paris S5:E1) and stale series (Key & Peele, Squid Game), and
   Continue Watching showed 8 extra items until aligned.
 - Verification note: comparing as the same user matters — the app had been left signed in
-  as 'admin' from M1 testing and its home legitimately differed from web-as-Alex;
+  as 'admin' from M1 testing and its home legitimately differed from web-as-owner;
   re-login via Quick Connect (code approved by an authenticated web session) fixed that.
 
 ## Previous milestone: M1 — Auth & session (DONE, tagged m1)
@@ -2107,7 +2107,7 @@ which is what Dashboard renders):
 - Token hygiene via `run-as`: DB schema/WAL contain no token column and no token-shaped
   strings; `secure_credentials.xml` fully encrypted (Tink AES-SIV keys / AES-GCM values).
 - Session restore: force-stop → relaunch → straight to signed-in Home
-  (`Restored session for 'Alex' on 'test-server'`), no network.
+  (`Restored session for 'owner' on 'test-server'`), no network.
 - Sign-out: credential entries wiped (only keyset metadata remains), app returns to
   ServerSetup; server/user Room rows kept per DECISIONS.md.
 - Dashboard→Devices: user confirmed "Jellyboost 0.1.0" session in web UI.

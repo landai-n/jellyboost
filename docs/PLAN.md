@@ -5,7 +5,7 @@ The official jellyfin-android app is a WebView wrapper around jellyfin-web with 
 
 ## Confirmed decisions
 - **v1 scope:** Movies & TV shows only. Extras: Quick Connect login. NOT v1 (don't preclude): music, live TV, Chromecast, multi-server UI, transcoded downloads, Android TV.
-- **Location:** standalone Gradle project `.` (sibling of jellyfin-android), own git repo — the on-disk directory keeps its original name; only the project/app identity is `Jellyboost` (see `DECISIONS.md`, 2026-07-31 rename).
+- **Location:** standalone Gradle project `jellyfin-native` in the `Jellyfin Android` workspace (sibling of jellyfin-android), own git repo — the on-disk directory keeps its original name; only the project/app identity is `Jellyboost` (see `DECISIONS.md`, 2026-07-31 rename).
 - **Stack:** Jetpack Compose + Material 3 (dark, jellyfin-web palette), Hilt, multi-module Findroid-style, Room, Media3/ExoPlayer + jellyfin ffmpeg decoder, jellyfin-sdk-kotlin **1.8.12** (pinned; 1.9.x = Jellyfin 12 renames, migrate later), Coil 3, WorkManager, OkHttp.
 - **App ID / root package:** `dev.jellyboost.app` / `dev.jellyboost`.
 - **Offline browse scope:** downloaded items only (cached parents of downloaded items still open, e.g. series page of a downloaded episode).

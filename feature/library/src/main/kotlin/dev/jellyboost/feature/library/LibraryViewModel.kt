@@ -25,6 +25,7 @@ import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.observeBadgeStates
 import dev.jellyboost.data.downloads.withDownloadState
+import dev.jellyboost.data.reloadOnChange
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -197,15 +198,14 @@ class LibraryViewModel
          * would just be spending a request.
          */
         private fun observeConnectivityChanges() {
-            viewModelScope.launch {
-                connectivityRefresher.connectivityChanged.collect {
+            connectivityRefresher.reloadOnChange(
+                viewModelScope,
+                onlyIf = {
                     val state = _uiState.value
                     val wasAsked = state.areFacetsLoaded || state.facetsError != null
-                    if (wasAsked && !state.areFacetsLoading) {
-                        retryFacets()
-                    }
-                }
-            }
+                    wasAsked && !state.areFacetsLoading
+                },
+            ) { retryFacets() }
         }
 
         /** Applies a sort key; picking the key that is already active flips the direction. */

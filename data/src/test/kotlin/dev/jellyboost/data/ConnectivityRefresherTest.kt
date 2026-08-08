@@ -7,12 +7,14 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 /**
@@ -134,4 +136,94 @@ class ConnectivityRefresherTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    /**
+     * [ConnectivityRefresher.reloadOnChange] is the shape five ViewModels used to spell out for
+     * themselves (audit 2026-08-08, DUP-8). What is pinned here is what they collectively relied
+     * on: a reload per change in either direction, the predicate the two variants pass, and the
+     * collection dying with the scope — a ViewModel's `viewModelScope` in production.
+     */
+    @Nested
+    inner class ReloadOnChange {
+        // `by lazy`, not a plain field: JUnit constructs a @Nested instance before the outer
+        // @BeforeEach runs, and `ConnectivityRefresher` reads `provider.state` in its constructor.
+        private val refresher by lazy { ConnectivityRefresher(provider) }
+        private var reloads = 0
+
+        @Test
+        fun `reloads on a change in either direction and not on the state it starts with`() =
+            runTest {
+                refresher.reloadOnChange(backgroundScope) { reloads++ }
+                runCurrent()
+                reloads shouldBe 0
+
+                state.value = ConnectionState.OFFLINE_NO_NETWORK
+                runCurrent()
+                reloads shouldBe 1
+
+                state.value = ConnectionState.ONLINE
+                runCurrent()
+                reloads shouldBe 2
+            }
+
+        @Test
+        fun `reloads on a reconfirmation, which no edge would ever report`() =
+            runTest {
+                refresher.reloadOnChange(backgroundScope) { reloads++ }
+                runCurrent()
+
+                reconfirmations.tryEmit(Unit)
+                runCurrent()
+
+                reloads shouldBe 1
+            }
+
+        @Test
+        fun `a false predicate skips the reload without ending the collection`() =
+            runTest {
+                var allowed = false
+                refresher.reloadOnChange(backgroundScope, onlyIf = { allowed }) { reloads++ }
+                runCurrent()
+
+                state.value = ConnectionState.OFFLINE_NO_NETWORK
+                runCurrent()
+                reloads shouldBe 0
+
+                // The screen has since asked for the data the change would invalidate — the
+                // `LibraryViewModel`/`SearchViewModel` case. The next change must still arrive.
+                allowed = true
+                state.value = ConnectionState.ONLINE
+                runCurrent()
+                reloads shouldBe 1
+            }
+
+        @Test
+        fun `the predicate is read at each change, not captured once`() =
+            runTest {
+                var allowed = true
+                refresher.reloadOnChange(backgroundScope, onlyIf = { allowed }) { reloads++ }
+                runCurrent()
+
+                state.value = ConnectionState.OFFLINE_NO_NETWORK
+                runCurrent()
+                allowed = false
+                state.value = ConnectionState.ONLINE
+                runCurrent()
+
+                reloads shouldBe 1
+            }
+
+        @Test
+        fun `cancelling the scope stops the reloads`() =
+            runTest {
+                val job = refresher.reloadOnChange(backgroundScope) { reloads++ }
+                runCurrent()
+
+                job.cancelAndJoin()
+                state.value = ConnectionState.OFFLINE_NO_NETWORK
+                runCurrent()
+
+                reloads shouldBe 0
+            }
+    }
 }

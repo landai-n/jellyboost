@@ -1,34 +1,17 @@
 package dev.jellyboost.feature.detail
 
-import androidx.lifecycle.SavedStateHandle
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
-import dev.jellyboost.core.common.syncplay.SyncPlaySession
-import dev.jellyboost.data.ConnectivityRefresher
-import dev.jellyboost.data.JellyfinRepository
-import dev.jellyboost.data.downloads.DownloadRepository
-import dev.jellyboost.data.userdata.UserDataChange
-import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -46,54 +29,10 @@ import org.junit.jupiter.api.Test
  * tests already exercise. Not one of them changed when the implementation moved, which is the point.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ItemDetailDownloadTest {
-    private val dispatcher = StandardTestDispatcher()
-    private val repository = mockk<JellyfinRepository>()
-    private val userDataRepository = mockk<UserDataRepository>()
-    private val changes =
-        MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    /** The badge source (M7); emits an empty map unless a test says otherwise. */
-    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
-
-    /** One item's footprint on disk; `null` unless a test says otherwise. */
-    private val bytesOnDisk = MutableStateFlow<Long?>(null)
-    private val downloads =
-        mockk<DownloadRepository> {
-            every { observeStates() } returns downloadStates
-            every { observeBytesOnDisk(any()) } returns bytesOnDisk
-        }
-
-    /** No group in any test here (M11 Phase 4) — group interop lives in [ItemDetailGroupActionsTest]. */
-    private val syncPlaySession =
-        mockk<SyncPlaySession>(relaxed = true) {
-            every { activeGroup } returns MutableStateFlow(null)
-        }
-
-    private val connectivityRefresher =
-        mockk<ConnectivityRefresher> {
-            every { connectivityChanged } returns MutableSharedFlow()
-        }
-
-    private val movie =
-        JellyfinItem(id = ITEM_ID, name = "Arrival", type = ItemType.MOVIE, productionYear = 2016)
-    private val series = JellyfinItem(id = ITEM_ID, name = "Westworld", type = ItemType.SERIES)
-    private val season =
-        JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
-
+internal class ItemDetailDownloadTest : ItemDetailViewModelFixture() {
     @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-        every { userDataRepository.changes } returns changes
-        coEvery { repository.getSeasons(any()) } returns AppResult.Success(emptyList())
+    fun setUpEpisodes() {
         coEvery { repository.getEpisodes(any(), any()) } returns AppResult.Success(emptyList())
-        coEvery { repository.getNextUpForSeries(any()) } returns AppResult.Success(null)
-        coEvery { repository.getSimilarItems(any(), any()) } returns AppResult.Success(emptyList())
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     // ---- M7: the Download button ----------------------------------------------------------------
@@ -498,33 +437,4 @@ class ItemDetailDownloadTest {
 
             coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
         }
-
-    /** The season page as the user reaches it: two episodes, loaded from its series. */
-    private fun givenSeasonWithEpisodes() {
-        coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
-        coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
-            AppResult.Success(
-                listOf(
-                    JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE),
-                    JellyfinItem(id = EPISODE_2, name = "Chestnut", type = ItemType.EPISODE),
-                ),
-            )
-    }
-
-    private fun viewModel() =
-        ItemDetailViewModel(
-            repository = repository,
-            userDataRepository = userDataRepository,
-            downloads = downloads,
-            connectivityRefresher = connectivityRefresher,
-            syncPlaySession = syncPlaySession,
-            savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
-        )
-
-    private companion object {
-        const val ITEM_ID = "item-1"
-        const val SERIES_ID = "series-1"
-        const val EPISODE_1 = "episode-1"
-        const val EPISODE_2 = "episode-2"
-    }
 }

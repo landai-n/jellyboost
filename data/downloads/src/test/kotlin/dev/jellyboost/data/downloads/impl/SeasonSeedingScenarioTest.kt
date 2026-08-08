@@ -367,6 +367,7 @@ class SeasonSeedingScenarioTest {
             seeder = seeder(),
             sweeper = sweeper,
             sessionGate = sessionGate,
+            transactionRunner = DownloadFixtures.directTransactionRunner,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

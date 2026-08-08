@@ -56,6 +56,11 @@ internal fun interface ProgressCallback {
  * stream so its finished size can be projected while it is still arriving. It is a *tap*, not a
  * transform: the bytes have already been written to disk when this is called, nothing here can
  * change them, and an implementation must not block — it runs inside the copy loop.
+ *
+ * Chunks are whatever the copy loop wrote — one full [FileDownloader.BUFFER_BYTES] buffer, and a
+ * shorter tail at the end of the body. An implementation must not assume a size: "in order and
+ * without gaps" is the whole contract, and it is what lets an element straddling two chunks be
+ * carried forward.
  */
 internal fun interface MediaChunkSink {
     /** [length] bytes of the body, starting at [offset] in [buffer]. The array is reused. */
@@ -269,9 +274,18 @@ internal class FileDownloader
         /**
          * The copy loop.
          *
-         * OkHttp's stream hands back one okio segment (8 KB) per read, so the callback is driven by
-         * *bytes accumulated* rather than by reads — otherwise the plan's "every 64 KB" would
-         * silently be "every 8 KB" and the throttle above it would do eight times the work.
+         * ### The buffer is *filled* before it is written
+         * OkHttp's stream hands back one okio segment — 8 KB — per read however large the array
+         * offered is, and [RandomAccessFile] is unbuffered: every `write` is a `pwrite` syscall.
+         * Writing each read straight through therefore turned the plan's one 64 KB write into
+         * eight 8 KB ones, ~15,300 syscalls a second on a gigabit LAN, for a loop whose whole job
+         * is to move bytes (audit 2026-08-08, PERF-12). Reads accumulate into the array until it is
+         * full, and the write, the tap and the progress callback all happen once per full buffer.
+         *
+         * The cadence is unchanged by construction: the callback used to fire when *accumulated
+         * reads* reached [BUFFER_BYTES], which with 8 KB segments is exactly when the array would
+         * have filled. Cancellation granularity is unchanged too — [coroutineContext.ensureActive]
+         * is still checked once per read, not once per write.
          */
         @Suppress("LongParameterList")
         private suspend fun copy(
@@ -284,13 +298,25 @@ internal class FileDownloader
         ): Long {
             val buffer = ByteArray(BUFFER_BYTES)
             var written = appendFrom
-            var sinceReport = 0
+            // Bytes held in `buffer` that are not on disk yet — always < BUFFER_BYTES at loop top.
+            var filled = 0
+
+            /** One write: the disk, then the tap, then the callback. A no-op on an empty buffer. */
+            suspend fun flush() {
+                if (filled == 0) return
+                output.write(buffer, 0, filled)
+                // After the write, never before: the tap must not be able to affect the file.
+                chunkSink?.onChunk(buffer, 0, filled)
+                written += filled
+                filled = 0
+                onProgress.onProgress(written, expectedTotal)
+            }
 
             while (true) {
                 coroutineContext.ensureActive()
                 val read =
                     try {
-                        input.read(buffer)
+                        input.read(buffer, filled, buffer.size - filled)
                     } catch (error: IOException) {
                         // A cancelled coroutine cancels the OkHttp call (see [cancellingCall]),
                         // and the blocked read then fails with an IOException. The caller asked
@@ -299,20 +325,13 @@ internal class FileDownloader
                         throw error
                     }
                 if (read == -1) break
-                output.write(buffer, 0, read)
-                // After the write, never before: the tap must not be able to affect the file.
-                chunkSink?.onChunk(buffer, 0, read)
-                written += read
-                sinceReport += read
-                if (sinceReport >= BUFFER_BYTES) {
-                    sinceReport = 0
-                    onProgress.onProgress(written, expectedTotal)
-                }
+                filled += read
+                if (filled == buffer.size) flush()
             }
 
-            // The tail: a file that ended mid-window would otherwise never report its last bytes,
-            // leaving the row a few kilobytes short of complete forever.
-            if (sinceReport > 0) onProgress.onProgress(written, expectedTotal)
+            // The tail: a body that ended mid-buffer would otherwise never have its last bytes
+            // written at all, let alone reported.
+            flush()
             return written
         }
 

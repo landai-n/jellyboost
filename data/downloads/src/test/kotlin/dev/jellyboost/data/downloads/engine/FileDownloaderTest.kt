@@ -244,6 +244,32 @@ class FileDownloaderTest {
         }
 
     @Test
+    fun `the copy loop fills its buffer before writing, so a chunk is a whole buffer or the tail`() =
+        runTest {
+            // okio hands back one 8 KB segment per read however large the array offered is, and
+            // `RandomAccessFile` is unbuffered — each read used to become its own `pwrite`, eight
+            // per 64 KB (audit 2026-08-08, PERF-12). The tap sees exactly what was written, so the
+            // chunk lengths are the write sizes.
+            val bytes = ByteArray(FileDownloader.BUFFER_BYTES * 2 + TAIL_BYTES) { (it % 251).toByte() }
+            val downloader = downloader(respondWith = ok(bytes))
+            val target = file("movie.mkv")
+            val chunkLengths = mutableListOf<Int>()
+
+            downloader.download(
+                URL,
+                target,
+                UnconfinedTestDispatcher(testScheduler),
+                chunkSink = { _, _, length -> chunkLengths += length },
+            ) { _, _ -> }
+
+            chunkLengths shouldContainExactly
+                listOf(FileDownloader.BUFFER_BYTES, FileDownloader.BUFFER_BYTES, TAIL_BYTES)
+            // And the batching is byte-exact: a body that does not divide by the buffer must land
+            // whole, tail included.
+            target.readBytes().contentEquals(bytes) shouldBe true
+        }
+
+    @Test
     fun `an undeclared body length reports a total of zero rather than a wrong one`() =
         runTest {
             val downloader = downloader(respondWith = chunked("hello".toByteArray()))
@@ -418,6 +444,10 @@ class FileDownloaderTest {
 
     private companion object {
         const val URL = "https://server.example/Items/1/Download"
+
+        /** A body remainder that is deliberately not a multiple of the copy buffer. */
+        const val TAIL_BYTES = 1_000
+
         val OCTET_STREAM = "application/octet-stream".toMediaType()
     }
 }

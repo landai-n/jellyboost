@@ -44,8 +44,19 @@ data class DownloadGroup(
      */
     val isMoviesSection: Boolean = false,
 ) {
-    /** Bytes this group occupies on disk. */
-    val bytesOnDisk: Long get() = items.sumOf { it.bytesOnDisk }
+    /**
+     * Bytes this group occupies on disk.
+     *
+     * Computed once, in the constructor body, rather than on every read: the group header draws it,
+     * and [DownloadsUiState.downloadedBytes] sums it across every group — so a `get()` here walked
+     * the whole *Downloaded* tab several times per progress tick, at the two to six ticks a second a
+     * live queue writes (docs/notes/audit-2026-08-08.md, PERF-5). A group is only ever rebuilt when
+     * its contents actually changed ([DownloadGroupCache]), so this runs when the number changes.
+     */
+    val bytesOnDisk: Long = items.sumOf { it.bytesOnDisk }
+
+    /** The row [itemId] names, or `null` when this group does not hold it. */
+    internal fun itemOrNull(itemId: String): DownloadItem? = items.firstOrNull { it.itemId == itemId }
 }
 
 /** Everything the Downloads screen draws. */
@@ -95,6 +106,16 @@ data class DownloadsUiState(
 
     /** `true` when there is nothing at all on the device and nothing queued. */
     val isEmpty: Boolean = downloaded.isEmpty() && queue.isEmpty()
+
+    /**
+     * Everything on the device, in bytes — the "on device" figure both storage panels draw.
+     *
+     * Here rather than in the composable that draws it: `DownloadsChrome` used to sum it inline, so
+     * the walk over every group (each of which was itself walking its own items — see
+     * [DownloadGroup.bytesOnDisk]) ran on every recomposition of a screen that recomposes several
+     * times a second during a transfer (audit 2026-08-08, PERF-5).
+     */
+    val downloadedBytes: Long = downloaded.sumOf { it.bytesOnDisk }
 
     /** The queue rows *Pause all* would pause — see [DownloadItem.isPauseTarget]. */
     val pauseAllTargets: List<DownloadItem> = queue.filter { it.isPauseTarget }
@@ -150,7 +171,103 @@ data class DownloadsUiState(
                 etaSeconds = eta,
             )
         }
+
+    /**
+     * Exactly what the screen's chrome — header, storage/queue summary, tab row — draws, and nothing
+     * else (audit 2026-08-08, PERF-5).
+     *
+     * The chrome used to take this whole class. Nothing taking [DownloadsUiState] can ever skip a
+     * recomposition: its `List` and `Map` fields are unstable to the Compose compiler, and a fresh
+     * instance arrives two to six times a second for the whole of a transfer. Every field of
+     * [DownloadsChromeState] is a scalar or a stable value type declared in this module, so the
+     * chrome now recomposes when one of the *numbers it draws* changes rather than when any download
+     * anywhere moves a byte.
+     *
+     * Computed here, in the projection step, for the same reason every `val` above is: once per
+     * emission rather than once per read.
+     */
+    val chrome: DownloadsChromeState =
+        DownloadsChromeState(
+            selectedTab = selectedTab,
+            storage = storageSummary(storage = storage, downloadedBytes = downloadedBytes),
+            queueStats = queueStats,
+            // The wide queue panel's own bar: what has arrived, against what has arrived plus what
+            // is left. Derived here rather than in `WideSummary`, which re-summed `bytesDownloaded`
+            // across the whole queue on every one of its recompositions.
+            queueProgress =
+                queue.sumOf { it.bytesDownloaded }.let { done ->
+                    usageFraction(used = done, total = done + queueStats.remainingBytes)
+                },
+            hasQueue = queue.isNotEmpty(),
+            wifiOnly = wifiOnly,
+            canPauseAll = canPauseAll,
+            canResumeAll = canResumeAll,
+        )
 }
+
+/**
+ * The storage figures the "on device" panel draws, in one place rather than recomputed by each of
+ * the two panels that draw them (audit 2026-08-08, UI-7/DUP-11: the compact [StorageUsage] card and
+ * the wide stat panel each carried their own copy of the same two lines of arithmetic).
+ *
+ * @property usedBytes what the screen reports as used. The filesystem walk is the source
+ *   ([StorageUsage.usedBytes] — the number a file manager would agree with), floored at what the
+ *   *Downloaded* tab adds up to: a walk that has not caught up with a download that just finished
+ *   must not report less space used than the rows on screen account for.
+ * @property availableBytes free space, straight from the walk.
+ * @property totalBytes the volume's size — used **plus** free as the walk reported them, never the
+ *   floored [usedBytes], so the bar's denominator stays the volume rather than growing with it.
+ */
+data class StorageSummary(
+    val usedBytes: Long = 0L,
+    val availableBytes: Long = 0L,
+    val totalBytes: Long = 0L,
+)
+
+/** [StorageSummary] for a filesystem walk and what the *Downloaded* tab holds — see the type. */
+internal fun storageSummary(
+    storage: StorageUsage,
+    downloadedBytes: Long,
+): StorageSummary =
+    StorageSummary(
+        usedBytes = maxOf(storage.usedBytes, downloadedBytes),
+        availableBytes = storage.availableBytes,
+        totalBytes = storage.usedBytes + storage.availableBytes,
+    )
+
+/**
+ * `used / total`, guarded against a not-yet-known total — shared by every usage bar on this screen.
+ *
+ * Here rather than in `DownloadsScreen.kt` so [DownloadsChromeState.queueProgress] can be derived in
+ * the projection alongside the numbers it belongs with, and so the guard is checkable without a
+ * Compose harness.
+ */
+internal fun usageFraction(
+    used: Long,
+    total: Long,
+): Float = if (total <= 0L) 0f else (used.toFloat() / total).coerceIn(0f, 1f)
+
+/**
+ * What the Downloads screen's chrome draws — see [DownloadsUiState.chrome] for why it exists.
+ *
+ * Every field is a scalar or a value type declared in this module, which is what makes a composable
+ * taking it skippable. Nothing here is a `List`, a `Map`, or a type from `:data`: the Compose
+ * compiler infers stability per compilation unit, so a `StorageUsage` (declared in `:data`, which is
+ * not compiled with the Compose plugin) would be treated as unstable and would sink the whole
+ * parameter list with it — hence [StorageSummary], which carries the same three numbers.
+ */
+data class DownloadsChromeState(
+    val selectedTab: DownloadsTab = DownloadsTab.DOWNLOADED,
+    val storage: StorageSummary = StorageSummary(),
+    val queueStats: QueueStats = QueueStats(itemCount = 0, remainingBytes = 0L, bytesPerSecond = 0L, etaSeconds = null),
+    /** How much of the queue's total bytes have already arrived, `0f..1f` — the queue panel's bar. */
+    val queueProgress: Float = 0f,
+    /** `true` while anything at all is queued: what decides the inline bulk-action pills. */
+    val hasQueue: Boolean = false,
+    val wifiOnly: Boolean = true,
+    val canPauseAll: Boolean = false,
+    val canResumeAll: Boolean = false,
+)
 
 /**
  * The Downloads screen's wide-layout "QUEUE" stat panel, in one place rather than three separate
@@ -322,6 +439,44 @@ internal fun List<DownloadItem>.toGroups(): List<DownloadGroup> {
             items = films.sortedBy { it.title.lowercase() },
             isMoviesSection = true,
         )
+}
+
+/**
+ * [toGroups] with the answer kept until the finished half of the table actually changes (audit
+ * 2026-08-08, PERF-11).
+ *
+ * The *Downloaded* tab does not move during a transfer, but the flow it is projected from emits two
+ * to six times a second while one is running — so the whole finished half was being re-partitioned,
+ * re-grouped, re-sorted and re-`lowercase()`d several times a second to produce a list identical to
+ * the last one. Worse than the arithmetic: a fresh, never-equal `List<DownloadGroup>` reached
+ * Compose on every one of those emissions, so every visible finished row recomposed for no visible
+ * change. Returning the *same instance* while nothing changed is what lets those rows skip.
+ *
+ * ### Why the whole item is compared, and not a cheap key
+ * The audit suggested a signature of ids, statuses and byte counts. That is not enough here, because
+ * the groups hold the [DownloadItem]s the rows draw *from*: a metadata refresh that fills in the
+ * artwork URL, or a playback position arriving from another screen, changes nothing about the
+ * grouping and everything about what the row should show — and a signature that ignored those fields
+ * would strand them until an unrelated write happened to land. A structural comparison of the
+ * finished list is exact, short-circuits on the first difference, and is still far cheaper than the
+ * grouping it replaces (which allocates a map, two sorted lists and one lowercased string per item).
+ *
+ * One instance belongs to one subscription — see `DownloadsViewModel.projection`. Not thread-safe,
+ * for the same reason [DownloadSpeedTracker] is not.
+ */
+internal class DownloadGroupCache {
+    private var lastFinished: List<DownloadItem>? = null
+    private var groups: List<DownloadGroup> = emptyList()
+
+    /** The finished half of [items], grouped — the previous answer whenever that half is unchanged. */
+    fun groups(items: List<DownloadItem>): List<DownloadGroup> {
+        val finished = items.filter { it.status == DownloadStatus.DOWNLOADED }
+        if (finished != lastFinished) {
+            lastFinished = finished
+            groups = finished.toGroups()
+        }
+        return groups
+    }
 }
 
 /** The queue tab's contents: everything not finished, in queue order. */

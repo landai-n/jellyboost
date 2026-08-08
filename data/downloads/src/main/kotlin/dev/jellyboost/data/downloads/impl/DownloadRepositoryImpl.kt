@@ -250,11 +250,18 @@ internal class DownloadRepositoryImpl
                     }
 
                     if (existing.isNotEmpty()) {
-                        // Same order as a single delete: stop the queue before unlinking anything,
-                        // so the downloader cannot be holding a handle to a file we remove — and
-                        // delete *before* the root moves, or the cascade would look on the new
-                        // volume for files that are on the old one. Unconditional here on purpose:
-                        // every download is about to go, so whatever is running is a target.
+                        // Same order as a single delete: claim the rows, stop the queue before
+                        // unlinking anything so the downloader cannot be holding a handle to a file
+                        // we remove — and delete *before* the root moves, or the cascade would look
+                        // on the new volume for files that are on the old one. Unconditional here
+                        // on purpose: every download is about to go, so whatever is running is a
+                        // target.
+                        //
+                        // The claim is not decoration: the cascade only deletes rows that are out
+                        // of the queue's reach (`DownloadDao.deleteUnlessRunnable`), so a `QUEUED`
+                        // row reaching it unclaimed would survive the switch and then point at
+                        // files on the volume the user just left.
+                        downloadDao.demoteRunnable(existing, DownloadStatus.CANCELLED, clock.instant())
                         scheduler.stop()
                         deleter.deleteAll(existing)
                     }

@@ -66,6 +66,38 @@ device walk — open each picker during playback, use the controls and watch the
 and check app-wide insets after leaving the player **on an API<35 emulator**, since the API 36
 test tablet masks UI-2 entirely.
 
+## Audit tier 1 — the UI performance wave: PERF-1/5/10/11/14/20/21/26 + UI-7/9/14/15/19 (2026-08-08 — landed, gate green; device walk owed)
+
+The Compose half of the 2026-08-08 audit's performance findings, centred on the Downloads screen
+(see `DECISIONS.md` 2026-08-08 for the argument):
+
+1. **PERF-5 + PERF-14** — the screen recomposed wholesale 2–8×/s during a transfer. `DownloadsUiState`
+   now precomputes `downloadedBytes` and a `DownloadsChromeState` of nothing but scalars, and the
+   chrome, the bulk-action bar, `RowArtwork` and `QueueRowActions` take *that* rather than the whole
+   unstable state. `DownloadsActions` and five `DownloadsViewModel` methods take an item id.
+2. **PERF-11 + PERF-10** — `DownloadGroupCache` returns the *same* `List<DownloadGroup>` while the
+   finished half of the table is unchanged (so finished rows skip), and the progress ratchet is
+   handed `toQueue()`'s subset instead of every download ever made.
+3. **PERF-20** — the animating chrome inset is no longer read in composition on Downloads or Search:
+   a `@Stable ChromeAwarePadding` hands it to `Modifier.padding`/`contentPadding`, which resolve it
+   in the layout phase. **PERF-21** — `LibraryUiState.filterChips` is precomputed, not `get()`.
+4. **PERF-1 (conservative half)** — `HazeInputScale.Auto` on the app's single `hazeEffect` site, so
+   every glass surface blurs a downscaled backdrop. **Deferred:** the structural half — dropping
+   `hazeSource` where the glass could be flat `mSurface` — pending a systrace fling measurement on
+   the tablet, which is what the audit asks for and what this wave has no data for.
+5. **PERF-26 (half)** — the Play-services probe is off the `onCreate` critical path. Still on the
+   main thread; moving it onto `CastAvailability`'s executor is a `:player` change, not taken here.
+6. **UI-7/9/14/15/19** — one `WifiOnlyToggle` (label unified to `onBackground`) and one
+   `storageSummary()`; locale-aware `StatEyebrow` with a sentence-case `contentDescription`; the
+   delete confirmation survives rotation (`rememberSaveable` over the id); one `LazyColumn` in the
+   pinned layout, so a tablet's scroll survives a tab switch; `Dimens.MinTouchTarget` for two 48dp
+   literals.
+
+Gate green (ktlint, detekt, 2 283 unit tests, `:app:lintDebug`, `assembleDebug`; `:feature:downloads`
+alone is 137 in 7 classes). **Owed:** a device walk — start a multi-item download and watch the
+*Downloaded* tab stay still while the queue moves, rotate with a delete dialog open, switch tabs
+mid-scroll on the tablet, and check the glass chrome still reads correctly with the downscaled blur.
+
 ## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
 
 Fourth full audit (`docs/notes/audit-2026-08-08.md`), seven parallel auditors. Two jobs:

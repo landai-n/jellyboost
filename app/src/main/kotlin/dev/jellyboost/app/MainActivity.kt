@@ -32,6 +32,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.cast.CastAvailability
 import dev.jellyboost.player.pip.PipController
 import dev.jellyboost.player.pip.PipState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -88,8 +89,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
 
         observePictureInPictureReadiness()
-        // A no-op, silently, on a device without Google Play services — which is the whole point.
-        castAvailability.initialize(this)
+        startCastStack()
 
         setContent {
             JellyfinTheme {
@@ -98,6 +98,28 @@ class MainActivity : FragmentActivity() {
                 JellyboostApp(sessionState = sessionState)
             }
         }
+    }
+
+    /**
+     * Brings the Cast stack up — a no-op, silently, on a device without Google Play services, which
+     * is the whole point (see [CastAvailability]).
+     *
+     * **Posted, not called inline** (audit 2026-08-08, PERF-26). `initialize` opens with
+     * `GoogleApiAvailability.isGooglePlayServicesAvailable`, a binder round trip to another process,
+     * and it was running in the middle of `onCreate` — on the critical path to the first frame,
+     * where every millisecond is one the user spends looking at the splash screen. Nothing needs the
+     * answer until a screen with a cast button is drawn.
+     *
+     * Still on the **main thread**, and deliberately: [CastAvailability.initialize] is `@MainThread`
+     * because `CastContext` is created from the main thread, and the framework's own work already
+     * happens on the executor it is handed. `Dispatchers.Main` rather than `lifecycleScope`'s
+     * `Main.immediate` for exactly the same reason `launch` is used at all here — `immediate` runs
+     * the body inline when it is already on the main thread, which would restore the behaviour this
+     * is fixing. Getting the *probe itself* off the main thread would mean moving it behind
+     * `CastAvailability`'s executor, in `:player`.
+     */
+    private fun startCastStack() {
+        lifecycleScope.launch(Dispatchers.Main) { castAvailability.initialize(this@MainActivity) }
     }
 
     /**

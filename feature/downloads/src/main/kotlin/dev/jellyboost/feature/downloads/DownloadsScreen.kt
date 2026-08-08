@@ -44,15 +44,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -66,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -154,13 +158,20 @@ fun DownloadsScreen(
     }
 }
 
-/** The four row actions, bundled so the list composables stay under the parameter limit. */
+/**
+ * The four row actions, bundled so the list composables stay under the parameter limit.
+ *
+ * Each takes an item **id**, not the row (audit 2026-08-08, PERF-14): the ViewModel behind every one
+ * of them only ever used the id, and taking the whole `DownloadItem` forced [QueueRowActions] to
+ * take one as well — an unstable parameter, freshly built on every progress tick, where the id and
+ * two booleans are the entire input.
+ */
 data class DownloadsActions(
-    val onPause: (DownloadItem) -> Unit,
-    val onResume: (DownloadItem) -> Unit,
-    val onDelete: (DownloadItem) -> Unit,
-    val onMoveUp: (DownloadItem) -> Unit,
-    val onMoveDown: (DownloadItem) -> Unit,
+    val onPause: (itemId: String) -> Unit,
+    val onResume: (itemId: String) -> Unit,
+    val onDelete: (itemId: String) -> Unit,
+    val onMoveUp: (itemId: String) -> Unit,
+    val onMoveDown: (itemId: String) -> Unit,
     val onSelectTab: (DownloadsTab) -> Unit,
 )
 
@@ -232,17 +243,29 @@ fun DownloadsContent(
     // cluster) otherwise; unified, it is the first thing that scrolls up under it. The BOTTOM half
     // stays on whichever list is drawn (listContentPadding), so rows still scroll out from under
     // the floating nav pill.
-    BoxWithConstraints(
-        modifier = modifier.fillMaxSize().padding(top = LocalAppChromePadding.current.calculateTopPadding()),
-    ) {
+    //
+    // Passed as an object rather than read here (audit 2026-08-08, PERF-20): the value animates
+    // every frame of a navigation, and `Modifier.padding(PaddingValues)` resolves it in the layout
+    // phase — reading `calculateTopPadding()` in composition invalidated this scope instead, which
+    // for a `BoxWithConstraints` means a whole subcomposition pass per transition frame.
+    BoxWithConstraints(modifier = modifier.fillMaxSize().padding(chromeTopPadding())) {
         val wide = !queueRowCompact(maxWidth)
 
         // Which delete the user has asked for but not yet confirmed. Local to the screen on
         // purpose: it is a question the UI is asking, not something the ViewModel or Room knows
         // about. It is hoisted this far up because the unified layout has no *Downloaded tab*
-        // composable left to hold it; keying the `remember` on the selected tab preserves what
-        // leaving that composable used to do — switching tabs drops the pending question.
-        var pendingDelete by remember(state.selectedTab) { mutableStateOf<DownloadItem?>(null) }
+        // composable left to hold it; keying it on the selected tab preserves what leaving that
+        // composable used to do — switching tabs drops the pending question.
+        //
+        // The *id* is saved, not the row (audit 2026-08-08, UI-14): a plain `remember` lost the
+        // dialog to a rotation, and a `DownloadItem` is not `Parcelable`. The row it names is looked
+        // up from the state that is on screen anyway, which also means the dialog can never outlive
+        // the download it is asking about.
+        var pendingDeleteId by rememberSaveable(state.selectedTab) { mutableStateOf<String?>(null) }
+        val pendingDelete =
+            remember(pendingDeleteId, state.downloaded) {
+                pendingDeleteId?.let { id -> state.downloaded.firstNotNullOfOrNull { it.itemOrNull(id) } }
+            }
 
         if (chromePinned(maxWidth, maxHeight)) {
             PinnedChromeLayout(
@@ -251,7 +274,7 @@ fun DownloadsContent(
                 bulk = bulk,
                 onPlay = onPlay,
                 onWifiOnlyChange = onWifiOnlyChange,
-                onRequestDelete = { pendingDelete = it },
+                onRequestDelete = { pendingDeleteId = it },
             )
         } else {
             UnifiedScrollLayout(
@@ -261,17 +284,17 @@ fun DownloadsContent(
                 wide = wide,
                 onPlay = onPlay,
                 onWifiOnlyChange = onWifiOnlyChange,
-                onRequestDelete = { pendingDelete = it },
+                onRequestDelete = { pendingDeleteId = it },
             )
         }
 
         pendingDelete?.let { item ->
             DeleteDownloadDialog(
                 item = item,
-                onDismiss = { pendingDelete = null },
+                onDismiss = { pendingDeleteId = null },
                 onConfirm = {
-                    pendingDelete = null
-                    actions.onDelete(item)
+                    pendingDeleteId = null
+                    actions.onDelete(item.itemId)
                 },
             )
         }
@@ -304,37 +327,39 @@ private fun PinnedChromeLayout(
     bulk: QueueBulkActions,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
-    onRequestDelete: (DownloadItem) -> Unit,
+    onRequestDelete: (itemId: String) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         DownloadsChrome(
-            state = state,
-            actions = actions,
+            chrome = state.chrome,
+            onSelectTab = actions.onSelectTab,
             bulk = bulk,
             wide = true,
             onWifiOnlyChange = onWifiOnlyChange,
         )
 
-        when (val body = state.body()) {
-            DownloadsBody.DOWNLOADS ->
+        val body = state.body()
+        when (body) {
+            // **One** list for both tabs, with the branch inside its content (audit 2026-08-08,
+            // UI-15). Two byte-identical `LazyColumn`s in two `when` branches are two list nodes
+            // with two scroll states, so switching tabs on a tablet jumped back to the top while
+            // the same switch on a phone — where `UnifiedScrollLayout` has always had one list —
+            // did not. One list makes the two layouts agree.
+            DownloadsBody.DOWNLOADS, DownloadsBody.QUEUE ->
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = listContentPadding(top = Dimens.SpaceSmall),
                 ) {
-                    downloadedRows(
-                        groups = state.downloaded,
-                        onDelete = onRequestDelete,
-                        onPlay = onPlay,
-                        compact = false,
-                    )
-                }
-
-            DownloadsBody.QUEUE ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = listContentPadding(top = Dimens.SpaceSmall),
-                ) {
-                    queueRows(state = state, actions = actions, bulk = bulk, wide = true)
+                    if (body == DownloadsBody.QUEUE) {
+                        queueRows(state = state, actions = actions, bulk = bulk, wide = true)
+                    } else {
+                        downloadedRows(
+                            groups = state.downloaded,
+                            onDelete = onRequestDelete,
+                            onPlay = onPlay,
+                            compact = false,
+                        )
+                    }
                 }
 
             // Full-height, vertically centred in the space the chrome left — these states have
@@ -361,7 +386,7 @@ private fun UnifiedScrollLayout(
     wide: Boolean,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
-    onRequestDelete: (DownloadItem) -> Unit,
+    onRequestDelete: (itemId: String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -371,8 +396,8 @@ private fun UnifiedScrollLayout(
     ) {
         item(key = CHROME_ITEM_KEY, contentType = DownloadsContentType.CHROME) {
             DownloadsChrome(
-                state = state,
-                actions = actions,
+                chrome = state.chrome,
+                onSelectTab = actions.onSelectTab,
                 bulk = bulk,
                 wide = wide,
                 onWifiOnlyChange = onWifiOnlyChange,
@@ -404,11 +429,16 @@ private fun UnifiedScrollLayout(
  * The header, storage/queue summary and tab row: the three pieces that are either pinned above the
  * list ([PinnedChromeLayout]) or scroll away as its first item ([UnifiedScrollLayout]). One
  * composable, so the two layouts cannot drift apart in anything but where it is put.
+ *
+ * @param chrome exactly the numbers drawn here, and no more (audit 2026-08-08, PERF-5). This used to
+ *   take the whole `DownloadsUiState` — an unstable type, rebuilt several times a second during a
+ *   transfer — so nothing under it could ever skip, and it re-summed every finished download's
+ *   `bytesOnDisk` on each of those recompositions. See [DownloadsUiState.chrome].
  */
 @Composable
 private fun DownloadsChrome(
-    state: DownloadsUiState,
-    actions: DownloadsActions,
+    chrome: DownloadsChromeState,
+    onSelectTab: (DownloadsTab) -> Unit,
     bulk: QueueBulkActions,
     wide: Boolean,
     onWifiOnlyChange: (Boolean) -> Unit,
@@ -417,33 +447,37 @@ private fun DownloadsChrome(
     Column(modifier = modifier.fillMaxWidth()) {
         DownloadsHeader(wide = wide)
 
-        val downloadedBytes = state.downloaded.sumOf { it.bytesOnDisk }
         if (wide) {
             WideSummary(
-                storage = state.storage,
-                downloadedBytes = downloadedBytes,
-                queue = state.queue,
-                queueStats = state.queueStats,
-                wifiOnly = state.wifiOnly,
+                storage = chrome.storage,
+                queueStats = chrome.queueStats,
+                queueProgress = chrome.queueProgress,
+                wifiOnly = chrome.wifiOnly,
                 onWifiOnlyChange = onWifiOnlyChange,
             )
         } else {
             StorageCard(
-                usage = state.storage,
-                downloadedBytes = downloadedBytes,
-                wifiOnly = state.wifiOnly,
+                storage = chrome.storage,
+                wifiOnly = chrome.wifiOnly,
                 onWifiOnlyChange = onWifiOnlyChange,
             )
         }
 
-        val showInlineBulkActions = wide && state.selectedTab == DownloadsTab.QUEUE && state.queue.isNotEmpty()
+        val showInlineBulkActions = wide && chrome.selectedTab == DownloadsTab.QUEUE && chrome.hasQueue
         DownloadsTabRow(
-            selectedTab = state.selectedTab,
-            onSelectTab = actions.onSelectTab,
+            selectedTab = chrome.selectedTab,
+            onSelectTab = onSelectTab,
             wide = wide,
             trailing =
                 if (showInlineBulkActions) {
-                    { QueueActionsBar(state = state, bulk = bulk, horizontalPadding = 0.dp) }
+                    {
+                        QueueActionsBar(
+                            canPauseAll = chrome.canPauseAll,
+                            canResumeAll = chrome.canResumeAll,
+                            bulk = bulk,
+                            horizontalPadding = 0.dp,
+                        )
+                    }
                 } else {
                     null
                 },
@@ -509,13 +543,60 @@ private fun DownloadsStateView(
  * A list's content padding: [top] as the caller wants it, and a bottom that clears `:app`'s
  * floating navigation pill — the chrome floats over this screen rather than shrinking it
  * (`LocalAppChromePadding`), so the last row would otherwise end underneath it.
+ *
+ * The chrome's own half is *not* read here (audit 2026-08-08, PERF-20). See [ChromeAwarePadding].
  */
 @Composable
-private fun listContentPadding(top: Dp): PaddingValues =
-    PaddingValues(
-        top = top,
-        bottom = Dimens.SpaceSmall + LocalAppChromePadding.current.calculateBottomPadding(),
-    )
+private fun listContentPadding(top: Dp): PaddingValues {
+    val chrome = LocalAppChromePadding.current
+    return remember(chrome, top) {
+        ChromeAwarePadding(chrome = chrome, top = top, bottom = Dimens.SpaceSmall, takeChromeBottom = true)
+    }
+}
+
+/** Just the chrome's top edge, resolved in the layout phase — see [ChromeAwarePadding]. */
+@Composable
+private fun chromeTopPadding(): PaddingValues {
+    val chrome = LocalAppChromePadding.current
+    return remember(chrome) { ChromeAwarePadding(chrome = chrome, takeChromeTop = true) }
+}
+
+/**
+ * A fixed inset plus one or both edges of the app's chrome padding, with the chrome's half read in
+ * the **layout** phase rather than in composition (audit 2026-08-08, PERF-20).
+ *
+ * `AppScaffold` publishes `LocalAppChromePadding` as a stable object whose `calculate*` methods read
+ * two running animations, precisely so that a consumer can defer the read — its own KDoc spells out
+ * that reading the values in composition invalidates the reading scope on every one of a navigation's
+ * ~18 frames. This screen was doing exactly that in three places, one of them the modifier of a
+ * `BoxWithConstraints`, where an invalidation costs a full subcomposition pass.
+ *
+ * Both consumers here resolve their `PaddingValues` where it is *used* instead: `Modifier.padding`
+ * and a lazy list's `contentPadding` both call `calculate*` inside their measure pass, which is a
+ * snapshot-observing scope of its own, so the animation now invalidates layout rather than
+ * composition. `@Stable`, and `remember`ed by its callers, so the identity a lazy list keys its
+ * measure policy on does not change either.
+ *
+ * The same shape exists in `:feature:search` (`SearchScreen.kt`) and, for the snackbar, as
+ * `:core:ui`'s `SnackbarBottomInset`. A shared home for it belongs in `:core:ui` beside
+ * `LocalAppChromePadding`; that hoist is deliberately not part of this change.
+ */
+@Stable
+internal class ChromeAwarePadding(
+    private val chrome: PaddingValues,
+    private val top: Dp = 0.dp,
+    private val bottom: Dp = 0.dp,
+    private val takeChromeTop: Boolean = false,
+    private val takeChromeBottom: Boolean = false,
+) : PaddingValues {
+    override fun calculateTopPadding(): Dp = top + if (takeChromeTop) chrome.calculateTopPadding() else 0.dp
+
+    override fun calculateBottomPadding(): Dp = bottom + if (takeChromeBottom) chrome.calculateBottomPadding() else 0.dp
+
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+}
 
 /** The screen's own title row — a top-level tab, so unlike a pushed screen it draws no back button. */
 @Composable
@@ -551,7 +632,7 @@ private fun DownloadsHeader(
  */
 private fun LazyListScope.downloadedRows(
     groups: List<DownloadGroup>,
-    onDelete: (DownloadItem) -> Unit,
+    onDelete: (itemId: String) -> Unit,
     onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
     compact: Boolean,
 ) {
@@ -576,7 +657,7 @@ private fun LazyListScope.downloadedRows(
         ) { item ->
             DownloadedRow(
                 item = item,
-                onDelete = { onDelete(item) },
+                onDelete = { onDelete(item.itemId) },
                 onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
                 inSeriesGroup = group.isSeries,
                 compact = compact,
@@ -633,7 +714,12 @@ private fun LazyListScope.queueRows(
 ) {
     if (!wide) {
         item(key = QUEUE_ACTIONS_ITEM_KEY, contentType = DownloadsContentType.QUEUE_ACTIONS) {
-            QueueActionsBar(state = state, bulk = bulk, modifier = Modifier.fillMaxWidth())
+            QueueActionsBar(
+                canPauseAll = state.canPauseAll,
+                canResumeAll = state.canResumeAll,
+                bulk = bulk,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
     items(
@@ -717,7 +803,8 @@ internal fun chromePinned(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun QueueActionsBar(
-    state: DownloadsUiState,
+    canPauseAll: Boolean,
+    canResumeAll: Boolean,
     bulk: QueueBulkActions,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = Dimens.PanelPadding,
@@ -730,14 +817,14 @@ private fun QueueActionsBar(
         QueueBulkButton(
             icon = Icons.Filled.Pause,
             labelRes = R.string.downloads_action_pause_all,
-            enabled = state.canPauseAll,
+            enabled = canPauseAll,
             onClick = bulk.onPauseAll,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         QueueBulkButton(
             icon = Icons.Filled.PlayArrow,
             labelRes = R.string.downloads_action_resume_all,
-            enabled = state.canResumeAll,
+            enabled = canResumeAll,
             onClick = bulk.onResumeAll,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -859,15 +946,11 @@ private fun GroupHeader(
  */
 @Composable
 private fun StorageCard(
-    usage: StorageUsage,
-    downloadedBytes: Long,
+    storage: StorageSummary,
     wifiOnly: Boolean,
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val total = usage.usedBytes + usage.availableBytes
-    val usedBytes = maxOf(usage.usedBytes, downloadedBytes)
-
     Column(
         modifier =
             modifier
@@ -883,34 +966,61 @@ private fun StorageCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
         ) {
-            Text(text = formatBytes(usedBytes), style = StatValue, color = MaterialTheme.colorScheme.onBackground)
             Text(
-                text = stringResource(R.string.downloads_storage_free, formatBytes(usage.availableBytes)),
+                text = formatBytes(storage.usedBytes),
+                style = StatValue,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                text = stringResource(R.string.downloads_storage_free, formatBytes(storage.availableBytes)),
                 style = StatCaption,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         UsageBar(
-            fraction = usageFraction(usedBytes, total),
+            fraction = usageFraction(storage.usedBytes, storage.totalBytes),
             label = stringResource(R.string.downloads_usage_storage_label),
         )
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.downloads_wifi_only),
-                style = StatSwitchLabel,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(checked = wifiOnly, onCheckedChange = null)
-        }
+        WifiOnlyToggle(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange)
+    }
+}
+
+/**
+ * The *Download over Wi-Fi only* switch row, in one place rather than two (audit 2026-08-08,
+ * UI-7 = DUP-11): the compact [StorageCard] and the wide [NetworkStatPanel] each carried their own
+ * copy, and the two had already drifted on the label's colour.
+ *
+ * The surviving colour is `onBackground` — the wide panel's. The label names the one control on the
+ * row, at 16sp/W600 it is not a caption, and `onSurfaceVariant` (white at 70 %) on the `#202020`
+ * m-surface these panels are drawn on is the dimmer of the two answers. Making the compact card
+ * match the wide one is therefore also the contrast-preserving direction (the 2026-08-05
+ * accessibility audit's standing preference).
+ *
+ * The whole row is the toggle's target, [Dimens.MinTouchTarget] tall (UI-19: the two copies each
+ * hardcoded `48.dp` next to a `Dimens` token that says exactly that).
+ */
+@Composable
+private fun WifiOnlyToggle(
+    wifiOnly: Boolean,
+    onWifiOnlyChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = Dimens.MinTouchTarget)
+                .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.downloads_wifi_only),
+            style = StatSwitchLabel,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = wifiOnly, onCheckedChange = null)
     }
 }
 
@@ -921,24 +1031,22 @@ private fun StorageCard(
  * derivation beyond a restyle (DECISIONS.md 2026-08-01, "Downloads restyle: a wide-layout queue
  * summary"; also pre-approved as a "convenience display" in STATUS.md's design-refresh entry).
  *
- * The queue panel's own progress bar is *not* one of [QueueStats]' fields — it is derived here, the
- * same way [StorageCard]'s bar is, from bytes [queue] already carries (`bytesDownloaded` against
- * `bytesDownloaded + queueStats.remainingBytes`), so [QueueStats] stays exactly the fields the task
- * asked for rather than growing a field only this one bar needs.
+ * The queue panel's own progress bar is *not* one of [QueueStats]' fields — it is derived from bytes
+ * the queue already carries (`bytesDownloaded` against `bytesDownloaded + remainingBytes`), so
+ * [QueueStats] stays exactly the fields the task asked for rather than growing a field only this one
+ * bar needs. That derivation moved onto [DownloadsChromeState.queueProgress] with the 2026-08-08
+ * audit (PERF-5): it was re-summing the whole queue on every recomposition of a panel that
+ * recomposes several times a second.
  */
 @Composable
 private fun WideSummary(
-    storage: StorageUsage,
-    downloadedBytes: Long,
-    queue: List<DownloadItem>,
+    storage: StorageSummary,
     queueStats: QueueStats,
+    queueProgress: Float,
     wifiOnly: Boolean,
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val queueDownloaded = queue.sumOf { it.bytesDownloaded }
-    val queueTotal = queueDownloaded + queueStats.remainingBytes
-
     Row(
         modifier =
             modifier
@@ -952,12 +1060,11 @@ private fun WideSummary(
     ) {
         OnDeviceStatPanel(
             storage = storage,
-            downloadedBytes = downloadedBytes,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         QueueStatPanel(
             stats = queueStats,
-            progress = usageFraction(queueDownloaded, queueTotal),
+            progress = queueProgress,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         NetworkStatPanel(
@@ -970,18 +1077,18 @@ private fun WideSummary(
 
 @Composable
 private fun OnDeviceStatPanel(
-    storage: StorageUsage,
-    downloadedBytes: Long,
+    storage: StorageSummary,
     modifier: Modifier = Modifier,
 ) {
-    val total = storage.usedBytes + storage.availableBytes
-    val usedBytes = maxOf(storage.usedBytes, downloadedBytes)
-
     StatPanel(modifier = modifier) {
         StatEyebrow(text = stringResource(R.string.downloads_stat_on_device))
-        Text(text = formatBytes(usedBytes), style = StatValue, color = MaterialTheme.colorScheme.onBackground)
+        Text(
+            text = formatBytes(storage.usedBytes),
+            style = StatValue,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
         UsageBar(
-            fraction = usageFraction(usedBytes, total),
+            fraction = usageFraction(storage.usedBytes, storage.totalBytes),
             label = stringResource(R.string.downloads_usage_storage_label),
         )
         Text(
@@ -989,7 +1096,7 @@ private fun OnDeviceStatPanel(
                 stringResource(
                     R.string.downloads_stat_free_of,
                     formatBytes(storage.availableBytes),
-                    formatBytes(total),
+                    formatBytes(storage.totalBytes),
                 ),
             style = StatCaption,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1044,23 +1151,7 @@ private fun NetworkStatPanel(
 ) {
     StatPanel(modifier = modifier) {
         StatEyebrow(text = stringResource(R.string.downloads_stat_network))
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .toggleable(value = wifiOnly, onValueChange = onWifiOnlyChange, role = Role.Switch),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.downloads_wifi_only),
-                style = StatSwitchLabel,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.weight(1f),
-            )
-            Switch(checked = wifiOnly, onCheckedChange = null)
-        }
+        WifiOnlyToggle(wifiOnly = wifiOnly, onWifiOnlyChange = onWifiOnlyChange)
         // Shown only while the toggle is on — the moment cellular would actually pause anything.
         if (wifiOnly) {
             Text(
@@ -1088,20 +1179,30 @@ private fun StatPanel(
     )
 }
 
+/**
+ * A stat panel's small shouted label ("ON DEVICE", "QUEUE", "NETWORK").
+ *
+ * The uppercasing is this composable's, and stops here — the same rule `:player`'s `TagPill`
+ * documents and the 2026-08-08 audit found broken here (UI-9), in both of its halves:
+ *
+ * - **the locale.** `String.uppercase()` with no locale uses the JVM default, read once and never
+ *   observed; `LocalConfiguration`'s is the app's current one, which for Turkish is the difference
+ *   between "TITLE" and "TİTLE". Lint calls this `NonObservableLocale`; it cannot see through the
+ *   parameterless overload, which is why the rule is written down rather than gated.
+ * - **the screen reader.** An uppercased *string* reaches text-to-speech as one, and some engines
+ *   spell it out letter by letter. The pill draws the shouted form and describes the sentence-case
+ *   one it was given.
+ */
 @Composable
 private fun StatEyebrow(text: String) {
+    val locale = LocalConfiguration.current.locales[0]
     Text(
-        text = text.uppercase(),
+        text = text.uppercase(locale),
         style = JellyfinTypeExtras.Eyebrow,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.semantics { contentDescription = text },
     )
 }
-
-/** `used / total`, guarded against a not-yet-known total — shared by every bar on this screen. */
-private fun usageFraction(
-    used: Long,
-    total: Long,
-): Float = if (total <= 0L) 0f else (used.toFloat() / total).coerceIn(0f, 1f)
 
 /**
  * The 6dp usage bar every stat panel on this screen draws (spec "4d Downloads": "track white@12%,

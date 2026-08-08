@@ -196,9 +196,10 @@ database, the filesystem and the system for while a download is running.
   seeded from the app scope, and an unseeded read answers `null`, which has always meant "the
   primary volume". PERF-15: the notifier's `lastPosted` outlived a worker run, so a
   pause/resume left the notification on *Preparing…* until the whole percent ticked over.
-  PERF-25: the delete cascade reads its batch in one statement and drops user-data rows in one
-  (the guarded per-row deletes stay per-row — each one's return value is the cascade's claim
-  check). PERF-28: two dead Room flows and the unused `UserDataRepository.observe` deleted.
+  PERF-25: the delete cascade reads its batch in one statement and drops user-data rows in one,
+  and the season enqueue reads its whole episode list in one (the guarded per-row *deletes* stay
+  per-row — each one's return value is the cascade's CORR-1 claim check).
+  PERF-28: two dead Room flows and the unused `UserDataRepository.observe` deleted.
   DUP-6 tail: `Ticks.PER_SECOND` replaces the enqueuer's local constant.
 
 Gate green (ktlint, detekt, unit tests, `:app:lintDebug`, `assembleDebug`). **Deliberately not

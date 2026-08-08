@@ -141,7 +141,11 @@ internal class DownloadEnqueuer
 
             removeDoomedContainerRow(container)
 
-            val pending = episodeIds.filter { downloadDao.get(it).isRetryable() }
+            // One read for the whole season, not one per episode: a forty-episode series meant
+            // forty statements before the enqueue could even begin (audit 2026-08-08, PERF-25). An
+            // id with no row is absent from the answer, which `isRetryable` already reads as "yes".
+            val existing = downloadDao.getAll(episodeIds).associateBy { it.itemId }
+            val pending = episodeIds.filter { existing[it].isRetryable() }
             if (pending.isEmpty()) return AppResult.Success(emptyList())
 
             val fetched =

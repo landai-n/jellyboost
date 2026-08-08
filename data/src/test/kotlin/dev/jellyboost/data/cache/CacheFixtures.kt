@@ -137,3 +137,36 @@ internal object CacheFixtures {
             updatedAt = NOW,
         )
 }
+
+/**
+ * Stands in for Room's `withTransaction`: it simply runs the block, and records enough for a
+ * test to assert *that* the work happened inside one — which is the property the fix adds, and
+ * the one no amount of mocked DAO calls can otherwise see.
+ */
+internal class RecordingTransactionRunner : TransactionRunner {
+    /** How deep in nested transactions the calling code currently is; 0 means none. */
+    var depth: Int = 0
+        private set
+
+    /** How many transactions were opened in total. */
+    var opened: Int = 0
+        private set
+
+    /** How many ended by throwing — Room's rollback path. */
+    var rolledBack: Int = 0
+        private set
+
+    override suspend fun <T> inTransaction(block: suspend () -> T): T {
+        opened++
+        depth++
+        var committed = false
+        try {
+            val result = block()
+            committed = true
+            return result
+        } finally {
+            depth--
+            if (!committed) rolledBack++
+        }
+    }
+}

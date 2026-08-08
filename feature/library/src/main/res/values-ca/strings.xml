@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Encara no hi ha biblioteques. Afegeix-ne una al servidor.</string>
     <string name="libraries_title">Biblioteques</string>
-    <string name="library_back">Enrere</string>
-    <string name="library_home">Inici</string>
     <string name="library_sort">Ordena</string>
     <string name="library_filter">Filtra</string>
     <string name="library_filter_all">Tot</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">No hi ha res per mostrar aquí.</string>
     <string name="library_empty_filtered">Cap element coincideix amb aquests filtres.</string>
     <string name="library_empty_clear_filters">Esborra els filtres</string>
-    <string name="library_retry">Torna-ho a provar</string>
     <string name="library_error_unknown">Alguna cosa ha fallat en carregar aquesta biblioteca.</string>
 </resources>

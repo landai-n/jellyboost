@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">이미 로그인되어 있는 기기에서 Jellyfin을 열고 퀵 커넥트로 이동해 이 코드를 입력하세요.</string>
     <string name="login_quick_connect_code_description">코드는 %1$s입니다</string>
     <string name="login_quick_connect_waiting">승인을 기다리는 중…</string>
-    <string name="login_quick_connect_cancel">취소</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="other">후보 주소 %d개를 시도했지만 실패했습니다.</item>

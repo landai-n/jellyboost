@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">Выкарыстана сховішча</string>
     <string name="downloads_usage_queue_label">Прагрэс чаргі</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Прайграць</string>
 
     <string name="downloads_action_delete">Выдаліць спампоўку</string>
     <string name="downloads_action_cancel">Скасаваць спампоўку</string>
@@ -50,7 +49,6 @@
     <string name="downloads_delete_dialog_title">Выдаліць %1$s?</string>
     <string name="downloads_delete_dialog_message">Спампаваныя файлы будуць выдалены з гэтай прылады. Вы можаце спампаваць іх зноў пазней.</string>
     <string name="downloads_delete_dialog_confirm">Выдаліць</string>
-    <string name="downloads_delete_dialog_cancel">Скасаваць</string>
 
     <string name="downloads_progress_of">%1$s з %2$s</string>
     <string name="downloads_progress_of_approx">%1$s з ~%2$s</string>

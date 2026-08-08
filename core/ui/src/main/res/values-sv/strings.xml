@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Tillbaka</string>
+    <string name="action_home">Hem</string>
+    <string name="action_cancel">Avbryt</string>
+    <string name="action_play">Spela upp</string>
+
     <string name="badge_downloaded">Nedladdad</string>
     <string name="badge_download_queued">I kö för nedladdning</string>
     <string name="badge_download_paused">Nedladdning pausad</string>

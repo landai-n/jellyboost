@@ -12,7 +12,6 @@
     <string name="offline_no_network">Aucun réseau — affichage des contenus téléchargés</string>
     <string name="offline_server_unreachable">Impossible de joindre le serveur — affichage des contenus téléchargés</string>
     <string name="offline_forced">Le mode hors ligne est activé — affichage des contenus téléchargés</string>
-    <string name="offline_retry">Réessayer</string>
     <string name="offline_go_online">Se reconnecter</string>
     <string name="syncplay_groups_action">Groupes SyncPlay</string>
     <string name="syncplay_groups_action_active">Groupes SyncPlay — vous êtes dans un groupe</string>

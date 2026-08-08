@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">استعمال شدہ اسٹوریج</string>
     <string name="downloads_usage_queue_label">قطار کی پیش رفت</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
-    <string name="downloads_action_play">چلائیں</string>
 
     <string name="downloads_action_delete">ڈاؤن لوڈ حذف کریں</string>
     <string name="downloads_action_cancel">ڈاؤن لوڈ منسوخ کریں</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s حذف کریں؟</string>
     <string name="downloads_delete_dialog_message">ڈاؤن لوڈ شدہ فائلیں اس ڈیوائس سے ہٹا دی جائیں گی۔ آپ بعد میں اسے دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</string>
     <string name="downloads_delete_dialog_confirm">حذف کریں</string>
-    <string name="downloads_delete_dialog_cancel">منسوخ کریں</string>
 
     <string name="downloads_progress_of">%2$s میں سے %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s میں سے %1$s</string>

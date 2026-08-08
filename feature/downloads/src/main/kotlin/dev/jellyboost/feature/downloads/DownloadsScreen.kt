@@ -36,15 +36,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +66,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -77,10 +73,12 @@ import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
+import dev.jellyboost.core.ui.theme.ChromeAwarePadding
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -561,43 +559,6 @@ private fun chromeTopPadding(): PaddingValues {
     return remember(chrome) { ChromeAwarePadding(chrome = chrome, takeChromeTop = true) }
 }
 
-/**
- * A fixed inset plus one or both edges of the app's chrome padding, with the chrome's half read in
- * the **layout** phase rather than in composition (audit 2026-08-08, PERF-20).
- *
- * `AppScaffold` publishes `LocalAppChromePadding` as a stable object whose `calculate*` methods read
- * two running animations, precisely so that a consumer can defer the read — its own KDoc spells out
- * that reading the values in composition invalidates the reading scope on every one of a navigation's
- * ~18 frames. This screen was doing exactly that in three places, one of them the modifier of a
- * `BoxWithConstraints`, where an invalidation costs a full subcomposition pass.
- *
- * Both consumers here resolve their `PaddingValues` where it is *used* instead: `Modifier.padding`
- * and a lazy list's `contentPadding` both call `calculate*` inside their measure pass, which is a
- * snapshot-observing scope of its own, so the animation now invalidates layout rather than
- * composition. `@Stable`, and `remember`ed by its callers, so the identity a lazy list keys its
- * measure policy on does not change either.
- *
- * The same shape exists in `:feature:search` (`SearchScreen.kt`) and, for the snackbar, as
- * `:core:ui`'s `SnackbarBottomInset`. A shared home for it belongs in `:core:ui` beside
- * `LocalAppChromePadding`; that hoist is deliberately not part of this change.
- */
-@Stable
-internal class ChromeAwarePadding(
-    private val chrome: PaddingValues,
-    private val top: Dp = 0.dp,
-    private val bottom: Dp = 0.dp,
-    private val takeChromeTop: Boolean = false,
-    private val takeChromeBottom: Boolean = false,
-) : PaddingValues {
-    override fun calculateTopPadding(): Dp = top + if (takeChromeTop) chrome.calculateTopPadding() else 0.dp
-
-    override fun calculateBottomPadding(): Dp = bottom + if (takeChromeBottom) chrome.calculateBottomPadding() else 0.dp
-
-    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
-
-    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
-}
-
 /** The screen's own title row — a top-level tab, so unlike a pushed screen it draws no back button. */
 @Composable
 private fun DownloadsHeader(
@@ -673,6 +634,9 @@ private fun LazyListScope.downloadedRows(
  * transfer — a film that may have taken an hour of a metered connection — and its icon sits one
  * row away from the next item's. Cancelling something still downloading costs the bytes not yet
  * spent, and is undone by pressing Download again.
+ *
+ * One of the three dialogs that had never picked up the app's hairline idiom and drew default M3
+ * chrome instead (audit 2026-08-08, DUP-2); `:core:ui`'s [ConfirmDialog] owns it now.
  */
 @Composable
 private fun DeleteDownloadDialog(
@@ -680,20 +644,12 @@ private fun DeleteDownloadDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.downloads_delete_dialog_title, item.rowTitle())) },
-        text = { Text(text = stringResource(R.string.downloads_delete_dialog_message)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.downloads_delete_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.downloads_delete_dialog_cancel))
-            }
-        },
+    ConfirmDialog(
+        title = stringResource(R.string.downloads_delete_dialog_title, item.rowTitle()),
+        text = stringResource(R.string.downloads_delete_dialog_message),
+        confirmLabel = stringResource(R.string.downloads_delete_dialog_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }
 
@@ -884,6 +840,9 @@ private fun QueueBulkButton(
  * says out loud what the action does **not** touch — finished downloads are on the other tab and
  * are never in this list (`toQueue()`), and the season-cancel walk showed that is exactly the
  * question a user asks before pressing something called "cancel all" (DECISIONS.md, 2026-07-29).
+ *
+ * The third of the three dialogs that drew default M3 chrome rather than the app's hairline (audit
+ * 2026-08-08, DUP-2) — see [DeleteDownloadDialog].
  */
 @Composable
 private fun CancelAllDialog(
@@ -891,20 +850,16 @@ private fun CancelAllDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = pluralStringResource(R.plurals.downloads_cancel_all_dialog_title, count, count)) },
-        text = { Text(text = stringResource(R.string.downloads_cancel_all_dialog_message)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = stringResource(R.string.downloads_cancel_all_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.downloads_cancel_all_dialog_dismiss))
-            }
-        },
+    ConfirmDialog(
+        title = pluralStringResource(R.plurals.downloads_cancel_all_dialog_title, count, count),
+        text = stringResource(R.string.downloads_cancel_all_dialog_message),
+        confirmLabel = stringResource(R.string.downloads_cancel_all_dialog_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        // Not the shared "Cancel": this dialog *is* a cancel confirmation, so a button labelled
+        // "Cancel" beside one labelled "Cancel all" would be a coin toss. "Keep" says which way it
+        // goes.
+        dismissLabel = stringResource(R.string.downloads_cancel_all_dialog_dismiss),
     )
 }
 

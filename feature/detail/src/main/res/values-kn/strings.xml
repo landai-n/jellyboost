@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">ಹಿಂದೆ</string>
-    <string name="detail_home">ಮುಖಪುಟ</string>
-    <string name="detail_play">ಪ್ಲೇ</string>
     <string name="detail_resume">ಮುಂದುವರಿಸಿ</string>
     <string name="detail_download">ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ</string>
-    <string name="detail_download_cancel">ರದ್ದುಮಾಡಿ</string>
     <string name="detail_download_remove">ತೆಗೆದುಹಾಕಿ</string>
-    <string name="detail_download_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
     <string name="detail_play_episode">ಈ ಸಂಚಿಕೆ ಪ್ಲೇ ಮಾಡಿ</string>
     <string name="detail_mark_watched">ವೀಕ್ಷಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿ</string>
     <string name="detail_mark_unwatched">ವೀಕ್ಷಿಸಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">ಡೌನ್‌ಲೋಡ್ ಅಳಿಸುವುದೇ?</string>
     <string name="detail_delete_download_dialog_message">ಇದು ಈ ಸಾಧನದಿಂದ ಅದನ್ನು ತೆಗೆದುಹಾಕುತ್ತದೆ. ನೀವು ಅದನ್ನು ಯಾವಾಗ ಬೇಕಾದರೂ ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಬಹುದು.</string>
     <string name="detail_delete_download_dialog_confirm">ಅಳಿಸಿ</string>
-    <string name="detail_delete_download_dialog_cancel">ರದ್ದುಮಾಡಿ</string>
 
     <string name="detail_error_unknown">ಈ ಐಟಂ ಅನ್ನು ಲೋಡ್ ಮಾಡುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ.</string>
 </resources>

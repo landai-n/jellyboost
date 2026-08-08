@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Tilbage</string>
-    <string name="detail_home">Hjem</string>
-    <string name="detail_play">Afspil</string>
     <string name="detail_resume">Genoptag</string>
     <string name="detail_download">Download</string>
-    <string name="detail_download_cancel">Annuller</string>
     <string name="detail_download_remove">Fjern</string>
-    <string name="detail_download_retry">Prøv igen</string>
     <string name="detail_play_episode">Afspil denne episode</string>
     <string name="detail_mark_watched">Markér som set</string>
     <string name="detail_mark_unwatched">Markér som ikke set</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Slet download?</string>
     <string name="detail_delete_download_dialog_message">Dette fjerner den fra denne enhed. Du kan downloade den igen når som helst.</string>
     <string name="detail_delete_download_dialog_confirm">Slet</string>
-    <string name="detail_delete_download_dialog_cancel">Annuller</string>
 
     <string name="detail_error_unknown">Noget gik galt under indlæsning af dette element.</string>
 </resources>

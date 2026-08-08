@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">返回</string>
+    <string name="action_home">主页</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_play">播放</string>
+
     <string name="badge_downloaded">已下载</string>
     <string name="badge_download_queued">已加入下载队列</string>
     <string name="badge_download_paused">下载已暂停</string>

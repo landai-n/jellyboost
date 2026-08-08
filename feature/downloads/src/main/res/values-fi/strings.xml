@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Käytetty tallennustila</string>
     <string name="downloads_usage_queue_label">Jonon edistyminen</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Toista</string>
 
     <string name="downloads_action_delete">Poista lataus</string>
     <string name="downloads_action_cancel">Peruuta lataus</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Poistetaanko %1$s?</string>
     <string name="downloads_delete_dialog_message">Ladatut tiedostot poistetaan tältä laitteelta. Voit ladata sen uudelleen myöhemmin.</string>
     <string name="downloads_delete_dialog_confirm">Poista</string>
-    <string name="downloads_delete_dialog_cancel">Peruuta</string>
 
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>

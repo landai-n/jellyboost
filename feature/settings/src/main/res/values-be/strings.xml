@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Налады</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Галоўная</string>
 
     <string name="settings_section_playback">Прайграванне</string>
     <string name="settings_skip_intro">Прапусціць уступ</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Выйсці з сістэмы?</string>
     <string name="settings_sign_out_dialog_message">Каб увайсці зноў, вам спатрэбяцца адрас сервера і пароль.</string>
     <string name="settings_sign_out_delete_downloads">Таксама выдаліць спампоўкі з гэтай прылады</string>
-    <string name="settings_cancel">Скасаваць</string>
     <string name="settings_section_about">Пра праграму</string>
     <string name="settings_version">Версія праграмы</string>
 </resources>

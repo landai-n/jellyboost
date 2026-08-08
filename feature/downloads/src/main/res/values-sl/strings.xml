@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">Porabljena shramba</string>
     <string name="downloads_usage_queue_label">Napredek čakalne vrste</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Predvajaj</string>
 
     <string name="downloads_action_delete">Izbriši prenos</string>
     <string name="downloads_action_cancel">Prekliči prenos</string>
@@ -50,7 +49,6 @@
     <string name="downloads_delete_dialog_title">Izbriši %1$s?</string>
     <string name="downloads_delete_dialog_message">Prenesene datoteke se odstranijo s te naprave. Pozneje jih lahko znova prenesete.</string>
     <string name="downloads_delete_dialog_confirm">Izbriši</string>
-    <string name="downloads_delete_dialog_cancel">Prekliči</string>
 
     <string name="downloads_progress_of">%1$s od %2$s</string>
     <string name="downloads_progress_of_approx">%1$s od ~%2$s</string>

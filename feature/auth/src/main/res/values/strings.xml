@@ -55,7 +55,6 @@
          character at a time instead of as a number. -->
     <string name="login_quick_connect_code_description">Your code is %1$s</string>
     <string name="login_quick_connect_waiting">Waiting for approval…</string>
-    <string name="login_quick_connect_cancel">Cancel</string>
 
     <!-- Errors -->
     <plurals name="auth_error_candidates_tried">

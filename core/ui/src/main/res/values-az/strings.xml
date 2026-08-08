@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Geri</string>
+    <string name="action_home">Əsas səhifə</string>
+    <string name="action_cancel">Ləğv et</string>
+    <string name="action_play">Oynat</string>
+
     <string name="badge_downloaded">Yükləndi</string>
     <string name="badge_download_queued">Yükləmə növbəsində</string>
     <string name="badge_download_paused">Yükləmə dayandırıldı</string>

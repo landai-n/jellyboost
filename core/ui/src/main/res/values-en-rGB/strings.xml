@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Back</string>
+    <string name="action_home">Home</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_play">Play</string>
+
     <string name="badge_downloaded">Downloaded</string>
     <string name="badge_download_queued">Queued for download</string>
     <string name="badge_download_paused">Download paused</string>

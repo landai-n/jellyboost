@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Oraindik ez dago liburutegirik. Gehitu bat zerbitzarian.</string>
     <string name="libraries_title">Liburutegiak</string>
-    <string name="library_back">Atzera</string>
-    <string name="library_home">Hasiera</string>
     <string name="library_sort">Ordenatu</string>
     <string name="library_filter">Iragazi</string>
     <string name="library_filter_all">Guztiak</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Ez dago ezer erakusteko hemen.</string>
     <string name="library_empty_filtered">Ez dago iragazki hauekin bat datorren elementurik.</string>
     <string name="library_empty_clear_filters">Garbitu iragazkiak</string>
-    <string name="library_retry">Berriz saiatu</string>
     <string name="library_error_unknown">Zerbait gaizki joan da liburutegi hau kargatzean.</string>
 </resources>

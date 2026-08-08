@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Параметрлер</string>
-    <string name="settings_back">Артқа</string>
-    <string name="settings_home">Басты бет</string>
 
     <string name="settings_section_playback">Ойнату</string>
     <string name="settings_skip_intro">Кіріспені өткізіп жіберу</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Шығу керек пе?</string>
     <string name="settings_sign_out_dialog_message">Қайта кіру үшін сізге сервер мекенжайы мен құпия сөз қажет болады.</string>
     <string name="settings_sign_out_delete_downloads">Осы құрылғыдағы жүктеулерді де жою</string>
-    <string name="settings_cancel">Бас тарту</string>
     <string name="settings_section_about">Қолданба туралы</string>
     <string name="settings_version">Қолданба нұсқасы</string>
 </resources>

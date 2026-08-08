@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">חזרה</string>
-    <string name="detail_home">בית</string>
-    <string name="detail_play">הפעלה</string>
     <string name="detail_resume">המשך</string>
     <string name="detail_download">הורדה</string>
-    <string name="detail_download_cancel">ביטול</string>
     <string name="detail_download_remove">הסרה</string>
-    <string name="detail_download_retry">ניסיון חוזר</string>
     <string name="detail_play_episode">הפעלת הפרק הזה</string>
     <string name="detail_mark_watched">סימון כנצפה</string>
     <string name="detail_mark_unwatched">סימון כלא נצפה</string>
@@ -75,7 +70,6 @@
     <string name="detail_delete_download_dialog_title">למחוק את ההורדה?</string>
     <string name="detail_delete_download_dialog_message">הפעולה תסיר אותה מהמכשיר הזה. תוכל להוריד אותה שוב בכל עת.</string>
     <string name="detail_delete_download_dialog_confirm">מחיקה</string>
-    <string name="detail_delete_download_dialog_cancel">ביטול</string>
 
     <string name="detail_error_unknown">משהו השתבש בטעינת הפריט הזה.</string>
 </resources>

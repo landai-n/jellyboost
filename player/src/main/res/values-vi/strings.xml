@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Đóng trình phát</string>
-    <string name="player_play">Phát</string>
     <string name="player_pause">Tạm dừng</string>
     <string name="player_rewind">Tua lại 10 giây</string>
     <string name="player_forward">Tua tới 30 giây</string>
@@ -58,7 +57,6 @@
     <string name="player_syncplay_leave">Rời nhóm</string>
     <string name="player_syncplay_leave_title">Rời khỏi nhóm này?</string>
     <string name="player_syncplay_leave_body">Việc phát lại sẽ tiếp tục ở đây, độc lập. Để tham gia lại, bạn cần chọn nhóm một lần nữa.</string>
-    <string name="player_syncplay_cancel">Hủy</string>
     <plurals name="player_syncplay_participants">
         <item quantity="other">%d người đang xem</item>
     </plurals>
@@ -72,7 +70,6 @@
     <string name="player_syncplay_queue_move_up_item">Di chuyển %1$s lên</string>
     <string name="player_syncplay_queue_move_down_item">Di chuyển %1$s xuống</string>
     <string name="player_syncplay_queue_remove_item">Xóa %1$s khỏi hàng đợi</string>
-    <string name="player_syncplay_queue_play">Phát</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d mục trong hàng đợi</item>
     </plurals>
@@ -84,8 +81,6 @@
     <string name="player_message_syncplay_library_denied">Nhóm đang xem nội dung mà bạn không có quyền truy cập.</string>
     <string name="player_message_syncplay_item_unavailable">Không thể mở nội dung mà nhóm đang xem.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Quay lại</string>
-    <string name="player_syncplay_groups_home">Trang chủ</string>
     <string name="player_syncplay_groups_create">Tạo nhóm</string>
     <string name="player_syncplay_groups_create_title">Đặt tên cho nhóm của bạn</string>
     <string name="player_syncplay_groups_create_hint">Tên nhóm</string>

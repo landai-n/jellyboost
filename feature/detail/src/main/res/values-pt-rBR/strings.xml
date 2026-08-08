@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Voltar</string>
-    <string name="detail_home">Início</string>
-    <string name="detail_play">Reproduzir</string>
     <string name="detail_resume">Continuar</string>
     <string name="detail_download">Baixar</string>
-    <string name="detail_download_cancel">Cancelar</string>
     <string name="detail_download_remove">Remover</string>
-    <string name="detail_download_retry">Tentar novamente</string>
     <string name="detail_play_episode">Reproduzir este episódio</string>
     <string name="detail_mark_watched">Marcar como assistido</string>
     <string name="detail_mark_unwatched">Marcar como não assistido</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">Excluir download?</string>
     <string name="detail_delete_download_dialog_message">Isso o remove deste dispositivo. Você pode baixá-lo novamente a qualquer momento.</string>
     <string name="detail_delete_download_dialog_confirm">Excluir</string>
-    <string name="detail_delete_download_dialog_cancel">Cancelar</string>
 
     <string name="detail_error_unknown">Algo deu errado ao carregar este item.</string>
 </resources>

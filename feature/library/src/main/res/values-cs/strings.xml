@@ -3,8 +3,6 @@
     <string name="libraries_empty">Zatím žádné knihovny. Přidejte nějakou na serveru.</string>
     <string name="libraries_title">Knihovny</string>
 
-    <string name="library_back">Zpět</string>
-    <string name="library_home">Domů</string>
     <string name="library_sort">Seřadit</string>
     <string name="library_filter">Filtrovat</string>
     <string name="library_filter_all">Vše</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Není zde nic k zobrazení.</string>
     <string name="library_empty_filtered">Žádná položka neodpovídá těmto filtrům.</string>
     <string name="library_empty_clear_filters">Zrušit filtry</string>
-    <string name="library_retry">Zkusit znovu</string>
 
     <string name="library_error_unknown">Při načítání této knihovny se něco pokazilo.</string>
 </resources>

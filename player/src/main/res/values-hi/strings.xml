@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">प्लेयर बंद करें</string>
-    <string name="player_play">चलाएँ</string>
     <string name="player_pause">रोकें</string>
     <string name="player_rewind">10 सेकंड पीछे जाएँ</string>
     <string name="player_forward">30 सेकंड आगे जाएँ</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">यह समूह छोड़ें?</string>
     <string name="player_syncplay_leave_body">प्लेबैक यहाँ अपने आप जारी रहता है। फिर से शामिल होने का मतलब है समूह को फिर से चुनना।</string>
 
-    <string name="player_syncplay_cancel">रद्द करें</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d व्यक्ति देख रहा है</item>
         <item quantity="other">%d लोग देख रहे हैं</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s को ऊपर ले जाएँ</string>
     <string name="player_syncplay_queue_move_down_item">%1$s को नीचे ले जाएँ</string>
     <string name="player_syncplay_queue_remove_item">%1$s को कतार से हटाएँ</string>
-    <string name="player_syncplay_queue_play">चलाएँ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d आइटम कतार में है</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">समूह जो देख रहा है उसे खोला नहीं जा सका।</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">वापस</string>
-    <string name="player_syncplay_groups_home">होम</string>
     <string name="player_syncplay_groups_create">समूह बनाएँ</string>
     <string name="player_syncplay_groups_create_title">अपने समूह का नाम रखें</string>
     <string name="player_syncplay_groups_create_hint">समूह का नाम</string>

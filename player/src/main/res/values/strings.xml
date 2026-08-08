@@ -3,7 +3,6 @@
     <!-- The back button's description, and the label of the player error state's one action —
          both close the player and return to where the user came from. -->
     <string name="player_back">Close player</string>
-    <string name="player_play">Play</string>
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Skip back 10 seconds</string>
     <string name="player_forward">Skip forward 30 seconds</string>
@@ -99,12 +98,12 @@
     <string name="player_syncplay_leave_body">Playback carries on here, on its own. Rejoining means picking the group again.</string>
 
     <!--
-      Every dialog button is an app string rather than `android.R.string.cancel` (B10): the system
-      string follows the device locale, and this app is English-only today, so a French device
-      showed "Annuler" next to an English "Create" in the same dialog. One string shared by every
-      SyncPlay dialog's dismiss button so the two can never drift apart again.
+      This module's dialogs take their dismiss label from `:core:ui`'s `action_cancel` (audit
+      2026-08-08, DUP-6) — an app string rather than `android.R.string.cancel` for the reason B10
+      recorded: the system string follows the device locale, so a French device showed "Annuler"
+      next to an English "Create" in the same dialog. It is now one string for the whole app rather
+      than one per module, which is the same argument one level up.
     -->
-    <string name="player_syncplay_cancel">Cancel</string>
 
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person watching</item>
@@ -135,9 +134,6 @@
     <string name="player_syncplay_queue_move_down_item">Move %1$s down</string>
     <string name="player_syncplay_queue_remove_item">Remove %1$s from the queue</string>
 
-    <!-- What tapping a queue row does — the row's own click label. -->
-    <string name="player_syncplay_queue_play">Play</string>
-
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item queued</item>
         <item quantity="other">%d items queued</item>
@@ -153,8 +149,6 @@
 
     <!-- M11 Phase 5: the dedicated SyncPlay section. -->
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Back</string>
-    <string name="player_syncplay_groups_home">Home</string>
     <string name="player_syncplay_groups_create">Create group</string>
     <string name="player_syncplay_groups_create_title">Name your group</string>
     <string name="player_syncplay_groups_create_hint">Group name</string>

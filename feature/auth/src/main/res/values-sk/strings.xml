@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Otvorte Jellyfin na zariadení, na ktorom ste už prihlásení, prejdite na Quick Connect a zadajte tento kód.</string>
     <string name="login_quick_connect_code_description">Váš kód je %1$s</string>
     <string name="login_quick_connect_waiting">Čaká sa na schválenie…</string>
-    <string name="login_quick_connect_cancel">Zrušiť</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Vyskúšaná %d kandidátska adresa, bez úspechu.</item>

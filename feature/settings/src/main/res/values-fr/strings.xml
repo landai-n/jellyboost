@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Paramètres</string>
-    <string name="settings_back">Retour</string>
-    <string name="settings_home">Accueil</string>
     <string name="settings_section_playback">Lecture</string>
     <string name="settings_skip_intro">Ignorer le générique</string>
     <string name="settings_skip_outro">Ignorer la fin</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Se déconnecter ?</string>
     <string name="settings_sign_out_dialog_message">Vous aurez besoin de l\'adresse de votre serveur et de votre mot de passe pour vous reconnecter.</string>
     <string name="settings_sign_out_delete_downloads">Supprimer aussi les téléchargements de cet appareil</string>
-    <string name="settings_cancel">Annuler</string>
     <string name="settings_section_about">À propos</string>
     <string name="settings_version">Version de l\'application</string>
 </resources>

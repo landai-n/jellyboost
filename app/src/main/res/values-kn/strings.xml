@@ -15,7 +15,6 @@
     <string name="offline_no_network">ನೆಟ್‌ವರ್ಕ್ ಇಲ್ಲ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
     <string name="offline_server_unreachable">ಸರ್ವರ್ ಅನ್ನು ತಲುಪಲು ಸಾಧ್ಯವಾಗುತ್ತಿಲ್ಲ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
     <string name="offline_forced">ಆಫ್‌ಲೈನ್ ಮೋಡ್ ಆನ್ ಆಗಿದೆ — ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಮಾಧ್ಯಮವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ</string>
-    <string name="offline_retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
     <string name="offline_go_online">ಆನ್‌ಲೈನ್‌ಗೆ ಹೋಗಿ</string>
 
     <string name="syncplay_groups_action">SyncPlay ಗುಂಪುಗಳು</string>

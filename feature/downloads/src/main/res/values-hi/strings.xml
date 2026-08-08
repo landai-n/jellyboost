@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">उपयोग में स्टोरेज</string>
     <string name="downloads_usage_queue_label">कतार की प्रगति</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">चलाएँ</string>
 
     <!-- Row actions -->
     <string name="downloads_action_delete">डाउनलोड हटाएँ</string>
@@ -52,7 +51,6 @@
     <string name="downloads_delete_dialog_title">%1$s हटाएँ?</string>
     <string name="downloads_delete_dialog_message">डाउनलोड की गई फ़ाइलें इस डिवाइस से हटा दी जाएँगी। आप इसे बाद में फिर से डाउनलोड कर सकते हैं।</string>
     <string name="downloads_delete_dialog_confirm">हटाएँ</string>
-    <string name="downloads_delete_dialog_cancel">रद्द करें</string>
 
     <!-- Queue row status line -->
     <string name="downloads_progress_of">%2$s में से %1$s</string>

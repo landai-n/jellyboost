@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Затвори плејер</string>
-    <string name="player_play">Пусти</string>
     <string name="player_pause">Паузирај</string>
     <string name="player_rewind">Врати се 10 секунди</string>
     <string name="player_forward">Премотај 30 секунди унапред</string>
@@ -71,8 +70,6 @@
     <string name="player_syncplay_leave_title">Напустити ову групу?</string>
     <string name="player_syncplay_leave_body">Репродукција овде наставља самостално. Поновно придруживање значи да поново изаберете групу.</string>
 
-    <string name="player_syncplay_cancel">Откажи</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d особа гледа</item>
         <item quantity="few">%d особе гледају</item>
@@ -90,7 +87,6 @@
     <string name="player_syncplay_queue_move_up_item">Помери %1$s навише</string>
     <string name="player_syncplay_queue_move_down_item">Помери %1$s наниже</string>
     <string name="player_syncplay_queue_remove_item">Уклони %1$s из реда чекања</string>
-    <string name="player_syncplay_queue_play">Пусти</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ставка у реду чекања</item>
@@ -107,8 +103,6 @@
     <string name="player_message_syncplay_item_unavailable">Није могуће отворити оно што група гледа.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Назад</string>
-    <string name="player_syncplay_groups_home">Почетна</string>
     <string name="player_syncplay_groups_create">Направи групу</string>
     <string name="player_syncplay_groups_create_title">Именуј своју групу</string>
     <string name="player_syncplay_groups_create_hint">Назив групе</string>

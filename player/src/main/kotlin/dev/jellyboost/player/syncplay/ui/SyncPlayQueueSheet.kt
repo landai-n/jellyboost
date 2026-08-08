@@ -52,6 +52,7 @@ import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.player.R
 import java.util.UUID
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * What the group is going to watch, and the four things a member may do about it.
@@ -245,7 +246,7 @@ private fun QueueRow(
                 .background(background)
                 .clickable(
                     role = Role.Button,
-                    onClickLabel = stringResource(R.string.player_syncplay_queue_play),
+                    onClickLabel = stringResource(CoreUiR.string.action_play),
                     onClick = onPlay,
                 ).padding(Dimens.SpaceExtraSmall),
         verticalAlignment = Alignment.CenterVertically,

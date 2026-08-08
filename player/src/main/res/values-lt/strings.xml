@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Uždaryti leistuvą</string>
-    <string name="player_play">Leisti</string>
     <string name="player_pause">Pristabdyti</string>
     <string name="player_rewind">Grįžti 10 sekundžių atgal</string>
     <string name="player_forward">Peršokti 30 sekundžių į priekį</string>
@@ -74,8 +73,6 @@
     <string name="player_syncplay_leave_title">Palikti šią grupę?</string>
     <string name="player_syncplay_leave_body">Leidimas čia tęsiasi savarankiškai. Prisijungimas iš naujo reiškia grupės pasirinkimą vėl.</string>
 
-    <string name="player_syncplay_cancel">Atšaukti</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d žmogus žiūri</item>
         <item quantity="few">%d žmonės žiūri</item>
@@ -94,7 +91,6 @@
     <string name="player_syncplay_queue_move_up_item">Perkelti %1$s aukštyn</string>
     <string name="player_syncplay_queue_move_down_item">Perkelti %1$s žemyn</string>
     <string name="player_syncplay_queue_remove_item">Pašalinti %1$s iš eilės</string>
-    <string name="player_syncplay_queue_play">Leisti</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elementas eilėje</item>
@@ -112,8 +108,6 @@
     <string name="player_message_syncplay_item_unavailable">Nepavyko atidaryti to, ką žiūri grupė.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Atgal</string>
-    <string name="player_syncplay_groups_home">Pradžia</string>
     <string name="player_syncplay_groups_create">Sukurti grupę</string>
     <string name="player_syncplay_groups_create_title">Pavadinkite savo grupę</string>
     <string name="player_syncplay_groups_create_hint">Grupės pavadinimas</string>

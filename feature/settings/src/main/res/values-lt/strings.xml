@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Nustatymai</string>
-    <string name="settings_back">Atgal</string>
-    <string name="settings_home">Pradžia</string>
 
     <string name="settings_section_playback">Atkūrimas</string>
     <string name="settings_skip_intro">Praleisti įžangą</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Atsijungti?</string>
     <string name="settings_sign_out_dialog_message">Norėdami vėl prisijungti, turėsite žinoti savo serverio adresą ir slaptažodį.</string>
     <string name="settings_sign_out_delete_downloads">Taip pat ištrinti atsisiuntimus iš šio įrenginio</string>
-    <string name="settings_cancel">Atšaukti</string>
     <string name="settings_section_about">Apie programėlę</string>
     <string name="settings_version">Programėlės versija</string>
 </resources>

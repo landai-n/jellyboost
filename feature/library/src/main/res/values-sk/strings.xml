@@ -3,8 +3,6 @@
     <string name="libraries_empty">Zatiaľ žiadne knižnice. Pridajte nejakú na serveri.</string>
     <string name="libraries_title">Knižnice</string>
 
-    <string name="library_back">Späť</string>
-    <string name="library_home">Domov</string>
     <string name="library_sort">Zoradiť</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Všetko</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Tu nie je nič na zobrazenie.</string>
     <string name="library_empty_filtered">Žiadna položka nezodpovedá týmto filtrom.</string>
     <string name="library_empty_clear_filters">Vymazať filtre</string>
-    <string name="library_retry">Skúsiť znova</string>
 
     <string name="library_error_unknown">Pri načítavaní tejto knižnice sa niečo pokazilo.</string>
 </resources>

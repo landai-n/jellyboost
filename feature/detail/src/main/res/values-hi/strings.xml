@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Navigation / actions -->
-    <string name="detail_back">वापस</string>
-    <string name="detail_home">होम</string>
-    <string name="detail_play">चलाएँ</string>
     <string name="detail_resume">फिर से शुरू करें</string>
     <string name="detail_download">डाउनलोड करें</string>
-    <string name="detail_download_cancel">रद्द करें</string>
     <string name="detail_download_remove">हटाएँ</string>
-    <string name="detail_download_retry">फिर से कोशिश करें</string>
     <string name="detail_play_episode">यह एपिसोड चलाएँ</string>
     <string name="detail_mark_watched">देखा हुआ चिह्नित करें</string>
     <string name="detail_mark_unwatched">न देखा हुआ चिह्नित करें</string>
@@ -74,7 +69,6 @@
     <string name="detail_delete_download_dialog_title">डाउनलोड हटाएँ?</string>
     <string name="detail_delete_download_dialog_message">यह इसे इस डिवाइस से हटा देगा। आप इसे कभी भी फिर से डाउनलोड कर सकते हैं।</string>
     <string name="detail_delete_download_dialog_confirm">हटाएँ</string>
-    <string name="detail_delete_download_dialog_cancel">रद्द करें</string>
 
     <string name="detail_error_unknown">इस आइटम को लोड करने में कुछ गड़बड़ हुई।</string>
 </resources>

@@ -7,7 +7,6 @@
     <string name="home_section_next_up">পরবর্তী</string>
     <string name="home_section_latest">সাম্প্রতিক %1$s</string>
     <string name="home_hero_resume">আবার শুরু করুন</string>
-    <string name="home_hero_play">চালান</string>
     <string name="home_hero_details">বিস্তারিত</string>
     <string name="home_hero_rated">বয়স রেটিং %1$s</string>
     <plurals name="home_minutes_left">

@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">喺你已經登入嘅裝置度打開 Jellyfin，去快速連接嗰度輸入呢個代碼。</string>
     <string name="login_quick_connect_code_description">你嘅代碼係 %1$s</string>
     <string name="login_quick_connect_waiting">等緊批准…</string>
-    <string name="login_quick_connect_cancel">取消</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="other">試咗 %d 個候選地址，都唔成功。</item>

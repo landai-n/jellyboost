@@ -15,7 +15,6 @@
     <string name="offline_no_network">네트워크 없음 — 다운로드한 미디어를 표시합니다</string>
     <string name="offline_server_unreachable">서버에 연결할 수 없음 — 다운로드한 미디어를 표시합니다</string>
     <string name="offline_forced">오프라인 모드 켜짐 — 다운로드한 미디어를 표시합니다</string>
-    <string name="offline_retry">다시 시도</string>
     <string name="offline_go_online">온라인으로 전환</string>
 
     <string name="syncplay_groups_action">SyncPlay 그룹</string>

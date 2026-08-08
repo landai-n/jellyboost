@@ -241,8 +241,13 @@ private const val PROGRESS_TRACK_ALPHA = 0.40f
  * (`8.0`), and rendering that as "8" beside a neighbouring card's "7.4" makes two values on the
  * same scale look like values on different ones. Locale-aware, because a decimal separator is not
  * universally a point.
+ *
+ * Public rather than `internal` (audit 2026-08-08, UI-6): the detail header had its own copy that
+ * hardcoded `Locale.US`, so on a German device the header's starred rating read `8.6` beside the
+ * cards' `8,6` on the very same screen, and `metaRowDescription` spoke the wrong separator to
+ * TalkBack. One function, one answer, and it is the one `RatingBadgeFormatTest` already pins.
  */
-internal fun formatRatingBadge(
+fun formatRatingBadge(
     rating: Float,
     locale: Locale = Locale.getDefault(),
 ): String = String.format(locale, "%.1f", rating)

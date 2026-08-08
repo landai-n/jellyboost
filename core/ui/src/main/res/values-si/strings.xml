@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">ආපසු</string>
+    <string name="action_home">මුල් පිටුව</string>
+    <string name="action_cancel">අවලංගු කරන්න</string>
+    <string name="action_play">වාදනය කරන්න</string>
+
     <string name="badge_downloaded">බාගත කර ඇත</string>
     <string name="badge_download_queued">බාගත කිරීම සඳහා පෝලිමේ ඇත</string>
     <string name="badge_download_paused">බාගත කිරීම විරාම කර ඇත</string>

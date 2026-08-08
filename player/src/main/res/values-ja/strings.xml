@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">プレーヤーを閉じる</string>
-    <string name="player_play">再生</string>
     <string name="player_pause">一時停止</string>
     <string name="player_rewind">10秒戻す</string>
     <string name="player_forward">30秒進める</string>
@@ -65,8 +64,6 @@
     <string name="player_syncplay_leave_title">このグループを離れますか？</string>
     <string name="player_syncplay_leave_body">再生はそのままここで単独で続きます。再度参加するにはグループを選び直す必要があります。</string>
 
-    <string name="player_syncplay_cancel">キャンセル</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="other">%d 人が視聴中</item>
     </plurals>
@@ -82,7 +79,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s を上へ移動</string>
     <string name="player_syncplay_queue_move_down_item">%1$s を下へ移動</string>
     <string name="player_syncplay_queue_remove_item">%1$s をキューから削除</string>
-    <string name="player_syncplay_queue_play">再生</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">%d 件がキューに入っています</item>
@@ -97,8 +93,6 @@
     <string name="player_message_syncplay_item_unavailable">グループが視聴しているものを開けませんでした。</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">戻る</string>
-    <string name="player_syncplay_groups_home">ホーム</string>
     <string name="player_syncplay_groups_create">グループを作成</string>
     <string name="player_syncplay_groups_create_title">グループに名前を付ける</string>
     <string name="player_syncplay_groups_create_hint">グループ名</string>

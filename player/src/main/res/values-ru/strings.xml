@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Закрыть плеер</string>
-    <string name="player_play">Воспроизвести</string>
     <string name="player_pause">Пауза</string>
     <string name="player_rewind">Назад на 10 секунд</string>
     <string name="player_forward">Вперёд на 30 секунд</string>
@@ -74,8 +73,6 @@
     <string name="player_syncplay_leave_title">Покинуть эту группу?</string>
     <string name="player_syncplay_leave_body">Воспроизведение продолжится здесь, отдельно. Чтобы присоединиться снова, нужно будет выбрать группу заново.</string>
 
-    <string name="player_syncplay_cancel">Отмена</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d человек смотрит</item>
         <item quantity="few">%d человека смотрят</item>
@@ -94,7 +91,6 @@
     <string name="player_syncplay_queue_move_up_item">Сдвинуть %1$s вверх</string>
     <string name="player_syncplay_queue_move_down_item">Сдвинуть %1$s вниз</string>
     <string name="player_syncplay_queue_remove_item">Удалить %1$s из очереди</string>
-    <string name="player_syncplay_queue_play">Воспроизвести</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент в очереди</item>
@@ -112,8 +108,6 @@
     <string name="player_message_syncplay_item_unavailable">Не удалось открыть то, что смотрит группа.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Назад</string>
-    <string name="player_syncplay_groups_home">Главная</string>
     <string name="player_syncplay_groups_create">Создать группу</string>
     <string name="player_syncplay_groups_create_title">Название группы</string>
     <string name="player_syncplay_groups_create_hint">Название группы</string>

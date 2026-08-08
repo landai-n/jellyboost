@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Nākamais</string>
     <string name="home_section_latest">Jaunākie %1$s</string>
     <string name="home_hero_resume">Turpināt</string>
-    <string name="home_hero_play">Atskaņot</string>
     <string name="home_hero_details">Detaļas</string>
     <string name="home_hero_rated">Vecuma ierobežojums %1$s</string>
     <plurals name="home_minutes_left">

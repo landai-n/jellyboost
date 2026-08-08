@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Stäng spelaren</string>
-    <string name="player_play">Spela upp</string>
     <string name="player_pause">Pausa</string>
     <string name="player_rewind">Hoppa bakåt 10 sekunder</string>
     <string name="player_forward">Hoppa framåt 30 sekunder</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Lämna den här gruppen?</string>
     <string name="player_syncplay_leave_body">Uppspelningen fortsätter här på egen hand. Att gå med igen innebär att välja gruppen på nytt.</string>
 
-    <string name="player_syncplay_cancel">Avbryt</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person tittar</item>
         <item quantity="other">%d personer tittar</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Flytta %1$s uppåt</string>
     <string name="player_syncplay_queue_move_down_item">Flytta %1$s nedåt</string>
     <string name="player_syncplay_queue_remove_item">Ta bort %1$s från kön</string>
-    <string name="player_syncplay_queue_play">Spela upp</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d objekt i kö</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Kunde inte öppna det gruppen tittar på.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Tillbaka</string>
-    <string name="player_syncplay_groups_home">Hem</string>
     <string name="player_syncplay_groups_create">Skapa grupp</string>
     <string name="player_syncplay_groups_create_title">Namnge din grupp</string>
     <string name="player_syncplay_groups_create_hint">Gruppnamn</string>

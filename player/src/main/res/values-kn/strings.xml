@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">ಪ್ಲೇಯರ್ ಮುಚ್ಚಿ</string>
-    <string name="player_play">ಪ್ಲೇ</string>
     <string name="player_pause">ವಿರಾಮ</string>
     <string name="player_rewind">10 ಸೆಕೆಂಡ್ ಹಿಂದೆ ಸರಿಸಿ</string>
     <string name="player_forward">30 ಸೆಕೆಂಡ್ ಮುಂದೆ ಸರಿಸಿ</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">ಈ ಗುಂಪನ್ನು ಬಿಡುವುದೇ?</string>
     <string name="player_syncplay_leave_body">ಇಲ್ಲಿ ಪ್ಲೇಬ್ಯಾಕ್ ತನ್ನಷ್ಟಕ್ಕೆ ತಾನೇ ಮುಂದುವರಿಯುತ್ತದೆ. ಮತ್ತೆ ಸೇರಲು ಗುಂಪನ್ನು ಮತ್ತೆ ಆಯ್ಕೆಮಾಡಬೇಕಾಗುತ್ತದೆ.</string>
 
-    <string name="player_syncplay_cancel">ರದ್ದುಮಾಡಿ</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d ವ್ಯಕ್ತಿ ವೀಕ್ಷಿಸುತ್ತಿದ್ದಾರೆ</item>
         <item quantity="other">%d ಜನ ವೀಕ್ಷಿಸುತ್ತಿದ್ದಾರೆ</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s ಅನ್ನು ಮೇಲಕ್ಕೆ ಸರಿಸಿ</string>
     <string name="player_syncplay_queue_move_down_item">%1$s ಅನ್ನು ಕೆಳಕ್ಕೆ ಸರಿಸಿ</string>
     <string name="player_syncplay_queue_remove_item">%1$s ಅನ್ನು ಸರತಿಯಿಂದ ತೆಗೆದುಹಾಕಿ</string>
-    <string name="player_syncplay_queue_play">ಪ್ಲೇ ಮಾಡಿ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ಐಟಂ ಸರತಿಯಲ್ಲಿದೆ</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">ಗುಂಪು ವೀಕ್ಷಿಸುತ್ತಿರುವುದನ್ನು ತೆರೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">ಹಿಂದೆ</string>
-    <string name="player_syncplay_groups_home">ಮುಖಪುಟ</string>
     <string name="player_syncplay_groups_create">ಗುಂಪು ರಚಿಸಿ</string>
     <string name="player_syncplay_groups_create_title">ನಿಮ್ಮ ಗುಂಪಿಗೆ ಹೆಸರಿಡಿ</string>
     <string name="player_syncplay_groups_create_hint">ಗುಂಪಿನ ಹೆಸರು</string>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">ਪਲੇਅਰ ਬੰਦ ਕਰੋ</string>
-    <string name="player_play">ਚਲਾਓ</string>
     <string name="player_pause">ਰੋਕੋ</string>
     <string name="player_rewind">10 ਸਕਿੰਟ ਪਿੱਛੇ ਜਾਓ</string>
     <string name="player_forward">30 ਸਕਿੰਟ ਅੱਗੇ ਜਾਓ</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">ਇਹ ਗਰੁੱਪ ਛੱਡੀਏ?</string>
     <string name="player_syncplay_leave_body">ਪਲੇਬੈਕ ਇੱਥੇ, ਆਪਣੇ ਆਪ ਜਾਰੀ ਰਹਿੰਦੀ ਹੈ। ਦੁਬਾਰਾ ਸ਼ਾਮਲ ਹੋਣ ਲਈ ਗਰੁੱਪ ਦੁਬਾਰਾ ਚੁਣਨਾ ਪਵੇਗਾ।</string>
 
-    <string name="player_syncplay_cancel">ਰੱਦ ਕਰੋ</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d ਵਿਅਕਤੀ ਦੇਖ ਰਿਹਾ ਹੈ</item>
         <item quantity="other">%d ਲੋਕ ਦੇਖ ਰਹੇ ਹਨ</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s ਨੂੰ ਉੱਪਰ ਲਿਜਾਓ</string>
     <string name="player_syncplay_queue_move_down_item">%1$s ਨੂੰ ਹੇਠਾਂ ਲਿਜਾਓ</string>
     <string name="player_syncplay_queue_remove_item">%1$s ਨੂੰ ਕਤਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
-    <string name="player_syncplay_queue_play">ਚਲਾਓ</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ਆਈਟਮ ਕਤਾਰਬੱਧ</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">ਗਰੁੱਪ ਜੋ ਦੇਖ ਰਿਹਾ ਹੈ ਉਹ ਖੋਲ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ।</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">ਪਿੱਛੇ</string>
-    <string name="player_syncplay_groups_home">ਹੋਮ</string>
     <string name="player_syncplay_groups_create">ਗਰੁੱਪ ਬਣਾਓ</string>
     <string name="player_syncplay_groups_create_title">ਆਪਣੇ ਗਰੁੱਪ ਦਾ ਨਾਮ ਦਿਓ</string>
     <string name="player_syncplay_groups_create_hint">ਗਰੁੱਪ ਦਾ ਨਾਮ</string>

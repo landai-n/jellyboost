@@ -8,7 +8,6 @@
     <string name="home_section_next_up">اگلا</string>
     <string name="home_section_latest">تازہ ترین %1$s</string>
     <string name="home_hero_resume">دوبارہ شروع کریں</string>
-    <string name="home_hero_play">چلائیں</string>
     <string name="home_hero_details">تفصیلات</string>
     <string name="home_hero_rated">عمر کی درجہ بندی %1$s</string>
     <plurals name="home_minutes_left">

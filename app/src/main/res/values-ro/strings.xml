@@ -12,7 +12,6 @@
     <string name="offline_no_network">Fără rețea — se afișează conținutul descărcat</string>
     <string name="offline_server_unreachable">Serverul nu poate fi contactat — se afișează conținutul descărcat</string>
     <string name="offline_forced">Modul offline este activat — se afișează conținutul descărcat</string>
-    <string name="offline_retry">Reîncearcă</string>
     <string name="offline_go_online">Revino online</string>
     <string name="syncplay_groups_action">Grupuri SyncPlay</string>
     <string name="syncplay_groups_action_active">Grupuri SyncPlay — ești într-un grup</string>

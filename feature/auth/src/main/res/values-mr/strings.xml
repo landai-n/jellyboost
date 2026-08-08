@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">आपण आधीच साइन इन केलेल्या डिव्हाइसवर Jellyfin उघडा, Quick Connect वर जा आणि हा कोड प्रविष्ट करा.</string>
     <string name="login_quick_connect_code_description">आपला कोड %1$s आहे</string>
     <string name="login_quick_connect_waiting">मंजुरीची वाट पाहत आहे…</string>
-    <string name="login_quick_connect_cancel">रद्द करा</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d संभाव्य पत्ता वापरून पाहिला, यश आले नाही.</item>

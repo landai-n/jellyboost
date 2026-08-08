@@ -12,7 +12,6 @@
     <string name="offline_no_network">Şəbəkə yoxdur — yüklənmiş media göstərilir</string>
     <string name="offline_server_unreachable">Serverə çatmaq mümkün deyil — yüklənmiş media göstərilir</string>
     <string name="offline_forced">Oflayn rejim aktivdir — yüklənmiş media göstərilir</string>
-    <string name="offline_retry">Yenidən cəhd et</string>
     <string name="offline_go_online">Onlayn ol</string>
     <string name="syncplay_groups_action">SyncPlay qrupları</string>
     <string name="syncplay_groups_action_active">SyncPlay qrupları — siz bir qrupdasınız</string>

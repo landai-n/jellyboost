@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Поставки</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Почетна</string>
 
     <string name="settings_section_playback">Репродукција</string>
     <string name="settings_skip_intro">Прескокни го уводот</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Да се одјавите?</string>
     <string name="settings_sign_out_dialog_message">Ќе ви требаат адресата на серверот и лозинката за повторно да се најавите.</string>
     <string name="settings_sign_out_delete_downloads">Исто така избриши ги преземањата од овој уред</string>
-    <string name="settings_cancel">Откажи</string>
     <string name="settings_section_about">За апликацијата</string>
     <string name="settings_version">Верзија на апликацијата</string>
 </resources>

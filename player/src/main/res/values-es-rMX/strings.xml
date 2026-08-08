@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Cerrar reproductor</string>
-    <string name="player_play">Reproducir</string>
     <string name="player_pause">Pausar</string>
     <string name="player_rewind">Retroceder 10 segundos</string>
     <string name="player_forward">Avanzar 30 segundos</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Salir del grupo</string>
     <string name="player_syncplay_leave_title">¿Salir de este grupo?</string>
     <string name="player_syncplay_leave_body">La reproducción continúa aquí, por su cuenta. Volver a unirte significa elegir el grupo de nuevo.</string>
-    <string name="player_syncplay_cancel">Cancelar</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persona viendo</item>
         <item quantity="other">%d personas viendo</item>
@@ -79,7 +77,6 @@
     <string name="player_syncplay_queue_move_up_item">Subir %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Bajar %1$s</string>
     <string name="player_syncplay_queue_remove_item">Quitar %1$s de la cola</string>
-    <string name="player_syncplay_queue_play">Reproducir</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elemento en cola</item>
         <item quantity="other">%d elementos en cola</item>
@@ -92,8 +89,6 @@
     <string name="player_message_syncplay_library_denied">El grupo está viendo algo a lo que no tienes acceso.</string>
     <string name="player_message_syncplay_item_unavailable">No se pudo abrir lo que el grupo está viendo.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Atrás</string>
-    <string name="player_syncplay_groups_home">Inicio</string>
     <string name="player_syncplay_groups_create">Crear grupo</string>
     <string name="player_syncplay_groups_create_title">Ponle nombre a tu grupo</string>
     <string name="player_syncplay_groups_create_hint">Nombre del grupo</string>

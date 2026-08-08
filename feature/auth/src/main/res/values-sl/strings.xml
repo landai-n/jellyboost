@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Odprite Jellyfin v napravi, kjer ste že prijavljeni, pojdite na Quick Connect in vnesite to kodo.</string>
     <string name="login_quick_connect_code_description">Vaša koda je %1$s</string>
     <string name="login_quick_connect_waiting">Čakanje na potrditev…</string>
-    <string name="login_quick_connect_cancel">Prekliči</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Preizkušen je bil %d naslov, brez uspeha.</item>

@@ -5,8 +5,6 @@
     <string name="libraries_title">लाइब्रेरियां</string>
 
     <!-- Top bar -->
-    <string name="library_back">वापस</string>
-    <string name="library_home">होम</string>
     <string name="library_sort">क्रमबद्ध करें</string>
     <string name="library_filter">फ़िल्टर</string>
     <string name="library_filter_all">सभी</string>
@@ -41,7 +39,6 @@
     <string name="library_empty">यहाँ दिखाने के लिए कुछ नहीं है।</string>
     <string name="library_empty_filtered">इन फ़िल्टर से कोई आइटम मेल नहीं खाता।</string>
     <string name="library_empty_clear_filters">फ़िल्टर साफ़ करें</string>
-    <string name="library_retry">फिर से कोशिश करें</string>
 
     <!-- Errors -->
     <string name="library_error_unknown">इस लाइब्रेरी को लोड करने में कुछ गड़बड़ हुई।</string>

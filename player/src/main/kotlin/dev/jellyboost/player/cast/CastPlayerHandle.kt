@@ -4,7 +4,6 @@ import androidx.media3.cast.CastPlayer
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.common.api.PendingResult
@@ -14,9 +13,9 @@ import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
 import dev.jellyboost.player.session.PlayerEvent
 import dev.jellyboost.player.session.PlayerHandle
-import kotlinx.coroutines.channels.BufferOverflow
+import dev.jellyboost.player.session.playerEventFlow
+import dev.jellyboost.player.session.playerEventListener
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
 import javax.inject.Inject
@@ -59,11 +58,7 @@ internal class CastPlayerHandle
         private val converter: CastMediaItemConverter,
         private val metadata: CastMetadataHolder,
     ) : PlayerHandle {
-        private val _events =
-            MutableSharedFlow<PlayerEvent>(
-                extraBufferCapacity = EVENT_BUFFER,
-                onBufferOverflow = BufferOverflow.DROP_OLDEST,
-            )
+        private val _events = playerEventFlow()
 
         override val events: Flow<PlayerEvent> = _events.asSharedFlow()
 
@@ -82,30 +77,19 @@ internal class CastPlayerHandle
          * needs the *decoded* size, and the decoder is in the television. `CastPlayer` reports
          * `VideoSize.UNKNOWN` throughout, so forwarding it would only overwrite a good aspect ratio
          * with nothing.
+         *
+         * That reasoning used to live in this KDoc above a hand-written listener that was otherwise
+         * byte-identical to the local one's — documented, but unenforced, so a sixth event added to
+         * one copy would simply have been missing from the other (audit 2026-08-08, DUP-3). It is
+         * now `forwardVideoSize = false`: the same decision, stated as an argument the shared bridge
+         * has to honour.
          */
         private val listener =
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    when (playbackState) {
-                        Player.STATE_READY -> _events.tryEmit(PlayerEvent.Ready)
-                        Player.STATE_ENDED -> _events.tryEmit(PlayerEvent.Ended)
-                        else -> Unit
-                    }
-                }
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    _events.tryEmit(PlayerEvent.IsPlayingChanged(isPlaying))
-                }
-
-                override fun onTracksChanged(tracks: Tracks) {
-                    _events.tryEmit(PlayerEvent.TracksChanged)
-                }
-
-                override fun onPlayerError(error: PlaybackException) {
-                    Timber.w(error, "Cast playback error %d", error.errorCode)
-                    _events.tryEmit(PlayerEvent.Error(error.errorCode, error.message))
-                }
-            }
+            playerEventListener(
+                emit = { _events.tryEmit(it) },
+                forwardVideoSize = false,
+                errorLogPrefix = "Cast playback error",
+            )
 
         /**
          * The cast player, created on first use, or `null` when there is no Cast stack at all.
@@ -362,7 +346,6 @@ internal class CastPlayerHandle
             }.getOrNull()
 
         private companion object {
-            const val EVENT_BUFFER = 16
             val NO_TRACKS = longArrayOf()
             const val NO_SOURCE = "Casting needs the resolved source."
             const val LOCAL_SOURCE = "A downloaded file cannot be reached by a Cast receiver."

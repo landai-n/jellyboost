@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Следващо</string>
     <string name="home_section_latest">Най-ново: %1$s</string>
     <string name="home_hero_resume">Продължи</string>
-    <string name="home_hero_play">Пусни</string>
     <string name="home_hero_details">Подробности</string>
     <string name="home_hero_rated">Възрастова категория %1$s</string>
     <plurals name="home_minutes_left">

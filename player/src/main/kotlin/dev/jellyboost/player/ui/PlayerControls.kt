@@ -82,6 +82,7 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The transport controls drawn over the video.
@@ -372,7 +373,7 @@ private fun PlayPauseButton(
         Icon(
             imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
             contentDescription =
-                stringResource(if (isPlaying) R.string.player_pause else R.string.player_play),
+                stringResource(if (isPlaying) R.string.player_pause else CoreUiR.string.action_play),
             modifier = Modifier.size(PLAY_ICON),
         )
     }

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Atrás</string>
-    <string name="detail_home">Inicio</string>
-    <string name="detail_play">Reproducir</string>
     <string name="detail_resume">Reanudar</string>
     <string name="detail_download">Descargar</string>
-    <string name="detail_download_cancel">Cancelar</string>
     <string name="detail_download_remove">Quitar</string>
-    <string name="detail_download_retry">Reintentar</string>
     <string name="detail_play_episode">Reproducir este episodio</string>
     <string name="detail_mark_watched">Marcar como visto</string>
     <string name="detail_mark_unwatched">Marcar como no visto</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">¿Eliminar descarga?</string>
     <string name="detail_delete_download_dialog_message">Esto la elimina de este dispositivo. Puedes volver a descargarla cuando quieras.</string>
     <string name="detail_delete_download_dialog_confirm">Eliminar</string>
-    <string name="detail_delete_download_dialog_cancel">Cancelar</string>
 
     <string name="detail_error_unknown">Algo salió mal al cargar este elemento.</string>
 </resources>

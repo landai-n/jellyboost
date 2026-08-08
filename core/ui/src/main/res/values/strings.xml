@@ -7,6 +7,24 @@
   of "Mark watched" are two chances for one screen's wording to drift from the other's.
 -->
 <resources>
+    <!--
+      Chrome action labels — the words the app's own furniture uses, as opposed to anything a
+      screen has to say for itself. Each of these was declared in up to six modules and translated
+      into 69 locales apiece (audit 2026-08-08, DUP-6), which is ~1,600 translated strings where
+      ~350 do the job, and the copies had already drifted: `Retry` had two Bulgarian spellings and
+      `Play` two French ones, so the same button said different things depending on which screen
+      drew it. They live here because a Back button is a Back button.
+
+      What deliberately stayed per-module: `Downloaded`, `Movie`/`Series`/`Season`/`Episode` and
+      `Waiting`/`Paused`, whose translations legitimately differ by context (a tab heading is not
+      an adjective), and `:app`'s `nav_home`, which is a *destination's name* in a four-member tab
+      family (`nav_libraries`/`nav_search`/`nav_downloads`) rather than a chrome action.
+    -->
+    <string name="action_back">Back</string>
+    <string name="action_home">Home</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_play">Play</string>
+
     <!-- Download badge states -->
     <string name="badge_downloaded">Downloaded</string>
     <string name="badge_download_queued">Queued for download</string>

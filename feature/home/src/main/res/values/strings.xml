@@ -13,7 +13,6 @@
 
     <!-- Continue-watching hero (2026 refresh) -->
     <string name="home_hero_resume">Resume</string>
-    <string name="home_hero_play">Play</string>
     <string name="home_hero_details">Details</string>
     <!-- The hero's age certificate, spoken rather than drawn: the metadata line is one node to a
          screen reader, and a bare "TV-MA" in it says nothing about what it certifies. %1$s is the

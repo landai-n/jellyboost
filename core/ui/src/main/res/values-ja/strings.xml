@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">戻る</string>
+    <string name="action_home">ホーム</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_play">再生</string>
+
     <string name="badge_downloaded">ダウンロード済み</string>
     <string name="badge_download_queued">ダウンロード待ち</string>
     <string name="badge_download_paused">ダウンロード一時停止中</string>

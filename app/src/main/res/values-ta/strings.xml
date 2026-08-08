@@ -15,7 +15,6 @@
     <string name="offline_no_network">நெட்வொர்க் இல்லை — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
     <string name="offline_server_unreachable">சேவையகத்தை அடைய முடியவில்லை — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
     <string name="offline_forced">ஆஃப்லைன் பயன்முறை இயக்கத்தில் உள்ளது — பதிவிறக்கப்பட்ட மீடியா காட்டப்படுகிறது</string>
-    <string name="offline_retry">மீண்டும் முயற்சிக்கவும்</string>
     <string name="offline_go_online">ஆன்லைனுக்குச் செல்</string>
 
     <string name="syncplay_groups_action">SyncPlay குழுக்கள்</string>

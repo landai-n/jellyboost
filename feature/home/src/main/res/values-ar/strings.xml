@@ -8,7 +8,6 @@
     <string name="home_section_next_up">التالي</string>
     <string name="home_section_latest">أحدث %1$s</string>
     <string name="home_hero_resume">استئناف</string>
-    <string name="home_hero_play">تشغيل</string>
     <string name="home_hero_details">التفاصيل</string>
     <string name="home_hero_rated">مصنّف %1$s</string>
     <plurals name="home_minutes_left">

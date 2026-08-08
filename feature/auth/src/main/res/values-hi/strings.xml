@@ -36,7 +36,6 @@
     <string name="login_quick_connect_instructions">किसी ऐसे डिवाइस पर Jellyfin खोलें जिस पर आप पहले से साइन इन हैं, फिर Quick Connect में जाकर यह कोड दर्ज करें।</string>
     <string name="login_quick_connect_code_description">आपका कोड %1$s है</string>
     <string name="login_quick_connect_waiting">स्वीकृति की प्रतीक्षा की जा रही है…</string>
-    <string name="login_quick_connect_cancel">रद्द करें</string>
 
     <!-- Errors -->
     <plurals name="auth_error_candidates_tried">

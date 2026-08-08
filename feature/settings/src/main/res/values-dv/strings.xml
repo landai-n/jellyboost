@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">ސެޓިންގްސް</string>
-    <string name="settings_back">ފަހަތަށް</string>
-    <string name="settings_home">ހޯމް</string>
 
     <string name="settings_section_playback">ޕްލޭބެކް</string>
     <string name="settings_skip_intro">އިންޓްރޯ ސްކިޕްކުރޭ</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">ސައިން އައުޓް ވާންހޭ؟</string>
     <string name="settings_sign_out_dialog_message">އަލުން ސައިން އިންވުމަށް ތިޔަ ސަރވަރ އެޑްރެހާއި ޕާސްވޯޑް ބޭނުންވާނެއެވެ.</string>
     <string name="settings_sign_out_delete_downloads">މި ޑިވައިސްއިން ޑައުންލޯޑްތައްވެސް ފޮހެލާ</string>
-    <string name="settings_cancel">ކެންސަލްކުރޭ</string>
     <string name="settings_section_about">އެޕާ ބެހޭ</string>
     <string name="settings_version">އެޕް ވަރޝަން</string>
 </resources>

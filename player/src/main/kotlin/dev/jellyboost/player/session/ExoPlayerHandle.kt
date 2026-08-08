@@ -4,10 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Tracks
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -18,9 +15,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jellyboost.player.model.PlaybackMediaItemSpec
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
 import javax.inject.Inject
@@ -52,11 +47,7 @@ internal class ExoPlayerHandle
         private val dataSourceFactory: DataSource.Factory,
         private val serviceState: PlaybackServiceState,
     ) : PlayerHandle {
-        private val _events =
-            MutableSharedFlow<PlayerEvent>(
-                extraBufferCapacity = EVENT_BUFFER,
-                onBufferOverflow = BufferOverflow.DROP_OLDEST,
-            )
+        private val _events = playerEventFlow()
 
         override val events: Flow<PlayerEvent> = _events.asSharedFlow()
 
@@ -75,33 +66,8 @@ internal class ExoPlayerHandle
         /** Non-null once playback has been prepared; the video surface binds to it. */
         override val player: Player? get() = exoPlayer
 
-        private val listener =
-            object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    when (playbackState) {
-                        Player.STATE_READY -> _events.tryEmit(PlayerEvent.Ready)
-                        Player.STATE_ENDED -> _events.tryEmit(PlayerEvent.Ended)
-                        else -> Unit
-                    }
-                }
-
-                override fun onIsPlayingChanged(isPlaying: Boolean) {
-                    _events.tryEmit(PlayerEvent.IsPlayingChanged(isPlaying))
-                }
-
-                override fun onTracksChanged(tracks: Tracks) {
-                    _events.tryEmit(PlayerEvent.TracksChanged)
-                }
-
-                override fun onVideoSizeChanged(videoSize: VideoSize) {
-                    _events.tryEmit(PlayerEvent.VideoSizeChanged(videoSize.width, videoSize.height))
-                }
-
-                override fun onPlayerError(error: PlaybackException) {
-                    Timber.w(error, "Playback error %d", error.errorCode)
-                    _events.tryEmit(PlayerEvent.Error(error.errorCode, error.message))
-                }
-            }
+        /** The shared Media3→[PlayerEvent] bridge; the local player forwards every event it has. */
+        private val listener = playerEventListener(emit = { _events.tryEmit(it) })
 
         /**
          * The shared player, created on first use.
@@ -321,9 +287,5 @@ internal class ExoPlayerHandle
 
         private fun stopPlaybackService() {
             context.stopService(Intent(context, PlaybackService::class.java))
-        }
-
-        private companion object {
-            const val EVENT_BUFFER = 16
         }
     }

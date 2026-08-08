@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Hap Jellyfin në një pajisje ku je i identifikuar tashmë, shko te Quick Connect dhe shkruaj këtë kod.</string>
     <string name="login_quick_connect_code_description">Kodi yt është %1$s</string>
     <string name="login_quick_connect_waiting">Duke pritur miratimin…</string>
-    <string name="login_quick_connect_cancel">Anulo</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">U provua %d adresë kandidate, pa sukses.</item>

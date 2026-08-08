@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Speler sluiten</string>
-    <string name="player_play">Afspelen</string>
     <string name="player_pause">Pauzeren</string>
     <string name="player_rewind">10 seconden terugspoelen</string>
     <string name="player_forward">30 seconden vooruitspoelen</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Deze groep verlaten?</string>
     <string name="player_syncplay_leave_body">Afspelen gaat hier zelfstandig verder. Opnieuw meedoen betekent de groep opnieuw kiezen.</string>
 
-    <string name="player_syncplay_cancel">Annuleren</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persoon kijkt mee</item>
         <item quantity="other">%d personen kijken mee</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s omhoog verplaatsen</string>
     <string name="player_syncplay_queue_move_down_item">%1$s omlaag verplaatsen</string>
     <string name="player_syncplay_queue_remove_item">%1$s uit de wachtrij verwijderen</string>
-    <string name="player_syncplay_queue_play">Afspelen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item in de wachtrij</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Kon niet openen wat de groep aan het kijken is.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Terug</string>
-    <string name="player_syncplay_groups_home">Start</string>
     <string name="player_syncplay_groups_create">Groep aanmaken</string>
     <string name="player_syncplay_groups_create_title">Geef je groep een naam</string>
     <string name="player_syncplay_groups_create_hint">Groepsnaam</string>

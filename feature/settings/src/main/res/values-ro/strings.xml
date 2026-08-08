@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Setări</string>
-    <string name="settings_back">Înapoi</string>
-    <string name="settings_home">Acasă</string>
     <string name="settings_section_playback">Redare</string>
     <string name="settings_skip_intro">Sari peste genericul de început</string>
     <string name="settings_skip_outro">Sari peste genericul de final</string>
@@ -47,7 +45,6 @@
     <string name="settings_sign_out_dialog_title">Deconectare?</string>
     <string name="settings_sign_out_dialog_message">Veți avea nevoie de adresa serverului și de parolă pentru a vă autentifica din nou.</string>
     <string name="settings_sign_out_delete_downloads">Șterge și descărcările de pe acest dispozitiv</string>
-    <string name="settings_cancel">Anulează</string>
     <string name="settings_section_about">Despre</string>
     <string name="settings_version">Versiunea aplicației</string>
 </resources>

@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">ਜਿਸ ਡਿਵਾਈਸ ਉੱਤੇ ਤੁਸੀਂ ਪਹਿਲਾਂ ਹੀ ਸਾਈਨ ਇਨ ਹੋ, ਉਸ ਉੱਤੇ Jellyfin ਖੋਲ੍ਹੋ, Quick Connect ਉੱਤੇ ਜਾਓ ਅਤੇ ਇਹ ਕੋਡ ਦਰਜ ਕਰੋ।</string>
     <string name="login_quick_connect_code_description">ਤੁਹਾਡਾ ਕੋਡ %1$s ਹੈ</string>
     <string name="login_quick_connect_waiting">ਮਨਜ਼ੂਰੀ ਦੀ ਉਡੀਕ ਹੋ ਰਹੀ ਹੈ…</string>
-    <string name="login_quick_connect_cancel">ਰੱਦ ਕਰੋ</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d ਸੰਭਵ ਪਤਾ ਅਜ਼ਮਾਇਆ ਗਿਆ, ਸਫਲਤਾ ਤੋਂ ਬਿਨਾਂ।</item>

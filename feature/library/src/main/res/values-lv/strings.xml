@@ -3,8 +3,6 @@
     <string name="libraries_empty">Vēl nav neviena bibliotēka. Pievienojiet vienu serverī.</string>
     <string name="libraries_title">Bibliotēkas</string>
 
-    <string name="library_back">Atpakaļ</string>
-    <string name="library_home">Sākums</string>
     <string name="library_sort">Kārtot</string>
     <string name="library_filter">Filtrs</string>
     <string name="library_filter_all">Viss</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Šeit nav ko rādīt.</string>
     <string name="library_empty_filtered">Neviens vienums neatbilst šiem filtriem.</string>
     <string name="library_empty_clear_filters">Notīrīt filtrus</string>
-    <string name="library_retry">Mēģināt vēlreiz</string>
 
     <string name="library_error_unknown">Ielādējot šo bibliotēku, kaut kas nogāja greizi.</string>
 </resources>

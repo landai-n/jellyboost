@@ -104,19 +104,23 @@ class MainActivity : FragmentActivity() {
      * Brings the Cast stack up — a no-op, silently, on a device without Google Play services, which
      * is the whole point (see [CastAvailability]).
      *
-     * **Posted, not called inline** (audit 2026-08-08, PERF-26). `initialize` opens with
+     * **Posted, not called inline** (audit 2026-08-08, PERF-26). `initialize` used to open with
      * `GoogleApiAvailability.isGooglePlayServicesAvailable`, a binder round trip to another process,
-     * and it was running in the middle of `onCreate` — on the critical path to the first frame,
-     * where every millisecond is one the user spends looking at the splash screen. Nothing needs the
-     * answer until a screen with a cast button is drawn.
+     * running in the middle of `onCreate` — on the critical path to the first frame, where every
+     * millisecond is one the user spends looking at the splash screen. Nothing needs the answer
+     * until a screen with a cast button is drawn.
+     *
+     * The probe itself has since moved behind [CastAvailability]'s own executor, which is where the
+     * earlier note said it would have to go, so `initialize` now returns as soon as it has captured
+     * the application context. This post stays regardless, and does the remaining work: it keeps the
+     * first touch of a `com.google.android.gms` class — the class loading, the singleton graph, the
+     * executor — out of `onCreate` entirely.
      *
      * Still on the **main thread**, and deliberately: [CastAvailability.initialize] is `@MainThread`
-     * because `CastContext` is created from the main thread, and the framework's own work already
-     * happens on the executor it is handed. `Dispatchers.Main` rather than `lifecycleScope`'s
-     * `Main.immediate` for exactly the same reason `launch` is used at all here — `immediate` runs
-     * the body inline when it is already on the main thread, which would restore the behaviour this
-     * is fixing. Getting the *probe itself* off the main thread would mean moving it behind
-     * `CastAvailability`'s executor, in `:player`.
+     * for its own guard, and `CastContext` is created from the main looper. `Dispatchers.Main`
+     * rather than `lifecycleScope`'s `Main.immediate` for exactly the reason `launch` is used at all
+     * here — `immediate` runs the body inline when it is already on the main thread, which would put
+     * that class loading straight back into `onCreate`.
      */
     private fun startCastStack() {
         lifecycleScope.launch(Dispatchers.Main) { castAvailability.initialize(this@MainActivity) }

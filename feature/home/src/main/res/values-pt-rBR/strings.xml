@@ -7,7 +7,6 @@
     <string name="home_section_next_up">A Seguir</string>
     <string name="home_section_latest">Últimos em %1$s</string>
     <string name="home_hero_resume">Continuar</string>
-    <string name="home_hero_play">Reproduzir</string>
     <string name="home_hero_details">Detalhes</string>
     <string name="home_hero_rated">Classificação indicativa %1$s</string>
     <plurals name="home_minutes_left">

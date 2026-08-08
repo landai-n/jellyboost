@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Артқа</string>
+    <string name="action_home">Басты бет</string>
+    <string name="action_cancel">Бас тарту</string>
+    <string name="action_play">Ойнату</string>
+
     <string name="badge_downloaded">Жүктеп алынды</string>
     <string name="badge_download_queued">Жүктеу кезегінде</string>
     <string name="badge_download_paused">Жүктеу кідіртілді</string>

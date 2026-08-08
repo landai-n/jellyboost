@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Tənzimləmələr</string>
-    <string name="settings_back">Geri</string>
-    <string name="settings_home">Əsas səhifə</string>
     <string name="settings_section_playback">Oxutma</string>
     <string name="settings_skip_intro">Girişi keç</string>
     <string name="settings_skip_outro">Sonluğu keç</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Çıxış edilsin?</string>
     <string name="settings_sign_out_dialog_message">Yenidən daxil olmaq üçün server ünvanınıza və şifrənizə ehtiyacınız olacaq.</string>
     <string name="settings_sign_out_delete_downloads">Bu cihazdakı yükləmələri də sil</string>
-    <string name="settings_cancel">Ləğv et</string>
     <string name="settings_section_about">Tətbiq haqqında</string>
     <string name="settings_version">Tətbiq versiyası</string>
 </resources>

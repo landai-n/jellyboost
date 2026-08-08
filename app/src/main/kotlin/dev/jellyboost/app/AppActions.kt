@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,43 @@ import dev.jellyboost.player.ui.CastRouteButton
 // they now sit on rather than over an opaque surface.
 
 /**
+ * What the app-wide actions read.
+ *
+ * Two values that have travelled together through four signature levels — `AppScaffold` →
+ * `GlassTopNav` → [AppActions], and `AppScaffold` → [AppActionCluster] → [AppActions] — spelled out
+ * verbatim at each of them, beside the four callbacks in [AppChromeActions] (audit 2026-08-08,
+ * DUP-10). Bundled for the same reason `CardOverlayFacts` was: an intermediate composable that
+ * forwards a cluster unchanged should not have to name its members, and adding a fifth action
+ * should not be a four-file edit.
+ *
+ * A `data class` of two stable types, so it compares by value and the bars still skip
+ * recomposition when neither has moved.
+ */
+@Immutable
+internal data class AppChromeState(
+    /** Decides whether the offline status icon is drawn, and which one. */
+    val connectionState: ConnectionState,
+    /** Lights the Groups action's badge (M11 Phase 5). */
+    val hasActiveSyncPlayGroup: Boolean,
+)
+
+/**
+ * What the app-wide actions do — the other half of [AppChromeState].
+ *
+ * Separate from the state rather than one six-field bundle because the two have different
+ * lifetimes: the state changes as connectivity and group membership move, the callbacks are fixed
+ * for the life of the scaffold. Keeping them apart is what lets the callbacks be `remember`ed once
+ * while the state flows.
+ */
+@Immutable
+internal data class AppChromeActions(
+    val onConnectionStatusClick: () -> Unit,
+    val onOpenSyncPlayGroups: () -> Unit,
+    val onNavigateToSettings: () -> Unit,
+    val onSetForceOffline: (Boolean) -> Unit,
+)
+
+/**
  * The four app-wide actions, in bar order: connection status, Cast, SyncPlay groups, overflow.
  *
  * A row of its own rather than a `RowScope` extension, because the spacing between these four is a
@@ -59,12 +97,8 @@ import dev.jellyboost.player.ui.CastRouteButton
  */
 @Composable
 internal fun AppActions(
-    connectionState: ConnectionState,
-    hasActiveSyncPlayGroup: Boolean,
-    onConnectionStatusClick: () -> Unit,
-    onOpenSyncPlayGroups: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onSetForceOffline: (Boolean) -> Unit,
+    chrome: AppChromeState,
+    actions: AppChromeActions,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -73,8 +107,8 @@ internal fun AppActions(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ConnectionStatusAction(
-            status = connectionState.toStatus(),
-            onClick = onConnectionStatusClick,
+            status = chrome.connectionState.toStatus(),
+            onClick = actions.onConnectionStatusClick,
         )
         // Shows nothing unless the device has a Cast stack and a receiver has been discovered (M12) —
         // but its view stays attached even then, because that is what keeps route discovery running;
@@ -87,13 +121,13 @@ internal fun AppActions(
             surfaceTint = GlassDefaults.ChromeFill,
         )
         SyncPlayGroupsAction(
-            hasActiveGroup = hasActiveSyncPlayGroup,
-            onClick = onOpenSyncPlayGroups,
+            hasActiveGroup = chrome.hasActiveSyncPlayGroup,
+            onClick = actions.onOpenSyncPlayGroups,
         )
         AppOverflowMenu(
-            forceOffline = connectionState == ConnectionState.OFFLINE_FORCED,
-            onNavigateToSettings = onNavigateToSettings,
-            onSetForceOffline = onSetForceOffline,
+            forceOffline = chrome.connectionState == ConnectionState.OFFLINE_FORCED,
+            onNavigateToSettings = actions.onNavigateToSettings,
+            onSetForceOffline = actions.onSetForceOffline,
         )
     }
 }
@@ -126,21 +160,13 @@ private val BadgeInset: Dp = ActionFrameOverhang
  */
 @Composable
 internal fun AppActionCluster(
-    connectionState: ConnectionState,
-    hasActiveSyncPlayGroup: Boolean,
-    onConnectionStatusClick: () -> Unit,
-    onOpenSyncPlayGroups: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onSetForceOffline: (Boolean) -> Unit,
+    chrome: AppChromeState,
+    actions: AppChromeActions,
     modifier: Modifier = Modifier,
 ) {
     AppActions(
-        connectionState = connectionState,
-        hasActiveSyncPlayGroup = hasActiveSyncPlayGroup,
-        onConnectionStatusClick = onConnectionStatusClick,
-        onOpenSyncPlayGroups = onOpenSyncPlayGroups,
-        onNavigateToSettings = onNavigateToSettings,
-        onSetForceOffline = onSetForceOffline,
+        chrome = chrome,
+        actions = actions,
         // `safeDrawing` rather than `statusBars`: in landscape on a device with a display cutout the
         // notch is a *horizontal* inset, and a cluster padded only for the status bar put its first
         // circle underneath it.

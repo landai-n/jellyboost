@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Настройки</string>
-    <string name="settings_back">Назад</string>
-    <string name="settings_home">Начало</string>
 
     <string name="settings_section_playback">Възпроизвеждане</string>
     <string name="settings_skip_intro">Пропускане на въведението</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Да излезете ли от профила?</string>
     <string name="settings_sign_out_dialog_message">Ще ви трябват адресът на сървъра и паролата, за да влезете отново.</string>
     <string name="settings_sign_out_delete_downloads">Изтрий също изтеглянията от това устройство</string>
-    <string name="settings_cancel">Отказ</string>
     <string name="settings_section_about">Относно</string>
     <string name="settings_version">Версия на приложението</string>
 </resources>

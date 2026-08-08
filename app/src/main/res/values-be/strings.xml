@@ -15,7 +15,6 @@
     <string name="offline_no_network">Няма сеткі — паказваюцца спампаваныя медыя</string>
     <string name="offline_server_unreachable">Немагчыма звязацца з серверам — паказваюцца спампаваныя медыя</string>
     <string name="offline_forced">Уключаны аўтаномны рэжым — паказваюцца спампаваныя медыя</string>
-    <string name="offline_retry">Паўтарыць</string>
     <string name="offline_go_online">Перайсці ў сетку</string>
 
     <string name="syncplay_groups_action">Групы SyncPlay</string>

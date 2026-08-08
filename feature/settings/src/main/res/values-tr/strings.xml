@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Ayarlar</string>
-    <string name="settings_back">Geri</string>
-    <string name="settings_home">Ana Sayfa</string>
     <string name="settings_section_playback">Oynatma</string>
     <string name="settings_skip_intro">Girişi atla</string>
     <string name="settings_skip_outro">Kapanışı atla</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Oturum kapatılsın mı?</string>
     <string name="settings_sign_out_dialog_message">Tekrar giriş yapmak için sunucu adresinize ve şifrenize ihtiyacınız olacak.</string>
     <string name="settings_sign_out_delete_downloads">Bu cihazdaki indirmeleri de sil</string>
-    <string name="settings_cancel">İptal</string>
     <string name="settings_section_about">Hakkında</string>
     <string name="settings_version">Uygulama sürümü</string>
 </resources>

@@ -7,7 +7,6 @@
     <string name="home_section_next_up">ඊළඟට</string>
     <string name="home_section_latest">නවතම %1$s</string>
     <string name="home_hero_resume">නැවත ආරම්භ කරන්න</string>
-    <string name="home_hero_play">වාදනය කරන්න</string>
     <string name="home_hero_details">විස්තර</string>
     <string name="home_hero_rated">වයස් සීමාව %1$s</string>
     <plurals name="home_minutes_left">

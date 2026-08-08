@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Tanca el reproductor</string>
-    <string name="player_play">Reprodueix</string>
     <string name="player_pause">Pausa</string>
     <string name="player_rewind">Retrocedeix 10 segons</string>
     <string name="player_forward">Avança 30 segons</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Surt del grup</string>
     <string name="player_syncplay_leave_title">Vols sortir d\'aquest grup?</string>
     <string name="player_syncplay_leave_body">La reproducció continua aquí, pel seu compte. Tornar-te a unir vol dir triar el grup de nou.</string>
-    <string name="player_syncplay_cancel">Cancel·la</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persona mirant</item>
         <item quantity="other">%d persones mirant</item>
@@ -79,7 +77,6 @@
     <string name="player_syncplay_queue_move_up_item">Puja %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Baixa %1$s</string>
     <string name="player_syncplay_queue_remove_item">Elimina %1$s de la cua</string>
-    <string name="player_syncplay_queue_play">Reprodueix</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element a la cua</item>
         <item quantity="other">%d elements a la cua</item>
@@ -92,8 +89,6 @@
     <string name="player_message_syncplay_library_denied">El grup està veient una cosa a la qual no tens accés.</string>
     <string name="player_message_syncplay_item_unavailable">No s\'ha pogut obrir el que el grup està veient.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Enrere</string>
-    <string name="player_syncplay_groups_home">Inici</string>
     <string name="player_syncplay_groups_create">Crea un grup</string>
     <string name="player_syncplay_groups_create_title">Posa nom al teu grup</string>
     <string name="player_syncplay_groups_create_hint">Nom del grup</string>

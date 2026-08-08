@@ -3,8 +3,6 @@
     <string name="libraries_empty">Kol kas nėra bibliotekų. Pridėkite vieną serveryje.</string>
     <string name="libraries_title">Bibliotekos</string>
 
-    <string name="library_back">Atgal</string>
-    <string name="library_home">Pradžia</string>
     <string name="library_sort">Rikiuoti</string>
     <string name="library_filter">Filtras</string>
     <string name="library_filter_all">Viskas</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Čia nėra ką rodyti.</string>
     <string name="library_empty_filtered">Nė vienas elementas neatitinka šių filtrų.</string>
     <string name="library_empty_clear_filters">Išvalyti filtrus</string>
-    <string name="library_retry">Bandyti dar kartą</string>
 
     <string name="library_error_unknown">Įkeliant šią biblioteką kažkas nutiko ne taip.</string>
 </resources>

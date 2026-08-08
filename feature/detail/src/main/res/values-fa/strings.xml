@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">بازگشت</string>
-    <string name="detail_home">خانه</string>
-    <string name="detail_play">پخش</string>
     <string name="detail_resume">ازسرگیری</string>
     <string name="detail_download">دانلود</string>
-    <string name="detail_download_cancel">لغو</string>
     <string name="detail_download_remove">حذف</string>
-    <string name="detail_download_retry">تلاش دوباره</string>
     <string name="detail_play_episode">پخش این قسمت</string>
     <string name="detail_mark_watched">علامت‌گذاری به‌عنوان تماشا شده</string>
     <string name="detail_mark_unwatched">علامت‌گذاری به‌عنوان تماشا نشده</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">دانلود حذف شود؟</string>
     <string name="detail_delete_download_dialog_message">این مورد از این دستگاه حذف می‌شود. می‌توانید هر زمان دوباره آن را دانلود کنید.</string>
     <string name="detail_delete_download_dialog_confirm">حذف</string>
-    <string name="detail_delete_download_dialog_cancel">لغو</string>
 
     <string name="detail_error_unknown">هنگام بارگذاری این مورد مشکلی پیش آمد.</string>
 </resources>

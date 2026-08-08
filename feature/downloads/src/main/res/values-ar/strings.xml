@@ -26,7 +26,6 @@
     <string name="downloads_usage_storage_label">المساحة المستخدمة</string>
     <string name="downloads_usage_queue_label">تقدّم قائمة الانتظار</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
-    <string name="downloads_action_play">تشغيل</string>
 
     <string name="downloads_action_delete">حذف التنزيل</string>
     <string name="downloads_action_cancel">إلغاء التنزيل</string>
@@ -54,7 +53,6 @@
     <string name="downloads_delete_dialog_title">حذف %1$s؟</string>
     <string name="downloads_delete_dialog_message">ستتم إزالة الملفات التي تم تنزيلها من هذا الجهاز. يمكنك تنزيلها مرة أخرى لاحقًا.</string>
     <string name="downloads_delete_dialog_confirm">حذف</string>
-    <string name="downloads_delete_dialog_cancel">إلغاء</string>
 
     <string name="downloads_progress_of">%1$s من %2$s</string>
     <string name="downloads_progress_of_approx">%1$s من ~%2$s</string>

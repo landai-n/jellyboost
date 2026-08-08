@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Takaisin</string>
+    <string name="action_home">Koti</string>
+    <string name="action_cancel">Peruuta</string>
+    <string name="action_play">Toista</string>
+
     <string name="badge_downloaded">Ladattu</string>
     <string name="badge_download_queued">Jonossa latausta varten</string>
     <string name="badge_download_paused">Lataus keskeytetty</string>

@@ -3,8 +3,6 @@
     <string name="libraries_empty">Сè уште нема библиотеки. Додадете една на серверот.</string>
     <string name="libraries_title">Библиотеки</string>
 
-    <string name="library_back">Назад</string>
-    <string name="library_home">Почетна</string>
     <string name="library_sort">Подреди</string>
     <string name="library_filter">Филтер</string>
     <string name="library_filter_all">Сите</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Овде нема ништо за прикажување.</string>
     <string name="library_empty_filtered">Ниту една ставка не одговара на овие филтри.</string>
     <string name="library_empty_clear_filters">Исчисти ги филтрите</string>
-    <string name="library_retry">Обиди се повторно</string>
 
     <string name="library_error_unknown">Нешто тргна наопаку при вчитувањето на оваа библиотека.</string>
 </resources>

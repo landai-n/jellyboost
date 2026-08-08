@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Uzata konservejo</string>
     <string name="downloads_usage_queue_label">Progreso de la atendovico</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Ludi</string>
     <string name="downloads_action_delete">Forigi elŝuton</string>
     <string name="downloads_action_cancel">Nuligi elŝuton</string>
     <string name="downloads_action_pause">Paŭzigi elŝuton</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Ĉu forigi %1$s?</string>
     <string name="downloads_delete_dialog_message">La elŝutitaj dosieroj estas forigitaj el ĉi tiu aparato. Vi povas denove elŝuti ĝin poste.</string>
     <string name="downloads_delete_dialog_confirm">Forigi</string>
-    <string name="downloads_delete_dialog_cancel">Nuligi</string>
     <string name="downloads_progress_of">%1$s el %2$s</string>
     <string name="downloads_progress_of_approx">%1$s el ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s el ĝis %2$s</string>

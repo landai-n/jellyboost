@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">بستن پخش‌کننده</string>
-    <string name="player_play">پخش</string>
     <string name="player_pause">توقف موقت</string>
     <string name="player_rewind">10 ثانیه عقب بروید</string>
     <string name="player_forward">30 ثانیه جلو بروید</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">این گروه ترک شود؟</string>
     <string name="player_syncplay_leave_body">پخش اینجا، به‌طور مستقل ادامه می‌یابد. پیوستن دوباره به معنی انتخاب دوباره گروه است.</string>
 
-    <string name="player_syncplay_cancel">لغو</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d نفر در حال تماشا</item>
         <item quantity="other">%d نفر در حال تماشا</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">انتقال %1$s به بالا</string>
     <string name="player_syncplay_queue_move_down_item">انتقال %1$s به پایین</string>
     <string name="player_syncplay_queue_remove_item">حذف %1$s از صف</string>
-    <string name="player_syncplay_queue_play">پخش</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d مورد در صف</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">باز کردن آنچه گروه تماشا می‌کند ممکن نبود.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">بازگشت</string>
-    <string name="player_syncplay_groups_home">خانه</string>
     <string name="player_syncplay_groups_create">ایجاد گروه</string>
     <string name="player_syncplay_groups_create_title">گروه خود را نام‌گذاری کنید</string>
     <string name="player_syncplay_groups_create_hint">نام گروه</string>

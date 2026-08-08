@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Lejátszó bezárása</string>
-    <string name="player_play">Lejátszás</string>
     <string name="player_pause">Szünet</string>
     <string name="player_rewind">10 másodperc vissza</string>
     <string name="player_forward">30 másodperc előre</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Kilépsz ebből a csoportból?</string>
     <string name="player_syncplay_leave_body">A lejátszás itt önállóan folytatódik. Az újracsatlakozáshoz újra ki kell választanod a csoportot.</string>
 
-    <string name="player_syncplay_cancel">Mégse</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d fő nézi</item>
         <item quantity="other">%d fő nézi</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s feljebb mozgatása</string>
     <string name="player_syncplay_queue_move_down_item">%1$s lejjebb mozgatása</string>
     <string name="player_syncplay_queue_remove_item">%1$s eltávolítása a sorból</string>
-    <string name="player_syncplay_queue_play">Lejátszás</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elem a sorban</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Nem sikerült megnyitni, amit a csoport néz.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Vissza</string>
-    <string name="player_syncplay_groups_home">Kezdőlap</string>
     <string name="player_syncplay_groups_create">Csoport létrehozása</string>
     <string name="player_syncplay_groups_create_title">Add meg a csoport nevét</string>
     <string name="player_syncplay_groups_create_hint">Csoport neve</string>

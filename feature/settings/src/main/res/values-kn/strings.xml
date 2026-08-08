@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
-    <string name="settings_back">ಹಿಂದೆ</string>
-    <string name="settings_home">ಮುಖಪುಟ</string>
 
     <string name="settings_section_playback">ಪ್ಲೇಬ್ಯಾಕ್</string>
     <string name="settings_skip_intro">ಇಂಟ್ರೋ ಬಿಟ್ಟುಬಿಡಿ</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">ಸೈನ್ ಔಟ್ ಮಾಡುವುದೇ?</string>
     <string name="settings_sign_out_dialog_message">ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಲು ನಿಮ್ಮ ಸರ್ವರ್ ವಿಳಾಸ ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್ ಅಗತ್ಯವಿದೆ.</string>
     <string name="settings_sign_out_delete_downloads">ಈ ಸಾಧನದಿಂದ ಡೌನ್‌ಲೋಡ್‌ಗಳನ್ನು ಸಹ ಅಳಿಸಿ</string>
-    <string name="settings_cancel">ರದ್ದುಮಾಡಿ</string>
     <string name="settings_section_about">ಆ್ಯಪ್ ಕುರಿತು</string>
     <string name="settings_version">ಆ್ಯಪ್ ಆವೃತ್ತಿ</string>
 </resources>

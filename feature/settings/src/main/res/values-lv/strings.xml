@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Iestatījumi</string>
-    <string name="settings_back">Atpakaļ</string>
-    <string name="settings_home">Sākums</string>
 
     <string name="settings_section_playback">Atskaņošana</string>
     <string name="settings_skip_intro">Izlaist ievadu</string>
@@ -51,7 +49,6 @@
     <string name="settings_sign_out_dialog_title">Izrakstīties?</string>
     <string name="settings_sign_out_dialog_message">Lai atkal pieteiktos, jums būs nepieciešama servera adrese un parole.</string>
     <string name="settings_sign_out_delete_downloads">Dzēst arī lejupielādes no šīs ierīces</string>
-    <string name="settings_cancel">Atcelt</string>
     <string name="settings_section_about">Par lietotni</string>
     <string name="settings_version">Lietotnes versija</string>
 </resources>

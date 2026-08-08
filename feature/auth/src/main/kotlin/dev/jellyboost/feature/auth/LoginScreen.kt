@@ -1,6 +1,5 @@
 package dev.jellyboost.feature.auth
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -26,7 +25,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -71,6 +69,7 @@ import dev.jellyboost.core.ui.component.FieldContent
 import dev.jellyboost.core.ui.component.FieldLabel
 import dev.jellyboost.core.ui.component.FieldState
 import dev.jellyboost.core.ui.component.GhostPillButton
+import dev.jellyboost.core.ui.component.JellyboostAlertDialog
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.PrimaryPillButton
@@ -78,6 +77,7 @@ import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import java.util.UUID
+import dev.jellyboost.core.ui.R as CoreUiR
 
 private val AvatarSize = 88.dp
 
@@ -222,27 +222,18 @@ private fun LoginContent(
         modifier = modifier,
     ) {
         // The whole sign-in form lives on one m-panel (claude.ai/design, "Login (landscape
-        // tablet)") — same treatment as ServerSetup's manual-address panel, so the two screens
-        // keep reading as one flow.
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surface,
-            border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
-        ) {
-            Column(
-                modifier = Modifier.padding(Dimens.PanelPadding),
-                verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
-            ) {
-                LoginFormFields(
-                    state = state,
-                    onUsernameChange = onUsernameChange,
-                    onPasswordChange = onPasswordChange,
-                    onSignIn = onSignIn,
-                    onStartQuickConnect = onStartQuickConnect,
-                    onChangeServer = onChangeServer,
-                )
-            }
+        // tablet)") — the same [AuthPanel] ServerSetup's manual-address form sits on, so the two
+        // screens keep reading as one flow. They were two hand-spelled copies until audit
+        // 2026-08-08 (DUP-9), and had drifted by 2dp of inner gap in the process.
+        AuthPanel {
+            LoginFormFields(
+                state = state,
+                onUsernameChange = onUsernameChange,
+                onPasswordChange = onPasswordChange,
+                onSignIn = onSignIn,
+                onStartQuickConnect = onStartQuickConnect,
+                onChangeServer = onChangeServer,
+            )
         }
     }
 
@@ -667,18 +658,11 @@ private fun QuickConnectDialog(
     state: QuickConnectUiState,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
-            ),
-        containerColor = MaterialTheme.colorScheme.surface,
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.login_quick_connect_cancel))
+                Text(text = stringResource(CoreUiR.string.action_cancel))
             }
         },
         title = {

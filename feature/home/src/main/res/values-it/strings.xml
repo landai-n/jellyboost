@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Prossimi episodi</string>
     <string name="home_section_latest">Ultimi arrivi: %1$s</string>
     <string name="home_hero_resume">Riprendi</string>
-    <string name="home_hero_play">Riproduci</string>
     <string name="home_hero_details">Dettagli</string>
     <string name="home_hero_rated">Classificazione %1$s</string>
     <plurals name="home_minutes_left">

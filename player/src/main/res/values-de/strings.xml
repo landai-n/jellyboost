@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Player schließen</string>
-    <string name="player_play">Abspielen</string>
     <string name="player_pause">Pause</string>
     <string name="player_rewind">10 Sekunden zurückspringen</string>
     <string name="player_forward">30 Sekunden vorspringen</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Diese Gruppe verlassen?</string>
     <string name="player_syncplay_leave_body">Die Wiedergabe läuft hier eigenständig weiter. Um wieder beizutreten, musst du die Gruppe erneut auswählen.</string>
 
-    <string name="player_syncplay_cancel">Abbrechen</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d Person schaut zu</item>
         <item quantity="other">%d Personen schauen zu</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s nach oben verschieben</string>
     <string name="player_syncplay_queue_move_down_item">%1$s nach unten verschieben</string>
     <string name="player_syncplay_queue_remove_item">%1$s aus der Warteschlange entfernen</string>
-    <string name="player_syncplay_queue_play">Abspielen</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d Titel in der Warteschlange</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Konnte nicht öffnen, was die Gruppe gerade schaut.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Zurück</string>
-    <string name="player_syncplay_groups_home">Start</string>
     <string name="player_syncplay_groups_create">Gruppe erstellen</string>
     <string name="player_syncplay_groups_create_title">Benenne deine Gruppe</string>
     <string name="player_syncplay_groups_create_hint">Gruppenname</string>

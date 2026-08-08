@@ -15,7 +15,6 @@
     <string name="offline_no_network">Brak sieci — wyświetlane są pobrane multimedia</string>
     <string name="offline_server_unreachable">Nie można połączyć się z serwerem — wyświetlane są pobrane multimedia</string>
     <string name="offline_forced">Tryb offline jest włączony — wyświetlane są pobrane multimedia</string>
-    <string name="offline_retry">Spróbuj ponownie</string>
     <string name="offline_go_online">Przejdź online</string>
 
     <string name="syncplay_groups_action">Grupy SyncPlay</string>

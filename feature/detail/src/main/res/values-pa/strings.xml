@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">ਪਿੱਛੇ</string>
-    <string name="detail_home">ਹੋਮ</string>
-    <string name="detail_play">ਚਲਾਓ</string>
     <string name="detail_resume">ਜਾਰੀ ਰੱਖੋ</string>
     <string name="detail_download">ਡਾਊਨਲੋਡ ਕਰੋ</string>
-    <string name="detail_download_cancel">ਰੱਦ ਕਰੋ</string>
     <string name="detail_download_remove">ਹਟਾਓ</string>
-    <string name="detail_download_retry">ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
     <string name="detail_play_episode">ਇਹ ਐਪੀਸੋਡ ਚਲਾਓ</string>
     <string name="detail_mark_watched">ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ</string>
     <string name="detail_mark_unwatched">ਨਾ-ਦੇਖਿਆ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">ਡਾਊਨਲੋਡ ਮਿਟਾਓ?</string>
     <string name="detail_delete_download_dialog_message">ਇਹ ਇਸਨੂੰ ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਹਟਾ ਦੇਵੇਗਾ। ਤੁਸੀਂ ਇਸਨੂੰ ਕਿਸੇ ਵੀ ਸਮੇਂ ਦੁਬਾਰਾ ਡਾਊਨਲੋਡ ਕਰ ਸਕਦੇ ਹੋ।</string>
     <string name="detail_delete_download_dialog_confirm">ਮਿਟਾਓ</string>
-    <string name="detail_delete_download_dialog_cancel">ਰੱਦ ਕਰੋ</string>
 
     <string name="detail_error_unknown">ਇਹ ਆਈਟਮ ਲੋਡ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
 </resources>

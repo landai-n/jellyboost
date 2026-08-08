@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">තවම පුස්තකාල නැත. සේවාදායකයේ එකක් එක් කරන්න.</string>
     <string name="libraries_title">පුස්තකාල</string>
-    <string name="library_back">ආපසු</string>
-    <string name="library_home">මුල් පිටුව</string>
     <string name="library_sort">අනුපිළිවෙල</string>
     <string name="library_filter">පෙරහන</string>
     <string name="library_filter_all">සියල්ල</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">මෙහි පෙන්වීමට කිසිවක් නැත.</string>
     <string name="library_empty_filtered">මෙම පෙරහන්වලට ගැලපෙන අයිතමයක් නැත.</string>
     <string name="library_empty_clear_filters">පෙරහන් හිස් කරන්න</string>
-    <string name="library_retry">යළි උත්සාහ කරන්න</string>
     <string name="library_error_unknown">මෙම පුස්තකාලය පූරණය කිරීමේදී යම් දෙයක් වැරදුණි.</string>
 </resources>

@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination
-import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
@@ -71,19 +70,17 @@ import dev.jellyboost.core.ui.R as CoreUiR
  * trailing actions running off the end of the window as a collapsed `Spacer(weight)` once let them.
  *
  * @param currentDestination selects the tab; `null` while the graph is still settling.
- * @param connectionState decides whether the offline status icon is drawn, and which one.
- * @param hasActiveSyncPlayGroup lights the Groups action's badge (M11 Phase 5).
+ * @param chrome what the trailing app-wide actions read — forwarded to [AppActions] unchanged, which
+ *   is why it is a bundle rather than six parameters this function does not otherwise touch (audit
+ *   2026-08-08, DUP-10).
+ * @param actions what those actions do.
  */
 @Composable
 internal fun GlassTopNav(
     currentDestination: NavDestination?,
-    connectionState: ConnectionState,
-    hasActiveSyncPlayGroup: Boolean,
+    chrome: AppChromeState,
+    actions: AppChromeActions,
     onSelectTab: (Any) -> Unit,
-    onConnectionStatusClick: () -> Unit,
-    onOpenSyncPlayGroups: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onSetForceOffline: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -118,14 +115,7 @@ internal fun GlassTopNav(
             TopNavTabs(currentDestination = currentDestination, onSelectTab = onSelectTab)
         }
 
-        AppActions(
-            connectionState = connectionState,
-            hasActiveSyncPlayGroup = hasActiveSyncPlayGroup,
-            onConnectionStatusClick = onConnectionStatusClick,
-            onOpenSyncPlayGroups = onOpenSyncPlayGroups,
-            onNavigateToSettings = onNavigateToSettings,
-            onSetForceOffline = onSetForceOffline,
-        )
+        AppActions(chrome = chrome, actions = actions)
     }
 }
 

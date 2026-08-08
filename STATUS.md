@@ -150,6 +150,40 @@ other seven; check the detail screen on the tablet in portrait *and* in a ~600dp
 groups screen and Settings headers still look right; and start a cast session, since the Play-services
 probe is now three thread hops where it was one.
 
+## Audit 2026-08-08 — remediation COMPLETE (2026-08-09); identifier scrub + history rewrite
+
+All seven remediation tiers of the 2026-08-08 audit are landed and merged: player UX
+wave, data-integrity wave, error-mapping/security wave (Tier 3+5 + SEC-10 warning),
+perf data-layer wave (schema v9, EXPLAIN-verified), perf UI wave, consolidation wave
+(duplication tier closed: one dialog/header/Back button; 1,540 locale strings removed),
+architecture wave (SDK stops at `:data`, compiler-enforced; detekt gate reaches
+`player/ui` with 2 named exemptions), and the test-fixtures wave (2,368 tests held,
+zero assertions changed). Each wave gate-verified independently and again on the merged
+tree. Deliberately not done: PERF-1's structural Haze half (measure first), PERF-27/29/30,
+SEC-13/14 (documented accepted risks), DUP-6 calibration list, build-health items
+(config-cache enablement — separate decision).
+
+**Identifier scrub (2026-08-08/09):** personal identifiers (an account name, a location
+name) removed from the tree (design mocks → generic names, test username → `casey`,
+docs → role descriptions/relative paths) and wiped from history: `main` + all 11 tags
+rewritten with git-filter-repo (content only; authorship untouched), verified zero
+occurrences across the new history, HEAD tree byte-identical. DesignSync cards
+re-synced from the cleaned mocks. **Owed:** (1) `git push --force origin main` — remote
+still has pre-rewrite history (push blocked from the agent side; run manually);
+(2) `worktree-music-m13` must be REBASED onto the rewritten main before it merges or it
+reintroduces old history; (3) local `backup/*` branches still hold old history —
+local-only by policy, delete if no longer wanted.
+
+**Device walk owed (consolidated from all waves):** player pickers survive 10 s + timer
+restarts on use; edge-to-edge after leaving player on an API 30–34 emulator; cancel-then-
+re-download an in-flight episode; cancel a season mid-transfer; pause/resume notification
+leaves "Preparing…"; cold launch + SyncPlay presence + cast session (lazy startup graph +
+3-hop GMS probe); the ten restyled dialogs; detail on tablet portrait + ~600dp split
+screen with a download in flight (progress ring, middle-band overview clamp); v9 index
+migration on an install with downloads; long browse session then offline library open.
+**Translations owed:** `server_setup_cleartext_warning` ×69 locales (English-only with a
+narrow lint exemption).
+
 ## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
 
 Fourth full audit (`docs/notes/audit-2026-08-08.md`), seven parallel auditors. Two jobs:

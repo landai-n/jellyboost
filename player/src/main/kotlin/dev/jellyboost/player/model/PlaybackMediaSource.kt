@@ -94,6 +94,37 @@ internal data class RemotePlaybackMediaSource(
 
     override fun withSelectedSubtitle(jellyfinIndex: Int?): PlaybackMediaSource =
         copy(selectedSubtitleIndex = jellyfinIndex)
+
+    /**
+     * Prints no URL (audit SEC-12, same shape as `StoredSession.toString()`).
+     *
+     * [transcodingUrl] is built by the server with an `ApiKey` query parameter — the live access
+     * token — so the generated data-class `toString()` prints a signed-in credential the moment an
+     * instance reaches a log line or a wrapped exception message. Nothing does that today; the
+     * point is that one `Timber.d("… %s", source)` is all it would take, and Media3's own error
+     * logging is outside the Timber story entirely.
+     *
+     * The rule is *no URL*, not *not that one*: [path] is whatever the server put in `Path` (a URL
+     * for an `HTTP`-protocol source, a path into somebody's library otherwise) and every
+     * [ExternalSubtitle.url] is a server-issued delivery URL. Each is replaced by the one thing a
+     * log actually wants from it — whether there is one, and how many. Everything else prints
+     * exactly as the generated implementation would.
+     */
+    override fun toString(): String =
+        "RemotePlaybackMediaSource(" +
+            "itemId=$itemId, mediaSourceId=$mediaSourceId, playSessionId=$playSessionId, " +
+            "playMethod=$playMethod, container=$container, protocol=$protocol, " +
+            "path=${redacted(path)}, transcodingUrl=${redacted(transcodingUrl)}, " +
+            "transcodingSubProtocol=$transcodingSubProtocol, liveStreamId=$liveStreamId, " +
+            "maxStreamingBitrate=$maxStreamingBitrate, runTimeTicks=$runTimeTicks, " +
+            "startPositionTicks=$startPositionTicks, audioTracks=$audioTracks, " +
+            "subtitleTracks=$subtitleTracks, externalSubtitles=${externalSubtitles.size}, " +
+            "selectedAudioIndex=$selectedAudioIndex, selectedSubtitleIndex=$selectedSubtitleIndex)"
+
+    private companion object {
+        /** `null` stays readable — its absence is a fact about the source, not a secret. */
+        fun redacted(value: String?): String = if (value == null) "null" else "<redacted>"
+    }
 }
 
 /**

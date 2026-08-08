@@ -1,5 +1,6 @@
 package dev.jellyboost.player.syncplay.socket
 
+import dev.jellyboost.core.network.hostForLog
 import dev.jellyboost.core.network.jellyfinAuthorizationHeader
 import dev.jellyboost.player.syncplay.di.SyncPlayScope
 import dev.jellyboost.player.syncplay.di.SyncPlaySocketClient
@@ -150,7 +151,11 @@ internal class OkHttpSyncPlaySocket
         private fun connection(opened: AtomicBoolean): Flow<OutboundWebSocketMessage> =
             callbackFlow {
                 val request = socketRequest()
-                Timber.d("Opening the SyncPlay websocket at %s", request.url)
+                // Host only (audit SEC-11): the full URL is the user's server address in a line
+                // that fires on every reconnect, i.e. exactly the log a user pastes when SyncPlay
+                // misbehaves. Through the shared helper so all four address-logging sites in the
+                // app say the same thing. See `hostForLog`.
+                Timber.d("Opening the SyncPlay websocket at %s", hostForLog(request.url.toString()))
                 _connectionState.value = SyncPlaySocketState.Connecting
                 // Generously bounded: the reader thread must never block or drop under any
                 // *healthy* load — this queue is the whole difference from the SDK's conflated

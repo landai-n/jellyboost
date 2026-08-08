@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -258,8 +259,103 @@ class ServerSetupViewModelTest {
             viewModel.uiState.value.canConnect shouldBe false
         }
 
+    @Test
+    @DisplayName("a public server that answered over plain http warns instead of moving on")
+    fun cleartextPublicServerWarnsBeforeNavigating() =
+        runTest {
+            // Audit SEC-10. The address the app is about to send the token to is the *resolved* one,
+            // and here it came back cleartext on a host that is not on this network.
+            coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
+                AppResult.Success(CLEARTEXT_PUBLIC)
+            val viewModel = viewModel()
+
+            viewModel.navigateToLogin.test {
+                viewModel.connectTo(ADDRESS)
+                advanceUntilIdle()
+
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            val state = viewModel.uiState.value
+            state.cleartextWarningHost shouldBe "media.example.com"
+            state.isConnecting shouldBe false
+            state.error shouldBe null
+            // Nothing is handed to Login until the user has seen the warning.
+            pendingServerStore.server shouldBe null
+        }
+
+    @Test
+    @DisplayName("pressing Connect again is the acknowledgement, and costs no second round-trip")
+    fun secondConnectAcknowledgesTheWarning() =
+        runTest {
+            coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
+                AppResult.Success(CLEARTEXT_PUBLIC)
+            val viewModel = viewModel()
+
+            viewModel.connectTo(ADDRESS)
+            advanceUntilIdle()
+
+            viewModel.navigateToLogin.test {
+                viewModel.connect()
+                advanceUntilIdle()
+
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            pendingServerStore.server shouldBe CLEARTEXT_PUBLIC
+            viewModel.uiState.value.cleartextWarningHost shouldBe null
+            // The server had already answered; acknowledging must not ask it again.
+            coVerify(exactly = 1) { discoveryRepository.resolveServerAddress(ADDRESS) }
+        }
+
+    @Test
+    @DisplayName("typing a different address retracts the warning and the acknowledgement with it")
+    fun editingTheAddressRetractsTheWarning() =
+        runTest {
+            coEvery { discoveryRepository.resolveServerAddress(ADDRESS) } returns
+                AppResult.Success(CLEARTEXT_PUBLIC)
+            coEvery { discoveryRepository.resolveServerAddress(OTHER_ADDRESS) } returns
+                AppResult.Success(RESOLVED)
+            val viewModel = viewModel()
+
+            viewModel.connectTo(ADDRESS)
+            advanceUntilIdle()
+            viewModel.uiState.value.cleartextWarningHost shouldBe "media.example.com"
+
+            viewModel.onAddressChange(OTHER_ADDRESS)
+            viewModel.uiState.value.cleartextWarningHost shouldBe null
+
+            // And the next Connect probes the new address rather than proceeding to the old server.
+            viewModel.connect()
+            advanceUntilIdle()
+            pendingServerStore.server shouldBe RESOLVED
+        }
+
+    @Test
+    @DisplayName("a LAN server over http is not warned about, however the address was typed")
+    fun privateCleartextServerIsNotWarnedAbout() =
+        runTest {
+            coEvery { discoveryRepository.resolveServerAddress(LIVING_ROOM.address) } returns
+                AppResult.Success(CLEARTEXT_PRIVATE)
+            val viewModel = viewModel()
+
+            viewModel.navigateToLogin.test {
+                viewModel.connectTo(LIVING_ROOM.address)
+                advanceUntilIdle()
+
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            viewModel.uiState.value.cleartextWarningHost shouldBe null
+            pendingServerStore.server shouldBe CLEARTEXT_PRIVATE
+        }
+
     private companion object {
         const val ADDRESS = "media.example.com"
+        const val OTHER_ADDRESS = "other.example.com"
         const val PROBE_MILLIS = 250L
 
         val LIVING_ROOM =
@@ -283,5 +379,11 @@ class ServerSetupViewModelTest {
                 version = "10.11.0",
                 address = "https://media.example.com",
             )
+
+        /** The SEC-10 case: a port-forwarded server, reached in the clear. */
+        val CLEARTEXT_PUBLIC = RESOLVED.copy(address = "http://media.example.com:8096")
+
+        /** The overwhelmingly common case, which must stay silent. */
+        val CLEARTEXT_PRIVATE = RESOLVED.copy(address = "http://192.168.1.10:8096")
     }
 }

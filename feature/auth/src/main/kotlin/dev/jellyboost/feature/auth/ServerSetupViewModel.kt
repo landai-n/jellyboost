@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.network.ServerDiscoveryRepository
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.model.DiscoveredServer
+import dev.jellyboost.core.network.model.ResolvedServer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,15 @@ internal data class ServerSetupUiState(
      * (docs/notes/audit-2026-07.md, SEC-03).
      */
     val sessionWasLost: Boolean = false,
+    /**
+     * Host of a server that resolved to a plain `http://` address outside the local network, or
+     * `null` when there is nothing to warn about (audit SEC-10).
+     *
+     * Set instead of navigating: the flow stops here, says what is about to happen to the access
+     * token, and the next press of Connect goes through. Non-null only between the resolve that
+     * raised it and the press that acknowledges it.
+     */
+    val cleartextWarningHost: String? = null,
 ) {
     /** The Connect button is only live for a non-blank address outside an in-flight probe. */
     val canConnect: Boolean get() = address.isNotBlank() && !isConnecting
@@ -81,6 +91,12 @@ internal class ServerSetupViewModel
 
         private var connectJob: Job? = null
 
+        /**
+         * The server behind [ServerSetupUiState.cleartextWarningHost], kept so that acknowledging
+         * the warning costs no second round-trip to a server that has already answered.
+         */
+        private var warnedServer: ResolvedServer? = null
+
         init {
             observeLocalServers()
         }
@@ -96,11 +112,23 @@ internal class ServerSetupViewModel
          */
         fun onAddressChange(value: String) {
             if (mutableUiState.value.isConnecting) return
-            mutableUiState.update { it.copy(address = value, error = null) }
+            // A new address is a new question: the standing cleartext warning was about the old one
+            // and must not be acknowledgeable by a Connect aimed somewhere else.
+            warnedServer = null
+            mutableUiState.update { it.copy(address = value, error = null, cleartextWarningHost = null) }
         }
 
-        /** Probes whatever is currently in the address field. */
+        /**
+         * Probes whatever is currently in the address field — or, when a cleartext warning is
+         * standing for the server this field already resolved to, takes the press as the
+         * acknowledgement of it and goes on to Login (audit SEC-10).
+         */
         fun connect() {
+            val acknowledged = warnedServer
+            if (acknowledged != null && mutableUiState.value.cleartextWarningHost != null) {
+                viewModelScope.launch { proceedTo(acknowledged) }
+                return
+            }
             connectTo(mutableUiState.value.address)
         }
 
@@ -114,13 +142,32 @@ internal class ServerSetupViewModel
 
             connectJob =
                 viewModelScope.launch {
-                    mutableUiState.update { it.copy(address = trimmed, isConnecting = true, error = null) }
+                    warnedServer = null
+                    mutableUiState.update {
+                        it.copy(
+                            address = trimmed,
+                            isConnecting = true,
+                            error = null,
+                            cleartextWarningHost = null,
+                        )
+                    }
 
                     when (val result = serverDiscoveryRepository.resolveServerAddress(trimmed)) {
                         is AppResult.Success -> {
-                            pendingServerStore.set(result.value)
-                            mutableUiState.update { it.copy(isConnecting = false, error = null) }
-                            navigationChannel.send(Unit)
+                            val server = result.value
+                            // The *resolved* address, not what was typed: a bare hostname can
+                            // resolve to https just as easily as to http, and only the answer says
+                            // which one this app is actually going to use.
+                            val warnAbout =
+                                hostOf(server.address).takeIf { isCleartextPublicAddress(server.address) }
+                            if (warnAbout == null) {
+                                proceedTo(server)
+                            } else {
+                                warnedServer = server
+                                mutableUiState.update {
+                                    it.copy(isConnecting = false, error = null, cleartextWarningHost = warnAbout)
+                                }
+                            }
                         }
 
                         is AppResult.Failure -> {
@@ -134,6 +181,14 @@ internal class ServerSetupViewModel
                         }
                     }
                 }
+        }
+
+        /** Hands [server] to the Login screen and moves the flow on. */
+        private suspend fun proceedTo(server: ResolvedServer) {
+            warnedServer = null
+            pendingServerStore.set(server)
+            mutableUiState.update { it.copy(isConnecting = false, error = null, cleartextWarningHost = null) }
+            navigationChannel.send(Unit)
         }
 
         /**

@@ -39,6 +39,35 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
+
+Fourth full audit (`docs/notes/audit-2026-08-08.md`), seven parallel auditors. Two jobs:
+verify the 2026-08-06 remediation in code (not docs), and dig where that audit never
+looked — **correctness/concurrency, security, performance/lifecycle**, plus a deep-read
+of the four biggest Compose files. **The remediation held: all ~44 prior findings
+code-verified landed, zero regressions** (two trivial unreached call sites; SyncPlay
+survived adversarial interleaving analysis clean). New: **9 High · ~35 Medium · ~40 Low**:
+
+1. **Player UI (UI-1..3)**: sheet pickers are destroyed by the controls auto-hide (timer
+   also never resets on interaction); leaving the player breaks edge-to-edge app-wide on
+   API 26–34 (hardcoded decor-fits "restore" — masked on the API 36 tablet).
+2. **Error mapping (DUP-1)**: SDK-exception→`AppError` ×3 disagreeing on 403/404 — a 403
+   from `/PlaybackInfo` never reaches re-auth.
+3. **Performance (PERF-1..5)**: unconditional full-screen Haze render pass on every
+   non-player frame; cold-start disk I/O + binder IPC on main; two broken indices
+   (missing `(source,type)` composite, BINARY-vs-NOCASE sortName — query-plan-proven);
+   Downloads screen recomposing wholesale 2–8×/s during transfers.
+4. **Correctness (CORR-1/2, medium)**: cancel→re-download races the delete cascade and
+   silently loses the new download; user-data read-modify-write can revert a watched
+   mark locally *and* server-side.
+5. **Governance (QUAL-1)**: `DECISIONS.md` corrupted — the duplication-wave entry pasted
+   45× by `10968fb6` (~750 noise lines). Dedupe before logging anything else.
+
+Security: **0 high** (token storage/manifest/backup/traversal all verified clean); one
+medium — no warning when the configured server is cleartext + non-private (SEC-10).
+Report ends with 7 remediation tiers (player UX wave first — device-verifiable in one
+walk). Findings only; no remediation started.
+
 ## Quality audit — whole-tree structural pass (2026-08-06 — report committed; H8 remediated)
 
 Third full audit (`docs/notes/audit-2026-08-06-quality.md`), and the first *structural*

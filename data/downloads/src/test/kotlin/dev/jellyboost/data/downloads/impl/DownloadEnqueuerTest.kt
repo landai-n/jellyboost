@@ -33,6 +33,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -89,6 +90,7 @@ class DownloadEnqueuerTest {
         coEvery { downloadDao.completedSiblings(any(), any(), any()) } returns emptyList()
         coEvery { itemDao.getItems(any()) } returns emptyList()
         coEvery { deleter.delete(any()) } returns 0L
+        coEvery { downloadDao.demoteRunnable(any(), any(), any()) } returns false
         // `toEntity` is overloaded (items and library views), so the argument types are explicit.
         every { mapper.toEntity(any<BaseItemDto>(), any<ItemSource>(), any<Instant>()) } answers {
             entity(firstArg(), secondArg())
@@ -206,13 +208,63 @@ class DownloadEnqueuerTest {
     fun `the created timestamp survives a re-enqueue`() =
         runTest {
             val earlier = Instant.parse("2026-07-01T08:00:00Z")
-            coEvery { downloadDao.get(uuid(1)) } returns DownloadFixtures.download().copy(createdAt = earlier)
+            // `ERROR`, because that is a state a re-enqueue actually writes over: a row still
+            // `QUEUED` is one the second tap must leave alone (see the refusal test below).
+            coEvery { downloadDao.get(uuid(1)) } returns
+                DownloadFixtures.download(status = DownloadStatus.ERROR).copy(createdAt = earlier)
             coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
 
             enqueuer().enqueue(uuid(1), USER)
 
             row.createdAt shouldBe earlier
             row.updatedAt shouldBe NOW
+        }
+
+    @Test
+    fun `a second tap on a single item already downloaded leaves its row exactly as it is`() =
+        runTest {
+            // Audit CORR-6. The container path has always filtered these out; the single path wrote
+            // over whatever it found, so a badge one tick stale — or a plain double tap — restamped
+            // a finished row's quality, `bytesTotal` and `sizeIsExact` from the *current*
+            // preference, describing a plan the file on disk was never fetched under.
+            coEvery { downloadDao.get(uuid(1)) } returns
+                DownloadFixtures.download(status = DownloadStatus.DOWNLOADED, quality = DownloadQuality.ORIGINAL)
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+            downloadQuality.value = DownloadQuality.LOW
+
+            enqueuer().enqueue(uuid(1), USER) shouldBe AppResult.Success(emptyList())
+
+            coVerify(exactly = 0) { downloadDao.upsert(any()) }
+        }
+
+    @Test
+    fun `a cancelled row is re-enqueued, because that is what re-downloading after a cancel is`() =
+        runTest {
+            // The other side of the same guard, and the state CORR-1's window leaves behind: the
+            // cascade has not reached the row yet, the UI already offers Download, and the tap has
+            // to write — the fresh QUEUED row is what makes the cascade skip it.
+            coEvery { downloadDao.get(uuid(1)) } returns
+                DownloadFixtures.download(status = DownloadStatus.CANCELLED)
+            coEvery { api.getFullItems(any()) } returns AppResult.Success(listOf(movie()))
+
+            enqueuer().enqueue(uuid(1), USER)
+
+            row.status shouldBe DownloadStatus.QUEUED
+        }
+
+    @Test
+    fun `every row of one enqueue gets its own queue position`() =
+        runTest {
+            // The `maxQueuePosition()` read and the row writes are one transaction now (CORR-6);
+            // the counter it seeds still has to advance per row within it.
+            givenSeason(episodeIds = listOf(uuid(2), uuid(3), uuid(4)))
+            coEvery { downloadDao.maxQueuePosition() } returns 7
+            coEvery { api.getFullItems(listOf(uuid(2), uuid(3), uuid(4))) } returns
+                AppResult.Success(listOf(episode(id = uuid(2)), episode(id = uuid(3)), episode(id = uuid(4))))
+
+            enqueuer().enqueue(uuid(11), USER)
+
+            rows.map { it.queuePosition } shouldContainExactly listOf(8, 9, 10)
         }
 
     // ---- failures -------------------------------------------------------------------------------
@@ -555,6 +607,12 @@ class DownloadEnqueuerTest {
 
             enqueuer().enqueue(uuid(11), USER)
 
+            coVerifyOrder {
+                // The claim first: the cascade only removes rows out of the queue's reach, and a
+                // doomed container row never leaves QUEUED/ERROR on its own.
+                downloadDao.demoteRunnable(listOf(uuid(11)), DownloadStatus.CANCELLED, NOW)
+                deleter.delete(uuid(11))
+            }
             coVerify(exactly = 1) { deleter.delete(uuid(11)) }
             rows.map { it.itemId } shouldContainExactly listOf(uuid(2))
         }
@@ -668,6 +726,7 @@ class DownloadEnqueuerTest {
             mapper = mapper,
             appPreferences = appPreferences,
             seeder = SiblingSeeder(downloadDao = downloadDao, itemDao = itemDao, clock = clock),
+            transactionRunner = DownloadFixtures.directTransactionRunner,
             clock = clock,
         )
 

@@ -4,12 +4,15 @@ import android.database.sqlite.SQLiteException
 import app.cash.turbine.test
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.network.model.SessionState
+import dev.jellyboost.data.cache.RecordingTransactionRunner
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -78,7 +81,9 @@ class UserDataRepositoryImplTest {
     private val now = Instant.parse("2026-07-28T10:00:00Z")
     private val clock = Clock.fixed(now, ZoneOffset.UTC)
 
-    private val repository =
+    private val transactionRunner = RecordingTransactionRunner()
+
+    private fun repository(runner: TransactionRunner = transactionRunner) =
         UserDataRepositoryImpl(
             userDataDao = userDataDao,
             apiClient = apiClient,
@@ -86,9 +91,12 @@ class UserDataRepositoryImplTest {
             eventBus = eventBus,
             syncScheduler = syncScheduler,
             connectionState = connectionState,
+            transactionRunner = runner,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )
+
+    private val repository = repository()
 
     private val originalTimeZone: TimeZone = TimeZone.getDefault()
 
@@ -120,6 +128,65 @@ class UserDataRepositoryImplTest {
     fun tearDown() {
         unmockkAll()
         TimeZone.setDefault(originalTimeZone)
+    }
+
+    // ---- the local write is atomic (audit CORR-2) ---------------------------------------------
+
+    @Test
+    fun `the read, the edit and the write of one operation are a single transaction`() =
+        runTest {
+            // Read-modify-write over a row two callers touch. During playback `PlaybackReporter`
+            // calls `setPosition` every five seconds, and each tick reads the whole row and writes
+            // the whole row back; before this, a "mark watched" from another screen landing between
+            // a tick's read and its write was overwritten by the stale snapshot — reverted locally,
+            // and pushed to the server as `played = false`.
+            val depths = mutableListOf<Int>()
+            coEvery { userDataDao.getUserData(any(), any()) } answers {
+                depths += transactionRunner.depth
+                null
+            }
+            coEvery { userDataDao.upsert(any()) } answers { depths += transactionRunner.depth }
+
+            repository.setPosition(itemId, positionTicks = 5L)
+
+            transactionRunner.opened shouldBe 1
+            // A zero on either side is the race.
+            depths shouldBe listOf(1, 1)
+        }
+
+    @Test
+    fun `a mark-watched committed just before a position tick is not reverted by it`() =
+        runTest {
+            // The interleaving itself, made deterministic: the competing write commits while the
+            // tick is still waiting for the transaction, so the tick's *read* has to be the one
+            // inside the block. A read taken before it would edit — and store — a row that says
+            // `played = false`, which is the bug both locally and on the wire.
+            var stored = UserDataEntity(itemId = itemUuid, userId = userId, updatedAt = now)
+            coEvery { userDataDao.getUserData(itemUuid, userId) } answers { stored }
+            coEvery { userDataDao.upsert(any()) } answers { stored = firstArg() }
+
+            val markWatchedFirst =
+                object : TransactionRunner {
+                    override suspend fun <T> inTransaction(block: suspend () -> T): T {
+                        stored = stored.copy(played = true, toBeSynced = true)
+                        return block()
+                    }
+                }
+
+            val result = repository(markWatchedFirst).setPosition(itemId, positionTicks = 5L)
+
+            result.shouldBeInstanceOf<AppResult.Success<UserData>>().value.played shouldBe true
+            stored.played shouldBe true
+            stored.playbackPositionTicks shouldBe 5L
+            // …and the state that reaches the server is the merged one, not the stale snapshot.
+            pushedState().played shouldBe true
+        }
+
+    /** The full desired state `setPosition` put on the wire. */
+    private fun pushedState(): UpdateUserItemDataDto {
+        val pushed = slot<UpdateUserItemDataDto>()
+        coVerify { itemsApi.updateItemUserData(any(), any(), capture(pushed)) }
+        return pushed.captured
     }
 
     // ---- local-first ordering ---------------------------------------------------------------

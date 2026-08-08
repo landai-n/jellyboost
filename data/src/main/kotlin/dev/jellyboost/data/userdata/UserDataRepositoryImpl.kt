@@ -5,12 +5,12 @@ import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.UserData
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.core.network.SessionRepository
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.network.model.SessionState
-import dev.jellyboost.core.network.toSdkDateTime
 import dev.jellyboost.data.runCatchingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,10 +20,6 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
-import org.jellyfin.sdk.api.client.extensions.itemsApi
-import org.jellyfin.sdk.api.client.extensions.playStateApi
-import org.jellyfin.sdk.api.client.extensions.userLibraryApi
-import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
 import timber.log.Timber
 import java.time.Clock
 import java.util.UUID
@@ -47,8 +43,9 @@ import javax.inject.Singleton
 @Singleton
 internal class UserDataRepositoryImpl
     @Suppress(
-        // Eight DI collaborators: one optimistic write spans the DAO, the API, the event bus that fans the change out
-        // to open screens, and the retry scheduler.
+        // Nine DI collaborators: one optimistic write spans the DAO, the transaction runner that makes its
+        // read-modify-write atomic, the API, the event bus that fans the change out to open screens, and the retry
+        // scheduler.
         "LongParameterList",
     )
     @Inject
@@ -59,6 +56,7 @@ internal class UserDataRepositoryImpl
         private val eventBus: UserDataEventBus,
         private val syncScheduler: UserDataSyncScheduler,
         private val connectionState: ConnectionStateProvider,
+        private val transactionRunner: TransactionRunner,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : UserDataRepository {
@@ -86,17 +84,10 @@ internal class UserDataRepositoryImpl
                         lastPlayedDate = if (played) clock.instant() else current.lastPlayedDate,
                     )
                 },
-                push = { row ->
-                    if (row.played) {
-                        apiClient.playStateApi.markPlayedItem(
-                            itemId = row.itemId,
-                            userId = row.userId,
-                            datePlayed = row.lastPlayedDate?.toSdkDateTime(),
-                        )
-                    } else {
-                        apiClient.playStateApi.markUnplayedItem(itemId = row.itemId, userId = row.userId)
-                    }
-                },
+                // No position re-assertion here even though `markPlayedItem` clears the server's:
+                // the edit above mirrors that locally, so the two already agree. The rule and the
+                // reasoning live in one place — see [pushUserData].
+                push = { row -> apiClient.pushPlayedState(row) },
             )
 
         override suspend fun setFavorite(
@@ -106,13 +97,7 @@ internal class UserDataRepositoryImpl
             write(
                 itemId = itemId,
                 edit = { current -> current.copy(isFavorite = favorite) },
-                push = { row ->
-                    if (row.isFavorite) {
-                        apiClient.userLibraryApi.markFavoriteItem(itemId = row.itemId, userId = row.userId)
-                    } else {
-                        apiClient.userLibraryApi.unmarkFavoriteItem(itemId = row.itemId, userId = row.userId)
-                    }
-                },
+                push = { row -> apiClient.pushFavoriteState(row) },
             )
 
         override suspend fun setPosition(
@@ -127,21 +112,7 @@ internal class UserDataRepositoryImpl
                         lastPlayedDate = clock.instant(),
                     )
                 },
-                push = { row ->
-                    apiClient.itemsApi.updateItemUserData(
-                        itemId = row.itemId,
-                        userId = row.userId,
-                        // The full desired state, not just the position: the endpoint merges what
-                        // it is given, so sending a partial DTO would risk resetting the rest.
-                        data =
-                            UpdateUserItemDataDto(
-                                playbackPositionTicks = row.playbackPositionTicks,
-                                played = row.played,
-                                isFavorite = row.isFavorite,
-                                lastPlayedDate = row.lastPlayedDate?.toSdkDateTime(),
-                            ),
-                    )
-                },
+                push = { row -> apiClient.pushFullState(row) },
             )
 
         /**
@@ -176,6 +147,22 @@ internal class UserDataRepositoryImpl
             return AppResult.Success(stored.toDomain())
         }
 
+        /**
+         * Step 1 of the write: read the row, apply [edit] to it, store the result — **as one
+         * transaction**.
+         *
+         * Read-modify-write over a row two independent callers touch, and until audit CORR-2 the
+         * three steps were three separate DAO calls. The interleaving is not exotic: during
+         * playback `PlaybackReporter` calls [setPosition] every five seconds, and each of those
+         * reads the whole row and writes the whole row back. A "mark watched" from another screen
+         * landing between a tick's read and its write was overwritten by the stale snapshot — the
+         * watched tick flicked back off locally, *and* the tick then pushed `played = false` to the
+         * server, so the mark was lost on both sides.
+         *
+         * The [TransactionRunner] seam is the same one the browse cache's merge uses (audit H3):
+         * the decision stays a plain Kotlin lambda the tests can drive, and the read that feeds it
+         * plus the write that follows it cannot be stepped into.
+         */
         private suspend fun storeLocally(
             id: UUID,
             userId: UUID,
@@ -183,11 +170,15 @@ internal class UserDataRepositoryImpl
         ): AppResult<UserDataEntity> =
             withContext(ioDispatcher) {
                 try {
-                    val current =
-                        userDataDao.getUserData(id, userId)
-                            ?: UserDataEntity(itemId = id, userId = userId, updatedAt = clock.instant())
-                    val next = edit(current).copy(toBeSynced = true, updatedAt = clock.instant())
-                    userDataDao.upsert(next)
+                    val next =
+                        transactionRunner.inTransaction {
+                            val current =
+                                userDataDao.getUserData(id, userId)
+                                    ?: UserDataEntity(itemId = id, userId = userId, updatedAt = clock.instant())
+                            edit(current).copy(toBeSynced = true, updatedAt = clock.instant()).also {
+                                userDataDao.upsert(it)
+                            }
+                        }
                     AppResult.Success(next)
                 } catch (cancellation: CancellationException) {
                     // A `withContext` that was cancelled has not written anything; reporting it as

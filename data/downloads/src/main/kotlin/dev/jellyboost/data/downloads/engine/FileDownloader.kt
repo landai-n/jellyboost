@@ -140,8 +140,15 @@ internal class FileDownloader
 
                 val call = newCall(url, resumeFrom)
                 val response = awaitUsableResponse(call, url)
-                cancellingCall(call) {
-                    response.use {
+                // `use` outside `cancellingCall`, not inside it: `cancellingCall` opens a
+                // `coroutineScope`, and a scope entered in an already-cancelled coroutine throws
+                // before it ever runs the block. With the `use` inside, a pause or a delete landing
+                // in that hairline window left the response — and the connection under it — open
+                // for the pool to discover later (audit 2026-08-08, CORR-7). Out here the response
+                // is closed on every path, cancellation included, and there is no suspension point
+                // between the two lines for a cancellation to arrive at.
+                response.use {
+                    cancellingCall(call) {
                         when (response.code) {
                             HTTP_RANGE_NOT_SATISFIABLE -> {
                                 // Already complete. Report the final size so the caller can close

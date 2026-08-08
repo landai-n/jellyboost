@@ -117,7 +117,7 @@ class ItemDetailDownloadTest {
     fun `download on an already-downloaded item asks for confirmation instead of deleting straight away`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
-            coEvery { downloads.delete(ITEM_ID) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
             downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
 
             val model = viewModel()
@@ -128,7 +128,7 @@ class ItemDetailDownloadTest {
             // A tap that would remove something already on the device is destructive enough to
             // confirm first (docs/POLISH.md) — nothing is deleted until the dialog is confirmed.
             model.uiState.value.showDeleteConfirmation shouldBe true
-            coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
             coVerify(exactly = 0) { downloads.enqueue(any()) }
         }
 
@@ -136,7 +136,7 @@ class ItemDetailDownloadTest {
     fun `confirming the delete-download dialog removes the item and clears the dialog`() =
         runTest(dispatcher) {
             coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(movie)
-            coEvery { downloads.delete(ITEM_ID) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
             downloadStates.value = mapOf(ITEM_ID to DownloadState.Downloaded)
 
             val model = viewModel()
@@ -146,7 +146,7 @@ class ItemDetailDownloadTest {
             model.confirmDeleteDownload()
             advanceUntilIdle()
 
-            coVerify { downloads.delete(ITEM_ID) }
+            coVerify { downloads.deleteAll(listOf(ITEM_ID)) }
             model.uiState.value.showDeleteConfirmation shouldBe false
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
@@ -165,7 +165,7 @@ class ItemDetailDownloadTest {
             advanceUntilIdle()
 
             model.uiState.value.showDeleteConfirmation shouldBe false
-            coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
         }
 
     @Test
@@ -182,7 +182,7 @@ class ItemDetailDownloadTest {
 
             // Resuming picks up from the bytes already on disk; deleting would throw them away.
             coVerify { downloads.resume(ITEM_ID) }
-            coVerify(exactly = 0) { downloads.delete(any()) }
+            coVerify(exactly = 0) { downloads.deleteAll(any()) }
         }
 
     @Test
@@ -342,7 +342,7 @@ class ItemDetailDownloadTest {
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
-            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
 
             val model = viewModel()
             advanceUntilIdle()
@@ -353,10 +353,10 @@ class ItemDetailDownloadTest {
             model.confirmDeleteDownload()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { downloads.delete(EPISODE_1) }
-            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
-            // The season itself never had a row; deleting it would be a no-op round trip.
-            coVerify(exactly = 0) { downloads.delete(ITEM_ID) }
+            // One batch call for the whole season, and the season's own id is not in it: it
+            // never had a row, and deleting it would be a no-op round trip (audit CORR-3).
+            coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_1, EPISODE_2)) }
+            coVerify(exactly = 1) { downloads.deleteAll(any()) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
 
@@ -365,7 +365,7 @@ class ItemDetailDownloadTest {
         runTest(dispatcher) {
             givenSeasonWithEpisodes()
             downloadStates.value = mapOf(EPISODE_2 to DownloadState.Queued)
-            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
 
             val model = viewModel()
             advanceUntilIdle()
@@ -373,8 +373,7 @@ class ItemDetailDownloadTest {
             model.onDownloadClick()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
-            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+            coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_2)) }
             // Nothing had finished, so this is an ordinary removal — no "kept" message.
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
@@ -390,16 +389,37 @@ class ItemDetailDownloadTest {
                     EPISODE_1 to DownloadState.Downloaded,
                     EPISODE_2 to DownloadState.Downloading(progress = 0.5f),
                 )
-            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
 
             val model = viewModel()
             advanceUntilIdle()
             model.onDownloadClick()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
-            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+            // The finished episode is not in the batch at all — a cancel keeps what landed.
+            coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_2)) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadCancelledKeepingFinished(keptCount = 1)
+        }
+
+    @Test
+    fun `cancelling a season is one batch call, never one delete per episode`() =
+        runTest(dispatcher) {
+            // Each single delete stops the download worker and starts it again, and every restart
+            // hands the queue the next doomed episode — a server transcode begun for an item the
+            // next iteration cancels. One call, one stop, one restart (audit CORR-3, STAB-09).
+            givenSeasonWithEpisodes()
+            downloadStates.value =
+                mapOf(EPISODE_1 to DownloadState.Queued, EPISODE_2 to DownloadState.Queued)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
+
+            val model = viewModel()
+            advanceUntilIdle()
+            model.onDownloadClick()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_1, EPISODE_2)) }
+            coVerify(exactly = 1) { downloads.deleteAll(any()) }
+            coVerify(exactly = 0) { downloads.delete(any()) }
         }
 
     @Test
@@ -408,7 +428,7 @@ class ItemDetailDownloadTest {
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Queued)
-            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
             coEvery { downloads.enqueue(ITEM_ID) } returns AppResult.Success(Unit)
 
             val model = viewModel()
@@ -427,7 +447,7 @@ class ItemDetailDownloadTest {
             advanceUntilIdle()
 
             coVerify(exactly = 1) { downloads.enqueue(ITEM_ID) }
-            coVerify(exactly = 0) { downloads.delete(EPISODE_1) }
+            coVerify(exactly = 0) { downloads.deleteAll(listOf(EPISODE_1)) }
         }
 
     @Test
@@ -436,7 +456,7 @@ class ItemDetailDownloadTest {
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Queued)
-            coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
 
             val model = viewModel()
             advanceUntilIdle()
@@ -445,8 +465,7 @@ class ItemDetailDownloadTest {
             model.confirmDeleteDownload()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { downloads.delete(EPISODE_1) }
-            coVerify(exactly = 1) { downloads.delete(EPISODE_2) }
+            coVerify(exactly = 1) { downloads.deleteAll(listOf(EPISODE_1, EPISODE_2)) }
             model.uiState.value.userMessage shouldBe UserMessage.DownloadDeleted
         }
 
@@ -456,8 +475,7 @@ class ItemDetailDownloadTest {
             givenSeasonWithEpisodes()
             downloadStates.value =
                 mapOf(EPISODE_1 to DownloadState.Downloaded, EPISODE_2 to DownloadState.Downloaded)
-            coEvery { downloads.delete(EPISODE_1) } returns AppResult.Success(0L)
-            coEvery { downloads.delete(EPISODE_2) } returns AppResult.Failure(AppError.Storage())
+            coEvery { downloads.deleteAll(any()) } returns AppResult.Failure(AppError.Storage())
 
             val model = viewModel()
             advanceUntilIdle()

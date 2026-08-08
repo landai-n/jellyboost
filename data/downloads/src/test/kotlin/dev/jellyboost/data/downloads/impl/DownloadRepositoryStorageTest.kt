@@ -80,6 +80,7 @@ class DownloadRepositoryStorageTest {
         coEvery { deleter.deleteAll(any()) } returns 0L
         coEvery { downloadDao.pending() } returns emptyList()
         coEvery { downloadDao.get(any()) } returns null
+        coEvery { downloadDao.demoteRunnable(any(), any(), any()) } returns false
     }
 
     // ---- storage location -------------------------------------------------------------------------
@@ -145,8 +146,12 @@ class DownloadRepositoryStorageTest {
 
             result.shouldBeInstanceOf<AppResult.Success<Unit>>()
             coVerifyOrder {
-                // Stop first so the downloader cannot hold a handle to a file being unlinked, and
-                // delete before the root moves or the cascade looks on the wrong volume for them.
+                // Claim the rows first — the cascade only deletes what is out of the queue's reach
+                // (`DownloadDao.deleteUnlessRunnable`), so a QUEUED row reaching it unclaimed would
+                // survive the switch and point at files on the volume the user just left. Then stop,
+                // so the downloader cannot hold a handle to a file being unlinked, and delete before
+                // the root moves or the cascade looks on the wrong volume for them.
+                downloadDao.demoteRunnable(listOf(uuid(1), uuid(2)), DownloadStatus.CANCELLED, NOW)
                 scheduler.stop()
                 deleter.deleteAll(listOf(uuid(1), uuid(2)))
                 locations.select(CARD_ID)

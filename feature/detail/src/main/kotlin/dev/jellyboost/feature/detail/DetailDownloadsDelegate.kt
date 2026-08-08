@@ -203,6 +203,13 @@ internal class DetailDownloadsDelegate(
     /**
      * Deletes [targets] and reports how it went. [keptCount] is the number of finished downloads
      * this call deliberately left alone, which is what the snackbar tells the user about.
+     *
+     * **One batch call, never a loop.** Every single delete stops the download worker and starts it
+     * again, so cancelling a twenty-episode season one row at a time was twenty stop/restart cycles
+     * — and each restart hands the queue the next doomed episode, asking the server for a transcode
+     * that the very next iteration cancels. That is the lesson `DownloadDao.requeueForUser` records
+     * for the resume side (audit 2026-07, STAB-09); `deleteAll` is the delete side of it, and it
+     * also runs the metadata prune once instead of once per row (DL-05).
      */
     private fun removeDownloads(
         targets: List<String>,
@@ -211,7 +218,7 @@ internal class DetailDownloadsDelegate(
         if (state.value.item == null || targets.isEmpty()) return
 
         scope.launch {
-            val failed = targets.map { downloads.delete(it) }.any { it is AppResult.Failure }
+            val failed = downloads.deleteAll(targets) is AppResult.Failure
             val message =
                 when {
                     failed -> UserMessage.DownloadDeleteFailed

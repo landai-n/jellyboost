@@ -93,7 +93,60 @@ survived adversarial interleaving analysis clean). New: **9 High · ~35 Medium �
 Security: **0 high** (token storage/manifest/backup/traversal all verified clean); one
 medium — no warning when the configured server is cleartext + non-private (SEC-10).
 Report ends with 7 remediation tiers (player UX wave first — device-verifiable in one
-walk). Findings only; no remediation started.
+walk). **Remediation started:** QUAL-1 (the `DECISIONS.md` dedupe) and Tier 2, the
+data-integrity wave — see the next entry.
+
+## Audit Tier 2 — the data-integrity wave: CORR-1..7 + DUP-5 (2026-08-08 — landed, gate green)
+
+`docs/notes/audit-2026-08-08.md` §3–§4, the correctness tier. Seven findings, all races
+or lost writes, none of which any test could see because every one of them lives in a
+window between two statements. Three DECISIONS entries logged (the cascade's order, the
+enqueue transaction + repeat-tap refusal, and the shape of the shared user-data push).
+
+- **CORR-1 — cancel → re-download lost the new download.** A cancel flips the row to
+  `CANCELLED`, the badge instantly reads *not downloaded* and offers **Download**, while
+  the cascade behind it is still inside `scheduler.stop()` (≤5 s). A re-tap in that window
+  wrote a fresh `QUEUED` row that the cascade then deleted — row, directory and metadata —
+  silently. The row delete is now `deleteUnlessRunnable` (`status NOT IN
+  ('QUEUED','DOWNLOADING')`), it happens **before** the files, and every caller claims its
+  targets with `demoteRunnable(…, CANCELLED)` first. The end state is a *resume*: the
+  partial file is never unlinked and the new row keeps its `bytesDownloaded`.
+- **CORR-4/CORR-6 — the enqueue is one transaction.** Metadata upsert, `maxQueuePosition()`
+  and every row write now commit together, which closes the prune-vs-enqueue race that
+  produced a permanent `MissingMetadataException`, the duplicate queue positions from two
+  taps in one second, and the re-stamping of a live row's quality/size fields by a stale
+  badge (the container path's `isRetryable` filter now applies to singles too, with
+  `CANCELLED` added to it).
+- **CORR-2 — the user-data read-modify-write is one transaction.** `PlaybackReporter`'s
+  five-second `setPosition` tick reads and rewrites the whole row; a cross-screen *mark
+  watched* landing between its read and its write was reverted locally **and** pushed to
+  the server as `played = false`. Same `TransactionRunner` seam as the H3 browse-cache fix.
+- **DUP-5 — one file owns the user-data requests.** `userdata/UserDataPush.kt`
+  (`pushPlayedState`/`pushFavoriteState`/`pushFullState`, composed by `pushUserData`), with
+  the server invariant — `markPlayedItem` clears the resume position, so the position is
+  asserted after it — stated once. `setPosition` still sends a single request: routing the
+  5 s tick through the composite would triple it and clear the server's position 12×/min.
+- **CORR-5 — the browse cache's user-data refresh joined the transaction** the item merge
+  already had. The comment calling that window benign had it backwards: a local write
+  landing between the pending-row filter and the `upsertAll` loses its `toBeSynced` flag,
+  so a failed push is then never retried.
+- **CORR-3 — season cancel is one `deleteAll`,** not N single deletes each stopping and
+  restarting the worker (and starting the next doomed transcode). The STAB-09 lesson,
+  applied on the delete side.
+- **CORR-7 — the OkHttp response can no longer leak** on a cancel arriving between
+  `awaitUsableResponse` returning and `cancellingCall`'s scope opening: `response.use` now
+  wraps `cancellingCall` instead of sitting inside it.
+
++13 unit tests, including `CancelThenRedownloadScenarioTest`, which plays CORR-1's whole
+interleaving through the real repository, deleter and enqueuer with the re-enqueue driven
+from inside the `stop()` stub. Two existing tests changed contract (the cascade's file/row
+order) or fixture (a re-enqueue over a `QUEUED` row is now a no-op, so the test uses the
+`ERROR` row that path actually describes); both are logged in DECISIONS.md, assertions
+intact. `RecordingTransactionRunner` moved from `BrowseCacheWriterTest` into
+`CacheFixtures` so the user-data tests share it, and `DownloadFixtures` gained the direct
+runner. **Not device-walked:** the wave is all interleavings; a walk that reproduced one
+would be luck, not verification. Worth folding into the next downloads DoD walk:
+cancel-then-immediately-re-download an in-flight episode, and cancel a season mid-transfer.
 
 ## Quality audit — whole-tree structural pass (2026-08-06 — report committed; H8 remediated)
 

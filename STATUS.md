@@ -39,6 +39,33 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Audit tier 1 — the player UX wave: UI-1/2/3 + UI-10/12/13/16/18 (2026-08-08 — landed, gate green; device walk owed)
+
+The first remediation tier of the 2026-08-08 audit, all in `:player`, all device-verifiable in
+one walk (see `DECISIONS.md` 2026-08-08 for the full argument):
+
+1. **UI-1** — the audio/subtitles/speed/quality pickers were `remember`ed *inside* the control
+   bar, which the auto-hide composes out, so a picker was disposed mid-selection. `PlayerSheet`
+   is folded into `PlayerPanel` (7 values); `PlayerScreen` now hosts every panel above the bar,
+   one exhaustive `when`. The auto-hide is also suppressed while any panel is open.
+2. **UI-3** — the auto-hide never restarted on use (`LaunchedEffect(shouldHide, timeoutMs)`;
+   the key runner writes `true` over `true`). An interaction counter, bumped by one wrapper
+   around the whole `PlayerActions` bundle, is now part of the key. The rule itself moved into
+   the pure `controlsAutoHide(…)`, with `ControlsAutoHideTest` pinning suppression and restart.
+3. **UI-2** — `ImmersiveLandscapeEffect` "restored" a hardcoded `decorFitsSystemWindows = true`
+   on dispose, breaking edge-to-edge app-wide on API 26–34. The restore is dropped (there is no
+   getter, and both the app's value and the player's are `false`).
+4. **UI-16** — top/bottom bars pad by `systemBars ∪ displayCutout`, so a notch clears in a
+   window whose bars are hidden. **UI-12** focus claimed in `onPlaced` + logged on failure;
+   **UI-13** `key(chip.id)` on the chip row; **UI-18** `modifier` on `SheetChip`;
+   **UI-10** the `@Suppress("LongMethod")` rationale now says what is true.
+
+Gate green (ktlint, detekt, 2 246 unit tests in 179 classes, `:app:lintDebug`, `assembleDebug`;
+`:player` alone is 206). **Owed:** the
+device walk — open each picker during playback, use the controls and watch the timer restart,
+and check app-wide insets after leaving the player **on an API<35 emulator**, since the API 36
+test tablet masks UI-2 entirely.
+
 ## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
 
 Fourth full audit (`docs/notes/audit-2026-08-08.md`), seven parallel auditors. Two jobs:

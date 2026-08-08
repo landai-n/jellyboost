@@ -284,6 +284,54 @@ worst case fit an 800dp phone-landscape bar with zero slack and was already crow
 portrait (711dp), so both go icon-only; the tablet-landscape bar (capped at 1000dp) keeps its
 labels (2026-07-31 phone-size sweep, DECISIONS entry).
 
+### Controls visibility, and the panels that outlive it
+
+The bar comes up on a tap and takes itself away again while something is playing. The rule is
+`controlsAutoHide(…)` — a pure function beside the effect that uses it, so "when do the controls go
+away" is `ControlsAutoHideTest` rather than a stopwatch and a tablet.
+
+| The timer runs | The timer is suspended |
+|---|---|
+| controls up, something playing, no panel open, touch exploration off | controls already away · **paused** (a paused film with no controls looks like a frozen app) · **a panel is open** · **touch exploration is on** — four seconds is not a traversal (accessibility audit CR-1) |
+
+Two properties are worth stating because both were once false (audit UI-1/UI-3, 2026-08-08):
+
+- **Every interaction restarts the countdown.** A seek, a chip tap, a picker choice, a keyboard
+  shortcut — all of them go through `PlayerActions`, which `PlayerScreen` wraps once with
+  `reportingInteraction { … }`; the counter it bumps is part of the effect's key, so the running
+  delay is cancelled and four fresh seconds begin. Until 2026-08-08 the key was
+  `(shouldHide, timeoutMs)`, neither of which use changes, so the bar hid four seconds after it
+  first *appeared* however busy the user was.
+- **`PlayerScreen` hosts all seven panels**, above the bar and above the auto-hide: audio,
+  subtitles, speed, quality, display, group, queue — one `openPanel: PlayerPanel?`, one exhaustive
+  `when` in `PanelHost`. The first four used to be `remember`ed inside the control bar, which is
+  inside the `AnimatedVisibility` the auto-hide drives, so the picker was disposed mid-selection
+  within a second or two of the tap that opened it. Anything on this screen that must survive four
+  seconds belongs to the screen.
+
+The timeout itself is the system's, not a constant: `calculateRecommendedTimeoutMillis` passes
+Settings → Accessibility → "time to take action" through, which is why 4 000 ms appears as a default
+rather than as the answer.
+
+### The window the player takes over
+
+For as long as the player is composed (`ImmersiveLandscapeEffect`, suspended in picture-in-picture):
+system bars hidden with `BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`, `decorFitsSystemWindows = false`,
+orientation handed to `SCREEN_ORIENTATION_USER` (WCAG 1.3.4 — see DECISIONS.md 2026-08-05).
+
+On the way out it restores the **orientation** and the **brightness override** the swipe may have
+written, and shows the bars again. It deliberately does *not* restore `decorFitsSystemWindows`:
+`WindowCompat` has no getter for it, so the "previous value" that used to be put back was a
+hardcoded `true` — the one value it may never be, since `MainActivity.enableEdgeToEdge()` sets it
+false for the whole process and this is a single-activity app. Leaving the player therefore broke
+edge-to-edge app-wide on API 26–34, invisibly on the API 35+ test tablet where the platform enforces
+it anyway (audit UI-2, fixed 2026-08-08).
+
+Because the bars are hidden, the top and bottom bars pad themselves with
+`WindowInsets.systemBars.union(WindowInsets.displayCutout)` rather than with `systemBarsPadding()`
+alone: the notch is the inset that is still there when the bars are not, and a *union* rather than
+two chained paddings, which on the shared top edge would inset by both (audit UI-16).
+
 ### Playback speed
 
 0.5×–2× in jellyfin-web's steps, applied through `PlayerHandle.setPlaybackSpeed`. Session-scoped by

@@ -2,6 +2,7 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.data.downloads.model.DownloadItem
+import dev.jellyboost.data.downloads.model.StorageUsage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -141,6 +142,119 @@ class DownloadsUiStateTest {
 
         state.queueStats.etaSeconds shouldBe 86_400L
     }
+
+    // ---- The precomputed chrome (audit 2026-08-08, PERF-5) --------------------------------------
+
+    @Test
+    fun `downloaded bytes are summed once, across every group`() {
+        val state =
+            DownloadsUiState(
+                downloaded =
+                    listOf(
+                        DownloadGroup(title = "Westworld", items = listOf(finished("1", 100L), finished("2", 200L))),
+                        DownloadGroup(title = "Dune", items = listOf(finished("3", 700L))),
+                    ),
+            )
+
+        state.downloadedBytes shouldBe 1_000L
+    }
+
+    @Test
+    fun `a group's own size is the sum of its rows`() {
+        DownloadGroup(
+            title = "Westworld",
+            items = listOf(finished("1", 100L), finished("2", 250L)),
+        ).bytesOnDisk shouldBe 350L
+    }
+
+    @Test
+    fun `the storage figure is floored at what the downloaded tab accounts for`() {
+        // The filesystem walk is the source, but it runs on a tick: a download that has just landed
+        // must not make the screen claim less space used than its own rows add up to.
+        val summary =
+            storageSummary(storage = StorageUsage(usedBytes = 400L, availableBytes = 600L), downloadedBytes = 900L)
+
+        summary.usedBytes shouldBe 900L
+        summary.availableBytes shouldBe 600L
+        // The denominator stays the volume — used *as walked* plus free — rather than growing with
+        // the floored figure, which would move the bar's end under it.
+        summary.totalBytes shouldBe 1_000L
+    }
+
+    @Test
+    fun `a walk ahead of the tab wins, since it sees files the tab does not`() {
+        val summary =
+            storageSummary(storage = StorageUsage(usedBytes = 800L, availableBytes = 200L), downloadedBytes = 100L)
+
+        summary.usedBytes shouldBe 800L
+        summary.totalBytes shouldBe 1_000L
+    }
+
+    @Test
+    fun `a not-yet-known total gives an empty bar rather than a division by zero`() {
+        usageFraction(used = 500L, total = 0L) shouldBe 0f
+    }
+
+    @Test
+    fun `a fraction past its own end is clamped`() {
+        usageFraction(used = 1_500L, total = 1_000L) shouldBe 1f
+    }
+
+    @Test
+    fun `the chrome carries the queue's progress, so the wide panel does not re-sum it per frame`() {
+        val state =
+            DownloadsUiState(
+                queue =
+                    listOf(
+                        queued("1", bytesDownloaded = 250L, bytesTotal = 500L),
+                        queued("2", bytesDownloaded = 250L, bytesTotal = 1_500L),
+                    ),
+            )
+
+        // 500 downloaded against 500 + 1_500 remaining.
+        state.chrome.queueProgress shouldBe 0.25f
+        state.chrome.hasQueue shouldBe true
+        state.chrome.queueStats shouldBe state.queueStats
+    }
+
+    @Test
+    fun `an empty queue reports no progress and no queue`() {
+        val state = DownloadsUiState(queue = emptyList())
+
+        state.chrome.queueProgress shouldBe 0f
+        state.chrome.hasQueue shouldBe false
+    }
+
+    @Test
+    fun `the chrome carries the bulk buttons' own enablement, and nothing else about the queue`() {
+        val state =
+            DownloadsUiState(
+                selectedTab = DownloadsTab.QUEUE,
+                queue = listOf(queued("1"), paused("2")),
+                wifiOnly = false,
+            )
+
+        state.chrome.selectedTab shouldBe DownloadsTab.QUEUE
+        state.chrome.canPauseAll shouldBe true
+        state.chrome.canResumeAll shouldBe true
+        state.chrome.wifiOnly shouldBe false
+    }
+
+    private fun finished(
+        itemId: String,
+        bytesOnDisk: Long,
+    ) = DownloadItem(
+        itemId = itemId,
+        title = "Title $itemId",
+        seriesName = null,
+        status = DownloadStatus.DOWNLOADED,
+        bytesDownloaded = bytesOnDisk,
+        bytesTotal = bytesOnDisk,
+        bytesOnDisk = bytesOnDisk,
+        queuePosition = 0,
+    )
+
+    private fun paused(itemId: String) = queued(itemId).copy(status = DownloadStatus.PAUSED)
 
     @Suppress("LongParameterList")
     private fun queued(

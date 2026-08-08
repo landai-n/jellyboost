@@ -38,15 +38,24 @@ internal class DownloadProgressRatchet {
     private val shown = mutableMapOf<String, Float>()
 
     /**
+     * @param queue the rows that draw a bar — `toQueue()`'s subset, not the whole table (audit
+     *   2026-08-08, PERF-10). Only queue rows read this map, and building a set and a map over
+     *   every download ever made, several times a second, to answer for a handful of them is work
+     *   that grows with the user's library rather than with the queue. [DownloadSpeedTracker]
+     *   filters first for the same reason.
      * @return the fraction to draw for each item, keyed by item id, in the order given.
      */
-    fun update(items: List<DownloadItem>): Map<String, Float> {
+    fun update(queue: List<DownloadItem>): Map<String, Float> {
         // Rows that are gone are forgotten, so a re-download after a delete starts at zero rather
-        // than inheriting the bar of the item it replaced.
-        shown.keys.retainAll(items.mapTo(mutableSetOf()) { it.itemId })
+        // than inheriting the bar of the item it replaced. A row that finished has left the queue,
+        // which is the same thing as far as this map is concerned.
+        shown.keys.retainAll(queue.mapTo(mutableSetOf()) { it.itemId })
 
-        return items.associate { item ->
+        return queue.associate { item ->
             item.itemId to
+                // `toQueue()` never hands this a finished row, so this branch is the guard for a
+                // caller that does — one that passed the whole table would otherwise ratchet a
+                // completed download's bar to 99 % and hold it there.
                 if (item.status == DownloadStatus.DOWNLOADED) {
                     shown.remove(item.itemId)
                     1f

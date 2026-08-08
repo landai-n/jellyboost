@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -162,7 +163,19 @@ fun Modifier.glassSurface(
     val hazeState = LocalHazeState.current
     val backdrop =
         if (hazeState != null) {
-            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint))
+            Modifier.hazeEffect(state = hazeState, style = GlassDefaults.style(tint = tint)) {
+                // Blur the backdrop at reduced resolution (audit 2026-08-08, PERF-1). Every glass
+                // surface in the app is this one call, and none of them was setting an input scale,
+                // so each blur node sampled and blurred at full device resolution — on a screen
+                // whose chrome carries three 18dp-blur icon buttons over a poster grid that is
+                // GPU cost paid per frame for a result an 18dp blur throws away anyway. `Auto` lets
+                // Haze pick the factor from the blur radius rather than pinning one here; the
+                // structural half of PERF-1 (dropping `hazeSource` where the glass could be flat
+                // `mSurface`) is deliberately left until a systrace fling measures it, as the audit
+                // asks. The lambda captures nothing, so it is a singleton and the modifier element
+                // still compares equal across recompositions.
+                inputScale = HazeInputScale.Auto
+            }
         } else {
             Modifier.background(color = tint, shape = shape)
         }

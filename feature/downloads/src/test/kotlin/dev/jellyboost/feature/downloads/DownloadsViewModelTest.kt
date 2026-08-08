@@ -263,9 +263,9 @@ class DownloadsViewModelTest {
             val model = viewModel()
             advanceUntilIdle()
 
-            model.pause(row)
-            model.resume(row)
-            model.delete(row)
+            model.pause(row.itemId)
+            model.resume(row.itemId)
+            model.delete(row.itemId)
             advanceUntilIdle()
 
             coVerify { downloads.pause("1") }
@@ -282,7 +282,7 @@ class DownloadsViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.delete(row)
+            model.delete(row.itemId)
             advanceUntilIdle()
 
             model.uiState.value.userMessage shouldBe DownloadsMessage.DeleteFailed
@@ -297,7 +297,7 @@ class DownloadsViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.delete(row)
+            model.delete(row.itemId)
             advanceUntilIdle()
             model.consumeMessage()
             advanceUntilIdle()
@@ -581,7 +581,7 @@ class DownloadsViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.moveUp(second)
+            model.moveUp(second.itemId)
             advanceUntilIdle()
 
             coVerify { downloads.move("2", 0) }
@@ -595,7 +595,7 @@ class DownloadsViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.moveUp(first)
+            model.moveUp(first.itemId)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { downloads.move(any(), any()) }
@@ -609,7 +609,7 @@ class DownloadsViewModelTest {
 
             val model = viewModel()
             advanceUntilIdle()
-            model.moveDown(last)
+            model.moveDown(last.itemId)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { downloads.move(any(), any()) }

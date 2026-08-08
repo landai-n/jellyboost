@@ -120,7 +120,7 @@ internal fun DownloadedRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RowArtwork(
-            item = item,
+            imageUrl = item.item?.primaryImageUrl,
             width = if (compact) ROW_ART_WIDTH_COMPACT else ROW_ART_WIDTH_WIDE,
             height = if (compact) ROW_ART_HEIGHT_COMPACT else ROW_ART_HEIGHT_WIDE,
         )
@@ -183,46 +183,98 @@ internal fun QueueRow(
             .padding(Dimens.SpaceMedium)
 
     if (compact) {
-        Column(
+        TwoTierQueueRow(
+            item = item,
+            progress = progress,
+            speedBytesPerSecond = speedBytesPerSecond,
+            actions = actions,
             modifier = cardModifier,
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                RowArtwork(item = item, width = ROW_ART_WIDTH_COMPACT, height = ROW_ART_HEIGHT_COMPACT)
-                QueueRowText(
-                    item = item,
-                    progress = progress,
-                    speedBytesPerSecond = speedBytesPerSecond,
-                    compact = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            QueueRowActions(
-                item = item,
-                actions = actions,
-                size = Dimens.PillHeightSmall,
-                modifier = Modifier.align(Alignment.End),
-            )
-        }
+        )
     } else {
-        Row(
+        OneTierQueueRow(
+            item = item,
+            progress = progress,
+            speedBytesPerSecond = speedBytesPerSecond,
+            actions = actions,
             modifier = cardModifier,
+        )
+    }
+}
+
+/**
+ * [QueueRow]'s compact form: artwork and text on the first tier, the action circles end-aligned on
+ * their own tier below — see [QueueRow]'s `compact` for the device-verified defect that split them.
+ */
+@Composable
+private fun TwoTierQueueRow(
+    item: DownloadItem,
+    progress: Float,
+    speedBytesPerSecond: Long?,
+    actions: DownloadsActions,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall)) {
+        Row(
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RowArtwork(item = item, width = ROW_ART_WIDTH_WIDE, height = ROW_ART_HEIGHT_WIDE)
+            RowArtwork(
+                imageUrl = item.item?.primaryImageUrl,
+                width = ROW_ART_WIDTH_COMPACT,
+                height = ROW_ART_HEIGHT_COMPACT,
+            )
             QueueRowText(
                 item = item,
                 progress = progress,
                 speedBytesPerSecond = speedBytesPerSecond,
-                compact = false,
+                compact = true,
                 modifier = Modifier.weight(1f),
             )
-            QueueRowActions(item = item, actions = actions, size = Dimens.PillHeightSmall)
         }
+        QueueRowActions(
+            itemId = item.itemId,
+            isResumeTarget = item.isResumeTarget,
+            isPauseTarget = item.isPauseTarget,
+            actions = actions,
+            size = Dimens.PillHeightSmall,
+            modifier = Modifier.align(Alignment.End),
+        )
+    }
+}
+
+/** [QueueRow]'s wide form: artwork, text and the action circles all on one line. */
+@Composable
+private fun OneTierQueueRow(
+    item: DownloadItem,
+    progress: Float,
+    speedBytesPerSecond: Long?,
+    actions: DownloadsActions,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RowArtwork(
+            imageUrl = item.item?.primaryImageUrl,
+            width = ROW_ART_WIDTH_WIDE,
+            height = ROW_ART_HEIGHT_WIDE,
+        )
+        QueueRowText(
+            item = item,
+            progress = progress,
+            speedBytesPerSecond = speedBytesPerSecond,
+            compact = false,
+            modifier = Modifier.weight(1f),
+        )
+        QueueRowActions(
+            itemId = item.itemId,
+            isResumeTarget = item.isResumeTarget,
+            isPauseTarget = item.isPauseTarget,
+            actions = actions,
+            size = Dimens.PillHeightSmall,
+        )
     }
 }
 
@@ -333,9 +385,27 @@ private fun QueueTrack(
     )
 }
 
+/**
+ * A queue row's up/down, pause-or-resume and cancel circles.
+ *
+ * Takes the id and the two predicates rather than the row (audit 2026-08-08, PERF-14): those three
+ * values are its entire input, and a `DownloadItem` — unstable to the Compose compiler, and freshly
+ * built by the projection two to six times a second — meant four icon buttons were recomposed on
+ * every progress write for a row whose buttons had not changed since it was enqueued.
+ *
+ * @param isResumeTarget paused and failed rows both offer *Resume*: retrying a failure is the same
+ *   operation, and for an original download the partial file means it costs only the bytes that are
+ *   missing. The predicates are `DownloadsUiState`'s, shared with the queue's *Resume all* /
+ *   *Pause all*, so a row and the bulk button can never disagree about them.
+ * @param isPauseTarget a transcode is never one: the server ignores `Range` on a file it is still
+ *   producing, so pausing one would silently discard everything downloaded so far (see
+ *   [DownloadItem.isPausable]). *Cancel* remains, and says what it actually does.
+ */
 @Composable
 private fun QueueRowActions(
-    item: DownloadItem,
+    itemId: String,
+    isResumeTarget: Boolean,
+    isPauseTarget: Boolean,
     actions: DownloadsActions,
     size: Dp,
     modifier: Modifier = Modifier,
@@ -344,37 +414,30 @@ private fun QueueRowActions(
         GlassIconButton(
             icon = Icons.Filled.ArrowUpward,
             contentDescription = stringResource(R.string.downloads_action_move_up),
-            onClick = { actions.onMoveUp(item) },
+            onClick = { actions.onMoveUp(itemId) },
             size = size,
         )
         GlassIconButton(
             icon = Icons.Filled.ArrowDownward,
             contentDescription = stringResource(R.string.downloads_action_move_down),
-            onClick = { actions.onMoveDown(item) },
+            onClick = { actions.onMoveDown(itemId) },
             size = size,
         )
 
-        // Paused and failed items both offer "resume": retrying a failure is the same operation,
-        // and for an original download the partial file means it costs only the bytes that are
-        // missing. The two predicates are shared with the queue's *Resume all* / *Pause all*
-        // (DownloadsUiState.kt) so a row and the bulk button can never disagree about it. Tinted
-        // primary — the one action circle on the row worth reaching for (spec "4d Downloads").
-        if (item.isResumeTarget) {
+        // Tinted primary — the one action circle on the row worth reaching for (spec "4d Downloads").
+        if (isResumeTarget) {
             GlassIconButton(
                 icon = Icons.Filled.PlayArrow,
                 contentDescription = stringResource(R.string.downloads_action_resume),
-                onClick = { actions.onResume(item) },
+                onClick = { actions.onResume(itemId) },
                 size = size,
                 tint = MaterialTheme.colorScheme.primary,
             )
-        } else if (item.isPauseTarget) {
-            // A transcode cannot be resumed — the server ignores `Range` on a file it is still
-            // producing — so pausing one would silently discard everything it has downloaded. See
-            // [DownloadItem.isPausable]; *Cancel* remains, and says what it actually does.
+        } else if (isPauseTarget) {
             GlassIconButton(
                 icon = Icons.Filled.Pause,
                 contentDescription = stringResource(R.string.downloads_action_pause),
-                onClick = { actions.onPause(item) },
+                onClick = { actions.onPause(itemId) },
                 size = size,
             )
         }
@@ -382,21 +445,28 @@ private fun QueueRowActions(
         GlassIconButton(
             icon = Icons.Filled.Delete,
             contentDescription = stringResource(R.string.downloads_action_cancel),
-            onClick = { actions.onDelete(item) },
+            onClick = { actions.onDelete(itemId) },
             size = size,
         )
     }
 }
 
+/**
+ * A row's thumbnail.
+ *
+ * Takes the URL, not the row (audit 2026-08-08, PERF-14): the image is the only thing on a queue row
+ * that never changes while it downloads, and taking a `DownloadItem` meant it was re-composed on
+ * every progress write anyway.
+ */
 @Composable
 private fun RowArtwork(
-    item: DownloadItem,
+    imageUrl: String?,
     width: Dp,
     height: Dp,
     modifier: Modifier = Modifier,
 ) {
     JellyfinAsyncImage(
-        url = item.item?.primaryImageUrl,
+        url = imageUrl,
         contentDescription = null,
         modifier =
             modifier

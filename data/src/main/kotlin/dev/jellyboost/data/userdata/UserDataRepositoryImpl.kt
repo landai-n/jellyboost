@@ -14,10 +14,7 @@ import dev.jellyboost.core.network.model.SessionState
 import dev.jellyboost.core.network.runCatchingApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import timber.log.Timber
@@ -61,12 +58,6 @@ internal class UserDataRepositoryImpl
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) : UserDataRepository {
         override val changes: SharedFlow<UserDataChange> get() = eventBus.changes
-
-        override fun observe(itemId: String): Flow<UserData?> {
-            val userId = currentUserId() ?: return emptyFlow()
-            val id = itemId.toUuidOrNull() ?: return emptyFlow()
-            return userDataDao.observeUserData(id, userId).map { it?.toDomain() }
-        }
 
         override suspend fun setPlayed(
             itemId: String,

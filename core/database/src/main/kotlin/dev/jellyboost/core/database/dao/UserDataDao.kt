@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import dev.jellyboost.core.database.entities.UserDataEntity
-import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import java.util.UUID
 
@@ -51,28 +50,17 @@ interface UserDataDao {
         userId: UUID,
     ): UserDataEntity?
 
-    /** Observes one item's row; emits `null` while no row exists. */
-    @Query("SELECT * FROM user_data WHERE itemId = :itemId AND userId = :userId")
-    fun observeUserData(
-        itemId: UUID,
-        userId: UUID,
-    ): Flow<UserDataEntity?>
-
     /**
-     * Observes the rows that exist for [itemIds] — the query behind an offline list screen
-     * overlaying local playback state onto cached items.
-     */
-    @Query("SELECT * FROM user_data WHERE userId = :userId AND itemId IN (:itemIds)")
-    fun observeUserDataFor(
-        itemIds: List<UUID>,
-        userId: UUID,
-    ): Flow<List<UserDataEntity>>
-
-    /**
-     * One-shot counterpart of [observeUserDataFor] (M6).
+     * The rows that exist for [itemIds] — what the offline repository overlays onto a page of
+     * cached items it has just read.
      *
-     * The offline repository overlays local playback state onto a page of cached items it has just
-     * read; a Flow there would mean a second subscription per page for a value it reads once.
+     * **One-shot on purpose, and this DAO deliberately exposes no `Flow` at all.** Two observing
+     * counterparts used to sit here (`observeUserData`, `observeUserDataFor`) and neither ever
+     * acquired a subscriber: screens are patched by `UserDataEventBus`, which broadcasts the
+     * optimistic write that has *already* landed, so a second Room subscription per open page
+     * would re-read this table on every progress tick to re-deliver what the bus delivered first.
+     * They were removed rather than left as a tempting hook (audit 2026-08-08, PERF-28); the bus is
+     * the pattern to follow.
      */
     @Query("SELECT * FROM user_data WHERE userId = :userId AND itemId IN (:itemIds)")
     suspend fun getUserDataFor(

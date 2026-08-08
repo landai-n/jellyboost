@@ -7,9 +7,13 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -46,6 +50,10 @@ class StorageLocationManagerTest {
     private fun manager(
         volumes: List<DownloadVolume>,
         stored: String? = null,
+        // `Unconfined` so the seed the constructor launches has landed by the time it returns —
+        // the app scope's behaviour, without a scheduler to advance. `seedNever()` below is the
+        // test for the window before it lands.
+        scope: CoroutineScope = CoroutineScope(Dispatchers.Unconfined),
     ): StorageLocationManager {
         every { preferences.downloadStorageVolumeId } returns MutableStateFlow(stored)
         return StorageLocationManager(
@@ -54,6 +62,7 @@ class StorageLocationManagerTest {
                     override fun volumes(): List<DownloadVolume> = volumes
                 },
             preferences = preferences,
+            appScope = scope,
         )
     }
 
@@ -140,11 +149,34 @@ class StorageLocationManagerTest {
                             override fun volumes(): List<DownloadVolume> = listOf(primary, card)
                         },
                     preferences = preferences,
+                    appScope = CoroutineScope(Dispatchers.Unconfined),
                 )
             manager.activeRoot() shouldBe File(primary.directory, "downloads")
 
             manager.select(card.id)
 
+            manager.activeRoot() shouldBe File(card.directory, "downloads")
+        }
+
+    // ---- the seeding window (audit 2026-08-08, PERF-19) -----------------------------------------
+
+    @Test
+    fun `a read before the stored choice has been loaded resolves the primary volume`() =
+        runTest {
+            // The cache used to be filled by a `runBlocking` under the non-suspending
+            // `DownloadStorage.rootPath`, i.e. a DataStore read charged to whatever thread got
+            // there first. It is seeded from the app scope instead, and this is the window that
+            // opens: `null` is not a failure but the documented default — "no volume chosen" — and
+            // it resolves to the path every download before the picker existed was written to.
+            // A scope that has not run yet: the seed is queued, exactly as it is in the moment
+            // between the graph being built and the app scope getting a turn.
+            val unstarted = TestScope()
+            val manager = manager(listOf(primary, card), stored = card.id, scope = unstarted)
+
+            manager.activeRoot() shouldBe File(primary.directory, "downloads")
+
+            // And once the seed lands, the stored choice is in force with nothing else happening.
+            unstarted.advanceUntilIdle()
             manager.activeRoot() shouldBe File(card.directory, "downloads")
         }
 }

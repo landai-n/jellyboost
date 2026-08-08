@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.UUID
 
 /**
  * Unit tests for [DownloadEnqueuer] — docs/PLAN.md's "Enqueue" step.
@@ -85,6 +86,11 @@ class DownloadEnqueuerTest {
         coEvery { itemDao.upsert(capture(upserted)) } just Runs
         coEvery { downloadDao.upsert(capture(rows)) } just Runs
         coEvery { downloadDao.get(any()) } returns null
+        // The season path reads its whole batch in one statement (audit PERF-25); routing it
+        // through the per-id stub keeps every test below expressing its rows one at a time.
+        coEvery { downloadDao.getAll(any()) } coAnswers {
+            firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
+        }
         coEvery { downloadDao.maxQueuePosition() } returns null
         // No finished siblings and no cached runtimes by default: seeding is opt-in per test.
         coEvery { downloadDao.completedSiblings(any(), any(), any()) } returns emptyList()

@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.DownloadEntity
@@ -133,8 +134,8 @@ internal class MissingMetadataException(
 @Singleton
 internal class DownloadQueue
     @Suppress(
-        // Twelve DI collaborators: the download engine ring (planner, storage, downloader, extractor, seeder, sweeper)
-        // is assembled here and nowhere else.
+        // Thirteen DI collaborators: the download engine ring (planner, storage, downloader, extractor, seeder,
+        // sweeper) is assembled here and nowhere else.
         "LongParameterList",
     )
     @Inject
@@ -149,6 +150,7 @@ internal class DownloadQueue
         private val seeder: SiblingSeeder,
         private val sweeper: OrphanSweeper,
         private val sessionGate: SessionGate,
+        private val transactionRunner: TransactionRunner,
         private val clock: Clock,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
@@ -815,7 +817,11 @@ internal class DownloadQueue
             /** The same publisher's collaborators, pointed at a re-planned [DownloadFileEntity]. */
             fun forFile(file: DownloadFileEntity) = ProgressPublisher(download, file, progress, projector, listener)
 
-            /** One 64 KB callback: always counted, written only on the throttle's cadence. */
+            /**
+             * One 64 KB callback: always counted, written only on the throttle's cadence.
+             *
+             * The file's counters and the item's go down in **one** transaction — see [publish].
+             */
             suspend fun sample(
                 bytes: Long,
                 total: Long,
@@ -828,8 +834,7 @@ internal class DownloadQueue
                 // projection is only as fresh as the row it is written to. A `null` here means
                 // "no cluster yet" and must not wipe a seed.
                 projector?.project(bytes)?.let { progress.mediaProjection = it }
-                downloadDao.updateFileProgress(file.id, bytes, total)
-                publish()
+                publish(fileBytes = bytes, fileTotal = total)
             }
 
             /** The file is whole at [written] bytes, and its row can say so. */
@@ -838,9 +843,9 @@ internal class DownloadQueue
                 // The file is whole, so its size is no longer a question: drop the projection and
                 // let the exact sum of real sizes speak.
                 if (projector != null) progress.mediaProjection = null
-                downloadDao.updateFileProgress(file.id, written, written)
                 downloadDao.setFileStatus(file.id, DownloadStatus.DOWNLOADED)
-                publish()
+                // The file's final counters ride the same transaction as the item's, like a sample.
+                publish(fileBytes = written, fileTotal = written)
             }
 
             /**
@@ -852,20 +857,37 @@ internal class DownloadQueue
                 publish()
             }
 
-            /** One progress sample to Room and to the host, under [progressLease]. */
-            private suspend fun publish() =
-                progressLease.withLock {
-                    val bytesDownloaded = progress.bytesDownloaded
-                    val bytesTotal = progress.bytesTotal
+            /**
+             * One progress sample to Room and to the host, under [progressLease].
+             *
+             * **One transaction, because `observeAll()` is one.** The Downloads screen's query is a
+             * `@Transaction` join across `downloads` and `download_files`, and Room's invalidation
+             * tracker fires once per committed transaction — so two auto-commit writes per sample
+             * re-ran that whole join twice, two to eight times a second for the length of a
+             * multi-gigabyte transfer, each re-run probing `items` behind it (audit 2026-08-08,
+             * PERF-7). Wrapped, a sample is one invalidation.
+             *
+             * @param fileBytes / [fileTotal] this file's own counters, written in the same
+             *   transaction as the item's; `null` for a publication that is not about this file's
+             *   byte count (a file found already whole on disk), so only the item's totals are due.
+             */
+            private suspend fun publish(
+                fileBytes: Long? = null,
+                fileTotal: Long = 0L,
+            ) = progressLease.withLock {
+                val snapshot = progress.snapshot()
+                transactionRunner.inTransaction {
+                    if (fileBytes != null) downloadDao.updateFileProgress(file.id, fileBytes, fileTotal)
                     downloadDao.updateProgress(
                         itemId = download.itemId,
-                        bytesDownloaded = bytesDownloaded,
-                        bytesTotal = bytesTotal,
-                        projectedBytes = progress.projectedBytes,
+                        bytesDownloaded = snapshot.bytesDownloaded,
+                        bytesTotal = snapshot.bytesTotal,
+                        projectedBytes = snapshot.projectedBytes,
                         updatedAt = clock.instant(),
                     )
-                    listener.onProgress(download, bytesDownloaded, bytesTotal)
                 }
+                listener.onProgress(download, snapshot.bytesDownloaded, snapshot.bytesTotal)
+            }
         }
 
         private fun PlannedFile.toEntity(
@@ -1019,18 +1041,6 @@ private class ItemProgress(
     @Volatile
     var mediaProjection: Long? = seededProjection
 
-    /**
-     * What the whole item is projected to weigh, or `null` when nothing is projecting it.
-     *
-     * The media file's own entry in [totals] is still `0` while its length is unknown, so that sum
-     * is exactly the item's *other* files — artwork and subtitles, a rounding error next to the
-     * video, added for completeness rather than for accuracy. Clamped into
-     * `[bytesDownloaded, bytesTotal]` so a projection can never claim less than what has landed nor
-     * more than the ceiling.
-     */
-    val projectedBytes: Long?
-        get() = mediaProjection?.let { (it + totals.values.sum()).coerceIn(bytesDownloaded, bytesTotal) }
-
     fun update(
         fileId: Long,
         bytes: Long,
@@ -1042,12 +1052,46 @@ private class ItemProgress(
         if (total > 0L) totals[fileId] = total
     }
 
-    val bytesDownloaded: Long get() = downloaded.values.sum()
+    /**
+     * The three figures one publication needs, summed in **one** pass over each map.
+     *
+     * They used to be three computed properties, and a publish read all three: `bytesTotal` walks
+     * `totals` twice and `bytesDownloaded` once, `projectedBytes` walks `totals` again and then
+     * both of the others — seven traversals of two `ConcurrentHashMap`s per sample, at up to twice
+     * a second per lane (audit 2026-08-08, PERF-22).
+     *
+     * Consistency, not just cost: the three used to be sampled at three different instants while
+     * the other lane was writing, so `projectedBytes` could clamp a projection into a range whose
+     * ends came from different moments — and `coerceIn` throws outright when the low end has
+     * overtaken the high one. One pass cannot disagree with itself.
+     */
+    fun snapshot(): ProgressSnapshot {
+        var downloadedSum = 0L
+        for (bytes in downloaded.values) downloadedSum += bytes
 
-    val bytesTotal: Long
-        get() {
-            val known = totals.values.sum()
-            val floor = if (totals.values.any { it <= 0L }) estimatedTotal else 0L
-            return maxOf(known, floor, bytesDownloaded)
+        var knownTotal = 0L
+        var anyUnknown = false
+        for (total in totals.values) {
+            knownTotal += total
+            if (total <= 0L) anyUnknown = true
         }
+        // The estimate is the floor for as long as *any* file's real size is unknown; once they are
+        // all in, the exact sum wins.
+        val bytesTotal = maxOf(knownTotal, if (anyUnknown) estimatedTotal else 0L, downloadedSum)
+
+        // The media file's own entry in `totals` is still `0` while its length is unknown, so
+        // `knownTotal` is exactly the item's *other* files — artwork and subtitles, a rounding
+        // error next to the video, added for completeness rather than for accuracy. Clamped so a
+        // projection can never claim less than what has landed nor more than the ceiling.
+        val projected = mediaProjection?.let { (it + knownTotal).coerceIn(downloadedSum, bytesTotal) }
+
+        return ProgressSnapshot(downloadedSum, bytesTotal, projected)
+    }
 }
+
+/** One consistent reading of an [ItemProgress] — see [ItemProgress.snapshot]. */
+private data class ProgressSnapshot(
+    val bytesDownloaded: Long,
+    val bytesTotal: Long,
+    val projectedBytes: Long?,
+)

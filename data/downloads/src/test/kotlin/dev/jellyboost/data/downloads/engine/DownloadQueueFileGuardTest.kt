@@ -13,6 +13,7 @@ import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.network.session.SessionGate
 import dev.jellyboost.data.cache.ItemEntityMapper
+import dev.jellyboost.data.downloads.DownloadFixtures
 import dev.jellyboost.data.downloads.DownloadFixtures.NOW
 import dev.jellyboost.data.downloads.DownloadFixtures.audioStream
 import dev.jellyboost.data.downloads.DownloadFixtures.download
@@ -210,6 +211,7 @@ class DownloadQueueFileGuardTest {
             seeder = seeder,
             sweeper = sweeper,
             sessionGate = sessionGate,
+            transactionRunner = DownloadFixtures.directTransactionRunner,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

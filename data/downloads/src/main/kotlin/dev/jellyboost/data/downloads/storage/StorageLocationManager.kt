@@ -1,9 +1,12 @@
 package dev.jellyboost.data.downloads.storage
 
+import dev.jellyboost.core.common.di.ApplicationScope
+import dev.jellyboost.core.common.runCatchingUnlessCancelled
 import dev.jellyboost.core.datastore.AppPreferences
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
@@ -25,7 +28,23 @@ import javax.inject.Singleton
  * that reaches the queue, the planner, the deleter and their tests — or resolving the preference on
  * every call. Instead the chosen id is read **once per process** and kept: it can only change
  * through [select], which updates the cache with it, so there is no window where the two disagree.
- * The one blocking read happens on whichever IO thread first asks for the root.
+ *
+ * ### And why nothing blocks to fill it
+ * That first read used to be a `runBlocking` — the only one in production code — hidden under a
+ * non-suspending property, i.e. a DataStore read that any thread reaching [DownloadStorage.rootPath]
+ * would have paid for on the spot. Every current caller happens to be on IO, so it was latent
+ * rather than live, but "the whole storage surface is safe as long as nobody ever calls it from the
+ * main thread" is not a property this class can enforce, and the price of being wrong is a frame
+ * drop with no trace back to here (audit 2026-08-08, PERF-19).
+ *
+ * The cache is seeded from the application scope at construction instead, and an unseeded read
+ * answers `null` — which is not a failure mode but the documented default: `null` means "no volume
+ * chosen", and [resolve] answers it with the primary volume, the path every download before this
+ * picker existed was written to. So the worst a read in the seeding window can do is resolve the
+ * primary volume for an install that has chosen an SD card, in the milliseconds before the app has
+ * read its own preferences — and `DownloadQueue.requireStableRoot` already refuses to write a file
+ * whose row was planned against a different root (audit DL-07), so a download cannot be split
+ * across the two.
  */
 @Singleton
 internal class StorageLocationManager
@@ -33,12 +52,31 @@ internal class StorageLocationManager
     constructor(
         private val volumeProvider: StorageVolumeProvider,
         private val preferences: AppPreferences,
+        @ApplicationScope private val appScope: CoroutineScope,
     ) {
         @Volatile private var cachedVolumeId: String? = null
 
         @Volatile private var cacheLoaded = false
 
         private val cacheLock = Any()
+
+        init {
+            // Fire-and-forget: nothing waits for it, and everything that reads before it lands gets
+            // the primary volume, which is what `null` has always meant here.
+            appScope.launch {
+                val stored =
+                    runCatchingUnlessCancelled { preferences.downloadStorageVolumeId.first() }
+                        .onFailure { Timber.w(it, "Could not read the stored download volume; using the default") }
+                        .getOrNull()
+                synchronized(cacheLock) {
+                    // A `select()` that landed first is the newer answer and must not be overwritten.
+                    if (!cacheLoaded) {
+                        cachedVolumeId = stored
+                        cacheLoaded = true
+                    }
+                }
+            }
+        }
 
         /** The stored choice, `null` while the default holds — what the settings screen observes. */
         val selectedVolumeId: Flow<String?> get() = preferences.downloadStorageVolumeId
@@ -93,17 +131,11 @@ internal class StorageLocationManager
             }
         }
 
-        private fun cachedVolumeId(): String? {
-            if (!cacheLoaded) {
-                synchronized(cacheLock) {
-                    if (!cacheLoaded) {
-                        cachedVolumeId = runBlocking { preferences.downloadStorageVolumeId.first() }
-                        cacheLoaded = true
-                    }
-                }
-            }
-            return cachedVolumeId
-        }
+        /**
+         * The chosen volume id, or `null` — including while the seed launched in `init` is still in
+         * flight, which [resolve] reads as "the primary volume". See this class's documentation.
+         */
+        private fun cachedVolumeId(): String? = cachedVolumeId
 
         private companion object {
             /** Sub-directory of the volume's app-specific directory, per docs/PLAN.md. */

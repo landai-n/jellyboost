@@ -116,6 +116,43 @@ class SchemaMigrationTest {
         tables(8) shouldContainExactly tables(7)
     }
 
+    @Test
+    fun `v8 to v9 changes no column at all, on any table`() {
+        // v9 is an *index-only* bump (audit 2026-08-08, PERF-3/4/23/24). Room can derive index work
+        // itself, so this stays an `@AutoMigration` — but only because nothing about the columns
+        // moved, which is the property that would otherwise break the upgrade.
+        tables(9) shouldContainExactly tables(8)
+        tables(9).forEach { table -> columns(9, table) shouldBe columns(8, table) }
+    }
+
+    @Test
+    fun `v9 replaces the items indices the query plans never used`() {
+        val before = indices(8, "items")
+        val after = indices(9, "items")
+
+        // Two composites in, because every list query in `ItemDao` leads with `source`.
+        (after - before.keys) shouldBe
+            mapOf(
+                "index_items_source_type" to listOf("source", "type"),
+                "index_items_source_cachedAt" to listOf("source", "cachedAt"),
+            )
+        // Three single-column indices out: `sortName` was BINARY where both consumers sort
+        // `COLLATE NOCASE` (so it was never chosen at all), and `source`/`cachedAt` are subsumed by
+        // the composites — verified with EXPLAIN QUERY PLAN, which is byte-identical without them.
+        (before.keys - after.keys) shouldContainExactly
+            setOf("index_items_source", "index_items_cachedAt", "index_items_sortName")
+    }
+
+    @Test
+    fun `v9 gives the sibling-size lookups the composite they filter on`() {
+        val before = indices(8, "downloads")
+        val after = indices(9, "downloads")
+
+        (after - before.keys) shouldBe
+            mapOf("index_downloads_seriesName_quality" to listOf("seriesName", "quality"))
+        (before.keys - after.keys).shouldBeEmpty()
+    }
+
     // ---- reading the exported schemas -------------------------------------------------------------
 
     /** One column as Room recorded it — the fields an auto-migration is derived from. */
@@ -156,6 +193,24 @@ class SchemaMigrationTest {
                         notNull = field["notNull"]?.jsonPrimitive?.content == "true",
                         defaultValue = field["defaultValue"]?.jsonPrimitive?.content,
                     )
+            }
+
+    /** One table's indices as Room exported them: name → the columns, in index order. */
+    private fun indices(
+        version: Int,
+        table: String,
+    ): Map<String, List<String>> =
+        schema(version)["database"]!!
+            .jsonObject["entities"]!!
+            .jsonArray
+            .first { it.jsonObject["tableName"]!!.jsonPrimitive.content == table }
+            .jsonObject["indices"]
+            ?.jsonArray
+            .orEmpty()
+            .associate { element ->
+                val index = element.jsonObject
+                index["name"]!!.jsonPrimitive.content to
+                    index["columnNames"]!!.jsonArray.map { it.jsonPrimitive.content }
             }
 
     private companion object {

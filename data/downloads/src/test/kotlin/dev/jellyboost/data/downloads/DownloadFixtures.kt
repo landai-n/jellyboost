@@ -42,6 +42,34 @@ object DownloadFixtures {
             override suspend fun <T> inTransaction(block: suspend () -> T): T = block()
         }
 
+    /**
+     * [directTransactionRunner] that also reports whether a transaction is open *right now*.
+     *
+     * What lets a test assert that two DAO calls are inside the **same** transaction rather than
+     * merely both present — the property behind the download queue's one-write-per-progress-sample
+     * rule (audit 2026-08-08, PERF-7). Nesting is counted the way Room joins it: an inner
+     * `inTransaction` is part of the outer one, not a second.
+     */
+    class RecordingTransactionRunner : TransactionRunner {
+        private var depth = 0
+
+        /** How many outermost transactions have been opened. */
+        var count = 0
+            private set
+
+        val isOpen: Boolean get() = depth > 0
+
+        override suspend fun <T> inTransaction(block: suspend () -> T): T {
+            if (depth == 0) count++
+            depth++
+            return try {
+                block()
+            } finally {
+                depth--
+            }
+        }
+    }
+
     /** Deterministic, readable ids — `uuid(1)` is `…-0001`. */
     fun uuid(seed: Int): UUID = UUID.fromString("00000000-0000-0000-0000-%012d".format(seed))
 

@@ -254,7 +254,7 @@ class OfflineJellyfinRepositoryFilterTest {
             // The sheet used to ignore its `parentId` entirely, so filtering a film library by a
             // genre only its downloaded TV carried could only ever empty the grid.
             val types = mutableListOf<List<ItemType>>()
-            coEvery { itemDao.allBySource(ItemSource.DOWNLOAD, capture(types)) } returns emptyList()
+            coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, capture(types)) } returns emptyList()
 
             repository.getFilterFacets(MOVIES_LIBRARY.toString(), emptyList())
 

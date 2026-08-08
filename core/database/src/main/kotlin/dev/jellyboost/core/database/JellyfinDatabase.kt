@@ -34,10 +34,11 @@ import dev.jellyboost.core.database.entities.UserEntity
  * `library_views` at M6; `downloads` + `download_files` at M7.
  *
  * Schemas are exported to `core/database/schemas/`, which is what lets each version bump be an
- * `@AutoMigration` instead of hand-written SQL as long as the change is purely additive. Every
- * version so far has been — v4 only adds two tables and v5 one column with a SQL default, so an
- * existing install keeps its cached items, its pending user-data rows and its download queue across
- * every upgrade.
+ * `@AutoMigration` instead of hand-written SQL: Room derives the migration from the two exported
+ * schemas, and can do so as long as no **column** was dropped, renamed or retyped and every new
+ * `NOT NULL` column brings a SQL default. Every version so far has held that — v4 only adds two
+ * tables, v5 one column with a SQL default, and v9 only rearranges indices — so an existing install
+ * keeps its cached items, its pending user-data rows and its download queue across every upgrade.
  */
 @Database(
     entities = [
@@ -75,6 +76,13 @@ import dev.jellyboost.core.database.entities.UserEntity
         // recorded which audio track the server picked, so playback falls back to assuming the
         // source's `DefaultAudioStreamIndex` — the behaviour that build had.
         AutoMigration(from = 7, to = 8),
+        // v8 → v9 changes **indices only** — no column, no table, no type. Room derives index
+        // work from the exported schemas the same way it derives `ALTER TABLE ADD COLUMN`, so
+        // this stays automatic: it drops the three `items` indices that measured as dead or
+        // subsumed and creates the two composites plus `downloads (seriesName, quality)`. Rows are
+        // untouched, so the migration is a rebuild of B-trees the queries were never using
+        // (`ItemEntity`, audit 2026-08-08 PERF-3/4/23/24).
+        AutoMigration(from = 8, to = 9),
     ],
 )
 @TypeConverters(

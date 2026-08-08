@@ -95,6 +95,26 @@ internal class DownloadNotifier
             return foregroundInfo(itemId, title, bytesDownloaded, bytesTotal)
         }
 
+        /**
+         * Forgets what was last posted, so the next sample is *always* considered a change.
+         *
+         * This notifier is a `@Singleton` and [lastPosted] therefore outlives a worker run, while
+         * the notification it describes does not: every worker run opens with
+         * [startingForegroundInfo] ("Preparing…"), which does not go through
+         * [foregroundInfoIfChanged] and so leaves the field holding the previous run's figure. A
+         * pause and an immediate resume then produced a first sample equal to it, the promotion was
+         * skipped as "nothing the user would see changed", and the notification sat on *Preparing…*
+         * until the whole percent happened to tick over — for a paused-at-73 %-of-4 GB episode,
+         * tens of seconds (audit 2026-08-08, PERF-15).
+         *
+         * Called from both ends of a run: the worker resets before it posts *Preparing…* (a pause
+         * cancels the worker outright, so the idle path below never runs for the case that actually
+         * bites), and the queue's `onIdle` resets when it runs dry with the worker still alive.
+         */
+        fun resetPostedProgress() {
+            lastPosted = null
+        }
+
         /** The "queue is starting" state, before any item has reported a byte. */
         fun startingForegroundInfo(): ForegroundInfo =
             ForegroundInfo(

@@ -5,7 +5,6 @@ import app.cash.turbine.test
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadQuality
-import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
@@ -477,17 +476,7 @@ class SettingsViewModelTest {
             availableBytes = 1_000L,
         )
 
-    private fun item(id: String) =
-        DownloadItem(
-            itemId = id,
-            title = "Item $id",
-            seriesName = null,
-            status = DownloadStatus.DOWNLOADED,
-            bytesDownloaded = 0L,
-            bytesTotal = 0L,
-            bytesOnDisk = 0L,
-            queuePosition = 0,
-        )
+    private fun item(id: String) = downloadItem(id)
 
     private companion object {
         val LOGGED_IN =

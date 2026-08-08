@@ -1,39 +1,21 @@
 package dev.jellyboost.feature.detail
 
-import androidx.lifecycle.SavedStateHandle
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
-import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
 import dev.jellyboost.core.common.syncplay.SyncPlayGroupHandle
-import dev.jellyboost.core.common.syncplay.SyncPlaySession
-import dev.jellyboost.data.ConnectivityRefresher
-import dev.jellyboost.data.JellyfinRepository
-import dev.jellyboost.data.downloads.DownloadRepository
-import dev.jellyboost.data.userdata.UserDataChange
-import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -51,47 +33,11 @@ import org.junit.jupiter.api.Test
  * group is still the navigation it always was.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ItemDetailGroupActionsTest {
-    private val dispatcher = StandardTestDispatcher()
-    private val repository = mockk<JellyfinRepository>()
-    private val userDataRepository = mockk<UserDataRepository>()
-    private val changes =
-        MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    private val downloads =
-        mockk<DownloadRepository> {
-            every { observeStates() } returns MutableStateFlow<Map<String, DownloadState>>(emptyMap())
-            every { observeBytesOnDisk(any()) } returns MutableStateFlow<Long?>(null)
-        }
-    private val connectivityRefresher =
-        mockk<ConnectivityRefresher> {
-            every { connectivityChanged } returns MutableSharedFlow()
-        }
-
-    /** The group this device is in; `null` until a test joins one. */
-    private val activeGroup = MutableStateFlow<SyncPlayGroupHandle?>(null)
-    private val syncPlaySession =
-        mockk<SyncPlaySession>(relaxed = true) {
-            every { activeGroup } returns this@ItemDetailGroupActionsTest.activeGroup
-        }
-
-    private val movie =
-        JellyfinItem(id = ITEM_ID, name = "Arrival", type = ItemType.MOVIE, productionYear = 2016)
-    private val series = JellyfinItem(id = ITEM_ID, name = "Westworld", type = ItemType.SERIES)
-
+internal class ItemDetailGroupActionsTest : ItemDetailViewModelFixture() {
     @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-        every { userDataRepository.changes } returns changes
-        coEvery { repository.getSeasons(any()) } returns AppResult.Success(emptyList())
+    fun setUpEpisodes() {
         coEvery { repository.getEpisodes(any(), any()) } returns AppResult.Success(emptyList())
-        coEvery { repository.getNextUpForSeries(any()) } returns AppResult.Success(null)
-        coEvery { repository.getSimilarItems(any(), any()) } returns AppResult.Success(emptyList())
         coEvery { repository.getSeriesEpisodes(any()) } returns AppResult.Success(emptyList())
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     @Test
@@ -316,9 +262,6 @@ class ItemDetailGroupActionsTest {
         userData = UserData(playbackPositionTicks = positionTicks, played = false),
     )
 
-    private val season =
-        JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
-
     private fun inAGroup() {
         activeGroup.value = SyncPlayGroupHandle(id = "group-1", name = "Film night", participantCount = 2)
     }
@@ -344,21 +287,7 @@ class ItemDetailGroupActionsTest {
         collector.cancel()
     }
 
-    private fun viewModel() =
-        ItemDetailViewModel(
-            repository = repository,
-            userDataRepository = userDataRepository,
-            downloads = downloads,
-            connectivityRefresher = connectivityRefresher,
-            syncPlaySession = syncPlaySession,
-            savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
-        )
-
     private companion object {
-        const val ITEM_ID = "item-1"
-        const val SERIES_ID = "series-1"
-        const val EPISODE_1 = "episode-1"
-        const val EPISODE_2 = "episode-2"
         const val EPISODE_3 = "episode-3"
         const val EPISODE_4 = "episode-4"
 

@@ -1,6 +1,5 @@
 package dev.jellyboost.feature.detail
 
-import androidx.lifecycle.SavedStateHandle
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadState
@@ -11,30 +10,14 @@ import dev.jellyboost.core.common.selection.BatchOutcome
 import dev.jellyboost.core.common.selection.BatchReport
 import dev.jellyboost.core.common.selection.SelectionAction
 import dev.jellyboost.core.common.selection.SelectionIntent
-import dev.jellyboost.data.ConnectivityRefresher
-import dev.jellyboost.data.JellyfinRepository
-import dev.jellyboost.data.downloads.DownloadRepository
-import dev.jellyboost.data.userdata.UserDataChange
-import dev.jellyboost.data.userdata.UserDataRepository
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
@@ -44,47 +27,14 @@ import org.junit.jupiter.api.Test
  * A file of its own rather than more of [ItemDetailViewModelTest]: that class already covers the
  * load shapes, the toggles and the Download button, and folding a whole interaction mode into it
  * puts it past detekt's `LargeClass` threshold. The fixture is the same season page — two episodes,
- * loaded from their series — every test here starts from.
+ * loaded from their series — every test here starts from ([ItemDetailViewModelFixture.givenSeasonWithEpisodes]).
+ *
+ * This class deliberately does not stub `getEpisodes` in its own `@BeforeEach`: every test calls
+ * [givenSeasonWithEpisodes] before touching the view model, so the fixture's shared default would
+ * only ever be overwritten.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ItemDetailSelectionTest {
-    private val dispatcher = StandardTestDispatcher()
-    private val repository = mockk<JellyfinRepository>()
-    private val userDataRepository = mockk<UserDataRepository>()
-    private val changes =
-        MutableSharedFlow<UserDataChange>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    /** The badge source (M7); emits an empty map unless a test says otherwise. */
-    private val downloadStates = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
-    private val downloads =
-        mockk<DownloadRepository> {
-            every { observeStates() } returns downloadStates
-            every { observeBytesOnDisk(any()) } returns MutableStateFlow<Long?>(null)
-        }
-
-    private val connectivityChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-    private val connectivityRefresher =
-        mockk<ConnectivityRefresher> {
-            every { connectivityChanged } returns connectivityChanges
-        }
-
-    private val season =
-        JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
-
-    @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-        every { userDataRepository.changes } returns changes
-        coEvery { repository.getSeasons(any()) } returns AppResult.Success(emptyList())
-        coEvery { repository.getNextUpForSeries(any()) } returns AppResult.Success(null)
-        coEvery { repository.getSimilarItems(any(), any()) } returns AppResult.Success(emptyList())
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
+internal class ItemDetailSelectionTest : ItemDetailViewModelFixture() {
     @Test
     fun `long-pressing an episode enters selection mode`() =
         runTest(dispatcher) {
@@ -315,38 +265,4 @@ class ItemDetailSelectionTest {
             val message = model.uiState.value.userMessage
             message.shouldBeNull()
         }
-
-    /** The season page as the user reaches it: two episodes, loaded from its series. */
-    private fun givenSeasonWithEpisodes() {
-        coEvery { repository.getItem(ITEM_ID) } returns AppResult.Success(season)
-        coEvery { repository.getEpisodes(SERIES_ID, ITEM_ID) } returns
-            AppResult.Success(
-                listOf(
-                    JellyfinItem(id = EPISODE_1, name = "The Original", type = ItemType.EPISODE),
-                    JellyfinItem(id = EPISODE_2, name = "Chestnut", type = ItemType.EPISODE),
-                ),
-            )
-    }
-
-    private fun viewModel() =
-        ItemDetailViewModel(
-            repository = repository,
-            userDataRepository = userDataRepository,
-            downloads = downloads,
-            connectivityRefresher = connectivityRefresher,
-            // No group: batch selection has nothing to do with SyncPlay, and a relaxed double keeps
-            // it that way (M11 Phase 4).
-            syncPlaySession =
-                mockk(relaxed = true) {
-                    every { activeGroup } returns MutableStateFlow(null)
-                },
-            savedStateHandle = SavedStateHandle(mapOf(ItemDetailViewModel.ARG_ITEM_ID to ITEM_ID)),
-        )
-
-    private companion object {
-        const val ITEM_ID = "item-1"
-        const val SERIES_ID = "series-1"
-        const val EPISODE_1 = "episode-1"
-        const val EPISODE_2 = "episode-2"
-    }
 }

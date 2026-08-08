@@ -65,7 +65,7 @@ class DownloadQueueFetchFileTest {
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
-    private val extractor = FakeExtractor()
+    private val extractor = FakeExtractor(sidecarBytes = SIDECAR_BYTES)
 
     /** The fetch file is a real file, and whether it is still there is the whole assertion. */
     @TempDir
@@ -192,26 +192,6 @@ class DownloadQueueFetchFileTest {
     private fun queueWith(vararg downloads: DownloadEntity) {
         val queued = downloads.map { DownloadWithFiles(download = it, files = emptyList()) }
         coEvery { downloadDao.nextRunnable() } returnsMany (queued + null)
-    }
-
-    /** The strip stage, without a `Looper`, a muxer or a device — see [DownloadQueueTest]'s twin. */
-    private class FakeExtractor : AudioSidecarExtractor {
-        override suspend fun extract(
-            source: File,
-            target: File,
-        ) {
-            target.writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
-        }
-    }
-
-    private class RecordingListener : DownloadQueueListener {
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) = Unit
-
-        override suspend fun onIdle() = Unit
     }
 
     private companion object {

@@ -138,28 +138,6 @@ class DownloadQueueProgressWriteTest {
         coEvery { downloadDao.nextRunnable() } returnsMany (queued + null)
     }
 
-    /** Nothing in this file plans a sidecar; the strip stage only has to exist. */
-    private class FakeExtractor : AudioSidecarExtractor {
-        override suspend fun extract(
-            source: File,
-            target: File,
-        ) = Unit
-    }
-
-    private class RecordingListener : DownloadQueueListener {
-        val progress = mutableListOf<Pair<Long, Long>>()
-
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) {
-            progress += bytesDownloaded to bytesTotal
-        }
-
-        override suspend fun onIdle() = Unit
-    }
-
     private companion object {
         val ITEM_ENTITY =
             ItemEntity(

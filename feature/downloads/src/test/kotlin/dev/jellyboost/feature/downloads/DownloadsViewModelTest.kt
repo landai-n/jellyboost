@@ -13,7 +13,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -24,13 +23,11 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -51,9 +48,11 @@ class DownloadsViewModelTest {
     private val storage = MutableStateFlow(StorageUsage())
     private val wifiOnly = MutableStateFlow(true)
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         every { downloads.observeDownloads() } returns items
         every { downloads.observeStorage() } returns storage
         every { downloads.wifiOnly } returns wifiOnly
@@ -64,11 +63,6 @@ class DownloadsViewModelTest {
         coEvery { downloads.resumeAll(any()) } returns AppResult.Success(Unit)
         coEvery { downloads.deleteAll(any()) } returns AppResult.Success(0L)
         coEvery { downloads.move(any(), any()) } returns AppResult.Success(Unit)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     // ---- the two tabs ---------------------------------------------------------------------------
@@ -811,7 +805,7 @@ class DownloadsViewModelTest {
         downloaded: Long = 0L,
         total: Long = 0L,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = id,
         title = title,
         seriesName = series,

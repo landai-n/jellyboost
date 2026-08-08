@@ -52,12 +52,43 @@ style:
   # the UI layer only ever sees `dev.jellyboost` domain models — held by discipline alone.
   # `includes` scopes the rule to the production sources of the UI layer; `:data`, `:player`
   # and `:core:network` are the layers allowed to name SDK types, and tests may fake them.
+  #
+  # ARCH-3 (audit 2026-08-08): "the UI layer" is a *layer*, not a set of modules. `:player` owns
+  # both its data plumbing (`resolve`, `syncplay`, `report`, `api`) — which legitimately speaks
+  # DTOs — and its own screens, which must not. Its two `ui` packages are therefore included.
+  # The rest of `:player` stays exempt on purpose; narrowing it further is a larger change.
+  #
+  # Measured, not assumed: turning `**/player/src/main/**/ui/**` on found **2** violations, not
+  # the 0 the audit's spot-check predicted. Both are named in `excludes` below rather than papered
+  # over by leaving the gate off, so every *other* file in those packages is guarded from today
+  # and the two exceptions are debt with an address. Neither was fixed in this pass because
+  # `:player` was owned by a different worktree at the time; both fixes are small and belong to
+  # whoever next touches that module.
+  #
+  # Note what this rule can and cannot see: `ForbiddenImport` matches *imports*, so a fully
+  # qualified `org.jellyfin.sdk.model.api.BaseItemDto` in a signature is invisible to it. For the
+  # `:data`-fed feature modules that gap is now closed by the build graph instead — `:data`
+  # depends on the SDK with `implementation`, so those types are not on their compile classpath at
+  # all (ARCH-1). `:player` still has the SDK by way of `:core:network`, so here the rule is the
+  # only guard, which is exactly why its blind spot is worth writing down.
   ForbiddenImport:
     active: true
     includes:
       - '**/app/src/main/**'
       - '**/core/ui/src/main/**'
       - '**/feature/*/src/main/**'
+      - '**/player/src/main/**/ui/**'
+    excludes:
+      # The two pre-existing violations the ARCH-3 extension uncovered, each with its fix:
+      #  - `TrickplayPreview.kt` reads `ApiClient.QUERY_ACCESS_TOKEN` to strip the access token out
+      #    of a sheet URL before using it as a cache key. It wants a *constant* ("api_key"), not a
+      #    DTO; the fix is to re-export it from `:core:network` beside `hostForLog`, which is where
+      #    the app's other "SDK detail the rest of the tree needs a name for" already lives.
+      #  - `SyncPlayGroupsViewModel.kt` catches `InvalidStatusException` to turn a 4xx into copy.
+      #    That is exactly what `Throwable.toAppError` in `:core:network` was consolidated for on
+      #    2026-08-08 (DUP-1); the fix is to fold this catch through it and match on `AppError`.
+      - '**/player/src/main/kotlin/dev/jellyboost/player/ui/TrickplayPreview.kt'
+      - '**/player/src/main/kotlin/dev/jellyboost/player/syncplay/ui/SyncPlayGroupsViewModel.kt'
     imports:
       - reason: 'The Jellyfin SDK stops at :data — the UI layer speaks dev.jellyboost models only (PLAN.md, ARCH-4).'
         value: 'org.jellyfin.*'

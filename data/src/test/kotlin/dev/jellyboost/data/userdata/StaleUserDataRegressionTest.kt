@@ -178,6 +178,7 @@ class StaleUserDataRegressionTest {
             eventBus = UserDataEventBus(),
             syncScheduler = syncScheduler,
             connectionState = connectionState,
+            transactionRunner = CacheFixtures.directTransactionRunner,
             clock = clock,
             ioDispatcher = UnconfinedTestDispatcher(),
         )

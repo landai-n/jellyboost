@@ -148,6 +148,57 @@ runner. **Not device-walked:** the wave is all interleavings; a walk that reprod
 would be luck, not verification. Worth folding into the next downloads DoD walk:
 cancel-then-immediately-re-download an in-flight episode, and cancel a season mid-transfer.
 
+## Audit Tier 3 — error mapping, cold start, security hygiene: DUP-1, PERF-2, SEC-10/11/12, QUAL-2/3, DUP-10 tail (2026-08-08 — landed, gate green; device walk owed)
+
+`docs/notes/audit-2026-08-08.md` §2 (DUP-1, PERF-2) and §4. Three DECISIONS entries logged.
+
+- **DUP-1 — one exception→`AppError` mapper, and 403 now reaches re-auth everywhere.** The
+  mapping existed three times (`core/network/ApiCalls.apiCall`, `data/ApiErrorMapper`, a
+  verbatim clone inside `PlaybackInfoResolver` made because `apiCall` was `internal`) and the
+  copies disagreed: 403 → `Server(403)` in two of them, `Unauthorized` in `:data`; 404 →
+  `Server(404)` vs `NotFound`. `runCatchingApi` + `Throwable.toAppError` are now public in
+  `:core:network` and every path folds through them; the other two copies are deleted. **The
+  `:data` answers won** (403 → `Unauthorized`, 404 → `NotFound`) because that is what
+  `DelegatingJellyfinRepository`'s own table and `DownloadFailure`'s PERMANENT classification
+  already assume. **One caller depended on the old answer and moved with it:**
+  `AuthRepository.observeQuickConnectState` read `Server(404)` to mean "the server forgot this
+  Quick Connect request" and now reads `NotFound` — its existing test covers it unchanged.
+  New `ApiErrorMappingTest` (9) pins every status answer with the caller that needs it named.
+- **PERF-2 — the singleton graph is no longer built before the first frame.** Five
+  `@Inject lateinit` fields on `JellyboostApplication` forced the whole graph inside
+  `super.onCreate()`, reaching `ApiClientProvider`'s constructor — blocking `SharedPreferences`
+  XML read (+ a `commit()` fsync on first run), a `Settings.Global` binder call, and
+  Ktor/OkHttp construction, all on main. The five are `dagger.Lazy` now, started from one
+  coroutine on the `@ApplicationScope` (IO) scope, and `ApiClientProvider`'s `jellyfin`/
+  `apiClient` are `by lazy`. `SyncPlayPresenceCoordinator.start()` hops back to Main
+  (`ProcessLifecycleOwner` asserts it); `workerFactory` stays eager (a platform contract).
+  The ordering contract — unordered by design, nothing lost by starting late — is on the class.
+- **SEC-10 — the setup flow says so when the token is about to travel in the clear.** A server
+  that *resolves* to `http://` on a host that is not loopback/RFC1918/link-local/CGNAT/ULA/
+  `.local`-family/single-label now stops on the setup screen with a banner naming the host and
+  what happens to the sign-in token. Pressing Connect again is the acknowledgement and goes
+  through with no second round-trip to the server. New `ServerAddressSafety.kt` holds the pure
+  rule; `ServerAddressSafetyTest` (38) pins it both ways.
+- **SEC-11/12, QUAL-2/3, DUP-10 tail** — `hostForLog` is public and now covers all four
+  address log sites (`AuthRepository`'s sign-in line demoted INFO→DEBUG, `ApiClientProvider`
+  ×3, the SyncPlay websocket open); `RemotePlaybackMediaSource.toString()` prints no URL at
+  all (`transcodingUrl`, `path`, the subtitle delivery URLs); `ServerReachabilityProbe`'s last
+  plain `runCatching` is `runCatchingUnlessCancelled`; `EncryptedSecureCredentialStore` takes
+  `@IoDispatcher` through its constructor; `setOf(502, 503, 504)` is now `HttpURLConnection`
+  constants.
+
+Gate green: ktlint, detekt, **2 315 unit tests in 183 classes** (+69), `:app:lintDebug`,
+`assembleDebug`. No detekt threshold raised, no lint severity changed, no test weakened.
+
+**Owed:**
+1. **A device walk for PERF-2** — cold launch, background/foreground with a SyncPlay group
+   held, and a cast session started from the top bar. What changed is *when* five singletons
+   are constructed, which no JVM test can see.
+2. **The 69 translations of `server_setup_cleartext_warning`** — the one English-only string
+   in the tree. It carries a `tools:ignore="MissingTranslation"` on that single element with
+   the reasoning inline; `config/lint/lint.xml` is untouched, so the next untranslated string
+   still fails the build. The attribute comes out with the translations.
+
 ## Quality audit — whole-tree structural pass (2026-08-06 — report committed; H8 remediated)
 
 Third full audit (`docs/notes/audit-2026-08-06-quality.md`), and the first *structural*

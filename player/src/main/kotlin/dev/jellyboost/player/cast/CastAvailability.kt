@@ -1,6 +1,8 @@
 package dev.jellyboost.player.cast
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.MainThread
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastState
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -70,8 +73,19 @@ class CastAvailability
          * without them throws, and a hard crash on launch is the one outcome a cast button is not
          * worth. Failure of any kind simply leaves [state] at [CastDeviceState.Unavailable].
          *
-         * Cheap enough for `onCreate`: the framework does its work on the supplied executor and
-         * calls back on the main thread, which is where the listener registration below belongs.
+         * ### Nothing here blocks the main thread
+         * `isGooglePlayServicesAvailable` is a **binder round trip to another process**, and it used
+         * to run inline in this method — which `MainActivity.onCreate` called inline in turn, on the
+         * critical path to the first frame (audit 2026-08-08, PERF-26). The prior wave posted the
+         * *call* off `onCreate`; this is the other half the note there asked for, and it is the half
+         * that could only be done here: the probe now runs on the same single-thread executor the
+         * framework's own initialisation uses.
+         *
+         * `getSharedInstance` still has to be reached from the **main** thread — it builds a
+         * `CastContext` bound to the caller's looper — so a successful probe posts back to the main
+         * looper before continuing. That is one message on an idle looper rather than a synchronous
+         * IPC on a busy one. The method therefore returns immediately and is `@MainThread` only for
+         * the guard and the context capture, which is what its two writes need.
          *
          * @param context any context; only the application context is retained.
          */
@@ -81,16 +95,27 @@ class CastAvailability
             initializationStarted = true
 
             val appContext = context.applicationContext
-            val playServicesStatus =
-                GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(appContext)
-            if (playServicesStatus != ConnectionResult.SUCCESS) {
-                Timber.i("Google Play services unavailable (status %d) — casting is off", playServicesStatus)
-                return
-            }
-
-            // One thread, used once: the framework's initialisation is I/O-ish and must not run on
-            // the main thread, and the executor has no work left after the task completes.
+            // One thread, used once: the probe and the framework's initialisation are both I/O-ish
+            // and neither belongs on the main thread; the executor has no work left afterwards.
             val executor = Executors.newSingleThreadExecutor()
+            executor.execute {
+                val playServicesStatus =
+                    GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(appContext)
+                if (playServicesStatus != ConnectionResult.SUCCESS) {
+                    Timber.i("Google Play services unavailable (status %d) — casting is off", playServicesStatus)
+                    executor.shutdown()
+                    return@execute
+                }
+                Handler(Looper.getMainLooper()).post { startCastContext(appContext, executor) }
+            }
+        }
+
+        /** The main-thread half: `CastContext` binds to the looper it is created on. */
+        @MainThread
+        private fun startCastContext(
+            appContext: Context,
+            executor: ExecutorService,
+        ) {
             CastContext
                 .getSharedInstance(appContext, executor)
                 .addOnSuccessListener { shared ->

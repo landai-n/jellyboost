@@ -98,6 +98,58 @@ alone is 137 in 7 classes). **Owed:** a device walk — start a multi-item downl
 *Downloaded* tab stay still while the queue moves, rotate with a delete dialog open, switch tabs
 mid-scroll on the tablet, and check the glass chrome still reads correctly with the downscaled blur.
 
+## Audit tier 6 — the consolidation wave: DUP-2/3/4/6/9/10 + UI-4/6/8/9/17 + PERF-20/26 residue (2026-08-08 — landed, gate green; device walk owed)
+
+The duplication-and-UI-deep-read tier of the 2026-08-08 audit, in four commits (see `DECISIONS.md`
+2026-08-08 for the full argument on each):
+
+1. **DUP-6 — chrome labels stop being written once per module.** Four new `:core:ui` names
+   (`action_back`/`action_home`/`action_cancel`/`action_play`) seeded byte-identically from an
+   existing module's 70 translated files; 22 module names deleted × 70 = **1 540 string elements
+   removed, 280 added**. `state_retry` was already in `:core:ui` and is the `Retry` keeper.
+   Drift resolved in the two groups that had it — the only wording any user sees change is
+   **fr `downloads_action_play` "Lire" → "Lecture"** and **kn `player_syncplay_queue_play` /
+   `downloads_action_play` "ಪ್ಲೇ ಮಾಡಿ" → "ಪ್ಲೇ"**, both the majority spelling. `nav_home` is
+   deliberately *not* consolidated (a tab family's destination name, not a chrome action), nor is
+   the audit's calibration list (`Downloaded`, `Movie`/`Series`/…, `Waiting`/`Paused`).
+2. **DUP-2 — one dialog.** `JellyboostAlertDialog` + `ConfirmDialog` in `:core:ui` own the hairline
+   idiom that was hand-spelled at 7 sites and **missing at 3**. All ten migrate; the three that were
+   missing it (detail's delete, downloads' delete and cancel-all) **change appearance** — they now
+   carry the app's edge and surface instead of default M3 chrome. `PlayerSheets`' pickers also drop
+   `android.R.string.cancel`, which was the last platform string in a dialog.
+3. **DUP-4 — one pushed-screen header.** `ScreenHeader` + `ScreenHeaderTitle` in `:core:ui`, and
+   `Dimens.HeaderPadding` replaces three `private val HeaderPadding = 20.dp` copies synced by prose.
+   Settings and the SyncPlay groups screen **gain a `heading()` landing spot** they never had.
+   `ItemDetailScreen.OverlayNav` deliberately stays its own shape (no title, Home at the end).
+4. **UI-8 — the detail screen has three layouts, not two contradictory booleans.** One `DetailLayout`
+   enum (COMPACT/MEDIUM/WIDE) derived once. **Behaviour change: the 480–720dp band now clamps the
+   overview** — it used to take the stacked header *and* run the synopsis unclamped. `isWide=true,
+   compact=true` is no longer representable.
+5. **UI-4/6/9/17 — the detail screen's four smaller defects.** `DownloadButton(labelled = true)` gives
+   the **tablet its live progress ring and completion tint back** (wide drew a static pill);
+   `formatRating`'s `Locale.US` copy is deleted for `:core:ui`'s locale-aware `formatRatingBadge`
+   (a German device drew `8.6` beside `8,6` on the same screen); the type eyebrow uppercases in the
+   device locale and speaks in sentence case; `ExpandableOverview`'s two flags become one saveable
+   object with an idempotent layout write.
+6. **DUP-3/9/10 + residue.** One `playerEventListener` for both `PlayerHandle`s, with the Cast
+   handle's documented-but-unenforced divergence now an argument (`forwardVideoSize = false`);
+   `AppChromeState`/`AppChromeActions` replace six parameters forwarded through four signature
+   levels; `AuthPanel` replaces two drifted copies (**the login card's inner gap tightens 16→14dp**,
+   the spec's number). **PERF-26 is finished** — the Play-services binder probe now runs on
+   `CastAvailability`'s executor rather than the main thread — and **`ChromeAwarePadding` is hoisted
+   to `:core:ui`**, closing the PERF-20 wave's logged residue.
+
+Gate green (ktlint, detekt, 2 357 unit tests in 186 classes, `:app:lintDebug`, `assembleDebug`;
+`:feature:detail` alone is 99 in 9 classes, `:core:ui` 69 in 9). `:app:lintDebug` is the
+load-bearing one here: `MissingTranslation` is an `error`, so the 1 540-element string move is
+verified complete in all 70 files per name.
+
+**Owed:** a device walk — open each of the ten dialogs and confirm the three restyled ones match the
+other seven; check the detail screen on the tablet in portrait *and* in a ~600dp split-screen window
+(the new MEDIUM band) and watch a download's ring fill in the wide layout; confirm the SyncPlay
+groups screen and Settings headers still look right; and start a cast session, since the Play-services
+probe is now three thread hops where it was one.
+
 ## Fresh audit — new dimensions + prior-audit verification (2026-08-08 — report committed; findings only)
 
 Fourth full audit (`docs/notes/audit-2026-08-08.md`), seven parallel auditors. Two jobs:

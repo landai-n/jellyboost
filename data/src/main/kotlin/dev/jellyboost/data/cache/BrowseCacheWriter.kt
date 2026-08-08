@@ -108,8 +108,8 @@ import javax.inject.Singleton
 @Singleton
 class BrowseCacheWriter
     @Suppress(
-        // Eight DI collaborators: the write-through merge needs three DAOs plus the transaction runner that makes the
-        // read-merge-write atomic (audit H3).
+        // Nine DI collaborators: the write-through merge needs three DAOs plus the transaction runner that makes the
+        // read-merge-write atomic (audit H3), and the maintenance pass it counts writes into (PERF-17).
         "LongParameterList",
     )
     @Inject
@@ -119,6 +119,7 @@ class BrowseCacheWriter
         private val userDataDao: UserDataDao,
         private val sessionRepository: SessionRepository,
         private val mapper: ItemEntityMapper,
+        private val maintenance: BrowseCacheMaintenance,
         private val clock: Clock,
         private val transactionRunner: TransactionRunner,
         @ApplicationScope private val scope: CoroutineScope,
@@ -160,6 +161,10 @@ class BrowseCacheWriter
             val now = clock.instant()
             writeItemRows(dtos, now, full)
             refreshUserData(dtos, now)
+            // Writing is what grows this table, so writing is what has to pay for bounding it.
+            // The counter throttles that to one sweep per `WRITES_BETWEEN_SWEEPS`, and the sweep
+            // itself runs on the application scope — nothing here waits for it (audit PERF-17).
+            maintenance.onWriteThrough()
         }
 
         /**

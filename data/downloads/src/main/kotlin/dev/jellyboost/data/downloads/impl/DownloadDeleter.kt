@@ -99,11 +99,15 @@ internal class DownloadDeleter
          *   since the cascade claimed it, and in both cases its directory belongs to somebody else.
          */
         private suspend fun removeRows(itemIds: List<UUID>): List<DownloadEntity> {
-            val removed = itemIds.mapNotNull { itemId -> removeRow(itemId) }
+            // One read for the whole batch, then one guarded delete per row. Reading per row too
+            // made a forty-episode cancel eighty statements where forty-one do (audit PERF-25); the
+            // *deletes* stay per row because each one's return value is this cascade's claim check.
+            val targets = downloadDao.getAll(itemIds)
+            val removed = targets.filter { removeRow(it) }
 
             if (removed.isNotEmpty()) {
                 pruneOrphanedItems()
-                removed.forEach { downloadDao.deleteSyncedUserData(it.itemId) }
+                downloadDao.deleteSyncedUserData(removed.map { it.itemId })
             }
             return removed
         }
@@ -111,17 +115,16 @@ internal class DownloadDeleter
         /**
          * Deletes one row if this cascade still owns it.
          *
-         * @return the row as it was, or `null` when there was none — or when it is runnable again,
-         *   which means the user asked for this download a second time and their tap outranks a
-         *   cancel they have already moved on from.
+         * @return `true` when the row was removed; `false` when it is runnable again, which means
+         *   the user asked for this download a second time and their tap outranks a cancel they
+         *   have already moved on from.
          */
-        private suspend fun removeRow(itemId: UUID): DownloadEntity? {
-            val download = downloadDao.get(itemId) ?: return null
-            if (downloadDao.deleteUnlessRunnable(itemId) == 0) {
+        private suspend fun removeRow(download: DownloadEntity): Boolean {
+            if (downloadDao.deleteUnlessRunnable(download.itemId) == 0) {
                 Timber.i("%s was queued again while being deleted; leaving it alone", download.itemName)
-                return null
+                return false
             }
-            return download
+            return true
         }
 
         /** Unlinks one removed download's directory. @return bytes actually freed. */

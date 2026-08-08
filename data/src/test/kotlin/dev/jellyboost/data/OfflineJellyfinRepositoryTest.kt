@@ -12,6 +12,7 @@ import dev.jellyboost.core.common.model.SortOrder
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
+import dev.jellyboost.core.database.entities.FacetKey
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.LatestDownloadKey
@@ -509,17 +510,15 @@ class OfflineJellyfinRepositoryTest {
     @Test
     fun `filter facets are computed from what is actually downloaded`() =
         runTest {
-            coEvery { itemDao.allBySource(ItemSource.DOWNLOAD, any()) } returns
+            // A three-column projection, not whole rows: a facet list has no LIMIT, so reading it
+            // as entities deserialised every downloaded item's `dto` blob (audit PERF-18).
+            coEvery { itemDao.facetKeysBySource(ItemSource.DOWNLOAD, any()) } returns
                 listOf(
-                    entity(movieDto(uuid(1), "Arrival", genres = listOf("Drama"), productionYear = 2016)),
-                    entity(
-                        movieDto(
-                            uuid(2),
-                            "Dune",
-                            genres = listOf("Science Fiction", "Drama"),
-                            productionYear = 2021,
-                            officialRating = "PG-13",
-                        ),
+                    FacetKey(genres = listOf("Drama"), productionYear = 2016, officialRating = null),
+                    FacetKey(
+                        genres = listOf("Science Fiction", "Drama"),
+                        productionYear = 2021,
+                        officialRating = "PG-13",
                     ),
                 )
 

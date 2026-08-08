@@ -15,16 +15,13 @@ import dev.jellyboost.data.userdata.UserDataRepository
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
  * The collaborators an [ItemDetailViewModel] needs, and the builder that assembles one.
@@ -89,18 +86,15 @@ internal abstract class ItemDetailViewModelFixture {
     protected val season =
         JellyfinItem(id = ITEM_ID, name = "Season 1", type = ItemType.SEASON, seriesId = SERIES_ID)
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         every { userDataRepository.changes } returns changes
         coEvery { repository.getSeasons(any()) } returns AppResult.Success(emptyList())
         coEvery { repository.getNextUpForSeries(any()) } returns AppResult.Success(null)
         coEvery { repository.getSimilarItems(any(), any()) } returns AppResult.Success(emptyList())
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     protected fun viewModel() =

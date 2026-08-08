@@ -1,9 +1,9 @@
 package dev.jellyboost.data.downloads.engine
 
 import dev.jellyboost.core.common.AppError
+import dev.jellyboost.core.network.toAppError
 import dev.jellyboost.data.downloads.plan.NotDownloadableException
 import dev.jellyboost.data.downloads.storage.StorageUnavailableException
-import dev.jellyboost.data.toAppError
 import java.net.HttpURLConnection
 
 /**
@@ -14,7 +14,7 @@ import java.net.HttpURLConnection
  * the M7 device walk showed a queue row reading *"Download failed: Required value baseUrl is null.
  * Provide it by setting ApiClient.baseUrl."*, which tells the user nothing they can act on.
  *
- * The taxonomy is `:data`'s [AppError] (via [toAppError]) so that a download failure and a browse
+ * The taxonomy is `:core:network`'s [AppError] (via [toAppError]) so that a download failure and a browse
  * failure describe the same underlying problem the same way; only the *copy* is download-specific,
  * because the remedy is ("the download will retry", not "pull to refresh").
  *

@@ -2,7 +2,7 @@ package dev.jellyboost.data.downloads
 
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.IoDispatcher
-import dev.jellyboost.data.runCatchingApi
+import dev.jellyboost.core.network.runCatchingApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient

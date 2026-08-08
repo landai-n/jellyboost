@@ -61,7 +61,7 @@ class DownloadQueueFileGuardTest {
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
-    private val extractor = FakeExtractor()
+    private val extractor = FakeExtractor(sidecarBytes = SIDECAR_BYTES)
 
     /** The whole-file and sidecar guards read real file sizes, so the tests write real files. */
     @TempDir
@@ -222,32 +222,6 @@ class DownloadQueueFileGuardTest {
     ) {
         val queued = downloads.map { DownloadWithFiles(download = it, files = files) }
         coEvery { downloadDao.nextRunnable() } returnsMany (queued + null)
-    }
-
-    /** The strip stage, without a `Looper`, a muxer or a device — see [DownloadQueueTest]'s twin. */
-    private class FakeExtractor : AudioSidecarExtractor {
-        var failure: Exception? = null
-
-        override suspend fun extract(
-            source: File,
-            target: File,
-        ) {
-            failure?.let { error ->
-                target.writeBytes(ByteArray(1))
-                throw error
-            }
-            target.writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
-        }
-    }
-
-    private class RecordingListener : DownloadQueueListener {
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) = Unit
-
-        override suspend fun onIdle() = Unit
     }
 
     private companion object {

@@ -108,6 +108,32 @@ class DownloadProgressRatchetTest {
     }
 
     @Test
+    fun `only the rows it was given are answered for`() {
+        // The ViewModel passes `toQueue()`'s subset rather than the whole table (audit 2026-08-08,
+        // PERF-10), so the map is the size of the queue and not of everything ever downloaded.
+        val answers =
+            ratchet.update(
+                listOf(
+                    downloading(id = "1", bytes = 100L, total = 1_000L),
+                    downloading(id = "2", bytes = 500L, total = 1_000L),
+                ),
+            )
+
+        answers.keys shouldBe setOf("1", "2")
+    }
+
+    @Test
+    fun `a row that leaves the queue by finishing is forgotten, like one that is deleted`() {
+        ratchet.update(listOf(downloading(bytes = 900L, total = 1_000L)))["1"] shouldBe 0.9f
+
+        // `toQueue()` excludes DOWNLOADED rows, so a completed download simply stops being passed —
+        // and must not leave its 90 % behind for whatever is enqueued next under the same id.
+        ratchet.update(emptyList())["1"].shouldBeNull()
+
+        ratchet.update(listOf(downloading(bytes = 10L, total = 1_000L)))["1"] shouldBe 0.01f
+    }
+
+    @Test
     fun `an unknown total reads as zero rather than as complete`() {
         ratchet.update(listOf(downloading(bytes = 500L, total = 0L)))["1"]!!.toDouble() shouldBe
             (0.0 plusOrMinus 1e-6)

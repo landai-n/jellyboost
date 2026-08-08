@@ -78,17 +78,23 @@ class DownloadsViewModel
             flow {
                 val speedTracker = DownloadSpeedTracker()
                 val progressRatchet = DownloadProgressRatchet()
+                val groupCache = DownloadGroupCache()
                 emitAll(
                     combine(
                         downloads.observeDownloads(),
                         downloads.observeStorage(),
                         downloads.wifiOnly,
                     ) { items, storage, wifiOnly ->
+                        val queue = items.toQueue()
                         DownloadsProjection(
-                            downloaded = items.toGroups(),
-                            queue = items.toQueue(),
+                            // Memoised: the finished half does not move during a transfer, but this
+                            // flow emits several times a second while one is running (PERF-11).
+                            downloaded = groupCache.groups(items),
+                            queue = queue,
                             speeds = speedTracker.update(items, clock.millis()),
-                            progress = progressRatchet.update(items),
+                            // The queue subset, not the whole table: nothing but a queue row reads
+                            // the ratchet's answer (PERF-10).
+                            progress = progressRatchet.update(queue),
                             storage = storage,
                             wifiOnly = wifiOnly,
                         )
@@ -116,14 +122,19 @@ class DownloadsViewModel
             viewModelScope.launch { downloads.setWifiOnly(enabled) }
         }
 
+        // The five row actions take an item **id** rather than a `DownloadItem` (audit 2026-08-08,
+        // PERF-14). Every one of them only ever used the id, and taking the whole row forced the
+        // composables that call them to take one too — `QueueRowActions` was handed a fresh, always-
+        // unstable `DownloadItem` on every progress tick where two booleans and an id would do.
+
         /** Pauses one item; its partial files stay on disk for the next resume. */
-        fun pause(item: DownloadItem) {
-            viewModelScope.launch { report(downloads.pause(item.itemId), DownloadsMessage.ActionFailed) }
+        fun pause(itemId: String) {
+            viewModelScope.launch { report(downloads.pause(itemId), DownloadsMessage.ActionFailed) }
         }
 
         /** Puts a paused or failed item back in the queue. */
-        fun resume(item: DownloadItem) {
-            viewModelScope.launch { report(downloads.resume(item.itemId), DownloadsMessage.ActionFailed) }
+        fun resume(itemId: String) {
+            viewModelScope.launch { report(downloads.resume(itemId), DownloadsMessage.ActionFailed) }
         }
 
         /**
@@ -132,8 +143,8 @@ class DownloadsViewModel
          * The same call backs *Cancel* in the queue and *Delete* in the downloaded list: both mean
          * "get this off my device", and a half-transferred file does not deserve its own path.
          */
-        fun delete(item: DownloadItem) {
-            viewModelScope.launch { report(downloads.delete(item.itemId), DownloadsMessage.DeleteFailed) }
+        fun delete(itemId: String) {
+            viewModelScope.launch { report(downloads.delete(itemId), DownloadsMessage.DeleteFailed) }
         }
 
         /**
@@ -215,27 +226,27 @@ class DownloadsViewModel
         }
 
         /** Moves a queued item one place towards the front. */
-        fun moveUp(item: DownloadItem) {
-            move(item, offset = -1)
+        fun moveUp(itemId: String) {
+            move(itemId, offset = -1)
         }
 
         /** Moves a queued item one place towards the back. */
-        fun moveDown(item: DownloadItem) {
-            move(item, offset = 1)
+        fun moveDown(itemId: String) {
+            move(itemId, offset = 1)
         }
 
         private fun move(
-            item: DownloadItem,
+            itemId: String,
             offset: Int,
         ) {
             val queue = uiState.value.queue
-            val index = queue.indexOfFirst { it.itemId == item.itemId }
+            val index = queue.indexOfFirst { it.itemId == itemId }
             if (index < 0) return
             val target = (index + offset).coerceIn(0, queue.lastIndex)
             if (target == index) return
 
             viewModelScope.launch {
-                report(downloads.move(item.itemId, target), DownloadsMessage.ActionFailed)
+                report(downloads.move(itemId, target), DownloadsMessage.ActionFailed)
             }
         }
 

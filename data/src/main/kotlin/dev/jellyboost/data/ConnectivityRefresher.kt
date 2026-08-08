@@ -2,9 +2,12 @@ package dev.jellyboost.data
 
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.core.network.connectivity.onlineStateChanges
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -54,4 +57,45 @@ class ConnectivityRefresher
          */
         val isOnline: Boolean
             get() = connectionStateProvider.state.value.isOnline
+    }
+
+/**
+ * Re-runs [reload] on every connection change, for as long as [scope] lives.
+ *
+ * The one line every screen's ViewModel used to spell out for itself (audit 2026-08-08, DUP-8:
+ * five copies, three of them byte-identical), and with it the argument they each restated:
+ *
+ * **Both directions matter, and that is the point of collecting this rather than an "online again"
+ * signal.** A screen opened in airplane mode keeps showing downloaded media after the server comes
+ * back; one opened online keeps showing *its* rows — links to media the app can no longer play —
+ * after the user pins offline mode or walks out of range. The reload is the same call either way,
+ * because `DelegatingJellyfinRepository` picks the source per request: the screen does not know or
+ * care which side of the change it is on.
+ *
+ * Reloading is also the only correct response to a *reconfirmation*
+ * ([ConnectivityRefresher.connectivityChanged] fires on those too): a request that already fell
+ * back to offline data left the screen showing downloads-only rows while the state still read
+ * online, so no edge is coming to correct it.
+ *
+ * **An extension rather than a member, on purpose.** Every ViewModel test in the tree fakes
+ * `ConnectivityRefresher` with a MockK stub of `connectivityChanged`. A member function is virtual
+ * and would have to be stubbed *as well*, in fifteen-odd test classes, to say the one thing it
+ * already says here; an extension is resolved statically, so a mocked refresher runs this real body
+ * over its stubbed flow and every existing test keeps testing what it was written to test.
+ *
+ * @param scope the ViewModel's `viewModelScope`; the collection ends when it is cancelled.
+ * @param onlyIf checked on each change, immediately before [reload]. The default reloads every
+ *   time; a screen passes one when a reload would be wasted work rather than a correction —
+ *   nothing has been fetched yet, or a fetch is already in flight.
+ * @param reload what to re-run. Not `suspend`: every caller's is a plain function that launches its
+ *   own load, and keeping it that way means this helper never becomes the thing that serialises two
+ *   of them.
+ */
+fun ConnectivityRefresher.reloadOnChange(
+    scope: CoroutineScope,
+    onlyIf: () -> Boolean = { true },
+    reload: () -> Unit,
+): Job =
+    scope.launch {
+        connectivityChanged.collect { if (onlyIf()) reload() }
     }

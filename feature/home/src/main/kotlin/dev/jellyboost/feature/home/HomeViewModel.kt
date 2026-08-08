@@ -19,6 +19,7 @@ import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.observeBadgeStates
 import dev.jellyboost.data.homelayout.HomeLayoutRepository
+import dev.jellyboost.data.reloadOnChange
 import dev.jellyboost.data.userdata.UserDataEventBus
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.async
@@ -94,17 +95,11 @@ class HomeViewModel
         }
 
         /**
-         * Swaps the rows for the other source's the moment the connection changes (M9).
-         *
-         * Both directions matter. A home screen opened in airplane mode kept showing downloaded
-         * media after the server came back; one opened online kept showing *its* rows — links to
-         * media the app can no longer play — after the user pinned offline mode or lost the
-         * network. `refresh()` is the same load either way: the repository picks the source.
+         * Swaps the rows for the other source's the moment the connection changes (M9) — see
+         * [reloadOnChange] for why both directions matter.
          */
         private fun observeConnectivityChanges() {
-            viewModelScope.launch {
-                connectivityRefresher.connectivityChanged.collect { refresh() }
-            }
+            connectivityRefresher.reloadOnChange(viewModelScope) { refresh() }
         }
 
         /**

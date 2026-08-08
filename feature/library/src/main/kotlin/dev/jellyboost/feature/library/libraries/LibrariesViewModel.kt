@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.data.reloadOnChange
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,13 +38,11 @@ class LibrariesViewModel
         }
 
         /**
-         * Re-loads the list whenever the connection changes (M9), in either direction — the offline
-         * list only contains libraries this device has already seen.
+         * Re-loads the list whenever the connection changes (M9) — the offline list only contains
+         * libraries this device has already seen. See [reloadOnChange].
          */
         private fun observeConnectivityChanges() {
-            viewModelScope.launch {
-                connectivityRefresher.connectivityChanged.collect { refresh() }
-            }
+            connectivityRefresher.reloadOnChange(viewModelScope) { refresh() }
         }
 
         /** Re-fetches the library list; called by pull-to-refresh and the error state's retry button. */

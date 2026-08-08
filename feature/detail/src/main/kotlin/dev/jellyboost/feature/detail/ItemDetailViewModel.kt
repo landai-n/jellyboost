@@ -21,6 +21,7 @@ import dev.jellyboost.core.ui.text.UiText
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
+import dev.jellyboost.data.reloadOnChange
 import dev.jellyboost.data.userdata.UserDataRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -140,7 +141,8 @@ class ItemDetailViewModel
         }
 
         /**
-         * Re-fetches this item whenever the connection changes (M9), in either direction.
+         * Re-fetches this item whenever the connection changes (M9), in either direction — see
+         * [reloadOnChange] for the general argument.
          *
          * Offline, `getItem` answers from the cache — and for anything that is not downloaded, with
          * a placeholder carrying `available = false`. That page has to become the real one when the
@@ -149,9 +151,7 @@ class ItemDetailViewModel
          * to see a Play button that means what it says.
          */
         private fun observeConnectivityChanges() {
-            viewModelScope.launch {
-                connectivityRefresher.connectivityChanged.collect { refresh() }
-            }
+            connectivityRefresher.reloadOnChange(viewModelScope) { refresh() }
         }
 
         /** Re-fetches the item and its rows; backs pull-to-refresh and the error state's retry. */

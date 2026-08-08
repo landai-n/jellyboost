@@ -18,14 +18,14 @@ import javax.inject.Singleton
  *
  * Behind an interface so the local-first write path can be unit-tested without WorkManager.
  */
-interface UserDataSyncScheduler {
+internal interface UserDataSyncScheduler {
     /** Enqueues the sync as unique work; a second call while one is pending is a no-op. */
     fun enqueue()
 }
 
 /** [UserDataSyncScheduler] backed by WorkManager, per docs/PLAN.md's "Data layer". */
 @Singleton
-class WorkManagerUserDataSyncScheduler
+internal class WorkManagerUserDataSyncScheduler
     @Inject
     constructor(
         @ApplicationContext private val context: Context,

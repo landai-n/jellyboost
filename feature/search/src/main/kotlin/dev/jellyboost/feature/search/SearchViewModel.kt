@@ -12,6 +12,7 @@ import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
 import dev.jellyboost.data.downloads.DownloadRepository
 import dev.jellyboost.data.downloads.observeBadgeStates
+import dev.jellyboost.data.reloadOnChange
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,11 +85,10 @@ class SearchViewModel
          * An empty field has nothing to re-run — it is not a search waiting for a better connection.
          */
         private fun observeConnectivityChanges() {
-            viewModelScope.launch {
-                connectivityRefresher.connectivityChanged.collect {
-                    if (_uiState.value.query.isNotBlank()) retry()
-                }
-            }
+            connectivityRefresher.reloadOnChange(
+                viewModelScope,
+                onlyIf = { _uiState.value.query.isNotBlank() },
+            ) { retry() }
         }
 
         /** Called on every keystroke. */

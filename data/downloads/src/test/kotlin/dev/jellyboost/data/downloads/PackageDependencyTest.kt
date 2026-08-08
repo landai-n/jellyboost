@@ -31,7 +31,7 @@ import java.io.File
  * | 0 | `plan` | pure functions from a DTO to file names and URLs |
  * | 0 | `storage` | where bytes live on disk |
  * | 1 | `engine` | the transfer machinery: queue, downloader, MKV repair, seeding, sweeping |
- * | 2 | *(root)* | the module's public surface — `DownloadRepository`, `DownloadApi`, the refresher |
+ * | 2 | *(root)* | the module's surface — `DownloadRepository` and the refresher (public), `DownloadApi` (internal) |
  * | 2 | `offline` | what the player asks about a completed download |
  * | 3 | `work` | WorkManager scheduling, the worker, the notification |
  * | 4 | `impl` | the implementations behind the root interfaces |

@@ -96,6 +96,39 @@ class MusicPlaybackViewModel
         fun next() = controller.next()
 
         /**
+         * A downloaded track tapped on the Downloads screen (M13).
+         *
+         * Audio must not ride the Downloads tab's video path — `Routes.Player` is the immersive
+         * video screen, which would fail on an audio file and bypass the music queue entirely.
+         * Instead the tap plays the track's downloaded *album context*: the album's tracks are
+         * fetched through the delegating repository (offline answers from the `albumId` column, so
+         * this works in airplane mode) and the queue starts at the tapped track, resumed at
+         * [startPositionTicks]. A track with no album, or a fetch that fails, degrades to a
+         * single-item queue of the track itself — the tap still plays.
+         */
+        fun playDownloadedAudio(
+            item: JellyfinItem,
+            startPositionTicks: Long = 0L,
+        ) {
+            viewModelScope.launch {
+                val startPositionMs = startPositionTicks.ticksToMillis()
+                val albumTracks =
+                    item.albumId?.let { albumId ->
+                        when (val result = repository.getAlbumTracks(albumId)) {
+                            is AppResult.Success -> result.value
+                            is AppResult.Failure -> null
+                        }
+                    }
+                val startIndex = albumTracks?.indexOfFirst { it.id == item.id }?.takeIf { it >= 0 }
+                if (albumTracks != null && startIndex != null) {
+                    controller.play(albumTracks, startIndex, startPositionMs = startPositionMs)
+                } else {
+                    controller.play(listOf(item), startIndex = 0, startPositionMs = startPositionMs)
+                }
+            }
+        }
+
+        /**
          * "Start radio" — `AlbumDetailScreen`'s header action, `ArtistDetailScreen`'s, and
          * `NowPlayingScreen`'s (M13 Phase 6, docs/notes/music-m13-plan.md, key decision 11).
          *

@@ -11,6 +11,7 @@ import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.resolve.ExoMediaSourceFactory
 import dev.jellyboost.player.resolve.PlaybackResolveRequest
 import dev.jellyboost.player.resolve.PlaybackSourceResolver
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
@@ -18,9 +19,11 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Unit tests for [PlaybackSessionController] — the resolve → prepare sequence extracted from
@@ -128,6 +131,46 @@ class PlaybackSessionControllerTest {
             // The caller has to publish the new source first, or a player event arriving during the
             // first buffer is attributed to the source that was just replaced.
             coVerify(exactly = 0) { reporter.reportStart(any(), any()) }
+        }
+
+    // ---- the relinquish closure (M13 handover) --------------------------------------------------
+
+    @Test
+    fun `the relinquish marshals its player calls onto the main dispatcher, report in between`() =
+        runTest {
+            // The arbiter runs video's relinquish inline in the *claimant's* context — for a music
+            // claim that is a background dispatcher — so the closure itself must hop the
+            // player-touching steps (snapshot, stop) onto main, with the stop report between them.
+            val transcript = mutableListOf<String>()
+            val recordingMain =
+                object : CoroutineDispatcher() {
+                    override fun dispatch(
+                        context: CoroutineContext,
+                        block: Runnable,
+                    ) {
+                        transcript += "main hop"
+                        block.run()
+                    }
+                }
+            coEvery { reporter.reportStop(any(), any()) } coAnswers { transcript += "stop report" }
+            val handover = PlaybackHandover()
+            val controller =
+                PlaybackSessionController(
+                    resolver = resolver,
+                    mediaSourceFactory = mediaSourceFactory,
+                    playerHandle = playerHandle,
+                    reporter = reporter,
+                    handover = handover,
+                    mainDispatcher = recordingMain,
+                )
+            controller.open(request(), playWhenReady = true)
+
+            handover.claim(PlaybackKind.MUSIC) {}
+
+            // Snapshot on main, then the report off it, then the stop on main — the report still
+            // completes before the player is let go, which is the arbiter's ordering invariant.
+            transcript shouldContainExactly listOf("main hop", "stop report", "main hop")
+            playerHandle.stopped shouldBe true
         }
 
     // ---- the cast state changing underneath a resolve (audit CAST-04) ---------------------------

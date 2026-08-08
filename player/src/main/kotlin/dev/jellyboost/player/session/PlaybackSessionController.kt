@@ -3,12 +3,16 @@ package dev.jellyboost.player.session
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.player.cast.CastStatusHolder
+import dev.jellyboost.player.di.MainDispatcher
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.report.PlaybackReporter
 import dev.jellyboost.player.resolve.ExoMediaSourceFactory
 import dev.jellyboost.player.resolve.PlaybackResolveRequest
 import dev.jellyboost.player.resolve.PlaybackSourceResolver
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -62,6 +66,19 @@ internal class PlaybackSessionController
          * shares.
          */
         private val handover: PlaybackHandover = PlaybackHandover(),
+        /**
+         * Where player calls made from *inside the relinquish closure* are marshalled to.
+         *
+         * The closure registered with [handover] runs inline in whichever context the next
+         * claimant calls `claim` from — for a music claim that is the music session's own
+         * background dispatcher — and Media3 throws off the main thread. Every relinquish owns
+         * its marshalling ([PlaybackHandover]'s contract); this is video's. Defaulted for the
+         * same reason [castStatus] is: no existing test triggers a relinquish, and one that does
+         * passes its own dispatcher. Deliberately not `.immediate` — resolving the immediate view
+         * initializes the platform Main dispatcher at construction, which a plain-JVM test cannot
+         * do, and the closure's hop is rare enough that an extra post is irrelevant.
+         */
+        @MainDispatcher private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
     ) {
         /**
          * Resolves [request] and hands the result to the player.
@@ -109,10 +126,14 @@ internal class PlaybackSessionController
             // finished closing its own server session — a music queue's stop report lands before
             // this film's start report, which is the whole point (key decision 3). Claiming for a
             // kind that already owns the player only replaces the callback, so a re-negotiation
-            // does not report itself stopped.
+            // does not report itself stopped. The closure runs inline in the *claimant's* context
+            // — music's background session scope — so its player calls hop to the main thread
+            // themselves; the report in between stays off it, and the ordering (stop report
+            // completed before the player is let go) is untouched.
             handover.claim(PlaybackKind.VIDEO) {
-                reporter.reportStop(resolved, playerHandle.snapshot())
-                playerHandle.stop()
+                val snapshot = withContext(mainDispatcher) { playerHandle.snapshot() }
+                reporter.reportStop(resolved, snapshot)
+                withContext(mainDispatcher) { playerHandle.stop() }
             }
 
             // The source travels alongside the spec: a cast receiver has to be told more about the

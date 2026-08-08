@@ -47,7 +47,7 @@ internal object MusicFixtures {
             with(request) {
                 requests +=
                     "$itemId|${containers.joinToString("+")}|$audioCodec|" +
-                    "$transcodingContainer|$maxStreamingBitrate"
+                    "$transcodingContainer|$maxStreamingBitrate|$audioBitRate"
                 "https://server/Audio/$itemId/universal?PlaySessionId=$playSessionId"
             }
     }

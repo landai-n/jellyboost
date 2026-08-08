@@ -110,6 +110,11 @@ sealed interface MusicPlaybackState {
      * The state stays `Active` when the queue runs out (paused on the last track) rather than
      * falling back to [Idle]: that is what every music player does, and it is what lets the user
      * press play again on what they were just listening to.
+     *
+     * @param parked `true` while the queue has handed the shared player to video and survives
+     *   only as a paused snapshot. The mini-player keeps drawing a parked queue — that is the
+     *   resume affordance — but surfaces tied to the *live* media session (the notification's
+     *   shuffle/repeat buttons) must not: while parked, the session belongs to the film.
      */
     data class Active(
         val queue: List<JellyfinItem>,
@@ -119,6 +124,7 @@ sealed interface MusicPlaybackState {
         val durationMs: Long,
         val shuffleEnabled: Boolean,
         val repeatMode: MusicRepeatMode,
+        val parked: Boolean = false,
     ) : MusicPlaybackState {
         /** The track playing now, or `null` if the queue is somehow empty. */
         val currentItem: JellyfinItem? get() = queue.getOrNull(currentIndex)

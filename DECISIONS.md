@@ -4191,3 +4191,76 @@ Seeded from the approved plan; listed for traceability, no divergence:
 - **Verified, not owed:** `assembleRelease` is green with **no new R8 keep rule** — `LyricDto` rides
   the same `kotlinx.serialization` keep rules every other SDK model does, and neither `MusicApi`
   wrapper is reflectively instantiated.
+
+## 2026-08-09 — M13 review fix wave
+- **Scope:** `:player` (music controller/adapter/port/resolver, session controller, handover,
+  service, session callback), `:core:common` (`MusicPlaybackState.Active`), `:data`
+  (`OnlineJellyfinRepository.getPlaylistItems`), `:data:downloads` (`DownloadPaths`),
+  `:feature:music` (two lazy-key sites), `:feature:downloads` + `:app` (Downloads audio routing).
+- **Plan said:** M13 as designed in `docs/notes/music-m13-plan.md`; this entry records the fixes
+  for the 15 CONFIRMED findings of the max-effort M13 code review, plus the handful of contract
+  decisions they forced.
+- **Done instead (per finding):**
+  1. *Video relinquish touched ExoPlayer off-main.* Contract decision: **the handover arbiter
+     never dictates a thread; every relinquish closure owns its own marshalling** (KDoc'd on
+     `PlaybackHandover`). Video's closure in `PlaybackSessionController.open` now hops snapshot
+     and stop onto an injected `@MainDispatcher` with the stop report between them (ordering
+     preserved); music's closure already marshalled via `onPlayer`.
+  2. *Universal audio URL conflated the direct-play ceiling with transcode quality, and HLS
+     transcodes had no mime type.* `maxStreamingBitrate` is now the 120 Mbps direct-play ceiling
+     (the video path's number; jellyfin-web/Finamp semantics — this also keeps the container-based
+     PlayMethod inference sound), the new `audioBitRate=384_000` carries transcode quality
+     (verified against SDK 1.8.12's builder), and a TRANSCODE queue entry sets
+     `MimeTypes.APPLICATION_M3U8` on its `MediaItem`; direct-play/file URIs stay content-sniffed.
+  3. *Duplicate lazy keys when a playlist repeats a track.* Position-qualified keys
+     (`"$index:$id"`) in `PlaylistDetailScreen` and `QueueSheet`, with comments naming the shared
+     convention (composition keys are not unit-testable; no helper invented for two sites).
+  4. *Downloads tab pushed `Routes.Player` for audio.* `DownloadsScreen.onPlay` now carries the
+     cached `JellyfinItem`; the nav host routes AUDIO to `MusicPlaybackViewModel.playDownloadedAudio`,
+     which plays the downloaded album context (delegating repo → offline `albumId` column) starting
+     at the tapped track and resume position, degrading to a single-item queue when the track has
+     no album or the fetch fails. Wiped-cache rows (item null) keep the video route — type unknowable.
+  5. *Music claim survived `ExoPlayerHandle.release()`+rebuild; playback bricked.* The adapter
+     tracks the claimed `Player` instance and treats an identity change as unclaimed (full re-claim
+     on next `setQueue`); `MusicPortSnapshot` gained `mediaItemCount`, and the controller's resume
+     re-prepares from its own state when the port reports an empty playlist while `Active`.
+  6. *Post-error resume no-oped (ExoPlayer parks in IDLE).* New port verb `retryPrepare()`
+     (`prepare()` — Media3's own retry, keeping playlist and position); resume and skips route
+     through it after an error, and resume re-opens the session the error handler closed.
+  7. *`release()` emitted a synchronous ItemTransition echo.* Fixed at both ends: the adapter
+     detaches its listener **before** `stop()`/`clearMediaItems()`, and the controller ignores
+     transitions while `relinquished` (defence in depth for echoes buffered across the handover's
+     suspension).
+  8. *Parked queue's shuffle/repeat buttons stamped the film's notification.*
+     `MusicPlaybackState.Active` gained `parked` (set while video holds the player);
+     `buttonsFor(parked)` is empty — the mini-player deliberately still shows the parked queue as
+     the resume affordance — and the service collector is `distinctUntilChanged` on the derived
+     button list, ending a notification re-stamp per position tick.
+  9. *`relinquishToOther` raced queued session commands.* It now completes on the session
+     dispatcher (`withContext` onto the scope's interceptor), setting `relinquished = true` as its
+     first act there, so queued commands serialise behind the park and hit the guard.
+  10. *Removing the playing entry orphaned session bookkeeping.* `removeAt` closes the open
+      session (stopped, current position) and nulls `openIndex` before the port removal, so
+      Media3's slide-in transition opens the next track's session instead of being swallowed.
+  11. *`moveItem` re-derived `openIndex` by playSessionId — null for downloads, matching entry 0.*
+      Replaced with pure index displacement arithmetic (same shape as `removeAt`'s shift).
+  12. *`trackCode` dropped the disc; same-title tracks collided.* Disc-qualified code (`2-04`)
+      when the server names a disc, bare `%02d` kept when `parentIndexNumber` is null; albumless
+      **and** artistless tracks take the id-suffixed form the empty-name fallback already used.
+      Existing test pinning the bare-title albumless directory was updated — the old name *was*
+      the collision (governance note in the fix report); the same-title-different-album test is
+      untouched and still passes.
+  13. *`getPlaylistItems` fed non-audio members into the audio-only pipeline.* Online
+      implementation filters to `BaseItemKind.AUDIO`, matching `SdkDownloadApi.getPlaylistTrackIds`;
+      view-only music app, so a playlist's video members are out of M13 scope (KDoc'd).
+  14. *SyncPlay guard bypassed by resume paths.* `reclaimAndResume` and the paused-resume branch
+      of `togglePlayPause` now refuse with `RefusedInSyncPlayGroup`, like `play()` always did.
+  15. *`DEFAULT_PLAYER_COMMANDS` granted external controllers `COMMAND_SET_SHUFFLE_MODE`/
+      `COMMAND_SET_REPEAT_MODE`, bypassing the controller.* Both stripped in `onConnect`; the
+      modes are owned by `MusicController` and the notification buttons already ride custom
+      session commands. External shuffle (Assistant, AVRCP) lands as a no-op — accepted until the
+      Android Auto follow-up routes it through the controller.
+- **Reason:** every change either restores a plan invariant (exactly one stop report per session,
+  main-thread player access, one owner of shuffle/repeat, audio-only music pipeline) or closes a
+  correctness hole the review confirmed; deviations from the reviewer's sketch are noted inline
+  above (none are material).

@@ -23,6 +23,20 @@ browse tree is a small follow-up. Music libraries surface as library tiles (no
 dedicated bottom-nav tab — user decision). Detailed phase plan:
 `docs/notes/music-m13-plan.md`; governance entry: DECISIONS 2026-08-05.
 
+**2026-08-09 — max-effort review + fix wave (post-Phase 6):** a 60-agent
+workflow review of the whole branch surfaced 15 confirmed correctness findings,
+concentrated in the shared-player handover and music session bookkeeping (wrong
+thread in video's relinquish, missing HLS mime on transcodes + a 384 kbps
+direct-play ceiling that force-transcoded lossless, release-echo phantom
+sessions, stale adapter claim after player rebuild, post-error bricked queue,
+parked-queue notification leakage, SyncPlay-guard bypass on resume, downloads
+tab opening the video player for tracks, multi-disc filename collisions,
+mixed-playlist video members entering the audio queue, and queue-edit
+bookkeeping drift). All 15 fixed (+18 pinning tests; two existing tests updated
+because their expectation *was* the bug — recorded in the tests and in
+DECISIONS "2026-08-09 — M13 review fix wave"). Three fixes get device
+spot-checks appended to `docs/notes/music-m13-dod-walk.md` (R1–R3).
+
 - **Phase 0 (governance docs)** — landed (`00d7204b`).
 - **Phase 1 (domain + mappers + DB v9)** — landed (`30962715`): ItemType music
   kinds, JellyfinItem music fields + ArtistRef, CollectionKind.MUSIC (not yet

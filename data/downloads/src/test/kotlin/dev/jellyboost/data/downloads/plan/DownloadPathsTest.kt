@@ -67,9 +67,42 @@ class DownloadPathsTest {
     }
 
     @Test
-    fun `a track the server gives no album or artist falls back to its own title`() {
-        DownloadPaths.itemDirectoryName(track(album = null, albumArtist = null, trackNumber = null)) shouldBe
-            "Go Your Own Way"
+    fun `a multi-disc track carries its disc in the track code`() {
+        DownloadPaths.itemDirectoryName(track(discNumber = 2)) shouldBe
+            "Fleetwood Mac - Rumours - 2-04 - Go Your Own Way"
+    }
+
+    @Test
+    fun `same-numbered same-titled tracks on different discs get different directories`() {
+        // A reprise or an "Intro" repeated per disc: without the disc in the code, both would
+        // sanitise to one directory, share one primary.webp, and either's delete would take the
+        // other's files — the same collision the album name prevents across albums.
+        val discOne = DownloadPaths.itemDirectoryName(track(name = "Intro", trackNumber = 1, discNumber = 1))
+        val discTwo = DownloadPaths.itemDirectoryName(track(name = "Intro", trackNumber = 1, discNumber = 2))
+
+        discOne shouldNotBe discTwo
+    }
+
+    @Test
+    fun `a track with neither album nor artist gets an id-suffixed directory`() {
+        // The old behaviour — the bare title — was the collision bug this pins: with no artist and
+        // no album in front, the title is the *whole* name, and two albumless tracks that share
+        // one would share a directory. The id suffix is the same disambiguator the empty-name
+        // fallback already uses.
+        val id = uuid(30)
+
+        DownloadPaths.itemDirectoryName(track(id = id, album = null, albumArtist = null, trackNumber = null)) shouldBe
+            "Go Your Own Way-$id"
+    }
+
+    @Test
+    fun `two albumless tracks sharing a title cannot share a directory`() {
+        val first =
+            DownloadPaths.itemDirectoryName(track(id = uuid(31), album = null, albumArtist = null))
+        val second =
+            DownloadPaths.itemDirectoryName(track(id = uuid(32), album = null, albumArtist = null))
+
+        first shouldNotBe second
     }
 
     @Test

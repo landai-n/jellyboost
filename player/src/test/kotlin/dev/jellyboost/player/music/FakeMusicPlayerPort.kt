@@ -52,7 +52,12 @@ internal class FakeMusicPlayerPort : MusicPlayerPort {
         calls += "setQueue(${entries.size}, $startIndex, $startPositionMs, $playWhenReady)"
         queue = entries
         released = false
-        currentSnapshot = currentSnapshot.copy(currentItemIndex = startIndex, positionMs = startPositionMs)
+        currentSnapshot =
+            currentSnapshot.copy(
+                currentItemIndex = startIndex,
+                positionMs = startPositionMs,
+                mediaItemCount = entries.size,
+            )
     }
 
     override fun play() {
@@ -82,6 +87,7 @@ internal class FakeMusicPlayerPort : MusicPlayerPort {
     override fun removeItem(index: Int) {
         calls += "removeItem($index)"
         queue = queue.toMutableList().apply { removeAt(index) }
+        currentSnapshot = currentSnapshot.copy(mediaItemCount = queue.size)
     }
 
     override fun moveItem(
@@ -104,14 +110,20 @@ internal class FakeMusicPlayerPort : MusicPlayerPort {
 
     override fun snapshot(): MusicPortSnapshot = currentSnapshot
 
+    override fun retryPrepare() {
+        calls += "retryPrepare"
+    }
+
     override fun release() {
         calls += "release"
         released = true
+        currentSnapshot = currentSnapshot.copy(mediaItemCount = 0)
     }
 
     override fun stopAndRelease() {
         calls += "stopAndRelease"
         released = true
         stopped = true
+        currentSnapshot = currentSnapshot.copy(mediaItemCount = 0)
     }
 }

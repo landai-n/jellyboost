@@ -4,6 +4,7 @@ import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.common.music.MusicRepeatMode
+import dev.jellyboost.data.downloads.offline.DownloadedMedia
 import dev.jellyboost.data.downloads.offline.DownloadedMediaProvider
 import dev.jellyboost.player.report.MusicReportTarget
 import dev.jellyboost.player.report.PlaybackReporter
@@ -15,6 +16,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -406,6 +408,188 @@ class MusicPlaybackControllerTest {
             handover.currentOwner shouldBe PlaybackKind.MUSIC
         }
 
+    // ---- review-fix regressions (2026-08-09 wave) -----------------------------------------
+
+    @Test
+    fun `a transition echo arriving after the handover parked the queue is ignored`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album(), startIndex = 1)
+            runCurrent()
+            handover.claim(PlaybackKind.VIDEO) {}
+            runCurrent()
+            reports.clear()
+            port.calls.clear()
+
+            // The synchronous echo of release()'s own clearMediaItems, or one buffered while the
+            // relinquish was suspended: either way it must not reset state or open a session.
+            port.emit(MusicPlayerEvent.ItemTransition(index = 0, mediaId = null, automatic = false))
+            runCurrent()
+
+            reports shouldContainExactly emptyList()
+            port.calls shouldContainExactly emptyList()
+            controller.state.value
+                .shouldBeInstanceOf<MusicPlaybackState.Active>()
+                .currentIndex shouldBe 1
+        }
+
+    @Test
+    fun `parking the queue marks the state parked, and reclaiming clears it`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album())
+            runCurrent()
+            controller.state.value
+                .shouldBeInstanceOf<MusicPlaybackState.Active>()
+                .parked shouldBe false
+
+            handover.claim(PlaybackKind.VIDEO) {}
+            runCurrent()
+            controller.state.value
+                .shouldBeInstanceOf<MusicPlaybackState.Active>()
+                .parked shouldBe true
+
+            controller.togglePlayPause()
+            runCurrent()
+            controller.state.value
+                .shouldBeInstanceOf<MusicPlaybackState.Active>()
+                .parked shouldBe false
+        }
+
+    @Test
+    fun `a command arriving mid-handover serialises behind the park and reclaims, never a bare call`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album(), startIndex = 1)
+            runCurrent()
+            // Make the park's stop report hang, so the handover is genuinely in flight when the
+            // user's command lands.
+            val gate = CompletableDeferred<Unit>()
+            coEvery { reporter.reportMusicStop(any(), any(), any()) } coAnswers { gate.await() }
+            port.calls.clear()
+
+            val claim = sessionScope.launch { handover.claim(PlaybackKind.VIDEO) {} }
+            runCurrent() // The relinquish is now suspended inside its stop report.
+            controller.next()
+            runCurrent() // The command must find `relinquished` already set.
+            gate.complete(Unit)
+            runCurrent()
+            claim.join()
+            runCurrent()
+
+            // No bare "next" ever reached the player mid-handover; the queued command became a
+            // reclaim of the parked queue instead.
+            port.calls shouldContainExactly
+                listOf("release", "setShuffleEnabled(false)", "setRepeatMode(OFF)", "setQueue(3, 1, 0, true)")
+            handover.currentOwner shouldBe PlaybackKind.MUSIC
+        }
+
+    @Test
+    fun `resume after the player was rebuilt re-prepares the queue instead of a bare play`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album(), startIndex = 1)
+            runCurrent()
+            port.currentSnapshot = port.currentSnapshot.copy(positionMs = 42_000L, isPlaying = true)
+            advanceTimeBy(1.seconds)
+            runCurrent()
+            port.emit(MusicPlayerEvent.IsPlayingChanged(false))
+            runCurrent()
+            // The shared handle released and lazily rebuilt the player underneath the queue: the
+            // port now reports an empty playlist while the state is still Active.
+            port.currentSnapshot = port.currentSnapshot.copy(mediaItemCount = 0, isPlaying = false)
+            port.calls.clear()
+            reports.clear()
+
+            controller.togglePlayPause()
+            runCurrent()
+
+            port.calls shouldContainExactly
+                listOf("setShuffleEnabled(false)", "setRepeatMode(OFF)", "setQueue(3, 1, 42000, true)")
+            // The session survived — same track, same playSessionId — so no second start report.
+            reports shouldContainExactly emptyList()
+        }
+
+    @Test
+    fun `resume after a player error re-prepares before playing, and reopens the session`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album())
+            runCurrent()
+            port.emit(MusicPlayerEvent.Error(1, "decoder died"))
+            runCurrent()
+            port.calls.clear()
+            reports.clear()
+
+            // The player is parked in IDLE, where a bare play() silently does nothing.
+            controller.togglePlayPause()
+            runCurrent()
+
+            port.calls shouldContainExactly listOf("retryPrepare", "play")
+            reports.first() shouldBe "start ${MusicFixtures.TRACK_IDS[0]} @0 paused=false NONE DEFAULT"
+        }
+
+    @Test
+    fun `a skip after a player error re-prepares the player first`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album())
+            runCurrent()
+            port.emit(MusicPlayerEvent.Error(1, "decoder died"))
+            runCurrent()
+            port.calls.clear()
+
+            controller.next()
+            runCurrent()
+
+            port.calls shouldContainExactly listOf("retryPrepare", "next")
+        }
+
+    @Test
+    fun `a parked queue refuses to resume while in a SyncPlay group`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album())
+            runCurrent()
+            handover.claim(PlaybackKind.VIDEO) {}
+            runCurrent()
+            syncPlay.setInGroup(true)
+            val messages = mutableListOf<MusicMessage>()
+            val collector = sessionScope.launchCollecting(controller.messages, messages)
+            runCurrent()
+            port.calls.clear()
+
+            controller.togglePlayPause()
+            runCurrent()
+
+            messages shouldContainExactly listOf(MusicMessage.RefusedInSyncPlayGroup)
+            port.calls shouldContainExactly emptyList()
+            handover.currentOwner shouldBe PlaybackKind.VIDEO
+            collector.cancel()
+        }
+
+    @Test
+    fun `a paused queue refuses to resume while in a SyncPlay group`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album())
+            runCurrent()
+            port.emit(MusicPlayerEvent.IsPlayingChanged(false))
+            runCurrent()
+            syncPlay.setInGroup(true)
+            val messages = mutableListOf<MusicMessage>()
+            val collector = sessionScope.launchCollecting(controller.messages, messages)
+            runCurrent()
+            port.calls.clear()
+
+            controller.togglePlayPause()
+            runCurrent()
+
+            messages shouldContainExactly listOf(MusicMessage.RefusedInSyncPlayGroup)
+            port.calls shouldContainExactly emptyList()
+            collector.cancel()
+        }
+
     // ---- queue editing --------------------------------------------------------------------
 
     @Test
@@ -452,6 +636,55 @@ class MusicPlaybackControllerTest {
 
             port.queue.map { it.itemId } shouldContainExactly
                 listOf(MusicFixtures.TRACK_IDS[1], MusicFixtures.TRACK_IDS[2], MusicFixtures.TRACK_IDS[0])
+        }
+
+    @Test
+    fun `removing the playing entry closes its session so the slide-in transition opens the next`() =
+        musicTest {
+            val controller = controller()
+            controller.play(MusicFixtures.album(), startIndex = 0)
+            runCurrent()
+            reports.clear()
+
+            controller.removeAt(0)
+            runCurrent()
+            // Media3 removes the current item, auto-advances, and fires a transition for the
+            // track that slid into position 0 — which must open a fresh session rather than be
+            // swallowed as the echo of the removed track's.
+            port.emit(MusicPlayerEvent.ItemTransition(index = 0, mediaId = null, automatic = false))
+            runCurrent()
+
+            reports shouldContainExactly
+                listOf(
+                    "stop ${MusicFixtures.TRACK_IDS[0]} @0 ended=false",
+                    "start ${MusicFixtures.TRACK_IDS[1]} @0 paused=false NONE DEFAULT",
+                )
+        }
+
+    @Test
+    fun `reordering a downloaded queue keeps the open session pinned by index, not by session id`() =
+        musicTest {
+            val controller = controller()
+            // A fully downloaded queue: every entry's playSessionId is null, so any lookup by
+            // session id matches the *first* entry, wherever the open session really sits.
+            val downloadedTrack = mockk<DownloadedMedia>()
+            coEvery { downloadedTrack.mediaUri } returns "file:///music/track.flac"
+            coEvery { downloadedTrack.mediaSourceId } returns "source-1"
+            coEvery { downloadedTrack.runTimeTicks } returns MusicFixtures.RUN_TIME_TICKS
+            coEvery { downloads.get(any()) } returns downloadedTrack
+            controller.play(MusicFixtures.album(), startIndex = 1)
+            runCurrent()
+            reports.clear()
+
+            // The playing entry (index 1) is displaced to 2 as entry 2 moves to the front.
+            controller.moveItem(from = 2, to = 0)
+            runCurrent()
+            // The player's echo of the move: the same track is still current, now at index 2.
+            port.emit(MusicPlayerEvent.ItemTransition(index = 2, mediaId = null, automatic = false))
+            runCurrent()
+
+            // Recognised as the echo — no stop/start pair for a track that never changed.
+            reports shouldContainExactly emptyList()
         }
 
     // ---- ticking --------------------------------------------------------------------------

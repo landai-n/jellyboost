@@ -203,7 +203,9 @@ internal fun QueueList(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
-        itemsIndexed(items = queue, key = { _, track -> track.id }) { index, track ->
+        // Position-qualified keys: a queue built from a playlist can hold the same track twice,
+        // and duplicate lazy keys crash the composition. Same convention as PlaylistDetailScreen.
+        itemsIndexed(items = queue, key = { index, track -> "$index:${track.id}" }) { index, track ->
             QueueTrackRow(
                 track = track,
                 isPlaying = index == currentIndex,

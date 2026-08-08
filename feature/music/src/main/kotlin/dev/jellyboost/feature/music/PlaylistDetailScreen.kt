@@ -126,7 +126,10 @@ private fun PlaylistDetailContent(
             }
         } else {
             state.tracks.forEachIndexed { index, track ->
-                item(key = track.id) {
+                // Position-qualified: a playlist may hold the same track twice, and a bare
+                // `track.id` would be a duplicate lazy key — an IllegalArgumentException at
+                // composition time. Same convention as the queue sheet's rows.
+                item(key = "$index:${track.id}") {
                     TrackRow(
                         track = track,
                         index = index + 1,

@@ -561,6 +561,29 @@ class OnlineJellyfinRepositoryTest {
         }
 
     @Test
+    fun `getPlaylistItems drops a mixed playlist's non-audio members`() =
+        runTest {
+            // A Jellyfin playlist may legally mix episodes and films in with tracks; every
+            // consumer of this member is the audio-only pipeline, whose resolver would build
+            // /Audio universal URLs for the video members. View-only music app: they are dropped,
+            // exactly as SdkDownloadApi.getPlaylistTrackIds drops them on the download path.
+            coEvery { playlistsApi.getPlaylistItems(any<GetPlaylistItemsRequest>()) } returns
+                queryResponse(
+                    listOf(
+                        itemDto(BaseItemKind.AUDIO, "Track 1"),
+                        itemDto(BaseItemKind.EPISODE, "Stray Episode"),
+                        itemDto(BaseItemKind.MOVIE, "Stray Film"),
+                        itemDto(BaseItemKind.AUDIO, "Track 2"),
+                    ),
+                )
+
+            val result = repository.getPlaylistItems(UUID.randomUUID().toString())
+
+            (result as AppResult.Success).value.map { it.name } shouldContainExactly
+                listOf("Track 1", "Track 2")
+        }
+
+    @Test
     fun `getAlbumTracks maps a transport failure onto Network`() =
         runTest {
             coEvery { itemsApi.getItems(any<GetItemsRequest>()) } throws IOException("reset")

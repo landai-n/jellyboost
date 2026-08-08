@@ -36,8 +36,8 @@ import javax.inject.Singleton
  * missing field is far more likely than an exotic codec. The dashboard check in the M13 device DoD
  * is what confirms all of this against a real server.
  *
- * The server can still transcode a track in the list for a *different* reason — a bitrate above
- * [MAX_STREAMING_BITRATE], or more channels than we asked for — and the report would then say
+ * The server can still transcode a track in the list for a *different* reason — a source above
+ * even [MAX_STREAMING_BITRATE], or more channels than we asked for — and the report would then say
  * direct play for a transcode. It costs an inaccurate dashboard row and nothing else: the
  * transcode is torn down by `stopEncodingProcess`, which keys on the play session id rather than
  * on the method.
@@ -89,6 +89,7 @@ internal class MusicStreamResolver
                             audioCodec = TRANSCODE_AUDIO_CODEC,
                             transcodingContainer = TRANSCODE_CONTAINER,
                             maxStreamingBitrate = MAX_STREAMING_BITRATE,
+                            audioBitRate = TRANSCODE_AUDIO_BITRATE,
                         ),
                     ),
                 playSessionId = playSessionId,
@@ -125,12 +126,24 @@ internal class MusicStreamResolver
             const val TRANSCODE_CONTAINER = "ts"
 
             /**
-             * The transcode ceiling, the same number `DeviceProfileBuilder` already advertises for
-             * audio (its `MAX_MUSIC_TRANSCODING_BITRATE`). Restated rather than imported: that one
-             * is a private detail of the device profile, and coupling the two would make a profile
-             * change silently re-negotiate every queue URL.
+             * The **direct-play** ceiling — `maxStreamingBitrate` is the threshold above which the
+             * server refuses to direct-play at all, not the transcode's quality. It mirrors the
+             * video path's `DeviceProfileBuilder.MAX_STREAMING_BITRATE` (the jellyfin-web/Finamp
+             * arrangement): set generously so that every listed container — a high-rate flac
+             * included — actually direct-plays, which is also what keeps the container-based
+             * [toPlayMethod] inference honest. The old value here (384 kbps, the *transcode*
+             * bitrate) forced even direct-capable lossless tracks through the encoder.
              */
-            const val MAX_STREAMING_BITRATE = 384_000
+            const val MAX_STREAMING_BITRATE = 120_000_000
+
+            /**
+             * What a transcode is encoded at — the separate `audioBitRate` parameter, the same
+             * number `DeviceProfileBuilder` advertises as `MAX_MUSIC_TRANSCODING_BITRATE`.
+             * Restated rather than imported: that one is a private detail of the device profile,
+             * and coupling the two would make a profile change silently re-negotiate every queue
+             * URL.
+             */
+            const val TRANSCODE_AUDIO_BITRATE = 384_000
         }
     }
 

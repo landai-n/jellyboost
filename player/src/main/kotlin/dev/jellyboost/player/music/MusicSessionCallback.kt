@@ -2,6 +2,7 @@ package dev.jellyboost.player.music
 
 import android.content.Context
 import android.os.Bundle
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
@@ -50,10 +51,20 @@ class MusicSessionCallback
         private val controller: MusicController,
     ) : MediaSession.Callback {
         /**
-         * Grants the two custom commands on top of everything the session offers by default.
+         * Grants the two custom commands on top of everything the session offers by default —
+         * minus the two *player* commands they exist to replace.
          *
-         * The media notification connects as a controller like any other, so without this its
+         * The media notification connects as a controller like any other, so without the grant its
          * buttons would be filtered out as unavailable before they were ever drawn.
+         *
+         * `COMMAND_SET_SHUFFLE_MODE` and `COMMAND_SET_REPEAT_MODE` are stripped from the granted
+         * player commands because the modes are owned by [MusicController] (see the class KDoc):
+         * an external controller — Assistant, Bluetooth AVRCP, a companion app — holding the
+         * player command would flip the player directly, behind the controller's back, with no
+         * `PlaybackOrder`/`RepeatMode` ever reaching the server and the queue state going stale.
+         * The notification's own buttons never used them (they carry the custom session commands
+         * above). External shuffle requests land as a no-op until the Android Auto follow-up
+         * routes them through the controller (DECISIONS.md, 2026-08-09).
          */
         override fun onConnect(
             session: MediaSession,
@@ -71,7 +82,11 @@ class MusicSessionCallback
                         .add(SessionCommand(ACTION_TOGGLE_SHUFFLE, Bundle.EMPTY))
                         .add(SessionCommand(ACTION_CYCLE_REPEAT, Bundle.EMPTY))
                         .build(),
-                    default.availablePlayerCommands,
+                    default.availablePlayerCommands
+                        .buildUpon()
+                        .remove(Player.COMMAND_SET_SHUFFLE_MODE)
+                        .remove(Player.COMMAND_SET_REPEAT_MODE)
+                        .build(),
                 )
         }
 
@@ -101,11 +116,17 @@ class MusicSessionCallback
          * The buttons for [state], or an empty list when nothing musical is loaded — which is what
          * a film's session gets, leaving the video notification exactly as it was.
          *
+         * A **parked** queue gets none either: the state stays `Active` so the mini-player keeps
+         * its resume affordance, but the media session now belongs to the film, and the queue's
+         * shuffle/repeat buttons stamped onto the film's notification is exactly the confusion
+         * the `parked` flag exists to prevent.
+         *
          * Both sit in the secondary slots: the central play/pause and the primary previous/next
          * belong to the transport and must not be displaced by a mode toggle.
          */
         fun buttonsFor(state: MusicPlaybackState): List<CommandButton> {
             val active = state as? MusicPlaybackState.Active ?: return emptyList()
+            if (active.parked) return emptyList()
             val shuffleIcon =
                 if (active.shuffleEnabled) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
             val shuffleLabel =

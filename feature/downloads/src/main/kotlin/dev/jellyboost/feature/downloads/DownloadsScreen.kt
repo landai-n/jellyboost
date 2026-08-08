@@ -73,6 +73,7 @@ import dev.jellyboost.core.common.Separators
 import dev.jellyboost.core.common.formatBytes
 import dev.jellyboost.core.common.formatDurationSeconds
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.ui.component.ConfirmDialog
 import dev.jellyboost.core.ui.component.EmptyState
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
@@ -110,15 +111,18 @@ import dev.jellyboost.data.downloads.model.StorageUsage
  * column, by both tabs' lists and by the snackbar host.
  *
  * @param onPlay play was requested for a finished download, at its resume position in Jellyfin
- *   ticks — the caller pushes `Routes.Player`, the same destination `:feature:detail`'s Play
- *   button navigates to. Reused rather than invented afresh: a completed download always resolves
- *   locally (`PlaybackSourceResolver`), so the player needs nothing from this screen but the id and
- *   the start position.
+ *   ticks — for video the caller pushes `Routes.Player`, the same destination `:feature:detail`'s
+ *   Play button navigates to; a completed download always resolves locally
+ *   (`PlaybackSourceResolver`), so the player needs nothing from this screen but the id and the
+ *   start position. The cached [dev.jellyboost.core.common.model.JellyfinItem] rides along
+ *   (M13) so the caller can route a downloaded *track* to the music queue instead of the video
+ *   screen; `null` when the item cache was wiped, in which case the caller falls back to the
+ *   video route.
  */
 @Composable
 fun DownloadsScreen(
     viewModel: DownloadsViewModel,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -232,7 +236,7 @@ fun DownloadsContent(
     state: DownloadsUiState,
     actions: DownloadsActions,
     bulk: QueueBulkActions,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -323,7 +327,7 @@ private fun PinnedChromeLayout(
     state: DownloadsUiState,
     actions: DownloadsActions,
     bulk: QueueBulkActions,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
     onRequestDelete: (itemId: String) -> Unit,
 ) {
@@ -382,7 +386,7 @@ private fun UnifiedScrollLayout(
     actions: DownloadsActions,
     bulk: QueueBulkActions,
     wide: Boolean,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     onWifiOnlyChange: (Boolean) -> Unit,
     onRequestDelete: (itemId: String) -> Unit,
 ) {
@@ -594,7 +598,7 @@ private fun DownloadsHeader(
 private fun LazyListScope.downloadedRows(
     groups: List<DownloadGroup>,
     onDelete: (itemId: String) -> Unit,
-    onPlay: (itemId: String, startPositionTicks: Long) -> Unit,
+    onPlay: (itemId: String, startPositionTicks: Long, item: JellyfinItem?) -> Unit,
     compact: Boolean,
 ) {
     groups.forEach { group ->
@@ -619,7 +623,7 @@ private fun LazyListScope.downloadedRows(
             DownloadedRow(
                 item = item,
                 onDelete = { onDelete(item.itemId) },
-                onPlay = { onPlay(item.itemId, item.playbackStartTicks) },
+                onPlay = { onPlay(item.itemId, item.playbackStartTicks, item.item) },
                 inSeriesGroup = group.isSeries,
                 compact = compact,
             )
@@ -1472,7 +1476,7 @@ private fun QueuePreview() {
                     onConfirmCancelAll = {},
                     onDismissCancelAll = {},
                 ),
-            onPlay = { _, _ -> },
+            onPlay = { _, _, _ -> },
             onWifiOnlyChange = {},
         )
     }

@@ -1,7 +1,6 @@
 package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
-import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.StorageUsage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -243,7 +242,7 @@ class DownloadsUiStateTest {
     private fun finished(
         itemId: String,
         bytesOnDisk: Long,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = itemId,
         title = "Title $itemId",
         seriesName = null,
@@ -261,7 +260,7 @@ class DownloadsUiStateTest {
         itemId: String,
         bytesDownloaded: Long = 0L,
         bytesTotal: Long = 1_000L,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = itemId,
         title = "Title $itemId",
         seriesName = null,

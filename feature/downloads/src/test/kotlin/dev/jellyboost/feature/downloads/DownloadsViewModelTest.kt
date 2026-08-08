@@ -811,7 +811,7 @@ class DownloadsViewModelTest {
         downloaded: Long = 0L,
         total: Long = 0L,
         quality: DownloadQuality = DownloadQuality.ORIGINAL,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = id,
         title = title,
         seriesName = series,

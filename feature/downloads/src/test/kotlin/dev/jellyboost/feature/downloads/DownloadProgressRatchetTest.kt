@@ -2,7 +2,6 @@ package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
-import dev.jellyboost.data.downloads.model.DownloadItem
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.floats.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldBeNull
@@ -150,7 +149,7 @@ class DownloadProgressRatchetTest {
         bytes: Long,
         total: Long,
         id: String = "1",
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = id,
         title = "Chestnut",
         seriesName = "Westworld",

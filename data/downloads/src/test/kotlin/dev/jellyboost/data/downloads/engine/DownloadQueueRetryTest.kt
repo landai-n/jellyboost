@@ -356,16 +356,6 @@ class DownloadQueueRetryTest {
     private fun withFiles(download: DownloadEntity) =
         DownloadWithFiles(download = download, files = emptyList<DownloadFileEntity>())
 
-    private class RecordingListener : DownloadQueueListener {
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) = Unit
-
-        override suspend fun onIdle() = Unit
-    }
-
     private companion object {
         val ITEM_ENTITY =
             ItemEntity(

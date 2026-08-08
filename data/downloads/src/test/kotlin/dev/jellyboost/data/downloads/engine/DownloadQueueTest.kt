@@ -72,7 +72,7 @@ class DownloadQueueTest {
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
-    private val extractor = FakeExtractor()
+    private val extractor = FakeExtractor(sidecarBytes = SIDECAR_BYTES)
 
     /** Real files for the one path that has any: the audio sidecar's fetch, strip and clean-up. */
     @TempDir
@@ -954,48 +954,6 @@ class DownloadQueueTest {
         download: DownloadEntity,
         files: List<DownloadFileEntity> = emptyList(),
     ) = DownloadWithFiles(download = download, files = files)
-
-    /**
-     * The strip stage, without a `Looper`, a muxer or a device.
-     *
-     * A failing extractor still writes something first, because that is what a real one does: the
-     * `Transformer` opens its output before it discovers it cannot finish, and the half-file it
-     * leaves is precisely what the queue has to clean up.
-     */
-    private class FakeExtractor : AudioSidecarExtractor {
-        val calls = mutableListOf<Pair<File, File>>()
-        var failure: Exception? = null
-
-        override suspend fun extract(
-            source: File,
-            target: File,
-        ) {
-            calls += source to target
-            failure?.let { error ->
-                target.writeBytes(ByteArray(1))
-                throw error
-            }
-            target.writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
-        }
-    }
-
-    /** Records what the worker would have shown in its notification. */
-    private class RecordingListener : DownloadQueueListener {
-        val progress = mutableListOf<Pair<Long, Long>>()
-        var idleCount = 0
-
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) {
-            progress += bytesDownloaded to bytesTotal
-        }
-
-        override suspend fun onIdle() {
-            idleCount++
-        }
-    }
 
     private companion object {
         const val IMAGE_URL = "https://server/image"

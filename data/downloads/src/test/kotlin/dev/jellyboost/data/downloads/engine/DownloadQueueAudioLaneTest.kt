@@ -72,7 +72,7 @@ class DownloadQueueAudioLaneTest {
     private val sessionGate = mockk<SessionGate>()
     private val clock = Clock.fixed(NOW, ZoneOffset.UTC)
     private val listener = RecordingListener()
-    private val extractor = FakeExtractor()
+    private val extractor = FakeExtractor(sidecarBytes = SIDECAR_BYTES)
 
     /** The sidecar path is the one place the queue touches real files. */
     @TempDir
@@ -301,34 +301,6 @@ class DownloadQueueAudioLaneTest {
     private fun queueWith(vararg downloads: DownloadEntity) {
         val queued = downloads.map { DownloadWithFiles(download = it, files = emptyList()) }
         coEvery { downloadDao.nextRunnable() } returnsMany (queued + null)
-    }
-
-    /** The strip stage, without a `Looper`, a muxer or a device. */
-    private class FakeExtractor : AudioSidecarExtractor {
-        val calls = mutableListOf<Pair<File, File>>()
-
-        override suspend fun extract(
-            source: File,
-            target: File,
-        ) {
-            calls += source to target
-            target.writeBytes(ByteArray(SIDECAR_BYTES.toInt()))
-        }
-    }
-
-    /** Records what the worker would have shown in its notification. */
-    private class RecordingListener : DownloadQueueListener {
-        val progress = mutableListOf<Pair<Long, Long>>()
-
-        override suspend fun onProgress(
-            download: DownloadEntity,
-            bytesDownloaded: Long,
-            bytesTotal: Long,
-        ) {
-            progress += bytesDownloaded to bytesTotal
-        }
-
-        override suspend fun onIdle() = Unit
     }
 
     private companion object {

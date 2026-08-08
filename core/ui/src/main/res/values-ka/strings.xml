@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">უკან</string>
+    <string name="action_home">მთავარი</string>
+    <string name="action_cancel">გაუქმება</string>
+    <string name="action_play">დაკვრა</string>
+
     <string name="badge_downloaded">გადმოწერილია</string>
     <string name="badge_download_queued">გადმოწერის რიგშია</string>
     <string name="badge_download_paused">გადმოწერა შეჩერებულია</string>

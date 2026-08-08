@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Fechar player</string>
-    <string name="player_play">Reproduzir</string>
     <string name="player_pause">Pausar</string>
     <string name="player_rewind">Voltar 10 segundos</string>
     <string name="player_forward">Avançar 30 segundos</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Sair do grupo</string>
     <string name="player_syncplay_leave_title">Sair deste grupo?</string>
     <string name="player_syncplay_leave_body">A reprodução continua aqui, sozinha. Para entrar de novo, você terá que escolher o grupo outra vez.</string>
-    <string name="player_syncplay_cancel">Cancelar</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d pessoa assistindo</item>
         <item quantity="other">%d pessoas assistindo</item>
@@ -79,7 +77,6 @@
     <string name="player_syncplay_queue_move_up_item">Mover %1$s para cima</string>
     <string name="player_syncplay_queue_move_down_item">Mover %1$s para baixo</string>
     <string name="player_syncplay_queue_remove_item">Remover %1$s da fila</string>
-    <string name="player_syncplay_queue_play">Reproduzir</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d item na fila</item>
         <item quantity="other">%d itens na fila</item>
@@ -92,8 +89,6 @@
     <string name="player_message_syncplay_library_denied">O grupo está assistindo a algo que você não tem acesso.</string>
     <string name="player_message_syncplay_item_unavailable">Não foi possível abrir o que o grupo está assistindo.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Voltar</string>
-    <string name="player_syncplay_groups_home">Início</string>
     <string name="player_syncplay_groups_create">Criar grupo</string>
     <string name="player_syncplay_groups_create_title">Dê um nome ao seu grupo</string>
     <string name="player_syncplay_groups_create_hint">Nome do grupo</string>

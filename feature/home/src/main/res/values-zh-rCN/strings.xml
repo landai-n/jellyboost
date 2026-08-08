@@ -8,7 +8,6 @@
     <string name="home_section_next_up">接下来</string>
     <string name="home_section_latest">最新%1$s</string>
     <string name="home_hero_resume">继续播放</string>
-    <string name="home_hero_play">播放</string>
     <string name="home_hero_details">详情</string>
     <string name="home_hero_rated">分级 %1$s</string>
     <plurals name="home_minutes_left">

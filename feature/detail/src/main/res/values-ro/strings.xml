@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Înapoi</string>
-    <string name="detail_home">Acasă</string>
-    <string name="detail_play">Redă</string>
     <string name="detail_resume">Continuă</string>
     <string name="detail_download">Descarcă</string>
-    <string name="detail_download_cancel">Anulează</string>
     <string name="detail_download_remove">Elimină</string>
-    <string name="detail_download_retry">Reîncearcă</string>
     <string name="detail_play_episode">Redă acest episod</string>
     <string name="detail_mark_watched">Marchează ca vizionat</string>
     <string name="detail_mark_unwatched">Marchează ca nevizionat</string>
@@ -67,7 +62,6 @@
     <string name="detail_delete_download_dialog_title">Ștergeți descărcarea?</string>
     <string name="detail_delete_download_dialog_message">Aceasta o elimină de pe acest dispozitiv. O puteți descărca din nou oricând.</string>
     <string name="detail_delete_download_dialog_confirm">Șterge</string>
-    <string name="detail_delete_download_dialog_cancel">Anulează</string>
 
     <string name="detail_error_unknown">Ceva nu a mers bine la încărcarea acestui element.</string>
 </resources>

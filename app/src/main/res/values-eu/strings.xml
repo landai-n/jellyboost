@@ -12,7 +12,6 @@
     <string name="offline_no_network">Ez dago sarerik — deskargatutako multimedia erakusten</string>
     <string name="offline_server_unreachable">Ezin da zerbitzaria erdietsi — deskargatutako multimedia erakusten</string>
     <string name="offline_forced">Lineaz kanpoko modua aktibatuta dago — deskargatutako multimedia erakusten</string>
-    <string name="offline_retry">Berriz saiatu</string>
     <string name="offline_go_online">Konektatu</string>
     <string name="syncplay_groups_action">SyncPlay taldeak</string>
     <string name="syncplay_groups_action_active">SyncPlay taldeak — talde batean zaude</string>

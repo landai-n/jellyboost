@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">პარამეტრები</string>
-    <string name="settings_back">უკან</string>
-    <string name="settings_home">მთავარი</string>
     <string name="settings_section_playback">დაკვრა</string>
     <string name="settings_skip_intro">შესავლის გამოტოვება</string>
     <string name="settings_skip_outro">დასასრულის გამოტოვება</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">გავდივართ?</string>
     <string name="settings_sign_out_dialog_message">ხელახლა შესასვლელად დაგჭირდებათ სერვერის მისამართი და პაროლი.</string>
     <string name="settings_sign_out_delete_downloads">ასევე წაშალეთ გადმოწერები ამ მოწყობილობიდან</string>
-    <string name="settings_cancel">გაუქმება</string>
     <string name="settings_section_about">აპლიკაციის შესახებ</string>
     <string name="settings_version">აპლიკაციის ვერსია</string>
 </resources>

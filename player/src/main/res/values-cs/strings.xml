@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Zavřít přehrávač</string>
-    <string name="player_play">Přehrát</string>
     <string name="player_pause">Pozastavit</string>
     <string name="player_rewind">Přeskočit o 10 sekund zpět</string>
     <string name="player_forward">Přeskočit o 30 sekund vpřed</string>
@@ -74,8 +73,6 @@
     <string name="player_syncplay_leave_title">Opustit tuto skupinu?</string>
     <string name="player_syncplay_leave_body">Přehrávání zde pokračuje samostatně. Pro opětovné připojení budete muset skupinu vybrat znovu.</string>
 
-    <string name="player_syncplay_cancel">Zrušit</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d člověk sleduje</item>
         <item quantity="few">%d lidé sledují</item>
@@ -94,7 +91,6 @@
     <string name="player_syncplay_queue_move_up_item">Posunout %1$s výš</string>
     <string name="player_syncplay_queue_move_down_item">Posunout %1$s níž</string>
     <string name="player_syncplay_queue_remove_item">Odebrat %1$s z fronty</string>
-    <string name="player_syncplay_queue_play">Přehrát</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d položka ve frontě</item>
@@ -112,8 +108,6 @@
     <string name="player_message_syncplay_item_unavailable">Nepodařilo se otevřít to, co skupina sleduje.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Zpět</string>
-    <string name="player_syncplay_groups_home">Domů</string>
     <string name="player_syncplay_groups_create">Vytvořit skupinu</string>
     <string name="player_syncplay_groups_create_title">Pojmenujte svou skupinu</string>
     <string name="player_syncplay_groups_create_hint">Název skupiny</string>

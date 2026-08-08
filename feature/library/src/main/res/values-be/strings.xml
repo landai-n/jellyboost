@@ -3,8 +3,6 @@
     <string name="libraries_empty">Пакуль няма бібліятэк. Дадайце адну на серверы.</string>
     <string name="libraries_title">Бібліятэкі</string>
 
-    <string name="library_back">Назад</string>
-    <string name="library_home">Галоўная</string>
     <string name="library_sort">Сартаванне</string>
     <string name="library_filter">Фільтр</string>
     <string name="library_filter_all">Усё</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Тут няма чаго паказаць.</string>
     <string name="library_empty_filtered">Ніводны элемент не адпавядае гэтым фільтрам.</string>
     <string name="library_empty_clear_filters">Ачысціць фільтры</string>
-    <string name="library_retry">Паўтарыць</string>
 
     <string name="library_error_unknown">Пры загрузцы гэтай бібліятэкі нешта пайшло не так.</string>
 </resources>

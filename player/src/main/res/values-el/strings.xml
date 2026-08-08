@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Κλείσιμο αναπαραγωγού</string>
-    <string name="player_play">Αναπαραγωγή</string>
     <string name="player_pause">Παύση</string>
     <string name="player_rewind">Πίσω 10 δευτερόλεπτα</string>
     <string name="player_forward">Μπροστά 30 δευτερόλεπτα</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Αποχώρηση από αυτή την ομάδα;</string>
     <string name="player_syncplay_leave_body">Η αναπαραγωγή συνεχίζεται εδώ, μόνη της. Η επανένταξη σημαίνει να επιλέξετε ξανά την ομάδα.</string>
 
-    <string name="player_syncplay_cancel">Άκυρο</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d άτομο παρακολουθεί</item>
         <item quantity="other">%d άτομα παρακολουθούν</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Μετακίνηση του %1$s επάνω</string>
     <string name="player_syncplay_queue_move_down_item">Μετακίνηση του %1$s κάτω</string>
     <string name="player_syncplay_queue_remove_item">Αφαίρεση του %1$s από την ουρά</string>
-    <string name="player_syncplay_queue_play">Αναπαραγωγή</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d στοιχείο στην ουρά</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Δεν ήταν δυνατό το άνοιγμα αυτού που παρακολουθεί η ομάδα.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Πίσω</string>
-    <string name="player_syncplay_groups_home">Αρχική</string>
     <string name="player_syncplay_groups_create">Δημιουργία ομάδας</string>
     <string name="player_syncplay_groups_create_title">Ονομάστε την ομάδα σας</string>
     <string name="player_syncplay_groups_create_hint">Όνομα ομάδας</string>

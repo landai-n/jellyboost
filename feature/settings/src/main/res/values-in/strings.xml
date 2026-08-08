@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Pengaturan</string>
-    <string name="settings_back">Kembali</string>
-    <string name="settings_home">Beranda</string>
     <string name="settings_section_playback">Pemutaran</string>
     <string name="settings_skip_intro">Lewati intro</string>
     <string name="settings_skip_outro">Lewati outro</string>
@@ -45,7 +43,6 @@
     <string name="settings_sign_out_dialog_title">Keluar?</string>
     <string name="settings_sign_out_dialog_message">Anda memerlukan alamat server dan kata sandi untuk masuk kembali.</string>
     <string name="settings_sign_out_delete_downloads">Hapus juga unduhan dari perangkat ini</string>
-    <string name="settings_cancel">Batal</string>
     <string name="settings_section_about">Tentang</string>
     <string name="settings_version">Versi aplikasi</string>
 </resources>

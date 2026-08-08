@@ -15,7 +15,6 @@
     <string name="offline_no_network">Nėra tinklo – rodomas atsisiųstas turinys</string>
     <string name="offline_server_unreachable">Nepavyksta pasiekti serverio – rodomas atsisiųstas turinys</string>
     <string name="offline_forced">Įjungtas neprisijungimo režimas – rodomas atsisiųstas turinys</string>
-    <string name="offline_retry">Bandyti dar kartą</string>
     <string name="offline_go_online">Prisijungti prie tinklo</string>
 
     <string name="syncplay_groups_action">„SyncPlay“ grupės</string>

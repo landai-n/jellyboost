@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Retour</string>
-    <string name="detail_home">Accueil</string>
-    <string name="detail_play">Lecture</string>
     <string name="detail_resume">Reprendre</string>
     <string name="detail_download">Télécharger</string>
-    <string name="detail_download_cancel">Annuler</string>
     <string name="detail_download_remove">Supprimer</string>
-    <string name="detail_download_retry">Réessayer</string>
     <string name="detail_play_episode">Lire cet épisode</string>
     <string name="detail_mark_watched">Marquer comme vu</string>
     <string name="detail_mark_unwatched">Marquer comme non vu</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">Supprimer le téléchargement ?</string>
     <string name="detail_delete_download_dialog_message">Ceci le supprime de cet appareil. Vous pouvez le retélécharger à tout moment.</string>
     <string name="detail_delete_download_dialog_confirm">Supprimer</string>
-    <string name="detail_delete_download_dialog_cancel">Annuler</string>
 
     <string name="detail_error_unknown">Une erreur est survenue lors du chargement de cet élément.</string>
 </resources>

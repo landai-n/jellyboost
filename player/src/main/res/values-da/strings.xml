@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Luk afspiller</string>
-    <string name="player_play">Afspil</string>
     <string name="player_pause">Pause</string>
     <string name="player_rewind">Spol 10 sekunder tilbage</string>
     <string name="player_forward">Spol 30 sekunder frem</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Forlad denne gruppe?</string>
     <string name="player_syncplay_leave_body">Afspilningen fortsætter her på egen hånd. For at deltage igen skal du vælge gruppen igen.</string>
 
-    <string name="player_syncplay_cancel">Annuller</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person ser med</item>
         <item quantity="other">%d personer ser med</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Flyt %1$s op</string>
     <string name="player_syncplay_queue_move_down_item">Flyt %1$s ned</string>
     <string name="player_syncplay_queue_remove_item">Fjern %1$s fra køen</string>
-    <string name="player_syncplay_queue_play">Afspil</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element i kø</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Kunne ikke åbne det, gruppen ser.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Tilbage</string>
-    <string name="player_syncplay_groups_home">Hjem</string>
     <string name="player_syncplay_groups_create">Opret gruppe</string>
     <string name="player_syncplay_groups_create_title">Navngiv din gruppe</string>
     <string name="player_syncplay_groups_create_hint">Gruppenavn</string>

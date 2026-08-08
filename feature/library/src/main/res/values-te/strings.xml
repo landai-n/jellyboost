@@ -3,8 +3,6 @@
     <string name="libraries_empty">ఇంకా లైబ్రరీలు లేవు. సర్వర్‌లో ఒకటి జోడించండి.</string>
     <string name="libraries_title">లైబ్రరీలు</string>
 
-    <string name="library_back">వెనుకకు</string>
-    <string name="library_home">హోమ్</string>
     <string name="library_sort">క్రమం</string>
     <string name="library_filter">ఫిల్టర్</string>
     <string name="library_filter_all">అన్నీ</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">ఇక్కడ చూపించడానికి ఏమీ లేదు.</string>
     <string name="library_empty_filtered">ఈ ఫిల్టర్‌లకు సరిపోలే అంశం లేదు.</string>
     <string name="library_empty_clear_filters">ఫిల్టర్‌లను తీసివేయండి</string>
-    <string name="library_retry">మళ్లీ ప్రయత్నించండి</string>
 
     <string name="library_error_unknown">ఈ లైబ్రరీని లోడ్ చేయడంలో ఏదో తప్పు జరిగింది.</string>
 </resources>

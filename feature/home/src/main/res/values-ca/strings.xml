@@ -7,7 +7,6 @@
     <string name="home_section_next_up">A continuació</string>
     <string name="home_section_latest">%1$s recents</string>
     <string name="home_hero_resume">Reprèn</string>
-    <string name="home_hero_play">Reprodueix</string>
     <string name="home_hero_details">Detalls</string>
     <string name="home_hero_rated">Classificada %1$s</string>
     <plurals name="home_minutes_left">

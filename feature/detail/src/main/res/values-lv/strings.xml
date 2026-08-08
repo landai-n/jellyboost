@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Atpakaļ</string>
-    <string name="detail_home">Sākums</string>
-    <string name="detail_play">Atskaņot</string>
     <string name="detail_resume">Turpināt</string>
     <string name="detail_download">Lejupielādēt</string>
-    <string name="detail_download_cancel">Atcelt</string>
     <string name="detail_download_remove">Noņemt</string>
-    <string name="detail_download_retry">Mēģināt vēlreiz</string>
     <string name="detail_play_episode">Atskaņot šo sēriju</string>
     <string name="detail_mark_watched">Atzīmēt kā skatītu</string>
     <string name="detail_mark_unwatched">Atzīmēt kā neskatītu</string>
@@ -72,7 +67,6 @@
     <string name="detail_delete_download_dialog_title">Dzēst lejupielādi?</string>
     <string name="detail_delete_download_dialog_message">Tas noņems to no šīs ierīces. Varat to lejupielādēt vēlreiz jebkurā laikā.</string>
     <string name="detail_delete_download_dialog_confirm">Dzēst</string>
-    <string name="detail_delete_download_dialog_cancel">Atcelt</string>
 
     <string name="detail_error_unknown">Ielādējot šo vienumu, kaut kas nogāja greizi.</string>
 </resources>

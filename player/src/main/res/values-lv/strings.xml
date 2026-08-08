@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Aizvērt atskaņotāju</string>
-    <string name="player_play">Atskaņot</string>
     <string name="player_pause">Pauzēt</string>
     <string name="player_rewind">Pārtīt 10 sekundes atpakaļ</string>
     <string name="player_forward">Pārtīt 30 sekundes uz priekšu</string>
@@ -71,8 +70,6 @@
     <string name="player_syncplay_leave_title">Pamest šo grupu?</string>
     <string name="player_syncplay_leave_body">Atskaņošana turpinās šeit, atsevišķi. Atkārtota pievienošanās nozīmē grupas izvēli no jauna.</string>
 
-    <string name="player_syncplay_cancel">Atcelt</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="zero">%d cilvēku skatās</item>
         <item quantity="one">%d cilvēks skatās</item>
@@ -90,7 +87,6 @@
     <string name="player_syncplay_queue_move_up_item">Pārvietot %1$s augšup</string>
     <string name="player_syncplay_queue_move_down_item">Pārvietot %1$s lejup</string>
     <string name="player_syncplay_queue_remove_item">Noņemt %1$s no rindas</string>
-    <string name="player_syncplay_queue_play">Atskaņot</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="zero">%d vienumu rindā</item>
@@ -107,8 +103,6 @@
     <string name="player_message_syncplay_item_unavailable">Neizdevās atvērt to, ko grupa skatās.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Atpakaļ</string>
-    <string name="player_syncplay_groups_home">Sākums</string>
     <string name="player_syncplay_groups_create">Izveidot grupu</string>
     <string name="player_syncplay_groups_create_title">Nosauciet savu grupu</string>
     <string name="player_syncplay_groups_create_hint">Grupas nosaukums</string>

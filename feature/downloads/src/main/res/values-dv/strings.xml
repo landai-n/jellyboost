@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">ބޭނުންކުރެވިފައިވާ ސްޓޯރޭޖް</string>
     <string name="downloads_usage_queue_label">ކިއޫގެ ކުރިއެރުން</string>
     <string name="downloads_queue_row_description">%1$s، %2$d%%، %3$s</string>
-    <string name="downloads_action_play">ޕްލޭ</string>
 
     <string name="downloads_action_delete">ޑައުންލޯޑް ފޮހެލާ</string>
     <string name="downloads_action_cancel">ޑައުންލޯޑް ކެންސަލްކުރޭ</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">%1$s ފޮހެލަންހޭ؟</string>
     <string name="downloads_delete_dialog_message">ޑައުންލޯޑްކޮށްފައިވާ ފައިލްތައް މި ޑިވައިސްއިން ނަގާނެ. ފަހުން އަލުން ޑައުންލޯޑްކުރެވިދާނެ.</string>
     <string name="downloads_delete_dialog_confirm">ފޮހެލާ</string>
-    <string name="downloads_delete_dialog_cancel">ކެންސަލްކުރޭ</string>
 
     <string name="downloads_progress_of">%2$s ގެ %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s ގެ %1$s</string>

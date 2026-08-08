@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Аль хэдийн нэвтэрсэн төхөөрөмж дээрээ Jellyfin-г нээж, Түргэн холболт руу орж энэ кодыг оруулна уу.</string>
     <string name="login_quick_connect_code_description">Таны код бол %1$s</string>
     <string name="login_quick_connect_waiting">Зөвшөөрлийг хүлээж байна…</string>
-    <string name="login_quick_connect_cancel">Цуцлах</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">%d боломжит хаягийг оролдсон боловч амжилтгүй боллоо.</item>

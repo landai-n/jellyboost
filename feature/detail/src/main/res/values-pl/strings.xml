@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Wstecz</string>
-    <string name="detail_home">Strona główna</string>
-    <string name="detail_play">Odtwórz</string>
     <string name="detail_resume">Wznów</string>
     <string name="detail_download">Pobierz</string>
-    <string name="detail_download_cancel">Anuluj</string>
     <string name="detail_download_remove">Usuń</string>
-    <string name="detail_download_retry">Spróbuj ponownie</string>
     <string name="detail_play_episode">Odtwórz ten odcinek</string>
     <string name="detail_mark_watched">Oznacz jako obejrzane</string>
     <string name="detail_mark_unwatched">Oznacz jako nieobejrzane</string>
@@ -75,7 +70,6 @@
     <string name="detail_delete_download_dialog_title">Usunąć pobieranie?</string>
     <string name="detail_delete_download_dialog_message">To usunie je z tego urządzenia. Możesz pobrać je ponownie w dowolnym momencie.</string>
     <string name="detail_delete_download_dialog_confirm">Usuń</string>
-    <string name="detail_delete_download_dialog_cancel">Anuluj</string>
 
     <string name="detail_error_unknown">Coś poszło nie tak podczas wczytywania tego elementu.</string>
 </resources>

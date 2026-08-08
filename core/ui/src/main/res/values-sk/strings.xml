@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Späť</string>
+    <string name="action_home">Domov</string>
+    <string name="action_cancel">Zrušiť</string>
+    <string name="action_play">Prehrať</string>
+
     <string name="badge_downloaded">Stiahnuté</string>
     <string name="badge_download_queued">Čaká na stiahnutie</string>
     <string name="badge_download_paused">Sťahovanie pozastavené</string>

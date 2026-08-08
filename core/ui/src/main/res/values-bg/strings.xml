@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Назад</string>
+    <string name="action_home">Начало</string>
+    <string name="action_cancel">Отказ</string>
+    <string name="action_play">Пусни</string>
+
     <string name="badge_downloaded">Изтеглено</string>
     <string name="badge_download_queued">Изчаква изтегляне</string>
     <string name="badge_download_paused">Изтеглянето е паузирано</string>

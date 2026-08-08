@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Använt lagringsutrymme</string>
     <string name="downloads_usage_queue_label">Köns förlopp</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Spela upp</string>
 
     <string name="downloads_action_delete">Ta bort nedladdning</string>
     <string name="downloads_action_cancel">Avbryt nedladdning</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Ta bort %1$s?</string>
     <string name="downloads_delete_dialog_message">De nedladdade filerna tas bort från den här enheten. Du kan ladda ner den igen senare.</string>
     <string name="downloads_delete_dialog_confirm">Ta bort</string>
-    <string name="downloads_delete_dialog_cancel">Avbryt</string>
 
     <string name="downloads_progress_of">%1$s av %2$s</string>
     <string name="downloads_progress_of_approx">%1$s av ~%2$s</string>

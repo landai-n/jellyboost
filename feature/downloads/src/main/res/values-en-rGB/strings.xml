@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Storage used</string>
     <string name="downloads_usage_queue_label">Queue progress</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Play</string>
     <string name="downloads_action_delete">Delete download</string>
     <string name="downloads_action_cancel">Cancel download</string>
     <string name="downloads_action_pause">Pause download</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Delete %1$s?</string>
     <string name="downloads_delete_dialog_message">The downloaded files are removed from this device. You can download it again later.</string>
     <string name="downloads_delete_dialog_confirm">Delete</string>
-    <string name="downloads_delete_dialog_cancel">Cancel</string>
     <string name="downloads_progress_of">%1$s of %2$s</string>
     <string name="downloads_progress_of_approx">%1$s of ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s of up to %2$s</string>

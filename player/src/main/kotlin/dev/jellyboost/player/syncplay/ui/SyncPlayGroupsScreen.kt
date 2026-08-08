@@ -1,6 +1,5 @@
 package dev.jellyboost.player.syncplay.ui
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,16 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -48,13 +42,15 @@ import dev.jellyboost.core.ui.component.ErrorState
 import dev.jellyboost.core.ui.component.FieldLabel
 import dev.jellyboost.core.ui.component.GhostPillButton
 import dev.jellyboost.core.ui.component.GlassIconButton
+import dev.jellyboost.core.ui.component.JellyboostAlertDialog
 import dev.jellyboost.core.ui.component.JellyboostSnackbarHost
 import dev.jellyboost.core.ui.component.JellyfinTextField
 import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.PrimaryPillButton
+import dev.jellyboost.core.ui.component.ScreenHeader
+import dev.jellyboost.core.ui.component.ScreenHeaderTitle
 import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
 import dev.jellyboost.core.ui.theme.Dimens
-import dev.jellyboost.core.ui.theme.GlassDefaults
 import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.mSurface
@@ -260,42 +256,21 @@ private fun SyncPlayGroupsHeader(
     onCreate: () -> Unit,
     createEnabled: Boolean,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        verticalAlignment = Alignment.CenterVertically,
+    ScreenHeader(
+        onBack = onBack,
+        onHome = onHome,
+        trailing = {
+            GlassIconButton(
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.player_syncplay_groups_create),
+                onClick = onCreate,
+                enabled = createEnabled,
+            )
+        },
     ) {
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.player_syncplay_groups_back),
-            onClick = onBack,
-        )
-        GlassIconButton(
-            icon = Icons.Filled.Home,
-            contentDescription = stringResource(R.string.player_syncplay_groups_home),
-            onClick = onHome,
-        )
-        Text(
-            text = stringResource(R.string.player_syncplay_groups_title),
-            style = JellyfinTypeExtras.ScreenTitle,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f).padding(start = Dimens.SpaceExtraSmall),
-        )
-        GlassIconButton(
-            icon = Icons.Filled.Add,
-            contentDescription = stringResource(R.string.player_syncplay_groups_create),
-            onClick = onCreate,
-            enabled = createEnabled,
-        )
+        ScreenHeaderTitle(text = stringResource(R.string.player_syncplay_groups_title))
     }
 }
-
-/** Side padding of the header — the same 20dp `LibraryGridScreen`'s header uses. */
-private val HeaderPadding = 20.dp
 
 @Composable
 private fun GroupsList(
@@ -522,15 +497,16 @@ private fun CreateGroupDialog(
 ) {
     var name by remember { mutableStateOf("") }
 
-    AlertDialog(
+    JellyboostAlertDialog(
         onDismissRequest = onDismiss,
-        modifier =
-            Modifier.border(
-                width = GlassDefaults.HairlineWidth,
-                color = GlassDefaults.PanelHairline,
-                shape = MaterialTheme.shapes.extraLarge,
-            ),
-        containerColor = MaterialTheme.colorScheme.surface,
+        confirmButton = {
+            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
+                Text(text = stringResource(R.string.player_syncplay_groups_create_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(text = stringResource(CoreUiR.string.action_cancel)) }
+        },
         title = { Text(text = stringResource(R.string.player_syncplay_groups_create_title)) },
         text = {
             JellyfinTextField(
@@ -547,14 +523,6 @@ private fun CreateGroupDialog(
                 label = FieldLabel(text = stringResource(R.string.player_syncplay_groups_create_hint)),
                 modifier = Modifier.fillMaxWidth(),
             )
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
-                Text(text = stringResource(R.string.player_syncplay_groups_create_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.player_syncplay_cancel)) }
         },
     )
 }

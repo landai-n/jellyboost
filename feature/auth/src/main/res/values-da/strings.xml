@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Åbn Jellyfin på en enhed, du allerede er logget ind på, gå til Quick Connect, og indtast denne kode.</string>
     <string name="login_quick_connect_code_description">Din kode er %1$s</string>
     <string name="login_quick_connect_waiting">Venter på godkendelse…</string>
-    <string name="login_quick_connect_cancel">Annuller</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Prøvede %d mulig adresse uden held.</item>

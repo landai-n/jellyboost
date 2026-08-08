@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">ჯერ ბიბლიოთეკები არ არის. დაამატეთ ერთი სერვერზე.</string>
     <string name="libraries_title">ბიბლიოთეკები</string>
-    <string name="library_back">უკან</string>
-    <string name="library_home">მთავარი</string>
     <string name="library_sort">დალაგება</string>
     <string name="library_filter">ფილტრი</string>
     <string name="library_filter_all">ყველა</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">აქ საჩვენებელი არაფერია.</string>
     <string name="library_empty_filtered">ამ ფილტრებს ვერცერთი ერთეული ვერ ერგება.</string>
     <string name="library_empty_clear_filters">ფილტრების გასუფთავება</string>
-    <string name="library_retry">ხელახლა ცდა</string>
     <string name="library_error_unknown">ამ ბიბლიოთეკის ჩატვირთვისას რაღაც შეცდომა მოხდა.</string>
 </resources>

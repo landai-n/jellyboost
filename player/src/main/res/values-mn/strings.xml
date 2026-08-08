@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Тоглуулагчийг хаах</string>
-    <string name="player_play">Тоглуулах</string>
     <string name="player_pause">Түр зогсоох</string>
     <string name="player_rewind">10 секунд ухрах</string>
     <string name="player_forward">30 секунд урагшлах</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Энэ бүлгээс гарах уу?</string>
     <string name="player_syncplay_leave_body">Тоглуулалт энд бие даан үргэлжилнэ. Дахин нэгдэхийн тулд бүлгийг дахин сонгох хэрэгтэй.</string>
 
-    <string name="player_syncplay_cancel">Цуцлах</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d хүн үзэж байна</item>
         <item quantity="other">%d хүн үзэж байна</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s-г дээш зөөх</string>
     <string name="player_syncplay_queue_move_down_item">%1$s-г доош зөөх</string>
     <string name="player_syncplay_queue_remove_item">%1$s-г дараалалаас хасах</string>
-    <string name="player_syncplay_queue_play">Тоглуулах</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d зүйл дараалалд орсон</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Бүлгийн үзэж буй зүйлийг нээж чадсангүй.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Буцах</string>
-    <string name="player_syncplay_groups_home">Нүүр</string>
     <string name="player_syncplay_groups_create">Бүлэг үүсгэх</string>
     <string name="player_syncplay_groups_create_title">Бүлгээ нэрлэнэ үү</string>
     <string name="player_syncplay_groups_create_hint">Бүлгийн нэр</string>

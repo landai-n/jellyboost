@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Asetukset</string>
-    <string name="settings_back">Takaisin</string>
-    <string name="settings_home">Koti</string>
 
     <string name="settings_section_playback">Toisto</string>
     <string name="settings_skip_intro">Ohita intro</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Kirjaudutaanko ulos?</string>
     <string name="settings_sign_out_dialog_message">Tarvitset palvelimen osoitteen ja salasanan kirjautuaksesi takaisin sisään.</string>
     <string name="settings_sign_out_delete_downloads">Poista myös lataukset tältä laitteelta</string>
-    <string name="settings_cancel">Peruuta</string>
     <string name="settings_section_about">Tietoja</string>
     <string name="settings_version">Sovelluksen versio</string>
 </resources>

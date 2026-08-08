@@ -21,7 +21,6 @@
     <string name="downloads_usage_storage_label">사용 중인 저장공간</string>
     <string name="downloads_usage_queue_label">대기열 진행률</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">재생</string>
 
     <string name="downloads_action_delete">다운로드 삭제</string>
     <string name="downloads_action_cancel">다운로드 취소</string>
@@ -44,7 +43,6 @@
     <string name="downloads_delete_dialog_title">%1$s을(를) 삭제할까요?</string>
     <string name="downloads_delete_dialog_message">다운로드된 파일이 이 기기에서 제거됩니다. 나중에 다시 다운로드할 수 있습니다.</string>
     <string name="downloads_delete_dialog_confirm">삭제</string>
-    <string name="downloads_delete_dialog_cancel">취소</string>
 
     <string name="downloads_progress_of">%2$s 중 %1$s</string>
     <string name="downloads_progress_of_approx">약 %2$s 중 %1$s</string>

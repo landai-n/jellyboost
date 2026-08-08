@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Në vijim</string>
     <string name="home_section_latest">Më të fundit: %1$s</string>
     <string name="home_hero_resume">Vazhdo</string>
-    <string name="home_hero_play">Luaj</string>
     <string name="home_hero_details">Detajet</string>
     <string name="home_hero_rated">Kategoria e moshës %1$s</string>
     <plurals name="home_minutes_left">

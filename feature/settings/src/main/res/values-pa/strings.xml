@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">ਸੈਟਿੰਗਾਂ</string>
-    <string name="settings_back">ਪਿੱਛੇ</string>
-    <string name="settings_home">ਹੋਮ</string>
 
     <string name="settings_section_playback">ਪਲੇਬੈਕ</string>
     <string name="settings_skip_intro">ਇੰਟਰੋ ਛੱਡੋ</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">ਸਾਈਨ ਆਉਟ ਕਰੀਏ?</string>
     <string name="settings_sign_out_dialog_message">ਦੁਬਾਰਾ ਸਾਈਨ ਇਨ ਕਰਨ ਲਈ ਤੁਹਾਨੂੰ ਆਪਣੇ ਸਰਵਰ ਪਤੇ ਅਤੇ ਪਾਸਵਰਡ ਦੀ ਲੋੜ ਪਵੇਗੀ।</string>
     <string name="settings_sign_out_delete_downloads">ਇਸ ਡਿਵਾਈਸ ਤੋਂ ਡਾਊਨਲੋਡ ਵੀ ਮਿਟਾਓ</string>
-    <string name="settings_cancel">ਰੱਦ ਕਰੋ</string>
     <string name="settings_section_about">ਐਪ ਬਾਰੇ</string>
     <string name="settings_version">ਐਪ ਵਰਜਨ</string>
 </resources>

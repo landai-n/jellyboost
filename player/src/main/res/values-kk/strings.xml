@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Ойнатқышты жабу</string>
-    <string name="player_play">Ойнату</string>
     <string name="player_pause">Кідірту</string>
     <string name="player_rewind">10 секундқа артқа айналдыру</string>
     <string name="player_forward">30 секундқа алға айналдыру</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Бұл топтан шығу керек пе?</string>
     <string name="player_syncplay_leave_body">Ойнату осы жерде өз бетінше жалғаса береді. Қайта қосылу үшін топты қайта таңдау керек болады.</string>
 
-    <string name="player_syncplay_cancel">Бас тарту</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d адам көріп жатыр</item>
         <item quantity="other">%d адам көріп жатыр</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s жоғары жылжыту</string>
     <string name="player_syncplay_queue_move_down_item">%1$s төмен жылжыту</string>
     <string name="player_syncplay_queue_remove_item">%1$s кезектен жою</string>
-    <string name="player_syncplay_queue_play">Ойнату</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент кезекте</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Топ көріп отырғанды ашу мүмкін болмады.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Артқа</string>
-    <string name="player_syncplay_groups_home">Басты бет</string>
     <string name="player_syncplay_groups_create">Топ құру</string>
     <string name="player_syncplay_groups_create_title">Тобыңызға атау беріңіз</string>
     <string name="player_syncplay_groups_create_hint">Топ атауы</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">הגדרות</string>
-    <string name="settings_back">חזרה</string>
-    <string name="settings_home">בית</string>
 
     <string name="settings_section_playback">הפעלה</string>
     <string name="settings_skip_intro">דילוג על הפתיח</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">להתנתק?</string>
     <string name="settings_sign_out_dialog_message">תזדקק לכתובת השרת ולסיסמה שלך כדי להתחבר שוב.</string>
     <string name="settings_sign_out_delete_downloads">מחיקת ההורדות מהמכשיר הזה גם כן</string>
-    <string name="settings_cancel">ביטול</string>
     <string name="settings_section_about">אודות</string>
     <string name="settings_version">גרסת האפליקציה</string>
 </resources>

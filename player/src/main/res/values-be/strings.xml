@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Закрыць плэер</string>
-    <string name="player_play">Прайграць</string>
     <string name="player_pause">Прыпыніць</string>
     <string name="player_rewind">Перамотка назад на 10 секунд</string>
     <string name="player_forward">Перамотка наперад на 30 секунд</string>
@@ -74,8 +73,6 @@
     <string name="player_syncplay_leave_title">Пакінуць гэтую групу?</string>
     <string name="player_syncplay_leave_body">Прайграванне тут працягнецца самастойна. Каб вярнуцца, трэба будзе зноў выбраць групу.</string>
 
-    <string name="player_syncplay_cancel">Скасаваць</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d асоба глядзіць</item>
         <item quantity="few">%d асобы глядзяць</item>
@@ -94,7 +91,6 @@
     <string name="player_syncplay_queue_move_up_item">Перамясціць %1$s вышэй</string>
     <string name="player_syncplay_queue_move_down_item">Перамясціць %1$s ніжэй</string>
     <string name="player_syncplay_queue_remove_item">Выдаліць %1$s з чаргі</string>
-    <string name="player_syncplay_queue_play">Прайграць</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d элемент у чарзе</item>
@@ -112,8 +108,6 @@
     <string name="player_message_syncplay_item_unavailable">Не ўдалося адкрыць тое, што глядзіць група.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Назад</string>
-    <string name="player_syncplay_groups_home">Галоўная</string>
     <string name="player_syncplay_groups_create">Стварыць групу</string>
     <string name="player_syncplay_groups_create_title">Дайце назву групе</string>
     <string name="player_syncplay_groups_create_hint">Назва групы</string>

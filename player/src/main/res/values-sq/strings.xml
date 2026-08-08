@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Mbyll luajtësin</string>
-    <string name="player_play">Luaj</string>
     <string name="player_pause">Pauzë</string>
     <string name="player_rewind">Kthehu 10 sekonda</string>
     <string name="player_forward">Përpara 30 sekonda</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Të largohesh nga ky grup?</string>
     <string name="player_syncplay_leave_body">Riprodhimi vazhdon këtu, i pavarur. Ribashkimi do të thotë të zgjedhësh grupin sërish.</string>
 
-    <string name="player_syncplay_cancel">Anulo</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d person po shikon</item>
         <item quantity="other">%d persona po shikojnë</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Zhvendos %1$s lart</string>
     <string name="player_syncplay_queue_move_down_item">Zhvendos %1$s poshtë</string>
     <string name="player_syncplay_queue_remove_item">Hiq %1$s nga radha</string>
-    <string name="player_syncplay_queue_play">Luaj</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d artikull në radhë</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Nuk u hap dot ajo që po shikon grupi.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Mbrapa</string>
-    <string name="player_syncplay_groups_home">Kryefaqja</string>
     <string name="player_syncplay_groups_create">Krijo grup</string>
     <string name="player_syncplay_groups_create_title">Emërto grupin tënd</string>
     <string name="player_syncplay_groups_create_hint">Emri i grupit</string>

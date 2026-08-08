@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">設定</string>
-    <string name="settings_back">戻る</string>
-    <string name="settings_home">ホーム</string>
 
     <string name="settings_section_playback">再生</string>
     <string name="settings_skip_intro">オープニングをスキップ</string>
@@ -49,7 +47,6 @@
     <string name="settings_sign_out_dialog_title">サインアウトしますか？</string>
     <string name="settings_sign_out_dialog_message">再度サインインするには、サーバーアドレスとパスワードが必要です。</string>
     <string name="settings_sign_out_delete_downloads">この端末のダウンロードも削除する</string>
-    <string name="settings_cancel">キャンセル</string>
     <string name="settings_section_about">アプリについて</string>
     <string name="settings_version">アプリのバージョン</string>
 </resources>

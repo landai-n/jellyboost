@@ -15,7 +15,6 @@
     <string name="offline_no_network">Nincs hálózat – letöltött tartalom megjelenítése</string>
     <string name="offline_server_unreachable">A szerver nem érhető el – letöltött tartalom megjelenítése</string>
     <string name="offline_forced">Az offline mód be van kapcsolva – letöltött tartalom megjelenítése</string>
-    <string name="offline_retry">Újra</string>
     <string name="offline_go_online">Online mód</string>
 
     <string name="syncplay_groups_action">SyncPlay csoportok</string>

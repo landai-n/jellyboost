@@ -8,7 +8,6 @@
     <string name="home_section_next_up">ಮುಂದಿನದು</string>
     <string name="home_section_latest">ಇತ್ತೀಚಿನ %1$s</string>
     <string name="home_hero_resume">ಮುಂದುವರಿಸಿ</string>
-    <string name="home_hero_play">ಪ್ಲೇ</string>
     <string name="home_hero_details">ವಿವರಗಳು</string>
     <string name="home_hero_rated">ವಯಸ್ಸಿನ ಮಾನದಂಡ %1$s</string>
     <plurals name="home_minutes_left">

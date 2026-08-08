@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Închide playerul</string>
-    <string name="player_play">Redă</string>
     <string name="player_pause">Pauză</string>
     <string name="player_rewind">Derulează înapoi 10 secunde</string>
     <string name="player_forward">Derulează înainte 30 de secunde</string>
@@ -64,7 +63,6 @@
     <string name="player_syncplay_leave">Părăsește grupul</string>
     <string name="player_syncplay_leave_title">Părăsiți acest grup?</string>
     <string name="player_syncplay_leave_body">Redarea continuă aici, singură. Revenirea înseamnă alegerea din nou a grupului.</string>
-    <string name="player_syncplay_cancel">Anulează</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persoană urmărește</item>
         <item quantity="few">%d persoane urmăresc</item>
@@ -80,7 +78,6 @@
     <string name="player_syncplay_queue_move_up_item">Mută %1$s mai sus</string>
     <string name="player_syncplay_queue_move_down_item">Mută %1$s mai jos</string>
     <string name="player_syncplay_queue_remove_item">Elimină %1$s din coadă</string>
-    <string name="player_syncplay_queue_play">Redă</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element în coadă</item>
         <item quantity="few">%d elemente în coadă</item>
@@ -94,8 +91,6 @@
     <string name="player_message_syncplay_library_denied">Grupul urmărește ceva la care nu aveți acces.</string>
     <string name="player_message_syncplay_item_unavailable">Nu s-a putut deschide ce urmărește grupul.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Înapoi</string>
-    <string name="player_syncplay_groups_home">Acasă</string>
     <string name="player_syncplay_groups_create">Creează grup</string>
     <string name="player_syncplay_groups_create_title">Denumiți grupul</string>
     <string name="player_syncplay_groups_create_hint">Numele grupului</string>

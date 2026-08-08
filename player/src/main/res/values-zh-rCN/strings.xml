@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">关闭播放器</string>
-    <string name="player_play">播放</string>
     <string name="player_pause">暂停</string>
     <string name="player_rewind">快退 10 秒</string>
     <string name="player_forward">快进 30 秒</string>
@@ -65,8 +64,6 @@
     <string name="player_syncplay_leave_title">是否离开此群组？</string>
     <string name="player_syncplay_leave_body">播放将在此处独立继续。重新加入需要再次选择群组。</string>
 
-    <string name="player_syncplay_cancel">取消</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="other">%d 人正在观看</item>
     </plurals>
@@ -82,7 +79,6 @@
     <string name="player_syncplay_queue_move_up_item">将 %1$s 上移</string>
     <string name="player_syncplay_queue_move_down_item">将 %1$s 下移</string>
     <string name="player_syncplay_queue_remove_item">将 %1$s 从队列中移除</string>
-    <string name="player_syncplay_queue_play">播放</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="other">已加入 %d 项到队列</item>
@@ -97,8 +93,6 @@
     <string name="player_message_syncplay_item_unavailable">无法打开群组正在观看的内容。</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">返回</string>
-    <string name="player_syncplay_groups_home">主页</string>
     <string name="player_syncplay_groups_create">创建群组</string>
     <string name="player_syncplay_groups_create_title">为你的群组命名</string>
     <string name="player_syncplay_groups_create_hint">群组名称</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Definições</string>
-    <string name="settings_back">Retroceder</string>
-    <string name="settings_home">Início</string>
     <string name="settings_section_playback">Reprodução</string>
     <string name="settings_skip_intro">Saltar abertura</string>
     <string name="settings_skip_outro">Saltar créditos finais</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">Terminar sessão?</string>
     <string name="settings_sign_out_dialog_message">Vai precisar do endereço do servidor e da palavra-passe para iniciar sessão novamente.</string>
     <string name="settings_sign_out_delete_downloads">Eliminar também as transferências deste dispositivo</string>
-    <string name="settings_cancel">Cancelar</string>
     <string name="settings_section_about">Acerca de</string>
     <string name="settings_version">Versão da aplicação</string>
 </resources>

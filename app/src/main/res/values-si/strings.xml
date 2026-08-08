@@ -12,7 +12,6 @@
     <string name="offline_no_network">ජාල සම්බන්ධතාවයක් නැත — බාගත මාධ්‍ය පෙන්වයි</string>
     <string name="offline_server_unreachable">සේවාදායකයට ළඟා විය නොහැක — බාගත මාධ්‍ය පෙන්වයි</string>
     <string name="offline_forced">නොබැඳි ප්‍රකාරය ක්‍රියාත්මකයි — බාගත මාධ්‍ය පෙන්වයි</string>
-    <string name="offline_retry">යළි උත්සාහ කරන්න</string>
     <string name="offline_go_online">සබැඳි වන්න</string>
     <string name="syncplay_groups_action">SyncPlay කණ්ඩායම්</string>
     <string name="syncplay_groups_action_active">SyncPlay කණ්ඩායම් — ඔබ කණ්ඩායමක සිටී</string>

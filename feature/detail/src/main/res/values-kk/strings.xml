@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Артқа</string>
-    <string name="detail_home">Басты бет</string>
-    <string name="detail_play">Ойнату</string>
     <string name="detail_resume">Жалғастыру</string>
     <string name="detail_download">Жүктеп алу</string>
-    <string name="detail_download_cancel">Бас тарту</string>
     <string name="detail_download_remove">Жою</string>
-    <string name="detail_download_retry">Қайталау</string>
     <string name="detail_play_episode">Осы бөлімді ойнату</string>
     <string name="detail_mark_watched">Қаралды деп белгілеу</string>
     <string name="detail_mark_unwatched">Қаралмады деп белгілеу</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Жүктеуді жою керек пе?</string>
     <string name="detail_delete_download_dialog_message">Бұл оны осы құрылғыдан жояды. Оны кез келген уақытта қайта жүктеп алуға болады.</string>
     <string name="detail_delete_download_dialog_confirm">Жою</string>
-    <string name="detail_delete_download_dialog_cancel">Бас тарту</string>
 
     <string name="detail_error_unknown">Бұл элементті жүктеу кезінде бірдеңе дұрыс болмады.</string>
 </resources>

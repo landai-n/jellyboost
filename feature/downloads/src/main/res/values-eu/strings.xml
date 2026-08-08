@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Erabilitako biltegiratzea</string>
     <string name="downloads_usage_queue_label">Ilararen aurrerapena</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Erreproduzitu</string>
     <string name="downloads_action_delete">Ezabatu deskarga</string>
     <string name="downloads_action_cancel">Utzi deskarga</string>
     <string name="downloads_action_pause">Pausatu deskarga</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">%1$s ezabatu?</string>
     <string name="downloads_delete_dialog_message">Deskargatutako fitxategiak gailu honetatik kentzen dira. Nahi duzunean berriz deskarga dezakezu.</string>
     <string name="downloads_delete_dialog_confirm">Ezabatu</string>
-    <string name="downloads_delete_dialog_cancel">Utzi</string>
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s / gehienez %2$s</string>

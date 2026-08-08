@@ -12,7 +12,6 @@
     <string name="offline_no_network">Neniu reto — montrante elŝutitajn enhavojn</string>
     <string name="offline_server_unreachable">Ne eblas atingi la servilon — montrante elŝutitajn enhavojn</string>
     <string name="offline_forced">Malreta reĝimo estas ŝaltita — montrante elŝutitajn enhavojn</string>
-    <string name="offline_retry">Reprovi</string>
     <string name="offline_go_online">Konektiĝi rete</string>
     <string name="syncplay_groups_action">SyncPlay-grupoj</string>
     <string name="syncplay_groups_action_active">SyncPlay-grupoj — vi estas en grupo</string>

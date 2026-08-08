@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Stockage utilisé</string>
     <string name="downloads_usage_queue_label">Progression de la file d\'attente</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Lire</string>
     <string name="downloads_action_delete">Supprimer le téléchargement</string>
     <string name="downloads_action_cancel">Annuler le téléchargement</string>
     <string name="downloads_action_pause">Suspendre le téléchargement</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Supprimer %1$s ?</string>
     <string name="downloads_delete_dialog_message">Les fichiers téléchargés sont supprimés de cet appareil. Vous pouvez le retélécharger plus tard.</string>
     <string name="downloads_delete_dialog_confirm">Supprimer</string>
-    <string name="downloads_delete_dialog_cancel">Annuler</string>
     <string name="downloads_progress_of">%1$s sur %2$s</string>
     <string name="downloads_progress_of_approx">%1$s sur ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s sur %2$s max.</string>

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">უკან</string>
-    <string name="detail_home">მთავარი</string>
-    <string name="detail_play">დაკვრა</string>
     <string name="detail_resume">გაგრძელება</string>
     <string name="detail_download">გადმოწერა</string>
-    <string name="detail_download_cancel">გაუქმება</string>
     <string name="detail_download_remove">წაშლა</string>
-    <string name="detail_download_retry">ხელახლა ცდა</string>
     <string name="detail_play_episode">ამ ეპიზოდის დაკვრა</string>
     <string name="detail_mark_watched">ნანახად მონიშვნა</string>
     <string name="detail_mark_unwatched">უნახავად მონიშვნა</string>
@@ -64,7 +59,6 @@
     <string name="detail_delete_download_dialog_title">წავშალოთ გადმოწერილი ფაილი?</string>
     <string name="detail_delete_download_dialog_message">ეს წაშლის მას ამ მოწყობილობიდან. შეგიძლიათ ისევ გადმოწეროთ ნებისმიერ დროს.</string>
     <string name="detail_delete_download_dialog_confirm">წაშლა</string>
-    <string name="detail_delete_download_dialog_cancel">გაუქმება</string>
 
     <string name="detail_error_unknown">ამ ერთეულის ჩატვირთვისას რაღაც შეცდომა მოხდა.</string>
 </resources>

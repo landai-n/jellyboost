@@ -19,7 +19,6 @@
     <string name="downloads_usage_storage_label">Penyimpanan terpakai</string>
     <string name="downloads_usage_queue_label">Kemajuan antrean</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Putar</string>
     <string name="downloads_action_delete">Hapus unduhan</string>
     <string name="downloads_action_cancel">Batalkan unduhan</string>
     <string name="downloads_action_pause">Jeda unduhan</string>
@@ -38,7 +37,6 @@
     <string name="downloads_delete_dialog_title">Hapus %1$s?</string>
     <string name="downloads_delete_dialog_message">File yang diunduh akan dihapus dari perangkat ini. Anda dapat mengunduhnya lagi nanti.</string>
     <string name="downloads_delete_dialog_confirm">Hapus</string>
-    <string name="downloads_delete_dialog_cancel">Batal</string>
     <string name="downloads_progress_of">%1$s dari %2$s</string>
     <string name="downloads_progress_of_approx">%1$s dari ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s dari maksimal %2$s</string>

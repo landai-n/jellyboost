@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">No libraries yet. Add one on the server.</string>
     <string name="libraries_title">Libraries</string>
-    <string name="library_back">Back</string>
-    <string name="library_home">Home</string>
     <string name="library_sort">Sort</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">All</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Nothing to show here.</string>
     <string name="library_empty_filtered">No item matches these filters.</string>
     <string name="library_empty_clear_filters">Clear filters</string>
-    <string name="library_retry">Retry</string>
     <string name="library_error_unknown">Something went wrong loading this library.</string>
 </resources>

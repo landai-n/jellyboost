@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">ফিরে যান</string>
+    <string name="action_home">হোম</string>
+    <string name="action_cancel">বাতিল করুন</string>
+    <string name="action_play">চালান</string>
+
     <string name="badge_downloaded">ডাউনলোড হয়েছে</string>
     <string name="badge_download_queued">ডাউনলোডের জন্য সারিবদ্ধ</string>
     <string name="badge_download_paused">ডাউনলোড থামানো হয়েছে</string>

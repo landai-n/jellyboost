@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Ancora nessuna libreria. Aggiungine una sul server.</string>
     <string name="libraries_title">Librerie</string>
-    <string name="library_back">Indietro</string>
-    <string name="library_home">Home</string>
     <string name="library_sort">Ordina</string>
     <string name="library_filter">Filtra</string>
     <string name="library_filter_all">Tutto</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Niente da mostrare qui.</string>
     <string name="library_empty_filtered">Nessun elemento corrisponde a questi filtri.</string>
     <string name="library_empty_clear_filters">Cancella filtri</string>
-    <string name="library_retry">Riprova</string>
     <string name="library_error_unknown">Si è verificato un errore durante il caricamento di questa libreria.</string>
 </resources>

@@ -3,8 +3,6 @@
     <string name="libraries_empty">Nach keng Bibliothéiken. Setz eng um Server dobäi.</string>
     <string name="libraries_title">Bibliothéiken</string>
 
-    <string name="library_back">Zréck</string>
-    <string name="library_home">Start</string>
     <string name="library_sort">Sortéieren</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">All</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Hei gëtt et näischt ze weisen.</string>
     <string name="library_empty_filtered">Kee Element entsprécht dëse Filteren.</string>
     <string name="library_empty_clear_filters">Filteren zrécksetzen</string>
-    <string name="library_retry">Nach eng Kéier probéieren</string>
 
     <string name="library_error_unknown">Beim Lueden vun dëser Bibliothéik ass eppes schif gelaf.</string>
 </resources>

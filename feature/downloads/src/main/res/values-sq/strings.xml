@@ -22,7 +22,6 @@
     <string name="downloads_usage_storage_label">Hapësira e përdorur</string>
     <string name="downloads_usage_queue_label">Ecuria e radhës</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Luaj</string>
 
     <string name="downloads_action_delete">Fshi shkarkimin</string>
     <string name="downloads_action_cancel">Anulo shkarkimin</string>
@@ -46,7 +45,6 @@
     <string name="downloads_delete_dialog_title">Të fshihet %1$s?</string>
     <string name="downloads_delete_dialog_message">Skedarët e shkarkuar hiqen nga kjo pajisje. Mund ta shkarkosh përsëri më vonë.</string>
     <string name="downloads_delete_dialog_confirm">Fshi</string>
-    <string name="downloads_delete_dialog_cancel">Anulo</string>
 
     <string name="downloads_progress_of">%1$s nga %2$s</string>
     <string name="downloads_progress_of_approx">%1$s nga ~%2$s</string>

@@ -3,8 +3,6 @@
     <string name="libraries_empty">Ingen biblioteker ennå. Legg til ett på serveren.</string>
     <string name="libraries_title">Biblioteker</string>
 
-    <string name="library_back">Tilbake</string>
-    <string name="library_home">Hjem</string>
     <string name="library_sort">Sorter</string>
     <string name="library_filter">Filter</string>
     <string name="library_filter_all">Alle</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Ingenting å vise her.</string>
     <string name="library_empty_filtered">Ingen elementer samsvarer med disse filtrene.</string>
     <string name="library_empty_clear_filters">Fjern filtre</string>
-    <string name="library_retry">Prøv igjen</string>
 
     <string name="library_error_unknown">Noe gikk galt under lasting av dette biblioteket.</string>
 </resources>

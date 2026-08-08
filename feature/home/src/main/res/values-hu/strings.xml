@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Következő</string>
     <string name="home_section_latest">Legújabb: %1$s</string>
     <string name="home_hero_resume">Folytatás</string>
-    <string name="home_hero_play">Lejátszás</string>
     <string name="home_hero_details">Részletek</string>
     <string name="home_hero_rated">Korhatár %1$s</string>
     <plurals name="home_minutes_left">

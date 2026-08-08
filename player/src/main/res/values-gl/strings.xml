@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Pechar reprodutor</string>
-    <string name="player_play">Reproducir</string>
     <string name="player_pause">Pausar</string>
     <string name="player_rewind">Retroceder 10 segundos</string>
     <string name="player_forward">Avanzar 30 segundos</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Saír do grupo</string>
     <string name="player_syncplay_leave_title">Saír deste grupo?</string>
     <string name="player_syncplay_leave_body">A reprodución continúa aquí, en solitario. Para unirte de novo terás que escoller o grupo outra vez.</string>
-    <string name="player_syncplay_cancel">Cancelar</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persoa vendo</item>
         <item quantity="other">%d persoas vendo</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">Subir %1$s</string>
     <string name="player_syncplay_queue_move_down_item">Baixar %1$s</string>
     <string name="player_syncplay_queue_remove_item">Quitar %1$s da cola</string>
-    <string name="player_syncplay_queue_play">Reproducir</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d elemento na cola</item>
         <item quantity="other">%d elementos na cola</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">O grupo está vendo algo ao que non tes acceso.</string>
     <string name="player_message_syncplay_item_unavailable">Non foi posible abrir o que o grupo está vendo.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Atrás</string>
-    <string name="player_syncplay_groups_home">Inicio</string>
     <string name="player_syncplay_groups_create">Crear grupo</string>
     <string name="player_syncplay_groups_create_title">Pon un nome ao teu grupo</string>
     <string name="player_syncplay_groups_create_hint">Nome do grupo</string>

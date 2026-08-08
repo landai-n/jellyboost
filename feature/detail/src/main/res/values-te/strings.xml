@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">వెనుకకు</string>
-    <string name="detail_home">హోమ్</string>
-    <string name="detail_play">ప్లే చేయండి</string>
     <string name="detail_resume">కొనసాగించండి</string>
     <string name="detail_download">డౌన్‌లోడ్ చేయండి</string>
-    <string name="detail_download_cancel">రద్దు చేయండి</string>
     <string name="detail_download_remove">తీసివేయండి</string>
-    <string name="detail_download_retry">మళ్లీ ప్రయత్నించండి</string>
     <string name="detail_play_episode">ఈ ఎపిసోడ్‌ను ప్లే చేయండి</string>
     <string name="detail_mark_watched">చూసినట్లు గుర్తించండి</string>
     <string name="detail_mark_unwatched">చూడనట్లు గుర్తించండి</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">డౌన్‌లోడ్‌ను తొలగించాలా?</string>
     <string name="detail_delete_download_dialog_message">ఇది దీన్ని ఈ పరికరం నుండి తీసివేస్తుంది. మీరు దీన్ని ఎప్పుడైనా మళ్లీ డౌన్‌లోడ్ చేసుకోవచ్చు.</string>
     <string name="detail_delete_download_dialog_confirm">తొలగించండి</string>
-    <string name="detail_delete_download_dialog_cancel">రద్దు చేయండి</string>
 
     <string name="detail_error_unknown">ఈ అంశాన్ని లోడ్ చేయడంలో ఏదో తప్పు జరిగింది.</string>
 </resources>

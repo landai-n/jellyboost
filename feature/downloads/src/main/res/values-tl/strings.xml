@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Nagamit na storage</string>
     <string name="downloads_usage_queue_label">Progreso ng pila</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">I-play</string>
     <string name="downloads_action_delete">Tanggalin ang download</string>
     <string name="downloads_action_cancel">Kanselahin ang download</string>
     <string name="downloads_action_pause">I-pause ang download</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Tanggalin ang %1$s?</string>
     <string name="downloads_delete_dialog_message">Aalisin ang mga na-download na file sa device na ito. Puwede mo itong i-download ulit sa ibang pagkakataon.</string>
     <string name="downloads_delete_dialog_confirm">Tanggalin</string>
-    <string name="downloads_delete_dialog_cancel">Kanselahin</string>
     <string name="downloads_progress_of">%1$s ng %2$s</string>
     <string name="downloads_progress_of_approx">%1$s ng ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s ng hanggang %2$s</string>

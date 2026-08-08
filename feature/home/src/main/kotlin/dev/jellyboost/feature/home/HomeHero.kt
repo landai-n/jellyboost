@@ -48,6 +48,7 @@ import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.JellyfinGradients
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The home screen's immersive *Continue watching* banner: the first resume item's artwork running
@@ -398,7 +399,7 @@ private fun HeroRailFade(modifier: Modifier = Modifier) {
 /** *Resume* once there is a position to resume from, *Play* otherwise. */
 @Composable
 private fun resumeLabel(item: JellyfinItem): String =
-    stringResource(if (item.userData.isResumable) R.string.home_hero_resume else R.string.home_hero_play)
+    stringResource(if (item.userData.isResumable) R.string.home_hero_resume else CoreUiR.string.action_play)
 
 /**
  * The mocks' landscape hero scrim: near-opaque background at the leading edge, gone by 70% across.

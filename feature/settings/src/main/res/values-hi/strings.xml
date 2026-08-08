@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">सेटिंग्स</string>
-    <string name="settings_back">वापस</string>
-    <string name="settings_home">होम</string>
 
     <!-- Playback -->
     <string name="settings_section_playback">प्लेबैक</string>
@@ -54,7 +52,6 @@
     <string name="settings_sign_out_dialog_title">साइन आउट करें?</string>
     <string name="settings_sign_out_dialog_message">फिर से साइन इन करने के लिए आपको अपने सर्वर का पता और पासवर्ड चाहिए होगा।</string>
     <string name="settings_sign_out_delete_downloads">इस डिवाइस से डाउनलोड भी हटाएँ</string>
-    <string name="settings_cancel">रद्द करें</string>
     <string name="settings_section_about">ऐप के बारे में</string>
     <string name="settings_version">ऐप वर्शन</string>
 </resources>

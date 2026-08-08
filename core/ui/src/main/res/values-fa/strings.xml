@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">بازگشت</string>
+    <string name="action_home">خانه</string>
+    <string name="action_cancel">لغو</string>
+    <string name="action_play">پخش</string>
+
     <string name="badge_downloaded">دانلود شد</string>
     <string name="badge_download_queued">در صف دانلود</string>
     <string name="badge_download_paused">دانلود متوقف شد</string>

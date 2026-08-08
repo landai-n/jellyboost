@@ -15,7 +15,6 @@
     <string name="offline_no_network">无网络连接——正在显示已下载的媒体</string>
     <string name="offline_server_unreachable">无法连接服务器——正在显示已下载的媒体</string>
     <string name="offline_forced">离线模式已开启——正在显示已下载的媒体</string>
-    <string name="offline_retry">重试</string>
     <string name="offline_go_online">恢复在线</string>
 
     <string name="syncplay_groups_action">SyncPlay 群组</string>

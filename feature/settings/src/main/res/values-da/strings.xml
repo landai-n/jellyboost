@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Indstillinger</string>
-    <string name="settings_back">Tilbage</string>
-    <string name="settings_home">Hjem</string>
 
     <string name="settings_section_playback">Afspilning</string>
     <string name="settings_skip_intro">Spring intro over</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Log ud?</string>
     <string name="settings_sign_out_dialog_message">Du skal bruge din serveradresse og adgangskode for at logge ind igen.</string>
     <string name="settings_sign_out_delete_downloads">Slet også downloads fra denne enhed</string>
-    <string name="settings_cancel">Annuller</string>
     <string name="settings_section_about">Om appen</string>
     <string name="settings_version">Appversion</string>
 </resources>

@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">ব্যবহৃত স্টোরেজ</string>
     <string name="downloads_usage_queue_label">সারির অগ্রগতি</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">চালান</string>
     <string name="downloads_action_delete">ডাউনলোড মুছুন</string>
     <string name="downloads_action_cancel">ডাউনলোড বাতিল করুন</string>
     <string name="downloads_action_pause">ডাউনলোড থামান</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">%1$s মুছবেন?</string>
     <string name="downloads_delete_dialog_message">ডাউনলোড করা ফাইলগুলো এই ডিভাইস থেকে সরানো হবে। আপনি পরে আবার এটি ডাউনলোড করতে পারবেন।</string>
     <string name="downloads_delete_dialog_confirm">মুছুন</string>
-    <string name="downloads_delete_dialog_cancel">বাতিল করুন</string>
     <string name="downloads_progress_of">%2$s এর মধ্যে %1$s</string>
     <string name="downloads_progress_of_approx">~%2$s এর মধ্যে %1$s</string>
     <string name="downloads_progress_of_capped">সর্বোচ্চ %2$s এর মধ্যে %1$s</string>

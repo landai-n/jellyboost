@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Sulje soitin</string>
-    <string name="player_play">Toista</string>
     <string name="player_pause">Keskeytä</string>
     <string name="player_rewind">Siirry 10 sekuntia taaksepäin</string>
     <string name="player_forward">Siirry 30 sekuntia eteenpäin</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">Poistutaanko tästä ryhmästä?</string>
     <string name="player_syncplay_leave_body">Toisto jatkuu täällä omillaan. Uudelleen liittyminen tarkoittaa ryhmän valitsemista uudelleen.</string>
 
-    <string name="player_syncplay_cancel">Peruuta</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d henkilö katsoo</item>
         <item quantity="other">%d henkilöä katsoo</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">Siirrä %1$s ylös</string>
     <string name="player_syncplay_queue_move_down_item">Siirrä %1$s alas</string>
     <string name="player_syncplay_queue_remove_item">Poista %1$s jonosta</string>
-    <string name="player_syncplay_queue_play">Toista</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d kohde jonossa</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">Ryhmän katsomaa sisältöä ei voitu avata.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Takaisin</string>
-    <string name="player_syncplay_groups_home">Koti</string>
     <string name="player_syncplay_groups_create">Luo ryhmä</string>
     <string name="player_syncplay_groups_create_title">Nimeä ryhmäsi</string>
     <string name="player_syncplay_groups_create_hint">Ryhmän nimi</string>

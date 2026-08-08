@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Vissza</string>
+    <string name="action_home">Kezdőlap</string>
+    <string name="action_cancel">Mégse</string>
+    <string name="action_play">Lejátszás</string>
+
     <string name="badge_downloaded">Letöltve</string>
     <string name="badge_download_queued">Letöltésre várakozik</string>
     <string name="badge_download_paused">Letöltés szüneteltetve</string>

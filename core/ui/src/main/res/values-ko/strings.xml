@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">뒤로</string>
+    <string name="action_home">홈</string>
+    <string name="action_cancel">취소</string>
+    <string name="action_play">재생</string>
+
     <string name="badge_downloaded">다운로드됨</string>
     <string name="badge_download_queued">다운로드 대기 중</string>
     <string name="badge_download_paused">다운로드 일시정지됨</string>

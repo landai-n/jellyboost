@@ -15,7 +15,6 @@
     <string name="offline_no_network">Желі жоқ — жүктеп алынған медиа көрсетілуде</string>
     <string name="offline_server_unreachable">Серверге қосыла алмады — жүктеп алынған медиа көрсетілуде</string>
     <string name="offline_forced">Желіден тыс режим қосулы — жүктеп алынған медиа көрсетілуде</string>
-    <string name="offline_retry">Қайталау</string>
     <string name="offline_go_online">Желіге қосылу</string>
 
     <string name="syncplay_groups_action">SyncPlay топтары</string>

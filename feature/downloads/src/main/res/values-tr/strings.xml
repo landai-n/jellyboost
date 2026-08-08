@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Kullanılan depolama</string>
     <string name="downloads_usage_queue_label">Kuyruğun ilerlemesi</string>
     <string name="downloads_queue_row_description">%1$s, %%%2$d, %3$s</string>
-    <string name="downloads_action_play">Oynat</string>
     <string name="downloads_action_delete">İndirmeyi sil</string>
     <string name="downloads_action_cancel">İndirmeyi iptal et</string>
     <string name="downloads_action_pause">İndirmeyi duraklat</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">%1$s silinsin mi?</string>
     <string name="downloads_delete_dialog_message">İndirilen dosyalar bu cihazdan kaldırılır. Daha sonra tekrar indirebilirsiniz.</string>
     <string name="downloads_delete_dialog_confirm">Sil</string>
-    <string name="downloads_delete_dialog_cancel">İptal</string>
     <string name="downloads_progress_of">%1$s / %2$s</string>
     <string name="downloads_progress_of_approx">%1$s / ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s / en fazla %2$s</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">அமைப்புகள்</string>
-    <string name="settings_back">பின்</string>
-    <string name="settings_home">முகப்பு</string>
 
     <string name="settings_section_playback">பிளேபேக்</string>
     <string name="settings_skip_intro">தொடக்கத்தைத் தவிர்</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">வெளியேறவா?</string>
     <string name="settings_sign_out_dialog_message">மீண்டும் உள்நுழைய உங்கள் சேவையக முகவரி மற்றும் கடவுச்சொல் தேவைப்படும்.</string>
     <string name="settings_sign_out_delete_downloads">இந்தச் சாதனத்திலிருந்து பதிவிறக்கங்களையும் நீக்கு</string>
-    <string name="settings_cancel">ரத்துசெய்</string>
     <string name="settings_section_about">ஆப் பற்றி</string>
     <string name="settings_version">ஆப் பதிப்பு</string>
 </resources>

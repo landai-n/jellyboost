@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Следеће</string>
     <string name="home_section_latest">Најновије: %1$s</string>
     <string name="home_hero_resume">Настави</string>
-    <string name="home_hero_play">Пусти</string>
     <string name="home_hero_details">Детаљи</string>
     <string name="home_hero_rated">Узрасна ознака %1$s</string>
     <plurals name="home_minutes_left">

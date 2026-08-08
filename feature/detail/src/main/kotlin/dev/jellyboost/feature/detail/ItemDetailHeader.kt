@@ -39,7 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -78,6 +79,7 @@ import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.component.MPillBadge
 import dev.jellyboost.core.ui.component.PrimaryPillButton
 import dev.jellyboost.core.ui.component.describeParts
+import dev.jellyboost.core.ui.component.formatRatingBadge
 import dev.jellyboost.core.ui.text.episodeNumberLabel
 import dev.jellyboost.core.ui.text.subtitleLine
 import dev.jellyboost.core.ui.theme.Dimens
@@ -86,7 +88,7 @@ import dev.jellyboost.core.ui.theme.JellyfinTheme
 import dev.jellyboost.core.ui.theme.JellyfinTypeExtras
 import dev.jellyboost.core.ui.theme.glassSurface
 import dev.jellyboost.core.ui.theme.popShadow
-import java.util.Locale
+import dev.jellyboost.core.ui.R as CoreUiR
 
 /**
  * The top of the detail screen: the backdrop, the title lockup drawn **on** it, the action row, and
@@ -108,15 +110,14 @@ import java.util.Locale
 internal fun DetailHero(
     item: JellyfinItem,
     playTarget: JellyfinItem?,
-    isWide: Boolean,
+    layout: DetailLayout,
     backdropHeight: Dp,
     downloadState: DownloadState,
     actions: DetailActionHandlers,
     modifier: Modifier = Modifier,
     downloadedBytes: Long? = null,
-    compact: Boolean = false,
 ) {
-    if (isWide) {
+    if (layout == DetailLayout.WIDE) {
         WideStage(
             item = item,
             playTarget = playTarget,
@@ -158,7 +159,7 @@ internal fun DetailHero(
                     actions = actions,
                     isWide = false,
                 )
-                DetailBody(item = item, compact = compact)
+                DetailBody(item = item, clampOverview = layout.clampsOverview)
             }
         }
     }
@@ -221,7 +222,7 @@ private fun WideStage(
                     actions = actions,
                     isWide = true,
                 )
-                DetailBody(item = item, compact = false)
+                DetailBody(item = item, clampOverview = DetailLayout.WIDE.clampsOverview)
             }
         }
     }
@@ -311,9 +312,10 @@ private fun TitleLockup(
     ) {
         item.typeEyebrow()?.let { eyebrow ->
             Text(
-                text = eyebrow,
+                text = eyebrow.drawn,
                 style = JellyfinTypeExtras.Eyebrow,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.semantics { contentDescription = eyebrow.spoken },
             )
         }
 
@@ -379,7 +381,7 @@ private fun MetaRow(
 
     val description =
         metaRowDescription(
-            rating = item.communityRating?.let { stringResource(R.string.detail_meta_rating, formatRating(it)) },
+            rating = item.communityRating?.let { stringResource(R.string.detail_meta_rating, formatRatingBadge(it)) },
             year = item.productionYear?.toString(),
             certificate = item.officialRating?.let { stringResource(R.string.detail_meta_rated, it) },
             facts = facts,
@@ -445,7 +447,7 @@ private fun RatingFact(
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(RatingStarSize),
         )
-        Text(text = formatRating(rating), style = RatingStyle, color = Color.White)
+        Text(text = formatRatingBadge(rating), style = RatingStyle, color = Color.White)
     }
 }
 
@@ -482,7 +484,7 @@ private fun ProgressLine(
 @Composable
 private fun DetailBody(
     item: JellyfinItem,
-    compact: Boolean,
+    clampOverview: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -499,7 +501,7 @@ private fun DetailBody(
         }
 
         item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
-            if (compact) {
+            if (clampOverview) {
                 ExpandableOverview(text = overview)
             } else {
                 Text(
@@ -568,11 +570,7 @@ private fun DetailActions(
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
             ) {
                 PrimaryPillButton(text = label, onClick = actions.onPlay, leadingIcon = playIcon)
-                GhostPillButton(
-                    text = stringResource(downloadState.labelRes()),
-                    onClick = actions.onDownload,
-                    leadingIcon = downloadState.icon(),
-                )
+                DownloadButton(state = downloadState, onClick = actions.onDownload, labelled = true)
                 FavoriteButton(
                     favorite = item.userData.isFavorite,
                     onClick = actions.onToggleFavorite,
@@ -644,29 +642,43 @@ private fun playLabel(
         episode != null && resume -> stringResource(R.string.detail_resume_target, episode)
         episode != null -> stringResource(R.string.detail_play_target, episode)
         resume -> stringResource(R.string.detail_resume)
-        else -> stringResource(R.string.detail_play)
+        else -> stringResource(CoreUiR.string.action_play)
     }
 }
 
 /**
  * The overview clamped to [COMPACT_OVERVIEW_MAX_LINES] on a phone, expanding (and collapsing
  * again) on tap. A paragraph that already fits is not made tappable — a ripple on inert text
- * would promise interaction it doesn't have. `rememberSaveable` keeps an expanded paragraph
- * expanded across rotation and process death, matching how scroll position survives.
+ * would promise interaction it doesn't have.
  *
  * Non-visually the affordance used to be invisible: a clickable paragraph with no state and no
  * label, announced as five ellipsized lines that could be activated for reasons unknown
  * (accessibility audit 2026-08-05, A11Y-12). It now says which of the two states it is in, and
  * names what a tap does — TalkBack reads the click label in place of its own "double tap to
  * activate", so "Read full overview" is the whole of the promise.
+ *
+ * ### Why both flags are saveable, and why the measurement is written once
+ * `expanded` and `overflowing` together decide whether the paragraph is tappable at all, so they
+ * have to survive the same events or the control comes back in a state that cannot be described:
+ * `expanded` was `rememberSaveable` and `overflowing` a plain `remember`, which meant a collapsed
+ * paragraph restored after process death was briefly inert — clickable only once a layout pass had
+ * re-measured it (audit 2026-08-08, UI-17). One saveable [OverviewState] holds both.
+ *
+ * The write from `onTextLayout` is also **conditional on the value changing**. `onTextLayout` runs
+ * inside layout, and this `Text` sits under `animateContentSize`, so an unconditional
+ * `overflowing = …` would queue a recomposition on every frame of the expand animation — the
+ * measurement is settled after the first meaningful pass and re-asserting it is what turns a
+ * one-shot into a per-frame loop. It is guarded today by the `if (!expanded)`; making the write
+ * itself idempotent is what keeps it guarded after the next edit.
  */
 @Composable
 private fun ExpandableOverview(
     text: String,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var overflowing by remember { mutableStateOf(false) }
+    var state by rememberSaveable(stateSaver = OverviewState.Saver) { mutableStateOf(OverviewState()) }
+    val expanded = state.expanded
+    val overflowing = state.overflowing
     val toggleable = overflowing || expanded
     val expandedState =
         stringResource(if (expanded) R.string.detail_overview_expanded else R.string.detail_overview_collapsed)
@@ -678,7 +690,13 @@ private fun ExpandableOverview(
         color = MaterialTheme.colorScheme.onBackground,
         maxLines = if (expanded) Int.MAX_VALUE else COMPACT_OVERVIEW_MAX_LINES,
         overflow = TextOverflow.Ellipsis,
-        onTextLayout = { if (!expanded) overflowing = it.hasVisualOverflow },
+        onTextLayout = { result ->
+            // Only while collapsed (an expanded paragraph never overflows), and only when the
+            // answer actually moves — see this composable's KDoc.
+            if (!expanded && result.hasVisualOverflow != overflowing) {
+                state = state.copy(overflowing = result.hasVisualOverflow)
+            }
+        },
         modifier =
             modifier
                 .widthIn(max = TEXT_MAX_WIDTH)
@@ -687,12 +705,34 @@ private fun ExpandableOverview(
                     if (toggleable) {
                         Modifier
                             .semantics { stateDescription = expandedState }
-                            .clickable(onClickLabel = clickLabel) { expanded = !expanded }
+                            .clickable(onClickLabel = clickLabel) {
+                                state = state.copy(expanded = !expanded)
+                            }
                     } else {
                         Modifier
                     },
                 ),
     )
+}
+
+/**
+ * Both halves of [ExpandableOverview]'s state, in one saveable object.
+ *
+ * Saveable rather than remembered: the pair is what makes the paragraph tappable, and restoring one
+ * without the other brings the control back in a state its own semantics cannot describe. Kept as
+ * one value rather than two `rememberSaveable`s so a future edit cannot re-introduce the asymmetry.
+ */
+private data class OverviewState(
+    val expanded: Boolean = false,
+    val overflowing: Boolean = false,
+) {
+    companion object {
+        val Saver: Saver<OverviewState, List<Boolean>> =
+            Saver(
+                save = { listOf(it.expanded, it.overflowing) },
+                restore = { OverviewState(expanded = it[0], overflowing = it[1]) },
+            )
+    }
 }
 
 /** Lines a compact overview shows before asking for a tap — about a third of a 360×800 screen. */
@@ -762,19 +802,48 @@ private fun GroupActionButtons(group: DetailGroupActions) {
 }
 
 /**
- * The Download control on compact: one 44dp glass circle that is really four buttons wearing one
- * coat, its glyph saying what tapping it does *now* — download, cancel, remove, retry.
+ * The Download control: one button that is really four wearing one coat, its glyph saying what
+ * tapping it does *now* — download, cancel, remove, retry.
  *
  * A transfer in flight keeps the determinate ring the cards' `DownloadBadge` draws, which is why
  * this is not simply a `GlassIconButton`: that case has no glyph at all, it has progress.
+ *
+ * @param labelled `true` on the wide layout, which has the room to say the word as well as draw the
+ *   glyph, so the control becomes a ghost pill rather than a 44dp circle. The state machine is the
+ *   same either way — which is the point. The wide layout used to draw a *static* `GhostPillButton`
+ *   straight off `labelRes()`, so a tablet showed a frozen "Cancel" pill for the whole of a transfer
+ *   the phone reported as a filling ring, and a finished download got none of the accent tint
+ *   (audit 2026-08-08, UI-4). This function's KDoc claimed the ring for "the Download control" while
+ *   only one of its two layouts had it.
  */
 @Composable
 private fun DownloadButton(
     state: DownloadState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    labelled: Boolean = false,
 ) {
     val label = stringResource(state.labelRes())
+
+    if (labelled) {
+        GhostPillButton(
+            text = label,
+            onClick = onClick,
+            modifier = modifier,
+            leadingIcon = state.icon(),
+            // The determinate ring and the completion tint the circular form has always drawn,
+            // reported through the pill's leading slot instead of replacing the glyph wholesale.
+            progress = (state as? DownloadState.Downloading)?.progress,
+            leadingIconTint =
+                if (state is DownloadState.Downloaded || state is DownloadState.Downloading) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    null
+                },
+        )
+        return
+    }
+
     if (state is DownloadState.Downloading) {
         Box(
             modifier =
@@ -824,10 +893,10 @@ private fun DownloadState.labelRes(): Int =
     when (this) {
         is DownloadState.NotDownloaded -> R.string.detail_download
         is DownloadState.Queued, is DownloadState.Downloading, is DownloadState.Paused ->
-            R.string.detail_download_cancel
+            CoreUiR.string.action_cancel
 
         is DownloadState.Downloaded -> R.string.detail_download_remove
-        is DownloadState.Failed -> R.string.detail_download_retry
+        is DownloadState.Failed -> CoreUiR.string.state_retry
     }
 
 @Composable
@@ -864,9 +933,24 @@ private fun JellyfinItem.childCountLabel(): String? {
     }
 }
 
-/** `SERIES` / `MOVIE` — the lockup's eyebrow, or nothing for the shapes a user never opens. */
+/**
+ * `SERIES` / `MOVIE` — the lockup's eyebrow, or nothing for the shapes a user never opens.
+ *
+ * Returns the drawn text and the spoken one, which are deliberately not the same string — the same
+ * split `TagPill` documents, and the pattern this eyebrow was missing both halves of (audit
+ * 2026-08-08, UI-9):
+ *
+ * - **Uppercased in the *device's* locale**, not the JVM's root: `uppercase()` with no argument
+ *   takes `Locale.getDefault()`, which on Android is the *system* locale rather than the one the
+ *   resources resolved in, and in Turkish maps `i` to `İ`. The project's own rule
+ *   (`PlayerControls.kt`, `config/lint/lint.xml`) says to pass the locale explicitly; the lint rule
+ *   is not gateable, so this is the second place it has to be written down rather than checked.
+ * - **Spoken in sentence case.** An all-caps word is a word to the eye and an initialism to a screen
+ *   reader: TalkBack spelled the eyebrow out letter by letter, "S-E-R-I-E-S". The
+ *   `contentDescription` carries the untransformed resource.
+ */
 @Composable
-private fun JellyfinItem.typeEyebrow(): String? {
+private fun JellyfinItem.typeEyebrow(): TypeEyebrow? {
     val label =
         when (type) {
             ItemType.MOVIE -> R.string.detail_type_movie
@@ -875,8 +959,16 @@ private fun JellyfinItem.typeEyebrow(): String? {
             ItemType.EPISODE -> R.string.detail_type_episode
             else -> return null
         }
-    return stringResource(label).uppercase()
+    val spoken = stringResource(label)
+    val locale = LocalConfiguration.current.locales[0]
+    return TypeEyebrow(drawn = spoken.uppercase(locale), spoken = spoken)
 }
+
+/** The eyebrow's two forms — see [typeEyebrow]. */
+private data class TypeEyebrow(
+    val drawn: String,
+    val spoken: String,
+)
 
 /** `Directed by X · A, B, C` — the one-line version of the credits the cast rail draws in full. */
 @Composable
@@ -966,9 +1058,6 @@ private val CreditStyle =
         letterSpacing = 0.01.em,
     )
 
-/** One decimal place, always — see `formatRatingBadge`, which the cards share the reasoning with. */
-private fun formatRating(rating: Float): String = String.format(Locale.US, "%.1f", rating)
-
 @Preview(name = "DetailHero", showBackground = true, backgroundColor = 0xFF101010, widthDp = 420, heightDp = 900)
 @Composable
 private fun DetailHeroPreview() {
@@ -976,11 +1065,10 @@ private fun DetailHeroPreview() {
         DetailHero(
             item = previewSeries,
             playTarget = previewEpisodeTarget,
-            isWide = false,
+            layout = DetailLayout.MEDIUM,
             backdropHeight = 416.dp,
             downloadState = DownloadState.NotDownloaded,
             actions = previewActionHandlers,
-            compact = false,
         )
     }
 }
@@ -998,11 +1086,10 @@ private fun DetailHeroCompactPreview() {
         DetailHero(
             item = previewSeries,
             playTarget = previewEpisodeTarget,
-            isWide = false,
+            layout = DetailLayout.COMPACT,
             backdropHeight = 416.dp,
             downloadState = DownloadState.Downloaded,
             actions = previewActionHandlers,
-            compact = true,
         )
     }
 }
@@ -1020,7 +1107,7 @@ private fun DetailHeroWidePreview() {
         DetailHero(
             item = previewSeries,
             playTarget = previewEpisodeTarget,
-            isWide = true,
+            layout = DetailLayout.WIDE,
             backdropHeight = 360.dp,
             downloadState = DownloadState.NotDownloaded,
             actions = previewActionHandlers,

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Indietro</string>
+    <string name="action_home">Home</string>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_play">Riproduci</string>
+
     <string name="badge_downloaded">Scaricato</string>
     <string name="badge_download_queued">In coda per il download</string>
     <string name="badge_download_paused">Download in pausa</string>

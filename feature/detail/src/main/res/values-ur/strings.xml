@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">واپس</string>
-    <string name="detail_home">ہوم</string>
-    <string name="detail_play">چلائیں</string>
     <string name="detail_resume">دوبارہ شروع کریں</string>
     <string name="detail_download">ڈاؤن لوڈ</string>
-    <string name="detail_download_cancel">منسوخ کریں</string>
     <string name="detail_download_remove">ہٹائیں</string>
-    <string name="detail_download_retry">دوبارہ کوشش کریں</string>
     <string name="detail_play_episode">یہ قسط چلائیں</string>
     <string name="detail_mark_watched">دیکھا گیا نشان زد کریں</string>
     <string name="detail_mark_unwatched">نہیں دیکھا گیا نشان زد کریں</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">ڈاؤن لوڈ حذف کریں؟</string>
     <string name="detail_delete_download_dialog_message">یہ اسے اس ڈیوائس سے ہٹا دے گا۔ آپ اسے کسی بھی وقت دوبارہ ڈاؤن لوڈ کر سکتے ہیں۔</string>
     <string name="detail_delete_download_dialog_confirm">حذف کریں</string>
-    <string name="detail_delete_download_dialog_cancel">منسوخ کریں</string>
 
     <string name="detail_error_unknown">اس آئٹم کو لوڈ کرتے وقت کچھ غلط ہو گیا۔</string>
 </resources>

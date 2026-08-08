@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Zapri predvajalnik</string>
-    <string name="player_play">Predvajaj</string>
     <string name="player_pause">Premor</string>
     <string name="player_rewind">Preskoči 10 sekund nazaj</string>
     <string name="player_forward">Preskoči 30 sekund naprej</string>
@@ -74,8 +73,6 @@
     <string name="player_syncplay_leave_title">Zapusti to skupino?</string>
     <string name="player_syncplay_leave_body">Predvajanje se tukaj nadaljuje samostojno. Za ponovno pridružitev boste morali skupino znova izbrati.</string>
 
-    <string name="player_syncplay_cancel">Prekliči</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d oseba gleda</item>
         <item quantity="two">%d osebi gledata</item>
@@ -94,7 +91,6 @@
     <string name="player_syncplay_queue_move_up_item">Pomakni %1$s navzgor</string>
     <string name="player_syncplay_queue_move_down_item">Pomakni %1$s navzdol</string>
     <string name="player_syncplay_queue_remove_item">Odstrani %1$s iz čakalne vrste</string>
-    <string name="player_syncplay_queue_play">Predvajaj</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d predmet v čakalni vrsti</item>
@@ -112,8 +108,6 @@
     <string name="player_message_syncplay_item_unavailable">Ni bilo mogoče odpreti tega, kar gleda skupina.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Nazaj</string>
-    <string name="player_syncplay_groups_home">Domov</string>
     <string name="player_syncplay_groups_create">Ustvari skupino</string>
     <string name="player_syncplay_groups_create_title">Poimenujte svojo skupino</string>
     <string name="player_syncplay_groups_create_hint">Ime skupine</string>

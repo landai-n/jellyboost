@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Nastavitve</string>
-    <string name="settings_back">Nazaj</string>
-    <string name="settings_home">Domov</string>
 
     <string name="settings_section_playback">Predvajanje</string>
     <string name="settings_skip_intro">Preskoči uvod</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Odjava?</string>
     <string name="settings_sign_out_dialog_message">Za ponovno prijavo boste potrebovali naslov strežnika in geslo.</string>
     <string name="settings_sign_out_delete_downloads">Izbriši tudi prenose s te naprave</string>
-    <string name="settings_cancel">Prekliči</string>
     <string name="settings_section_about">O aplikaciji</string>
     <string name="settings_version">Različica aplikacije</string>
 </resources>

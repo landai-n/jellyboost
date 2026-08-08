@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Playeri bağla</string>
-    <string name="player_play">Oynat</string>
     <string name="player_pause">Fasilə ver</string>
     <string name="player_rewind">10 saniyə geri sar</string>
     <string name="player_forward">30 saniyə irəli sar</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Qrupdan çıx</string>
     <string name="player_syncplay_leave_title">Bu qrupdan çıxılsın?</string>
     <string name="player_syncplay_leave_body">Oxutma burada, müstəqil şəkildə davam edir. Yenidən qoşulmaq qrupu yenidən seçmək deməkdir.</string>
-    <string name="player_syncplay_cancel">Ləğv et</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d nəfər izləyir</item>
         <item quantity="other">%d nəfər izləyir</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s yuxarı köçür</string>
     <string name="player_syncplay_queue_move_down_item">%1$s aşağı köçür</string>
     <string name="player_syncplay_queue_remove_item">%1$s növbədən sil</string>
-    <string name="player_syncplay_queue_play">Oynat</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d element növbəyə əlavə edildi</item>
         <item quantity="other">%d element növbəyə əlavə edildi</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">Qrup sizin girişiniz olmayan bir şeyə baxır.</string>
     <string name="player_message_syncplay_item_unavailable">Qrupun izlədiyi şey açıla bilmədi.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Geri</string>
-    <string name="player_syncplay_groups_home">Əsas səhifə</string>
     <string name="player_syncplay_groups_create">Qrup yarat</string>
     <string name="player_syncplay_groups_create_title">Qrupunuza ad verin</string>
     <string name="player_syncplay_groups_create_hint">Qrup adı</string>

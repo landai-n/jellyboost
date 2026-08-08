@@ -7,7 +7,6 @@
     <string name="home_section_next_up">Növbəti</string>
     <string name="home_section_latest">Ən Son %1$s</string>
     <string name="home_hero_resume">Davam et</string>
-    <string name="home_hero_play">Oynat</string>
     <string name="home_hero_details">Ətraflı</string>
     <string name="home_hero_rated">%1$s reytinqli</string>
     <plurals name="home_minutes_left">

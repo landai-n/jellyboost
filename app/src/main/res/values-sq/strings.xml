@@ -15,7 +15,6 @@
     <string name="offline_no_network">Nuk ka rrjet — po shfaqet media e shkarkuar</string>
     <string name="offline_server_unreachable">Serveri nuk mund të arrihet — po shfaqet media e shkarkuar</string>
     <string name="offline_forced">Mënyra jashtë linje është aktive — po shfaqet media e shkarkuar</string>
-    <string name="offline_retry">Provo përsëri</string>
     <string name="offline_go_online">Kalo në linjë</string>
 
     <string name="syncplay_groups_action">Grupet SyncPlay</string>

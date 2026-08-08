@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Nazaj</string>
+    <string name="action_home">Domov</string>
+    <string name="action_cancel">Prekliči</string>
+    <string name="action_play">Predvajaj</string>
+
     <string name="badge_downloaded">Preneseno</string>
     <string name="badge_download_queued">V vrsti za prenos</string>
     <string name="badge_download_paused">Prenos v premoru</string>

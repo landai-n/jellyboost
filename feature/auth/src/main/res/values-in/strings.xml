@@ -29,7 +29,6 @@
     <string name="login_quick_connect_instructions">Buka Jellyfin di perangkat tempat Anda sudah masuk, buka Quick Connect, lalu masukkan kode ini.</string>
     <string name="login_quick_connect_code_description">Kode Anda adalah %1$s</string>
     <string name="login_quick_connect_waiting">Menunggu persetujuan…</string>
-    <string name="login_quick_connect_cancel">Batal</string>
     <plurals name="auth_error_candidates_tried">
         <item quantity="other">Mencoba %d alamat kandidat, tanpa keberhasilan.</item>
     </plurals>

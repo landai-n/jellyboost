@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">Atgal</string>
+    <string name="action_home">Pradžia</string>
+    <string name="action_cancel">Atšaukti</string>
+    <string name="action_play">Leisti</string>
+
     <string name="badge_downloaded">Atsisiųsta</string>
     <string name="badge_download_queued">Eilėje atsisiuntimui</string>
     <string name="badge_download_paused">Atsisiuntimas pristabdytas</string>

@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">ย้อนกลับ</string>
-    <string name="detail_home">หน้าแรก</string>
-    <string name="detail_play">เล่น</string>
     <string name="detail_resume">เล่นต่อ</string>
     <string name="detail_download">ดาวน์โหลด</string>
-    <string name="detail_download_cancel">ยกเลิก</string>
     <string name="detail_download_remove">ลบ</string>
-    <string name="detail_download_retry">ลองอีกครั้ง</string>
     <string name="detail_play_episode">เล่นตอนนี้</string>
     <string name="detail_mark_watched">ทำเครื่องหมายว่าดูแล้ว</string>
     <string name="detail_mark_unwatched">ทำเครื่องหมายว่ายังไม่ได้ดู</string>
@@ -61,7 +56,6 @@
     <string name="detail_delete_download_dialog_title">ลบดาวน์โหลดนี้หรือไม่?</string>
     <string name="detail_delete_download_dialog_message">การดำเนินการนี้จะลบออกจากอุปกรณ์นี้ คุณสามารถดาวน์โหลดใหม่ได้ทุกเมื่อ</string>
     <string name="detail_delete_download_dialog_confirm">ลบ</string>
-    <string name="detail_delete_download_dialog_cancel">ยกเลิก</string>
 
     <string name="detail_error_unknown">เกิดข้อผิดพลาดขณะโหลดรายการนี้</string>
 </resources>

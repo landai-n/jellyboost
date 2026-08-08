@@ -20,7 +20,6 @@
     <string name="downloads_usage_storage_label">Emmagatzematge utilitzat</string>
     <string name="downloads_usage_queue_label">Progrés de la cua</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Reprodueix</string>
     <string name="downloads_action_delete">Elimina la baixada</string>
     <string name="downloads_action_cancel">Cancel·la la baixada</string>
     <string name="downloads_action_pause">Posa en pausa la baixada</string>
@@ -40,7 +39,6 @@
     <string name="downloads_delete_dialog_title">Vols eliminar %1$s?</string>
     <string name="downloads_delete_dialog_message">Els fitxers baixats s\'eliminen d\'aquest dispositiu. El pots tornar a baixar més endavant.</string>
     <string name="downloads_delete_dialog_confirm">Elimina</string>
-    <string name="downloads_delete_dialog_cancel">Cancel·la</string>
     <string name="downloads_progress_of">%1$s de %2$s</string>
     <string name="downloads_progress_of_approx">%1$s de ~%2$s</string>
     <string name="downloads_progress_of_capped">%1$s de fins a %2$s</string>

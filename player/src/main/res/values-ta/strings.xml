@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">பிளேயரை மூடு</string>
-    <string name="player_play">இயக்கு</string>
     <string name="player_pause">இடைநிறுத்து</string>
     <string name="player_rewind">10 வினாடிகள் பின்செல்</string>
     <string name="player_forward">30 வினாடிகள் முன்செல்</string>
@@ -68,8 +67,6 @@
     <string name="player_syncplay_leave_title">இந்தக் குழுவை விட்டு வெளியேறவா?</string>
     <string name="player_syncplay_leave_body">பிளேபேக் இங்கு தானாகவே தொடரும். மீண்டும் சேர வேண்டுமெனில் குழுவை மீண்டும் தேர்ந்தெடுக்க வேண்டும்.</string>
 
-    <string name="player_syncplay_cancel">ரத்துசெய்</string>
-
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d நபர் பார்க்கிறார்</item>
         <item quantity="other">%d பேர் பார்க்கிறார்கள்</item>
@@ -86,7 +83,6 @@
     <string name="player_syncplay_queue_move_up_item">%1$s ஐ மேலே நகர்த்து</string>
     <string name="player_syncplay_queue_move_down_item">%1$s ஐ கீழே நகர்த்து</string>
     <string name="player_syncplay_queue_remove_item">%1$s ஐ வரிசையிலிருந்து அகற்று</string>
-    <string name="player_syncplay_queue_play">இயக்கு</string>
 
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d உருப்படி வரிசையில் உள்ளது</item>
@@ -102,8 +98,6 @@
     <string name="player_message_syncplay_item_unavailable">குழு பார்ப்பதைத் திறக்க முடியவில்லை.</string>
 
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">பின்</string>
-    <string name="player_syncplay_groups_home">முகப்பு</string>
     <string name="player_syncplay_groups_create">குழுவை உருவாக்கு</string>
     <string name="player_syncplay_groups_create_title">உங்கள் குழுவிற்குப் பெயரிடுங்கள்</string>
     <string name="player_syncplay_groups_create_hint">குழுவின் பெயர்</string>

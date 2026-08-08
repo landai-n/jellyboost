@@ -2,8 +2,6 @@
 <resources>
     <string name="libraries_empty">Aucune bibliothèque pour le moment. Ajoutez-en une sur le serveur.</string>
     <string name="libraries_title">Bibliothèques</string>
-    <string name="library_back">Retour</string>
-    <string name="library_home">Accueil</string>
     <string name="library_sort">Trier</string>
     <string name="library_filter">Filtrer</string>
     <string name="library_filter_all">Tout</string>
@@ -32,6 +30,5 @@
     <string name="library_empty">Rien à afficher ici.</string>
     <string name="library_empty_filtered">Aucun élément ne correspond à ces filtres.</string>
     <string name="library_empty_clear_filters">Effacer les filtres</string>
-    <string name="library_retry">Réessayer</string>
     <string name="library_error_unknown">Une erreur est survenue lors du chargement de cette bibliothèque.</string>
 </resources>

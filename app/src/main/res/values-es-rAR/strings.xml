@@ -12,7 +12,6 @@
     <string name="offline_no_network">Sin conexión — mostrando contenido descargado</string>
     <string name="offline_server_unreachable">No se puede contactar con el servidor — mostrando contenido descargado</string>
     <string name="offline_forced">El modo sin conexión está activado — mostrando contenido descargado</string>
-    <string name="offline_retry">Reintentar</string>
     <string name="offline_go_online">Conectarse</string>
     <string name="syncplay_groups_action">Grupos de SyncPlay</string>
     <string name="syncplay_groups_action_active">Grupos de SyncPlay — estás en un grupo</string>

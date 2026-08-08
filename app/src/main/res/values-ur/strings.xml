@@ -15,7 +15,6 @@
     <string name="offline_no_network">نیٹ ورک نہیں ہے — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
     <string name="offline_server_unreachable">سرور تک رسائی ممکن نہیں — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
     <string name="offline_forced">آف لائن موڈ آن ہے — ڈاؤن لوڈ شدہ میڈیا دکھایا جا رہا ہے</string>
-    <string name="offline_retry">دوبارہ کوشش کریں</string>
     <string name="offline_go_online">آن لائن ہوں</string>
 
     <string name="syncplay_groups_action">SyncPlay گروپس</string>

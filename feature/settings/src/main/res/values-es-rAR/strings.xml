@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Ajustes</string>
-    <string name="settings_back">Atrás</string>
-    <string name="settings_home">Inicio</string>
     <string name="settings_section_playback">Reproducción</string>
     <string name="settings_skip_intro">Saltar introducción</string>
     <string name="settings_skip_outro">Saltar créditos finales</string>
@@ -46,7 +44,6 @@
     <string name="settings_sign_out_dialog_title">¿Cerrar sesión?</string>
     <string name="settings_sign_out_dialog_message">Necesitarás la dirección de tu servidor y tu contraseña para volver a iniciar sesión.</string>
     <string name="settings_sign_out_delete_downloads">Eliminar también las descargas de este dispositivo</string>
-    <string name="settings_cancel">Cancelar</string>
     <string name="settings_section_about">Acerca de</string>
     <string name="settings_version">Versión de la aplicación</string>
 </resources>

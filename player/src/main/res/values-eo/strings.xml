@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="player_back">Fermi la ludilon</string>
-    <string name="player_play">Ludi</string>
     <string name="player_pause">Paŭzo</string>
     <string name="player_rewind">Reen 10 sekundojn</string>
     <string name="player_forward">Antaŭen 30 sekundojn</string>
@@ -61,7 +60,6 @@
     <string name="player_syncplay_leave">Forlasi la grupon</string>
     <string name="player_syncplay_leave_title">Ĉu forlasi ĉi tiun grupon?</string>
     <string name="player_syncplay_leave_body">Ludado daŭras ĉi tie, memstare. Rekuniĝo postulas denove elekti la grupon.</string>
-    <string name="player_syncplay_cancel">Nuligi</string>
     <plurals name="player_syncplay_participants">
         <item quantity="one">%d persono spektas</item>
         <item quantity="other">%d personoj spektas</item>
@@ -76,7 +74,6 @@
     <string name="player_syncplay_queue_move_up_item">Movi %1$s supren</string>
     <string name="player_syncplay_queue_move_down_item">Movi %1$s malsupren</string>
     <string name="player_syncplay_queue_remove_item">Forigi %1$s el la atendovico</string>
-    <string name="player_syncplay_queue_play">Ludi</string>
     <plurals name="player_syncplay_queue_count">
         <item quantity="one">%d ero envicigita</item>
         <item quantity="other">%d eroj envicigitaj</item>
@@ -89,8 +86,6 @@
     <string name="player_message_syncplay_library_denied">La grupo spektas ion, al kio vi ne havas aliron.</string>
     <string name="player_message_syncplay_item_unavailable">Ne eblis malfermi tion, kion la grupo spektas.</string>
     <string name="player_syncplay_groups_title">SyncPlay</string>
-    <string name="player_syncplay_groups_back">Reen</string>
-    <string name="player_syncplay_groups_home">Hejmo</string>
     <string name="player_syncplay_groups_create">Krei grupon</string>
     <string name="player_syncplay_groups_create_title">Nomu vian grupon</string>
     <string name="player_syncplay_groups_create_hint">Grupnomo</string>

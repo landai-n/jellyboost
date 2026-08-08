@@ -3,8 +3,6 @@
     <string name="libraries_empty">ਹਾਲੇ ਕੋਈ ਲਾਇਬ੍ਰੇਰੀ ਨਹੀਂ ਹੈ। ਸਰਵਰ ਉੱਤੇ ਇੱਕ ਸ਼ਾਮਲ ਕਰੋ।</string>
     <string name="libraries_title">ਲਾਇਬ੍ਰੇਰੀਆਂ</string>
 
-    <string name="library_back">ਪਿੱਛੇ</string>
-    <string name="library_home">ਹੋਮ</string>
     <string name="library_sort">ਕ੍ਰਮਬੱਧ ਕਰੋ</string>
     <string name="library_filter">ਫਿਲਟਰ</string>
     <string name="library_filter_all">ਸਾਰੇ</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">ਇੱਥੇ ਦਿਖਾਉਣ ਲਈ ਕੁਝ ਨਹੀਂ ਹੈ।</string>
     <string name="library_empty_filtered">ਇਹਨਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਕੋਈ ਆਈਟਮ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।</string>
     <string name="library_empty_clear_filters">ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ</string>
-    <string name="library_retry">ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
 
     <string name="library_error_unknown">ਇਹ ਲਾਇਬ੍ਰੇਰੀ ਲੋਡ ਕਰਦੇ ਸਮੇਂ ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ।</string>
 </resources>

@@ -24,7 +24,6 @@
     <string name="downloads_usage_storage_label">Panaudota saugykla</string>
     <string name="downloads_usage_queue_label">Eilės eiga</string>
     <string name="downloads_queue_row_description">%1$s, %2$d%%, %3$s</string>
-    <string name="downloads_action_play">Leisti</string>
 
     <string name="downloads_action_delete">Ištrinti atsisiuntimą</string>
     <string name="downloads_action_cancel">Atšaukti atsisiuntimą</string>
@@ -50,7 +49,6 @@
     <string name="downloads_delete_dialog_title">Ištrinti %1$s?</string>
     <string name="downloads_delete_dialog_message">Atsisiųsti failai bus pašalinti iš šio įrenginio. Galėsite atsisiųsti jį iš naujo vėliau.</string>
     <string name="downloads_delete_dialog_confirm">Ištrinti</string>
-    <string name="downloads_delete_dialog_cancel">Atšaukti</string>
 
     <string name="downloads_progress_of">%1$s iš %2$s</string>
     <string name="downloads_progress_of_approx">%1$s iš ~%2$s</string>

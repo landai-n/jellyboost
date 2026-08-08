@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">ފަހަތަށް</string>
+    <string name="action_home">ހޯމް</string>
+    <string name="action_cancel">ކެންސަލްކުރޭ</string>
+    <string name="action_play">ޕްލޭ</string>
+
     <string name="badge_downloaded">ޑައުންލޯޑްކޮށްފި</string>
     <string name="badge_download_queued">ޑައުންލޯޑަށް ކިޔޫގައި</string>
     <string name="badge_download_paused">ޑައުންލޯޑް މެދުކަނޑާލައިފި</string>

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Sätted</string>
-    <string name="settings_back">Tagasi</string>
-    <string name="settings_home">Avaleht</string>
 
     <string name="settings_section_playback">Taasesitus</string>
     <string name="settings_skip_intro">Jäta intro vahele</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Kas logida välja?</string>
     <string name="settings_sign_out_dialog_message">Tagasi sisse logimiseks vajad oma serveri aadressi ja parooli.</string>
     <string name="settings_sign_out_delete_downloads">Kustuta ka allalaadimised sellest seadmest</string>
-    <string name="settings_cancel">Tühista</string>
     <string name="settings_section_about">Teave</string>
     <string name="settings_version">Rakenduse versioon</string>
 </resources>

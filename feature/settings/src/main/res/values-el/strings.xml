@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Ρυθμίσεις</string>
-    <string name="settings_back">Πίσω</string>
-    <string name="settings_home">Αρχική</string>
 
     <string name="settings_section_playback">Αναπαραγωγή</string>
     <string name="settings_skip_intro">Παράλειψη εισαγωγής</string>
@@ -50,7 +48,6 @@
     <string name="settings_sign_out_dialog_title">Αποσύνδεση;</string>
     <string name="settings_sign_out_dialog_message">Θα χρειαστείτε τη διεύθυνση του διακομιστή σας και τον κωδικό πρόσβασης για να συνδεθείτε ξανά.</string>
     <string name="settings_sign_out_delete_downloads">Διαγραφή επίσης των λήψεων από αυτή τη συσκευή</string>
-    <string name="settings_cancel">Άκυρο</string>
     <string name="settings_section_about">Σχετικά</string>
     <string name="settings_version">Έκδοση εφαρμογής</string>
 </resources>

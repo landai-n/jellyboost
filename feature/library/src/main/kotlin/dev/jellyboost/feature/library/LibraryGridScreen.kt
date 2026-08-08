@@ -17,9 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -27,9 +25,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,12 +46,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -81,6 +74,8 @@ import dev.jellyboost.core.ui.component.LoadingState
 import dev.jellyboost.core.ui.component.POSTER_CARD_CONTENT_TYPE
 import dev.jellyboost.core.ui.component.PillChip
 import dev.jellyboost.core.ui.component.PosterCard
+import dev.jellyboost.core.ui.component.ScreenHeader
+import dev.jellyboost.core.ui.component.ScreenHeaderTitle
 import dev.jellyboost.core.ui.component.SelectionAppBar
 import dev.jellyboost.core.ui.component.batchOutcomeText
 import dev.jellyboost.core.ui.component.rememberOneShotSnackbar
@@ -261,59 +256,34 @@ private fun LibraryHeader(
     onHome: () -> Unit,
     sortAction: @Composable () -> Unit,
 ) {
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(
-                    start = HeaderPadding,
-                    end = HeaderPadding,
-                    top = HeaderPadding,
-                    // The chip row sits one small gap under the title block, not a full 20dp: the
-                    // two read as one header, and the grid's own padding follows below them.
-                    bottom = Dimens.SpaceSmall,
-                ),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
-        verticalAlignment = Alignment.CenterVertically,
+    ScreenHeader(
+        onBack = onBack,
+        onHome = onHome,
+        contentPadding =
+            PaddingValues(
+                start = Dimens.HeaderPadding,
+                end = Dimens.HeaderPadding,
+                top = Dimens.HeaderPadding,
+                // The chip row sits one small gap under the title block, not a full 20dp: the
+                // two read as one header, and the grid's own padding follows below them.
+                bottom = Dimens.SpaceSmall,
+            ),
+        // `sortAction` is a plain composable slot, not a `RowScope` one — it is empty on the wide
+        // layout, where the chip row hosts the control instead.
+        trailing = { sortAction() },
     ) {
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.library_back),
-            onClick = onBack,
+        ScreenHeaderTitle(
+            text = title,
+            style = if (isWide) JellyfinTypeExtras.ScreenTitleLarge else JellyfinTypeExtras.ScreenTitle,
         )
-        GlassIconButton(
-            icon = Icons.Filled.Home,
-            contentDescription = stringResource(R.string.library_home),
-            onClick = onHome,
-        )
-
-        Column(modifier = Modifier.weight(1f).padding(start = Dimens.SpaceExtraSmall)) {
+        if (totalCount != null) {
             Text(
-                text = title,
-                style = if (isWide) JellyfinTypeExtras.ScreenTitleLarge else JellyfinTypeExtras.ScreenTitle,
-                color = MaterialTheme.colorScheme.onBackground,
+                text = pluralStringResource(CoreUiR.plurals.library_item_count, totalCount, totalCount),
+                style = HeaderCountStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                // The screen's own heading — where a heading-jump lands, and the full library name
-                // whatever the one ellipsized line had room for (audit A11Y-10).
-                modifier =
-                    Modifier.semantics {
-                        heading()
-                        contentDescription = title
-                    },
             )
-            if (totalCount != null) {
-                Text(
-                    text = pluralStringResource(CoreUiR.plurals.library_item_count, totalCount, totalCount),
-                    style = HeaderCountStyle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-            }
         }
-
-        sortAction()
     }
 }
 
@@ -342,7 +312,7 @@ private fun LibraryFilterRow(
     ) {
         LazyRow(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = HeaderPadding),
+            contentPadding = PaddingValues(horizontal = Dimens.HeaderPadding),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSmall),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -447,7 +417,7 @@ private fun SortLabelAction(
                     // A glyph and a word that open a menu: the compact layout's version of this is
                     // a `GlassIconButton` and has always said so; this one said nothing (ROLE-01).
                     .clickable(role = Role.Button) { onExpandedChange(true) }
-                    .padding(horizontal = HeaderPadding, vertical = Dimens.SpaceSmall),
+                    .padding(horizontal = Dimens.HeaderPadding, vertical = Dimens.SpaceSmall),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(SortLabelGap),
         ) {
@@ -574,12 +544,12 @@ private fun ItemGrid(
         modifier = modifier.fillMaxSize(),
         contentPadding =
             PaddingValues(
-                start = HeaderPadding,
-                end = HeaderPadding,
+                start = Dimens.HeaderPadding,
+                end = Dimens.HeaderPadding,
                 top = Dimens.SpaceExtraSmall,
                 // Nothing below the grid clears the navigation bar for it — this screen consumes no
                 // `Scaffold` insets, so the last row buys its own clearance here, where it scrolls.
-                bottom = HeaderPadding + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                bottom = Dimens.HeaderPadding + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
             ),
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
         verticalArrangement = Arrangement.spacedBy(GridRowGap),
@@ -669,7 +639,7 @@ private fun AppendError(
             textAlign = TextAlign.Center,
         )
         TextButton(onClick = onRetry) {
-            Text(text = stringResource(R.string.library_retry))
+            Text(text = stringResource(CoreUiR.string.state_retry))
         }
     }
 }
@@ -686,15 +656,6 @@ private fun AppendError(
  * artwork request (`ArtworkRequestWidths.POSTER_DP`, 128dp) actually fetches.
  */
 private val MIN_CELL_WIDTH = Dimens.PosterWidth
-
-/**
- * Side padding of the header, the chip row and the grid — the screen's own edge.
- *
- * 20dp rather than [Dimens.ScreenPadding]: the refresh's headers sit a touch wider than the
- * content-only screens, and the grid follows the header so the first poster lines up under the
- * title rather than 4dp inside it.
- */
-private val HeaderPadding = 20.dp
 
 /** Vertical gutter between grid rows — wider than the horizontal one, which the titles fill. */
 private val GridRowGap = 20.dp

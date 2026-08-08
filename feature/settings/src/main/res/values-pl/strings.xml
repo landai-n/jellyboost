@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Ustawienia</string>
-    <string name="settings_back">Wstecz</string>
-    <string name="settings_home">Strona główna</string>
 
     <string name="settings_section_playback">Odtwarzanie</string>
     <string name="settings_skip_intro">Pomiń intro</string>
@@ -52,7 +50,6 @@
     <string name="settings_sign_out_dialog_title">Wylogować się?</string>
     <string name="settings_sign_out_dialog_message">Aby zalogować się ponownie, będziesz potrzebować adresu serwera i hasła.</string>
     <string name="settings_sign_out_delete_downloads">Usuń też pobrania z tego urządzenia</string>
-    <string name="settings_cancel">Anuluj</string>
     <string name="settings_section_about">O aplikacji</string>
     <string name="settings_version">Wersja aplikacji</string>
 </resources>

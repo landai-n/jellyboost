@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="detail_back">Zréck</string>
-    <string name="detail_home">Start</string>
-    <string name="detail_play">Ofspillen</string>
     <string name="detail_resume">Weiderfueren</string>
     <string name="detail_download">Eroflueden</string>
-    <string name="detail_download_cancel">Ofbriechen</string>
     <string name="detail_download_remove">Ewechhuelen</string>
-    <string name="detail_download_retry">Nach eng Kéier probéieren</string>
     <string name="detail_play_episode">Dës Episod ofspillen</string>
     <string name="detail_mark_watched">Als gekuckt markéieren</string>
     <string name="detail_mark_unwatched">Als net gekuckt markéieren</string>
@@ -69,7 +64,6 @@
     <string name="detail_delete_download_dialog_title">Download läschen?</string>
     <string name="detail_delete_download_dialog_message">Dëst hëlt en vun dësem Apparat ewech. Du kanns en zu all Moment nach eng Kéier eroflueden.</string>
     <string name="detail_delete_download_dialog_confirm">Läschen</string>
-    <string name="detail_delete_download_dialog_cancel">Ofbriechen</string>
 
     <string name="detail_error_unknown">Beim Lueden vun dësem Element ass eppes schif gelaf.</string>
 </resources>

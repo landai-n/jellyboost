@@ -3,8 +3,6 @@
     <string name="libraries_empty">Әзірге кітапханалар жоқ. Серверде біреуін қосыңыз.</string>
     <string name="libraries_title">Кітапханалар</string>
 
-    <string name="library_back">Артқа</string>
-    <string name="library_home">Басты бет</string>
     <string name="library_sort">Сұрыптау</string>
     <string name="library_filter">Сүзгі</string>
     <string name="library_filter_all">Барлығы</string>
@@ -36,7 +34,6 @@
     <string name="library_empty">Мұнда көрсетуге ештеңе жоқ.</string>
     <string name="library_empty_filtered">Осы сүзгілерге сәйкес келетін элемент жоқ.</string>
     <string name="library_empty_clear_filters">Сүзгілерді тазалау</string>
-    <string name="library_retry">Қайталау</string>
 
     <string name="library_error_unknown">Бұл кітапхананы жүктеу кезінде бірдеңе дұрыс болмады.</string>
 </resources>

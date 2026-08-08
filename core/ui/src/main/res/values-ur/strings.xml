@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="action_back">واپس</string>
+    <string name="action_home">ہوم</string>
+    <string name="action_cancel">منسوخ کریں</string>
+    <string name="action_play">چلائیں</string>
+
     <string name="badge_downloaded">ڈاؤن لوڈ ہو گیا</string>
     <string name="badge_download_queued">ڈاؤن لوڈ کی قطار میں</string>
     <string name="badge_download_paused">ڈاؤن لوڈ موقوف ہے</string>

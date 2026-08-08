@@ -32,7 +32,6 @@
     <string name="login_quick_connect_instructions">Отворете Jellyfin на устройство, в което вече сте влезли, отидете на Quick Connect и въведете този код.</string>
     <string name="login_quick_connect_code_description">Вашият код е %1$s</string>
     <string name="login_quick_connect_waiting">Изчакване на одобрение…</string>
-    <string name="login_quick_connect_cancel">Отказ</string>
 
     <plurals name="auth_error_candidates_tried">
         <item quantity="one">Опитан е %d възможен адрес, без успех.</item>

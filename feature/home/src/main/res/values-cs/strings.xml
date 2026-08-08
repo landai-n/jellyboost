@@ -8,7 +8,6 @@
     <string name="home_section_next_up">Další v pořadí</string>
     <string name="home_section_latest">Nejnovější %1$s</string>
     <string name="home_hero_resume">Pokračovat</string>
-    <string name="home_hero_play">Přehrát</string>
     <string name="home_hero_details">Podrobnosti</string>
     <string name="home_hero_rated">Přístupnost %1$s</string>
     <plurals name="home_minutes_left">

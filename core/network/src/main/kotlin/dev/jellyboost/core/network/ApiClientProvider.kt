@@ -24,16 +24,25 @@ import javax.inject.Singleton
  *
  * The Android `Context` gives the SDK the device *name* it derives from `Build`/`device_name`.
  * The device *id* is deliberately NOT the SDK's default — see [deviceId].
+ *
+ * ### Nothing happens in the constructor (audit PERF-2)
+ * Both SDK objects are built on first *use*, not on construction. Building them is the most
+ * expensive thing in the app's singleton graph — a blocking `SharedPreferences` XML read plus, on
+ * the very first run, a synchronous `commit()` fsync (`SharedPreferencesDeviceIdStore`), a
+ * `Settings.Global` binder read for the device name, and Ktor/OkHttp/serialization setup — and
+ * anything that injects *anything* reaching this class used to pay all of it. Whoever first touches
+ * [jellyfin] or [apiClient] pays it instead, off the cold-start path; `by lazy`'s default
+ * synchronized mode makes that safe from any thread.
  */
 @Singleton
 class ApiClientProvider
     @Inject
     constructor(
-        @ApplicationContext applicationContext: Context,
-        deviceIdProvider: DeviceIdProvider,
+        @ApplicationContext private val applicationContext: Context,
+        private val deviceIdProvider: DeviceIdProvider,
     ) {
         /** SDK entry point. Exposed for `jellyfin.discovery`; not for issuing API calls. */
-        val jellyfin: Jellyfin =
+        val jellyfin: Jellyfin by lazy {
             createJellyfin {
                 context = applicationContext
                 clientInfo = ClientInfo(name = CLIENT_NAME, version = CLIENT_VERSION)
@@ -43,9 +52,10 @@ class ApiClientProvider
                         name = androidDevice(applicationContext).name,
                     )
             }
+        }
 
         /** The one API client. Its base URL and access token change over the app's lifetime. */
-        val apiClient: ApiClient = jellyfin.createApi()
+        val apiClient: ApiClient by lazy { jellyfin.createApi() }
 
         /**
          * Stable per-installation device identifier, from [DeviceIdProvider] (a random UUID
@@ -69,7 +79,7 @@ class ApiClientProvider
          * and whenever the user switches to a different server.
          */
         fun useServer(baseUrl: String) {
-            Timber.d("Pointing API client at %s (no credentials)", baseUrl)
+            Timber.d("Pointing API client at %s (no credentials)", hostForLog(baseUrl))
             apiClient.update(baseUrl = baseUrl, accessToken = null)
         }
 
@@ -82,7 +92,7 @@ class ApiClientProvider
             baseUrl: String,
             accessToken: String,
         ) {
-            Timber.d("Pointing API client at %s with stored credentials", baseUrl)
+            Timber.d("Pointing API client at %s with stored credentials", hostForLog(baseUrl))
             apiClient.update(baseUrl = baseUrl, accessToken = accessToken)
         }
 
@@ -94,7 +104,7 @@ class ApiClientProvider
          * it is used when switching to a different *server*.
          */
         fun useAddress(baseUrl: String) {
-            Timber.d("Re-pointing API client at %s, keeping the session", baseUrl)
+            Timber.d("Re-pointing API client at %s, keeping the session", hostForLog(baseUrl))
             apiClient.update(baseUrl = baseUrl)
         }
 

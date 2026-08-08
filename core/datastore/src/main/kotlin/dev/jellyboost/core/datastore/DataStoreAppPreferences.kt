@@ -10,6 +10,7 @@ import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.io.IOException
@@ -41,7 +42,21 @@ class DataStoreAppPreferences
                 }
             }
 
-        override val forceOffline: Flow<Boolean> = preferences.map { it[FORCE_OFFLINE] == true }
+        /**
+         * One preference, deduplicated.
+         *
+         * DataStore re-emits the **whole** `Preferences` snapshot on every `edit`, so without this
+         * a single write fanned a new value out of all seven flows below — including
+         * [downloadStorageVolumeId], whose collector restarts a full `File.walk` of the downloads
+         * tree, i.e. toggling Wi-Fi-only re-walked the storage root (audit 2026-08-08, PERF-8).
+         *
+         * A helper rather than seven hand-written `distinctUntilChanged()` calls, and rather than
+         * one on [preferences]: deduplicating the snapshot is useless (a write genuinely changes
+         * it), and the one thing worth guaranteeing is that a preference added later cannot forget.
+         */
+        private fun <T> preference(read: (Preferences) -> T): Flow<T> = preferences.map(read).distinctUntilChanged()
+
+        override val forceOffline: Flow<Boolean> = preference { it[FORCE_OFFLINE] == true }
 
         override suspend fun setForceOffline(enabled: Boolean) {
             dataStore.edit { it[FORCE_OFFLINE] = enabled }
@@ -50,7 +65,7 @@ class DataStoreAppPreferences
         // `?: true` rather than `== true`: an unset Wi-Fi-only preference means "on", which is the
         // one default in this file that is not simply `false` (see AppPreferences' KDoc).
         override val downloadOverWifiOnly: Flow<Boolean> =
-            preferences.map { it[DOWNLOAD_OVER_WIFI_ONLY] ?: DEFAULT_WIFI_ONLY }
+            preference { it[DOWNLOAD_OVER_WIFI_ONLY] ?: DEFAULT_WIFI_ONLY }
 
         override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
             dataStore.edit { it[DOWNLOAD_OVER_WIFI_ONLY] = enabled }
@@ -59,7 +74,7 @@ class DataStoreAppPreferences
         // Same name-based encoding, and the same forgiving read, as the skip modes below: a stored
         // name this build does not know decodes to ORIGINAL, which is what a fresh install gets.
         override val downloadQuality: Flow<DownloadQuality> =
-            preferences.map { DownloadQuality.fromNameOrDefault(it[DOWNLOAD_QUALITY]) }
+            preference { DownloadQuality.fromNameOrDefault(it[DOWNLOAD_QUALITY]) }
 
         override suspend fun setDownloadQuality(quality: DownloadQuality) {
             dataStore.edit { it[DOWNLOAD_QUALITY] = quality.name }
@@ -68,7 +83,7 @@ class DataStoreAppPreferences
         // A blank stored id reads as "unset" as well as an absent one: an empty string can only be
         // the result of a bad write, and the default volume is the safe answer to any of them.
         override val downloadStorageVolumeId: Flow<String?> =
-            preferences.map { it[DOWNLOAD_STORAGE_VOLUME]?.takeIf(String::isNotBlank) }
+            preference { it[DOWNLOAD_STORAGE_VOLUME]?.takeIf(String::isNotBlank) }
 
         override suspend fun setDownloadStorageVolumeId(volumeId: String?) {
             dataStore.edit { store ->
@@ -84,19 +99,19 @@ class DataStoreAppPreferences
 
         // M9 player ---------------------------------------------------------------------------
 
-        override val introSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_INTRO) }
+        override val introSkipMode: Flow<SegmentSkipMode> = preference { it.skipMode(SEGMENT_SKIP_INTRO) }
 
         override suspend fun setIntroSkipMode(mode: SegmentSkipMode) {
             dataStore.edit { it[SEGMENT_SKIP_INTRO] = mode.name }
         }
 
-        override val outroSkipMode: Flow<SegmentSkipMode> = preferences.map { it.skipMode(SEGMENT_SKIP_OUTRO) }
+        override val outroSkipMode: Flow<SegmentSkipMode> = preference { it.skipMode(SEGMENT_SKIP_OUTRO) }
 
         override suspend fun setOutroSkipMode(mode: SegmentSkipMode) {
             dataStore.edit { it[SEGMENT_SKIP_OUTRO] = mode.name }
         }
 
-        override val pipOnLeave: Flow<Boolean> = preferences.map { it[PIP_ON_LEAVE] ?: DEFAULT_PIP_ON_LEAVE }
+        override val pipOnLeave: Flow<Boolean> = preference { it[PIP_ON_LEAVE] ?: DEFAULT_PIP_ON_LEAVE }
 
         override suspend fun setPipOnLeave(enabled: Boolean) {
             dataStore.edit { it[PIP_ON_LEAVE] = enabled }

@@ -5,11 +5,15 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.jellyboost.core.common.di.ApplicationScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.shareIn
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,7 +36,23 @@ class AndroidConnectivityMonitor
     @Inject
     constructor(
         @ApplicationContext private val context: Context,
+        @ApplicationScope private val appScope: CoroutineScope,
     ) : ConnectivityMonitor {
+        /**
+         * The system callback, registered **once** however many collectors there are.
+         *
+         * `callbackFlow` is cold, so each collector used to register a `NetworkCallback` of its
+         * own — a binder round trip and a system-side registration per subscriber. There are two,
+         * both for the life of the process (`ConnectionStateProvider` combines this into its state
+         * *and* re-probes the server on every network change), so the app permanently held two
+         * registrations delivering the same edges (audit 2026-08-08, PERF-16).
+         *
+         * `replay = 1` is what keeps the seed meaningful: the callbacks report only *changes*, so a
+         * late subscriber that missed the initial `send` would otherwise sit with no value until
+         * the network next moved. `replayExpirationMillis = 0` clears that cache as soon as the
+         * upstream stops, so a subscriber arriving after a quiet period is never handed a verdict
+         * from before it — it waits the millisecond for a fresh seed instead.
+         */
         override val hasNetwork: Flow<Boolean> =
             callbackFlow {
                 val manager = context.getSystemService(ConnectivityManager::class.java)
@@ -74,10 +94,30 @@ class AndroidConnectivityMonitor
                 awaitClose { manager.unregisterNetworkCallback(callback) }
             }.distinctUntilChanged()
                 .conflate()
+                .shareIn(
+                    scope = appScope,
+                    started =
+                        SharingStarted.WhileSubscribed(
+                            stopTimeoutMillis = UNSUBSCRIBE_GRACE_MS,
+                            replayExpirationMillis = 0L,
+                        ),
+                    replay = 1,
+                )
 
         private fun ConnectivityManager.isUsable(network: Network?): Boolean =
             network != null && getNetworkCapabilities(network).carriesInternet()
 
         private fun NetworkCapabilities?.carriesInternet(): Boolean =
             this != null && hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+
+        private companion object {
+            /**
+             * How long the registration outlives its last collector.
+             *
+             * Only ever exercised in tests and at process teardown today — the app's collectors are
+             * process-lifetime — but unregistering and re-registering across a momentary gap would
+             * cost a pair of binder calls for nothing.
+             */
+            const val UNSUBSCRIBE_GRACE_MS = 5_000L
+        }
     }

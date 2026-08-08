@@ -11,6 +11,7 @@ import dev.jellyboost.core.common.model.ItemQuery
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.LibraryView
+import dev.jellyboost.core.network.runCatchingApi
 import dev.jellyboost.data.cache.BrowseCacheWriter
 import dev.jellyboost.data.mapper.ItemMapper
 import dev.jellyboost.data.mapper.toBaseItemKind

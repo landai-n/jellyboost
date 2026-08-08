@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,8 +19,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,6 +39,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -89,13 +94,19 @@ import kotlin.time.Duration.Companion.minutes
  * The bottom bar is width-capped and centred: on a 2560 px tablet a seek bar stretched edge to edge
  * puts the time readout and the pickers a hand-span apart from each other.
  *
+ * **This composable draws and nothing else.** It holds no picker state: a chip tap goes straight to
+ * `PlayerActions.onOpenPanel`, and `PlayerScreen` hosts every panel above the auto-hide. It used to
+ * `remember` an open sheet here, inside the very `AnimatedVisibility(controlsVisible)` the auto-hide
+ * drives, so the picker was disposed mid-selection a second or two after it was opened (audit UI-1).
+ * Anything on this screen that must outlive four seconds belongs to the screen, not to the bar.
+ *
  * ### The 2026 refresh
  * Everything here is glass over the film — circles for the seek buttons and the chrome, a pill for
  * each picker — with exactly one solid surface on the screen: the white play/pause disc. That is the
  * refresh's rule for primary actions (DECISIONS.md 2026-08-01, "primary action buttons are white"),
  * and over a moving image it is also the only thing that stays findable at a glance. No control was
- * added, removed or rewired in the restyle; the seek amounts, the picker set, the sheet host and the
- * label threshold are the M9–M12 ones.
+ * added, removed or rewired in the restyle; the seek amounts, the picker set and the label threshold
+ * are the M9–M12 ones.
  *
  * The glass here is *flat* dark glass — [VIDEO_GLASS_FILL] plus the standard hairline — not a Haze
  * blur. The video is a `SurfaceView` whose pixels are composited by the system and never reach the
@@ -112,8 +123,6 @@ internal fun PlayerControls(
     actions: PlayerActions,
     modifier: Modifier = Modifier,
 ) {
-    var openSheet by remember { mutableStateOf<PlayerSheet?>(null) }
-
     Box(modifier = modifier.fillMaxSize().background(SCRIM)) {
         TopBar(state = state, onBack = actions.onBack, modifier = Modifier.align(Alignment.TopStart))
 
@@ -128,17 +137,9 @@ internal fun PlayerControls(
             state = state,
             position = position,
             actions = actions,
-            onOpenSheet = { openSheet = it },
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
-
-    PlayerSheetHost(
-        sheet = openSheet,
-        state = state,
-        actions = actions,
-        onDismiss = { openSheet = null },
-    )
 }
 
 @Composable
@@ -151,7 +152,7 @@ private fun TopBar(
         modifier =
             modifier
                 .fillMaxWidth()
-                .systemBarsPadding()
+                .windowInsetsPadding(playerBarInsets())
                 .padding(horizontal = Dimens.SpaceLarge, vertical = Dimens.SpaceMedium),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
@@ -382,7 +383,6 @@ private fun BottomBar(
     state: PlayerUiState,
     position: StateFlow<PlaybackPosition>,
     actions: PlayerActions,
-    onOpenSheet: (PlayerSheet) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -390,7 +390,7 @@ private fun BottomBar(
             modifier
                 .widthIn(max = MAX_BAR_WIDTH)
                 .fillMaxWidth()
-                .systemBarsPadding()
+                .windowInsetsPadding(playerBarInsets())
                 .padding(Dimens.SpaceLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraSmall),
     ) {
@@ -420,19 +420,44 @@ private fun BottomBar(
             ) {
                 Clock(position = position, durationMs = state.durationMs, modifier = Modifier.weight(1f))
 
+                // Keyed by identity, not by position (audit UI-13): this list changes shape at
+                // runtime — joining a group inserts two chips in the middle of it, a receiver
+                // connecting removes another — and an unkeyed `forEach` gives Compose positional
+                // slots, so the chip that *was* third keeps the third slot's remembered state while
+                // drawing a different picker's icon. `key` makes the identity the chip's own.
                 chips.forEach { chip ->
-                    SheetChip(
-                        label = chip.id.label(state),
-                        onClick = { chip.id.open(actions, onOpenSheet) },
-                        icon = chip.id.icon,
-                        showLabel = showLabels,
-                        value = chip.id.value(values),
-                    )
+                    key(chip.id) {
+                        SheetChip(
+                            label = chip.id.label(state),
+                            onClick = { actions.onOpenPanel(chip.id.panel) },
+                            icon = chip.id.icon,
+                            showLabel = showLabels,
+                            value = chip.id.value(values),
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+/**
+ * What the top and bottom bars hold themselves off: the system bars **and** the display cutout, as a
+ * union rather than as a sum (audit UI-16).
+ *
+ * `systemBarsPadding()` alone was the wrong question in this window. The player hides the system
+ * bars, so on most devices that inset resolves to zero — and a bar drawn at the very top of a
+ * landscape screen then runs straight under the notch, where a phone puts the back button and the
+ * title. The cutout is the inset that is still there when the bars are not.
+ *
+ * The bars stay in the union rather than being replaced by the cutout, because they come *back*:
+ * `BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE` means a swipe from the edge floats them over this very
+ * layout, and a three-button navigation bar on an older device is never hidden at all.
+ * `WindowInsets.union` takes the larger of the two per edge — the notch and the status bar occupy
+ * the same edge, and adding `.systemBarsPadding().displayCutoutPadding()` would inset by both.
+ */
+@Composable
+private fun playerBarInsets(): WindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
 
 /**
  * Whether the bottom bar's pickers have room to say what they are, given [maxWidth] — the width the
@@ -861,12 +886,16 @@ private fun ScrubberThumb() {
  * declared [CHIP_HEIGHT], and the click target sits inside that inner clip so the ripple is bounded
  * by the visible shape rather than by the touch frame around it. Do not "simplify" this back to
  * `Button` — see the JellyfinButtons header for the full story.
+ *
+ * @param modifier applied to the invisible touch frame, which is this composable's outermost node —
+ *   so a caller positions the 48dp frame and the capsule stays centred in it (audit UI-18).
  */
 @Composable
 private fun SheetChip(
     label: String,
     icon: ImageVector,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     showLabel: Boolean = true,
     value: String? = null,
 ) {
@@ -876,7 +905,7 @@ private fun SheetChip(
     val state = if (value == null) Modifier else Modifier.semantics { stateDescription = value }
 
     if (!showLabel) {
-        Box(modifier = Modifier.size(Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
+        Box(modifier = modifier.size(Dimens.MinTouchTarget), contentAlignment = Alignment.Center) {
             Box(
                 modifier =
                     Modifier
@@ -898,7 +927,7 @@ private fun SheetChip(
     }
 
     Box(
-        modifier = Modifier.heightIn(min = Dimens.MinTouchTarget),
+        modifier = modifier.heightIn(min = Dimens.MinTouchTarget),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -1159,7 +1188,6 @@ private fun ControlsPreview() {
                 state = state,
                 position = position,
                 actions = previewActions(),
-                onOpenSheet = {},
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
         }

@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -79,6 +81,7 @@ import dev.jellyboost.player.R
 import dev.jellyboost.player.syncplay.ui.SyncPlayGroupSheet
 import dev.jellyboost.player.syncplay.ui.SyncPlayQueueSheet
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 /**
  * The full-screen video player.
@@ -112,10 +115,15 @@ fun PlayerScreen(
 
 /** The screen proper — see the public overload above. Separate so tests can supply a ViewModel. */
 @Suppress(
-    // The longest composable left (127). Its shape is audit CPX-9's finding, not a formatting one: three independent
-    // sheet booleans and a `return@Box` PiP guard that silently drops any sibling appended after it. The fix is one
-    // `openPanel: PlayerPanel?` and an inverted guard — scheduled with the next player wave — and shaving lines out of
-    // it first would only make that fix harder.
+    // Still the longest composable in the app, and now for a reason rather than for a defect (audit UI-10 corrects
+    // what this comment used to claim). CPX-9's shape finding *is* fixed, in this file: one `openPanel: PlayerPanel?`
+    // field instead of independent booleans, and a positive `if (!inPictureInPicture)` instead of the `return@Box`
+    // that silently dropped siblings. What is left is not a function doing several jobs but the one job of wiring a
+    // window, a lifecycle, a keyboard layer, an auto-hide, seven hosted panels and five overlays to a single piece of
+    // screen state — and roughly half of these lines are the comments saying why each of those lives here rather than
+    // one level down. Every candidate split (an overlay block, a `PlayerContent`) was weighed in the UI-1/UI-3 wave:
+    // each needs six to nine parameters to say what the enclosing scope already knows, and moves a hoisting decision
+    // away from the state it exists to protect. Extraction here would buy line count and cost the argument.
     "LongMethod",
 )
 @Composable
@@ -128,12 +136,17 @@ internal fun PlayerScreen(
     val player by viewModel.videoPlayer.collectAsStateWithLifecycle()
     val pipState by viewModel.pipState.collectAsStateWithLifecycle()
     // Hoisted above the controls, and above the auto-hide, because a panel must survive the controls
-    // getting out of the way while the user is reading the participant list (M11) — and, for the
-    // display sheet, because it is the accessible alternative to the brightness and volume swipes
-    // (audit CR-8), so of all three it is the one that must not disappear while it is being used.
+    // getting out of the way while it is being used: the participant list is read at leisure (M11),
+    // the display sheet is the accessible alternative to the brightness and volume swipes (audit
+    // CR-8), and a track picker is chosen from — which the four pickers held inside the control bar
+    // were not allowed to be, until audit UI-1 moved them here with the rest.
     //
-    // One field rather than three booleans (audit CPX-9): see [PlayerPanel].
+    // One field rather than a boolean per panel (audit CPX-9): see [PlayerPanel].
     var openPanel by remember { mutableStateOf<PlayerPanel?>(null) }
+    // Every action the user takes restarts the auto-hide (audit UI-3). Counted rather than
+    // time-stamped: the number is only ever compared with itself as a `LaunchedEffect` key, where
+    // "different from last time" is the whole question and a clock would answer it no better.
+    var interactions by remember { mutableIntStateOf(0) }
     // Rebuilt per composition, these method references are that many new unstable lambdas, and every
     // control below skips nothing (audit PERF-04/PERF-05). The ViewModel outlives the composition,
     // so one bundle is all that is ever needed.
@@ -149,13 +162,13 @@ internal fun PlayerScreen(
                 onSelectSpeed = viewModel::selectSpeed,
                 onSkipSegment = viewModel::skipCurrentSegment,
                 onBack = onBack,
-                onOpenDisplaySheet = { openPanel = PlayerPanel.DISPLAY },
-                onOpenGroupSheet = { openPanel = PlayerPanel.GROUP },
-                onOpenQueueSheet = { openPanel = PlayerPanel.QUEUE },
+                onOpenPanel = { panel -> openPanel = panel },
                 onSetGroupShuffle = viewModel::setGroupShuffle,
                 onSetGroupRepeat = viewModel::setGroupRepeat,
                 onLeaveGroup = viewModel::leaveGroup,
-            )
+                // One wrapper for the whole bundle rather than a bump at each call site, so an
+                // action added later cannot quietly stop counting as use of the player.
+            ).reportingInteraction { interactions++ }
         }
     // The shared one-shot idiom, keyed on the `PlayerMessage` rather than on its copy (audit
     // DUP-3/HYG-8) — which matters most here, where the three cast messages resolve through the
@@ -185,6 +198,8 @@ internal fun PlayerScreen(
     ControlsAutoHideEffect(
         visible = controlsVisible,
         isPlaying = state.isPlaying,
+        panelOpen = openPanel != null,
+        interactions = interactions,
         onHide = { controlsVisible = false },
     )
 
@@ -193,8 +208,7 @@ internal fun PlayerScreen(
     // control bar — see [PlayerKeyScope] for which key wins where.
     val focusRequester = remember { FocusRequester() }
     var rootFocused by remember { mutableStateOf(false) }
-
-    LaunchedEffect(focusRequester) { runCatching { focusRequester.requestFocus() } }
+    val focusClaimed = remember { mutableStateOf(false) }
 
     val runKeyCommand = remember(actions) { playerKeyRunner(actions) { controlsVisible = true } }
 
@@ -209,6 +223,21 @@ internal fun PlayerScreen(
                 .background(Color.Black)
                 .focusRequester(focusRequester)
                 .onFocusChanged { rootFocused = it.isFocused }
+                // Claimed at first placement, not from a `LaunchedEffect` (audit UI-12). A
+                // `FocusRequester` throws until the node it is attached to has been placed, and the
+                // effect that used to do this ran once, keyed on the requester, with the failure
+                // swallowed by a bare `runCatching` — so on any composition where the effect won the
+                // race the keyboard shortcuts were simply dead for the rest of the session, silently.
+                // `onPlaced` cannot be early by construction, and the latch is a plain state read
+                // nowhere in composition, so writing it during layout invalidates nothing.
+                .onPlaced {
+                    if (!focusClaimed.value) {
+                        focusClaimed.value =
+                            runCatching { focusRequester.requestFocus() }
+                                .onFailure { error -> Timber.w(error, "The player root could not take focus") }
+                                .isSuccess
+                    }
+                }
                 // `focusTarget`, not `focusable`: this node exists to receive key events, and
                 // `focusable` would additionally publish a screen-sized semantics node for TalkBack
                 // to stop on — an empty stop over the very surface CR-1 just labelled.
@@ -319,7 +348,7 @@ internal fun PlayerScreen(
     if (!inPictureInPicture) {
         PanelHost(
             panel = openPanel,
-            syncPlay = state.syncPlay,
+            state = state,
             actions = actions,
             onDismiss = { openPanel = null },
         )
@@ -327,23 +356,41 @@ internal fun PlayerScreen(
 }
 
 /**
- * Draws whichever of the screen's three panels is open, or nothing.
+ * Draws whichever of the screen's seven panels is open, or nothing.
  *
- * One `when` over [PlayerPanel] rather than three independently-gated hosts: the exhaustive branch is
- * what makes "one panel at a time" a property of the code instead of a property of the call sites
- * (audit CPX-9). The membership gates the group and queue panels carry are unchanged and stay
- * *inside* their branches, because they answer a different question — not "did the user tap this"
- * but "is the thing this panel is about still there".
+ * One `when` over [PlayerPanel] rather than independently-gated hosts: the exhaustive branch is what
+ * makes "one panel at a time" a property of the code instead of a property of the call sites (audit
+ * CPX-9). Since audit UI-1 it covers the four track/quality/rate pickers too, which the control bar
+ * used to host and dispose along with itself; hosting them here is the whole fix, and the `when`
+ * being exhaustive is what will keep the eighth panel from being hosted somewhere that vanishes.
+ *
+ * The membership gates the group and queue panels carry are unchanged and stay *inside* their
+ * branches, because they answer a different question — not "did the user tap this" but "is the thing
+ * this panel is about still there".
  */
 @Composable
 private fun PanelHost(
     panel: PlayerPanel?,
-    syncPlay: PlayerSyncPlayState,
+    state: PlayerUiState,
     actions: PlayerActions,
     onDismiss: () -> Unit,
 ) {
+    val syncPlay = state.syncPlay
+
     when (panel) {
         null -> Unit
+
+        PlayerPanel.AUDIO ->
+            PlayerAudioDialog(state = state, onSelect = actions.onSelectAudio, onDismiss = onDismiss)
+
+        PlayerPanel.SUBTITLES ->
+            PlayerSubtitleDialog(state = state, onSelect = actions.onSelectSubtitle, onDismiss = onDismiss)
+
+        PlayerPanel.SPEED ->
+            PlayerSpeedDialog(state = state, onSelect = actions.onSelectSpeed, onDismiss = onDismiss)
+
+        PlayerPanel.QUALITY ->
+            PlayerQualityDialog(state = state, onSelect = actions.onSelectQuality, onDismiss = onDismiss)
 
         PlayerPanel.DISPLAY -> PlayerDisplayDialog(onDismiss = onDismiss)
 
@@ -564,30 +611,94 @@ private fun CastingBackdrop(
  * Takes the controls away on their own while something is playing; a paused player keeps them,
  * because a paused film with no controls looks like a frozen app.
  *
- * Two accessibility conditions on that (audit CR-1). **While touch exploration is on the controls
- * never hide at all**: a screen-reader user reads the bar one element at a time, and four seconds is
- * not a traversal — the controls would vanish mid-swipe, every time, and until CR-1's tap action
- * there was no way to ask for them back. Suppressing beats stretching here: no finite timeout is
- * long enough for "read every control", and a bar that stays up is exactly what a user who is
- * exploring the screen wants. When touch exploration is off, the four seconds still pass through
- * [recommendedControlsTimeoutMs], so the system's "time to take action" preference is honoured.
+ * Three conditions suppress the timer entirely, and one restarts it. All four are [controlsAutoHide]'s
+ * to decide — this composable only reads the two system values that cannot be tested and hands them
+ * over, so that "when do the controls go away" is a unit test rather than a stopwatch and a tablet.
+ *
+ * **While touch exploration is on the controls never hide at all** (audit CR-1): a screen-reader user
+ * reads the bar one element at a time, and four seconds is not a traversal — the controls would vanish
+ * mid-swipe, every time, and until CR-1's tap action there was no way to ask for them back.
+ * Suppressing beats stretching here: no finite timeout is long enough for "read every control".
+ *
+ * **While a panel is open the timer does not run** (audit UI-1, belt and braces). Hosting the panels
+ * above the bar is what actually stops a picker being disposed mid-selection; this stops the *bar
+ * behind it* going too, so dismissing a picker returns the user to the controls they opened it from
+ * rather than to bare video. It is also the honest reading of the timer's own question — a user with a
+ * dialog open is using the player, not ignoring it.
+ *
+ * **Every interaction restarts it.** [interactions] is a counter the action bundle bumps
+ * (`PlayerActions.reportingInteraction`), and it is in the effect key, so a seek, a chip tap or a key
+ * press cancels the running timer and starts a fresh one. Before audit UI-3 the key was
+ * `(shouldHide, timeoutMs)`, neither of which an interaction changes — the key runner writes `true`
+ * over `true` — so the bar hid four seconds after it first appeared no matter what was done with it.
+ *
+ * When nothing suppresses it, the four seconds still pass through [recommendedControlsTimeoutMs], so
+ * the system's "time to take action" preference is honoured.
  */
 @Composable
 private fun ControlsAutoHideEffect(
     visible: Boolean,
     isPlaying: Boolean,
+    panelOpen: Boolean,
+    interactions: Int,
     onHide: () -> Unit,
 ) {
-    val touchExplorationEnabled = rememberTouchExplorationEnabled()
-    val timeoutMs = recommendedControlsTimeoutMs()
-    val shouldHide = visible && isPlaying && !touchExplorationEnabled
+    val timer =
+        ControlsAutoHide(
+            armed =
+                controlsAutoHideArmed(
+                    visible = visible,
+                    isPlaying = isPlaying,
+                    panelOpen = panelOpen,
+                    touchExplorationEnabled = rememberTouchExplorationEnabled(),
+                ),
+            timeoutMs = recommendedControlsTimeoutMs(),
+            interactions = interactions,
+        )
 
-    LaunchedEffect(shouldHide, timeoutMs) {
-        if (!shouldHide) return@LaunchedEffect
-        delay(timeoutMs)
+    LaunchedEffect(timer) {
+        if (!timer.armed) return@LaunchedEffect
+        delay(timer.timeoutMs)
         onHide()
     }
 }
+
+/**
+ * The auto-hide timer, as a value: whether it runs, how long it runs for, and what has happened since
+ * it last started.
+ *
+ * It is a `data class` because that is exactly what a `LaunchedEffect` key needs — equality decides
+ * whether the running timer survives the recomposition or is cancelled and restarted — and because it
+ * makes both halves of the contract testable without a Compose runtime: [controlsAutoHideArmed] pins
+ * the four suppression rules, and this value's own equality pins the restart. `ControlsAutoHideTest`
+ * holds both.
+ *
+ * @property armed whether the timer should run at all.
+ * @property timeoutMs how long it waits, once armed — the system's accessibility timeout, not a
+ *   constant, so a change to "time to take action" restarts the timer as surely as a tap does.
+ * @property interactions how many actions the user has taken since the player was composed; every
+ *   change to it is a restart.
+ */
+internal data class ControlsAutoHide(
+    val armed: Boolean,
+    val timeoutMs: Long,
+    val interactions: Int,
+)
+
+/**
+ * Whether the controls should be counting down, given everything that can stop them.
+ *
+ * Pure, and the only place the rule is written: the controls hide when they are up, something is
+ * playing, no panel is covering them and the screen is not being explored by touch. The timeout and
+ * the interaction count are deliberately *not* arguments — they do not decide this question, they
+ * only ride along in [ControlsAutoHide] as the rest of the effect's key.
+ */
+internal fun controlsAutoHideArmed(
+    visible: Boolean,
+    isPlaying: Boolean,
+    panelOpen: Boolean,
+    touchExplorationEnabled: Boolean,
+): Boolean = visible && isPlaying && !panelOpen && !touchExplorationEnabled
 
 /**
  * How long the controls should linger, once the system's own accessibility timeout preference has
@@ -671,8 +782,10 @@ private fun VideoSurface(
  * Puts the window into immersive full-screen for as long as the player is composed, and hands the
  * orientation back to the user's own rotation setting.
  *
- * The previous orientation and system-bar behaviour are captured and restored on dispose; the
- * project's test device is a tablet, where getting this wrong leaves the whole app sideways.
+ * The previous orientation and brightness are captured and restored on dispose; the project's test
+ * device is a tablet, where getting the first wrong leaves the whole app sideways. The system bars
+ * are shown again on the way out, and the decor-fits flag is deliberately *not* put back — see the
+ * comment on it for why a restore there was worse than none (audit UI-2).
  *
  * Suspended in picture-in-picture ([enabled] `false`): a floating window has no system bars to hide
  * and no orientation to force, and asking for an orientation while the system is resizing the window
@@ -697,7 +810,6 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
         val window = activity.window
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         val previousOrientation = activity.requestedOrientation
-        val previousDecorFitsSystemWindows = true
         // The brightness swipe writes a per-window override (`PlayerGestureLayer`), and in a
         // single-activity app the window outlives the player — nothing undoes the override on its
         // own, so a film dimmed for the night would leave every other screen dimmed too (audit
@@ -706,6 +818,15 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
         // system.
         val previousBrightness = window.attributes.screenBrightness
 
+        // Not restored on the way out, and deliberately (audit UI-2). There is no getter for it —
+        // `WindowCompat` only sets — so the "previous value" this used to put back was the literal
+        // `true` somebody wrote next to three genuine captures, and `true` is the one value it is
+        // never allowed to be: `MainActivity.enableEdgeToEdge()` sets it false for the process, and
+        // this is a single-activity app, so leaving the player flipped the *whole app* to
+        // decor-fitting for the rest of its life — status-bar-coloured strips under every screen's
+        // top bar on API 26–34, invisible on the API 35+ test tablet where edge-to-edge is enforced
+        // anyway. The honest restore is none: the app's own value and the player's are both `false`,
+        // and setting it here is belt and braces for a window some future screen has changed.
         WindowCompat.setDecorFitsSystemWindows(window, false)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         controller.hide(WindowInsetsCompat.Type.systemBars())
@@ -713,7 +834,6 @@ private fun ImmersiveLandscapeEffect(enabled: Boolean) {
 
         onDispose {
             controller.show(WindowInsetsCompat.Type.systemBars())
-            WindowCompat.setDecorFitsSystemWindows(window, previousDecorFitsSystemWindows)
             activity.requestedOrientation = previousOrientation
             window.attributes =
                 WindowManager.LayoutParams().apply {

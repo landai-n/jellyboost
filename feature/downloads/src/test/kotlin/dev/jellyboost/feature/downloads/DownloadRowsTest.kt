@@ -5,7 +5,6 @@ import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.model.UserData
-import dev.jellyboost.data.downloads.model.DownloadItem
 import dev.jellyboost.data.downloads.model.SizeCertainty
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
@@ -359,7 +358,7 @@ class DownloadRowsTest {
         status: DownloadStatus = DownloadStatus.DOWNLOADED,
         playbackPositionTicks: Long = 0L,
         played: Boolean = false,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = "1",
         title = title,
         seriesName = series,

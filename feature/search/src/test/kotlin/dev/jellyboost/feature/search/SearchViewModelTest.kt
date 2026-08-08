@@ -19,7 +19,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,13 +27,11 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 
 /**
  * Unit tests for [SearchViewModel].
@@ -63,15 +60,12 @@ class SearchViewModelTest {
 
     private val queries = mutableListOf<ItemQuery>()
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         coEvery { repository.getItems(capture(queries)) } returns AppResult.Success(emptyList())
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     // ---- debounce ---------------------------------------------------------------------------

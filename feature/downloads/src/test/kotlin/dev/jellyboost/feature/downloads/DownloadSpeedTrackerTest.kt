@@ -1,7 +1,6 @@
 package dev.jellyboost.feature.downloads
 
 import dev.jellyboost.core.common.model.DownloadStatus
-import dev.jellyboost.data.downloads.model.DownloadItem
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldNotContainKey
 import io.kotest.matchers.shouldBe
@@ -120,7 +119,7 @@ class DownloadSpeedTrackerTest {
         id: String,
         bytes: Long,
         status: DownloadStatus = DownloadStatus.DOWNLOADING,
-    ) = DownloadItem(
+    ) = downloadItem(
         itemId = id,
         title = "Arrival",
         seriesName = null,

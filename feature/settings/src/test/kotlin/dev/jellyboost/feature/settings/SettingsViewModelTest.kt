@@ -5,7 +5,6 @@ import app.cash.turbine.test
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.DownloadQuality
-import dev.jellyboost.core.common.model.DownloadStatus
 import dev.jellyboost.core.common.model.SegmentSkipMode
 import dev.jellyboost.core.datastore.AppPreferences
 import dev.jellyboost.core.network.SessionRepository
@@ -22,7 +21,6 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -31,12 +29,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.UUID
 
 /**
@@ -66,9 +62,11 @@ class SettingsViewModelTest {
     private val sessionRepository = mockk<SessionRepository>(relaxUnitFun = true)
     private val downloads = mockk<DownloadRepository>(relaxUnitFun = true)
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         every { appPreferences.introSkipMode } returns introSkipMode
         every { appPreferences.outroSkipMode } returns outroSkipMode
         every { appPreferences.pipOnLeave } returns pipOnLeave
@@ -81,11 +79,6 @@ class SettingsViewModelTest {
         every { downloads.observeDownloads() } returns items
         coEvery { downloads.delete(any()) } returns AppResult.Success(0L)
         coEvery { downloads.setStorageLocation(any(), any()) } returns AppResult.Success(Unit)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     // ---- preferences read back --------------------------------------------------------------------
@@ -477,17 +470,7 @@ class SettingsViewModelTest {
             availableBytes = 1_000L,
         )
 
-    private fun item(id: String) =
-        DownloadItem(
-            itemId = id,
-            title = "Item $id",
-            seriesName = null,
-            status = DownloadStatus.DOWNLOADED,
-            bytesDownloaded = 0L,
-            bytesTotal = 0L,
-            bytesOnDisk = 0L,
-            queuePosition = 0,
-        )
+    private fun item(id: String) = downloadItem(id)
 
     private companion object {
         val LOGGED_IN =

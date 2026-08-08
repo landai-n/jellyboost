@@ -16,23 +16,21 @@ import dev.jellyboost.player.syncplay.model.SyncPlayQueueEntry
 import dev.jellyboost.player.syncplay.model.SyncPlayQueueUpdateReason
 import dev.jellyboost.player.syncplay.model.SyncPlayRepeatMode
 import dev.jellyboost.player.syncplay.model.SyncPlayShuffleMode
+import dev.jellyboost.player.ui.MainDispatcherExtension
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.time.Instant
 import java.util.UUID
 
@@ -61,18 +59,15 @@ class SyncPlayQueueViewModelTest {
         }
     private val repository = mockk<JellyfinRepository>()
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         coEvery { repository.getItem(firstItemId.toString()) } returns
             AppResult.Success(item(firstItemId, "The Original"))
         coEvery { repository.getItem(secondItemId.toString()) } returns
             AppResult.Success(item(secondItemId, "Chestnut"))
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     @Test

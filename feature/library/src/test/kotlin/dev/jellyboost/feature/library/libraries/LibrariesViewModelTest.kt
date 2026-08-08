@@ -7,6 +7,7 @@ import dev.jellyboost.core.common.model.CollectionKind
 import dev.jellyboost.core.common.model.LibraryView
 import dev.jellyboost.data.ConnectivityRefresher
 import dev.jellyboost.data.JellyfinRepository
+import dev.jellyboost.feature.library.MainDispatcherExtension
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -16,17 +17,13 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 
 /** Unit tests for [LibrariesViewModel]'s load, failure and refresh behaviour. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -44,15 +41,8 @@ class LibrariesViewModelTest {
     private val movies = LibraryView(id = "lib-movies", name = "Movies", collectionType = CollectionKind.MOVIES)
     private val shows = LibraryView(id = "lib-shows", name = "Shows", collectionType = CollectionKind.TVSHOWS)
 
-    @BeforeEach
-    fun setUp() {
-        Dispatchers.setMain(dispatcher)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
 
     @Test
     fun `starts in the loading state`() =

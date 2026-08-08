@@ -33,7 +33,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -43,12 +42,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 
 /** Unit tests for [LibraryViewModel]'s query building, sort/filter handling and facet loading. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -89,16 +86,13 @@ class LibraryViewModelTest {
      */
     private val totalCountSinks = mutableListOf<(Int) -> Unit>()
 
+    @RegisterExtension
+    val mainDispatcher = MainDispatcherExtension(dispatcher)
+
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(dispatcher)
         every { repository.getItemsPaged(capture(queries), capture(totalCountSinks)) } returns
             flowOf(PagingData.from(listOf(movie("m1", "Dune"))))
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Dispatchers.resetMain()
     }
 
     // ---- route arguments --------------------------------------------------------------------

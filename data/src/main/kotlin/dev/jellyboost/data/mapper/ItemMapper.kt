@@ -31,7 +31,7 @@ import org.jellyfin.sdk.model.api.PersonKind as SdkPersonKind
  *   real one (`DataModule.provideArtworkRequestWidths`).
  */
 @Singleton
-class ItemMapper
+internal class ItemMapper
     @Inject
     constructor(
         private val imageUrls: ImageUrlFactory,

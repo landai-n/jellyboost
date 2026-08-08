@@ -3,7 +3,7 @@ package dev.jellyboost.data.mapper
 import java.util.UUID
 
 /** The artwork kinds this client requests from the server. */
-enum class ImageKind {
+internal enum class ImageKind {
     PRIMARY,
     BACKDROP,
     THUMB,
@@ -17,7 +17,7 @@ enum class ImageKind {
  * `org.jellyfin.sdk.api.client.ApiClient`, and so the offline path can substitute local file URIs
  * in M8 without touching the mapper.
  */
-interface ImageUrlFactory {
+internal interface ImageUrlFactory {
     /**
      * @param itemId item that owns the image.
      * @param kind which artwork to build a URL for.

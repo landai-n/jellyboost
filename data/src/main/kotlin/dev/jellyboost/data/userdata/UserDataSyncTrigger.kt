@@ -1,19 +1,18 @@
 package dev.jellyboost.data.userdata
 
 import android.database.sqlite.SQLiteException
+import dev.jellyboost.core.common.StartOnce
 import dev.jellyboost.core.common.di.ApplicationScope
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
+import dev.jellyboost.core.network.connectivity.onEachOnlineStretch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,8 +30,8 @@ import javax.inject.Singleton
  * - connectivity came back. `NetworkType.CONNECTED` gets a *pending* job running again, but a run
  *   that already failed and exhausted its retries, or one that was never enqueued, needs a nudge.
  *
- * The state flow starts at its current value, so the first collection is the app-start check and
- * every later `false → true` edge is the reconnect one; one code path covers both.
+ * [onEachOnlineStretch] is what covers both with one code path, and carries the reasoning for why
+ * the initial value is deliberately not dropped here.
  *
  * A count query guards the enqueue so a normal launch — the overwhelmingly common case, with
  * nothing pending — costs one indexed `COUNT(*)` on `toBeSynced` and schedules no work at all.
@@ -40,28 +39,19 @@ import javax.inject.Singleton
 @Singleton
 class UserDataSyncTrigger
     @Inject
-    constructor(
+    internal constructor(
         private val connectionState: ConnectionStateProvider,
         private val userDataDao: UserDataDao,
         private val scheduler: UserDataSyncScheduler,
         @ApplicationScope private val scope: CoroutineScope,
         @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     ) {
-        private val started = AtomicBoolean(false)
+        private val startOnce = StartOnce()
 
-        /**
-         * Begins watching the connection. Idempotent — calling it twice does not double the watch,
-         * which matters because `:app` calls it from `Application.onCreate` and a process can be
-         * re-created without the singleton being.
-         */
+        /** Begins watching the connection. Idempotent — see [StartOnce]. */
         fun start() {
-            if (!started.compareAndSet(false, true)) return
-
-            scope.launch {
-                connectionState.state
-                    .map { it.isOnline }
-                    .distinctUntilChanged()
-                    .collect { isOnline -> if (isOnline) enqueueIfPending() }
+            startOnce {
+                scope.launch { connectionState.onEachOnlineStretch { enqueueIfPending() } }
             }
         }
 

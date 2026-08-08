@@ -3,6 +3,7 @@ package dev.jellyboost.data.downloads
 import dev.jellyboost.core.common.model.DownloadFileType
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.DownloadStatus
+import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.entities.DownloadEntity
 import dev.jellyboost.core.database.entities.DownloadFileEntity
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -27,6 +28,19 @@ import java.util.UUID
 @Suppress("LongParameterList")
 object DownloadFixtures {
     val NOW: Instant = Instant.parse("2026-07-28T12:00:00Z")
+
+    /**
+     * A [TransactionRunner] that just runs the block — the stand-in for every test that is *not*
+     * about atomicity itself. Room's real transaction is a device concern; what a JVM test can
+     * assert is the decision it wraps, and which statements are inside it.
+     *
+     * The same shape `:data`'s `CacheFixtures` carries for the browse cache; it cannot be shared,
+     * since a test source set only sees its own module's.
+     */
+    val directTransactionRunner =
+        object : TransactionRunner {
+            override suspend fun <T> inTransaction(block: suspend () -> T): T = block()
+        }
 
     /** Deterministic, readable ids — `uuid(1)` is `…-0001`. */
     fun uuid(seed: Int): UUID = UUID.fromString("00000000-0000-0000-0000-%012d".format(seed))

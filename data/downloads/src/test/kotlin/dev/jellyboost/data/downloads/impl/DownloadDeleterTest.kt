@@ -5,6 +5,7 @@ import dev.jellyboost.core.database.dao.DownloadDao
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.ItemParentRefs
 import dev.jellyboost.core.database.entities.ItemSource
+import dev.jellyboost.data.downloads.DownloadFixtures
 import dev.jellyboost.data.downloads.DownloadFixtures.download
 import dev.jellyboost.data.downloads.DownloadFixtures.uuid
 import dev.jellyboost.data.downloads.storage.DownloadStorage
@@ -17,6 +18,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,6 +42,7 @@ class DownloadDeleterTest {
     fun setUp() {
         every { storage.deleteItemDirectory(any()) } returns 0L
         coEvery { downloadDao.get(any()) } returns download()
+        coEvery { downloadDao.deleteUnlessRunnable(any()) } returns 1
         coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { itemDao.getParentRefs(any()) } returns emptyList()
         coEvery { itemDao.deleteDownloadsNotIn(capture(kept), any()) } returns 0
@@ -56,16 +59,53 @@ class DownloadDeleterTest {
         }
 
     @Test
-    fun `the files go before the rows`() =
+    fun `the guarded row delete goes before the files`() =
         runTest {
-            // The other order would leave gigabytes on disk that nothing points at if the process
-            // died in between.
+            // The order the plan's cascade gives is the other one, and audit CORR-1 is why it
+            // changed: the guard has to be the first destructive act or it guards nothing. What
+            // the old order protected against — a process death leaving bytes nothing points at —
+            // is `OrphanSweeper`'s job at the head of every drain.
             deleter().delete(uuid(1))
 
             coVerifyOrder {
+                downloadDao.deleteUnlessRunnable(uuid(1))
                 storage.deleteItemDirectory(any())
-                downloadDao.delete(uuid(1))
             }
+        }
+
+    @Test
+    fun `a download re-enqueued while the cascade waited keeps its row, its metadata and its files`() =
+        runTest {
+            // The CORR-1 interleaving, at the seam that decides it. The user cancelled (row
+            // CANCELLED, UI instantly offers *Download*), the cascade is behind a five-second
+            // `stop()`, and the user re-tapped: `DownloadEnqueuer` has written a fresh QUEUED row,
+            // so the guarded delete matches nothing and this item is not this cascade's any more.
+            coEvery { downloadDao.deleteUnlessRunnable(uuid(1)) } returns 0
+
+            deleter().delete(uuid(1)) shouldBe 0L
+
+            // Not one byte, not one row, not one metadata blob of the new download is touched.
+            verify(exactly = 0) { storage.deleteItemDirectory(any()) }
+            coVerify(exactly = 0) { itemDao.deleteDownloadsNotIn(any(), any()) }
+            coVerify(exactly = 0) { downloadDao.deleteSyncedUserData(any()) }
+        }
+
+    @Test
+    fun `a batch deletes the rows that are still its own and skips the one that came back`() =
+        runTest {
+            // Cancel-all on a season while the user re-taps Download on one episode: the other
+            // rows still go, and the prune still runs once for them.
+            coEvery { downloadDao.get(uuid(1)) } returns download(itemId = uuid(1))
+            coEvery { downloadDao.get(uuid(2)) } returns download(itemId = uuid(2), directoryName = "Dune (2021)")
+            coEvery { downloadDao.deleteUnlessRunnable(uuid(2)) } returns 0
+            every { storage.deleteItemDirectory("Arrival (2016)") } returns 100L
+
+            deleter().deleteAll(listOf(uuid(1), uuid(2))) shouldBe 100L
+
+            verify(exactly = 0) { storage.deleteItemDirectory("Dune (2021)") }
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
+            coVerify(exactly = 0) { downloadDao.deleteSyncedUserData(uuid(2)) }
+            coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
         }
 
     @Test
@@ -80,11 +120,11 @@ class DownloadDeleterTest {
             deleter().delete(uuid(1)) shouldBe 2_400_000_000L
 
             coVerifyOrder {
-                storage.deleteItemDirectory("Arrival (2016)")
                 // `download_files` follows through the foreign key.
-                downloadDao.delete(uuid(1))
+                downloadDao.deleteUnlessRunnable(uuid(1))
                 itemDao.deleteDownloadsNotIn(any(), ItemSource.DOWNLOAD)
                 downloadDao.deleteSyncedUserData(uuid(1))
+                storage.deleteItemDirectory("Arrival (2016)")
             }
         }
 
@@ -95,7 +135,7 @@ class DownloadDeleterTest {
 
             deleter().delete(uuid(1)) shouldBe 0L
 
-            coVerify { downloadDao.delete(uuid(1)) }
+            coVerify { downloadDao.deleteUnlessRunnable(uuid(1)) }
         }
 
     @Test
@@ -105,7 +145,7 @@ class DownloadDeleterTest {
 
             deleter().delete(uuid(1)) shouldBe 0L
 
-            coVerify(exactly = 0) { downloadDao.delete(any()) }
+            coVerify(exactly = 0) { downloadDao.deleteUnlessRunnable(any()) }
         }
 
     // ---- the metadata prune ---------------------------------------------------------------------
@@ -174,8 +214,8 @@ class DownloadDeleterTest {
             deleter().deleteAll(listOf(uuid(1), uuid(2))) shouldBe 300L
 
             coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
-            coVerify(exactly = 1) { downloadDao.delete(uuid(1)) }
-            coVerify(exactly = 1) { downloadDao.delete(uuid(2)) }
+            coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(1)) }
+            coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(2)) }
             coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
             coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(2)) }
         }
@@ -205,7 +245,13 @@ class DownloadDeleterTest {
 
     // ---- helpers --------------------------------------------------------------------------------
 
-    private fun deleter() = DownloadDeleter(downloadDao = downloadDao, itemDao = itemDao, storage = storage)
+    private fun deleter() =
+        DownloadDeleter(
+            downloadDao = downloadDao,
+            itemDao = itemDao,
+            storage = storage,
+            transactionRunner = DownloadFixtures.directTransactionRunner,
+        )
 
     private fun parentRefs(
         id: UUID,

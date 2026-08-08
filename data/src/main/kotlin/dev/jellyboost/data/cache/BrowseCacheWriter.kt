@@ -74,10 +74,13 @@ import javax.inject.Singleton
  *
  * A `toBeSynced = true` row is left completely untouched — it is the only copy of a change the
  * server has not accepted yet, and reconciling the two versions is most-recent-wins in M8's sync
- * worker, not a cache write's business. The check-then-write is not atomic against a concurrent
- * local write; the window is one Room read wide, both writes are already fire-and-forget, and the
- * worst case is a refreshed row the next read corrects — never a lost server-side change, since a
- * local write that reached the server has already reached it.
+ * worker, not a cache write's business. That filter and the write it guards run in the **same
+ * transaction** as the item merge below. They did not until audit CORR-5, and the in-code comment
+ * that called the window benign was wrong about which direction it lost data in: a local write
+ * landing between the filter and the `upsertAll` sets `toBeSynced = true` and is then overwritten
+ * flag and all, so the row no longer *looks* pending — and if that write's own push then fails
+ * (which is the case the flag exists for), `UserDataSyncWorker` never sees it and the user's change
+ * is gone for good, not corrected by the next read.
  *
  * This stays a *read* concern on purpose: the plan's "local-first always" write path
  * (docs/PLAN.md, "Data layer") is untouched.
@@ -233,6 +236,11 @@ class BrowseCacheWriter
         /**
          * Adopts the server's `userData` into the local mirror for every item that has one and is
          * not waiting to be pushed — rule two in this class's documentation.
+         *
+         * The pending-row filter and the write it guards are one transaction, for the reason the
+         * item merge above is: a check-then-write that another writer can step into is a decision
+         * made about a state that no longer exists. It is all Room work, so it costs nothing but
+         * the block (audit CORR-5).
          */
         private suspend fun refreshUserData(
             dtos: List<BaseItemDto>,
@@ -247,14 +255,14 @@ class BrowseCacheWriter
             if (fromServer.isEmpty()) return
 
             try {
-                val pending = userDataDao.getPendingSyncIds(fromServer.map { it.first }, userId).toSet()
-                val rows =
-                    fromServer
-                        .filterNot { (itemId, _) -> itemId in pending }
-                        .map { (itemId, userData) -> userData.toEntity(itemId, userId, now) }
-                if (rows.isEmpty()) return
-
-                userDataDao.upsertAll(rows)
+                transactionRunner.inTransaction {
+                    val pending = userDataDao.getPendingSyncIds(fromServer.map { it.first }, userId).toSet()
+                    val rows =
+                        fromServer
+                            .filterNot { (itemId, _) -> itemId in pending }
+                            .map { (itemId, userData) -> userData.toEntity(itemId, userId, now) }
+                    if (rows.isNotEmpty()) userDataDao.upsertAll(rows)
+                }
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (error: SQLiteException) {

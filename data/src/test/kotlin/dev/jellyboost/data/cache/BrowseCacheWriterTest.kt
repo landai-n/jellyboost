@@ -1,7 +1,6 @@
 package dev.jellyboost.data.cache
 
 import android.database.sqlite.SQLiteException
-import dev.jellyboost.core.database.TransactionRunner
 import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.dao.LibraryViewDao
 import dev.jellyboost.core.database.dao.UserDataDao
@@ -441,6 +440,43 @@ class BrowseCacheWriterTest {
         }
 
     @Test
+    fun `the pending filter and the user-data write happen in one transaction`() =
+        runTest {
+            // Audit CORR-5. These two used to sit outside the transaction the item merge got: a
+            // local write landing between them sets `toBeSynced = true` and is then overwritten
+            // flag and all by `upsertAll`, so the sync worker never sees it — and if that write's
+            // own push failed, which is the case the flag exists for, the user's change is gone.
+            val depths = mutableListOf<Int>()
+            coEvery { userDataDao.getPendingSyncIds(any(), any()) } answers {
+                depths += transactionRunner.depth
+                emptyList()
+            }
+            coEvery { userDataDao.upsertAll(capture(userDataRows)) } answers {
+                depths += transactionRunner.depth
+            }
+
+            writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
+
+            // One for the item merge, one for this — and both statements saw an open transaction.
+            transactionRunner.opened shouldBe 2
+            depths shouldContainExactly listOf(1, 1)
+        }
+
+    @Test
+    fun `a failed user-data refresh rolls its own block back without touching the item merge`() =
+        runTest {
+            coEvery { userDataDao.upsertAll(any()) } throws SQLiteException("disk full")
+
+            writer().writeItems(listOf(movieDto(uuid(1), "Arrival").withUserData(played = true)))
+
+            // Still swallowed — a broken mirror never fails a read — but it reaches the runner,
+            // which is what makes Room roll that transaction back. The item merge's own
+            // transaction committed before it.
+            transactionRunner.opened shouldBe 2
+            transactionRunner.rolledBack shouldBe 1
+        }
+
+    @Test
     fun `writes no user data when nobody is signed in`() =
         runTest {
             every { sessionRepository.sessionState } returns MutableStateFlow(SessionState.LoggedOut)
@@ -607,39 +643,6 @@ class BrowseCacheWriterTest {
             serverName = "home",
             serverVersion = "10.11.0",
         )
-
-    /**
-     * Stands in for Room's `withTransaction`: it simply runs the block, and records enough for a
-     * test to assert *that* the work happened inside one — which is the property the fix adds, and
-     * the one no amount of mocked DAO calls can otherwise see.
-     */
-    private class RecordingTransactionRunner : TransactionRunner {
-        /** How deep in nested transactions the calling code currently is; 0 means none. */
-        var depth: Int = 0
-            private set
-
-        /** How many transactions were opened in total. */
-        var opened: Int = 0
-            private set
-
-        /** How many ended by throwing — Room's rollback path. */
-        var rolledBack: Int = 0
-            private set
-
-        override suspend fun <T> inTransaction(block: suspend () -> T): T {
-            opened++
-            depth++
-            var committed = false
-            try {
-                val result = block()
-                committed = true
-                return result
-            } finally {
-                depth--
-                if (!committed) rolledBack++
-            }
-        }
-    }
 
     private companion object {
         /** The SDK reads its date fields in the device's zone, so this is a local wall-clock time. */

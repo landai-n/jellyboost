@@ -350,6 +350,7 @@ class SeasonSeedingScenarioTest {
             mapper = mapper,
             appPreferences = appPreferences,
             seeder = seeder(),
+            transactionRunner = DownloadFixtures.directTransactionRunner,
             clock = clock,
         )
 

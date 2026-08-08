@@ -186,9 +186,30 @@ interface DownloadDao {
     @Upsert
     suspend fun upsert(download: DownloadEntity)
 
-    /** Removes one download; its `download_files` rows go with it through the foreign key. */
-    @Query("DELETE FROM downloads WHERE itemId = :itemId")
-    suspend fun delete(itemId: UUID)
+    /**
+     * Removes one download **unless it is back in the queue** — the delete cascade's claim guard.
+     *
+     * The status test lives in the statement for the same reason [markDownloadingIfRunnable]'s
+     * does, and the racer is just as real. A cancel writes `CANCELLED` and the UI immediately maps
+     * that to *not downloaded*, offering **Download** again — while the cascade behind it is still
+     * waiting out `DownloadScheduler.stop()` (up to five seconds). A user who re-taps in that
+     * window gets a fresh `QUEUED` row from `DownloadEnqueuer`, and an unguarded
+     * `DELETE … WHERE itemId = :itemId` then deleted *that* row, its files and its metadata: the
+     * download the user had just asked for vanished with no error anywhere (audit 2026-08-08,
+     * CORR-1).
+     *
+     * `QUEUED` and `DOWNLOADING` are exactly the two statuses the drain can pick up
+     * ([nextRunnable]), so a row holding one of them at cascade time is a *new* download somebody
+     * asked for after the claim — never the one being deleted. Every caller therefore claims its
+     * targets first with [demoteRunnable] (`CANCELLED`), which is atomic against the drain, and
+     * this statement re-checks that the claim still holds at the moment the row actually goes.
+     *
+     * `download_files` rows follow through the foreign key, as before.
+     *
+     * @return `1` when the row was removed, `0` when it was left to its new owner.
+     */
+    @Query("DELETE FROM downloads WHERE itemId = :itemId AND status NOT IN ('QUEUED', 'DOWNLOADING')")
+    suspend fun deleteUnlessRunnable(itemId: UUID): Int
 
     /** Moves a download to a new status, stamping [updatedAt] and clearing any stale error. */
     @Query(

@@ -5,16 +5,12 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.di.IoDispatcher
 import dev.jellyboost.core.database.dao.UserDataDao
 import dev.jellyboost.core.database.entities.UserDataEntity
-import dev.jellyboost.core.network.toSdkDateTime
 import dev.jellyboost.core.network.toSdkInstant
 import dev.jellyboost.data.runCatchingApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
-import org.jellyfin.sdk.api.client.extensions.itemsApi
-import org.jellyfin.sdk.api.client.extensions.playStateApi
 import org.jellyfin.sdk.api.client.extensions.userLibraryApi
-import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import timber.log.Timber
 import java.time.Clock
@@ -78,11 +74,10 @@ internal enum class SyncResolution {
  *
  * ### What a push sends
  * The full desired state, through the same endpoints `UserDataRepositoryImpl` uses for the
- * equivalent single operation: the dedicated played / favourite endpoints first (they carry
- * server-side side effects such as the play count that the merge endpoint does not), then
- * `updateItemUserData` last so the position and `lastPlayedDate` this device recorded are the ones
- * that stick. The worker cannot know *which* operation produced the pending row — it may be
- * several, batched by an offline session — so it asserts the whole row rather than guessing.
+ * equivalent single operation — [pushUserData], which is where those three requests and the order
+ * they go in are defined for both callers. The worker cannot know *which* operation produced the
+ * pending row — it may be several, batched by an offline session — so it asserts the whole row
+ * rather than guessing.
  */
 @Singleton
 class UserDataSyncer
@@ -176,40 +171,16 @@ class UserDataSyncer
             return SyncResolution.ADOPTED
         }
 
-        /** The local row is newer: assert it on the server, then clear the flag. */
+        /**
+         * The local row is newer: assert it on the server, then clear the flag.
+         *
+         * The three requests and the order they go in are [pushUserData]'s — shared with
+         * `UserDataRepositoryImpl`, which is where the second copy of them used to live (audit
+         * DUP-5). The rule that decides the order (`markPlayedItem` clears the server's resume
+         * position, so the position is asserted last) is documented there, once.
+         */
         private suspend fun push(row: UserDataEntity): SyncResolution {
-            val pushed =
-                runCatchingApi {
-                    if (row.played) {
-                        apiClient.playStateApi.markPlayedItem(
-                            itemId = row.itemId,
-                            userId = row.userId,
-                            datePlayed = row.lastPlayedDate?.toSdkDateTime(),
-                        )
-                    } else {
-                        apiClient.playStateApi.markUnplayedItem(itemId = row.itemId, userId = row.userId)
-                    }
-
-                    if (row.isFavorite) {
-                        apiClient.userLibraryApi.markFavoriteItem(itemId = row.itemId, userId = row.userId)
-                    } else {
-                        apiClient.userLibraryApi.unmarkFavoriteItem(itemId = row.itemId, userId = row.userId)
-                    }
-
-                    // Last on purpose: `markPlayedItem` clears the server's resume position, so the
-                    // position has to be asserted after it, not before.
-                    apiClient.itemsApi.updateItemUserData(
-                        itemId = row.itemId,
-                        userId = row.userId,
-                        data =
-                            UpdateUserItemDataDto(
-                                playbackPositionTicks = row.playbackPositionTicks,
-                                played = row.played,
-                                isFavorite = row.isFavorite,
-                                lastPlayedDate = row.lastPlayedDate?.toSdkDateTime(),
-                            ),
-                    )
-                }
+            val pushed = runCatchingApi { apiClient.pushUserData(row) }
 
             return when (pushed) {
                 is AppResult.Failure ->

@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Upsert
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.database.entities.DownloadedItemKey
+import dev.jellyboost.core.database.entities.FacetKey
 import dev.jellyboost.core.database.entities.ItemCacheKey
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemParentRefs
@@ -269,12 +270,27 @@ interface ItemDao {
         episodeType: ItemType,
     ): List<ItemEntity>
 
-    /** Every downloaded row of the given types — the input to the offline filter facets. */
-    @Query("SELECT * FROM items WHERE source = :source AND type IN (:types)")
-    suspend fun allBySource(
+    /**
+     * Every downloaded row of the given types, as the three columns the offline filter sheet's
+     * facets are built from — and nothing else.
+     *
+     * No `WHERE` beyond source and type and no `LIMIT`, because a facet list is the *distinct*
+     * values across the whole offline library and a page of it would offer the user filters that
+     * exclude items they can see. Which makes the projection the point: reading these rows as
+     * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob to answer a
+     * question about three small columns (audit 2026-08-08, PERF-18).
+     */
+    @Query(
+        """
+        SELECT genres AS genres, productionYear AS productionYear, officialRating AS officialRating
+        FROM items
+        WHERE source = :source AND type IN (:types)
+        """,
+    )
+    suspend fun facetKeysBySource(
         source: ItemSource,
         types: List<ItemType>,
-    ): List<ItemEntity>
+    ): List<FacetKey>
 
     /**
      * Drops browse-cache rows older than [cutoff].
@@ -285,6 +301,41 @@ interface ItemDao {
     @Query("DELETE FROM items WHERE source = :browseCache AND cachedAt < :cutoff")
     suspend fun evictBrowseCacheOlderThan(
         cutoff: Instant,
+        browseCache: ItemSource,
+    ): Int
+
+    /**
+     * Drops the browse-cache rows beyond the [keep] most recently written ones.
+     *
+     * The age sweep's companion, and it bounds the thing age cannot: a single session of heavy
+     * browsing writes rows far faster than a month passes, so a TTL alone leaves within-session
+     * growth unbounded — and every one of those rows carries a multi-kilobyte `dto` blob (audit
+     * 2026-08-08, PERF-17).
+     *
+     * The sub-select orders by the same `(source, cachedAt)` index the sweep uses and skips the
+     * survivors, so what it visits is only the excess. `LIMIT -1` is SQLite's "no limit", which is
+     * how an `OFFSET` is expressed without one.
+     *
+     * Downloads are excluded by the `source` predicate, in both halves, for
+     * [evictBrowseCacheOlderThan]'s reason: a [ItemSource.DOWNLOAD] row is never evicted, however
+     * far down the list it sorts.
+     *
+     * @return how many rows were dropped.
+     */
+    @Query(
+        """
+        DELETE FROM items
+        WHERE source = :browseCache
+          AND id IN (
+            SELECT id FROM items
+            WHERE source = :browseCache
+            ORDER BY cachedAt DESC
+            LIMIT -1 OFFSET :keep
+          )
+        """,
+    )
+    suspend fun trimBrowseCacheTo(
+        keep: Int,
         browseCache: ItemSource,
     ): Int
 

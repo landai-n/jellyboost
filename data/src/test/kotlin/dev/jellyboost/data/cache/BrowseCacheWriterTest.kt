@@ -99,6 +99,7 @@ class BrowseCacheWriterTest {
             userDataDao = userDataDao,
             sessionRepository = sessionRepository,
             mapper = mapper,
+            maintenance = CacheFixtures.maintenance(this, itemDao, clock),
             clock = clock,
             transactionRunner = transactionRunner,
             scope = this,

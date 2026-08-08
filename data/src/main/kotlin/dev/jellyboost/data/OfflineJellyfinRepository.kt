@@ -267,6 +267,11 @@ internal class OfflineJellyfinRepository
          * *television* and filtering by one of them could only ever produce an empty grid
          * (docs/notes/audit-2026-07.md, ARCH-01). Scoping is by type, for the reason
          * [typesOf] documents.
+         *
+         * The read is a three-column projection ([FacetKey]) and not [ItemEntity]: a facet list is
+         * the distinct values over the *whole* offline library, so this query has no `LIMIT` — and
+         * as whole rows it deserialised every downloaded item's multi-kilobyte `dto` blob to
+         * produce three small lists, each time the sheet was opened (audit 2026-08-08, PERF-18).
          */
         override suspend fun getFilterFacets(
             parentId: String?,
@@ -274,7 +279,7 @@ internal class OfflineJellyfinRepository
         ): AppResult<FilterFacets> =
             onIo {
                 val rows =
-                    itemDao.allBySource(
+                    itemDao.facetKeysBySource(
                         ItemSource.DOWNLOAD,
                         typesOf(parentId?.toUuidOrNull(), itemTypes.ifEmpty { LIST_ITEM_TYPES }),
                     )

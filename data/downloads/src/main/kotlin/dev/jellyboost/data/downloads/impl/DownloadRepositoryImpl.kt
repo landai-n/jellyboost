@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -171,7 +172,7 @@ internal class DownloadRepositoryImpl
          */
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun observeStorage(): Flow<StorageUsage> =
-            combine(downloadShape(), locations.selectedVolumeId) { shape, _ -> shape }
+            combine(downloadShape, locations.selectedVolumeId) { shape, _ -> shape }
                 .flatMapLatest { shape -> if (shape.transferring) walkTicks() else flowOf(Unit) }
                 .map {
                     StorageUsage(
@@ -191,15 +192,46 @@ internal class DownloadRepositoryImpl
          */
         override fun observeBytesOnDisk(itemId: String): Flow<Long?> {
             val id = itemId.toUuidOrNull() ?: return flowOf(null)
-            return downloadDao.observeBytesOnDisk(id)
+            return downloadDao
+                .observeBytesOnDisk(id)
+                // The five flows above all carry this pair; this one did not. `download_files` is
+                // written on every throttled progress sample of *any* item in the queue, and Room
+                // re-runs the `SUM` for each of them — so an open detail page re-summed its own
+                // files at 2/s because something unrelated was downloading, and emitted the same
+                // number every time (audit 2026-08-08, PERF-9).
+                .distinctUntilChanged()
+                .flowOn(ioDispatcher)
         }
 
-        /** The download table reduced to what changes which files exist. */
-        private fun downloadShape(): Flow<DownloadShape> =
+        /**
+         * The download table reduced to what changes which files exist.
+         *
+         * Shared for [downloadStates]' reason, and it is the same `observeProgress()` query
+         * underneath: two flows subscribe to this one ([observeStorage] and
+         * [observeStorageLocations]) and the Downloads screen shows both at once, so a cold flow
+         * here meant two independent full reads of the table per progress sample — the samples this
+         * projection exists to *not* pay for (audit 2026-08-08, PERF-6).
+         *
+         * `shareIn(replay = 1)` rather than [kotlinx.coroutines.flow.stateIn]: a `StateFlow` needs
+         * an initial value, and the only honest one is an empty table — which both consumers would
+         * briefly believe, walking the storage tree and reporting "0 downloads" before the first
+         * real emission. A replay cache holds the last real shape and nothing else.
+         *
+         * `by lazy` for [downloadStates]' reason too: this is a constructor property, and building
+         * the chain eagerly would call `observeProgress()` in every unit test that never subscribes.
+         */
+        private val downloadShape: Flow<DownloadShape> by lazy {
             downloadDao
                 .observeProgress()
                 .map { rows -> DownloadShape(rows.mapTo(mutableSetOf()) { it.itemId to it.status }) }
                 .distinctUntilChanged()
+                .flowOn(ioDispatcher)
+                .shareIn(
+                    scope = appScope,
+                    started = SharingStarted.WhileSubscribed(STATES_STOP_TIMEOUT_MS),
+                    replay = 1,
+                )
+        }
 
         /**
          * `locations.resolve()` re-scans the mounted volumes, which is not free — and used to be
@@ -208,7 +240,7 @@ internal class DownloadRepositoryImpl
          * answers that at the rate it can actually change (docs/notes/audit-2026-07.md, PERF-13).
          */
         override fun observeStorageLocations(): Flow<StorageLocations> =
-            combine(downloadShape(), locations.selectedVolumeId) { shape, selectedId ->
+            combine(downloadShape, locations.selectedVolumeId) { shape, selectedId ->
                 val selection = locations.resolve(selectedId)
                 StorageLocations(
                     volumes = selection.volumes.map(DownloadVolume::toOption),
@@ -555,7 +587,18 @@ private class DownloadMetadataCache(
 ) {
     private val parsed = mutableMapOf<UUID, CachedMetadata>()
 
-    /** The items behind [ids], parsing only the rows whose cached blob changed since last time. */
+    /**
+     * The items behind [ids], parsing only the rows whose cached blob changed since last time.
+     *
+     * The `getCacheKeys` probe runs on **every** emission and deliberately stays that way. It looks
+     * like a candidate for a shape gate — an emission this flow gets is a `downloads` write, and a
+     * byte count cannot move an `items` row (audit 2026-08-08, PERF-7 suggests exactly that) — but
+     * this probe is the only thing that notices a *metadata* refresh: `DownloadedMetadataRefresher`
+     * rewrites `items` rows behind an open Downloads screen, and picking that up is pinned by
+     * `DownloadRepositoryImplTest`. The probe is a three-column projection over primary keys; what
+     * PERF-7 was really paying for was the emission *rate*, which the queue's transactional sample
+     * write halves at the source.
+     */
     suspend fun itemsFor(ids: List<UUID>): Map<UUID, JellyfinItem> {
         if (ids.isEmpty()) {
             parsed.clear()

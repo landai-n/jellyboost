@@ -2,7 +2,6 @@ package dev.jellyboost.data.userdata
 
 import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.core.common.model.UserData
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 /**
@@ -19,11 +18,15 @@ import kotlinx.coroutines.flow.SharedFlow
  * server has heard about it yet.
  */
 interface UserDataRepository {
-    /** Local user-data changes, for list ViewModels to patch their items in place. */
+    /**
+     * Local user-data changes, for list ViewModels to patch their items in place.
+     *
+     * The **only** observation surface this repository offers. A per-item `observe(itemId)` used to
+     * sit beside it, backed by a Room `Flow`; it never acquired a caller, because a screen that has
+     * already rendered an item wants the *delta* rather than a second subscription re-reading the
+     * table on every write in it (audit 2026-08-08, PERF-28).
+     */
     val changes: SharedFlow<UserDataChange>
-
-    /** Observes one item's locally stored user data; emits `null` until a local row exists. */
-    fun observe(itemId: String): Flow<UserData?>
 
     /**
      * Marks an item watched or unwatched.

@@ -46,6 +46,10 @@ internal class DownloadWorker
     ) : CoroutineWorker(appContext, workerParameters) {
         override suspend fun doWork(): Result {
             notifier.ensureChannel()
+            // Before "Preparing…", not after: the notifier is a singleton and remembers what the
+            // *previous* run last posted, so without this the first sample of this run could match
+            // it and be skipped, leaving the notification on "Preparing…" (PERF-15).
+            notifier.resetPostedProgress()
             promote { notifier.startingForegroundInfo() }
 
             return try {
@@ -83,7 +87,9 @@ internal class DownloadWorker
                     promote { info }
                 }
 
-                override suspend fun onIdle() = Unit
+                // The queue ran dry with this worker still alive: whatever it posts next describes
+                // a new run of the drain, and must not be suppressed as "unchanged" (PERF-15).
+                override suspend fun onIdle() = notifier.resetPostedProgress()
             }
 
         /**

@@ -45,6 +45,33 @@ enum class ItemSource {
  * Image *tags* rather than image URLs are stored: a URL embeds the server's base address, which
  * changes when the reachability probe rotates to another `ServerAddressEntity`.
  *
+ * ### Why these indices, and why not the obvious ones (schema v9)
+ *
+ * Every list query in [dev.jellyboost.core.database.dao.ItemDao] leads with `source`, because the
+ * offline surfaces are downloaded-items-only while the same table also holds the whole browse
+ * cache. So the two composites below are what the statements are actually shaped like, and the
+ * single-column `source` / `cachedAt` indices they replace are not kept alongside them: `source` is
+ * an exact leftmost prefix of `(source, type)`, and no query orders or filters by `cachedAt`
+ * without also fixing `source`. Verified with `EXPLAIN QUERY PLAN` on a 20k-row copy of this
+ * schema — dropping both leaves every plan byte-identical (audit 2026-08-08, PERF-3/PERF-24).
+ *
+ * - `(source, type)` turned four full-ish scans into two-column searches. They previously picked
+ *   `index_items_type` and then visited **every** browsed episode ever cached, deserialising a
+ *   multi-kilobyte [dto] blob per row before `source` discarded it (`unwatchedDownloadedEpisodes`,
+ *   `searchDownloaded`, `downloadedListKeys`, `facetKeysBySource`).
+ * - `(source, cachedAt)` serves the browse-cache eviction sweep as a two-column range delete
+ *   instead of a scan of *every* row older than the cutoff regardless of source, and lets
+ *   `latestDownloadedKeys` read its `cachedAt DESC` order straight off the index — its
+ *   `TEMP B-TREE` is gone.
+ * - `type` stays as a single column even though it is the *second* member of `(source, type)`: a
+ *   composite cannot answer a type-only predicate, and unlike `source` it has no covering prefix
+ *   to fall back on.
+ * - **There is deliberately no `sortName` index.** Room's `@Index` cannot express a collation, so
+ *   the one this table used to carry was `BINARY` while both consumers sort
+ *   `sortName COLLATE NOCASE` — proven never used (the NOCASE plans build a `TEMP B-TREE` and
+ *   ignore it), i.e. pure write amplification on every cached page. The sorts it would have served
+ *   run over the `source`-filtered subset, which the composite above now bounds.
+ *
  * @property sortName the server's `sortName`, falling back to [name]; the library grid's sort key.
  * @property cachedAt when this row was last written. Doubles as the "recently downloaded" ordering
  *   for the offline home rows, which is why a browse write-through must not bump it on a
@@ -53,13 +80,12 @@ enum class ItemSource {
 @Entity(
     tableName = "items",
     indices = [
-        Index(value = ["source"]),
+        Index(value = ["source", "type"]),
+        Index(value = ["source", "cachedAt"]),
         Index(value = ["type"]),
         Index(value = ["parentId"]),
         Index(value = ["seriesId"]),
         Index(value = ["seasonId"]),
-        Index(value = ["sortName"]),
-        Index(value = ["cachedAt"]),
     ],
 )
 data class ItemEntity(
@@ -139,6 +165,22 @@ data class DownloadedItemKey(
     val officialRating: String?,
     val played: Boolean,
     val isFavorite: Boolean,
+)
+
+/**
+ * One downloaded row reduced to the three columns a **filter sheet** is built from.
+ *
+ * A projection rather than whole rows for [DownloadedItemKey]'s reason, and more sharply: the
+ * facets are the distinct genres, years and ratings across *every* downloaded item, so the query
+ * behind them has no `WHERE` beyond source and type and no `LIMIT` at all. Reading it as
+ * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob — the whole offline
+ * library, in bytes — to answer a question about three small columns, every time the sheet was
+ * opened (audit 2026-08-08, PERF-18).
+ */
+data class FacetKey(
+    val genres: List<String>,
+    val productionYear: Int?,
+    val officialRating: String?,
 )
 
 /**

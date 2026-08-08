@@ -42,6 +42,11 @@ class DownloadDeleterTest {
     fun setUp() {
         every { storage.deleteItemDirectory(any()) } returns 0L
         coEvery { downloadDao.get(any()) } returns download()
+        // The cascade reads its whole batch in one statement (audit PERF-25); routing it through
+        // the per-id stub keeps every test below expressing its rows one at a time, as it did.
+        coEvery { downloadDao.getAll(any()) } coAnswers {
+            firstArg<List<UUID>>().mapNotNull { downloadDao.get(it) }
+        }
         coEvery { downloadDao.deleteUnlessRunnable(any()) } returns 1
         coEvery { downloadDao.allItemIds() } returns emptyList()
         coEvery { itemDao.getParentRefs(any()) } returns emptyList()
@@ -103,8 +108,8 @@ class DownloadDeleterTest {
             deleter().deleteAll(listOf(uuid(1), uuid(2))) shouldBe 100L
 
             verify(exactly = 0) { storage.deleteItemDirectory("Dune (2021)") }
-            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
-            coVerify(exactly = 0) { downloadDao.deleteSyncedUserData(uuid(2)) }
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(listOf(uuid(1))) }
+            coVerify(exactly = 0) { downloadDao.deleteSyncedUserData(match { uuid(2) in it }) }
             coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
         }
 
@@ -123,7 +128,7 @@ class DownloadDeleterTest {
                 // `download_files` follows through the foreign key.
                 downloadDao.deleteUnlessRunnable(uuid(1))
                 itemDao.deleteDownloadsNotIn(any(), ItemSource.DOWNLOAD)
-                downloadDao.deleteSyncedUserData(uuid(1))
+                downloadDao.deleteSyncedUserData(listOf(uuid(1)))
                 storage.deleteItemDirectory("Arrival (2016)")
             }
         }
@@ -216,8 +221,8 @@ class DownloadDeleterTest {
             coVerify(exactly = 1) { itemDao.deleteDownloadsNotIn(any(), any()) }
             coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(1)) }
             coVerify(exactly = 1) { downloadDao.deleteUnlessRunnable(uuid(2)) }
-            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
-            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(2)) }
+            // One statement for the whole batch now, not one per removed row (audit PERF-25).
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(listOf(uuid(1), uuid(2))) }
         }
 
     @Test
@@ -240,7 +245,7 @@ class DownloadDeleterTest {
 
             // The DAO query itself carries the `toBeSynced = 0` guard — a pending row is the only
             // copy of a change the server has not seen.
-            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(uuid(1)) }
+            coVerify(exactly = 1) { downloadDao.deleteSyncedUserData(listOf(uuid(1))) }
         }
 
     // ---- helpers --------------------------------------------------------------------------------

@@ -78,6 +78,11 @@ import java.util.UUID
         Index(value = ["status"]),
         Index(value = ["queuePosition"]),
         Index(value = ["userId"]),
+        // `(seriesName, quality)` is the pair both sibling-size lookups filter on
+        // (`completedSiblings`, `unseededSiblings`), and they run on the enqueue path for every
+        // episode of a season. Without it `completedSiblings` fell back to `index_downloads_status`
+        // and `unseededSiblings` scanned the table in queue order (schema v9, audit PERF-23).
+        Index(value = ["seriesName", "quality"]),
     ],
 )
 data class DownloadEntity(

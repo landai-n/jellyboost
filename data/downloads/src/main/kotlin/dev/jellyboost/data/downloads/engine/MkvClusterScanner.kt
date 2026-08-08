@@ -70,6 +70,16 @@ internal class MkvClusterScanner {
     private val carry = ByteArray(WINDOW - 1)
     private var carryLength = 0
 
+    /**
+     * Scratch for the carry-plus-head join, allocated once and reused.
+     *
+     * At most `(WINDOW - 1)` carried bytes joined to at most `(WINDOW - 1)` of the new chunk, so
+     * this is the largest join that can ever be needed. It used to be a fresh `ByteArray` per
+     * chunk, alongside a second one in [rememberTail] — two allocations for every 64 KB of a
+     * transfer, on the thread copying it (audit 2026-08-08, PERF-13).
+     */
+    private val joined = ByteArray(2 * (WINDOW - 1))
+
     private var timestampScaleNanos = DEFAULT_TIMESTAMP_SCALE_NANOS
     private var sawCluster = false
     private var latestMillis = -1L
@@ -101,17 +111,24 @@ internal class MkvClusterScanner {
         // enough of this one to complete the longest element we look at.
         if (carryLength > 0) {
             val take = minOf(length, WINDOW - 1)
-            val joined = ByteArray(carryLength + take)
             System.arraycopy(carry, 0, joined, 0, carryLength)
             System.arraycopy(chunk, offset, joined, carryLength, take)
-            scan(joined, from = 0, end = joined.size, startEnd = carryLength)
+            scan(joined, from = 0, end = carryLength + take, startEnd = carryLength)
         }
 
         scan(chunk, from = offset, end = offset + length, startEnd = offset + length)
         rememberTail(chunk, offset, length)
     }
 
-    /** Scans `[from, end)` for candidates that *begin* before [startEnd]. */
+    /**
+     * Scans `[from, end)` for candidates that *begin* before [startEnd].
+     *
+     * The two ids this looks for begin with distinct bytes, so the loop tests one byte per offset
+     * and only calls [matches] where a lead byte actually landed. It used to call it at *every*
+     * offset — twice, once per pattern — which is two calls and two bounds checks for each byte of
+     * a multi-gigabyte transfer, on the thread copying it (audit 2026-08-08, PERF-13). Identical
+     * results: a byte that is not the pattern's first byte can never start the pattern.
+     */
     private fun scan(
         buffer: ByteArray,
         from: Int,
@@ -120,16 +137,30 @@ internal class MkvClusterScanner {
     ) {
         var index = from
         while (index < startEnd) {
-            if (matches(buffer, index, end, CLUSTER_ID)) {
-                readClusterMillis(buffer, index + CLUSTER_ID.size, end)?.let(::acceptCluster)
-            } else if (!sawCluster && matches(buffer, index, end, TIMESTAMP_SCALE_ID)) {
-                readTimestampScale(buffer, index + TIMESTAMP_SCALE_ID.size, end)
+            when (buffer[index]) {
+                CLUSTER_LEAD ->
+                    if (matches(buffer, index, end, CLUSTER_ID)) {
+                        readClusterMillis(buffer, index + CLUSTER_ID.size, end)?.let(::acceptCluster)
+                    }
+
+                TIMESTAMP_SCALE_LEAD ->
+                    if (!sawCluster && matches(buffer, index, end, TIMESTAMP_SCALE_ID)) {
+                        readTimestampScale(buffer, index + TIMESTAMP_SCALE_ID.size, end)
+                    }
+
+                else -> Unit
             }
             index++
         }
     }
 
-    /** Keeps the tail of `carry + chunk` for the next call, so a split element is not lost. */
+    /**
+     * Keeps the tail of `carry + chunk` for the next call, so a split element is not lost.
+     *
+     * Shifted in place. `System.arraycopy` is a `memmove`, so the surviving carry bytes can slide
+     * down over themselves before the chunk's tail is appended — the third array this used to
+     * allocate per chunk bought nothing (audit 2026-08-08, PERF-13).
+     */
     private fun rememberTail(
         chunk: ByteArray,
         offset: Int,
@@ -138,10 +169,8 @@ internal class MkvClusterScanner {
         val keep = minOf(WINDOW - 1, carryLength + length)
         val fromChunk = minOf(length, keep)
         val fromCarry = keep - fromChunk
-        val next = ByteArray(keep)
-        if (fromCarry > 0) System.arraycopy(carry, carryLength - fromCarry, next, 0, fromCarry)
-        System.arraycopy(chunk, offset + length - fromChunk, next, fromCarry, fromChunk)
-        System.arraycopy(next, 0, carry, 0, keep)
+        if (fromCarry > 0) System.arraycopy(carry, carryLength - fromCarry, carry, 0, fromCarry)
+        System.arraycopy(chunk, offset + length - fromChunk, carry, fromCarry, fromChunk)
         carryLength = keep
     }
 
@@ -225,6 +254,15 @@ internal class MkvClusterScanner {
 
         /** `TimestampScale`, inside Segment Info. */
         val TIMESTAMP_SCALE_ID = byteArrayOf(0x2A, 0xD7.toByte(), 0xB1.toByte())
+
+        /**
+         * The first bytes of the two ids above, as the byte-per-offset test [scan] leads with.
+         *
+         * They are distinct, which is what lets one `when` decide which pattern (if either) an
+         * offset could possibly begin.
+         */
+        val CLUSTER_LEAD = CLUSTER_ID[0]
+        val TIMESTAMP_SCALE_LEAD = TIMESTAMP_SCALE_ID[0]
 
         /** `Timestamp`, the first child of a cluster once any `CRC-32` is past. */
         const val TIMESTAMP_ID = 0xE7

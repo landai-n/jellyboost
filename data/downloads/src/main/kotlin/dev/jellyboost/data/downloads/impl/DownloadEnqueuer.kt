@@ -141,7 +141,11 @@ internal class DownloadEnqueuer
 
             removeDoomedContainerRow(container)
 
-            val pending = episodeIds.filter { downloadDao.get(it).isRetryable() }
+            // One read for the whole season, not one per episode: a forty-episode series meant
+            // forty statements before the enqueue could even begin (audit 2026-08-08, PERF-25). An
+            // id with no row is absent from the answer, which `isRetryable` already reads as "yes".
+            val existing = downloadDao.getAll(episodeIds).associateBy { it.itemId }
+            val pending = episodeIds.filter { existing[it].isRetryable() }
             if (pending.isEmpty()) return AppResult.Success(emptyList())
 
             val fetched =
@@ -477,7 +481,7 @@ internal class DownloadEnqueuer
                     ?: return SizeEstimate(mediaSources?.firstOrNull()?.size, exact = true)
 
             val ticks = runTimeTicks?.takeIf { it > 0L } ?: return SizeEstimate(null, exact = false)
-            val seconds = ticks.toDouble() / TICKS_PER_SECOND
+            val seconds = ticks.toDouble() / Ticks.PER_SECOND
             val sidecars = extraAudioBytes(seconds)
 
             remuxBytes(quality, seconds)?.let {
@@ -636,9 +640,6 @@ internal class DownloadEnqueuer
             this == null || status == DownloadStatus.ERROR || status == DownloadStatus.CANCELLED
 
         private companion object {
-            /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
-            const val TICKS_PER_SECOND = 10_000_000.0
-
             /** The one input container `CanStreamCopyVideo` has a special case for. */
             const val AVI_CONTAINER = "avi"
 

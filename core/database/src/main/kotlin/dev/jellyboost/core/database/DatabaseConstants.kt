@@ -21,6 +21,11 @@ object DatabaseConstants {
      *   by `@AutoMigration(6, 7)`.
      * - v8 — the audio track a transcode baked in (`downloads.bakedAudioStreamIndex`, nullable),
      *   by `@AutoMigration(7, 8)`.
+     * - v9 — **indices only**, no column or table change: `items` gains `(source, type)` and
+     *   `(source, cachedAt)` and loses the three single-column indices those subsume or never
+     *   served (`source`, `cachedAt`, `sortName`); `downloads` gains `(seriesName, quality)`. By
+     *   `@AutoMigration(8, 9)` — see `ItemEntity` for the query plans (audit 2026-08-08,
+     *   PERF-3/4/23/24).
      */
-    const val DATABASE_VERSION = 8
+    const val DATABASE_VERSION = 9
 }

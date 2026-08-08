@@ -60,6 +60,18 @@ interface DownloadDao {
     suspend fun get(itemId: UUID): DownloadEntity?
 
     /**
+     * Several download rows without their files, in no particular order.
+     *
+     * What the delete cascade reads before it starts deleting. It used to call [get] once per
+     * target, so cancelling a forty-episode season opened forty statements before the first row
+     * went (audit 2026-08-08, PERF-25). The deletes themselves stay per-row on purpose: each one
+     * is a guarded `DELETE` whose *own* return value says whether the cascade still owns that item
+     * (see [deleteUnlessRunnable]), and a batched delete could only report a total.
+     */
+    @Query("SELECT * FROM downloads WHERE itemId IN (:itemIds)")
+    suspend fun getAll(itemIds: List<UUID>): List<DownloadEntity>
+
+    /**
      * One download **with** its files — what offline playback resolves against (M8).
      *
      * [observeAll] returns the same shape for the whole table; a player opening a single item has
@@ -436,7 +448,10 @@ interface DownloadDao {
      * It queries `user_data` from the download DAO on purpose. The rule is part of *this* cascade
      * and nothing else uses it, and M7 was built alongside a parallel branch that owns
      * [UserDataDao] — putting the statement here kept the two changes from colliding over one file.
+     *
+     * Batched, unlike the row deletes above: this one has no per-item verdict to report, and it ran
+     * once per deleted item inside the cascade's transaction (audit 2026-08-08, PERF-25).
      */
-    @Query("DELETE FROM user_data WHERE itemId = :itemId AND toBeSynced = 0")
-    suspend fun deleteSyncedUserData(itemId: UUID)
+    @Query("DELETE FROM user_data WHERE itemId IN (:itemIds) AND toBeSynced = 0")
+    suspend fun deleteSyncedUserData(itemIds: List<UUID>)
 }

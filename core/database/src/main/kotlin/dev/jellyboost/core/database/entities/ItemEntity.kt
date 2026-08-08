@@ -58,7 +58,7 @@ enum class ItemSource {
  * - `(source, type)` turned four full-ish scans into two-column searches. They previously picked
  *   `index_items_type` and then visited **every** browsed episode ever cached, deserialising a
  *   multi-kilobyte [dto] blob per row before `source` discarded it (`unwatchedDownloadedEpisodes`,
- *   `searchDownloaded`, `downloadedListKeys`, `allBySource`).
+ *   `searchDownloaded`, `downloadedListKeys`, `facetKeysBySource`).
  * - `(source, cachedAt)` serves the browse-cache eviction sweep as a two-column range delete
  *   instead of a scan of *every* row older than the cutoff regardless of source, and lets
  *   `latestDownloadedKeys` read its `cachedAt DESC` order straight off the index — its
@@ -165,6 +165,22 @@ data class DownloadedItemKey(
     val officialRating: String?,
     val played: Boolean,
     val isFavorite: Boolean,
+)
+
+/**
+ * One downloaded row reduced to the three columns a **filter sheet** is built from.
+ *
+ * A projection rather than whole rows for [DownloadedItemKey]'s reason, and more sharply: the
+ * facets are the distinct genres, years and ratings across *every* downloaded item, so the query
+ * behind them has no `WHERE` beyond source and type and no `LIMIT` at all. Reading it as
+ * [ItemEntity] deserialised every downloaded item's multi-kilobyte `dto` blob — the whole offline
+ * library, in bytes — to answer a question about three small columns, every time the sheet was
+ * opened (audit 2026-08-08, PERF-18).
+ */
+data class FacetKey(
+    val genres: List<String>,
+    val productionYear: Int?,
+    val officialRating: String?,
 )
 
 /**

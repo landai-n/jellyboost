@@ -1,14 +1,19 @@
 package dev.jellyboost.data.cache
 
 import dev.jellyboost.core.database.TransactionRunner
+import dev.jellyboost.core.database.dao.ItemDao
 import dev.jellyboost.core.database.entities.ItemEntity
 import dev.jellyboost.core.database.entities.ItemSource
 import dev.jellyboost.core.database.entities.UserDataEntity
 import dev.jellyboost.data.mapper.FakeImageUrlFactory
 import dev.jellyboost.data.mapper.ItemMapper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ImageType
+import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
@@ -19,6 +24,7 @@ import java.util.UUID
  * `ItemEntity` literals: the blob is the thing the offline path reads back, so a fixture that
  * faked it would test nothing.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList")
 internal object CacheFixtures {
     val NOW: Instant = Instant.parse("2026-07-28T10:00:00Z")
@@ -37,6 +43,25 @@ internal object CacheFixtures {
         object : TransactionRunner {
             override suspend fun <T> inTransaction(block: suspend () -> T): T = block()
         }
+
+    /**
+     * A real [BrowseCacheMaintenance] for the tests that only need `BrowseCacheWriter` to have one.
+     *
+     * Real rather than a mock because what the writer does with it is count: `onWriteThrough` is an
+     * atomic increment for all but every `WRITES_BETWEEN_SWEEPS`th call, so a handful of writes
+     * touches [itemDao] not at all and a test asserting on the writer's own statements sees exactly
+     * what it did before the counter existed. `BrowseCacheMaintenanceTest` owns the sweep itself.
+     */
+    fun maintenance(
+        scope: CoroutineScope,
+        itemDao: ItemDao,
+        clock: Clock,
+    ) = BrowseCacheMaintenance(
+        itemDao = itemDao,
+        clock = clock,
+        scope = scope,
+        ioDispatcher = UnconfinedTestDispatcher(),
+    )
 
     fun uuid(seed: Int): UUID = UUID.fromString("00000000-0000-0000-0000-%012d".format(seed))
 

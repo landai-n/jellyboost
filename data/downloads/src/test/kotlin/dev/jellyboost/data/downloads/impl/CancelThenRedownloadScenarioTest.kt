@@ -184,6 +184,7 @@ class CancelThenRedownloadScenarioTest {
 
         coEvery { downloadDao.upsert(any()) } answers { downloads[firstArg<DownloadEntity>().itemId] = firstArg() }
         coEvery { downloadDao.get(any()) } answers { downloads[firstArg()] }
+        coEvery { downloadDao.getAll(any()) } answers { firstArg<List<UUID>>().mapNotNull { downloads[it] } }
         coEvery { downloadDao.allItemIds() } answers { downloads.keys.toList() }
         coEvery { downloadDao.maxQueuePosition() } answers { downloads.values.maxOfOrNull { it.queuePosition } }
         coEvery { downloadDao.pending() } answers {

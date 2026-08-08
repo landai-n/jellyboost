@@ -477,7 +477,7 @@ internal class DownloadEnqueuer
                     ?: return SizeEstimate(mediaSources?.firstOrNull()?.size, exact = true)
 
             val ticks = runTimeTicks?.takeIf { it > 0L } ?: return SizeEstimate(null, exact = false)
-            val seconds = ticks.toDouble() / TICKS_PER_SECOND
+            val seconds = ticks.toDouble() / Ticks.PER_SECOND
             val sidecars = extraAudioBytes(seconds)
 
             remuxBytes(quality, seconds)?.let {
@@ -636,9 +636,6 @@ internal class DownloadEnqueuer
             this == null || status == DownloadStatus.ERROR || status == DownloadStatus.CANCELLED
 
         private companion object {
-            /** A `runTimeTicks` tick is 100 ns, so there are ten million of them in a second. */
-            const val TICKS_PER_SECOND = 10_000_000.0
-
             /** The one input container `CanStreamCopyVideo` has a special case for. */
             const val AVI_CONTAINER = "avi"
 

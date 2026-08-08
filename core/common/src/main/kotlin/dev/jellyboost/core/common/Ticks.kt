@@ -13,6 +13,9 @@ object Ticks {
     /** A Jellyfin tick is 100 nanoseconds, so a millisecond is ten thousand of them. */
     const val PER_MILLISECOND = 10_000L
 
+    /** Ticks in a whole second (`PER_MILLISECOND * 1000`). */
+    const val PER_SECOND = 10_000_000L
+
     /** Ticks in a whole minute (`PER_MILLISECOND * 1000 * 60`). */
     const val PER_MINUTE = 600_000_000L
 

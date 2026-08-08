@@ -148,6 +148,66 @@ runner. **Not device-walked:** the wave is all interleavings; a walk that reprod
 would be luck, not verification. Worth folding into the next downloads DoD walk:
 cancel-then-immediately-re-download an in-flight episode, and cancel a season mid-transfer.
 
+## Audit Tier 4C — the data-layer performance wave: PERF-3/4/6..9/12/13/15..19/22..25/28 + DUP-6 tail (2026-08-08 — landed, gate green)
+
+`docs/notes/audit-2026-08-08.md` §2–§4, the `:core:database` / `:data` / `:data:downloads`
+half of the perf tiers. Nothing here changes what the app does; it changes what it asks the
+database, the filesystem and the system for while a download is running.
+
+- **Schema v9 (PERF-3/4/23/24), index-only, `@AutoMigration(8, 9)`.** Every list query in
+  `ItemDao` leads with `source` and none of the seven `items` indices said so:
+  `unwatchedDownloadedEpisodes`, `searchDownloaded`, `downloadedListKeys` and the facet read
+  all picked `index_items_type` and then visited every browsed episode ever cached, decoding a
+  multi-kilobyte `dto` blob per row before `source` discarded it. `(source, type)` and
+  `(source, cachedAt)` in; `sortName` (BINARY where both consumers sort `COLLATE NOCASE`, so
+  never chosen at all), `source` and `cachedAt` out — with the composites in place, every plan
+  is byte-identical without them. `downloads (seriesName, quality)` for the two sibling-size
+  lookups. All verified with `EXPLAIN QUERY PLAN` against a 20k-row copy of the exported
+  schema, before and after; three new `SchemaMigrationTest` cases pin the index diff and that
+  no column moved.
+- **Flow hygiene on the downloads path (PERF-6/8/9/16).** `downloadShape()` and
+  `AndroidConnectivityMonitor.hasNetwork` were cold flows with two permanent subscribers each —
+  two full table reads per progress sample, and two binder-registered `NetworkCallback`s;
+  both are `shareIn(replay = 1)` now. `observeBytesOnDisk` gained the
+  `distinctUntilChanged().flowOn(io)` its five siblings carry. DataStore re-emits the whole
+  snapshot on every `edit`, so a `preference {}` helper carries the dedupe for all seven
+  preferences — a Wi-Fi-only toggle used to restart the volume flow's full `File.walk`.
+- **One transaction per progress sample (PERF-7/22).** Room's invalidation tracker fires once
+  per committed transaction, and `observeAll()` is a `@Transaction` join over both download
+  tables, so the file-row and item-row writes being two auto-commit statements re-ran the whole
+  Downloads query twice per sample. They share a `TransactionRunner` block now
+  (`DownloadQueueProgressWriteTest`). `ItemProgress` publishes from one `snapshot()` instead of
+  three computed properties that walked its two maps seven times — and could disagree with
+  themselves mid-write.
+- **The copy loop fills its buffer (PERF-12/13).** okio hands back 8 KB per read and
+  `RandomAccessFile` is unbuffered, so the plan's one 64 KB write was eight `pwrite`s —
+  ~15,300 syscalls/s on gigabit. Reads now accumulate into the array; the progress cadence is
+  unchanged by construction. `MkvClusterScanner` stopped allocating three arrays per chunk
+  (the carry shifts in place, the join buffer is reused) and tests one byte per offset instead
+  of calling `matches` twice at every one. Its existing every-cut and byte-at-a-time suites
+  passed unmodified, which is the point.
+- **Browse cache is bounded by count as well as age (PERF-17).** The TTL sweep ran once per
+  process and inserts never evicted, so a long browsing session grew the table without limit.
+  `BROWSE_CACHE_MAX_ROWS = 5 000` plus a sweep every 25 write-throughs, triggered from
+  `BrowseCacheWriter` and run on the app scope; a sweep in flight suppresses another.
+- **The rest.** PERF-18: the facet read is a three-column `FacetKey` projection, not whole rows
+  (it has no `LIMIT` — it was the entire offline library's blobs for three small lists).
+  PERF-19: the tree's only production `runBlocking` is gone — the storage-volume cache is
+  seeded from the app scope, and an unseeded read answers `null`, which has always meant "the
+  primary volume". PERF-15: the notifier's `lastPosted` outlived a worker run, so a
+  pause/resume left the notification on *Preparing…* until the whole percent ticked over.
+  PERF-25: the delete cascade reads its batch in one statement and drops user-data rows in one
+  (the guarded per-row deletes stay per-row — each one's return value is the cascade's claim
+  check). PERF-28: two dead Room flows and the unused `UserDataRepository.observe` deleted.
+  DUP-6 tail: `Ticks.PER_SECOND` replaces the enqueuer's local constant.
+
+Gate green (ktlint, detekt, unit tests, `:app:lintDebug`, `assembleDebug`). **Deliberately not
+done:** PERF-7's second half (gating the `getCacheKeys` probe on download-table shape) —
+`DownloadRepositoryImplTest` pins that a rewritten `items` row is re-read, and that probe is
+the only thing that notices one. **Not device-walked:** worth folding into the next downloads
+DoD walk — pause/resume mid-transfer and watch the notification, and a long browse session
+followed by an offline library open.
+
 ## Quality audit — whole-tree structural pass (2026-08-06 — report committed; H8 remediated)
 
 Third full audit (`docs/notes/audit-2026-08-06-quality.md`), and the first *structural*

@@ -40,10 +40,13 @@ class BrowseCacheMaintenanceTest {
 
     private val cutoff = slot<Instant>()
     private val source = slot<ItemSource>()
+    private val keep = slot<Int>()
+    private val trimSource = slot<ItemSource>()
 
     @BeforeEach
     fun setUp() {
         coEvery { itemDao.evictBrowseCacheOlderThan(capture(cutoff), capture(source)) } returns 0
+        coEvery { itemDao.trimBrowseCacheTo(capture(keep), capture(trimSource)) } returns 0
     }
 
     private fun TestScope.maintenance() =
@@ -122,5 +125,81 @@ class BrowseCacheMaintenanceTest {
                 CancellationException("scope cancelled")
 
             shouldThrow<CancellationException> { maintenance().evictExpired() }
+        }
+
+    // ---- the row cap (audit 2026-08-08, PERF-17) ------------------------------------------------
+
+    @Test
+    @DisplayName("the trim only ever targets browse-cache rows, never downloads")
+    fun trimsBrowseCacheOnly() =
+        runTest {
+            maintenance().trimToCap()
+
+            trimSource.captured shouldBe ItemSource.BROWSE_CACHE
+            keep.captured shouldBe BrowseCacheMaintenance.BROWSE_CACHE_MAX_ROWS
+        }
+
+    @Test
+    @DisplayName("a sweep bounds the table by age *and* by row count")
+    fun sweepAppliesBothBounds() =
+        runTest {
+            // Age alone leaves within-session growth unbounded: rows are written by browsing, which
+            // happens far faster than a month passes.
+            coEvery { itemDao.evictBrowseCacheOlderThan(any(), any()) } returns 3
+            coEvery { itemDao.trimBrowseCacheTo(any(), any()) } returns 4
+
+            maintenance().sweep() shouldBe 7
+        }
+
+    @Test
+    @DisplayName("a failed trim is a logged warning, never a crash")
+    fun trimSwallowsStorageFailure() =
+        runTest {
+            coEvery { itemDao.trimBrowseCacheTo(any(), any()) } throws SQLiteException("disk full")
+
+            maintenance().trimToCap() shouldBe 0
+        }
+
+    @Test
+    @DisplayName("write-throughs below the threshold sweep nothing")
+    fun writesBelowThresholdDoNotSweep() =
+        runTest {
+            val maintenance = maintenance()
+
+            repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS - 1) { maintenance.onWriteThrough() }
+            advanceUntilIdle()
+
+            // The counter is the whole of the throttle: a sweep is two indexed DELETEs, cheap but
+            // not free, and it must not ride the write path.
+            coVerify(exactly = 0) { itemDao.evictBrowseCacheOlderThan(any(), any()) }
+        }
+
+    @Test
+    @DisplayName("every Nth write-through sweeps, so a long browsing session stays bounded")
+    fun everyNthWriteSweeps() =
+        runTest {
+            val maintenance = maintenance()
+
+            repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS) { maintenance.onWriteThrough() }
+            advanceUntilIdle()
+            repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS) { maintenance.onWriteThrough() }
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) { itemDao.trimBrowseCacheTo(any(), any()) }
+        }
+
+    @Test
+    @DisplayName("writes landing during a sweep do not start a second one")
+    fun writesDuringASweepDoNotStackUp() =
+        runTest {
+            val maintenance = maintenance()
+
+            // No `advanceUntilIdle` between the batches, so the first sweep is still in flight when
+            // the second threshold is crossed. An eviction pass that could be started again by the
+            // writes it is running behind would multiply exactly when the table is busiest.
+            repeat(BrowseCacheMaintenance.WRITES_BETWEEN_SWEEPS * 2) { maintenance.onWriteThrough() }
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { itemDao.trimBrowseCacheTo(any(), any()) }
         }
 }

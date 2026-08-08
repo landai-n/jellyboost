@@ -165,6 +165,7 @@ class StaleUserDataRegressionTest {
             userDataDao = userDataDao,
             sessionRepository = sessionRepository,
             mapper = CacheFixtures.mapper,
+            maintenance = CacheFixtures.maintenance(scope, itemDao, clock),
             clock = clock,
             transactionRunner = CacheFixtures.directTransactionRunner,
             scope = scope,

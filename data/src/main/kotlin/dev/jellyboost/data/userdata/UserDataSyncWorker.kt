@@ -34,7 +34,7 @@ import timber.log.Timber
  * (see `DECISIONS.md`, "the download worker restores the session itself").
  */
 @HiltWorker
-class UserDataSyncWorker
+internal class UserDataSyncWorker
     @AssistedInject
     constructor(
         @Assisted appContext: Context,

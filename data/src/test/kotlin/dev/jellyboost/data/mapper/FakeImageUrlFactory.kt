@@ -8,7 +8,7 @@ import java.util.UUID
  * Encodes every input into the URL so assertions can prove *which* item and tag the mapper picked
  * — that is the whole point of the artwork fallback chain.
  */
-class FakeImageUrlFactory : ImageUrlFactory {
+internal class FakeImageUrlFactory : ImageUrlFactory {
     override fun imageUrl(
         itemId: UUID,
         kind: ImageKind,

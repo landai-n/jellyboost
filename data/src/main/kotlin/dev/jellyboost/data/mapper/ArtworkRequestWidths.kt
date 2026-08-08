@@ -21,7 +21,7 @@ import kotlin.math.ceil
  * is written once and has to survive being moved to another device, so it is deliberately sized
  * generously and independently of whatever screen happens to be attached today.
  */
-data class ArtworkRequestWidths(
+internal data class ArtworkRequestWidths(
     val poster: Int,
     val thumb: Int,
     val backdrop: Int,

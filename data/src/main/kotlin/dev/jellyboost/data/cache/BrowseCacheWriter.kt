@@ -106,7 +106,7 @@ import javax.inject.Singleton
  * nothing can change underneath them.
  */
 @Singleton
-class BrowseCacheWriter
+internal class BrowseCacheWriter
     @Suppress(
         // Nine DI collaborators: the write-through merge needs three DAOs plus the transaction runner that makes the
         // read-merge-write atomic (audit H3), and the maintenance pass it counts writes into (PERF-17).

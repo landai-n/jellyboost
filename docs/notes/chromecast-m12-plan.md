@@ -192,10 +192,72 @@ keeps only if broken, with DECISIONS entry); `/document-feature` →
 entries for implementation-time observations (resolved cast-framework version,
 transcodingUrl api_key finding); full DoD walk; `/verify`; tag `m12`.
 
-**Deferred (M12-phase-2 candidates, recorded in PLAN.md):** 4K/HEVC/AC3
-per-device profile detection; reattach to a live cast session after process
-death; Output Switcher; styled-receiver branding; casting the on-disk copy via a
-local HTTP server; cast + SyncPlay.
+**Deferred (M12-phase-2 candidates, recorded in PLAN.md):** ~~4K/HEVC per-device
+profiles~~ (landed 2026-08-15, below); AC3/5.1 audio detection; reattach to a live
+cast session after process death; Output Switcher; styled-receiver branding;
+casting the on-disk copy via a local HTTP server; cast + SyncPlay.
+
+## Phase-2a — 4K/HEVC per-receiver profiles (2026-08-15)
+
+**The capability question has no API.** The sender SDK exposes no codec or
+resolution capability: `CastDevice.hasCapability` covers only in/out audio/video
+flags, and CAF's `canDisplayType()` runs on the receiver, which with the Default
+Media Receiver is Google's code we cannot ask. Every sender that adapts to the
+receiver (jellyfin-web's chromecast plugin included) does it by **model name**,
+so that is the design: `CastReceiverClass.fromModelName(CastDevice.modelName)`,
+an exact-match allowlist over lowercased names, with everything unknown falling
+back to today's measured-safe 1080p profile.
+
+**Classes** (published Google/NVIDIA decoder specs, not guesses):
+
+| Class | Model names | Video ceiling added |
+|---|---|---|
+| `ULTRA_4K` | Chromecast Ultra, Chromecast with Google TV, Chromecast Google TV, Google TV Streamer, SHIELD Android TV, SHIELD TV, NVIDIA SHIELD | HEVC Main/Main 10 ≤3840×2160, level ≤5.1 (`153`) |
+| `HEVC_1080P` | Chromecast HD | HEVC Main/Main 10 ≤1920×1080, level ≤4.1 (`123`) |
+| `LEGACY_1080P` | everything else, incl. bare "Chromecast" and `null` | none — the existing profile, byte-for-byte |
+
+**What ships enabled: direct play only.** Capable classes gain `hevc` in the
+`mp4` DirectPlayProfile plus an `hevc` CodecProfile (profile `main|main 10`,
+level/size per class, and `VideoRangeType ∈ SDR|HDR10|HLG` so a Dolby Vision
+bitstream — which reports "Main 10" but needs a DV pipeline — still transcodes).
+H.264 stays at High L4.2 ≤1080p in **all** classes: that is correct for
+Chromecast Ultra (its published 4K decode is HEVC/VP9 only, H.264 tops out at
+1080p60), and 4K H.264 content is too rare to justify per-class H.264 ceilings.
+
+**What deliberately does not change:**
+- **The transcode target stays H.264+AAC HLS-ts ≤1080p for every class.** CAF's
+  TS demuxer is H.264-only — HEVC over HLS needs fMP4 segments, and fMP4-HLS was
+  device-measured broken on the reference Ultra (load accepted, media session
+  never opens; class doc of `CastDeviceProfile`). So 4K reaches the television
+  exclusively as a direct play; an HEVC file the receiver cannot direct-play
+  still becomes a 1080p H.264 transcode. An fMP4-HLS HEVC transcode for
+  Google-TV-class receivers is a phase-2b candidate **gated on a device walk**,
+  not shipped speculatively.
+- **Audio ceilings are untouched in every class** — stereo AAC/MP3 is a measured
+  fact on the Default Media Receiver (error 104 on >2ch AAC in every container,
+  AC3/EAC3 failed too), not a conservatism to relax from a spec sheet. A 4K HEVC
+  remux with TrueHD/AC3 audio therefore still full-transcodes today (video
+  cannot be copied into the ts transcode container); that is the known cost of
+  the measured audio floor and it is recorded, not hidden.
+- Cast Auto still skips the phone-side bandwidth measurement (the phone's link
+  is not the receiver's), and the quality picker remains the manual override.
+
+**Plumbing:** `CastSessionListener.onSessionStarted` gains `modelName`
+(defaulted, so fakes and call sites compile unchanged); `GmsCastSessionMonitor`
+reads `castDevice?.modelName` under the same `runCatching` defense as
+`friendlyName`; `CastSessionCoordinator` classifies once per session, logs
+`model → class` at INFO (that log line is what turns a mis-classified 4K device
+into a one-line allowlist fix), and stores the class on
+`CastConnection.Connected`; `CastStatusHolder` exposes it;
+`PlaybackInfoResolver` passes it to `CastDeviceProfile.build(...)`.
+`PlaybackResolveRequest` is untouched.
+
+**Owed to the device walk (user-run):** on the real Ultra — model string logged
+and classified `ULTRA_4K`; a 4K HEVC Main 10 **mp4** with stereo AAC direct-plays
+(dashboard: DirectPlay, no ffmpeg); an HDR10 file renders (dongle tone-maps on
+SDR screens); a Dolby Vision file transcodes rather than black-screens; an mkv
+or TrueHD-audio 4K still transcodes to 1080p exactly as before; and an unknown
+receiver keeps today's behaviour end to end.
 
 ## Verification
 

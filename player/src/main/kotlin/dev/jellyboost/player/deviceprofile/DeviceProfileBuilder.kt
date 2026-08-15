@@ -129,28 +129,56 @@ internal class DeviceProfileBuilder
         }
 
         /**
-         * Restricts direct play of [videoCodec] in [container] to the profiles the device's
-         * decoders advertise — a device that only decodes H.264 High should not be handed a
-         * High 4:4:4 file.
+         * Restricts direct play of [videoCodec] in [container] to what the device's decoders
+         * actually handle: the profiles they advertise — a device that only decodes H.264 High
+         * should not be handed a High 4:4:4 file — and the largest frame they accept, which also
+         * caps the size the server transcodes *to*. Without the size conditions a 4K source either
+         * direct-plays or transcodes at full width into a hardware decoder that tops out below it,
+         * and ExoPlayer falls back to software decode.
+         *
+         * Either half may be unknown; `null` only when both are.
          */
         private fun codecProfile(
             container: String,
             videoCodec: String,
         ): CodecProfile? {
-            val profiles = codecs.videoProfiles[videoCodec]?.takeIf { it.isNotEmpty() } ?: return null
+            val profiles = codecs.videoProfiles[videoCodec]?.takeIf { it.isNotEmpty() }
+            val maxSize = codecs.videoMaxSizes[videoCodec]
+            val conditions =
+                buildList {
+                    profiles?.let {
+                        add(
+                            DeviceProfileDefaults.condition(
+                                ProfileConditionType.EQUALS_ANY,
+                                ProfileConditionValue.VIDEO_PROFILE,
+                                it.joinToString("|"),
+                            ),
+                        )
+                    }
+                    maxSize?.let {
+                        add(
+                            DeviceProfileDefaults.condition(
+                                ProfileConditionType.LESS_THAN_EQUAL,
+                                ProfileConditionValue.WIDTH,
+                                it.width.toString(),
+                            ),
+                        )
+                        add(
+                            DeviceProfileDefaults.condition(
+                                ProfileConditionType.LESS_THAN_EQUAL,
+                                ProfileConditionValue.HEIGHT,
+                                it.height.toString(),
+                            ),
+                        )
+                    }
+                }
+            if (conditions.isEmpty()) return null
             return CodecProfile(
                 type = CodecType.VIDEO,
                 container = container,
                 codec = videoCodec,
                 applyConditions = emptyList(),
-                conditions =
-                    listOf(
-                        DeviceProfileDefaults.condition(
-                            ProfileConditionType.EQUALS_ANY,
-                            ProfileConditionValue.VIDEO_PROFILE,
-                            profiles.joinToString("|"),
-                        ),
-                    ),
+                conditions = conditions,
             )
         }
 

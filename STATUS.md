@@ -51,10 +51,20 @@ direct play. Auto-ness travels as an explicit `autoBitrate` flag through
 not from reverse-mapping the cap. Manual picks, cast (still uncapped — receiver's link,
 not ours), and local playback unchanged. `DECISIONS.md` 2026-08-15; feature doc
 `docs/features/auto-quality.md`; commits `21861ab2`+`851c7816`+`97b6e301`+`82d74489`.
+**Corrected after the first (failed) device walk** — burst-reading small chunks measured
+64.7 Mbps on a ~55 Mbps link and the server was then asked to *transcode* at that target,
+which delivered 0.76× realtime (constant stall) against 2.50× at 20 Mbps. Two fixes: the
+ramp now computes the **cumulative** rate (all bytes over all elapsed time, the
+ramp-ending chunk included) instead of the last chunk's; and an Auto negotiation that
+comes back `TRANSCODE` with a cap above `PlaybackQuality.HIGH`'s 20 Mbps rung is
+re-negotiated once at that rung (direct play/direct stream keep the full measured cap,
+manual picks and cast untouched, the flag — and so the "Auto" chip — kept).
+`DECISIONS.md` 2026-08-15 amendment.
 **Device walk owed:** first Auto play on a constrained link comes up transcoded and
-smooth after a ≤5 s one-time pause (chip still "Auto"); second play within 15 min
-starts instantly; strong-LAN Auto still direct-plays; prior survives app restart;
-SyncPlay cold-cache group open tolerates the pause; cast behaves exactly as before.
+smooth after a ≤5 s one-time pause (chip still "Auto"); the 4K HEVC title that stalled
+now plays through; second play within 15 min starts instantly; strong-LAN Auto still
+direct-plays; prior survives app restart; SyncPlay cold-cache group open tolerates the
+pause; cast behaves exactly as before.
 
 ## Audit tier 1 — the player UX wave: UI-1/2/3 + UI-10/12/13/16/18 (2026-08-08 — landed, gate green; device walk owed)
 

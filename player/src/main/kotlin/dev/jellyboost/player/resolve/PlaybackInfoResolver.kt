@@ -11,6 +11,7 @@ import dev.jellyboost.player.deviceprofile.CastDeviceProfile
 import dev.jellyboost.player.deviceprofile.CodecHelpers
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.model.ExternalSubtitle
+import dev.jellyboost.player.model.PlaybackQuality
 import dev.jellyboost.player.model.PlaybackTrack
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
 import org.jellyfin.sdk.model.api.MediaSourceInfo
@@ -57,10 +58,53 @@ internal class PlaybackInfoResolver
          * @return a [RemotePlaybackMediaSource], or an [AppError] describing why not.
          */
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> =
-            when (val outcome = runCatchingApi { negotiate(request.withMeasuredCap()) }) {
+            when (val outcome = runCatchingApi { negotiateUnderTranscodeCeiling(request.withMeasuredCap()) }) {
                 is AppResult.Success -> outcome.value
                 is AppResult.Failure -> outcome
             }
+
+        /**
+         * Negotiates [request], and re-negotiates once if Auto's measured cap became a transcode's
+         * *target* (DECISIONS.md, 2026-08-15 amendment).
+         *
+         * `maxStreamingBitrate` does double duty: to a direct play it is a ceiling the file either
+         * fits under or does not, and a high one is exactly the point — the original bytes, no
+         * re-encode. To a transcode it is the bitrate the server is asked to *produce*, and no
+         * measurement of the **link** can say whether the encoder-plus-link chain can produce it in
+         * realtime. Measured on the user's server: at a 64.7 Mbps Auto cap a 4K HEVC source was
+         * delivered at 0.76× realtime — a permanent stall — where the same file at
+         * [PlaybackQuality.HIGH]'s 20 Mbps rung ran 2.50× realtime, and 20 Mbps is already
+         * transparent for a 1080p transcode. So an Auto transcode above that rung is re-negotiated
+         * at it; direct play and direct stream keep the full measured cap, and a hand-picked cap is
+         * never touched.
+         *
+         * The abandoned first negotiation costs nothing but its round trip: ffmpeg is spawned by the
+         * first *segment* fetch, not by `PlaybackInfo`, and nothing here fetches one.
+         *
+         * The re-negotiated request keeps [PlaybackResolveRequest.autoBitrate], so the resolved
+         * source still reads as Auto and the picker's chip does not silently become "High".
+         */
+        private suspend fun negotiateUnderTranscodeCeiling(
+            request: PlaybackResolveRequest,
+        ): AppResult<RemotePlaybackMediaSource> {
+            val negotiated = negotiate(request)
+            val cap = request.maxStreamingBitrate
+            val overCeiling =
+                negotiated is AppResult.Success &&
+                    negotiated.value.playMethod == PlayMethod.TRANSCODE &&
+                    request.autoBitrate &&
+                    !request.castTarget &&
+                    cap != null &&
+                    cap > AUTO_TRANSCODE_CEILING
+            if (!overCeiling) return negotiated
+
+            Timber.i(
+                "Auto measured %d bps but the server chose to transcode; re-negotiating at %d",
+                cap,
+                AUTO_TRANSCODE_CEILING,
+            )
+            return negotiate(request.copy(maxStreamingBitrate = AUTO_TRANSCODE_CEILING))
+        }
 
         /**
          * The request as it should actually go out, with Auto's cap filled in.
@@ -249,6 +293,17 @@ internal class PlaybackInfoResolver
                     request.subtitleStreamIndex?.takeIf { it >= 0 }
                         ?: defaultSubtitleStreamIndex.takeIf { request.subtitleStreamIndex == null },
             )
+        }
+
+        private companion object {
+            /**
+             * The highest bitrate an Auto negotiation will ask a *transcode* to hit.
+             *
+             * Deliberately the picker's own [PlaybackQuality.HIGH] rung rather than a second copy of
+             * 20 Mbps: it is the same number the user gets by tapping "High", so the two paths cannot
+             * drift apart, and the fallback ladder already knows how to step down from it.
+             */
+            val AUTO_TRANSCODE_CEILING: Int = requireNotNull(PlaybackQuality.HIGH.maxStreamingBitrate)
         }
     }
 

@@ -6,6 +6,7 @@ import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.bitrate.AutoBitrateDetector
+import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.deviceprofile.DeviceCodecs
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.deviceprofile.MediaCodecProbe
@@ -43,7 +44,7 @@ class PlaybackInfoResolverTest {
         mockk<AutoBitrateDetector> {
             coEvery { currentCap() } returns MEASURED_CAP
         }
-    private val resolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector)
+    private val resolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector, CastStatusHolder())
 
     // ---- the dash-less media source id --------------------------------------------------------
 

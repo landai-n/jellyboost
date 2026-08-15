@@ -1,5 +1,6 @@
 package dev.jellyboost.player.cast
 
+import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +30,16 @@ internal class CastStatusHolder
         /** `true` while a receiver is playing, or about to. */
         val isCasting: Boolean get() = _connection.value is CastConnection.Connected
 
+        /**
+         * The connected receiver's capability class; the conservative floor when not casting.
+         *
+         * Read by `PlaybackInfoResolver` at negotiation time, so a `castTarget` resolve claims
+         * exactly what the receiver on the other side of the room was classified as
+         * (DECISIONS.md, 2026-08-15, M12 phase-2a).
+         */
+        val receiver: CastReceiverClass
+            get() = (_connection.value as? CastConnection.Connected)?.receiver ?: CastReceiverClass.LEGACY_1080P
+
         /** Publishes the session state. Called by [CastSessionCoordinator] only. */
         fun setConnection(connection: CastConnection) {
             _connection.value = connection
@@ -51,8 +62,12 @@ internal sealed interface CastConnection {
      *
      * @property deviceName the receiver's friendly name; `null` when the framework has not published
      *   one, which callers show as a generic "casting" rather than an empty label.
+     * @property receiver the hardware's capability class, resolved from its model name once at
+     *   session start. Defaults to the conservative floor so tests and callers that only care
+     *   about connectedness need not name it.
      */
     data class Connected(
         val deviceName: String?,
+        val receiver: CastReceiverClass = CastReceiverClass.LEGACY_1080P,
     ) : CastConnection
 }

@@ -7,6 +7,7 @@ import dev.jellyboost.core.network.runCatchingApi
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.bitrate.AutoBitrateDetector
+import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
 import dev.jellyboost.player.deviceprofile.CodecHelpers
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
@@ -40,6 +41,7 @@ internal class PlaybackInfoResolver
         private val api: PlayerApi,
         private val deviceProfileBuilder: DeviceProfileBuilder,
         private val autoBitrateDetector: AutoBitrateDetector,
+        private val castStatus: CastStatusHolder,
     ) {
         /**
          * Resolves [request] into something the player can open.
@@ -220,7 +222,14 @@ internal class PlaybackInfoResolver
                 // (docs/notes/chromecast-m12-plan.md, key decision 2).
                 deviceProfile =
                     if (castTarget) {
-                        CastDeviceProfile.build(maxStreamingBitrate = maxStreamingBitrate)
+                        // The receiver's class is read at negotiation time rather than carried on
+                        // the request: the request describes what to play, the holder knows who is
+                        // playing it, and a renegotiation mid-session should always describe the
+                        // receiver that is actually connected (M12 phase-2a).
+                        CastDeviceProfile.build(
+                            maxStreamingBitrate = maxStreamingBitrate,
+                            receiver = castStatus.receiver,
+                        )
                     } else {
                         deviceProfileBuilder.getDeviceProfile(maxStreamingBitrate = maxStreamingBitrate)
                     },

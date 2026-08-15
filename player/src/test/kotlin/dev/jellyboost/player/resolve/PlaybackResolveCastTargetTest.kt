@@ -6,12 +6,16 @@ import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.PlayerApi
 import dev.jellyboost.player.bitrate.AutoBitrateDetector
+import dev.jellyboost.player.cast.CastConnection
+import dev.jellyboost.player.cast.CastStatusHolder
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
+import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import dev.jellyboost.player.deviceprofile.DeviceCodecs
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.deviceprofile.MediaCodecProbe
 import dev.jellyboost.player.model.RemotePlaybackMediaSource
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,6 +24,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.junit.jupiter.api.Test
 
@@ -44,7 +49,10 @@ class PlaybackResolveCastTargetTest {
     // the detector even if one were (DECISIONS.md, 2026-08-15).
     private val autoBitrateDetector = mockk<AutoBitrateDetector>()
 
-    private val infoResolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector)
+    /** No session by default, so negotiations describe the conservative legacy receiver. */
+    private val castStatus = CastStatusHolder()
+
+    private val infoResolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector, castStatus)
 
     private val resolver = PlaybackSourceResolver(local, infoResolver, connectionState)
 
@@ -82,6 +90,27 @@ class PlaybackResolveCastTargetTest {
             sent.captured.deviceProfile!!
                 .directPlayProfiles
                 .none { it.videoCodec?.contains("hevc") == true } shouldBe true
+        }
+
+    @Test
+    fun `a receiver classified as 4K-capable is offered HEVC direct play`() =
+        runTest {
+            castStatus.setConnection(
+                CastConnection.Connected(deviceName = "Living Room TV", receiver = CastReceiverClass.ULTRA_4K),
+            )
+            val sent = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(PlayerFixtures.ITEM_ID, capture(sent)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)))
+
+            infoResolver.resolve(request)
+
+            // The class the coordinator resolved at session start is what the negotiation claims —
+            // the request itself carries nothing, so a mid-session renegotiation always describes
+            // the receiver that is actually connected.
+            sent.captured.deviceProfile!!
+                .directPlayProfiles
+                .single { it.container == "mp4" && it.type == DlnaProfileType.VIDEO }
+                .videoCodec!! shouldContain "hevc"
         }
 
     @Test

@@ -5,6 +5,7 @@ import dev.jellyboost.core.network.ConnectionState
 import dev.jellyboost.core.network.connectivity.ConnectionStateProvider
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.PlayerApi
+import dev.jellyboost.player.bitrate.AutoBitrateDetector
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
 import dev.jellyboost.player.deviceprofile.DeviceCodecs
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
@@ -39,7 +40,11 @@ class PlaybackResolveCastTargetTest {
             MediaCodecProbe { DeviceCodecs(videoCodecs = setOf("h264", "hevc"), audioCodecs = setOf("aac")) },
         )
 
-    private val infoResolver = PlaybackInfoResolver(api, deviceProfileBuilder)
+    // Never consulted here: none of these requests is an Auto one, and the cast branch would skip
+    // the detector even if one were (DECISIONS.md, 2026-08-15).
+    private val autoBitrateDetector = mockk<AutoBitrateDetector>()
+
+    private val infoResolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector)
 
     private val resolver = PlaybackSourceResolver(local, infoResolver, connectionState)
 

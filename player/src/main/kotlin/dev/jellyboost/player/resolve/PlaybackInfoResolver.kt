@@ -6,6 +6,7 @@ import dev.jellyboost.core.common.UNDEFINED_LANGUAGE
 import dev.jellyboost.core.network.runCatchingApi
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.api.PlayerApi
+import dev.jellyboost.player.bitrate.AutoBitrateDetector
 import dev.jellyboost.player.deviceprofile.CastDeviceProfile
 import dev.jellyboost.player.deviceprofile.CodecHelpers
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
@@ -37,6 +38,7 @@ internal class PlaybackInfoResolver
     constructor(
         private val api: PlayerApi,
         private val deviceProfileBuilder: DeviceProfileBuilder,
+        private val autoBitrateDetector: AutoBitrateDetector,
     ) {
         /**
          * Resolves [request] into something the player can open.
@@ -49,14 +51,34 @@ internal class PlaybackInfoResolver
          *
          * The whole negotiation, not just the call, sits inside it: building the device profile and
          * reading the response are both places the SDK can throw, and both belong in the same
-         * taxonomy as the call itself.
+         * taxonomy as the call itself — as is the throughput measurement an Auto request triggers,
+         * which is answered from `AutoBitrateDetector` before the negotiation begins.
          *
          * @return a [RemotePlaybackMediaSource], or an [AppError] describing why not.
          */
         suspend fun resolve(request: PlaybackResolveRequest): AppResult<RemotePlaybackMediaSource> =
-            when (val outcome = runCatchingApi { negotiate(request) }) {
+            when (val outcome = runCatchingApi { negotiate(request.withMeasuredCap()) }) {
                 is AppResult.Success -> outcome.value
                 is AppResult.Failure -> outcome
+            }
+
+        /**
+         * The request as it should actually go out, with Auto's cap filled in.
+         *
+         * A `copy` of the caller's request rather than a separate cap value, so that
+         * [PlaybackResolveRequest.autoBitrate] rides along onto the resolved source: everything
+         * downstream reads the *effective* cap and the *original* flag off the same object.
+         *
+         * Cast Auto keeps today's uncapped behaviour on purpose. The link that decides whether a
+         * receiver copes is the receiver's, not this device's, and the cast profile is already
+         * conservative — measuring here would cap a television by a tablet's Wi-Fi
+         * (DECISIONS.md, 2026-08-15).
+         */
+        private suspend fun PlaybackResolveRequest.withMeasuredCap(): PlaybackResolveRequest =
+            when {
+                !autoBitrate -> this
+                castTarget -> copy(maxStreamingBitrate = null)
+                else -> copy(maxStreamingBitrate = autoBitrateDetector.currentCap())
             }
 
         /** The negotiation itself; every throw it makes is [resolve]'s to translate. */
@@ -216,6 +238,7 @@ internal class PlaybackInfoResolver
                 transcodingSubProtocol = transcodingSubProtocol,
                 liveStreamId = liveStreamId,
                 maxStreamingBitrate = request.maxStreamingBitrate,
+                autoBitrate = request.autoBitrate,
                 runTimeTicks = runTimeTicks ?: 0L,
                 startPositionTicks = request.startPositionTicks,
                 audioTracks = audio.map { it.toTrack(defaultAudioStreamIndex) },
@@ -279,7 +302,12 @@ private fun MediaStream.toExternalSubtitle(): ExternalSubtitle? {
     )
 }
 
-/** Small helper so callers can build a request from the route's string item id. */
+/**
+ * Small helper so callers can build a request from the route's string item id.
+ *
+ * `autoBitrate = true`: opening an item is the one moment nobody has picked a quality, which is
+ * exactly what Auto means. The cap stays `null` here and is filled by [PlaybackInfoResolver].
+ */
 internal fun playbackResolveRequest(
     itemId: String,
     mediaSourceId: String? = null,
@@ -289,4 +317,5 @@ internal fun playbackResolveRequest(
         itemId = UUID.fromString(itemId),
         mediaSourceId = mediaSourceId,
         startPositionTicks = startPositionTicks,
+        autoBitrate = true,
     )

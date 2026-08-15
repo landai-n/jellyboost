@@ -115,6 +115,9 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             // The offline guard must not reach the online path, where a re-resolve is the whole
             // mechanism for getting a different audio track out of a transcode.
             playerHandle.trackSelectionSucceeds = false
+            // The session starts as an Auto one — that is what opening from the route produces, and
+            // the resolver echoes the flag back onto the source it answers with.
+            coEvery { resolver.resolve(any()) } returns AppResult.Success(source.copy(autoBitrate = true))
             val model = viewModel()
             advanceUntilIdle()
 
@@ -125,7 +128,10 @@ internal class PlayerTrackPickerTest : PlayerViewModelFixture() {
             advanceUntilIdle()
 
             requests.last().audioStreamIndex shouldBe 2
+            // The VM still sends no cap of its own — Auto's number is measured and filled in by the
+            // resolver, which is mocked here — and the flag is what says so (DECISIONS.md 2026-08-15).
             requests.last().maxStreamingBitrate.shouldBeNull()
+            requests.last().autoBitrate shouldBe true
             // Nothing to bypass: there is no download of this item to be forced past.
             requests.last().forceRemote shouldBe false
         }

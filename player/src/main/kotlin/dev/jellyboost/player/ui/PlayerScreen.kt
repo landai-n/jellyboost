@@ -314,7 +314,11 @@ internal fun PlayerScreen(
                 )
             }
 
-            BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
+            // Only while the chrome is hidden: with the controls up, the primary slot's own
+            // buffering disc (PlayerControls) is already saying it, in the same place.
+            if (!controlsVisible) {
+                BufferingIndicator(state = state, modifier = Modifier.align(Alignment.Center))
+            }
 
             state.skippableSegment?.let { segment ->
                 SkipSegmentButton(
@@ -483,7 +487,11 @@ private fun WaitingForGroupOverlay(
  * - not while the group is waiting, for the same reason: [WaitingForGroupOverlay] is a better answer
  *   to the same frozen frame, and it names the reason;
  * - not while a receiver has the film, where "buffering" is a statement about a decoder three metres
- *   away that this device cannot see.
+ *   away that this device cannot see;
+ * - not while the chrome is visible (the caller's guard): the transport row's primary slot swaps
+ *   its play button for a buffering disc under the same conditions, so this overlay would draw a
+ *   second spinner on top of it — and worse, next to a Play triangle that reads as "press me" while
+ *   a tap would cancel the very start being waited on.
  */
 @Composable
 private fun BufferingIndicator(

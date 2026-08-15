@@ -67,15 +67,17 @@ class AutoBitrateDetectorTest {
     // ---- the ramp -------------------------------------------------------------------------------
 
     @Test
-    fun `the cap is the last chunk's rate with a fifth taken off`() =
+    fun `the cap is the whole ramp's cumulative rate with a fifth taken off`() =
         runTest {
-            // 500 KB in 200 ms, 1 MB in 400 ms, then 3 MB in 800 ms — a link doing 30 Mbps.
+            // 500 KB in 200 ms, 1 MB in 400 ms, then 3 MB in 800 ms.
             answerChunks(200L, 400L, 800L)
 
             val cap = detector().currentCap()
 
-            // 3_000_000 bytes × 8 ÷ 0.8 s = 30 Mbps, minus the 20% headroom.
-            cap shouldBe 24_000_000
+            // Cumulative, not last-chunk: 4_500_000 bytes × 8 ÷ 1.4 s ≈ 25.71 Mbps, minus the 20%
+            // headroom. The last chunk alone would read 30 Mbps — TCP's window, not the link
+            // (DECISIONS.md, 2026-08-15 amendment).
+            cap shouldBe 20_571_428
             coVerify(exactly = 3) { api.getBitrateTestBytes(any()) }
         }
 
@@ -89,6 +91,20 @@ class AutoBitrateDetectorTest {
             // Only the 500 KB chunk was fetched: 500_000 × 8 ÷ 1.5 s ≈ 2.67 Mbps, ×0.8.
             cap shouldBe 2_133_332
             coVerify(exactly = 1) { api.getBitrateTestBytes(any()) }
+        }
+
+    @Test
+    fun `the chunk that ended the ramp is counted, bytes and time both`() =
+        runTest {
+            // 500 KB in 200 ms (20 Mbps), then 1 MB in 1.5 s — the slow chunk that stops the ramp.
+            answerChunks(200L, 1_500L)
+
+            val cap = detector().currentCap()
+
+            // 1_500_000 bytes × 8 ÷ 1.7 s ≈ 7.06 Mbps, ×0.8. Neither the fast chunk alone
+            // (16 Mbps) nor the slow one alone (4.27 Mbps): the ramp answers with all of it.
+            cap shouldBe 5_647_058
+            coVerify(exactly = 2) { api.getBitrateTestBytes(any()) }
         }
 
     @Test
@@ -118,9 +134,9 @@ class AutoBitrateDetectorTest {
             answerChunks(200L, 400L, 800L)
             val detector = detector()
 
-            detector.currentCap() shouldBe 24_000_000
+            detector.currentCap() shouldBe 20_571_428
             clock += 14 * 60 * 1_000L
-            detector.currentCap() shouldBe 24_000_000
+            detector.currentCap() shouldBe 20_571_428
 
             // Fourteen minutes later the link is still the link; asking again costs a round trip on
             // the one screen that must not be slow.
@@ -149,8 +165,8 @@ class AutoBitrateDetectorTest {
             val first = async { detector.currentCap() }
             val second = async { detector.currentCap() }
 
-            first.await() shouldBe 24_000_000
-            second.await() shouldBe 24_000_000
+            first.await() shouldBe 20_571_428
+            second.await() shouldBe 20_571_428
             // The second caller waits for the one in flight rather than starting a competing
             // transfer that would measure the first one's own traffic.
             coVerify(exactly = 3) { api.getBitrateTestBytes(any()) }
@@ -165,7 +181,7 @@ class AutoBitrateDetectorTest {
 
             detector().currentCap()
 
-            coVerify(exactly = 1) { preferences.setMaxStreamingBitrate(24_000_000) }
+            coVerify(exactly = 1) { preferences.setMaxStreamingBitrate(20_571_428) }
         }
 
     // ---- what a failed measurement degrades to ---------------------------------------------------
@@ -175,7 +191,7 @@ class AutoBitrateDetectorTest {
         runTest {
             answerChunks(200L, 400L, 800L)
             val detector = detector()
-            detector.currentCap() shouldBe 24_000_000
+            detector.currentCap() shouldBe 20_571_428
 
             clock += 16 * 60 * 1_000L
             coEvery { api.getBitrateTestBytes(any()) } coAnswers {
@@ -184,7 +200,7 @@ class AutoBitrateDetectorTest {
             }
 
             // The stale number describes this link better than no number at all does.
-            detector.currentCap() shouldBe 24_000_000
+            detector.currentCap() shouldBe 20_571_428
         }
 
     @Test

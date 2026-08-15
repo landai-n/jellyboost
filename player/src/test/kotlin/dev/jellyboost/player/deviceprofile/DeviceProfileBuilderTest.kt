@@ -84,7 +84,7 @@ class DeviceProfileBuilderTest {
                 ),
             ).getDeviceProfile()
 
-        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == "mkv" }
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == null }
         codecProfile.shouldNotBeNull()
         codecProfile.conditions
             .single()
@@ -115,7 +115,7 @@ class DeviceProfileBuilderTest {
                 ),
             ).getDeviceProfile()
 
-        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == "mkv" }
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == null }
         codecProfile.shouldNotBeNull()
         codecProfile.conditions.map { it.property } shouldBe
             listOf(
@@ -132,6 +132,26 @@ class DeviceProfileBuilderTest {
     }
 
     @Test
+    fun `emits exactly one containerless profile per codec`() {
+        // Container-bound codec profiles were measured being dropped by the server when sizing a
+        // Dolby Vision transcode, so containerless-and-deduplicated is load-bearing, not tidiness
+        // (DECISIONS.md, 2026-08-16).
+        val profile =
+            builder(
+                DeviceCodecs(
+                    videoCodecs = setOf("h264", "hevc"),
+                    audioCodecs = setOf("aac"),
+                    videoProfiles = mapOf("h264" to setOf("high"), "hevc" to setOf("main")),
+                    videoMaxSizes = mapOf("h264" to VideoMaxSize(width = 2560, height = 1440)),
+                ),
+            ).getDeviceProfile()
+
+        profile.codecProfiles.count { it.codec == "h264" } shouldBe 1
+        profile.codecProfiles.count { it.codec == "hevc" } shouldBe 1
+        profile.codecProfiles.all { it.container == null } shouldBe true
+    }
+
+    @Test
     fun `caps a codec whose decoder profiles are unknown at its frame size alone`() {
         val profile =
             builder(
@@ -142,7 +162,7 @@ class DeviceProfileBuilderTest {
                 ),
             ).getDeviceProfile()
 
-        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "hevc" && it.container == "mkv" }
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "hevc" && it.container == null }
         codecProfile.shouldNotBeNull()
         codecProfile.conditions.map { it.property } shouldBe
             listOf(ProfileConditionValue.WIDTH, ProfileConditionValue.HEIGHT)
@@ -160,7 +180,7 @@ class DeviceProfileBuilderTest {
                 ),
             ).getDeviceProfile()
 
-        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == "mkv" }
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == null }
         codecProfile.shouldNotBeNull()
         codecProfile.conditions.map { it.property } shouldBe listOf(ProfileConditionValue.VIDEO_PROFILE)
     }

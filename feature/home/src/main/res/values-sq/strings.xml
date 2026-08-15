@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Media ime</string>
     <string name="home_section_continue_watching">Vazhdo shikimin</string>
     <string name="home_section_next_up">Në vijim</string>
+    <string name="home_section_continue_listening">Vazhdo dëgjimin</string>
     <string name="home_section_latest">Më të fundit: %1$s</string>
     <string name="home_hero_resume">Vazhdo</string>
     <string name="home_hero_details">Detajet</string>

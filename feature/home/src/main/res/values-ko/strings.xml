@@ -6,6 +6,7 @@
     <string name="home_section_my_media">내 미디어</string>
     <string name="home_section_continue_watching">계속 시청하기</string>
     <string name="home_section_next_up">다음 시청</string>
+    <string name="home_section_continue_listening">계속 듣기</string>
     <string name="home_section_latest">최신 %1$s</string>
     <string name="home_hero_resume">이어서 재생</string>
     <string name="home_hero_details">세부정보</string>

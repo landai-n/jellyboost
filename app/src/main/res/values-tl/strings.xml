@@ -15,4 +15,13 @@
     <string name="offline_go_online">Mag-online</string>
     <string name="syncplay_groups_action">Mga grupo ng SyncPlay</string>
     <string name="syncplay_groups_action_active">Mga grupo ng SyncPlay — nasa isang grupo ka</string>
+    <string name="music_refused_in_group">Umalis sa grupo ng SyncPlay para makapag-play ng musika sa device na ito.</string>
+    <string name="music_track_unavailable">Hindi ma-play ang “%1$s” — nilaktawan ito.</string>
+    <string name="music_queue_unavailable">Wala sa mga track na iyon ang na-play.</string>
+    <string name="music_playback_failed">Nabigo ang playback ng “%1$s”.</string>
+    <string name="music_radio_failed">Hindi masimulan ang radyo mula sa “%1$s”.</string>
+    <string name="mini_player_play">I-play</string>
+    <string name="mini_player_pause">I-pause</string>
+    <string name="mini_player_next">Susunod</string>
+    <string name="mini_player_open_now_playing">Buksan ang Kasalukuyang Pinapatugtog</string>
 </resources>

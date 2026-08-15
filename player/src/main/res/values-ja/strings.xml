@@ -52,6 +52,11 @@
     <string name="player_message_track_offline">そのトラックはダウンロード済みファイルに含まれていません。</string>
     <string name="player_message_failed">再生に失敗しました。</string>
     <string name="player_message_change_reverted">変更を適用できませんでした — これまでどおり続行します。</string>
+    <string name="music_notification_shuffle_on">シャッフルをオフにする</string>
+    <string name="music_notification_shuffle_off">シャッフルをオンにする</string>
+    <string name="music_notification_repeat_off">リピートオフ</string>
+    <string name="music_notification_repeat_all">キューをリピート中</string>
+    <string name="music_notification_repeat_one">このトラックをリピート中</string>
 
     <string name="player_syncplay_group">グループ</string>
     <string name="player_syncplay_waiting">グループを待っています…</string>

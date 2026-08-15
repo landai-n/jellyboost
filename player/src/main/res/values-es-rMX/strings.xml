@@ -53,6 +53,11 @@
     <string name="player_message_track_offline">Esa pista no está en el archivo descargado.</string>
     <string name="player_message_failed">Error de reproducción.</string>
     <string name="player_message_change_reverted">No se pudo aplicar ese cambio — se continúa como antes.</string>
+    <string name="music_notification_shuffle_on">Desactivar la reproducción aleatoria</string>
+    <string name="music_notification_shuffle_off">Activar la reproducción aleatoria</string>
+    <string name="music_notification_repeat_off">Repetición desactivada</string>
+    <string name="music_notification_repeat_all">Repitiendo la cola</string>
+    <string name="music_notification_repeat_one">Repitiendo esta pista</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Esperando al grupo…</string>
     <string name="player_syncplay_shuffle">Aleatorizar cola</string>

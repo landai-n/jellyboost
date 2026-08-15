@@ -6,6 +6,10 @@
     <string name="search_section_movies">Фільмы</string>
     <string name="search_section_series">Серыялы</string>
     <string name="search_section_episodes">Эпізоды</string>
+    <string name="search_section_artists">Выканаўцы</string>
+    <string name="search_section_albums">Альбомы</string>
+    <string name="search_section_songs">Песні</string>
+    <string name="search_section_playlists">Плэйлісты</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d вынік</item>
         <item quantity="few">%1$d вынікі</item>

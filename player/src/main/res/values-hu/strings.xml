@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Ez a sáv nincs a letöltött fájlban.</string>
     <string name="player_message_failed">A lejátszás sikertelen.</string>
     <string name="player_message_change_reverted">A módosítást nem sikerült alkalmazni — folytatás a korábbiak szerint.</string>
+    <string name="music_notification_shuffle_on">Véletlenszerű sorrend kikapcsolása</string>
+    <string name="music_notification_shuffle_off">Véletlenszerű sorrend bekapcsolása</string>
+    <string name="music_notification_repeat_off">Ismétlés kikapcsolva</string>
+    <string name="music_notification_repeat_all">A sor ismétlése</string>
+    <string name="music_notification_repeat_one">Ez a szám ismétlődik</string>
 
     <string name="player_syncplay_group">Csoport</string>
     <string name="player_syncplay_waiting">Várakozás a csoportra…</string>

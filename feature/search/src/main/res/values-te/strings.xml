@@ -6,6 +6,10 @@
     <string name="search_section_movies">సినిమాలు</string>
     <string name="search_section_series">షోలు</string>
     <string name="search_section_episodes">ఎపిసోడ్‌లు</string>
+    <string name="search_section_artists">కళాకారులు</string>
+    <string name="search_section_albums">ఆల్బమ్‌లు</string>
+    <string name="search_section_songs">పాటలు</string>
+    <string name="search_section_playlists">ప్లేజాబితాలు</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d ఫలితం</item>
         <item quantity="other">%1$d ఫలితాలు</item>

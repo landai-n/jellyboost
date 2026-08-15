@@ -6,6 +6,7 @@
     <string name="home_section_my_media">ਮੇਰੀ ਮੀਡੀਆ</string>
     <string name="home_section_continue_watching">ਦੇਖਣਾ ਜਾਰੀ ਰੱਖੋ</string>
     <string name="home_section_next_up">ਅੱਗੇ</string>
+    <string name="home_section_continue_listening">ਸੁਣਨਾ ਜਾਰੀ ਰੱਖੋ</string>
     <string name="home_section_latest">ਨਵੀਨਤਮ %1$s</string>
     <string name="home_hero_resume">ਜਾਰੀ ਰੱਖੋ</string>
     <string name="home_hero_details">ਵੇਰਵੇ</string>

@@ -52,6 +52,11 @@
     <string name="player_message_track_offline">呢條音軌唔喺已下載嘅檔案入面。</string>
     <string name="player_message_failed">播放失敗。</string>
     <string name="player_message_change_reverted">套用唔到嗰個變更 — 照舊繼續。</string>
+    <string name="music_notification_shuffle_on">關閉隨機播放</string>
+    <string name="music_notification_shuffle_off">開啟隨機播放</string>
+    <string name="music_notification_repeat_off">關閉循環播放</string>
+    <string name="music_notification_repeat_all">循環播放佇列</string>
+    <string name="music_notification_repeat_one">單曲循環播放</string>
 
     <string name="player_syncplay_group">群組</string>
     <string name="player_syncplay_waiting">等緊群組…</string>

@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay grupas</string>
     <string name="syncplay_groups_action_active">SyncPlay grupas — esat grupā</string>
+    <string name="music_refused_in_group">Pametiet SyncPlay grupu, lai atskaņotu mūziku šajā ierīcē.</string>
+    <string name="music_track_unavailable">Nevarēja atskaņot “%1$s” — ieraksts tika izlaists.</string>
+    <string name="music_queue_unavailable">Nevarēja atskaņot nevienu no šiem ierakstiem.</string>
+    <string name="music_playback_failed">“%1$s” atskaņošana neizdevās.</string>
+    <string name="music_radio_failed">Nevarēja sākt radio no “%1$s”.</string>
+    <string name="mini_player_play">Atskaņot</string>
+    <string name="mini_player_pause">Pauzēt</string>
+    <string name="mini_player_next">Nākamais</string>
+    <string name="mini_player_open_now_playing">Atvērt Tagad atskaņo</string>
 </resources>

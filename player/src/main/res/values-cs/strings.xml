@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Tato stopa není součástí staženého souboru.</string>
     <string name="player_message_failed">Přehrávání se nezdařilo.</string>
     <string name="player_message_change_reverted">Změnu se nepodařilo použít — pokračuje se jako dřív.</string>
+    <string name="music_notification_shuffle_on">Vypnout náhodné přehrávání</string>
+    <string name="music_notification_shuffle_off">Zapnout náhodné přehrávání</string>
+    <string name="music_notification_repeat_off">Opakování vypnuto</string>
+    <string name="music_notification_repeat_all">Opakování fronty</string>
+    <string name="music_notification_repeat_one">Opakování této skladby</string>
 
     <string name="player_syncplay_group">Skupina</string>
     <string name="player_syncplay_waiting">Čeká se na skupinu…</string>

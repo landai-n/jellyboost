@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">Skupine SyncPlay</string>
     <string name="syncplay_groups_action_active">Skupine SyncPlay — v skupini ste</string>
+    <string name="music_refused_in_group">Zapustite skupino SyncPlay, da lahko na tej napravi predvajate glasbo.</string>
+    <string name="music_track_unavailable">Skladbe „%1$s“ ni bilo mogoče predvajati — preskočena je.</string>
+    <string name="music_queue_unavailable">Nobene od teh skladb ni bilo mogoče predvajati.</string>
+    <string name="music_playback_failed">Predvajanje skladbe „%1$s“ ni uspelo.</string>
+    <string name="music_radio_failed">Radia iz „%1$s“ ni bilo mogoče zagnati.</string>
+    <string name="mini_player_play">Predvajaj</string>
+    <string name="mini_player_pause">Premor</string>
+    <string name="mini_player_next">Naslednja</string>
+    <string name="mini_player_open_now_playing">Odpri Zdaj se predvaja</string>
 </resources>

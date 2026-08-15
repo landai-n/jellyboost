@@ -95,56 +95,74 @@ internal fun MiniPlayer(
             )
         }
 
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .clickable(onClickLabel = stringResource(R.string.mini_player_open_now_playing), onClick = onClick)
-                    .padding(horizontal = Dimens.SpaceMedium, vertical = Dimens.SpaceSmall),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
-        ) {
-            JellyfinAsyncImage(
-                url = track.primaryImageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(ArtSize).clip(RoundedCornerShape(Dimens.CardCornerRadius)),
-            )
+        MiniPlayerRow(
+            track = track,
+            isPlaying = state.isPlaying,
+            onTogglePlayPause = onTogglePlayPause,
+            onNext = onNext,
+            onClick = onClick,
+        )
+    }
+}
 
-            Column(modifier = Modifier.weight(1f)) {
+/** The bar's one content row: artwork, title/artist, play/pause, next — [MiniPlayer]'s tap target. */
+@Composable
+private fun MiniPlayerRow(
+    track: JellyfinItem,
+    isPlaying: Boolean,
+    onTogglePlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClickLabel = stringResource(R.string.mini_player_open_now_playing), onClick = onClick)
+                .padding(horizontal = Dimens.SpaceMedium, vertical = Dimens.SpaceSmall),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
+    ) {
+        JellyfinAsyncImage(
+            url = track.primaryImageUrl,
+            contentDescription = null,
+            modifier = Modifier.size(ArtSize).clip(RoundedCornerShape(Dimens.CardCornerRadius)),
+        )
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = track.name,
+                style = TitleStyle,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.basicMarquee(),
+            )
+            track.displaySubtitle?.let { subtitle ->
                 Text(
-                    text = track.name,
-                    style = TitleStyle,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    text = subtitle,
+                    style = SubtitleStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.basicMarquee(),
                 )
-                track.displaySubtitle?.let { subtitle ->
-                    Text(
-                        text = subtitle,
-                        style = SubtitleStyle,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
             }
+        }
 
-            IconButton(onClick = onTogglePlayPause) {
-                Icon(
-                    imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription =
-                        stringResource(if (state.isPlaying) R.string.mini_player_pause else R.string.mini_player_play),
-                    tint = Color.White,
-                )
-            }
-            IconButton(onClick = onNext) {
-                Icon(
-                    imageVector = Icons.Filled.SkipNext,
-                    contentDescription = stringResource(R.string.mini_player_next),
-                    tint = Color.White,
-                )
-            }
+        IconButton(onClick = onTogglePlayPause) {
+            Icon(
+                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                contentDescription =
+                    stringResource(if (isPlaying) R.string.mini_player_pause else R.string.mini_player_play),
+                tint = Color.White,
+            )
+        }
+        IconButton(onClick = onNext) {
+            Icon(
+                imageVector = Icons.Filled.SkipNext,
+                contentDescription = stringResource(R.string.mini_player_next),
+                tint = Color.White,
+            )
         }
     }
 }

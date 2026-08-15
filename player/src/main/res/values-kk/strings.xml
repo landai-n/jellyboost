@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Бұл трек жүктелген файлда жоқ.</string>
     <string name="player_message_failed">Ойнату сәтсіз аяқталды.</string>
     <string name="player_message_change_reverted">Бұл өзгерісті қолдану мүмкін болмады — бұрынғыша жалғасады.</string>
+    <string name="music_notification_shuffle_on">Араластыруды өшіру</string>
+    <string name="music_notification_shuffle_off">Араластыруды қосу</string>
+    <string name="music_notification_repeat_off">Қайталау өшірулі</string>
+    <string name="music_notification_repeat_all">Кезек қайталануда</string>
+    <string name="music_notification_repeat_one">Осы трек қайталануда</string>
 
     <string name="player_syncplay_group">Топ</string>
     <string name="player_syncplay_waiting">Топ күтілуде…</string>

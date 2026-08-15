@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Mit indhold</string>
     <string name="home_section_continue_watching">Fortsæt visning</string>
     <string name="home_section_next_up">Op næste</string>
+    <string name="home_section_continue_listening">Fortsæt med at lytte</string>
     <string name="home_section_latest">Nyeste %1$s</string>
     <string name="home_hero_resume">Genoptag</string>
     <string name="home_hero_details">Detaljer</string>

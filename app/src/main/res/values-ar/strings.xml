@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">مجموعات SyncPlay</string>
     <string name="syncplay_groups_action_active">مجموعات SyncPlay — أنت في مجموعة</string>
+    <string name="music_refused_in_group">غادر مجموعة SyncPlay لتشغيل الموسيقى على هذا الجهاز.</string>
+    <string name="music_track_unavailable">تعذر تشغيل «%1$s» — تم تخطيه.</string>
+    <string name="music_queue_unavailable">تعذر تشغيل أي من تلك المقطوعات.</string>
+    <string name="music_playback_failed">فشل تشغيل «%1$s».</string>
+    <string name="music_radio_failed">تعذر بدء الراديو من «%1$s».</string>
+    <string name="mini_player_play">تشغيل</string>
+    <string name="mini_player_pause">إيقاف مؤقت</string>
+    <string name="mini_player_next">التالي</string>
+    <string name="mini_player_open_now_playing">فتح قيد التشغيل الآن</string>
 </resources>

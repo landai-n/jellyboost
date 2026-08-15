@@ -15,4 +15,13 @@
     <string name="offline_go_online">Connecta\'t</string>
     <string name="syncplay_groups_action">Grups de SyncPlay</string>
     <string name="syncplay_groups_action_active">Grups de SyncPlay — ets en un grup</string>
+    <string name="music_refused_in_group">Surt del grup de SyncPlay per reproduir música en aquest dispositiu.</string>
+    <string name="music_track_unavailable">No s\'ha pogut reproduir “%1$s” — s\'ha omès.</string>
+    <string name="music_queue_unavailable">No s\'ha pogut reproduir cap d\'aquestes pistes.</string>
+    <string name="music_playback_failed">Error de reproducció de “%1$s”.</string>
+    <string name="music_radio_failed">No s\'ha pogut iniciar la ràdio des de “%1$s”.</string>
+    <string name="mini_player_play">Reprodueix</string>
+    <string name="mini_player_pause">Pausa</string>
+    <string name="mini_player_next">Següent</string>
+    <string name="mini_player_open_now_playing">Obre la reproducció actual</string>
 </resources>

@@ -15,4 +15,13 @@
     <string name="offline_go_online">অনলাইনে যান</string>
     <string name="syncplay_groups_action">SyncPlay গ্রুপ</string>
     <string name="syncplay_groups_action_active">SyncPlay গ্রুপ — আপনি একটি গ্রুপে আছেন</string>
+    <string name="music_refused_in_group">এই ডিভাইসে গান চালাতে SyncPlay গ্রুপ ছেড়ে দিন।</string>
+    <string name="music_track_unavailable">“%1$s” চালানো যায়নি — এটি বাদ দেওয়া হয়েছে।</string>
+    <string name="music_queue_unavailable">ওই ট্র্যাকগুলোর কোনোটিই চালানো যায়নি।</string>
+    <string name="music_playback_failed">“%1$s” প্লেব্যাক ব্যর্থ হয়েছে।</string>
+    <string name="music_radio_failed">“%1$s” থেকে রেডিও শুরু করা যায়নি।</string>
+    <string name="mini_player_play">চালান</string>
+    <string name="mini_player_pause">থামান</string>
+    <string name="mini_player_next">পরবর্তী</string>
+    <string name="mini_player_open_now_playing">এখন চলছে খুলুন</string>
 </resources>

@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay ಗುಂಪುಗಳು</string>
     <string name="syncplay_groups_action_active">SyncPlay ಗುಂಪುಗಳು — ನೀವು ಒಂದು ಗುಂಪಿನಲ್ಲಿದ್ದೀರಿ</string>
+    <string name="music_refused_in_group">ಈ ಸಾಧನದಲ್ಲಿ ಸಂಗೀತ ಪ್ಲೇ ಮಾಡಲು SyncPlay ಗುಂಪಿನಿಂದ ಹೊರಬನ್ನಿ.</string>
+    <string name="music_track_unavailable">“%1$s” ಪ್ಲೇ ಮಾಡಲಾಗಲಿಲ್ಲ — ಅದನ್ನು ಬಿಟ್ಟುಬಿಡಲಾಗಿದೆ.</string>
+    <string name="music_queue_unavailable">ಆ ಟ್ರ್ಯಾಕ್‌ಗಳಲ್ಲಿ ಯಾವುದನ್ನೂ ಪ್ಲೇ ಮಾಡಲಾಗಲಿಲ್ಲ.</string>
+    <string name="music_playback_failed">“%1$s” ಪ್ಲೇಬ್ಯಾಕ್ ವಿಫಲವಾಗಿದೆ.</string>
+    <string name="music_radio_failed">“%1$s” ನಿಂದ ರೇಡಿಯೋ ಪ್ರಾರಂಭಿಸಲಾಗಲಿಲ್ಲ.</string>
+    <string name="mini_player_play">ಪ್ಲೇ</string>
+    <string name="mini_player_pause">ವಿರಾಮ</string>
+    <string name="mini_player_next">ಮುಂದಿನದು</string>
+    <string name="mini_player_open_now_playing">ಈಗ ಪ್ಲೇ ಆಗುತ್ತಿರುವುದನ್ನು ತೆರೆಯಿರಿ</string>
 </resources>

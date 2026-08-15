@@ -6,6 +6,10 @@
     <string name="search_section_movies">فیلم‌ها</string>
     <string name="search_section_series">سریال‌ها</string>
     <string name="search_section_episodes">قسمت‌ها</string>
+    <string name="search_section_artists">هنرمندان</string>
+    <string name="search_section_albums">آلبوم‌ها</string>
+    <string name="search_section_songs">آهنگ‌ها</string>
+    <string name="search_section_playlists">فهرست‌های پخش</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d نتیجه</item>
         <item quantity="other">%1$d نتیجه</item>

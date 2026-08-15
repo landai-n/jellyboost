@@ -5,6 +5,10 @@
     <string name="search_section_movies">ภาพยนตร์</string>
     <string name="search_section_series">ซีรีส์</string>
     <string name="search_section_episodes">ตอนทั้งหมด</string>
+    <string name="search_section_artists">ศิลปิน</string>
+    <string name="search_section_albums">อัลบั้ม</string>
+    <string name="search_section_songs">เพลง</string>
+    <string name="search_section_playlists">เพลย์ลิสต์</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d รายการ</item>
     </plurals>

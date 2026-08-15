@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Moji sadržaji</string>
     <string name="home_section_continue_watching">Nastavi gledati</string>
     <string name="home_section_next_up">Sljedeće</string>
+    <string name="home_section_continue_listening">Nastavi slušati</string>
     <string name="home_section_latest">Najnovije: %1$s</string>
     <string name="home_hero_resume">Nastavi</string>
     <string name="home_hero_details">Detalji</string>

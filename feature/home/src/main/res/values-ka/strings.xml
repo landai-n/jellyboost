@@ -5,6 +5,7 @@
     <string name="home_section_my_media">ჩემი მედია</string>
     <string name="home_section_continue_watching">ყურების გაგრძელება</string>
     <string name="home_section_next_up">შემდეგი</string>
+    <string name="home_section_continue_listening">მოსმენის გაგრძელება</string>
     <string name="home_section_latest">უახლესი %1$s</string>
     <string name="home_hero_resume">გაგრძელება</string>
     <string name="home_hero_details">დეტალები</string>

@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Daardie baan is nie in die afgelaaide lêer nie.</string>
     <string name="player_message_failed">Terugspeel het misluk.</string>
     <string name="player_message_change_reverted">Kon daardie verandering nie toepas nie — gaan voort soos voorheen.</string>
+    <string name="music_notification_shuffle_on">Skakel skommel af</string>
+    <string name="music_notification_shuffle_off">Skakel skommel aan</string>
+    <string name="music_notification_repeat_off">Herhaal af</string>
+    <string name="music_notification_repeat_all">Herhaal die wagtou</string>
+    <string name="music_notification_repeat_one">Herhaal hierdie snit</string>
 
     <string name="player_syncplay_group">Groep</string>
     <string name="player_syncplay_waiting">Wag vir groep…</string>

@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filme</string>
     <string name="search_section_series">Seriale</string>
     <string name="search_section_episodes">Episoade</string>
+    <string name="search_section_artists">Artiști</string>
+    <string name="search_section_albums">Albume</string>
+    <string name="search_section_songs">Melodii</string>
+    <string name="search_section_playlists">Liste de redare</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d rezultat</item>
         <item quantity="few">%1$d rezultate</item>

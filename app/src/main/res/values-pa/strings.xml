@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay ਗਰੁੱਪ</string>
     <string name="syncplay_groups_action_active">SyncPlay ਗਰੁੱਪ — ਤੁਸੀਂ ਇੱਕ ਗਰੁੱਪ ਵਿੱਚ ਹੋ</string>
+    <string name="music_refused_in_group">ਇਸ ਡਿਵਾਈਸ \'ਤੇ ਸੰਗੀਤ ਚਲਾਉਣ ਲਈ SyncPlay ਗਰੁੱਪ ਛੱਡੋ।</string>
+    <string name="music_track_unavailable">“%1$s” ਨਹੀਂ ਚੱਲ ਸਕਿਆ — ਇਸਨੂੰ ਛੱਡ ਦਿੱਤਾ ਗਿਆ।</string>
+    <string name="music_queue_unavailable">ਉਹਨਾਂ ਵਿੱਚੋਂ ਕੋਈ ਵੀ ਟਰੈਕ ਨਹੀਂ ਚੱਲ ਸਕਿਆ।</string>
+    <string name="music_playback_failed">“%1$s” ਦਾ ਪਲੇਬੈਕ ਅਸਫਲ ਰਿਹਾ।</string>
+    <string name="music_radio_failed">“%1$s” ਤੋਂ ਰੇਡੀਓ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕਿਆ।</string>
+    <string name="mini_player_play">ਚਲਾਓ</string>
+    <string name="mini_player_pause">ਰੋਕੋ</string>
+    <string name="mini_player_next">ਅਗਲਾ</string>
+    <string name="mini_player_open_now_playing">ਹੁਣ ਚੱਲ ਰਿਹਾ ਖੋਲ੍ਹੋ</string>
 </resources>

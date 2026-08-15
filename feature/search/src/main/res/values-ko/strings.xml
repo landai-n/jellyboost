@@ -6,6 +6,10 @@
     <string name="search_section_movies">영화</string>
     <string name="search_section_series">시리즈</string>
     <string name="search_section_episodes">에피소드</string>
+    <string name="search_section_artists">아티스트</string>
+    <string name="search_section_albums">앨범</string>
+    <string name="search_section_songs">노래</string>
+    <string name="search_section_playlists">재생목록</string>
     <plurals name="search_result_count">
         <item quantity="other">결과 %1$d개</item>
     </plurals>

@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmy</string>
     <string name="search_section_series">Seriale</string>
     <string name="search_section_episodes">Odcinki</string>
+    <string name="search_section_artists">Wykonawcy</string>
+    <string name="search_section_albums">Albumy</string>
+    <string name="search_section_songs">Utwory</string>
+    <string name="search_section_playlists">Playlisty</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d wynik</item>
         <item quantity="few">%1$d wyniki</item>

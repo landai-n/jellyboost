@@ -6,6 +6,10 @@
     <string name="search_section_movies">चित्रपट</string>
     <string name="search_section_series">शो</string>
     <string name="search_section_episodes">भाग</string>
+    <string name="search_section_artists">कलाकार</string>
+    <string name="search_section_albums">अल्बम</string>
+    <string name="search_section_songs">गाणी</string>
+    <string name="search_section_playlists">प्लेलिस्ट</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d निकाल</item>
         <item quantity="other">%1$d निकाल</item>

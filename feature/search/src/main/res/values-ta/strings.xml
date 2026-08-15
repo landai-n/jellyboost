@@ -6,6 +6,10 @@
     <string name="search_section_movies">திரைப்படங்கள்</string>
     <string name="search_section_series">நிகழ்ச்சிகள்</string>
     <string name="search_section_episodes">எபிசோடுகள்</string>
+    <string name="search_section_artists">கலைஞர்கள்</string>
+    <string name="search_section_albums">ஆல்பங்கள்</string>
+    <string name="search_section_songs">பாடல்கள்</string>
+    <string name="search_section_playlists">பிளேலிஸ்ட்கள்</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d முடிவு</item>
         <item quantity="other">%1$d முடிவுகள்</item>

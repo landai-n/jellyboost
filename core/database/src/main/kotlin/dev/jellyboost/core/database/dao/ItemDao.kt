@@ -28,6 +28,13 @@ import java.util.UUID
  * rows, and making the caller say which it wants keeps that distinction visible at the call site.
  */
 @Dao
+@Suppress(
+    // One member per query, by construction — a DAO is wide by contract, not by neglect (the
+    // same shape `OnlineJellyfinRepository` logs in DECISIONS.md). M13's three music queries
+    // (`tracksOfAlbum`, `albumsOfArtist`, the Continue Listening resume) took it from 18 to 21;
+    // splitting a music DAO out would put one table's queries in two files.
+    "TooManyFunctions",
+)
 interface ItemDao {
     /** Inserts the rows, replacing any existing row with the same id. */
     @Upsert

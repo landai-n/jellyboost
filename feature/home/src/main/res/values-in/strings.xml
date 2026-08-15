@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Media Saya</string>
     <string name="home_section_continue_watching">Lanjutkan Menonton</string>
     <string name="home_section_next_up">Berikutnya</string>
+    <string name="home_section_continue_listening">Lanjutkan Mendengarkan</string>
     <string name="home_section_latest">%1$s Terbaru</string>
     <string name="home_hero_resume">Lanjutkan</string>
     <string name="home_hero_details">Detail</string>

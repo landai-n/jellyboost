@@ -5,6 +5,10 @@
     <string name="search_section_movies">মুভি</string>
     <string name="search_section_series">শো</string>
     <string name="search_section_episodes">পর্বসমূহ</string>
+    <string name="search_section_artists">শিল্পী</string>
+    <string name="search_section_albums">অ্যালবাম</string>
+    <string name="search_section_songs">গান</string>
+    <string name="search_section_playlists">প্লেলিস্ট</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$dটি ফলাফল</item>
         <item quantity="other">%1$dটি ফলাফল</item>

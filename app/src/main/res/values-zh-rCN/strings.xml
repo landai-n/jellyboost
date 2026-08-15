@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay 群组</string>
     <string name="syncplay_groups_action_active">SyncPlay 群组——你已加入一个群组</string>
+    <string name="music_refused_in_group">退出 SyncPlay 群组后才能在此设备上播放音乐。</string>
+    <string name="music_track_unavailable">无法播放“%1$s”——已跳过。</string>
+    <string name="music_queue_unavailable">这些曲目都无法播放。</string>
+    <string name="music_playback_failed">“%1$s”播放失败。</string>
+    <string name="music_radio_failed">无法从“%1$s”开始电台。</string>
+    <string name="mini_player_play">播放</string>
+    <string name="mini_player_pause">暂停</string>
+    <string name="mini_player_next">下一首</string>
+    <string name="mini_player_open_now_playing">打开正在播放</string>
 </resources>

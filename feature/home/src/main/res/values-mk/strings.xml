@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Мои медиуми</string>
     <string name="home_section_continue_watching">Продолжи со гледање</string>
     <string name="home_section_next_up">Следно</string>
+    <string name="home_section_continue_listening">Продолжи со слушање</string>
     <string name="home_section_latest">Најново: %1$s</string>
     <string name="home_hero_resume">Продолжи</string>
     <string name="home_hero_details">Детали</string>

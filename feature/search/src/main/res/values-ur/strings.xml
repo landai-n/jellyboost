@@ -6,6 +6,10 @@
     <string name="search_section_movies">فلمیں</string>
     <string name="search_section_series">شوز</string>
     <string name="search_section_episodes">اقساط</string>
+    <string name="search_section_artists">فنکار</string>
+    <string name="search_section_albums">البمز</string>
+    <string name="search_section_songs">گانے</string>
+    <string name="search_section_playlists">پلے لسٹس</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d نتیجہ</item>
         <item quantity="other">%1$d نتائج</item>

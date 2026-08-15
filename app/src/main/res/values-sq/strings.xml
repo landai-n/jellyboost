@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">Grupet SyncPlay</string>
     <string name="syncplay_groups_action_active">Grupet SyncPlay — je në një grup</string>
+    <string name="music_refused_in_group">Dil nga grupi SyncPlay për të luajtur muzikë në këtë pajisje.</string>
+    <string name="music_track_unavailable">«%1$s» nuk mund të luhej — u anashkalua.</string>
+    <string name="music_queue_unavailable">Asnjë nga ato pjesë nuk mund të luhej.</string>
+    <string name="music_playback_failed">Riprodhimi i «%1$s» dështoi.</string>
+    <string name="music_radio_failed">Radioja nga «%1$s» nuk mund të nisej.</string>
+    <string name="mini_player_play">Luaj</string>
+    <string name="mini_player_pause">Pauzë</string>
+    <string name="mini_player_next">Tjetra</string>
+    <string name="mini_player_open_now_playing">Hap Duke luajtur tani</string>
 </resources>

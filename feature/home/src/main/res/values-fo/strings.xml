@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Mítt tilfar</string>
     <string name="home_section_continue_watching">Halda áfram at hyggja</string>
     <string name="home_section_next_up">Næsta</string>
+    <string name="home_section_continue_listening">Halda áfram at lurta</string>
     <string name="home_section_latest">Nýggjastu %1$s</string>
     <string name="home_hero_resume">Halda áfram</string>
     <string name="home_hero_details">Frágreiðing</string>

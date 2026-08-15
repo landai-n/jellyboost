@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmek</string>
     <string name="search_section_series">Sorozatok</string>
     <string name="search_section_episodes">Epizódok</string>
+    <string name="search_section_artists">Előadók</string>
+    <string name="search_section_albums">Albumok</string>
+    <string name="search_section_songs">Számok</string>
+    <string name="search_section_playlists">Lejátszási listák</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d találat</item>
         <item quantity="other">%1$d találat</item>

@@ -15,4 +15,13 @@
     <string name="offline_go_online">Chuyển sang trực tuyến</string>
     <string name="syncplay_groups_action">Nhóm SyncPlay</string>
     <string name="syncplay_groups_action_active">Nhóm SyncPlay — bạn đang ở trong một nhóm</string>
+    <string name="music_refused_in_group">Rời nhóm SyncPlay để phát nhạc trên thiết bị này.</string>
+    <string name="music_track_unavailable">Không thể phát “%1$s” — đã bỏ qua.</string>
+    <string name="music_queue_unavailable">Không thể phát bất kỳ bản nhạc nào trong số đó.</string>
+    <string name="music_playback_failed">Phát “%1$s” thất bại.</string>
+    <string name="music_radio_failed">Không thể bắt đầu radio từ “%1$s”.</string>
+    <string name="mini_player_play">Phát</string>
+    <string name="mini_player_pause">Tạm dừng</string>
+    <string name="mini_player_next">Tiếp theo</string>
+    <string name="mini_player_open_now_playing">Mở Đang phát</string>
 </resources>

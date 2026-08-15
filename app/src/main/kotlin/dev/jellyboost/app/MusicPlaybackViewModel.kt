@@ -4,12 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.Ticks
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.data.JellyfinRepository
-import dev.jellyboost.player.model.ticksToMillis
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -85,7 +85,7 @@ class MusicPlaybackViewModel
          * depends on `:player` for the video screen, so reusing it here needs no new dependency.
          */
         fun playResumed(item: JellyfinItem) {
-            val startPositionMs = item.userData.playbackPositionTicks.ticksToMillis()
+            val startPositionMs = Ticks.ticksToMillis(item.userData.playbackPositionTicks)
             viewModelScope.launch { controller.play(listOf(item), startIndex = 0, startPositionMs = startPositionMs) }
         }
 
@@ -111,7 +111,7 @@ class MusicPlaybackViewModel
             startPositionTicks: Long = 0L,
         ) {
             viewModelScope.launch {
-                val startPositionMs = startPositionTicks.ticksToMillis()
+                val startPositionMs = Ticks.ticksToMillis(startPositionTicks)
                 val albumTracks =
                     item.albumId?.let { albumId ->
                         when (val result = repository.getAlbumTracks(albumId)) {

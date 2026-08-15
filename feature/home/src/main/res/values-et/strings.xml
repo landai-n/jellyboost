@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Minu meedia</string>
     <string name="home_section_continue_watching">Jätka vaatamist</string>
     <string name="home_section_next_up">Järgmisena</string>
+    <string name="home_section_continue_listening">Jätka kuulamist</string>
     <string name="home_section_latest">Uusimad %1$s</string>
     <string name="home_hero_resume">Jätka</string>
     <string name="home_hero_details">Üksikasjad</string>

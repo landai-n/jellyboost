@@ -67,6 +67,11 @@
     <string name="player_message_track_offline">هذا المقطع غير موجود في الملف الذي تم تنزيله.</string>
     <string name="player_message_failed">فشل التشغيل.</string>
     <string name="player_message_change_reverted">تعذّر تطبيق هذا التغيير — نواصل كما كان من قبل.</string>
+    <string name="music_notification_shuffle_on">إيقاف التشغيل العشوائي</string>
+    <string name="music_notification_shuffle_off">تفعيل التشغيل العشوائي</string>
+    <string name="music_notification_repeat_off">التكرار متوقف</string>
+    <string name="music_notification_repeat_all">تكرار قائمة الانتظار</string>
+    <string name="music_notification_repeat_one">تكرار هذه المقطوعة</string>
 
     <string name="player_syncplay_group">المجموعة</string>
     <string name="player_syncplay_waiting">بانتظار المجموعة…</string>

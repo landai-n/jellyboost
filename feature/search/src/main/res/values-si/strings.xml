@@ -5,6 +5,10 @@
     <string name="search_section_movies">චිත්‍රපට</string>
     <string name="search_section_series">වැඩසටහන්</string>
     <string name="search_section_episodes">කථාංග</string>
+    <string name="search_section_artists">කලාකරුවන්</string>
+    <string name="search_section_albums">ඇල්බම</string>
+    <string name="search_section_songs">ගීත</string>
+    <string name="search_section_playlists">වාදන ලැයිස්තු</string>
     <plurals name="search_result_count">
         <item quantity="one">ප්‍රතිඵල %1$d</item>
         <item quantity="other">ප්‍රතිඵල %1$d</item>

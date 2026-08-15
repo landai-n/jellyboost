@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Αυτό το κομμάτι δεν βρίσκεται στο ληφθέν αρχείο.</string>
     <string name="player_message_failed">Η αναπαραγωγή απέτυχε.</string>
     <string name="player_message_change_reverted">Δεν ήταν δυνατή η εφαρμογή της αλλαγής — συνεχίζουμε όπως πριν.</string>
+    <string name="music_notification_shuffle_on">Απενεργοποίηση τυχαίας σειράς</string>
+    <string name="music_notification_shuffle_off">Ενεργοποίηση τυχαίας σειράς</string>
+    <string name="music_notification_repeat_off">Επανάληψη ανενεργή</string>
+    <string name="music_notification_repeat_all">Επανάληψη της ουράς</string>
+    <string name="music_notification_repeat_one">Επανάληψη αυτού του κομματιού</string>
 
     <string name="player_syncplay_group">Ομάδα</string>
     <string name="player_syncplay_waiting">Αναμονή ομάδας…</string>

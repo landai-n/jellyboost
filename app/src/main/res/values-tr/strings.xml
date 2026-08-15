@@ -15,4 +15,13 @@
     <string name="offline_go_online">Çevrimiçi ol</string>
     <string name="syncplay_groups_action">SyncPlay grupları</string>
     <string name="syncplay_groups_action_active">SyncPlay grupları — bir grupta bulunuyorsunuz</string>
+    <string name="music_refused_in_group">Bu cihazda müzik çalmak için SyncPlay grubundan ayrılın.</string>
+    <string name="music_track_unavailable">“%1$s” çalınamadı — parça atlandı.</string>
+    <string name="music_queue_unavailable">Bu parçaların hiçbiri çalınamadı.</string>
+    <string name="music_playback_failed">“%1$s” oynatılamadı.</string>
+    <string name="music_radio_failed">“%1$s” üzerinden radyo başlatılamadı.</string>
+    <string name="mini_player_play">Oynat</string>
+    <string name="mini_player_pause">Duraklat</string>
+    <string name="mini_player_next">Sonraki</string>
+    <string name="mini_player_open_now_playing">Şimdi çalınanı aç</string>
 </resources>

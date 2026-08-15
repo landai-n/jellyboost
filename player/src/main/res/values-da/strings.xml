@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Det spor er ikke i den downloadede fil.</string>
     <string name="player_message_failed">Afspilning mislykkedes.</string>
     <string name="player_message_change_reverted">Ændringen kunne ikke anvendes — fortsætter som før.</string>
+    <string name="music_notification_shuffle_on">Slå bland fra</string>
+    <string name="music_notification_shuffle_off">Slå bland til</string>
+    <string name="music_notification_repeat_off">Gentagelse fra</string>
+    <string name="music_notification_repeat_all">Gentager køen</string>
+    <string name="music_notification_repeat_one">Gentager dette nummer</string>
 
     <string name="player_syncplay_group">Gruppe</string>
     <string name="player_syncplay_waiting">Venter på gruppe…</string>

@@ -102,19 +102,26 @@ fun TrackRow(
 
         DownloadBadge(state = track.downloadState)
 
-        val isFavorite = track.userData.isFavorite
-        val favoriteTint =
-            if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-        IconButton(onClick = onToggleFavorite, modifier = Modifier.size(Dimens.MinTouchTarget)) {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription =
-                    stringResource(
-                        if (isFavorite) R.string.music_track_favorite_remove else R.string.music_track_favorite_add,
-                    ),
-                tint = favoriteTint,
-            )
-        }
+        TrackFavoriteButton(isFavorite = track.userData.isFavorite, onClick = onToggleFavorite)
+    }
+}
+
+/** The row's trailing heart — [TrackRow]'s own affordance, sized to the minimum touch target. */
+@Composable
+private fun TrackFavoriteButton(
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+) {
+    val tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    IconButton(onClick = onClick, modifier = Modifier.size(Dimens.MinTouchTarget)) {
+        Icon(
+            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription =
+                stringResource(
+                    if (isFavorite) R.string.music_track_favorite_remove else R.string.music_track_favorite_add,
+                ),
+            tint = tint,
+        )
     }
 }
 

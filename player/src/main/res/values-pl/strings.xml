@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Tej ścieżki nie ma w pobranym pliku.</string>
     <string name="player_message_failed">Odtwarzanie nie powiodło się.</string>
     <string name="player_message_change_reverted">Nie udało się zastosować tej zmiany — odtwarzanie trwa jak wcześniej.</string>
+    <string name="music_notification_shuffle_on">Wyłącz odtwarzanie losowe</string>
+    <string name="music_notification_shuffle_off">Włącz odtwarzanie losowe</string>
+    <string name="music_notification_repeat_off">Powtarzanie wyłączone</string>
+    <string name="music_notification_repeat_all">Powtarzanie kolejki</string>
+    <string name="music_notification_repeat_one">Powtarzanie tego utworu</string>
 
     <string name="player_syncplay_group">Grupa</string>
     <string name="player_syncplay_waiting">Oczekiwanie na grupę…</string>

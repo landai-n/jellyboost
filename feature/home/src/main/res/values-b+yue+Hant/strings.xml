@@ -6,6 +6,7 @@
     <string name="home_section_my_media">我嘅媒體</string>
     <string name="home_section_continue_watching">繼續觀看</string>
     <string name="home_section_next_up">接下嚟</string>
+    <string name="home_section_continue_listening">繼續收聽</string>
     <string name="home_section_latest">最新%1$s</string>
     <string name="home_hero_resume">繼續播放</string>
     <string name="home_hero_details">詳情</string>

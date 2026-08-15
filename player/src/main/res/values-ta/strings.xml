@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">அந்தத் தட்டு பதிவிறக்கப்பட்ட கோப்பில் இல்லை.</string>
     <string name="player_message_failed">பிளேபேக் தோல்வியடைந்தது.</string>
     <string name="player_message_change_reverted">அந்த மாற்றத்தைப் பயன்படுத்த முடியவில்லை — முன்பு போலவே தொடர்கிறது.</string>
+    <string name="music_notification_shuffle_on">ஷஃபிளை அணை</string>
+    <string name="music_notification_shuffle_off">ஷஃபிளை இயக்கு</string>
+    <string name="music_notification_repeat_off">மீண்டும் இயக்குதல் ஆஃப்</string>
+    <string name="music_notification_repeat_all">வரிசையை மீண்டும் இயக்குகிறது</string>
+    <string name="music_notification_repeat_one">இந்தத் தடத்தை மீண்டும் இயக்குகிறது</string>
 
     <string name="player_syncplay_group">குழு</string>
     <string name="player_syncplay_waiting">குழுவிற்காகக் காத்திருக்கிறது…</string>

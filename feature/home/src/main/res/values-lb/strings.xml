@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Meng Medien</string>
     <string name="home_section_continue_watching">Weiderkucken</string>
     <string name="home_section_next_up">Als Nächst</string>
+    <string name="home_section_continue_listening">Weiderlauschteren</string>
     <string name="home_section_latest">Nei an %1$s</string>
     <string name="home_hero_resume">Weiderfueren</string>
     <string name="home_hero_details">Detailer</string>

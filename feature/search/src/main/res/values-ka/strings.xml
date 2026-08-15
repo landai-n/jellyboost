@@ -5,6 +5,10 @@
     <string name="search_section_movies">ფილმები</string>
     <string name="search_section_series">სერიალები</string>
     <string name="search_section_episodes">ეპიზოდები</string>
+    <string name="search_section_artists">შემსრულებლები</string>
+    <string name="search_section_albums">ალბომები</string>
+    <string name="search_section_songs">სიმღერები</string>
+    <string name="search_section_playlists">დასაკრავი სიები</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d შედეგი</item>
         <item quantity="other">%1$d შედეგი</item>

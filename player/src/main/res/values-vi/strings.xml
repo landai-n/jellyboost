@@ -47,6 +47,11 @@
     <string name="player_message_track_offline">Track đó không có trong tệp đã tải xuống.</string>
     <string name="player_message_failed">Phát lại thất bại.</string>
     <string name="player_message_change_reverted">Không thể áp dụng thay đổi đó — tiếp tục như trước.</string>
+    <string name="music_notification_shuffle_on">Tắt phát ngẫu nhiên</string>
+    <string name="music_notification_shuffle_off">Bật phát ngẫu nhiên</string>
+    <string name="music_notification_repeat_off">Tắt lặp lại</string>
+    <string name="music_notification_repeat_all">Đang lặp lại hàng đợi</string>
+    <string name="music_notification_repeat_one">Đang lặp lại bản nhạc này</string>
     <string name="player_syncplay_group">Nhóm</string>
     <string name="player_syncplay_waiting">Đang chờ nhóm…</string>
     <string name="player_syncplay_shuffle">Xáo trộn hàng đợi</string>

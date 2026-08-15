@@ -15,4 +15,13 @@
     <string name="offline_go_online">Sambungkan kembali</string>
     <string name="syncplay_groups_action">Grup SyncPlay</string>
     <string name="syncplay_groups_action_active">Grup SyncPlay — Anda berada dalam grup</string>
+    <string name="music_refused_in_group">Keluar dari grup SyncPlay untuk memutar musik di perangkat ini.</string>
+    <string name="music_track_unavailable">Tidak dapat memutar “%1$s” — trek dilewati.</string>
+    <string name="music_queue_unavailable">Tidak ada satu pun trek itu yang dapat diputar.</string>
+    <string name="music_playback_failed">Pemutaran “%1$s” gagal.</string>
+    <string name="music_radio_failed">Tidak dapat memulai radio dari “%1$s”.</string>
+    <string name="mini_player_play">Putar</string>
+    <string name="mini_player_pause">Jeda</string>
+    <string name="mini_player_next">Berikutnya</string>
+    <string name="mini_player_open_now_playing">Buka Sedang Diputar</string>
 </resources>

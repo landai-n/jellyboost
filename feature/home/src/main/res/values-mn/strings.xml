@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Миний медиа</string>
     <string name="home_section_continue_watching">Үзсээр байгаа</string>
     <string name="home_section_next_up">Дараагийн</string>
+    <string name="home_section_continue_listening">Сонссоор байгаа</string>
     <string name="home_section_latest">Сүүлийн үеийн %1$s</string>
     <string name="home_hero_resume">Үргэлжлүүлэх</string>
     <string name="home_hero_details">Дэлгэрэнгүй</string>

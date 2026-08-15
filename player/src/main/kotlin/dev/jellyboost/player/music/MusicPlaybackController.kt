@@ -1,11 +1,11 @@
 package dev.jellyboost.player.music
 
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.core.common.model.JellyfinItem
 import dev.jellyboost.core.common.music.MusicController
 import dev.jellyboost.core.common.music.MusicMessage
 import dev.jellyboost.core.common.music.MusicPlaybackState
 import dev.jellyboost.core.common.music.MusicRepeatMode
-import dev.jellyboost.player.di.MainDispatcher
 import dev.jellyboost.player.model.millisToTicks
 import dev.jellyboost.player.music.di.MusicSessionScope
 import dev.jellyboost.player.report.MusicReportTarget
@@ -74,6 +74,12 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("TooManyFunctions") // The MusicController surface is eleven verbs; this is that surface.
 internal class MusicPlaybackController
     @Inject
+    // Eight collaborators, each a seam the class's KDoc names: the port (the one player), the
+    // resolver and spec factory (pure), the reporter, the handover arbiter, the SyncPlay refusal
+    // gate, the session scope and the main dispatcher Media3 requires. Bundling any pair would
+    // invent a type with no meaning of its own — the PlayerViewModel precedent (DECISIONS.md
+    // 2026-08-03) for a justified suppression.
+    @Suppress("LongParameterList")
     constructor(
         private val port: MusicPlayerPort,
         private val resolver: MusicStreamResolver,
@@ -319,15 +325,14 @@ internal class MusicPlaybackController
                 _messages.tryEmit(MusicMessage.RefusedInSyncPlayGroup)
                 return false
             }
-            if (queue.isEmpty()) {
-                _messages.tryEmit(MusicMessage.QueueUnavailable)
-                return false
-            }
-
             val resolved = resolveAll(queue)
             val playable = resolved.filter { it.second != null }
             if (playable.isEmpty()) {
-                Timber.w("Nothing in a %d-track queue could be resolved", queue.size)
+                // Covers the empty queue too: resolveAll of nothing is nothing, and both cases
+                // are the same answer to the caller — there is nothing here to play.
+                if (queue.isNotEmpty()) {
+                    Timber.w("Nothing in a %d-track queue could be resolved", queue.size)
+                }
                 _messages.tryEmit(MusicMessage.QueueUnavailable)
                 return false
             }

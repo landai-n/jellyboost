@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">Pista hori ez dago deskargatutako fitxategian.</string>
     <string name="player_message_failed">Erreprodukzioak huts egin du.</string>
     <string name="player_message_change_reverted">Ezin izan da aldaketa hori aplikatu — lehen bezala jarraitzen du.</string>
+    <string name="music_notification_shuffle_on">Itzali ausazko erreprodukzioa</string>
+    <string name="music_notification_shuffle_off">Piztu ausazko erreprodukzioa</string>
+    <string name="music_notification_repeat_off">Errepikapena itzalita</string>
+    <string name="music_notification_repeat_all">Ilara errepikatzen</string>
+    <string name="music_notification_repeat_one">Pista hau errepikatzen</string>
     <string name="player_syncplay_group">Taldea</string>
     <string name="player_syncplay_waiting">Taldearen zain…</string>
     <string name="player_syncplay_shuffle">Nahastu ilara</string>

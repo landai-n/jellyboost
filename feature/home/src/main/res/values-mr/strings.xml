@@ -6,6 +6,7 @@
     <string name="home_section_my_media">माझे मीडिया</string>
     <string name="home_section_continue_watching">पाहणे सुरू ठेवा</string>
     <string name="home_section_next_up">पुढे</string>
+    <string name="home_section_continue_listening">ऐकणे सुरू ठेवा</string>
     <string name="home_section_latest">नवीनतम %1$s</string>
     <string name="home_hero_resume">पुन्हा सुरू करा</string>
     <string name="home_hero_details">तपशील</string>

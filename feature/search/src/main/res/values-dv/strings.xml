@@ -6,6 +6,10 @@
     <string name="search_section_movies">ފިލްމުތައް</string>
     <string name="search_section_series">ސީރީޒްތައް</string>
     <string name="search_section_episodes">އެޕިސޯޑްތައް</string>
+    <string name="search_section_artists">އާޓިސްޓުން</string>
+    <string name="search_section_albums">އަލްބަމްތައް</string>
+    <string name="search_section_songs">ލަވަތައް</string>
+    <string name="search_section_playlists">ޕްލޭލިސްޓްތައް</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d ނަތީޖާ</item>
         <item quantity="other">%1$d ނަތީޖާ</item>

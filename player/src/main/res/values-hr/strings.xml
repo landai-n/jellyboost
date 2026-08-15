@@ -58,6 +58,11 @@
     <string name="player_message_track_offline">Ta staza nije u preuzetoj datoteci.</string>
     <string name="player_message_failed">Reprodukcija nije uspjela.</string>
     <string name="player_message_change_reverted">Promjenu nije bilo moguće primijeniti — nastavlja se kao prije.</string>
+    <string name="music_notification_shuffle_on">Isključi nasumičnu reprodukciju</string>
+    <string name="music_notification_shuffle_off">Uključi nasumičnu reprodukciju</string>
+    <string name="music_notification_repeat_off">Ponavljanje isključeno</string>
+    <string name="music_notification_repeat_all">Ponavlja se red čekanja</string>
+    <string name="music_notification_repeat_one">Ponavlja se ova pjesma</string>
 
     <string name="player_syncplay_group">Grupa</string>
     <string name="player_syncplay_waiting">Čekanje grupe…</string>

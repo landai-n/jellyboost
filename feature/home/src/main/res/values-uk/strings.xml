@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Моє медіа</string>
     <string name="home_section_continue_watching">Продовжити перегляд</string>
     <string name="home_section_next_up">Далі</string>
+    <string name="home_section_continue_listening">Продовжити прослуховування</string>
     <string name="home_section_latest">Останні %1$s</string>
     <string name="home_hero_resume">Продовжити</string>
     <string name="home_hero_details">Подробиці</string>

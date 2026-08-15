@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Mia enhavo</string>
     <string name="home_section_continue_watching">Daŭrigi Spektadon</string>
     <string name="home_section_next_up">Sekve</string>
+    <string name="home_section_continue_listening">Daŭrigi Aŭskultadon</string>
     <string name="home_section_latest">Plej novaj: %1$s</string>
     <string name="home_hero_resume">Daŭrigi</string>
     <string name="home_hero_details">Detaloj</string>

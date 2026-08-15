@@ -15,4 +15,13 @@
     <string name="offline_go_online">Se reconnecter</string>
     <string name="syncplay_groups_action">Groupes SyncPlay</string>
     <string name="syncplay_groups_action_active">Groupes SyncPlay — vous êtes dans un groupe</string>
+    <string name="music_refused_in_group">Quittez le groupe SyncPlay pour écouter de la musique sur cet appareil.</string>
+    <string name="music_track_unavailable">Impossible de lire « %1$s » — piste ignorée.</string>
+    <string name="music_queue_unavailable">Aucune de ces pistes n\'a pu être lue.</string>
+    <string name="music_playback_failed">Échec de la lecture de « %1$s ».</string>
+    <string name="music_radio_failed">Impossible de lancer la radio à partir de « %1$s ».</string>
+    <string name="mini_player_play">Lecture</string>
+    <string name="mini_player_pause">Pause</string>
+    <string name="mini_player_next">Suivant</string>
+    <string name="mini_player_open_now_playing">Ouvrir la lecture en cours</string>
 </resources>

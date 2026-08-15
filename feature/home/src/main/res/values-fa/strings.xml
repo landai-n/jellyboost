@@ -6,6 +6,7 @@
     <string name="home_section_my_media">رسانه‌های من</string>
     <string name="home_section_continue_watching">ادامه تماشا</string>
     <string name="home_section_next_up">بعدی</string>
+    <string name="home_section_continue_listening">ادامه گوش دادن</string>
     <string name="home_section_latest">جدیدترین %1$s</string>
     <string name="home_hero_resume">ازسرگیری</string>
     <string name="home_hero_details">جزئیات</string>

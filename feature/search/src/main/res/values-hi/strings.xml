@@ -7,6 +7,10 @@
     <string name="search_section_movies">फ़िल्में</string>
     <string name="search_section_series">शो</string>
     <string name="search_section_episodes">एपिसोड</string>
+    <string name="search_section_artists">कलाकार</string>
+    <string name="search_section_albums">एल्बम</string>
+    <string name="search_section_songs">गाने</string>
+    <string name="search_section_playlists">प्लेलिस्ट</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d परिणाम</item>
         <item quantity="other">%1$d परिणाम</item>

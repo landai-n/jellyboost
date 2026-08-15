@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Тази пътечка не е в изтегления файл.</string>
     <string name="player_message_failed">Възпроизвеждането е неуспешно.</string>
     <string name="player_message_change_reverted">Промяната не можа да се приложи — продължаваме както преди.</string>
+    <string name="music_notification_shuffle_on">Изключи разбъркването</string>
+    <string name="music_notification_shuffle_off">Включи разбъркването</string>
+    <string name="music_notification_repeat_off">Повторението е изключено</string>
+    <string name="music_notification_repeat_all">Повтаряне на опашката</string>
+    <string name="music_notification_repeat_one">Повтаряне на този запис</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Изчакване на групата…</string>

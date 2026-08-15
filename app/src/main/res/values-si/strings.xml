@@ -15,4 +15,13 @@
     <string name="offline_go_online">සබැඳි වන්න</string>
     <string name="syncplay_groups_action">SyncPlay කණ්ඩායම්</string>
     <string name="syncplay_groups_action_active">SyncPlay කණ්ඩායම් — ඔබ කණ්ඩායමක සිටී</string>
+    <string name="music_refused_in_group">මෙම උපාංගයේ සංගීතය වාදනය කිරීමට SyncPlay කණ්ඩායමෙන් ඉවත් වන්න.</string>
+    <string name="music_track_unavailable">“%1$s” වාදනය කළ නොහැකි විය — එය මඟ හරින ලදී.</string>
+    <string name="music_queue_unavailable">එම ඛණ්ඩ කිසිවක් වාදනය කළ නොහැකි විය.</string>
+    <string name="music_playback_failed">“%1$s” වාදනය අසාර්ථක විය.</string>
+    <string name="music_radio_failed">“%1$s” වෙතින් ගුවන්විදුලිය ආරම්භ කළ නොහැකි විය.</string>
+    <string name="mini_player_play">වාදනය කරන්න</string>
+    <string name="mini_player_pause">විරාම කරන්න</string>
+    <string name="mini_player_next">ඊළඟ</string>
+    <string name="mini_player_open_now_playing">දැන් වාදනය වන දේ විවෘත කරන්න</string>
 </resources>

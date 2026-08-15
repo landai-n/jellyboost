@@ -6,6 +6,10 @@
     <string name="search_section_movies">Фильмдер</string>
     <string name="search_section_series">Көрсетілімдер</string>
     <string name="search_section_episodes">Бөлімдер</string>
+    <string name="search_section_artists">Орындаушылар</string>
+    <string name="search_section_albums">Альбомдар</string>
+    <string name="search_section_songs">Әндер</string>
+    <string name="search_section_playlists">Ойнату тізімдері</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d нәтиже</item>
         <item quantity="other">%1$d нәтиже</item>

@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Det spåret finns inte i den nedladdade filen.</string>
     <string name="player_message_failed">Uppspelningen misslyckades.</string>
     <string name="player_message_change_reverted">Ändringen kunde inte tillämpas — fortsätter som förut.</string>
+    <string name="music_notification_shuffle_on">Stäng av blandning</string>
+    <string name="music_notification_shuffle_off">Slå på blandning</string>
+    <string name="music_notification_repeat_off">Upprepning av</string>
+    <string name="music_notification_repeat_all">Upprepar kön</string>
+    <string name="music_notification_repeat_one">Upprepar det här spåret</string>
 
     <string name="player_syncplay_group">Grupp</string>
     <string name="player_syncplay_waiting">Väntar på grupp…</string>

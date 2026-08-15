@@ -34,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -373,22 +372,26 @@ private const val CHROME_EXIT_DIVISOR = 2
 @Composable
 private fun MusicMessageEffect(snackbarHostState: SnackbarHostState) {
     val viewModel: MusicPlaybackViewModel = hiltViewModel()
-    val context = LocalContext.current
 
-    LaunchedEffect(viewModel) {
+    // Resolved here rather than inside the collector because a collector runs outside
+    // composition, where `stringResource` is not available — the same arrangement
+    // [rememberConnectionStatusExplainer] documents. The parameterized ones are resolved as
+    // their raw positional templates and formatted with the item name at collect time.
+    val refusedInGroup = stringResource(R.string.music_refused_in_group)
+    val queueUnavailable = stringResource(R.string.music_queue_unavailable)
+    val trackUnavailable = stringResource(R.string.music_track_unavailable)
+    val playbackFailed = stringResource(R.string.music_playback_failed)
+    val radioFailed = stringResource(R.string.music_radio_failed)
+
+    LaunchedEffect(viewModel, refusedInGroup, queueUnavailable, trackUnavailable, playbackFailed, radioFailed) {
         viewModel.messages.collect { message ->
             val text =
                 when (message) {
-                    MusicMessage.RefusedInSyncPlayGroup -> context.getString(R.string.music_refused_in_group)
-                    is MusicMessage.TrackUnavailable ->
-                        context.getString(R.string.music_track_unavailable, message.itemName)
-
-                    MusicMessage.QueueUnavailable -> context.getString(R.string.music_queue_unavailable)
-                    is MusicMessage.PlaybackFailed ->
-                        context.getString(R.string.music_playback_failed, message.itemName)
-
-                    is MusicMessage.RadioFailed ->
-                        context.getString(R.string.music_radio_failed, message.itemName)
+                    MusicMessage.RefusedInSyncPlayGroup -> refusedInGroup
+                    is MusicMessage.TrackUnavailable -> trackUnavailable.format(message.itemName)
+                    MusicMessage.QueueUnavailable -> queueUnavailable
+                    is MusicMessage.PlaybackFailed -> playbackFailed.format(message.itemName)
+                    is MusicMessage.RadioFailed -> radioFailed.format(message.itemName)
                 }
             snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
         }

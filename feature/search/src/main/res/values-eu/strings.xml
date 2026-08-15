@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmak</string>
     <string name="search_section_series">Telesailak</string>
     <string name="search_section_episodes">Atalak</string>
+    <string name="search_section_artists">Artistak</string>
+    <string name="search_section_albums">Albumak</string>
+    <string name="search_section_songs">Abestiak</string>
+    <string name="search_section_playlists">Erreprodukzio-zerrendak</string>
     <plurals name="search_result_count">
         <item quantity="one">Emaitza %1$d</item>
         <item quantity="other">%1$d emaitza</item>

@@ -6,6 +6,7 @@
     <string name="home_section_my_media">המדיה שלי</string>
     <string name="home_section_continue_watching">המשך צפייה</string>
     <string name="home_section_next_up">הבא בתור</string>
+    <string name="home_section_continue_listening">המשך האזנה</string>
     <string name="home_section_latest">%1$s אחרונים</string>
     <string name="home_hero_resume">המשך</string>
     <string name="home_hero_details">פרטים</string>

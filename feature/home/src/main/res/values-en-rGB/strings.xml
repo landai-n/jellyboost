@@ -5,6 +5,7 @@
     <string name="home_section_my_media">My Media</string>
     <string name="home_section_continue_watching">Continue Watching</string>
     <string name="home_section_next_up">Next Up</string>
+    <string name="home_section_continue_listening">Continue Listening</string>
     <string name="home_section_latest">Latest %1$s</string>
     <string name="home_hero_resume">Resume</string>
     <string name="home_hero_details">Details</string>

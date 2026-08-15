@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">ಆ ಟ್ರ್ಯಾಕ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿದ ಫೈಲ್‌ನಲ್ಲಿ ಇಲ್ಲ.</string>
     <string name="player_message_failed">ಪ್ಲೇಬ್ಯಾಕ್ ವಿಫಲವಾಗಿದೆ.</string>
     <string name="player_message_change_reverted">ಆ ಬದಲಾವಣೆಯನ್ನು ಅನ್ವಯಿಸಲಾಗಲಿಲ್ಲ — ಮೊದಲಿನಂತೆ ಮುಂದುವರಿಯುತ್ತಿದೆ.</string>
+    <string name="music_notification_shuffle_on">ಶಫಲ್ ಆಫ್ ಮಾಡಿ</string>
+    <string name="music_notification_shuffle_off">ಶಫಲ್ ಆನ್ ಮಾಡಿ</string>
+    <string name="music_notification_repeat_off">ಪುನರಾವರ್ತನೆ ಆಫ್</string>
+    <string name="music_notification_repeat_all">ಸರತಿಯನ್ನು ಪುನರಾವರ್ತಿಸಲಾಗುತ್ತಿದೆ</string>
+    <string name="music_notification_repeat_one">ಈ ಟ್ರ್ಯಾಕ್ ಪುನರಾವರ್ತಿಸಲಾಗುತ್ತಿದೆ</string>
 
     <string name="player_syncplay_group">ಗುಂಪು</string>
     <string name="player_syncplay_waiting">ಗುಂಪಿಗಾಗಿ ಕಾಯಲಾಗುತ್ತಿದೆ…</string>

@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Таа песна не е во преземената датотека.</string>
     <string name="player_message_failed">Репродукцијата не успеа.</string>
     <string name="player_message_change_reverted">Промената не можеше да се примени — продолжуваме како порано.</string>
+    <string name="music_notification_shuffle_on">Исклучи мешање</string>
+    <string name="music_notification_shuffle_off">Вклучи мешање</string>
+    <string name="music_notification_repeat_off">Повторувањето е исклучено</string>
+    <string name="music_notification_repeat_all">Се повторува редицата</string>
+    <string name="music_notification_repeat_one">Се повторува оваа песна</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чекање на групата…</string>

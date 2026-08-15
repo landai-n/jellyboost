@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">קבוצות SyncPlay</string>
     <string name="syncplay_groups_action_active">קבוצות SyncPlay — אתה נמצא בקבוצה</string>
+    <string name="music_refused_in_group">צא מקבוצת SyncPlay כדי להשמיע מוזיקה במכשיר הזה.</string>
+    <string name="music_track_unavailable">לא ניתן היה להשמיע את ״%1$s״ — הרצועה דולגה.</string>
+    <string name="music_queue_unavailable">לא ניתן היה להשמיע אף אחת מהרצועות האלה.</string>
+    <string name="music_playback_failed">ההשמעה של ״%1$s״ נכשלה.</string>
+    <string name="music_radio_failed">לא ניתן היה להתחיל רדיו מתוך ״%1$s״.</string>
+    <string name="mini_player_play">הפעלה</string>
+    <string name="mini_player_pause">השהיה</string>
+    <string name="mini_player_next">הבא</string>
+    <string name="mini_player_open_now_playing">פתיחת מה שמתנגן</string>
 </resources>

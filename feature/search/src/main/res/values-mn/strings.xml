@@ -6,6 +6,10 @@
     <string name="search_section_movies">Кино</string>
     <string name="search_section_series">Цувралууд</string>
     <string name="search_section_episodes">Ангиуд</string>
+    <string name="search_section_artists">Уран бүтээлчид</string>
+    <string name="search_section_albums">Цомгууд</string>
+    <string name="search_section_songs">Дуунууд</string>
+    <string name="search_section_playlists">Тоглуулах жагсаалтууд</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d үр дүн</item>
         <item quantity="other">%1$d үр дүн</item>

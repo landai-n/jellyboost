@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Mine medier</string>
     <string name="home_section_continue_watching">Fortsett å se</string>
     <string name="home_section_next_up">Neste</string>
+    <string name="home_section_continue_listening">Fortsett å lytte</string>
     <string name="home_section_latest">Nyeste %1$s</string>
     <string name="home_hero_resume">Fortsett</string>
     <string name="home_hero_details">Detaljer</string>

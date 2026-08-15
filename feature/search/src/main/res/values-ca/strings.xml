@@ -5,6 +5,10 @@
     <string name="search_section_movies">Pel·lícules</string>
     <string name="search_section_series">Sèries</string>
     <string name="search_section_episodes">Episodis</string>
+    <string name="search_section_artists">Artistes</string>
+    <string name="search_section_albums">Àlbums</string>
+    <string name="search_section_songs">Cançons</string>
+    <string name="search_section_playlists">Llistes de reproducció</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d resultat</item>
         <item quantity="many">%1$d resultats</item>

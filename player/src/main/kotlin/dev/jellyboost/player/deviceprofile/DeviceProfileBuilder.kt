@@ -82,7 +82,7 @@ internal class DeviceProfileBuilder
         private fun build(directPlayAss: Boolean): DeviceProfile {
             val containerProfiles = mutableListOf<ContainerProfile>()
             val directPlayProfiles = mutableListOf<DirectPlayProfile>()
-            val codecProfiles = mutableListOf<CodecProfile>()
+            val playableVideoCodecs = mutableSetOf<String>()
 
             SUPPORTED_CONTAINER_FORMATS.forEachIndexed { index, container ->
                 val videoCodecs = supportedVideoCodecs[index]
@@ -98,9 +98,7 @@ internal class DeviceProfileBuilder
                             videoCodec = videoCodecs.joinToString(","),
                             audioCodec = audioCodecs.joinToString(","),
                         )
-                    videoCodecs.forEach { videoCodec ->
-                        codecProfile(container, videoCodec)?.let(codecProfiles::add)
-                    }
+                    playableVideoCodecs += videoCodecs
                 }
 
                 if (audioCodecs.isNotEmpty()) {
@@ -120,7 +118,7 @@ internal class DeviceProfileBuilder
                 directPlayProfiles = directPlayProfiles,
                 transcodingProfiles = TRANSCODING_PROFILES,
                 containerProfiles = containerProfiles,
-                codecProfiles = codecProfiles,
+                codecProfiles = playableVideoCodecs.sorted().mapNotNull(::codecProfile),
                 subtitleProfiles = subtitleProfiles(directPlayAss),
                 maxStreamingBitrate = DeviceProfileDefaults.MAX_STREAMING_BITRATE,
                 maxStaticBitrate = DeviceProfileDefaults.MAX_STATIC_BITRATE,
@@ -129,19 +127,22 @@ internal class DeviceProfileBuilder
         }
 
         /**
-         * Restricts direct play of [videoCodec] in [container] to what the device's decoders
-         * actually handle: the profiles they advertise — a device that only decodes H.264 High
-         * should not be handed a High 4:4:4 file — and the largest frame they accept, which also
-         * caps the size the server transcodes *to*. Without the size conditions a 4K source either
-         * direct-plays or transcodes at full width into a hardware decoder that tops out below it,
-         * and ExoPlayer falls back to software decode.
+         * Restricts [videoCodec] to what the device's decoders actually handle: the profiles they
+         * advertise — a device that only decodes H.264 High should not be handed a High 4:4:4
+         * file — and the largest frame they accept, which also caps the size the server transcodes
+         * *to*. Without the size conditions a 4K source either direct-plays or transcodes at full
+         * width into a hardware decoder that tops out below it, and ExoPlayer falls back to
+         * software decode.
+         *
+         * One profile per codec, with **no container**, and that is load-bearing rather than
+         * convenience: the server was measured (10.11.11) dropping container-bound codec profiles
+         * when sizing a Dolby Vision transcode — the same conditions bound to `mkv` produced a
+         * 3840-wide stream where the containerless shape produced 2560 — and a decoder's limits do
+         * not depend on the container anyway (DECISIONS.md, 2026-08-16).
          *
          * Either half may be unknown; `null` only when both are.
          */
-        private fun codecProfile(
-            container: String,
-            videoCodec: String,
-        ): CodecProfile? {
+        private fun codecProfile(videoCodec: String): CodecProfile? {
             val profiles = codecs.videoProfiles[videoCodec]?.takeIf { it.isNotEmpty() }
             val maxSize = codecs.videoMaxSizes[videoCodec]
             val conditions =
@@ -175,7 +176,7 @@ internal class DeviceProfileBuilder
             if (conditions.isEmpty()) return null
             return CodecProfile(
                 type = CodecType.VIDEO,
-                container = container,
+                container = null,
                 codec = videoCodec,
                 applyConditions = emptyList(),
                 conditions = conditions,

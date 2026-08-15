@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Serial</string>
     <string name="media_card_type_season">Musim</string>
     <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_song">Lagu</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artis</string>
+    <string name="media_card_type_playlist">Daftar putar</string>
     <string name="media_card_type_library">Pustaka</string>
     <string name="media_card_progress">%1$d%% ditonton</string>
     <string name="media_card_rating">Peringkat %1$s dari 10</string>

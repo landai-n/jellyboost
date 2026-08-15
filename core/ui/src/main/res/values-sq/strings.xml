@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Serial</string>
     <string name="media_card_type_season">Sezon</string>
     <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_song">Këngë</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artist</string>
+    <string name="media_card_type_playlist">Playlistë</string>
     <string name="media_card_type_library">Bibliotekë</string>
     <string name="media_card_progress">%1$d%% të shikuara</string>
     <string name="media_card_rating">Vlerësimi %1$s nga 10</string>

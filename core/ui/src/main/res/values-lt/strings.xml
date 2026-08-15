@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Serialas</string>
     <string name="media_card_type_season">Sezonas</string>
     <string name="media_card_type_episode">Epizodas</string>
+    <string name="media_card_type_song">Daina</string>
+    <string name="media_card_type_album">Albumas</string>
+    <string name="media_card_type_artist">Atlikėjas</string>
+    <string name="media_card_type_playlist">Grojaraštis</string>
     <string name="media_card_type_library">Biblioteka</string>
     <string name="media_card_progress">Žiūrėta %1$d%%</string>
     <string name="media_card_rating">Įvertinimas %1$s iš 10</string>

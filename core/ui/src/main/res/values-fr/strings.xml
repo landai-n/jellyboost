@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Série</string>
     <string name="media_card_type_season">Saison</string>
     <string name="media_card_type_episode">Épisode</string>
+    <string name="media_card_type_song">Titre</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artiste</string>
+    <string name="media_card_type_playlist">Liste de lecture</string>
     <string name="media_card_type_library">Bibliothèque</string>
     <string name="media_card_progress">%1$d%% vu</string>
     <string name="media_card_rating">Note %1$s sur 10</string>

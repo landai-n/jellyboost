@@ -70,14 +70,27 @@ val LocalAppChromePadding: ProvidableCompositionLocal<PaddingValues> =
  *   unit-testable (`DownloadsScreenTest`).
  * @param top a fixed inset added above whatever the chrome contributes.
  * @param bottom the same at the other end.
+ * @param start a fixed leading inset. The chrome contributes nothing horizontally — it is a band at
+ *   each end of the window — so this is a plain pass-through, there purely so a *grid* can express
+ *   its side margins in the same `contentPadding` object rather than having to split them into a
+ *   `Modifier.padding` that would no longer scroll with the content (`:feature:music`'s library
+ *   grid is the first caller; the list-shaped callers leave both at zero and pad their rows).
+ * @param end the same at the trailing edge.
  * @param takeChromeTop whether the chrome's top edge is added to [top].
  * @param takeChromeBottom whether the chrome's bottom edge is added to [bottom].
  */
 @Stable
+// A PaddingValues implementation: the parameters ARE the type's four axes plus the two
+// chrome-edge switches its KDoc explains — there is nothing to bundle that is not already
+// this one object. The PlayerViewModel precedent (DECISIONS.md 2026-08-03) for a justified
+// suppression.
+@Suppress("LongParameterList")
 class ChromeAwarePadding(
     private val chrome: PaddingValues,
     private val top: Dp = 0.dp,
     private val bottom: Dp = 0.dp,
+    private val start: Dp = 0.dp,
+    private val end: Dp = 0.dp,
     private val takeChromeTop: Boolean = false,
     private val takeChromeBottom: Boolean = false,
 ) : PaddingValues {
@@ -85,7 +98,9 @@ class ChromeAwarePadding(
 
     override fun calculateBottomPadding(): Dp = bottom + if (takeChromeBottom) chrome.calculateBottomPadding() else 0.dp
 
-    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp =
+        if (layoutDirection == LayoutDirection.Ltr) start else end
 
-    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = 0.dp
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp =
+        if (layoutDirection == LayoutDirection.Ltr) end else start
 }

@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Seriea</string>
     <string name="media_card_type_season">Denboraldia</string>
     <string name="media_card_type_episode">Atala</string>
+    <string name="media_card_type_song">Abestia</string>
+    <string name="media_card_type_album">Albuma</string>
+    <string name="media_card_type_artist">Artista</string>
+    <string name="media_card_type_playlist">Erreprodukzio-zerrenda</string>
     <string name="media_card_type_library">Liburutegia</string>
     <string name="media_card_progress">%1$d%% ikusita</string>
     <string name="media_card_rating">Balorazioa: %1$s 10etik</string>

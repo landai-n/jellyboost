@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Serie</string>
     <string name="media_card_type_season">Staffel</string>
     <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_song">Lidd</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Kënschtler</string>
+    <string name="media_card_type_playlist">Playlist</string>
     <string name="media_card_type_library">Bibliothéik</string>
     <string name="media_card_progress">%1$d%% gekuckt</string>
     <string name="media_card_rating">Bewäertung %1$s vun 10</string>

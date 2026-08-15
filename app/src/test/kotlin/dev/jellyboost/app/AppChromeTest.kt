@@ -60,15 +60,38 @@ class AppChromeTest {
 }
 
 /**
- * Unit tests for [showsMiniPlayer] and [miniPlayerBottomOffset] — the two plain functions behind
- * the M13 Phase 4 mini-player's visibility and docking position, split out from `NavDestination`
- * so they are testable without one (the same reasoning [AppChromeTest] documents for [useBottomNav]).
+ * Unit tests for [showsMiniPlayer], [miniPlayerBottomOffset] and [chromeBottomTarget] — the three
+ * plain functions behind the M13 Phase 4 mini-player's visibility, its docking position and the
+ * clearance a screen underneath it has to reserve, split out from `NavDestination` and from
+ * composition so they are testable without either (the same reasoning [AppChromeTest] documents for
+ * [useBottomNav]).
+ *
+ * The three have to agree, and that is most of what is pinned here: the bar docks
+ * [miniPlayerBottomOffset] above whatever is at the bottom edge, so the padding published for the
+ * screen under it must be that same offset's worth plus the bar's height — no more (a visible gap
+ * under the last row) and no less (the last row disappears under the glass).
  */
 class MiniPlayerVisibilityTest {
     @Test
     @DisplayName("an active queue shows the bar, off both Player and NowPlaying")
     fun activeQueueOffPlayerAndNowPlayingShowsTheBar() {
         showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = false) shouldBe true
+    }
+
+    @Test
+    @DisplayName("the destination is not part of the rule beyond those two: a pushed screen shows the bar")
+    fun theRuleIsTheTwoDestinationsRatherThanTopLevelness() {
+        // `AppScaffold` used to `&&` this with `isTopLevel`, which hid the bar on exactly the four
+        // screens playback starts from — the music library, an album, an artist, a playlist, all
+        // pushed — so a tap on Play showed nothing until the user navigated back to a tab (device
+        // walk, 2026-08-15). The gate is gone, and this function is the whole rule; the clearance
+        // argument it rested on is [chromeBottomTarget]'s job, pinned below.
+        //
+        // Nothing here says "pushed" because this function never took a destination: what it pins
+        // is that its only two exclusions are the two named ones, whatever else is on screen.
+        showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = false) shouldBe true
+        showsMiniPlayer(activeState(), onPlayer = true, onNowPlaying = false) shouldBe false
+        showsMiniPlayer(activeState(), onPlayer = false, onNowPlaying = true) shouldBe false
     }
 
     @Test
@@ -108,6 +131,67 @@ class MiniPlayerVisibilityTest {
         miniPlayerBottomOffset(isTopLevel = false, bottomNav = true) shouldBe MiniPlayerGap
     }
 
+    // ---- The clearance the bar's new reach makes necessary ------------------------------------
+
+    @Test
+    @DisplayName("a pushed screen reserves the bar's own extent above the inset it applies itself")
+    fun aPushedScreenReservesTheBarsExtent() {
+        // The half `:feature:music`'s four browse screens add to their list's `contentPadding` on
+        // top of the navigation-bar inset they apply by hand. It has to be exactly the bar's height
+        // plus the gap it docks above that inset (`miniPlayerBottomOffset(isTopLevel = false)`), or
+        // the last track ends under the bar — which is what the device walk found.
+        chromeBottomTarget(
+            isTopLevel = false,
+            bottomNav = true,
+            showMiniPlayer = true,
+            navigationBarInset = NAV_INSET,
+        ) shouldBe MiniPlayerHeight + MiniPlayerGap
+    }
+
+    @Test
+    @DisplayName("a pushed screen with no queue reserves nothing at all")
+    fun aPushedScreenWithNoQueueReservesNothing() {
+        chromeBottomTarget(
+            isTopLevel = false,
+            bottomNav = true,
+            showMiniPlayer = false,
+            navigationBarInset = NAV_INSET,
+        ) shouldBe 0.dp
+    }
+
+    @Test
+    @DisplayName("a compact tab stacks the bar on top of the pill's own reservation")
+    fun aCompactTabStacksTheBarOnThePill() {
+        chromeBottomTarget(
+            isTopLevel = true,
+            bottomNav = true,
+            showMiniPlayer = true,
+            navigationBarInset = NAV_INSET,
+        ) shouldBe NAV_INSET + BottomNavMargin + BottomNavHeight + MiniPlayerHeight + MiniPlayerGap
+    }
+
+    @Test
+    @DisplayName("the pill's reservation is unchanged when no queue is loaded")
+    fun theBottomPillsReservationIsUnchangedWithoutAQueue() {
+        chromeBottomTarget(
+            isTopLevel = true,
+            bottomNav = true,
+            showMiniPlayer = false,
+            navigationBarInset = NAV_INSET,
+        ) shouldBe NAV_INSET + BottomNavMargin + BottomNavHeight
+    }
+
+    @Test
+    @DisplayName("the wide layout has no pill, so the bar is the whole reservation")
+    fun theWideLayoutReservesOnlyTheBar() {
+        chromeBottomTarget(
+            isTopLevel = true,
+            bottomNav = false,
+            showMiniPlayer = true,
+            navigationBarInset = NAV_INSET,
+        ) shouldBe MiniPlayerHeight + MiniPlayerGap
+    }
+
     private fun activeState() =
         MusicPlaybackState.Active(
             queue = listOf(JellyfinItem(id = "t1", name = "Track 1", type = ItemType.AUDIO)),
@@ -118,4 +202,9 @@ class MiniPlayerVisibilityTest {
             shuffleEnabled = false,
             repeatMode = MusicRepeatMode.OFF,
         )
+
+    private companion object {
+        /** A stand-in for whatever the window's navigation bar takes — a gesture pill's height. */
+        val NAV_INSET = 24.dp
+    }
 }

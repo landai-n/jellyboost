@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Phim bộ</string>
     <string name="media_card_type_season">Mùa</string>
     <string name="media_card_type_episode">Tập</string>
+    <string name="media_card_type_song">Bài hát</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Nghệ sĩ</string>
+    <string name="media_card_type_playlist">Danh sách phát</string>
     <string name="media_card_type_library">Thư viện</string>
     <string name="media_card_progress">Đã xem %1$d%%</string>
     <string name="media_card_rating">Đánh giá %1$s trên 10</string>

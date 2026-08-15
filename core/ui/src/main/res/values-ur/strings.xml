@@ -18,6 +18,10 @@
     <string name="media_card_type_series">سیریز</string>
     <string name="media_card_type_season">سیزن</string>
     <string name="media_card_type_episode">قسط</string>
+    <string name="media_card_type_song">گانا</string>
+    <string name="media_card_type_album">البم</string>
+    <string name="media_card_type_artist">فنکار</string>
+    <string name="media_card_type_playlist">پلے لسٹ</string>
     <string name="media_card_type_library">لائبریری</string>
     <string name="media_card_progress">%1$d%% دیکھا گیا</string>
     <string name="media_card_rating">درجہ بندی 10 میں سے %1$s</string>

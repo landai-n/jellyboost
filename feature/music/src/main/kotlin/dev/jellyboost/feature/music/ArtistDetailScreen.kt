@@ -3,7 +3,6 @@ package dev.jellyboost.feature.music
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -74,6 +73,9 @@ fun ArtistDetailScreen(
     val errorMessage = state.errorMessage?.toMessage()
 
     Box(modifier = modifier.fillMaxSize()) {
+        // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
+        MusicScreenGlow()
+
         when {
             state.isLoading -> LoadingState()
 
@@ -137,7 +139,7 @@ private fun ArtistDetailContent(
     val artist = state.artist ?: return
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
+        contentPadding = musicListContentPadding(bottom = Dimens.SpaceExtraLarge),
         verticalArrangement = Arrangement.spacedBy(Dimens.SpaceExtraLarge),
     ) {
         item(key = SECTION_HEADER) {

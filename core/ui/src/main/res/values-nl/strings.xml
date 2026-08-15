@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Serie</string>
     <string name="media_card_type_season">Seizoen</string>
     <string name="media_card_type_episode">Aflevering</string>
+    <string name="media_card_type_song">Nummer</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artiest</string>
+    <string name="media_card_type_playlist">Afspeellijst</string>
     <string name="media_card_type_library">Bibliotheek</string>
     <string name="media_card_progress">%1$d%% bekeken</string>
     <string name="media_card_rating">Beoordeling %1$s van 10</string>

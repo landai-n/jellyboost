@@ -18,6 +18,10 @@
     <string name="media_card_type_series">シリーズ</string>
     <string name="media_card_type_season">シーズン</string>
     <string name="media_card_type_episode">エピソード</string>
+    <string name="media_card_type_song">曲</string>
+    <string name="media_card_type_album">アルバム</string>
+    <string name="media_card_type_artist">アーティスト</string>
+    <string name="media_card_type_playlist">プレイリスト</string>
     <string name="media_card_type_library">ライブラリ</string>
     <string name="media_card_progress">%1$d%% 視聴済み</string>
     <string name="media_card_rating">評価 10 点中 %1$s 点</string>

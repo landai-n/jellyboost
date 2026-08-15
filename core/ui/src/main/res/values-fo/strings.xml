@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Sería</string>
     <string name="media_card_type_season">Sesongur</string>
     <string name="media_card_type_episode">Partur</string>
+    <string name="media_card_type_song">Lag</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Listamaður</string>
+    <string name="media_card_type_playlist">Spælilisti</string>
     <string name="media_card_type_library">Savn</string>
     <string name="media_card_progress">%1$d%% sætt</string>
     <string name="media_card_rating">Meting %1$s av 10</string>

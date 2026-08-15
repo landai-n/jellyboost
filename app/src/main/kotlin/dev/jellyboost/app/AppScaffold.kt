@@ -74,9 +74,12 @@ import kotlinx.coroutines.launch
  * that floats on top of it, so the page below always fills the whole window and its content scrolls
  * under the glass, which is the whole point of the refresh's material (DECISIONS.md 2026-08-01).
  *
- * - **Pushed destinations are unchanged.** Settings, LibraryGrid, ItemDetail, the player and the
- *   auth flow each manage their own system-bar insets and get no chrome at all; nothing here pads
- *   them, exactly as before.
+ * - **Pushed destinations get no *navigation* chrome.** Settings, LibraryGrid, ItemDetail, the
+ *   player and the auth flow each manage their own system-bar insets and no bar is drawn over them.
+ *   The one exception is [MiniPlayer], which follows the queue rather than the destination — see
+ *   [showsMiniPlayer] — and which therefore makes [LocalAppChromePadding]'s *bottom* non-zero on a
+ *   pushed screen too. A pushed screen that scrolls under it consumes that bottom the same way a
+ *   top-level one does (`:feature:music`'s four browse screens are the ones that do).
  * - **Top-level destinations consume [LocalAppChromePadding]** in the `contentPadding` of whatever
  *   they scroll. That is the one thing a top-level screen has to do, and it replaces the
  *   `innerPadding`/bottom-inset the old `Scaffold` used to hand down: padding that scrolls away,
@@ -165,12 +168,14 @@ internal fun AppScaffold(
     // same arrangement those two already rely on.
     val musicViewModel: MusicPlaybackViewModel = hiltViewModel()
     val musicState by musicViewModel.state.collectAsStateWithLifecycle()
-    // Restricted to top-level destinations, matching the M13 Phase 4 DoD's own wording ("docked
-    // above the bottom nav on every *tab*"): `LocalAppChromePadding` — which the bar's height folds
-    // into — is likewise only consumed by top-level screens (see that composition local's KDoc), so
-    // showing the bar on a pushed screen (`ItemDetail`, `Settings`, …) would float it over content
-    // with no reserved clearance, unlike every other piece of this chrome.
-    val showMiniPlayer = isTopLevel && showsMiniPlayer(musicState, onPlayer, onNowPlaying)
+    // Not gated on `isTopLevel`: the bar has to be visible where playback *starts*, which on this
+    // app is an album, artist or playlist screen — all of them pushed. Restricting it to the tabs
+    // meant the user tapped Play and saw nothing at all until they navigated back to one (device
+    // walk, 2026-08-15). `showsMiniPlayer` already excludes the two destinations that would
+    // duplicate it, and the clearance argument the restriction rested on is answered by
+    // `chromePadding` below: its bottom already folds the bar in whatever the destination, so a
+    // pushed screen consumes it exactly like a tab does.
+    val showMiniPlayer = showsMiniPlayer(musicState, onPlayer, onNowPlaying)
 
     val snackbarHostState = remember { SnackbarHostState() }
     val showConnectionStatus =
@@ -294,6 +299,7 @@ internal fun AppScaffold(
                     MiniPlayer(
                         state = active,
                         onTogglePlayPause = musicViewModel::togglePlayPause,
+                        onPrevious = musicViewModel::previous,
                         onNext = musicViewModel::next,
                         onClick = { navController.navigate(Routes.NowPlaying) },
                     )
@@ -431,6 +437,14 @@ private fun TopChromeScrim(
  * whenever the bar is on screen, so a list's last row scrolls clear of it the same way it already
  * scrolls clear of [GlassBottomNav] — no top-level screen has anything else to do.
  *
+ * That term is deliberately **not** gated on [isTopLevel], and it is the one thing that makes this
+ * value non-zero on a pushed destination. It matches [miniPlayerBottomOffset] term for term: on a
+ * pushed screen the bar docks [MiniPlayerGap] above the navigation-bar inset it consumes itself, so
+ * `MiniPlayerHeight + MiniPlayerGap` is exactly how much of the window it covers *above* that inset
+ * — which is the half a pushed screen does not already apply by hand (`LibraryGridScreen`'s own
+ * KDoc records that convention). The four `:feature:music` browse screens add it to their list's
+ * `contentPadding` on top of their own navigation-bar inset.
+ *
  * Both ends animate over [NAV_TRANSITION_MILLIS] rather than switching, for the reason spelled out
  * in [AppScaffold]'s KDoc: the value is read by a list's `contentPadding`, and a screen fading out
  * while its padding snapped to zero jumped visibly under the fade.
@@ -469,8 +483,12 @@ private fun chromePadding(
             else -> statusBarInset + TopNavHeight + Dimens.SpaceSmall
         }
     val bottomTarget =
-        (if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp) +
-            (if (showMiniPlayer) MiniPlayerHeight + MiniPlayerGap else 0.dp)
+        chromeBottomTarget(
+            isTopLevel = isTopLevel,
+            bottomNav = bottomNav,
+            showMiniPlayer = showMiniPlayer,
+            navigationBarInset = navigationBarInset,
+        )
 
     val top =
         animateDpAsState(
@@ -487,6 +505,32 @@ private fun chromePadding(
 
     return remember { AnimatedChromePadding(top = top, bottom = bottom) }
 }
+
+/**
+ * How much of the bottom of the window the chrome covers — [chromePadding]'s `bottom`, split out as
+ * a plain function of the four things it depends on so the arithmetic is unit-testable without a
+ * device (the same reasoning [miniPlayerBottomOffset] and [useBottomNav] document).
+ *
+ * Two independent terms:
+ * - the floating navigation pill, on a **top-level, compact** window only — its margin, its height,
+ *   and the navigation-bar inset it floats above, none of which any screen applies itself;
+ * - [MiniPlayer], **whatever the destination**, because the bar follows the queue rather than the
+ *   back stack (see [showsMiniPlayer]).
+ *
+ * The mini-player's term is [MiniPlayerHeight] + [MiniPlayerGap] and deliberately carries no
+ * navigation-bar inset of its own: it is the bar's extent *above* whatever is already at the bottom
+ * edge, which is what [miniPlayerBottomOffset] docks it past. On a top-level compact window the
+ * pill's term supplies the inset; on a pushed one the screen does, by the convention every pushed
+ * screen in this app already follows (`LibraryGridScreen`), so the two never double-count it.
+ */
+internal fun chromeBottomTarget(
+    isTopLevel: Boolean,
+    bottomNav: Boolean,
+    showMiniPlayer: Boolean,
+    navigationBarInset: Dp,
+): Dp =
+    (if (isTopLevel && bottomNav) navigationBarInset + BottomNavMargin + BottomNavHeight else 0.dp) +
+        (if (showMiniPlayer) MiniPlayerHeight + MiniPlayerGap else 0.dp)
 
 /**
  * How far above whatever is already at the bottom edge [MiniPlayer] itself docks (M13 Phase 4).

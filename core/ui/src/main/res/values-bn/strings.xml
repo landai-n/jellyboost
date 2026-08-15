@@ -17,6 +17,10 @@
     <string name="media_card_type_series">সিরিজ</string>
     <string name="media_card_type_season">সিজন</string>
     <string name="media_card_type_episode">পর্ব</string>
+    <string name="media_card_type_song">গান</string>
+    <string name="media_card_type_album">অ্যালবাম</string>
+    <string name="media_card_type_artist">শিল্পী</string>
+    <string name="media_card_type_playlist">প্লেলিস্ট</string>
     <string name="media_card_type_library">লাইব্রেরি</string>
     <string name="media_card_progress">%1$d%% দেখা হয়েছে</string>
     <string name="media_card_rating">রেটিং ১০-এর মধ্যে %1$s</string>

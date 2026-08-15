@@ -1,9 +1,12 @@
 package dev.jellyboost.feature.music.nowplaying
 
+import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,9 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,13 +36,21 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -44,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import dev.jellyboost.core.common.model.DownloadState
 import dev.jellyboost.core.common.model.ItemType
 import dev.jellyboost.core.common.model.JellyfinItem
+import dev.jellyboost.core.ui.component.GlassIconTint
 import dev.jellyboost.core.ui.component.JellyfinAsyncImage
 import dev.jellyboost.core.ui.theme.Dimens
 import dev.jellyboost.core.ui.theme.GlassDefaults
@@ -310,7 +325,23 @@ private fun QueueTrackLabels(
     }
 }
 
-/** Reorder up/down and remove — the trailing controls every queue row carries. */
+/**
+ * Reorder up/down and remove, behind **one** overflow button.
+ *
+ * They were three always-visible 48dp `IconButton`s — 144dp of it, on top of the row's 56dp artwork
+ * and the current track's equalizer glyph. The title column is the row's only flexible child, so it
+ * absorbed all of that: on a phone-width sheet every single title ellipsised after a couple of words
+ * (device walk, 2026-08-15). One overflow returns 96dp to the titles, which are what the sheet
+ * exists to show; the three verbs keep their exact strings and their edge-disabled states, one tap
+ * further in.
+ *
+ * The icon is tinted explicitly rather than inheriting `LocalContentColor`. [QueueList] is drawn in
+ * two places — inside this sheet, where a `ModalBottomSheet`'s own `Surface` provides `onSurface`,
+ * and inline in `NowPlayingScreen`'s wide right-hand pane, which has no `Surface` ancestor at all
+ * and therefore inherits Material's *bare* default for that local, `Color.Black`. On the app's
+ * `#101010` background that rendered these controls invisible (device walk, 2026-08-15).
+ * [GlassIconTint] is the token every other icon button in this module already names.
+ */
 @Composable
 private fun QueueRowActions(
     canMoveUp: Boolean,
@@ -319,24 +350,84 @@ private fun QueueRowActions(
     onMoveDown: () -> Unit,
     onRemove: () -> Unit,
 ) {
-    IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-        Icon(
-            imageVector = Icons.Outlined.ArrowUpward,
-            contentDescription = stringResource(R.string.music_now_playing_queue_move_up),
-        )
+    var expanded by remember { mutableStateOf(false) }
+
+    // The menu has to be a sibling of the button *inside its own Box*: a DropdownMenu anchors to its
+    // layout parent, and without the wrapper that parent is the whole row — which would drop the
+    // menu from the artwork's edge instead of from this button (`AppActions.AppOverflowMenu`).
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                imageVector = Icons.Filled.MoreVert,
+                // No "more options" string exists in this module and none may be added here, so the
+                // sheet's own title stands in: "Queue" is at least the subject of every verb behind
+                // the button.
+                contentDescription = stringResource(R.string.music_now_playing_queue),
+                tint = GlassIconTint,
+            )
+        }
+
+        // `LibrarySortMenu`'s dressing — the app's one prior menu on a dark surface: the theme's
+        // `surface` rather than M3's `surfaceContainer`, and the panel hairline that gives every
+        // floating surface in the refresh its edge.
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(GlassDefaults.HairlineWidth, GlassDefaults.PanelHairline),
+        ) {
+            QueueRowMenuItem(
+                labelRes = R.string.music_now_playing_queue_move_up,
+                icon = Icons.Outlined.ArrowUpward,
+                enabled = canMoveUp,
+                onClick = {
+                    expanded = false
+                    onMoveUp()
+                },
+            )
+            QueueRowMenuItem(
+                labelRes = R.string.music_now_playing_queue_move_down,
+                icon = Icons.Outlined.ArrowDownward,
+                enabled = canMoveDown,
+                onClick = {
+                    expanded = false
+                    onMoveDown()
+                },
+            )
+            QueueRowMenuItem(
+                labelRes = R.string.music_now_playing_queue_remove,
+                icon = Icons.Outlined.Delete,
+                enabled = true,
+                onClick = {
+                    expanded = false
+                    onRemove()
+                },
+            )
+        }
     }
-    IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-        Icon(
-            imageVector = Icons.Outlined.ArrowDownward,
-            contentDescription = stringResource(R.string.music_now_playing_queue_move_down),
-        )
-    }
-    IconButton(onClick = onRemove) {
-        Icon(
-            imageVector = Icons.Outlined.Delete,
-            contentDescription = stringResource(R.string.music_now_playing_queue_remove),
-        )
-    }
+}
+
+/**
+ * One entry in [QueueRowActions]' menu.
+ *
+ * `Role.Button` is declared on the item itself rather than on its icon: `DropdownMenuItem`'s own
+ * `clickable` merges its descendants and sets no role of its own, so a role on the leading icon
+ * would sit under the node TalkBack focuses (accessibility audit 2026-08-05, ROLE-01).
+ */
+@Composable
+private fun QueueRowMenuItem(
+    @StringRes labelRes: Int,
+    icon: ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = { Text(text = stringResource(labelRes)) },
+        modifier = Modifier.semantics { role = Role.Button },
+        enabled = enabled,
+        onClick = onClick,
+        leadingIcon = { Icon(imageVector = icon, contentDescription = null) },
+    )
 }
 
 /** Wide enough for a title and its controls, narrow enough to stay one glance on a tablet. */

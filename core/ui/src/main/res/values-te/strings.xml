@@ -18,6 +18,10 @@
     <string name="media_card_type_series">సిరీస్</string>
     <string name="media_card_type_season">సీజన్</string>
     <string name="media_card_type_episode">ఎపిసోడ్</string>
+    <string name="media_card_type_song">పాట</string>
+    <string name="media_card_type_album">ఆల్బమ్</string>
+    <string name="media_card_type_artist">కళాకారుడు</string>
+    <string name="media_card_type_playlist">ప్లేలిస్ట్</string>
     <string name="media_card_type_library">లైబ్రరీ</string>
     <string name="media_card_progress">%1$d%% చూశారు</string>
     <string name="media_card_rating">రేటింగ్ 10కి %1$s</string>

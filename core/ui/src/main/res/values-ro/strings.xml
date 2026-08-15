@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Serial</string>
     <string name="media_card_type_season">Sezon</string>
     <string name="media_card_type_episode">Episod</string>
+    <string name="media_card_type_song">Melodie</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artist</string>
+    <string name="media_card_type_playlist">Listă de redare</string>
     <string name="media_card_type_library">Bibliotecă</string>
     <string name="media_card_progress">Vizionat %1$d%%</string>
     <string name="media_card_rating">Notă %1$s din 10</string>

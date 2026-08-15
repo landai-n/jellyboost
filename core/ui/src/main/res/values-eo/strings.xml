@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Serio</string>
     <string name="media_card_type_season">Sezono</string>
     <string name="media_card_type_episode">Epizodo</string>
+    <string name="media_card_type_song">Kanto</string>
+    <string name="media_card_type_album">Albumo</string>
+    <string name="media_card_type_artist">Artisto</string>
+    <string name="media_card_type_playlist">Ludlisto</string>
     <string name="media_card_type_library">Biblioteko</string>
     <string name="media_card_progress">%1$d%% spektita</string>
     <string name="media_card_rating">Takso %1$s el 10</string>

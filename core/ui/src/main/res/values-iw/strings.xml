@@ -18,6 +18,10 @@
     <string name="media_card_type_series">סדרה</string>
     <string name="media_card_type_season">עונה</string>
     <string name="media_card_type_episode">פרק</string>
+    <string name="media_card_type_song">שיר</string>
+    <string name="media_card_type_album">אלבום</string>
+    <string name="media_card_type_artist">אמן</string>
+    <string name="media_card_type_playlist">רשימת השמעה</string>
     <string name="media_card_type_library">ספרייה</string>
     <string name="media_card_progress">%1$d%% נצפו</string>
     <string name="media_card_rating">דירוג %1$s מתוך 10</string>

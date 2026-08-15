@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Сериал</string>
     <string name="media_card_type_season">Маусым</string>
     <string name="media_card_type_episode">Бөлім</string>
+    <string name="media_card_type_song">Ән</string>
+    <string name="media_card_type_album">Альбом</string>
+    <string name="media_card_type_artist">Орындаушы</string>
+    <string name="media_card_type_playlist">Ойнату тізімі</string>
     <string name="media_card_type_library">Кітапхана</string>
     <string name="media_card_progress">%1$d%% қаралды</string>
     <string name="media_card_rating">Рейтинг 10-нан %1$s</string>

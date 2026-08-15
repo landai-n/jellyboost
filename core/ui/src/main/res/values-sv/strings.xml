@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Serie</string>
     <string name="media_card_type_season">Säsong</string>
     <string name="media_card_type_episode">Avsnitt</string>
+    <string name="media_card_type_song">Låt</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artist</string>
+    <string name="media_card_type_playlist">Spellista</string>
     <string name="media_card_type_library">Bibliotek</string>
     <string name="media_card_progress">%1$d%% sett</string>
     <string name="media_card_rating">Betyg %1$s av 10</string>

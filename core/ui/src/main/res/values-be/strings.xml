@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Серыял</string>
     <string name="media_card_type_season">Сезон</string>
     <string name="media_card_type_episode">Эпізод</string>
+    <string name="media_card_type_song">Песня</string>
+    <string name="media_card_type_album">Альбом</string>
+    <string name="media_card_type_artist">Выканаўца</string>
+    <string name="media_card_type_playlist">Плэйліст</string>
     <string name="media_card_type_library">Бібліятэка</string>
     <string name="media_card_progress">Прагледжана %1$d%%</string>
     <string name="media_card_rating">Ацэнка %1$s з 10</string>

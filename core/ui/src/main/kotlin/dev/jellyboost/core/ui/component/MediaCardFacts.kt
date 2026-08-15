@@ -124,10 +124,10 @@ internal fun itemTypeLabelRes(type: ItemType): Int? =
         ItemType.SERIES -> R.string.media_card_type_series
         ItemType.SEASON -> R.string.media_card_type_season
         ItemType.EPISODE -> R.string.media_card_type_episode
-        // The M13 music kinds have no label resource yet: a word here costs 69 translations, and
-        // the music surfaces draw their own cards (AlbumCard/ArtistCard) with their own semantics —
-        // only a playlist poster reaches this. Logged as honest residue (DECISIONS.md 2026-08-15).
-        ItemType.AUDIO, ItemType.MUSIC_ALBUM, ItemType.MUSIC_ARTIST, ItemType.PLAYLIST -> null
+        ItemType.AUDIO -> R.string.media_card_type_song
+        ItemType.MUSIC_ALBUM -> R.string.media_card_type_album
+        ItemType.MUSIC_ARTIST -> R.string.media_card_type_artist
+        ItemType.PLAYLIST -> R.string.media_card_type_playlist
         ItemType.COLLECTION_FOLDER, ItemType.FOLDER, ItemType.UNKNOWN -> null
     }
 

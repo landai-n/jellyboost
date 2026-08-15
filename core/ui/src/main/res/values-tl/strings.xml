@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Serye</string>
     <string name="media_card_type_season">Season</string>
     <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_song">Kanta</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artist</string>
+    <string name="media_card_type_playlist">Playlist</string>
     <string name="media_card_type_library">Aklatan</string>
     <string name="media_card_progress">%1$d%% napanood</string>
     <string name="media_card_rating">Rating %1$s sa 10</string>

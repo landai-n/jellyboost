@@ -115,8 +115,16 @@ class MediaCardFactsTest {
     @Test
     fun `every playable kind has its own word`() {
         val labels =
-            listOf(ItemType.MOVIE, ItemType.SERIES, ItemType.SEASON, ItemType.EPISODE)
-                .map { itemTypeLabelRes(it).shouldNotBeNull() }
+            listOf(
+                ItemType.MOVIE,
+                ItemType.SERIES,
+                ItemType.SEASON,
+                ItemType.EPISODE,
+                ItemType.AUDIO,
+                ItemType.MUSIC_ALBUM,
+                ItemType.MUSIC_ARTIST,
+                ItemType.PLAYLIST,
+            ).map { itemTypeLabelRes(it).shouldNotBeNull() }
 
         labels.distinct() shouldHaveSize labels.size
     }

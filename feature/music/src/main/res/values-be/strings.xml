@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="music_error_network">Не ўдаецца звязацца з вашым серверам. Праверце злучэнне і паспрабуйце зноў.</string>
+    <string name="music_error_unauthorized">Тэрмін дзеяння сесіі скончыўся. Увайдзіце зноў, каб працягнуць.</string>
+    <string name="music_error_not_found">Гэтага элемента больш няма на серверы.</string>
+    <string name="music_error_server_with_code">Сервер вярнуў памылку (%1$d).</string>
+    <string name="music_error_server">Сервер вярнуў памылку.</string>
+    <string name="music_error_storage">Не ўдалося прачытаць лакальныя дадзеныя.</string>
+    <string name="music_error_unknown">Пры загрузцы нешта пайшло не так.</string>
+
+    <string name="music_library_back">Назад</string>
+    <string name="music_library_home">Галоўная</string>
+    <string name="music_library_tab_albums">Альбомы</string>
+    <string name="music_library_tab_artists">Выканаўцы</string>
+    <string name="music_library_tab_playlists">Плэйлісты</string>
+    <string name="music_library_empty_albums">Тут пакуль няма альбомаў</string>
+    <string name="music_library_empty_artists">Тут пакуль няма выканаўцаў</string>
+    <string name="music_library_empty_playlists">Тут пакуль няма плэйлістоў</string>
+
+    <string name="music_track_favorite_add">Дадаць у абранае</string>
+    <string name="music_track_favorite_remove">Выдаліць з абранага</string>
+
+    <string name="music_album_empty">Гэты альбом недаступны</string>
+    <string name="music_album_back">Назад</string>
+    <string name="music_album_home">Галоўная</string>
+    <string name="music_album_no_tracks">Трэкі не знойдзены</string>
+    <string name="music_album_disc_number">Дыск %1$d</string>
+    <string name="music_album_remove_favorite">Выдаліць з абранага</string>
+    <string name="music_album_add_favorite">Дадаць у абранае</string>
+    <string name="music_album_play">Прайграць</string>
+    <string name="music_album_shuffle">Перамяшаць</string>
+    <string name="music_album_download">Спампаваць альбом</string>
+    <string name="music_album_downloading">Альбом спампоўваецца</string>
+    <string name="music_album_downloaded">Альбом спампаваны</string>
+    <string name="music_album_start_radio">Запусціць радыё</string>
+
+    <string name="music_artist_empty">Гэты выканаўца недаступны</string>
+    <string name="music_artist_back">Назад</string>
+    <string name="music_artist_home">Галоўная</string>
+    <string name="music_artist_section_albums">Альбомы</string>
+    <string name="music_artist_section_top_tracks">Папулярныя трэкі</string>
+    <string name="music_artist_top_tracks_show_more">Паказаць больш</string>
+    <string name="music_artist_remove_favorite">Выдаліць з абранага</string>
+    <string name="music_artist_add_favorite">Дадаць у абранае</string>
+    <string name="music_artist_start_radio">Запусціць радыё</string>
+
+    <string name="music_playlist_empty">Гэты плэйліст недаступны</string>
+    <string name="music_playlist_back">Назад</string>
+    <string name="music_playlist_home">Галоўная</string>
+    <string name="music_playlist_no_tracks">Няма трэкаў для паказу — плэйлісты пакуль недаступныя афлайн</string>
+    <plurals name="music_playlist_track_count">
+        <item quantity="one">%1$d трэк</item>
+        <item quantity="few">%1$d трэкі</item>
+        <item quantity="many">%1$d трэкаў</item>
+        <item quantity="other">%1$d трэкаў</item>
+    </plurals>
+
+    <string name="music_now_playing_back">Назад</string>
+    <string name="music_now_playing_open_queue">Чарга</string>
+    <string name="music_now_playing_shuffle_on">Уключыць перамешванне</string>
+    <string name="music_now_playing_shuffle_off">Выключыць перамешванне</string>
+    <string name="music_now_playing_previous">Папярэдні</string>
+    <string name="music_now_playing_next">Далей</string>
+    <string name="music_now_playing_play">Прайграць</string>
+    <string name="music_now_playing_pause">Прыпыніць</string>
+    <string name="music_now_playing_repeat_off">Уключыць паўтор</string>
+    <string name="music_now_playing_repeat_all">Паўтараць усё — націсніце для паўтору аднаго</string>
+    <string name="music_now_playing_repeat_one">Паўтараць адзін — націсніце, каб выключыць паўтор</string>
+    <string name="music_now_playing_favorite_add">Дадаць у абранае</string>
+    <string name="music_now_playing_favorite_remove">Выдаліць з абранага</string>
+    <string name="music_now_playing_start_radio">Запусціць радыё</string>
+    <string name="music_now_playing_lyrics_show">Паказаць тэкст песні</string>
+    <string name="music_now_playing_lyrics_hide">Паказаць вокладку</string>
+    <string name="music_now_playing_lyrics_tab">Тэкст песні</string>
+
+    <string name="music_now_playing_queue">Чарга</string>
+    <string name="music_now_playing_queue_empty">Чарга пустая</string>
+    <string name="music_now_playing_queue_close">Закрыць чаргу</string>
+    <string name="music_now_playing_queue_playing">Прайграецца зараз</string>
+    <string name="music_now_playing_queue_move_up">Перамясціць вышэй</string>
+    <string name="music_now_playing_queue_move_down">Перамясціць ніжэй</string>
+    <string name="music_now_playing_queue_remove">Выдаліць з чаргі</string>
+    <plurals name="music_now_playing_queue_count">
+        <item quantity="one">%1$d трэк</item>
+        <item quantity="few">%1$d трэкі</item>
+        <item quantity="many">%1$d трэкаў</item>
+        <item quantity="other">%1$d трэкаў</item>
+    </plurals>
+</resources>

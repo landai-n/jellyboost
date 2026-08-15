@@ -17,6 +17,10 @@
     <string name="media_card_type_series">სერიალი</string>
     <string name="media_card_type_season">სეზონი</string>
     <string name="media_card_type_episode">ეპიზოდი</string>
+    <string name="media_card_type_song">სიმღერა</string>
+    <string name="media_card_type_album">ალბომი</string>
+    <string name="media_card_type_artist">შემსრულებელი</string>
+    <string name="media_card_type_playlist">პლეილისტი</string>
     <string name="media_card_type_library">ბიბლიოთეკა</string>
     <string name="media_card_progress">ნანახია %1$d%%</string>
     <string name="media_card_rating">შეფასება %1$s 10-დან</string>

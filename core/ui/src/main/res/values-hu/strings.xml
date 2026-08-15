@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Sorozat</string>
     <string name="media_card_type_season">Évad</string>
     <string name="media_card_type_episode">Epizód</string>
+    <string name="media_card_type_song">Dal</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Előadó</string>
+    <string name="media_card_type_playlist">Lejátszási lista</string>
     <string name="media_card_type_library">Könyvtár</string>
     <string name="media_card_progress">%1$d%% megnézve</string>
     <string name="media_card_rating">Értékelés: %1$s a 10-ből</string>

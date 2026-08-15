@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,8 +50,9 @@ import dev.jellyboost.core.ui.theme.popShadow
 
 /**
  * The docked bar the app chrome shows whenever music is loaded and the user is not already looking
- * at it — artwork, title/artist, play/pause, next, a thin progress line, and a tap-through to
- * [dev.jellyboost.core.common.Routes.NowPlaying] (M13 Phase 4, docs/notes/music-m13-plan.md).
+ * at it — artwork, title/artist, previous, play/pause, next, a thin progress line, and a
+ * tap-through to [dev.jellyboost.core.common.Routes.NowPlaying] (M13 Phase 4,
+ * docs/notes/music-m13-plan.md).
  *
  * Visual language matches [GlassBottomNav]: a floating glass bar, [popShadow] under it,
  * [GlassDefaults.BottomNavFill] rather than the lighter in-content [GlassDefaults.Fill] — the same
@@ -64,6 +66,7 @@ import dev.jellyboost.core.ui.theme.popShadow
 internal fun MiniPlayer(
     state: MusicPlaybackState.Active,
     onTogglePlayPause: () -> Unit,
+    onPrevious: () -> Unit,
     onNext: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -99,18 +102,20 @@ internal fun MiniPlayer(
             track = track,
             isPlaying = state.isPlaying,
             onTogglePlayPause = onTogglePlayPause,
+            onPrevious = onPrevious,
             onNext = onNext,
             onClick = onClick,
         )
     }
 }
 
-/** The bar's one content row: artwork, title/artist, play/pause, next — [MiniPlayer]'s tap target. */
+/** The bar's one content row: artwork, title/artist, [MiniPlayerTransport] — the tap target. */
 @Composable
 private fun MiniPlayerRow(
     track: JellyfinItem,
     isPlaying: Boolean,
     onTogglePlayPause: () -> Unit,
+    onPrevious: () -> Unit,
     onNext: () -> Unit,
     onClick: () -> Unit,
 ) {
@@ -149,21 +154,57 @@ private fun MiniPlayerRow(
             }
         }
 
-        IconButton(onClick = onTogglePlayPause) {
-            Icon(
-                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                contentDescription =
-                    stringResource(if (isPlaying) R.string.mini_player_pause else R.string.mini_player_play),
-                tint = Color.White,
-            )
-        }
-        IconButton(onClick = onNext) {
-            Icon(
-                imageVector = Icons.Filled.SkipNext,
-                contentDescription = stringResource(R.string.mini_player_next),
-                tint = Color.White,
-            )
-        }
+        MiniPlayerTransport(
+            isPlaying = isPlaying,
+            onTogglePlayPause = onTogglePlayPause,
+            onPrevious = onPrevious,
+            onNext = onNext,
+        )
+    }
+}
+
+/**
+ * Previous / play-pause / next.
+ *
+ * Previous is here because the bar is very often the only transport on screen: it now shows on the
+ * pushed music screens too ([showsMiniPlayer]), and going back a track meant opening the full
+ * now-playing view to reach the one button (device walk, 2026-08-15). It sits *before* play/pause,
+ * the order every transport row in the app draws (`NowPlayingTransportRow`, `PlayerControls`), so
+ * the glyphs read left-to-right as the timeline does.
+ *
+ * The tints are `onSurface` — the theme token, not the raw `Color.White` they used to be. Identical
+ * pixels on this dark-only scheme (`JellyfinColors.OnSurface` *is* white), stated as the role so the
+ * bar's glyphs move with the palette rather than being pinned outside it.
+ */
+@Composable
+private fun MiniPlayerTransport(
+    isPlaying: Boolean,
+    onTogglePlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val tint = MaterialTheme.colorScheme.onSurface
+    IconButton(onClick = onPrevious) {
+        Icon(
+            imageVector = Icons.Filled.SkipPrevious,
+            contentDescription = stringResource(R.string.mini_player_previous),
+            tint = tint,
+        )
+    }
+    IconButton(onClick = onTogglePlayPause) {
+        Icon(
+            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            contentDescription =
+                stringResource(if (isPlaying) R.string.mini_player_pause else R.string.mini_player_play),
+            tint = tint,
+        )
+    }
+    IconButton(onClick = onNext) {
+        Icon(
+            imageVector = Icons.Filled.SkipNext,
+            contentDescription = stringResource(R.string.mini_player_next),
+            tint = tint,
+        )
     }
 }
 
@@ -202,6 +243,7 @@ private fun MiniPlayerPreview() {
                     repeatMode = MusicRepeatMode.OFF,
                 ),
             onTogglePlayPause = {},
+            onPrevious = {},
             onNext = {},
             onClick = {},
             modifier = Modifier.padding(Dimens.SpaceMedium),

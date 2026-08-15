@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Цуврал</string>
     <string name="media_card_type_season">Улирал</string>
     <string name="media_card_type_episode">Анги</string>
+    <string name="media_card_type_song">Дуу</string>
+    <string name="media_card_type_album">Цомог</string>
+    <string name="media_card_type_artist">Уран бүтээлч</string>
+    <string name="media_card_type_playlist">Тоглуулах жагсаалт</string>
     <string name="media_card_type_library">Сан</string>
     <string name="media_card_progress">%1$d%% үзсэн</string>
     <string name="media_card_rating">Үнэлгээ 10-аас %1$s</string>

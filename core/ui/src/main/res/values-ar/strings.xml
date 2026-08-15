@@ -18,6 +18,10 @@
     <string name="media_card_type_series">مسلسل</string>
     <string name="media_card_type_season">موسم</string>
     <string name="media_card_type_episode">حلقة</string>
+    <string name="media_card_type_song">أغنية</string>
+    <string name="media_card_type_album">ألبوم</string>
+    <string name="media_card_type_artist">فنان</string>
+    <string name="media_card_type_playlist">قائمة تشغيل</string>
     <string name="media_card_type_library">مكتبة</string>
     <string name="media_card_progress">تمت مشاهدة %1$d%%</string>
     <string name="media_card_rating">التقييم %1$s من 10</string>

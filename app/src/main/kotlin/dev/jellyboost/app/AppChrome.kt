@@ -154,6 +154,15 @@ internal fun NavDestination?.isTopLevel(): Boolean = TopLevelTab.entries.any { i
  * during that window would invite a tap that fights the video controls for the same player), and
  * [Routes.NowPlaying] is this exact bar's own full-screen view, one tap away.
  *
+ * **Those two exclusions are the whole rule** — [isTopLevel] is deliberately not part of it. The bar
+ * used to be restricted to the four tabs, on the argument that only a top-level screen consumes
+ * `LocalAppChromePadding` and so only a tab had clearance for it. That put the bar everywhere
+ * *except* the screens playback actually starts from: an album, an artist, a playlist and the music
+ * library are all pushed destinations, and tapping Play on one of them showed nothing at all until
+ * the user navigated back to a tab (device walk, 2026-08-15). The clearance half of the argument is
+ * answered instead — `AppScaffold.chromePadding` folds the bar's height in whatever the destination,
+ * and the four music screens consume its bottom (see that function's KDoc).
+ *
  * A plain function of the two booleans `AppScaffold` already computes for [Routes.Player] rather
  * than of a `NavDestination`, so it is unit-testable without constructing one.
  */

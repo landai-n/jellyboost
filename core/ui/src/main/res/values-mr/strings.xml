@@ -18,6 +18,10 @@
     <string name="media_card_type_series">मालिका</string>
     <string name="media_card_type_season">सीझन</string>
     <string name="media_card_type_episode">भाग</string>
+    <string name="media_card_type_song">गाणे</string>
+    <string name="media_card_type_album">अल्बम</string>
+    <string name="media_card_type_artist">कलाकार</string>
+    <string name="media_card_type_playlist">प्लेलिस्ट</string>
     <string name="media_card_type_library">लायब्ररी</string>
     <string name="media_card_progress">%1$d%% पाहिले</string>
     <string name="media_card_rating">रेटिंग १० पैकी %1$s</string>

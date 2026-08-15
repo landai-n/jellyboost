@@ -26,6 +26,26 @@ decomposed, moved-API imports fixed (`MainDispatcher`, `IoDispatcher`,
 `stringResource` at composition, and all 19 new music strings translated into
 every shipped locale. Device DoD still owed (unchanged).
 
+**2026-08-15 (later) — `:feature:music` localized.** The module's 69 locale
+files now exist (67 strings + 2 plurals each, ~4 700 entries), reusing the
+repo's vetted same-locale wording wherever the English matched and carrying
+correct CLDR plural sets; the `MissingTranslation` gate now polices the module
+(DECISIONS 2026-08-15, residue closed). The four `media_card_type_*` music
+labels landed in the same wave (base + 69 locales, wired in
+`itemTypeLabelRes`), so no music i18n gap remains. A device-reported UX wave
+followed the same day: NowPlaying's two-pane layout now requires landscape
+aspect (a portrait tablet got half-width artwork), the mini-player shows on
+the pushed music screens where playback starts, queue rows trade three
+always-on buttons for an overflow menu (titles were cropped to nothing), the
+mini-player gains Previous, and the music screens' colors align with the
+app's glass idiom (the queue's invisible black-on-black icons were
+`LocalContentColor`'s bare default in the wide pane — now `GlassIconTint`).
+Follow-ups recorded, not done: a blurred album-art backdrop behind the
+album/artist headers (structural, one shared music header), and
+`takeChromeBottom` on the non-music pushed screens (ItemDetail, LibraryGrid,
+Settings, SyncPlayGroups) whose last row the mini-player can now float over
+while music plays.
+
 Third user-approved scope extension (after M11/M12): a full music experience —
 artist/album/playlist browsing, background playback with notification/lock-screen
 controls, a local queue with shuffle/repeat, music search, offline music

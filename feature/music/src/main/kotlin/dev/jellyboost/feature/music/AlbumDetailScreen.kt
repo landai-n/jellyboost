@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -86,6 +85,9 @@ fun AlbumDetailScreen(
     val errorMessage = state.errorMessage?.toMessage()
 
     Box(modifier = modifier.fillMaxSize()) {
+        // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
+        MusicScreenGlow()
+
         when {
             state.isLoading -> LoadingState()
 
@@ -153,7 +155,7 @@ private fun AlbumDetailContent(
     val album = state.album ?: return
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = Dimens.SpaceExtraLarge),
+        contentPadding = musicListContentPadding(bottom = Dimens.SpaceExtraLarge),
     ) {
         item(key = SECTION_HEADER) {
             AlbumHeader(

@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Sari</string>
     <string name="media_card_type_season">Hooaeg</string>
     <string name="media_card_type_episode">Osa</string>
+    <string name="media_card_type_song">Lugu</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Esitaja</string>
+    <string name="media_card_type_playlist">Esitusloend</string>
     <string name="media_card_type_library">Kogu</string>
     <string name="media_card_progress">%1$d%% vaadatud</string>
     <string name="media_card_rating">Hinnang %1$s 10-st</string>

@@ -18,6 +18,10 @@
     <string name="media_card_type_series">தொடர்</string>
     <string name="media_card_type_season">சீசன்</string>
     <string name="media_card_type_episode">எபிசோட்</string>
+    <string name="media_card_type_song">பாடல்</string>
+    <string name="media_card_type_album">ஆல்பம்</string>
+    <string name="media_card_type_artist">கலைஞர்</string>
+    <string name="media_card_type_playlist">இசைப்பட்டியல்</string>
     <string name="media_card_type_library">நூலகம்</string>
     <string name="media_card_progress">%1$d%% பார்க்கப்பட்டது</string>
     <string name="media_card_rating">மதிப்பீடு 10-இல் %1$s</string>

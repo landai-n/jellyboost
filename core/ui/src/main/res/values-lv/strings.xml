@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Seriāls</string>
     <string name="media_card_type_season">Sezona</string>
     <string name="media_card_type_episode">Sērija</string>
+    <string name="media_card_type_song">Dziesma</string>
+    <string name="media_card_type_album">Albums</string>
+    <string name="media_card_type_artist">Izpildītājs</string>
+    <string name="media_card_type_playlist">Atskaņošanas saraksts</string>
     <string name="media_card_type_library">Bibliotēka</string>
     <string name="media_card_progress">Noskatīts %1$d%%</string>
     <string name="media_card_rating">Vērtējums %1$s no 10</string>

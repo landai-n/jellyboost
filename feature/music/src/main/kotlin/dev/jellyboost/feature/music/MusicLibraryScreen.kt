@@ -5,14 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -89,20 +86,25 @@ fun MusicLibraryScreen(
     val playlists = viewModel.playlists.collectAsLazyPagingItems()
 
     Scaffold(modifier = modifier, contentWindowInsets = WindowInsets(0)) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            MusicLibraryHeader(title = state.libraryName, onBack = onBack, onHome = onHome)
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            // Behind everything, anchored to the top of the window — see [MusicScreenGlow].
+            MusicScreenGlow()
 
-            MusicLibraryTabRow(selectedTab = state.selectedTab, onSelectTab = viewModel::selectTab)
+            Column(modifier = Modifier.fillMaxSize()) {
+                MusicLibraryHeader(title = state.libraryName, onBack = onBack, onHome = onHome)
 
-            when (state.selectedTab) {
-                MusicLibraryTab.ALBUMS ->
-                    AlbumGrid(items = albums, onItemClick = onAlbumClick, modifier = Modifier.weight(1f))
+                MusicLibraryTabRow(selectedTab = state.selectedTab, onSelectTab = viewModel::selectTab)
 
-                MusicLibraryTab.ARTISTS ->
-                    ArtistGrid(items = artists, onItemClick = onArtistClick, modifier = Modifier.weight(1f))
+                when (state.selectedTab) {
+                    MusicLibraryTab.ALBUMS ->
+                        AlbumGrid(items = albums, onItemClick = onAlbumClick, modifier = Modifier.weight(1f))
 
-                MusicLibraryTab.PLAYLISTS ->
-                    PlaylistGrid(items = playlists, onItemClick = onPlaylistClick, modifier = Modifier.weight(1f))
+                    MusicLibraryTab.ARTISTS ->
+                        ArtistGrid(items = artists, onItemClick = onArtistClick, modifier = Modifier.weight(1f))
+
+                    MusicLibraryTab.PLAYLISTS ->
+                        PlaylistGrid(items = playlists, onItemClick = onPlaylistClick, modifier = Modifier.weight(1f))
+                }
             }
         }
     }
@@ -183,7 +185,12 @@ private fun MusicLibrarySegment(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val contentColor = if (selected) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+    // The app background, not `Color.Black`: the selected capsule is the same solid white pill
+    // `GlassBottomNav` and `DownloadsTabRow` draw, and both put the *page* colour on it rather than
+    // true black (`SegmentedSelectedContent`, `#101010`). Black on white was a half-step darker than
+    // every other selected control in the app.
+    val contentColor =
+        if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
         modifier =
             modifier
@@ -271,11 +278,10 @@ private fun MusicGrid(
                 columns = GridCells.Adaptive(MIN_CELL_WIDTH),
                 modifier = modifier.fillMaxSize(),
                 contentPadding =
-                    PaddingValues(
-                        start = HeaderPadding,
-                        end = HeaderPadding,
+                    musicListContentPadding(
+                        bottom = HeaderPadding,
                         top = Dimens.SpaceExtraSmall,
-                        bottom = HeaderPadding + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                        horizontal = HeaderPadding,
                     ),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceLarge),

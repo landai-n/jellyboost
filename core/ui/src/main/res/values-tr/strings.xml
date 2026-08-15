@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Dizi</string>
     <string name="media_card_type_season">Sezon</string>
     <string name="media_card_type_episode">Bölüm</string>
+    <string name="media_card_type_song">Şarkı</string>
+    <string name="media_card_type_album">Albüm</string>
+    <string name="media_card_type_artist">Sanatçı</string>
+    <string name="media_card_type_playlist">Çalma listesi</string>
     <string name="media_card_type_library">Kitaplık</string>
     <string name="media_card_progress">%%%1$d izlendi</string>
     <string name="media_card_rating">Puan 10 üzerinden %1$s</string>

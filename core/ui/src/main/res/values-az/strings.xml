@@ -17,6 +17,10 @@
     <string name="media_card_type_series">Serial</string>
     <string name="media_card_type_season">Fəsil</string>
     <string name="media_card_type_episode">Epizod</string>
+    <string name="media_card_type_song">Mahnı</string>
+    <string name="media_card_type_album">Albom</string>
+    <string name="media_card_type_artist">İfaçı</string>
+    <string name="media_card_type_playlist">Pleylist</string>
     <string name="media_card_type_library">Kitabxana</string>
     <string name="media_card_progress">%1$d%% izlənilib</string>
     <string name="media_card_rating">Reytinq 10 üzrə %1$s</string>

@@ -18,6 +18,10 @@
     <string name="media_card_type_series">ސީރީޒް</string>
     <string name="media_card_type_season">ސީޒަން</string>
     <string name="media_card_type_episode">އެޕިސޯޑް</string>
+    <string name="media_card_type_song">ލަވަ</string>
+    <string name="media_card_type_album">އަލްބަމް</string>
+    <string name="media_card_type_artist">އާޓިސްޓް</string>
+    <string name="media_card_type_playlist">ޕްލޭލިސްޓް</string>
     <string name="media_card_type_library">ލައިބްރަރީ</string>
     <string name="media_card_progress">%1$d%% ބަލައިފި</string>
     <string name="media_card_rating">ރޭޓިން 10 ން %1$s</string>

@@ -169,7 +169,7 @@ private fun NowPlayingContent(
     val track = state.track
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val wide = isWideNowPlaying(maxWidth)
+        val wide = isWideNowPlaying(maxWidth, maxHeight)
 
         if (track != null) {
             if (wide) {
@@ -706,8 +706,19 @@ private const val SECONDS_PER_HOUR = 3_600L
 /** Width at which the screen switches to the two-pane layout — the chrome's own `TopNavMinWidth`. */
 private val NowPlayingWideBreakpoint = 560.dp
 
-/** Whether a [maxWidth]-wide window gets the two-pane layout; a plain function so it is unit-testable. */
-internal fun isWideNowPlaying(maxWidth: Dp): Boolean = maxWidth >= NowPlayingWideBreakpoint
+/**
+ * Whether the window gets the two-pane layout; a plain function so it is unit-testable.
+ *
+ * Width alone is not enough: a portrait tablet is wider than the breakpoint, and the two-pane
+ * split there put the artwork in a half-width column beside the controls — the stacked layout is
+ * what a taller-than-wide window wants, whatever its width (device walk, 2026-08-15). So the panes
+ * additionally require the window to actually be wider than it is tall, the same width-and-height
+ * reasoning `DownloadsScreen`'s `chromePinned` documents.
+ */
+internal fun isWideNowPlaying(
+    maxWidth: Dp,
+    maxHeight: Dp,
+): Boolean = maxWidth >= NowPlayingWideBreakpoint && maxWidth > maxHeight
 
 private val ArtworkSizeCompact = 320.dp
 private val ArtworkSizeWide = 360.dp

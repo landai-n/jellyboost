@@ -18,6 +18,10 @@
     <string name="media_card_type_series">劇集</string>
     <string name="media_card_type_season">季</string>
     <string name="media_card_type_episode">集</string>
+    <string name="media_card_type_song">歌曲</string>
+    <string name="media_card_type_album">專輯</string>
+    <string name="media_card_type_artist">演出者</string>
+    <string name="media_card_type_playlist">播放清單</string>
     <string name="media_card_type_library">媒體庫</string>
     <string name="media_card_progress">已觀看 %1$d%%</string>
     <string name="media_card_rating">評分 %1$s，滿分 10 分</string>

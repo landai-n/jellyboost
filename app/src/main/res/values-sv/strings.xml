@@ -27,5 +27,6 @@
     <string name="mini_player_play">Spela upp</string>
     <string name="mini_player_pause">Pausa</string>
     <string name="mini_player_next">Nästa</string>
+    <string name="mini_player_previous">Föregående</string>
     <string name="mini_player_open_now_playing">Öppna Spelas nu</string>
 </resources>

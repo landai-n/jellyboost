@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Seriál</string>
     <string name="media_card_type_season">Řada</string>
     <string name="media_card_type_episode">Epizoda</string>
+    <string name="media_card_type_song">Skladba</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Interpret</string>
+    <string name="media_card_type_playlist">Playlist</string>
     <string name="media_card_type_library">Knihovna</string>
     <string name="media_card_progress">Zhlédnuto %1$d%%</string>
     <string name="media_card_rating">Hodnocení %1$s z 10</string>

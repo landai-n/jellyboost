@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Sarja</string>
     <string name="media_card_type_season">Kausi</string>
     <string name="media_card_type_episode">Jakso</string>
+    <string name="media_card_type_song">Kappale</string>
+    <string name="media_card_type_album">Albumi</string>
+    <string name="media_card_type_artist">Artisti</string>
+    <string name="media_card_type_playlist">Soittolista</string>
     <string name="media_card_type_library">Kirjasto</string>
     <string name="media_card_progress">%1$d%% katsottu</string>
     <string name="media_card_rating">Arvosana %1$s / 10</string>

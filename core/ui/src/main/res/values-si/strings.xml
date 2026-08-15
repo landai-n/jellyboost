@@ -17,6 +17,10 @@
     <string name="media_card_type_series">කතා මාලාව</string>
     <string name="media_card_type_season">වාරය</string>
     <string name="media_card_type_episode">කථාංගය</string>
+    <string name="media_card_type_song">ගීතය</string>
+    <string name="media_card_type_album">ඇල්බමය</string>
+    <string name="media_card_type_artist">කලාකරුවා</string>
+    <string name="media_card_type_playlist">ධාවන ලැයිස්තුව</string>
     <string name="media_card_type_library">පුස්තකාලය</string>
     <string name="media_card_progress">%1$d%% නරඹා ඇත</string>
     <string name="media_card_rating">ශ්‍රේණිගත කිරීම 10 න් %1$s</string>

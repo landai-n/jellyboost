@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Σειρά</string>
     <string name="media_card_type_season">Σεζόν</string>
     <string name="media_card_type_episode">Επεισόδιο</string>
+    <string name="media_card_type_song">Τραγούδι</string>
+    <string name="media_card_type_album">Άλμπουμ</string>
+    <string name="media_card_type_artist">Καλλιτέχνης</string>
+    <string name="media_card_type_playlist">Λίστα αναπαραγωγής</string>
     <string name="media_card_type_library">Βιβλιοθήκη</string>
     <string name="media_card_progress">Έχει προβληθεί %1$d%%</string>
     <string name="media_card_rating">Βαθμολογία %1$s στα 10</string>

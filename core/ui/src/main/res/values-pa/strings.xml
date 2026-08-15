@@ -18,6 +18,10 @@
     <string name="media_card_type_series">ਸੀਰੀਜ਼</string>
     <string name="media_card_type_season">ਸੀਜ਼ਨ</string>
     <string name="media_card_type_episode">ਐਪੀਸੋਡ</string>
+    <string name="media_card_type_song">ਗੀਤ</string>
+    <string name="media_card_type_album">ਐਲਬਮ</string>
+    <string name="media_card_type_artist">ਕਲਾਕਾਰ</string>
+    <string name="media_card_type_playlist">ਪਲੇਲਿਸਟ</string>
     <string name="media_card_type_library">ਲਾਇਬ੍ਰੇਰੀ</string>
     <string name="media_card_progress">%1$d%% ਦੇਖਿਆ ਗਿਆ</string>
     <string name="media_card_rating">ਰੇਟਿੰਗ 10 ਵਿੱਚੋਂ %1$s</string>

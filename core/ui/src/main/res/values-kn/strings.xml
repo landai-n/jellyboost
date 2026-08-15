@@ -18,6 +18,10 @@
     <string name="media_card_type_series">ಸರಣಿ</string>
     <string name="media_card_type_season">ಸೀಸನ್</string>
     <string name="media_card_type_episode">ಸಂಚಿಕೆ</string>
+    <string name="media_card_type_song">ಹಾಡು</string>
+    <string name="media_card_type_album">ಆಲ್ಬಮ್</string>
+    <string name="media_card_type_artist">ಕಲಾವಿದ</string>
+    <string name="media_card_type_playlist">ಪ್ಲೇಪಟ್ಟಿ</string>
     <string name="media_card_type_library">ಲೈಬ್ರರಿ</string>
     <string name="media_card_progress">%1$d%% ವೀಕ್ಷಿಸಲಾಗಿದೆ</string>
     <string name="media_card_rating">ರೇಟಿಂಗ್ 10ರಲ್ಲಿ %1$s</string>

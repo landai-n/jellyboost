@@ -96,6 +96,14 @@ class MusicPlaybackViewModel
         fun next() = controller.next()
 
         /**
+         * The mini-player's previous button.
+         *
+         * Straight through to [MusicController.previous], which is the one that carries the
+         * restart-then-step-back rule — the bar has no business restating it.
+         */
+        fun previous() = controller.previous()
+
+        /**
          * A downloaded track tapped on the Downloads screen (M13).
          *
          * Audio must not ride the Downloads tab's video path — `Routes.Player` is the immersive

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="music_error_network">Δεν είναι δυνατή η πρόσβαση στον διακομιστή σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
+    <string name="music_error_unauthorized">Η περίοδος σύνδεσής σας έληξε. Συνδεθείτε ξανά για να συνεχίσετε.</string>
+    <string name="music_error_not_found">Αυτό το στοιχείο δεν είναι πλέον στον διακομιστή.</string>
+    <string name="music_error_server_with_code">Ο διακομιστής επέστρεψε σφάλμα (%1$d).</string>
+    <string name="music_error_server">Ο διακομιστής επέστρεψε σφάλμα.</string>
+    <string name="music_error_storage">Δεν ήταν δυνατή η ανάγνωση των τοπικών δεδομένων.</string>
+    <string name="music_error_unknown">Κάτι πήγε στραβά κατά τη φόρτωση.</string>
+
+    <string name="music_library_back">Πίσω</string>
+    <string name="music_library_home">Αρχική</string>
+    <string name="music_library_tab_albums">Άλμπουμ</string>
+    <string name="music_library_tab_artists">Καλλιτέχνες</string>
+    <string name="music_library_tab_playlists">Λίστες αναπαραγωγής</string>
+    <string name="music_library_empty_albums">Δεν υπάρχουν άλμπουμ εδώ ακόμη</string>
+    <string name="music_library_empty_artists">Δεν υπάρχουν καλλιτέχνες εδώ ακόμη</string>
+    <string name="music_library_empty_playlists">Δεν υπάρχουν λίστες αναπαραγωγής εδώ ακόμη</string>
+
+    <string name="music_track_favorite_add">Προσθήκη στα αγαπημένα</string>
+    <string name="music_track_favorite_remove">Αφαίρεση από τα αγαπημένα</string>
+
+    <string name="music_album_empty">Αυτό το άλμπουμ δεν είναι διαθέσιμο</string>
+    <string name="music_album_back">Πίσω</string>
+    <string name="music_album_home">Αρχική</string>
+    <string name="music_album_no_tracks">Δεν βρέθηκαν κομμάτια</string>
+    <string name="music_album_disc_number">Δίσκος %1$d</string>
+    <string name="music_album_remove_favorite">Αφαίρεση από τα αγαπημένα</string>
+    <string name="music_album_add_favorite">Προσθήκη στα αγαπημένα</string>
+    <string name="music_album_play">Αναπαραγωγή</string>
+    <string name="music_album_shuffle">Τυχαία σειρά</string>
+    <string name="music_album_download">Λήψη άλμπουμ</string>
+    <string name="music_album_downloading">Γίνεται λήψη άλμπουμ</string>
+    <string name="music_album_downloaded">Το άλμπουμ λήφθηκε</string>
+    <string name="music_album_start_radio">Έναρξη ραδιοφώνου</string>
+
+    <string name="music_artist_empty">Αυτός ο καλλιτέχνης δεν είναι διαθέσιμος</string>
+    <string name="music_artist_back">Πίσω</string>
+    <string name="music_artist_home">Αρχική</string>
+    <string name="music_artist_section_albums">Άλμπουμ</string>
+    <string name="music_artist_section_top_tracks">Κορυφαία κομμάτια</string>
+    <string name="music_artist_top_tracks_show_more">Εμφάνιση περισσότερων</string>
+    <string name="music_artist_remove_favorite">Αφαίρεση από τα αγαπημένα</string>
+    <string name="music_artist_add_favorite">Προσθήκη στα αγαπημένα</string>
+    <string name="music_artist_start_radio">Έναρξη ραδιοφώνου</string>
+
+    <string name="music_playlist_empty">Αυτή η λίστα αναπαραγωγής δεν είναι διαθέσιμη</string>
+    <string name="music_playlist_back">Πίσω</string>
+    <string name="music_playlist_home">Αρχική</string>
+    <string name="music_playlist_no_tracks">Δεν υπάρχουν κομμάτια για εμφάνιση — οι λίστες αναπαραγωγής δεν είναι ακόμη διαθέσιμες εκτός σύνδεσης</string>
+    <plurals name="music_playlist_track_count">
+        <item quantity="one">%1$d κομμάτι</item>
+        <item quantity="other">%1$d κομμάτια</item>
+    </plurals>
+
+    <string name="music_now_playing_back">Πίσω</string>
+    <string name="music_now_playing_open_queue">Ουρά</string>
+    <string name="music_now_playing_shuffle_on">Ενεργοποίηση τυχαίας σειράς</string>
+    <string name="music_now_playing_shuffle_off">Απενεργοποίηση τυχαίας σειράς</string>
+    <string name="music_now_playing_previous">Προηγούμενο</string>
+    <string name="music_now_playing_next">Επόμενο</string>
+    <string name="music_now_playing_play">Αναπαραγωγή</string>
+    <string name="music_now_playing_pause">Παύση</string>
+    <string name="music_now_playing_repeat_off">Ενεργοποίηση επανάληψης</string>
+    <string name="music_now_playing_repeat_all">Επανάληψη όλων — πατήστε για επανάληψη ενός κομματιού</string>
+    <string name="music_now_playing_repeat_one">Επανάληψη ενός κομματιού — πατήστε για απενεργοποίηση της επανάληψης</string>
+    <string name="music_now_playing_favorite_add">Προσθήκη στα αγαπημένα</string>
+    <string name="music_now_playing_favorite_remove">Αφαίρεση από τα αγαπημένα</string>
+    <string name="music_now_playing_start_radio">Έναρξη ραδιοφώνου</string>
+    <string name="music_now_playing_lyrics_show">Εμφάνιση στίχων</string>
+    <string name="music_now_playing_lyrics_hide">Εμφάνιση εξωφύλλου</string>
+    <string name="music_now_playing_lyrics_tab">Στίχοι</string>
+
+    <string name="music_now_playing_queue">Ουρά</string>
+    <string name="music_now_playing_queue_empty">Η ουρά είναι άδεια</string>
+    <string name="music_now_playing_queue_close">Κλείσιμο ουράς</string>
+    <string name="music_now_playing_queue_playing">Αναπαράγεται τώρα</string>
+    <string name="music_now_playing_queue_move_up">Μετακίνηση επάνω</string>
+    <string name="music_now_playing_queue_move_down">Μετακίνηση κάτω</string>
+    <string name="music_now_playing_queue_remove">Αφαίρεση από την ουρά</string>
+    <plurals name="music_now_playing_queue_count">
+        <item quantity="one">%1$d κομμάτι</item>
+        <item quantity="other">%1$d κομμάτια</item>
+    </plurals>
+</resources>

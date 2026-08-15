@@ -47,6 +47,10 @@
     <string name="media_card_type_series">Series</string>
     <string name="media_card_type_season">Season</string>
     <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_song">Song</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Artist</string>
+    <string name="media_card_type_playlist">Playlist</string>
     <string name="media_card_type_library">Library</string>
     <!-- Resume progress, which the card otherwise conveys only as a 3dp bar. -->
     <string name="media_card_progress">%1$d%% watched</string>

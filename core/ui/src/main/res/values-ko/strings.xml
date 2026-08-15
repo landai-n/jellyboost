@@ -18,6 +18,10 @@
     <string name="media_card_type_series">시리즈</string>
     <string name="media_card_type_season">시즌</string>
     <string name="media_card_type_episode">에피소드</string>
+    <string name="media_card_type_song">곡</string>
+    <string name="media_card_type_album">앨범</string>
+    <string name="media_card_type_artist">아티스트</string>
+    <string name="media_card_type_playlist">재생목록</string>
     <string name="media_card_type_library">라이브러리</string>
     <string name="media_card_progress">%1$d%% 시청함</string>
     <string name="media_card_rating">평점 10점 만점에 %1$s점</string>

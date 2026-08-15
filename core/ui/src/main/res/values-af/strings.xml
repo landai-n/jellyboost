@@ -18,6 +18,10 @@
     <string name="media_card_type_series">Reeks</string>
     <string name="media_card_type_season">Seisoen</string>
     <string name="media_card_type_episode">Episode</string>
+    <string name="media_card_type_song">Liedjie</string>
+    <string name="media_card_type_album">Album</string>
+    <string name="media_card_type_artist">Kunstenaar</string>
+    <string name="media_card_type_playlist">Speellys</string>
     <string name="media_card_type_library">Biblioteek</string>
     <string name="media_card_progress">%1$d%% gekyk</string>
     <string name="media_card_rating">Gradering %1$s uit 10</string>

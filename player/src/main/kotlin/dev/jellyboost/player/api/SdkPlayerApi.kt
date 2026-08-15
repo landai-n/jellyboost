@@ -85,4 +85,9 @@ internal class SdkPlayerApi
                     .getItemSegments(itemId = itemId, includeSegmentTypes = types)
                     .content.items
             }
+
+        override suspend fun getBitrateTestBytes(size: Int): ByteArray =
+            withContext(ioDispatcher) {
+                apiClient.mediaInfoApi.getBitrateTestBytes(size).content
+            }
     }

@@ -190,6 +190,23 @@ of the walk).
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## Auto quality — measured bitrate cap (2026-08-15 — landed, gate green; device walk owed)
+
+Auto in the quality picker no longer means "no cap": an Auto resolve now measures
+throughput against `/Playback/BitrateTest` (ramped 500 KB→1 MB→3 MB, 5 s budget, ×0.8,
+clamped 720 kbps–120 Mbps, 15 min single-flight cache, last value persisted as a prior
+under the long-reserved `max_streaming_bitrate` key) and negotiates with the measured
+number, so a constrained link gets a transcode automatically instead of a stalling
+direct play. Auto-ness travels as an explicit `autoBitrate` flag through
+`PlaybackResolveRequest`/`RemotePlaybackMediaSource` so the chip derives from the flag,
+not from reverse-mapping the cap. Manual picks, cast (still uncapped — receiver's link,
+not ours), and local playback unchanged. `DECISIONS.md` 2026-08-15; feature doc
+`docs/features/auto-quality.md`; commits `21861ab2`+`851c7816`+`97b6e301`+`82d74489`.
+**Device walk owed:** first Auto play on a constrained link comes up transcoded and
+smooth after a ≤5 s one-time pause (chip still "Auto"); second play within 15 min
+starts instantly; strong-LAN Auto still direct-plays; prior survives app restart;
+SyncPlay cold-cache group open tolerates the pause; cast behaves exactly as before.
+
 ## Audit tier 1 — the player UX wave: UI-1/2/3 + UI-10/12/13/16/18 (2026-08-08 — landed, gate green; device walk owed)
 
 The first remediation tier of the 2026-08-08 audit, all in `:player`, all device-verifiable in

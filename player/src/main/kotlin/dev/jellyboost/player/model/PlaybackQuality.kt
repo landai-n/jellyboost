@@ -5,8 +5,15 @@ package dev.jellyboost.player.model
  *
  * A cap is sent to the server as `maxStreamingBitrate`; anything above it forces the server to
  * transcode, which is exactly how the milestone's "forced transcode" verification is performed
- * from the UI (docs/PLAN.md, M5 DoD). [AUTO] sends no cap at all and lets the device profile's
- * 120 Mbps ceiling apply.
+ * from the UI (docs/PLAN.md, M5 DoD).
+ *
+ * [AUTO]'s own `maxStreamingBitrate` is `null`, but that is no longer what reaches the server:
+ * an Auto request carries `PlaybackResolveRequest.autoBitrate`, and `PlaybackInfoResolver` fills the
+ * cap in from `AutoBitrateDetector`'s measured throughput (DECISIONS.md, 2026-08-15). `null` only
+ * survives the round trip in the degraded case — a measurement that failed with no prior to fall
+ * back on — which restores the old behaviour of letting the device profile's 120 Mbps ceiling apply.
+ * That degraded case is also the only way [lowerThan] is ever asked about a `null` cap, which it
+ * answers by treating the stream as [HIGH]'s 20 Mbps and stepping down from there.
  */
 internal enum class PlaybackQuality(
     val maxStreamingBitrate: Int?,

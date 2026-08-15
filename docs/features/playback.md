@@ -180,6 +180,9 @@ not inherit an exhausted one.
 | Resume | `Routes.Player.startPositionTicks` from the item's `playbackPositionTicks`; written back by `PlaybackReporter` on every tick and on stop. |
 | No orphaned ffmpeg | `PlaybackReporter.stopTranscoding` on stop **and** before every re-resolve. |
 
+Since 2026-08-15, the picker's **Auto** no longer means "no cap": it negotiates with a
+throughput measurement taken against the server — see `auto-quality.md` and DECISIONS.md.
+
 ## Not here yet
 
 - Offline playback from downloads — M8. `PlaybackMediaSource` is already a sealed type with the

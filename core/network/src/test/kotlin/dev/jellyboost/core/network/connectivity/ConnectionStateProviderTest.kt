@@ -86,6 +86,10 @@ class ConnectionStateProviderTest {
             override val pipOnLeave: Flow<Boolean> = MutableStateFlow(true)
 
             override suspend fun setPipOnLeave(enabled: Boolean) = Unit
+
+            override val maxStreamingBitrate: Flow<Int?> = MutableStateFlow(null)
+
+            override suspend fun setMaxStreamingBitrate(bitrate: Int?) = Unit
         }
 
     private var applicationScope: CoroutineScope? = null

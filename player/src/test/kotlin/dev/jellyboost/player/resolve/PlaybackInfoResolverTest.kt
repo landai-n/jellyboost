@@ -5,6 +5,7 @@ import dev.jellyboost.core.common.AppResult
 import dev.jellyboost.player.PlayMethod
 import dev.jellyboost.player.PlayerFixtures
 import dev.jellyboost.player.api.PlayerApi
+import dev.jellyboost.player.bitrate.AutoBitrateDetector
 import dev.jellyboost.player.deviceprofile.DeviceCodecs
 import dev.jellyboost.player.deviceprofile.DeviceProfileBuilder
 import dev.jellyboost.player.deviceprofile.MediaCodecProbe
@@ -14,6 +15,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -37,7 +39,11 @@ class PlaybackInfoResolverTest {
         DeviceProfileBuilder(
             MediaCodecProbe { DeviceCodecs(videoCodecs = setOf("h264"), audioCodecs = setOf("aac")) },
         )
-    private val resolver = PlaybackInfoResolver(api, deviceProfileBuilder)
+    private val autoBitrateDetector =
+        mockk<AutoBitrateDetector> {
+            coEvery { currentCap() } returns MEASURED_CAP
+        }
+    private val resolver = PlaybackInfoResolver(api, deviceProfileBuilder, autoBitrateDetector)
 
     // ---- the dash-less media source id --------------------------------------------------------
 
@@ -183,6 +189,71 @@ class PlaybackInfoResolverTest {
             request.captured.maxStreamingBitrate shouldBe 3_000_000
             request.captured.deviceProfile
                 ?.maxStreamingBitrate shouldBe 3_000_000
+        }
+
+    // ---- Auto's measured cap (DECISIONS.md, 2026-08-15) -------------------------------------------
+
+    @Test
+    fun `an auto request is negotiated at the measured bitrate, profile included`() =
+        runTest {
+            val request = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(request)) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)),
+                )
+
+            val result =
+                resolver.resolve(
+                    PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
+                )
+
+            // The caller sent no cap at all; this number exists only because the detector measured it.
+            request.captured.maxStreamingBitrate shouldBe MEASURED_CAP
+            request.captured.deviceProfile
+                ?.maxStreamingBitrate shouldBe MEASURED_CAP
+            result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
+            // And the source says the number was measured, so the picker can still call it "Auto".
+            result.value.maxStreamingBitrate shouldBe MEASURED_CAP
+            result.value.autoBitrate shouldBe true
+        }
+
+    @Test
+    fun `a cast auto request is still sent uncapped`() =
+        runTest {
+            val request = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(request)) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)),
+                )
+
+            resolver.resolve(
+                PlaybackResolveRequest(
+                    itemId = PlayerFixtures.ITEM_ID,
+                    autoBitrate = true,
+                    castTarget = true,
+                ),
+            )
+
+            // The link that decides whether a receiver copes is the receiver's, not this device's.
+            request.captured.maxStreamingBitrate.shouldBeNull()
+            coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
+        }
+
+    @Test
+    fun `a hand-picked cap is never second-guessed by a measurement`() =
+        runTest {
+            val request = slot<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(request)) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)),
+                )
+
+            resolver.resolve(
+                PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, maxStreamingBitrate = 3_000_000),
+            )
+
+            request.captured.maxStreamingBitrate shouldBe 3_000_000
+            coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
         }
 
     @Test
@@ -413,5 +484,10 @@ class PlaybackInfoResolverTest {
         result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
         result.value.shouldNotBeNull()
         return result.value
+    }
+
+    private companion object {
+        /** Deliberately not one of `PlaybackQuality`'s rungs: a measurement lands where it lands. */
+        const val MEASURED_CAP = 5_600_000
     }
 }

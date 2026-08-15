@@ -27,6 +27,11 @@ import java.util.UUID
  *   this device's, because the decoders that matter are the television's; and, like [forceRemote],
  *   it skips the copy on disk, because a `file://` URI means nothing on the other side of the
  *   network (docs/notes/chromecast-m12-plan.md, key decision 3).
+ * @param autoBitrate whether the cap should be chosen by measurement, not by the user:
+ *   `PlaybackInfoResolver` overwrites [maxStreamingBitrate] with `AutoBitrateDetector`'s value when
+ *   this is set (DECISIONS.md, 2026-08-15). A caller building an Auto request therefore leaves the
+ *   cap `null` and never waits on the measurement itself. Carried through to
+ *   `RemotePlaybackMediaSource` so the picker can tell a measured 8 Mbps from a hand-picked one.
  */
 internal data class PlaybackResolveRequest(
     val itemId: UUID,
@@ -39,4 +44,5 @@ internal data class PlaybackResolveRequest(
     val enableDirectStream: Boolean? = null,
     val forceRemote: Boolean = false,
     val castTarget: Boolean = false,
+    val autoBitrate: Boolean = false,
 )

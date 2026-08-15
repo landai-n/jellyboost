@@ -247,11 +247,19 @@ comes back `TRANSCODE` with a cap above `PlaybackQuality.HIGH`'s 20 Mbps rung is
 re-negotiated once at that rung (direct play/direct stream keep the full measured cap,
 manual picks and cast untouched, the flag — and so the "Auto" chip — kept).
 `DECISIONS.md` 2026-08-15 amendment.
-**Device walk owed:** first Auto play on a constrained link comes up transcoded and
-smooth after a ≤5 s one-time pause (chip still "Auto"); the 4K HEVC title that stalled
-now plays through; second play within 15 min starts instantly; strong-LAN Auto still
-direct-plays; prior survives app restart; SyncPlay cold-cache group open tolerates the
-pause; cast behaves exactly as before.
+**Device walk PASSED (2026-08-16, user-verified on the test tablet)** — after two more
+amendments the fourth walk played smooth: (3) the device profile advertises the hardware
+decoders' max frame size (2560×1440-class on this tablet, read from MediaCodecList; the
+server downscales transcodes to it and refuses oversize direct play — before this, a
+3840×1920 transcode fell back to software decode, the real source of "laggy 1920p"), and
+(4) codec profiles are emitted **containerless, one per codec**: the server (10.11.11) was
+measured dropping container-bound codec profiles when sizing a Dolby Vision transcode
+(3840-wide output with `container="mkv"`, 2560-wide without — same conditions). Live
+logcat during the passing walk: probe reports h264/hevc max 2560×2560, Auto measured
+43.8 Mbps cumulative, re-negotiated at 20 Mbps, no decoder-init failure. `DECISIONS.md`
+2026-08-15 second amendment + 2026-08-16 third amendment. Still owed: SyncPlay cold-cache
+group-open tolerance, strong-LAN direct-play spot-check, and the known edge that the
+per-axis decoder range (2560×2560) under-constrains portrait 4K video.
 
 ## Audit tier 1 — the player UX wave: UI-1/2/3 + UI-10/12/13/16/18 (2026-08-08 — landed, gate green; device walk owed)
 

@@ -46,9 +46,21 @@ measured number is not surfaced in the UI (user choice; see DECISIONS.md, 2026-0
   measurement); the picker chip derives from the flag, not from reverse-mapping the
   bitrate — a measured 8 Mbps must not render as "Medium" or swallow a genuine Medium
   tap.
-- Cast Auto is deliberately unchanged (uncapped, `CastDeviceProfile`'s own conservative
-  ceiling): the link that decides whether a receiver copes is the receiver's, not this
-  device's. Measured-cap-for-cast is a noted follow-up.
+- **Resolution is capped by the decoder, not just the bitrate.** `MediaCodecProbe` reads
+  each hardware decoder's maximum frame size and `DeviceProfileBuilder` advertises it as
+  `Width`/`Height` `LessThanEqual` conditions, so the server downscales transcodes to a
+  hardware-decodable size and refuses oversize direct play (on the reference tablet:
+  2560×1440-class; a 3840-wide transcode used to fall back to software decode and
+  stutter regardless of bitrate). The codec profiles carrying these conditions are
+  emitted **containerless, one per codec** — load-bearing, not tidiness: server 10.11.11
+  was measured dropping container-bound codec profiles when sizing a Dolby Vision
+  transcode (DECISIONS.md, 2026-08-15 second amendment and 2026-08-16 third amendment).
+  Known edge: decoders report per-axis ranges (2560×2560), so portrait 4K video is
+  under-constrained on the height axis.
+- Cast Auto is deliberately unchanged (uncapped bitrate, `CastDeviceProfile`'s own
+  per-receiver-class ceilings — see `docs/features/chromecast.md`): the link and decoder
+  that decide whether a receiver copes are the receiver's, not this device's.
+  Measured-cap-for-cast is a noted follow-up.
 - The decoder-fallback ladder (`DecoderFallbackHandler`) steps a non-rung measured cap
   down to the next rung below it; when the ladder fires, the retry request clears the
   flag so the chip shows the rung that is actually playing.

@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmler</string>
     <string name="search_section_series">Diziler</string>
     <string name="search_section_episodes">Bölümler</string>
+    <string name="search_section_artists">Sanatçılar</string>
+    <string name="search_section_albums">Albümler</string>
+    <string name="search_section_songs">Şarkılar</string>
+    <string name="search_section_playlists">Çalma Listeleri</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d sonuç</item>
         <item quantity="other">%1$d sonuç</item>

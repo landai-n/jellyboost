@@ -6,6 +6,10 @@
     <string name="search_section_movies">Elokuvat</string>
     <string name="search_section_series">Sarjat</string>
     <string name="search_section_episodes">Jaksot</string>
+    <string name="search_section_artists">Artistit</string>
+    <string name="search_section_albums">Albumit</string>
+    <string name="search_section_songs">Kappaleet</string>
+    <string name="search_section_playlists">Soittolistat</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d tulos</item>
         <item quantity="other">%1$d tulosta</item>

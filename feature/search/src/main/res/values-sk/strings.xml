@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmy</string>
     <string name="search_section_series">Seriály</string>
     <string name="search_section_episodes">Epizódy</string>
+    <string name="search_section_artists">Interpreti</string>
+    <string name="search_section_albums">Albumy</string>
+    <string name="search_section_songs">Skladby</string>
+    <string name="search_section_playlists">Playlisty</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d výsledok</item>
         <item quantity="few">%1$d výsledky</item>

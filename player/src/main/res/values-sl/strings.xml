@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Te sledi ni v preneseni datoteki.</string>
     <string name="player_message_failed">Predvajanje ni uspelo.</string>
     <string name="player_message_change_reverted">Spremembe ni bilo mogoče uveljaviti — nadaljuje se kot prej.</string>
+    <string name="music_notification_shuffle_on">Izklopi naključno predvajanje</string>
+    <string name="music_notification_shuffle_off">Vklopi naključno predvajanje</string>
+    <string name="music_notification_repeat_off">Ponavljanje izklopljeno</string>
+    <string name="music_notification_repeat_all">Ponavljanje čakalne vrste</string>
+    <string name="music_notification_repeat_one">Ponavljanje te skladbe</string>
 
     <string name="player_syncplay_group">Skupina</string>
     <string name="player_syncplay_waiting">Čakanje na skupino…</string>

@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">ਉਹ ਟਰੈਕ ਡਾਊਨਲੋਡ ਕੀਤੀ ਫਾਈਲ ਵਿੱਚ ਨਹੀਂ ਹੈ।</string>
     <string name="player_message_failed">ਪਲੇਬੈਕ ਅਸਫਲ ਰਿਹਾ।</string>
     <string name="player_message_change_reverted">ਉਹ ਤਬਦੀਲੀ ਲਾਗੂ ਨਹੀਂ ਹੋ ਸਕੀ — ਪਹਿਲਾਂ ਵਾਂਗ ਜਾਰੀ ਹੈ।</string>
+    <string name="music_notification_shuffle_on">ਸ਼ਫਲ ਬੰਦ ਕਰੋ</string>
+    <string name="music_notification_shuffle_off">ਸ਼ਫਲ ਚਾਲੂ ਕਰੋ</string>
+    <string name="music_notification_repeat_off">ਦੁਹਰਾਓ ਬੰਦ</string>
+    <string name="music_notification_repeat_all">ਕਤਾਰ ਦੁਹਰਾਈ ਜਾ ਰਹੀ ਹੈ</string>
+    <string name="music_notification_repeat_one">ਇਹ ਟਰੈਕ ਦੁਹਰਾਇਆ ਜਾ ਰਿਹਾ ਹੈ</string>
 
     <string name="player_syncplay_group">ਗਰੁੱਪ</string>
     <string name="player_syncplay_waiting">ਗਰੁੱਪ ਦੀ ਉਡੀਕ ਹੋ ਰਹੀ ਹੈ…</string>

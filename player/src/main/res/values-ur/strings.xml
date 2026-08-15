@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">یہ ٹریک ڈاؤن لوڈ شدہ فائل میں موجود نہیں ہے۔</string>
     <string name="player_message_failed">پلے بیک ناکام ہوگیا۔</string>
     <string name="player_message_change_reverted">وہ تبدیلی لاگو نہیں ہو سکی — پہلے کی طرح جاری ہے۔</string>
+    <string name="music_notification_shuffle_on">شفل بند کریں</string>
+    <string name="music_notification_shuffle_off">شفل آن کریں</string>
+    <string name="music_notification_repeat_off">تکرار بند</string>
+    <string name="music_notification_repeat_all">قطار دہرائی جا رہی ہے</string>
+    <string name="music_notification_repeat_one">یہ ٹریک دہرایا جا رہا ہے</string>
 
     <string name="player_syncplay_group">گروپ</string>
     <string name="player_syncplay_waiting">گروپ کا انتظار ہے…</string>

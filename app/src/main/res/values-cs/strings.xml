@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">Skupiny SyncPlay</string>
     <string name="syncplay_groups_action_active">Skupiny SyncPlay — jste ve skupině</string>
+    <string name="music_refused_in_group">Opusťte skupinu SyncPlay, abyste mohli přehrávat hudbu na tomto zařízení.</string>
+    <string name="music_track_unavailable">Nepodařilo se přehrát „%1$s“ — skladba byla přeskočena.</string>
+    <string name="music_queue_unavailable">Nepodařilo se přehrát žádnou z těchto skladeb.</string>
+    <string name="music_playback_failed">Přehrávání skladby „%1$s“ se nezdařilo.</string>
+    <string name="music_radio_failed">Nepodařilo se spustit rádio ze skladby „%1$s“.</string>
+    <string name="mini_player_play">Přehrát</string>
+    <string name="mini_player_pause">Pozastavit</string>
+    <string name="mini_player_next">Další</string>
+    <string name="mini_player_open_now_playing">Otevřít právě přehrávané</string>
 </resources>

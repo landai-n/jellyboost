@@ -117,7 +117,7 @@ Confirmed feasibility:
    `artistRefs: List<ArtistRef(id, name)>` (navigation needs artist ids,
    carried by `dto.artistItems`/`dto.albumArtists`). Track/disc numbers
    reuse existing `indexNumber`/`parentIndexNumber`. `ItemType` gains the
-   four music kinds; `isPlayable` adds AUDIO. `ItemEntity` v9 adds two
+   four music kinds; `isPlayable` adds AUDIO. `ItemEntity` v10 adds two
    nullable indexed **query-only** columns (`albumId`, `albumArtistId`) so
    offline can answer "tracks of album X in disc/track order" and "albums of
    artist Y"; domain items still rebuild from the stored DTO blob. Additive
@@ -248,7 +248,7 @@ M13 summary + DoD, this note, STATUS.md.
 **Phase 1 — Domain + mappers + DB (mechanical, wide; sonnet).** `ItemType`
 (+4 values, `isPlayable`), `JellyfinItem` music fields + display branches,
 `ArtistRef`, `ItemMapper` (music fields; collection-kind mapping ready but
-`SUPPORTED` unflipped), `QueryMapper` mirror, `ItemEntity` v9 (`albumId`,
+`SUPPORTED` unflipped), `QueryMapper` mirror, `ItemEntity` v10 (`albumId`,
 `albumArtistId`, indexes, `@AutoMigration(8,9)`), `ItemEntityMapper`,
 `ItemDao` music queries, `LIBRARY_COUNT_TYPES` + offline equivalent. Tests:
 `ItemMapperTest` UNKNOWN assertions become positive assertions, entity

@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay グループ</string>
     <string name="syncplay_groups_action_active">SyncPlay グループ — グループに参加中です</string>
+    <string name="music_refused_in_group">このデバイスで音楽を再生するには SyncPlay グループを退出してください。</string>
+    <string name="music_track_unavailable">「%1$s」を再生できませんでした — スキップしました。</string>
+    <string name="music_queue_unavailable">どのトラックも再生できませんでした。</string>
+    <string name="music_playback_failed">「%1$s」の再生に失敗しました。</string>
+    <string name="music_radio_failed">「%1$s」からラジオを開始できませんでした。</string>
+    <string name="mini_player_play">再生</string>
+    <string name="mini_player_pause">一時停止</string>
+    <string name="mini_player_next">次へ</string>
+    <string name="mini_player_open_now_playing">再生中の画面を開く</string>
 </resources>

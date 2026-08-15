@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">Wala sa na-download na file ang track na iyon.</string>
     <string name="player_message_failed">Nabigo ang playback.</string>
     <string name="player_message_change_reverted">Hindi maisagawa ang pagbabagong iyon — nagpapatuloy tulad ng dati.</string>
+    <string name="music_notification_shuffle_on">I-off ang shuffle</string>
+    <string name="music_notification_shuffle_off">I-on ang shuffle</string>
+    <string name="music_notification_repeat_off">Naka-off ang pag-ulit</string>
+    <string name="music_notification_repeat_all">Inuulit ang pila</string>
+    <string name="music_notification_repeat_one">Inuulit ang track na ito</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Naghihintay sa grupo…</string>
     <string name="player_syncplay_shuffle">I-shuffle ang pila</string>

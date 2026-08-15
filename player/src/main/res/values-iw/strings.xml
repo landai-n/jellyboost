@@ -58,6 +58,11 @@
     <string name="player_message_track_offline">הרצועה הזאת לא נמצאת בקובץ שהורד.</string>
     <string name="player_message_failed">ההפעלה נכשלה.</string>
     <string name="player_message_change_reverted">לא ניתן היה להחיל את השינוי — ממשיכים כמו קודם.</string>
+    <string name="music_notification_shuffle_on">כיבוי ערבוב</string>
+    <string name="music_notification_shuffle_off">הפעלת ערבוב</string>
+    <string name="music_notification_repeat_off">חזרה כבויה</string>
+    <string name="music_notification_repeat_all">חזרה על התור</string>
+    <string name="music_notification_repeat_one">חזרה על הרצועה הזו</string>
 
     <string name="player_syncplay_group">קבוצה</string>
     <string name="player_syncplay_waiting">ממתין לקבוצה…</string>

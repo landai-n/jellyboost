@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay గ్రూపులు</string>
     <string name="syncplay_groups_action_active">SyncPlay గ్రూపులు — మీరు ఒక గ్రూప్‌లో ఉన్నారు</string>
+    <string name="music_refused_in_group">ఈ పరికరంలో సంగీతం ప్లే చేయడానికి SyncPlay గ్రూప్ నుండి నిష్క్రమించండి.</string>
+    <string name="music_track_unavailable">“%1$s” ప్లే చేయలేకపోయాం — దాన్ని దాటవేశాం.</string>
+    <string name="music_queue_unavailable">ఆ ట్రాక్‌లలో ఏదీ ప్లే చేయలేకపోయాం.</string>
+    <string name="music_playback_failed">“%1$s” ప్లేబ్యాక్ విఫలమైంది.</string>
+    <string name="music_radio_failed">“%1$s” నుండి రేడియో ప్రారంభించలేకపోయాం.</string>
+    <string name="mini_player_play">ప్లే చేయండి</string>
+    <string name="mini_player_pause">పాజ్ చేయండి</string>
+    <string name="mini_player_next">తర్వాతిది</string>
+    <string name="mini_player_open_now_playing">ఇప్పుడు ప్లే అవుతున్నది తెరవండి</string>
 </resources>

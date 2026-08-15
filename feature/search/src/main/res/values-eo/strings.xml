@@ -5,6 +5,10 @@
     <string name="search_section_movies">Filmoj</string>
     <string name="search_section_series">Serioj</string>
     <string name="search_section_episodes">Epizodoj</string>
+    <string name="search_section_artists">Artistoj</string>
+    <string name="search_section_albums">Albumoj</string>
+    <string name="search_section_songs">Kantoj</string>
+    <string name="search_section_playlists">Ludlistoj</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d rezulto</item>
         <item quantity="other">%1$d rezultoj</item>

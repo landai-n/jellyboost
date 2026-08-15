@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Nire Multimedia</string>
     <string name="home_section_continue_watching">Ikusten Jarraitu</string>
     <string name="home_section_next_up">Hurrengoa</string>
+    <string name="home_section_continue_listening">Entzuten Jarraitu</string>
     <string name="home_section_latest">%1$s berrienak</string>
     <string name="home_hero_resume">Jarraitu</string>
     <string name="home_hero_details">Xehetasunak</string>

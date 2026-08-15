@@ -15,4 +15,13 @@
     <string name="offline_go_online">Onlayn ol</string>
     <string name="syncplay_groups_action">SyncPlay qrupları</string>
     <string name="syncplay_groups_action_active">SyncPlay qrupları — siz bir qrupdasınız</string>
+    <string name="music_refused_in_group">Bu cihazda musiqi çalmaq üçün SyncPlay qrupundan çıxın.</string>
+    <string name="music_track_unavailable">“%1$s” oxudula bilmədi — ötürüldü.</string>
+    <string name="music_queue_unavailable">Həmin treklərin heç biri oxudula bilmədi.</string>
+    <string name="music_playback_failed">“%1$s” üçün oxutma uğursuz oldu.</string>
+    <string name="music_radio_failed">“%1$s” əsasında radio başladıla bilmədi.</string>
+    <string name="mini_player_play">Oynat</string>
+    <string name="mini_player_pause">Fasilə ver</string>
+    <string name="mini_player_next">Növbəti</string>
+    <string name="mini_player_open_now_playing">İndi oxunanı aç</string>
 </resources>

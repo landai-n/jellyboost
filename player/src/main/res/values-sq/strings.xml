@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Ajo gjurmë nuk është në skedarin e shkarkuar.</string>
     <string name="player_message_failed">Riprodhimi dështoi.</string>
     <string name="player_message_change_reverted">Ndryshimi nuk u zbatua dot — vazhdon si më parë.</string>
+    <string name="music_notification_shuffle_on">Çaktivizo përzierjen</string>
+    <string name="music_notification_shuffle_off">Aktivizo përzierjen</string>
+    <string name="music_notification_repeat_off">Përsëritja joaktive</string>
+    <string name="music_notification_repeat_all">Po përsëritet radha</string>
+    <string name="music_notification_repeat_one">Po përsëritet kjo pjesë</string>
 
     <string name="player_syncplay_group">Grupi</string>
     <string name="player_syncplay_waiting">Duke pritur grupin…</string>

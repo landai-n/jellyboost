@@ -6,6 +6,7 @@
     <string name="home_section_my_media">ތިމަންގެ މީޑިއާ</string>
     <string name="home_section_continue_watching">ބެލުން ކުރިއަށް</string>
     <string name="home_section_next_up">ދެން އޮތީ</string>
+    <string name="home_section_continue_listening">އަޑުއެހުން ކުރިއަށް</string>
     <string name="home_section_latest">އެންމެ ފަހުގެ %1$s</string>
     <string name="home_hero_resume">ކުރިއަށް ގެންދޭ</string>
     <string name="home_hero_details">ތަފްޞީލް</string>

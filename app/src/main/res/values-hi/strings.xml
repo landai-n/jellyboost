@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay समूह</string>
     <string name="syncplay_groups_action_active">SyncPlay समूह — आप एक समूह में हैं</string>
+    <string name="music_refused_in_group">इस डिवाइस पर संगीत चलाने के लिए SyncPlay समूह छोड़ें।</string>
+    <string name="music_track_unavailable">“%1$s” नहीं चल सका — इसे छोड़ दिया गया।</string>
+    <string name="music_queue_unavailable">उनमें से कोई भी ट्रैक नहीं चल सका।</string>
+    <string name="music_playback_failed">“%1$s” का प्लेबैक विफल हुआ।</string>
+    <string name="music_radio_failed">“%1$s” से रेडियो शुरू नहीं हो सका।</string>
+    <string name="mini_player_play">चलाएँ</string>
+    <string name="mini_player_pause">रोकें</string>
+    <string name="mini_player_next">अगला</string>
+    <string name="mini_player_open_now_playing">अभी चल रहा है खोलें</string>
 </resources>

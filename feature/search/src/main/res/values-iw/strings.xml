@@ -6,6 +6,10 @@
     <string name="search_section_movies">סרטים</string>
     <string name="search_section_series">סדרות</string>
     <string name="search_section_episodes">פרקים</string>
+    <string name="search_section_artists">אמנים</string>
+    <string name="search_section_albums">אלבומים</string>
+    <string name="search_section_songs">שירים</string>
+    <string name="search_section_playlists">פלייליסטים</string>
     <plurals name="search_result_count">
         <item quantity="one">תוצאה אחת</item>
         <item quantity="two">שתי תוצאות</item>

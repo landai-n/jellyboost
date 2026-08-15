@@ -5,6 +5,10 @@
     <string name="search_section_movies">Phim</string>
     <string name="search_section_series">Chương trình</string>
     <string name="search_section_episodes">Tập phim</string>
+    <string name="search_section_artists">Nghệ sĩ</string>
+    <string name="search_section_albums">Album</string>
+    <string name="search_section_songs">Bài hát</string>
+    <string name="search_section_playlists">Danh sách phát</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d kết quả</item>
     </plurals>

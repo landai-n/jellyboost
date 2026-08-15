@@ -53,6 +53,11 @@
     <string name="player_message_track_offline">Essa faixa não está no ficheiro transferido.</string>
     <string name="player_message_failed">Falha na reprodução.</string>
     <string name="player_message_change_reverted">Não foi possível aplicar essa alteração — a continuar como antes.</string>
+    <string name="music_notification_shuffle_on">Desativar reprodução aleatória</string>
+    <string name="music_notification_shuffle_off">Ativar reprodução aleatória</string>
+    <string name="music_notification_repeat_off">Repetição desativada</string>
+    <string name="music_notification_repeat_all">A repetir a fila</string>
+    <string name="music_notification_repeat_one">A repetir esta faixa</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">A aguardar pelo grupo…</string>
     <string name="player_syncplay_shuffle">Baralhar fila</string>

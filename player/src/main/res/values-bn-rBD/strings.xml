@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">সেই ট্র্যাকটি ডাউনলোড করা ফাইলে নেই।</string>
     <string name="player_message_failed">প্লেব্যাক ব্যর্থ হয়েছে।</string>
     <string name="player_message_change_reverted">পরিবর্তনটি প্রয়োগ করা যায়নি — আগের মতোই চলছে।</string>
+    <string name="music_notification_shuffle_on">শাফল বন্ধ করুন</string>
+    <string name="music_notification_shuffle_off">শাফল চালু করুন</string>
+    <string name="music_notification_repeat_off">পুনরাবৃত্তি বন্ধ</string>
+    <string name="music_notification_repeat_all">সারি পুনরাবৃত্তি হচ্ছে</string>
+    <string name="music_notification_repeat_one">এই ট্র্যাক পুনরাবৃত্তি হচ্ছে</string>
     <string name="player_syncplay_group">গ্রুপ</string>
     <string name="player_syncplay_waiting">গ্রুপের অপেক্ষায়…</string>
     <string name="player_syncplay_shuffle">সারি এলোমেলো করুন</string>

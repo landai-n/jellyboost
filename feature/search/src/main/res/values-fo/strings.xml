@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmar</string>
     <string name="search_section_series">Seriur</string>
     <string name="search_section_episodes">Partar</string>
+    <string name="search_section_artists">Listafólk</string>
+    <string name="search_section_albums">Album</string>
+    <string name="search_section_songs">Løg</string>
+    <string name="search_section_playlists">Spælilistar</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d úrslit</item>
         <item quantity="other">%1$d úrslit</item>

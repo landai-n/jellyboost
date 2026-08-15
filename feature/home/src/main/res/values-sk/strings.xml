@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Moje médiá</string>
     <string name="home_section_continue_watching">Pokračovať v sledovaní</string>
     <string name="home_section_next_up">Ďalej</string>
+    <string name="home_section_continue_listening">Pokračovať v počúvaní</string>
     <string name="home_section_latest">Najnovšie %1$s</string>
     <string name="home_hero_resume">Pokračovať</string>
     <string name="home_hero_details">Podrobnosti</string>

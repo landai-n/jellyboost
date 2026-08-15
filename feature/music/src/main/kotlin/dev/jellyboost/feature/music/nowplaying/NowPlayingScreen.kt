@@ -383,24 +383,45 @@ private fun NowPlayingWideContent(
             )
             Spacer(modifier = Modifier.height(Dimens.SpaceSmall))
 
-            if (lyricsShown && state.lyrics != null) {
-                LyricsPane(
-                    lyrics = state.lyrics,
-                    activeLineIndex = state.activeLyricLineIndex,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-            } else {
-                QueueList(
-                    queue = state.queue,
-                    currentIndex = state.currentIndex,
-                    onJumpTo = actions.onJumpTo,
-                    onRemove = actions.onRemove,
-                    onMoveUp = { index -> actions.onMoveItem(index, index - 1) },
-                    onMoveDown = { index -> actions.onMoveItem(index, index + 1) },
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-            }
+            NowPlayingWidePaneBody(
+                state = state,
+                actions = actions,
+                lyricsShown = lyricsShown,
+                modifier = Modifier.weight(1f, fill = false),
+            )
         }
+    }
+}
+
+/**
+ * Whatever the wide layout's right pane is showing under [NowPlayingRightPaneTabRow] — the inline
+ * queue, or this track's lyrics once the Lyrics tab is selected (M13 Phase 6).
+ *
+ * The pane is the column's one flexible child, so the caller passes its `weight` in [modifier].
+ */
+@Composable
+private fun NowPlayingWidePaneBody(
+    state: NowPlayingUiState,
+    actions: NowPlayingActions,
+    lyricsShown: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (lyricsShown && state.lyrics != null) {
+        LyricsPane(
+            lyrics = state.lyrics,
+            activeLineIndex = state.activeLyricLineIndex,
+            modifier = modifier,
+        )
+    } else {
+        QueueList(
+            queue = state.queue,
+            currentIndex = state.currentIndex,
+            onJumpTo = actions.onJumpTo,
+            onRemove = actions.onRemove,
+            onMoveUp = { index -> actions.onMoveItem(index, index - 1) },
+            onMoveDown = { index -> actions.onMoveItem(index, index + 1) },
+            modifier = modifier,
+        )
     }
 }
 

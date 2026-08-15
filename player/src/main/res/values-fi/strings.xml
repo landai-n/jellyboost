@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Tämä raita ei ole ladatussa tiedostossa.</string>
     <string name="player_message_failed">Toisto epäonnistui.</string>
     <string name="player_message_change_reverted">Muutosta ei voitu ottaa käyttöön — jatketaan kuten ennen.</string>
+    <string name="music_notification_shuffle_on">Poista satunnaistoisto käytöstä</string>
+    <string name="music_notification_shuffle_off">Ota satunnaistoisto käyttöön</string>
+    <string name="music_notification_repeat_off">Toisto pois</string>
+    <string name="music_notification_repeat_all">Toistaa jonoa</string>
+    <string name="music_notification_repeat_one">Toistaa tätä kappaletta</string>
 
     <string name="player_syncplay_group">Ryhmä</string>
     <string name="player_syncplay_waiting">Odotetaan ryhmää…</string>

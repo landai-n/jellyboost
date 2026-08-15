@@ -5,6 +5,7 @@
     <string name="home_section_my_media">আমার মিডিয়া</string>
     <string name="home_section_continue_watching">দেখা চালিয়ে যান</string>
     <string name="home_section_next_up">পরবর্তী</string>
+    <string name="home_section_continue_listening">শোনা চালিয়ে যান</string>
     <string name="home_section_latest">সাম্প্রতিক %1$s</string>
     <string name="home_hero_resume">আবার শুরু করুন</string>
     <string name="home_hero_details">বিস্তারিত</string>

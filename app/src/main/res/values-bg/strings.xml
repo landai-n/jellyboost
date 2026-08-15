@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay групи</string>
     <string name="syncplay_groups_action_active">SyncPlay групи — в група сте</string>
+    <string name="music_refused_in_group">Напуснете групата в SyncPlay, за да пуснете музика на това устройство.</string>
+    <string name="music_track_unavailable">„%1$s“ не можа да се възпроизведе — записът беше пропуснат.</string>
+    <string name="music_queue_unavailable">Нито един от тези записи не можа да се възпроизведе.</string>
+    <string name="music_playback_failed">Възпроизвеждането на „%1$s“ е неуспешно.</string>
+    <string name="music_radio_failed">Радиото от „%1$s“ не можа да започне.</string>
+    <string name="mini_player_play">Пусни</string>
+    <string name="mini_player_pause">Пауза</string>
+    <string name="mini_player_next">Следващо</string>
+    <string name="mini_player_open_now_playing">Отвори текущото възпроизвеждане</string>
 </resources>

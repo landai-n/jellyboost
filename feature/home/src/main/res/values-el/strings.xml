@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Τα μέσα μου</string>
     <string name="home_section_continue_watching">Συνέχιση παρακολούθησης</string>
     <string name="home_section_next_up">Επόμενα</string>
+    <string name="home_section_continue_listening">Συνέχιση ακρόασης</string>
     <string name="home_section_latest">Πιο πρόσφατα: %1$s</string>
     <string name="home_hero_resume">Συνέχεια</string>
     <string name="home_hero_details">Λεπτομέρειες</string>

@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">Групи SyncPlay</string>
     <string name="syncplay_groups_action_active">Групи SyncPlay — ви в групі</string>
+    <string name="music_refused_in_group">Вийдіть із групи SyncPlay, щоб відтворювати музику на цьому пристрої.</string>
+    <string name="music_track_unavailable">Не вдалося відтворити «%1$s» — трек пропущено.</string>
+    <string name="music_queue_unavailable">Не вдалося відтворити жоден із цих треків.</string>
+    <string name="music_playback_failed">Не вдалося відтворити «%1$s».</string>
+    <string name="music_radio_failed">Не вдалося запустити радіо з «%1$s».</string>
+    <string name="mini_player_play">Відтворити</string>
+    <string name="mini_player_pause">Пауза</string>
+    <string name="mini_player_next">Далі</string>
+    <string name="mini_player_open_now_playing">Відкрити поточне відтворення</string>
 </resources>

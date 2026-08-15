@@ -1,6 +1,6 @@
 package dev.jellyboost.data.music
 
-import dev.jellyboost.core.network.di.IoDispatcher
+import dev.jellyboost.core.common.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient

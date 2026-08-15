@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Táto stopa nie je súčasťou stiahnutého súboru.</string>
     <string name="player_message_failed">Prehrávanie zlyhalo.</string>
     <string name="player_message_change_reverted">Zmenu sa nepodarilo použiť — pokračuje sa ako predtým.</string>
+    <string name="music_notification_shuffle_on">Vypnúť náhodné prehrávanie</string>
+    <string name="music_notification_shuffle_off">Zapnúť náhodné prehrávanie</string>
+    <string name="music_notification_repeat_off">Opakovanie vypnuté</string>
+    <string name="music_notification_repeat_all">Opakovanie frontu</string>
+    <string name="music_notification_repeat_one">Opakovanie tejto skladby</string>
 
     <string name="player_syncplay_group">Skupina</string>
     <string name="player_syncplay_waiting">Čaká sa na skupinu…</string>

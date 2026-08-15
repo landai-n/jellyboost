@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -280,86 +281,115 @@ private fun SearchResults(
         //
         // The `contentType`s let the two poster sections reuse each other's nodes as results come
         // and go while the user types, instead of composing a row from scratch each time.
-        if (state.movies.isNotEmpty()) {
-            item(key = SECTION_MOVIES, contentType = ROW_POSTERS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_movies),
-                    items = state.movies,
-                    key = JellyfinItem::id,
-                    contentType = POSTER_CARD_CONTENT_TYPE,
-                ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
-            }
-        }
+        //
+        // `LazyListScope` extensions rather than composables, the `HomeScreen`/`DownloadsScreen`
+        // convention: each one emits several `item`s, which only a lazy scope can do.
+        videoSections(state = state, onItemClick = onItemClick)
+        musicSections(state = state, onItemClick = onItemClick)
+    }
+}
 
-        if (state.series.isNotEmpty()) {
-            item(key = SECTION_SERIES, contentType = ROW_POSTERS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_series),
-                    items = state.series,
-                    key = JellyfinItem::id,
-                    contentType = POSTER_CARD_CONTENT_TYPE,
-                ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
-            }
+/** Movies, series, episodes — the sections search had before M13. */
+private fun LazyListScope.videoSections(
+    state: SearchUiState,
+    onItemClick: (JellyfinItem) -> Unit,
+) {
+    if (state.movies.isNotEmpty()) {
+        item(key = SECTION_MOVIES, contentType = ROW_POSTERS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_movies),
+                items = state.movies,
+                key = JellyfinItem::id,
+                contentType = POSTER_CARD_CONTENT_TYPE,
+            ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
         }
+    }
 
-        if (state.episodes.isNotEmpty()) {
-            item(key = SECTION_EPISODES, contentType = ROW_THUMBS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_episodes),
-                    items = state.episodes,
-                    key = JellyfinItem::id,
-                    contentType = THUMB_CARD_CONTENT_TYPE,
-                ) { item -> ThumbCard(item = item, onClick = { onItemClick(item) }) }
-            }
+    if (state.series.isNotEmpty()) {
+        item(key = SECTION_SERIES, contentType = ROW_POSTERS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_series),
+                items = state.series,
+                key = JellyfinItem::id,
+                contentType = POSTER_CARD_CONTENT_TYPE,
+            ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
         }
+    }
 
-        // M13 Phase 2 — music sections, in the same order the milestone plan lists them.
-        if (state.artists.isNotEmpty()) {
-            item(key = SECTION_ARTISTS, contentType = ROW_ARTISTS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_artists),
-                    items = state.artists,
-                    key = JellyfinItem::id,
-                    contentType = CARD_ARTIST,
-                ) { item -> ArtistCard(item = item, onClick = { onItemClick(item) }) }
-            }
+    if (state.episodes.isNotEmpty()) {
+        item(key = SECTION_EPISODES, contentType = ROW_THUMBS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_episodes),
+                items = state.episodes,
+                key = JellyfinItem::id,
+                contentType = THUMB_CARD_CONTENT_TYPE,
+            ) { item -> ThumbCard(item = item, onClick = { onItemClick(item) }) }
         }
+    }
+}
 
-        if (state.albums.isNotEmpty()) {
-            item(key = SECTION_ALBUMS, contentType = ROW_ALBUMS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_albums),
-                    items = state.albums,
-                    key = JellyfinItem::id,
-                    contentType = CARD_ALBUM,
-                ) { item -> AlbumCard(item = item, onClick = { onItemClick(item) }) }
-            }
+/** M13 Phase 2 — music sections, in the same order the milestone plan lists them. */
+private fun LazyListScope.musicSections(
+    state: SearchUiState,
+    onItemClick: (JellyfinItem) -> Unit,
+) {
+    if (state.artists.isNotEmpty()) {
+        item(key = SECTION_ARTISTS, contentType = ROW_ARTISTS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_artists),
+                items = state.artists,
+                key = JellyfinItem::id,
+                contentType = CARD_ARTIST,
+            ) { item -> ArtistCard(item = item, onClick = { onItemClick(item) }) }
         }
+    }
 
-        if (state.songs.isNotEmpty()) {
-            item(key = SECTION_SONGS, contentType = SECTION_SONGS) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = stringResource(R.string.search_section_songs),
-                        style = JellyfinTypeExtras.SectionTitle,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(horizontal = Dimens.ScreenPadding),
-                    )
-                    state.songs.forEach { song -> SongRow(song = song, onClick = { onItemClick(song) }) }
-                }
-            }
+    if (state.albums.isNotEmpty()) {
+        item(key = SECTION_ALBUMS, contentType = ROW_ALBUMS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_albums),
+                items = state.albums,
+                key = JellyfinItem::id,
+                contentType = CARD_ALBUM,
+            ) { item -> AlbumCard(item = item, onClick = { onItemClick(item) }) }
         }
+    }
 
-        if (state.playlists.isNotEmpty()) {
-            item(key = SECTION_PLAYLISTS, contentType = ROW_POSTERS) {
-                MediaRow(
-                    title = stringResource(R.string.search_section_playlists),
-                    items = state.playlists,
-                    key = JellyfinItem::id,
-                    contentType = POSTER_CARD_CONTENT_TYPE,
-                ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
-            }
+    if (state.songs.isNotEmpty()) {
+        item(key = SECTION_SONGS, contentType = SECTION_SONGS) {
+            SongSection(songs = state.songs, onItemClick = onItemClick)
         }
+    }
+
+    if (state.playlists.isNotEmpty()) {
+        item(key = SECTION_PLAYLISTS, contentType = ROW_POSTERS) {
+            MediaRow(
+                title = stringResource(R.string.search_section_playlists),
+                items = state.playlists,
+                key = JellyfinItem::id,
+                contentType = POSTER_CARD_CONTENT_TYPE,
+            ) { item -> PosterCard(item = item, onClick = { onItemClick(item) }) }
+        }
+    }
+}
+
+/**
+ * The songs section: a titled column of [SongRow]s rather than a `MediaRow`, since a song has no
+ * artwork of its own worth a card.
+ */
+@Composable
+private fun SongSection(
+    songs: List<JellyfinItem>,
+    onItemClick: (JellyfinItem) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.search_section_songs),
+            style = JellyfinTypeExtras.SectionTitle,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(horizontal = Dimens.ScreenPadding),
+        )
+        songs.forEach { song -> SongRow(song = song, onClick = { onItemClick(song) }) }
     }
 }
 

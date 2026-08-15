@@ -53,6 +53,11 @@
     <string name="player_message_track_offline">Cette piste n\'est pas dans le fichier téléchargé.</string>
     <string name="player_message_failed">Échec de la lecture.</string>
     <string name="player_message_change_reverted">Impossible d\'appliquer ce changement — la lecture continue comme avant.</string>
+    <string name="music_notification_shuffle_on">Désactiver la lecture aléatoire</string>
+    <string name="music_notification_shuffle_off">Activer la lecture aléatoire</string>
+    <string name="music_notification_repeat_off">Répétition désactivée</string>
+    <string name="music_notification_repeat_all">Répétition de la file</string>
+    <string name="music_notification_repeat_one">Répétition de cette piste</string>
     <string name="player_syncplay_group">Groupe</string>
     <string name="player_syncplay_waiting">En attente du groupe…</string>
     <string name="player_syncplay_shuffle">Mélanger la file d\'attente</string>

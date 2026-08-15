@@ -6,6 +6,7 @@
     <string name="home_section_my_media">ನನ್ನ ಮಾಧ್ಯಮ</string>
     <string name="home_section_continue_watching">ವೀಕ್ಷಣೆ ಮುಂದುವರಿಸಿ</string>
     <string name="home_section_next_up">ಮುಂದಿನದು</string>
+    <string name="home_section_continue_listening">ಆಲಿಸುವುದನ್ನು ಮುಂದುವರಿಸಿ</string>
     <string name="home_section_latest">ಇತ್ತೀಚಿನ %1$s</string>
     <string name="home_hero_resume">ಮುಂದುವರಿಸಿ</string>
     <string name="home_hero_details">ವಿವರಗಳು</string>

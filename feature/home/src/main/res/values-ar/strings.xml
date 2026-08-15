@@ -6,6 +6,7 @@
     <string name="home_section_my_media">وسائطي</string>
     <string name="home_section_continue_watching">متابعة المشاهدة</string>
     <string name="home_section_next_up">التالي</string>
+    <string name="home_section_continue_listening">متابعة الاستماع</string>
     <string name="home_section_latest">أحدث %1$s</string>
     <string name="home_hero_resume">استئناف</string>
     <string name="home_hero_details">التفاصيل</string>

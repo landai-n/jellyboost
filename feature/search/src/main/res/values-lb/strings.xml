@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmer</string>
     <string name="search_section_series">Serien</string>
     <string name="search_section_episodes">Episoden</string>
+    <string name="search_section_artists">Kënschtler</string>
+    <string name="search_section_albums">Alben</string>
+    <string name="search_section_songs">Lidder</string>
+    <string name="search_section_playlists">Playlisten</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d Resultat</item>
         <item quantity="other">%1$d Resultater</item>

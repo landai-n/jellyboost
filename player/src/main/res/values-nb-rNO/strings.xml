@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Det sporet er ikke i den nedlastede filen.</string>
     <string name="player_message_failed">Avspilling mislyktes.</string>
     <string name="player_message_change_reverted">Kunne ikke bruke endringen — fortsetter som før.</string>
+    <string name="music_notification_shuffle_on">Slå av tilfeldig rekkefølge</string>
+    <string name="music_notification_shuffle_off">Slå på tilfeldig rekkefølge</string>
+    <string name="music_notification_repeat_off">Gjentakelse av</string>
+    <string name="music_notification_repeat_all">Gjentar køen</string>
+    <string name="music_notification_repeat_one">Gjentar dette sporet</string>
 
     <string name="player_syncplay_group">Gruppe</string>
     <string name="player_syncplay_waiting">Venter på gruppen…</string>

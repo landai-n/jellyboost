@@ -236,31 +236,7 @@ private fun AlbumHeader(
             overflow = TextOverflow.Ellipsis,
         )
 
-        val artist = album.artistRefs.firstOrNull()
-        val artistLine = artist?.name ?: album.albumArtist
-        if (artistLine != null) {
-            Text(
-                text = artistLine,
-                style = AlbumArtistStyle,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier =
-                    Modifier
-                        .padding(top = Dimens.SpaceExtraSmall)
-                        .then(
-                            if (artist != null) {
-                                Modifier.clickable {
-                                    onArtistClick(
-                                        JellyfinItem(id = artist.id, name = artist.name, type = ItemType.MUSIC_ARTIST),
-                                    )
-                                }
-                            } else {
-                                Modifier
-                            },
-                        ),
-            )
-        }
+        AlbumArtistLine(album = album, onArtistClick = onArtistClick)
 
         album.productionYear?.let { year ->
             Text(
@@ -273,23 +249,75 @@ private fun AlbumHeader(
 
         Spacer(modifier = Modifier.height(Dimens.SpaceMedium))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
-            val isFavorite = album.userData.isFavorite
-            GlassIconButton(
-                icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                contentDescription =
-                    stringResource(
-                        if (isFavorite) R.string.music_album_remove_favorite else R.string.music_album_add_favorite,
-                    ),
-                onClick = { onToggleFavorite(album) },
-                tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
-            )
-            AlbumDownloadButton(
-                state = downloadState,
-                canDownload = canDownload,
-                onDownload = onDownload,
-            )
-        }
+        AlbumHeaderActions(
+            album = album,
+            downloadState = downloadState,
+            canDownload = canDownload,
+            onToggleFavorite = onToggleFavorite,
+            onDownload = onDownload,
+        )
+    }
+}
+
+/**
+ * The album's artist, under the title — tappable through to that artist when the server named one
+ * with an id, plain text when all we have is the [JellyfinItem.albumArtist] string.
+ */
+@Composable
+private fun AlbumArtistLine(
+    album: JellyfinItem,
+    onArtistClick: (JellyfinItem) -> Unit,
+) {
+    val artist = album.artistRefs.firstOrNull()
+    val artistLine = artist?.name ?: album.albumArtist ?: return
+    Text(
+        text = artistLine,
+        style = AlbumArtistStyle,
+        color = MaterialTheme.colorScheme.primary,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier =
+            Modifier
+                .padding(top = Dimens.SpaceExtraSmall)
+                .then(
+                    if (artist != null) {
+                        Modifier.clickable {
+                            onArtistClick(
+                                JellyfinItem(id = artist.id, name = artist.name, type = ItemType.MUSIC_ARTIST),
+                            )
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
+    )
+}
+
+/** The header's action row: favourite, and [AlbumDownloadButton] for the album as a whole. */
+@Composable
+private fun AlbumHeaderActions(
+    album: JellyfinItem,
+    downloadState: DownloadState,
+    canDownload: Boolean,
+    onToggleFavorite: (JellyfinItem) -> Unit,
+    onDownload: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium)) {
+        val isFavorite = album.userData.isFavorite
+        GlassIconButton(
+            icon = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            contentDescription =
+                stringResource(
+                    if (isFavorite) R.string.music_album_remove_favorite else R.string.music_album_add_favorite,
+                ),
+            onClick = { onToggleFavorite(album) },
+            tint = if (isFavorite) MaterialTheme.colorScheme.primary else GlassIconTint,
+        )
+        AlbumDownloadButton(
+            state = downloadState,
+            canDownload = canDownload,
+            onDownload = onDownload,
+        )
     }
 }
 

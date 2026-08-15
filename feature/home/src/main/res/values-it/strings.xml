@@ -5,6 +5,7 @@
     <string name="home_section_my_media">I miei contenuti</string>
     <string name="home_section_continue_watching">Continua a guardare</string>
     <string name="home_section_next_up">Prossimi episodi</string>
+    <string name="home_section_continue_listening">Continua ad ascoltare</string>
     <string name="home_section_latest">Ultimi arrivi: %1$s</string>
     <string name="home_hero_resume">Riprendi</string>
     <string name="home_hero_details">Dettagli</string>

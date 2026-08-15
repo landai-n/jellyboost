@@ -58,6 +58,11 @@
     <string name="player_message_track_offline">Та нумера није у преузетом фајлу.</string>
     <string name="player_message_failed">Репродукција није успела.</string>
     <string name="player_message_change_reverted">Промена није могла да се примени — наставља се као раније.</string>
+    <string name="music_notification_shuffle_on">Искључи насумично пуштање</string>
+    <string name="music_notification_shuffle_off">Укључи насумично пуштање</string>
+    <string name="music_notification_repeat_off">Понављање искључено</string>
+    <string name="music_notification_repeat_all">Понавља се ред чекања</string>
+    <string name="music_notification_repeat_one">Понавља се ова нумера</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чекање на групу…</string>

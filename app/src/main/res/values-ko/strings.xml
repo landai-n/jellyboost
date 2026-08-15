@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay 그룹</string>
     <string name="syncplay_groups_action_active">SyncPlay 그룹 — 그룹에 참여 중입니다</string>
+    <string name="music_refused_in_group">이 기기에서 음악을 재생하려면 SyncPlay 그룹에서 나가세요.</string>
+    <string name="music_track_unavailable">“%1$s”을(를) 재생할 수 없어 건너뛰었습니다.</string>
+    <string name="music_queue_unavailable">해당 트랙을 하나도 재생할 수 없습니다.</string>
+    <string name="music_playback_failed">“%1$s” 재생에 실패했습니다.</string>
+    <string name="music_radio_failed">“%1$s”에서 라디오를 시작할 수 없습니다.</string>
+    <string name="mini_player_play">재생</string>
+    <string name="mini_player_pause">일시정지</string>
+    <string name="mini_player_next">다음</string>
+    <string name="mini_player_open_now_playing">재생 중 화면 열기</string>
 </resources>

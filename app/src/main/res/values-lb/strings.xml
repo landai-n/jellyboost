@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay-Gruppen</string>
     <string name="syncplay_groups_action_active">SyncPlay-Gruppen – du bass an enger Grupp</string>
+    <string name="music_refused_in_group">Verloss d\'SyncPlay-Grupp fir op dësem Apparat Musek ofzespillen.</string>
+    <string name="music_track_unavailable">„%1$s“ konnt net ofgespillt ginn – iwwersprongen.</string>
+    <string name="music_queue_unavailable">Keen vun dëse Stécker konnt ofgespillt ginn.</string>
+    <string name="music_playback_failed">D\'Ofspille vun „%1$s“ ass feelgeschloen.</string>
+    <string name="music_radio_failed">Radio ausgoend vun „%1$s“ konnt net gestart ginn.</string>
+    <string name="mini_player_play">Ofspillen</string>
+    <string name="mini_player_pause">Paus</string>
+    <string name="mini_player_next">Nächst</string>
+    <string name="mini_player_open_now_playing">Aktuell Widderginn opmaachen</string>
 </resources>

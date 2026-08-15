@@ -47,6 +47,11 @@
     <string name="player_message_track_offline">Trek itu tidak ada dalam file yang diunduh.</string>
     <string name="player_message_failed">Pemutaran gagal.</string>
     <string name="player_message_change_reverted">Perubahan itu tidak dapat diterapkan — melanjutkan seperti sebelumnya.</string>
+    <string name="music_notification_shuffle_on">Matikan pengacakan</string>
+    <string name="music_notification_shuffle_off">Nyalakan pengacakan</string>
+    <string name="music_notification_repeat_off">Ulangi nonaktif</string>
+    <string name="music_notification_repeat_all">Mengulang antrean</string>
+    <string name="music_notification_repeat_one">Mengulang trek ini</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Menunggu grup…</string>
     <string name="player_syncplay_shuffle">Acak antrean</string>

@@ -6,6 +6,10 @@
     <string name="search_section_movies">ਫਿਲਮਾਂ</string>
     <string name="search_section_series">ਸ਼ੋਅ</string>
     <string name="search_section_episodes">ਐਪੀਸੋਡ</string>
+    <string name="search_section_artists">ਕਲਾਕਾਰ</string>
+    <string name="search_section_albums">ਐਲਬਮ</string>
+    <string name="search_section_songs">ਗਾਣੇ</string>
+    <string name="search_section_playlists">ਪਲੇਲਿਸਟ</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d ਨਤੀਜਾ</item>
         <item quantity="other">%1$d ਨਤੀਜੇ</item>

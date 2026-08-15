@@ -5,6 +5,10 @@
     <string name="search_section_movies">Film</string>
     <string name="search_section_series">Acara</string>
     <string name="search_section_episodes">Episode</string>
+    <string name="search_section_artists">Artis</string>
+    <string name="search_section_albums">Album</string>
+    <string name="search_section_songs">Lagu</string>
+    <string name="search_section_playlists">Daftar Putar</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d hasil</item>
     </plurals>

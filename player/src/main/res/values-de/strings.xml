@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Diese Spur ist nicht in der heruntergeladenen Datei enthalten.</string>
     <string name="player_message_failed">Wiedergabe fehlgeschlagen.</string>
     <string name="player_message_change_reverted">Änderung konnte nicht übernommen werden — es geht wie zuvor weiter.</string>
+    <string name="music_notification_shuffle_on">Zufallswiedergabe ausschalten</string>
+    <string name="music_notification_shuffle_off">Zufallswiedergabe einschalten</string>
+    <string name="music_notification_repeat_off">Wiederholung aus</string>
+    <string name="music_notification_repeat_all">Warteschlange wird wiederholt</string>
+    <string name="music_notification_repeat_one">Titel wird wiederholt</string>
 
     <string name="player_syncplay_group">Gruppe</string>
     <string name="player_syncplay_waiting">Warten auf Gruppe …</string>

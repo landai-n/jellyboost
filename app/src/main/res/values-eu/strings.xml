@@ -15,4 +15,13 @@
     <string name="offline_go_online">Konektatu</string>
     <string name="syncplay_groups_action">SyncPlay taldeak</string>
     <string name="syncplay_groups_action_active">SyncPlay taldeak — talde batean zaude</string>
+    <string name="music_refused_in_group">Irten SyncPlay taldetik gailu honetan musika erreproduzitzeko.</string>
+    <string name="music_track_unavailable">Ezin izan da “%1$s” erreproduzitu — saltatu egin da.</string>
+    <string name="music_queue_unavailable">Ezin izan da pista horietako bat ere erreproduzitu.</string>
+    <string name="music_playback_failed">“%1$s”(r)en erreprodukzioak huts egin du.</string>
+    <string name="music_radio_failed">Ezin izan da irratia abiarazi “%1$s”(e)tik.</string>
+    <string name="mini_player_play">Erreproduzitu</string>
+    <string name="mini_player_pause">Pausatu</string>
+    <string name="mini_player_next">Hurrengoa</string>
+    <string name="mini_player_open_now_playing">Ireki orain erreproduzitzen</string>
 </resources>

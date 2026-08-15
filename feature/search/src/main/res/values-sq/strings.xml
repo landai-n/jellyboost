@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filma</string>
     <string name="search_section_series">Seriale</string>
     <string name="search_section_episodes">Episode</string>
+    <string name="search_section_artists">Artistë</string>
+    <string name="search_section_albums">Albume</string>
+    <string name="search_section_songs">Këngë</string>
+    <string name="search_section_playlists">Lista luajtjeje</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d rezultat</item>
         <item quantity="other">%1$d rezultate</item>

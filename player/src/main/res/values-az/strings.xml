@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">Bu trek yüklənmiş faylda yoxdur.</string>
     <string name="player_message_failed">Oxutma uğursuz oldu.</string>
     <string name="player_message_change_reverted">Bu dəyişikliyi tətbiq etmək mümkün olmadı — əvvəlki kimi davam edilir.</string>
+    <string name="music_notification_shuffle_on">Qarışdırmanı söndür</string>
+    <string name="music_notification_shuffle_off">Qarışdırmanı yandır</string>
+    <string name="music_notification_repeat_off">Təkrar deaktiv</string>
+    <string name="music_notification_repeat_all">Növbə təkrarlanır</string>
+    <string name="music_notification_repeat_one">Bu trek təkrarlanır</string>
     <string name="player_syncplay_group">Qrup</string>
     <string name="player_syncplay_waiting">Qrup gözlənilir…</string>
     <string name="player_syncplay_shuffle">Növbəni qarışdır</string>

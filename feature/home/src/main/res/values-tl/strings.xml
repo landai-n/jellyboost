@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Aking Media</string>
     <string name="home_section_continue_watching">Ipagpatuloy ang Panonood</string>
     <string name="home_section_next_up">Susunod</string>
+    <string name="home_section_continue_listening">Ipagpatuloy ang Pakikinig</string>
     <string name="home_section_latest">Pinakabagong %1$s</string>
     <string name="home_hero_resume">Ipagpatuloy</string>
     <string name="home_hero_details">Detalye</string>

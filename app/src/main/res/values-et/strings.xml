@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay rühmad</string>
     <string name="syncplay_groups_action_active">SyncPlay rühmad – oled rühmas</string>
+    <string name="music_refused_in_group">Sellel seadmel muusika esitamiseks lahku SyncPlay rühmast.</string>
+    <string name="music_track_unavailable">Lugu „%1$s” ei õnnestunud esitada – see jäeti vahele.</string>
+    <string name="music_queue_unavailable">Ühtegi neist lugudest ei õnnestunud esitada.</string>
+    <string name="music_playback_failed">Loo „%1$s” esitamine ebaõnnestus.</string>
+    <string name="music_radio_failed">Raadio käivitamine loost „%1$s” ebaõnnestus.</string>
+    <string name="mini_player_play">Esita</string>
+    <string name="mini_player_pause">Peata</string>
+    <string name="mini_player_next">Järgmine</string>
+    <string name="mini_player_open_now_playing">Ava praegu esitatav</string>
 </resources>

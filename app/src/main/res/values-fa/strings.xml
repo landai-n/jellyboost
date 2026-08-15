@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">گروه‌های SyncPlay</string>
     <string name="syncplay_groups_action_active">گروه‌های SyncPlay — شما در یک گروه هستید</string>
+    <string name="music_refused_in_group">برای پخش موسیقی روی این دستگاه، از گروه SyncPlay خارج شوید.</string>
+    <string name="music_track_unavailable">پخش «%1$s» ممکن نبود — رد شد.</string>
+    <string name="music_queue_unavailable">هیچ‌کدام از آن قطعه‌ها پخش نشد.</string>
+    <string name="music_playback_failed">پخش «%1$s» ناموفق بود.</string>
+    <string name="music_radio_failed">شروع رادیو از «%1$s» ممکن نبود.</string>
+    <string name="mini_player_play">پخش</string>
+    <string name="mini_player_pause">توقف موقت</string>
+    <string name="mini_player_next">بعدی</string>
+    <string name="mini_player_open_now_playing">باز کردن در حال پخش</string>
 </resources>

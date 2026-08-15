@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Omat mediat</string>
     <string name="home_section_continue_watching">Jatka katsomista</string>
     <string name="home_section_next_up">Seuraavaksi</string>
+    <string name="home_section_continue_listening">Jatka kuuntelua</string>
     <string name="home_section_latest">Uusimmat %1$s</string>
     <string name="home_hero_resume">Jatka</string>
     <string name="home_hero_details">Tiedot</string>

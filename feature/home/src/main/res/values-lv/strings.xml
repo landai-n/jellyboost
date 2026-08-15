@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Mani mediji</string>
     <string name="home_section_continue_watching">Turpināt skatīties</string>
     <string name="home_section_next_up">Nākamais</string>
+    <string name="home_section_continue_listening">Turpināt klausīties</string>
     <string name="home_section_latest">Jaunākie %1$s</string>
     <string name="home_hero_resume">Turpināt</string>
     <string name="home_hero_details">Detaļas</string>

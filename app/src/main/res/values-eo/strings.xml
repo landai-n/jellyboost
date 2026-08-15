@@ -15,4 +15,13 @@
     <string name="offline_go_online">Konektiĝi rete</string>
     <string name="syncplay_groups_action">SyncPlay-grupoj</string>
     <string name="syncplay_groups_action_active">SyncPlay-grupoj — vi estas en grupo</string>
+    <string name="music_refused_in_group">Forlasu la SyncPlay-grupon por ludi muzikon en ĉi tiu aparato.</string>
+    <string name="music_track_unavailable">Ne eblis ludi “%1$s” — ĝi estis preterlasita.</string>
+    <string name="music_queue_unavailable">Ne eblis ludi iun ajn el tiuj trakoj.</string>
+    <string name="music_playback_failed">Ludado de “%1$s” malsukcesis.</string>
+    <string name="music_radio_failed">Ne eblis komenci radion el “%1$s”.</string>
+    <string name="mini_player_play">Ludi</string>
+    <string name="mini_player_pause">Paŭzo</string>
+    <string name="mini_player_next">Sekva</string>
+    <string name="mini_player_open_now_playing">Malfermi nun ludatan</string>
 </resources>

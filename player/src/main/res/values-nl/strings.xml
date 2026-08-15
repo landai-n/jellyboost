@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Dat spoor zit niet in het gedownloade bestand.</string>
     <string name="player_message_failed">Afspelen mislukt.</string>
     <string name="player_message_change_reverted">Kon die wijziging niet toepassen — gaat verder zoals eerst.</string>
+    <string name="music_notification_shuffle_on">Shuffle uitschakelen</string>
+    <string name="music_notification_shuffle_off">Shuffle inschakelen</string>
+    <string name="music_notification_repeat_off">Herhalen uit</string>
+    <string name="music_notification_repeat_all">Wachtrij herhalen</string>
+    <string name="music_notification_repeat_one">Dit nummer herhalen</string>
 
     <string name="player_syncplay_group">Groep</string>
     <string name="player_syncplay_waiting">Wachten op groep…</string>

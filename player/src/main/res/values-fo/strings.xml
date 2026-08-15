@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Hetta lagið er ikki í niðurhalaðu fíluni.</string>
     <string name="player_message_failed">Avspæling miseydnaðist.</string>
     <string name="player_message_change_reverted">Broytingin kundi ikki verða framd — heldur fram sum áður.</string>
+    <string name="music_notification_shuffle_on">Sløkk rugging</string>
+    <string name="music_notification_shuffle_off">Kveik rugging</string>
+    <string name="music_notification_repeat_off">Endurtaka sløkt</string>
+    <string name="music_notification_repeat_all">Endurtekur bíðirøðina</string>
+    <string name="music_notification_repeat_one">Endurtekur hetta lagið</string>
 
     <string name="player_syncplay_group">Bólkur</string>
     <string name="player_syncplay_waiting">Bíðar eftir bólki…</string>

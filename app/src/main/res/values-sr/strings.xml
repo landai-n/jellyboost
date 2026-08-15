@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay групе</string>
     <string name="syncplay_groups_action_active">SyncPlay групе — у групи сте</string>
+    <string name="music_refused_in_group">Напустите SyncPlay групу да бисте пуштали музику на овом уређају.</string>
+    <string name="music_track_unavailable">Није могуће пустити „%1$s” — нумера је прескочена.</string>
+    <string name="music_queue_unavailable">Ниједну од тих нумера није могуће пустити.</string>
+    <string name="music_playback_failed">Репродукција нумере „%1$s” није успела.</string>
+    <string name="music_radio_failed">Није могуће покренути радио из „%1$s”.</string>
+    <string name="mini_player_play">Пусти</string>
+    <string name="mini_player_pause">Паузирај</string>
+    <string name="mini_player_next">Следећа</string>
+    <string name="mini_player_open_now_playing">Отвори Тренутно се пушта</string>
 </resources>

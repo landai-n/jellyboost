@@ -52,6 +52,11 @@
     <string name="player_message_track_offline">该轨道不在已下载的文件中。</string>
     <string name="player_message_failed">播放失败。</string>
     <string name="player_message_change_reverted">无法应用该更改 — 将按原样继续。</string>
+    <string name="music_notification_shuffle_on">关闭随机播放</string>
+    <string name="music_notification_shuffle_off">开启随机播放</string>
+    <string name="music_notification_repeat_off">关闭循环播放</string>
+    <string name="music_notification_repeat_all">循环播放队列</string>
+    <string name="music_notification_repeat_one">单曲循环播放</string>
 
     <string name="player_syncplay_group">群组</string>
     <string name="player_syncplay_waiting">正在等待群组…</string>

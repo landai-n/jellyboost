@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">این تِرک در فایل دانلودشده موجود نیست.</string>
     <string name="player_message_failed">پخش ناموفق بود.</string>
     <string name="player_message_change_reverted">اعمال آن تغییر ممکن نشد — مانند قبل ادامه می‌دهیم.</string>
+    <string name="music_notification_shuffle_on">خاموش کردن پخش تصادفی</string>
+    <string name="music_notification_shuffle_off">روشن کردن پخش تصادفی</string>
+    <string name="music_notification_repeat_off">تکرار خاموش</string>
+    <string name="music_notification_repeat_all">تکرار صف</string>
+    <string name="music_notification_repeat_one">تکرار این قطعه</string>
 
     <string name="player_syncplay_group">گروه</string>
     <string name="player_syncplay_waiting">در انتظار گروه…</string>

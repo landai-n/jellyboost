@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Saját tartalom</string>
     <string name="home_section_continue_watching">Folytatás</string>
     <string name="home_section_next_up">Következő</string>
+    <string name="home_section_continue_listening">Hallgatás folytatása</string>
     <string name="home_section_latest">Legújabb: %1$s</string>
     <string name="home_hero_resume">Folytatás</string>
     <string name="home_hero_details">Részletek</string>

@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">ეს ტრეკი გადმოწერილ ფაილში არ არის.</string>
     <string name="player_message_failed">დაკვრა ვერ მოხერხდა.</string>
     <string name="player_message_change_reverted">ცვლილების გამოყენება ვერ მოხერხდა — გრძელდება როგორც აქამდე.</string>
+    <string name="music_notification_shuffle_on">შემთხვევითი დაკვრის გამორთვა</string>
+    <string name="music_notification_shuffle_off">შემთხვევითი დაკვრის ჩართვა</string>
+    <string name="music_notification_repeat_off">გამეორება გამორთულია</string>
+    <string name="music_notification_repeat_all">რიგის გამეორება</string>
+    <string name="music_notification_repeat_one">ამ ჩანაწერის გამეორება</string>
     <string name="player_syncplay_group">ჯგუფი</string>
     <string name="player_syncplay_waiting">ჯგუფის მოლოდინში…</string>
     <string name="player_syncplay_shuffle">რიგის არევა</string>

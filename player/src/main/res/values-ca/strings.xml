@@ -53,6 +53,11 @@
     <string name="player_message_track_offline">Aquesta pista no és al fitxer baixat.</string>
     <string name="player_message_failed">Error de reproducció.</string>
     <string name="player_message_change_reverted">No s\'ha pogut aplicar aquest canvi — es continua com abans.</string>
+    <string name="music_notification_shuffle_on">Desactiva l\'ordre aleatori</string>
+    <string name="music_notification_shuffle_off">Activa l\'ordre aleatori</string>
+    <string name="music_notification_repeat_off">Repetició desactivada</string>
+    <string name="music_notification_repeat_all">Repetint la cua</string>
+    <string name="music_notification_repeat_one">Repetint aquesta pista</string>
     <string name="player_syncplay_group">Grup</string>
     <string name="player_syncplay_waiting">Esperant el grup…</string>
     <string name="player_syncplay_shuffle">Aleatoritza la cua</string>

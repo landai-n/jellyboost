@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">Tiu trako ne estas en la elŝutita dosiero.</string>
     <string name="player_message_failed">Ludado malsukcesis.</string>
     <string name="player_message_change_reverted">Ne eblis apliki tiun ŝanĝon — daŭrigas kiel antaŭe.</string>
+    <string name="music_notification_shuffle_on">Malŝalti miksadon</string>
+    <string name="music_notification_shuffle_off">Ŝalti miksadon</string>
+    <string name="music_notification_repeat_off">Ripetado malŝaltita</string>
+    <string name="music_notification_repeat_all">Ripetas la atendovicon</string>
+    <string name="music_notification_repeat_one">Ripetas ĉi tiun trakon</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Atendante la grupon…</string>
     <string name="player_syncplay_shuffle">Miksi atendovicon</string>

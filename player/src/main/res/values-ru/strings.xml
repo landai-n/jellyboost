@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Этой дорожки нет в загруженном файле.</string>
     <string name="player_message_failed">Не удалось воспроизвести.</string>
     <string name="player_message_change_reverted">Не удалось применить это изменение — продолжаем как раньше.</string>
+    <string name="music_notification_shuffle_on">Выключить перемешивание</string>
+    <string name="music_notification_shuffle_off">Включить перемешивание</string>
+    <string name="music_notification_repeat_off">Повтор выключен</string>
+    <string name="music_notification_repeat_all">Повтор очереди</string>
+    <string name="music_notification_repeat_one">Повтор этого трека</string>
 
     <string name="player_syncplay_group">Группа</string>
     <string name="player_syncplay_waiting">Ожидание группы…</string>

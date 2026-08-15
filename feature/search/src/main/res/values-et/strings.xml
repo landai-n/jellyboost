@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmid</string>
     <string name="search_section_series">Sarjad</string>
     <string name="search_section_episodes">Osad</string>
+    <string name="search_section_artists">Esitajad</string>
+    <string name="search_section_albums">Albumid</string>
+    <string name="search_section_songs">Lood</string>
+    <string name="search_section_playlists">Esitusloendid</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d tulemus</item>
         <item quantity="other">%1$d tulemust</item>

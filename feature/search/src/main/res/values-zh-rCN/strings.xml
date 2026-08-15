@@ -6,6 +6,10 @@
     <string name="search_section_movies">电影</string>
     <string name="search_section_series">剧集</string>
     <string name="search_section_episodes">集数</string>
+    <string name="search_section_artists">艺术家</string>
+    <string name="search_section_albums">专辑</string>
+    <string name="search_section_songs">歌曲</string>
+    <string name="search_section_playlists">播放列表</string>
     <plurals name="search_result_count">
         <item quantity="other">%1$d 个结果</item>
     </plurals>

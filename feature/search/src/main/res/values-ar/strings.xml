@@ -6,6 +6,10 @@
     <string name="search_section_movies">الأفلام</string>
     <string name="search_section_series">المسلسلات</string>
     <string name="search_section_episodes">الحلقات</string>
+    <string name="search_section_artists">الفنانون</string>
+    <string name="search_section_albums">الألبومات</string>
+    <string name="search_section_songs">الأغاني</string>
+    <string name="search_section_playlists">قوائم التشغيل</string>
     <plurals name="search_result_count">
         <item quantity="zero">لا نتائج</item>
         <item quantity="one">نتيجة واحدة</item>

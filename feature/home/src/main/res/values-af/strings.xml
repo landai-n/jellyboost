@@ -6,6 +6,7 @@
     <string name="home_section_my_media">My Media</string>
     <string name="home_section_continue_watching">Gaan voort met kyk</string>
     <string name="home_section_next_up">Volgende</string>
+    <string name="home_section_continue_listening">Gaan voort met luister</string>
     <string name="home_section_latest">Nuutste %1$s</string>
     <string name="home_hero_resume">Hervat</string>
     <string name="home_hero_details">Besonderhede</string>

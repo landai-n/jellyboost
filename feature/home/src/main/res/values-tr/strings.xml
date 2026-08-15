@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Medyalarım</string>
     <string name="home_section_continue_watching">İzlemeye Devam Et</string>
     <string name="home_section_next_up">Sırada</string>
+    <string name="home_section_continue_listening">Dinlemeye Devam Et</string>
     <string name="home_section_latest">En Yeni %1$s</string>
     <string name="home_hero_resume">Devam et</string>
     <string name="home_hero_details">Ayrıntılar</string>

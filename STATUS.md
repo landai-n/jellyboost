@@ -14,6 +14,18 @@ baseline profile still compiles into the release APK (`assets/dexopt/baseline.pr
 
 ## Planned milestone: M13 — Music (approved 2026-08-05; all 6 phases landed, code complete; device DoD owed)
 
+**2026-08-15 — rebased onto post-audit main and merged.** The branch predated
+the audit remediation and the 2026-08-08 history rewrite; landing it meant a
+10-commit rebase onto the rewritten `main` (DECISIONS 2026-08-15): the music
+DB columns renumbered v9 → v10 (`@AutoMigration(9, 10)`, the index audit had
+taken v9), conflict resolutions consistently kept main's audit refactors with
+the music additions rebuilt on top, and the tightened gates were satisfied for
+real — targeted suppressions where width is contractual, five composables
+decomposed, moved-API imports fixed (`MainDispatcher`, `IoDispatcher`,
+`Ticks`), the Media3 `SessionError` constant, snackbar strings resolved via
+`stringResource` at composition, and all 19 new music strings translated into
+every shipped locale. Device DoD still owed (unchanged).
+
 Third user-approved scope extension (after M11/M12): a full music experience —
 artist/album/playlist browsing, background playback with notification/lock-screen
 controls, a local queue with shuffle/repeat, music search, offline music
@@ -38,9 +50,9 @@ DECISIONS "2026-08-09 — M13 review fix wave"). Three fixes get device
 spot-checks appended to `docs/notes/music-m13-dod-walk.md` (R1–R3).
 
 - **Phase 0 (governance docs)** — landed (`00d7204b`).
-- **Phase 1 (domain + mappers + DB v9)** — landed (`30962715`): ItemType music
+- **Phase 1 (domain + mappers + DB v10)** — landed (`30962715`): ItemType music
   kinds, JellyfinItem music fields + ArtistRef, CollectionKind.MUSIC (not yet
-  SUPPORTED), ItemEntity v9 albumId/albumArtistId + tracksOfAlbum/
+  SUPPORTED), ItemEntity v10 albumId/albumArtistId + tracksOfAlbum/
   albumsOfArtist DAO queries. Gate green, +9 tests, no behaviour change.
 - **Phase 2 (browse UI + repository surface)** — landed (`bead1d10`): new
   `:feature:music` (MusicLibrary tabs / AlbumDetail / ArtistDetail /
@@ -99,7 +111,7 @@ spot-checks appended to `docs/notes/music-m13-dod-walk.md` (R1–R3).
   track `AlbumArtist - Album - 04 - Title` (the plain form collides for music);
   `DownloadedMetadataRefresher` refreshes album/artist parents;
   `ItemParentRefs` + the delete cascade's prune now walk `albumId`/`albumArtistId`
-  (projection only — the columns are v9, no schema change); the Downloads screen
+  (projection only — the columns are v10, no schema change); the Downloads screen
   groups tracks under their album through the existing `seriesName` heading
   column; `AlbumDetailScreen` gained a Download control and
   `ArtistDetail`/`PlaylistDetail` the `observeStates()` badge wiring they were

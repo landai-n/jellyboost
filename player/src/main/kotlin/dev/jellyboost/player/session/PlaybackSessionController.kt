@@ -2,8 +2,8 @@ package dev.jellyboost.player.session
 
 import dev.jellyboost.core.common.AppError
 import dev.jellyboost.core.common.AppResult
+import dev.jellyboost.core.common.di.MainDispatcher
 import dev.jellyboost.player.cast.CastStatusHolder
-import dev.jellyboost.player.di.MainDispatcher
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.ticksToMillis
 import dev.jellyboost.player.report.PlaybackReporter
@@ -40,6 +40,11 @@ import javax.inject.Singleton
 @Singleton
 internal class PlaybackSessionController
     @Inject
+    // Five collaborators plus the two M13 handover seams (the arbiter and the dispatcher its
+    // relinquish closure marshals player calls to), both defaulted so tests construct the
+    // pre-M13 behaviour. Each is a distinct seam; bundling any pair would invent a type with
+    // no meaning of its own — the PlayerViewModel precedent (DECISIONS.md 2026-08-03).
+    @Suppress("LongParameterList")
     constructor(
         private val resolver: PlaybackSourceResolver,
         private val mediaSourceFactory: ExoMediaSourceFactory,

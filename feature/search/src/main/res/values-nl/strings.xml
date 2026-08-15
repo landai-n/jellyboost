@@ -6,6 +6,10 @@
     <string name="search_section_movies">Films</string>
     <string name="search_section_series">Series</string>
     <string name="search_section_episodes">Afleveringen</string>
+    <string name="search_section_artists">Artiesten</string>
+    <string name="search_section_albums">Albums</string>
+    <string name="search_section_songs">Nummers</string>
+    <string name="search_section_playlists">Afspeellijsten</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d resultaat</item>
         <item quantity="other">%1$d resultaten</item>

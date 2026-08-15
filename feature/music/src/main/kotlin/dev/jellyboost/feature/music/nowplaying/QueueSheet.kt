@@ -233,7 +233,6 @@ private fun QueueTrackRow(
 ) {
     val background =
         if (isPlaying) MaterialTheme.colorScheme.primary.copy(alpha = NOW_PLAYING_TINT_ALPHA) else Color.Transparent
-    val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
 
     Row(
         modifier =
@@ -246,36 +245,9 @@ private fun QueueTrackRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMedium),
     ) {
-        JellyfinAsyncImage(
-            url = track.primaryImageUrl,
-            contentDescription = null,
-            modifier =
-                Modifier
-                    .width(ROW_THUMB_SIZE)
-                    .heightIn(max = ROW_THUMB_SIZE)
-                    .clip(thumbShape)
-                    .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, thumbShape),
-            contentScale = ContentScale.Crop,
-        )
+        QueueTrackThumb(url = track.primaryImageUrl)
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = track.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            track.displaySubtitle?.let { subtitle ->
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
+        QueueTrackLabels(track = track, modifier = Modifier.weight(1f))
 
         if (isPlaying) {
             Icon(
@@ -285,24 +257,85 @@ private fun QueueTrackRow(
             )
         }
 
-        IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowUpward,
-                contentDescription = stringResource(R.string.music_now_playing_queue_move_up),
+        QueueRowActions(
+            canMoveUp = canMoveUp,
+            canMoveDown = canMoveDown,
+            onMoveUp = onMoveUp,
+            onMoveDown = onMoveDown,
+            onRemove = onRemove,
+        )
+    }
+}
+
+/** The row's leading artwork — the same hairline-bordered square the rest of the sheet's art uses. */
+@Composable
+private fun QueueTrackThumb(url: String?) {
+    val thumbShape = RoundedCornerShape(Dimens.CardCornerRadius)
+    JellyfinAsyncImage(
+        url = url,
+        contentDescription = null,
+        modifier =
+            Modifier
+                .width(ROW_THUMB_SIZE)
+                .heightIn(max = ROW_THUMB_SIZE)
+                .clip(thumbShape)
+                .border(GlassDefaults.HairlineWidth, GlassDefaults.ArtworkInnerHairline, thumbShape),
+        contentScale = ContentScale.Crop,
+    )
+}
+
+/** Title over subtitle — the row's one flexible column, so the caller passes its `weight`. */
+@Composable
+private fun QueueTrackLabels(
+    track: JellyfinItem,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = track.name,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        track.displaySubtitle?.let { subtitle ->
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowDownward,
-                contentDescription = stringResource(R.string.music_now_playing_queue_move_down),
-            )
-        }
-        IconButton(onClick = onRemove) {
-            Icon(
-                imageVector = Icons.Outlined.Delete,
-                contentDescription = stringResource(R.string.music_now_playing_queue_remove),
-            )
-        }
+    }
+}
+
+/** Reorder up/down and remove — the trailing controls every queue row carries. */
+@Composable
+private fun QueueRowActions(
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    IconButton(onClick = onMoveUp, enabled = canMoveUp) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowUpward,
+            contentDescription = stringResource(R.string.music_now_playing_queue_move_up),
+        )
+    }
+    IconButton(onClick = onMoveDown, enabled = canMoveDown) {
+        Icon(
+            imageVector = Icons.Outlined.ArrowDownward,
+            contentDescription = stringResource(R.string.music_now_playing_queue_move_down),
+        )
+    }
+    IconButton(onClick = onRemove) {
+        Icon(
+            imageVector = Icons.Outlined.Delete,
+            contentDescription = stringResource(R.string.music_now_playing_queue_remove),
+        )
     }
 }
 

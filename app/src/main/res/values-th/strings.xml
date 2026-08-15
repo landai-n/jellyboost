@@ -15,4 +15,13 @@
     <string name="offline_go_online">กลับสู่ออนไลน์</string>
     <string name="syncplay_groups_action">กลุ่ม SyncPlay</string>
     <string name="syncplay_groups_action_active">กลุ่ม SyncPlay — คุณอยู่ในกลุ่มแล้ว</string>
+    <string name="music_refused_in_group">ออกจากกลุ่ม SyncPlay เพื่อเล่นเพลงบนอุปกรณ์นี้</string>
+    <string name="music_track_unavailable">เล่น “%1$s” ไม่ได้ — ข้ามไปแล้ว</string>
+    <string name="music_queue_unavailable">เล่นแทร็กเหล่านั้นไม่ได้เลย</string>
+    <string name="music_playback_failed">การเล่น “%1$s” ล้มเหลว</string>
+    <string name="music_radio_failed">เริ่มวิทยุจาก “%1$s” ไม่ได้</string>
+    <string name="mini_player_play">เล่น</string>
+    <string name="mini_player_pause">หยุดชั่วคราว</string>
+    <string name="mini_player_next">ถัดไป</string>
+    <string name="mini_player_open_now_playing">เปิดหน้ากำลังเล่น</string>
 </resources>

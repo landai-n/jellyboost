@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">तो ट्रॅक डाउनलोड केलेल्या फाइलमध्ये नाही.</string>
     <string name="player_message_failed">प्लेबॅक अयशस्वी झाला.</string>
     <string name="player_message_change_reverted">तो बदल लागू करता आला नाही — पूर्वीप्रमाणेच सुरू आहे.</string>
+    <string name="music_notification_shuffle_on">शफल बंद करा</string>
+    <string name="music_notification_shuffle_off">शफल सुरू करा</string>
+    <string name="music_notification_repeat_off">पुनरावृत्ती बंद</string>
+    <string name="music_notification_repeat_all">रांगेची पुनरावृत्ती होत आहे</string>
+    <string name="music_notification_repeat_one">या ट्रॅकची पुनरावृत्ती होत आहे</string>
 
     <string name="player_syncplay_group">गट</string>
     <string name="player_syncplay_waiting">गटाची वाट पाहत आहे…</string>

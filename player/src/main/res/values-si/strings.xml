@@ -50,6 +50,11 @@
     <string name="player_message_track_offline">එම මාර්ගය බාගත කළ ගොනුවේ නොමැත.</string>
     <string name="player_message_failed">වාදනය අසාර්ථක විය.</string>
     <string name="player_message_change_reverted">එම වෙනස යෙදිය නොහැකි විය — පෙර පරිදිම දිගටම ක්‍රියාත්මක වේ.</string>
+    <string name="music_notification_shuffle_on">අහඹු වාදනය අක්‍රිය කරන්න</string>
+    <string name="music_notification_shuffle_off">අහඹු වාදනය සක්‍රිය කරන්න</string>
+    <string name="music_notification_repeat_off">පුනරාවර්තනය අක්‍රියයි</string>
+    <string name="music_notification_repeat_all">පෝලිම පුනරාවර්තනය වේ</string>
+    <string name="music_notification_repeat_one">මෙම ඛණ්ඩය පුනරාවර්තනය වේ</string>
     <string name="player_syncplay_group">කණ්ඩායම</string>
     <string name="player_syncplay_waiting">කණ්ඩායම සඳහා රැඳී සිටිමින්…</string>
     <string name="player_syncplay_shuffle">පෝලිම අහඹු කරන්න</string>

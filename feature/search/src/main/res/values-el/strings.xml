@@ -6,6 +6,10 @@
     <string name="search_section_movies">Ταινίες</string>
     <string name="search_section_series">Σειρές</string>
     <string name="search_section_episodes">Επεισόδια</string>
+    <string name="search_section_artists">Καλλιτέχνες</string>
+    <string name="search_section_albums">Άλμπουμ</string>
+    <string name="search_section_songs">Τραγούδια</string>
+    <string name="search_section_playlists">Λίστες αναπαραγωγής</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d αποτέλεσμα</item>
         <item quantity="other">%1$d αποτελέσματα</item>

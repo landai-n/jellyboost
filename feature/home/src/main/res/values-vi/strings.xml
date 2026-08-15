@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Media của tôi</string>
     <string name="home_section_continue_watching">Tiếp tục xem</string>
     <string name="home_section_next_up">Tiếp theo</string>
+    <string name="home_section_continue_listening">Tiếp tục nghe</string>
     <string name="home_section_latest">%1$s mới nhất</string>
     <string name="home_hero_resume">Tiếp tục</string>
     <string name="home_hero_details">Chi tiết</string>

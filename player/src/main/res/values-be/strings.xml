@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Гэтай дарожкі няма ў спампаваным файле.</string>
     <string name="player_message_failed">Прайграванне не ўдалося.</string>
     <string name="player_message_change_reverted">Не ўдалося прымяніць гэту змену — працягваем як раней.</string>
+    <string name="music_notification_shuffle_on">Выключыць перамешванне</string>
+    <string name="music_notification_shuffle_off">Уключыць перамешванне</string>
+    <string name="music_notification_repeat_off">Паўтор выключаны</string>
+    <string name="music_notification_repeat_all">Паўтор усёй чаргі</string>
+    <string name="music_notification_repeat_one">Паўтор гэтага трэка</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Чаканне групы…</string>

@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay گروپس</string>
     <string name="syncplay_groups_action_active">SyncPlay گروپس — آپ ایک گروپ میں ہیں</string>
+    <string name="music_refused_in_group">اس ڈیوائس پر موسیقی چلانے کے لیے SyncPlay گروپ چھوڑیں۔</string>
+    <string name="music_track_unavailable">“%1$s” نہیں چل سکا — اسے چھوڑ دیا گیا۔</string>
+    <string name="music_queue_unavailable">ان میں سے کوئی بھی ٹریک نہیں چل سکا۔</string>
+    <string name="music_playback_failed">“%1$s” کا پلے بیک ناکام ہوگیا۔</string>
+    <string name="music_radio_failed">“%1$s” سے ریڈیو شروع نہیں ہو سکا۔</string>
+    <string name="mini_player_play">چلائیں</string>
+    <string name="mini_player_pause">موقوف کریں</string>
+    <string name="mini_player_next">اگلا</string>
+    <string name="mini_player_open_now_playing">ابھی چل رہا ہے کھولیں</string>
 </resources>

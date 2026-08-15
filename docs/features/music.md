@@ -70,7 +70,7 @@ pre-M13 player test still passes unchanged.
 `artistRefs: List<ArtistRef>`) rather than a second, music-specific model — "UI never sees DTO,
 online and offline produce identical `JellyfinItem`" is the contract every other feature already
 relies on, and a parallel model would mean two mini-players, two card kinds, two offline paths.
-`ItemType` gained `AUDIO`/`MUSIC_ALBUM`/`MUSIC_ARTIST`/`PLAYLIST`; `ItemEntity` (Room v9) gained two
+`ItemType` gained `AUDIO`/`MUSIC_ALBUM`/`MUSIC_ARTIST`/`PLAYLIST`; `ItemEntity` (Room v10) gained two
 nullable, indexed, **query-only** columns (`albumId`, `albumArtistId`) so offline can answer "tracks
 of this album" and "albums of this artist" — the domain item itself still rebuilds from the stored
 DTO blob, so the migration stayed a plain additive `@AutoMigration(8, 9)`.

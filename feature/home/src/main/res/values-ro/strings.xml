@@ -5,6 +5,7 @@
     <string name="home_section_my_media">Conținutul meu</string>
     <string name="home_section_continue_watching">Continuă vizionarea</string>
     <string name="home_section_next_up">Urmează</string>
+    <string name="home_section_continue_listening">Continuă ascultarea</string>
     <string name="home_section_latest">Cele mai recente din %1$s</string>
     <string name="home_hero_resume">Continuă</string>
     <string name="home_hero_details">Detalii</string>

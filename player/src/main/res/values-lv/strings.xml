@@ -58,6 +58,11 @@
     <string name="player_message_track_offline">Šis celiņš nav lejupielādētajā failā.</string>
     <string name="player_message_failed">Atskaņošana neizdevās.</string>
     <string name="player_message_change_reverted">Izmaiņas neizdevās lietot — turpinām kā iepriekš.</string>
+    <string name="music_notification_shuffle_on">Izslēgt jaukto secību</string>
+    <string name="music_notification_shuffle_off">Ieslēgt jaukto secību</string>
+    <string name="music_notification_repeat_off">Atkārtošana izslēgta</string>
+    <string name="music_notification_repeat_all">Atkārto rindu</string>
+    <string name="music_notification_repeat_one">Atkārto šo ierakstu</string>
 
     <string name="player_syncplay_group">Grupa</string>
     <string name="player_syncplay_waiting">Gaida grupu…</string>

@@ -15,4 +15,13 @@
     <string name="offline_go_online">Revino online</string>
     <string name="syncplay_groups_action">Grupuri SyncPlay</string>
     <string name="syncplay_groups_action_active">Grupuri SyncPlay — ești într-un grup</string>
+    <string name="music_refused_in_group">Părăsește grupul SyncPlay pentru a reda muzică pe acest dispozitiv.</string>
+    <string name="music_track_unavailable">Nu s-a putut reda „%1$s” — piesa a fost omisă.</string>
+    <string name="music_queue_unavailable">Niciuna dintre acele piese nu a putut fi redată.</string>
+    <string name="music_playback_failed">Redarea piesei „%1$s” a eșuat.</string>
+    <string name="music_radio_failed">Nu s-a putut porni radioul de la „%1$s”.</string>
+    <string name="mini_player_play">Redă</string>
+    <string name="mini_player_pause">Pauză</string>
+    <string name="mini_player_next">Următoarea</string>
+    <string name="mini_player_open_now_playing">Deschide Se redă acum</string>
 </resources>

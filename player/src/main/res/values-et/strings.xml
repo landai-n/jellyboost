@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">See rada pole allalaaditud failis.</string>
     <string name="player_message_failed">Esitamine ebaõnnestus.</string>
     <string name="player_message_change_reverted">Muudatust ei saanud rakendada — jätkatakse nagu enne.</string>
+    <string name="music_notification_shuffle_on">Lülita juhuesitus välja</string>
+    <string name="music_notification_shuffle_off">Lülita juhuesitus sisse</string>
+    <string name="music_notification_repeat_off">Kordamine väljas</string>
+    <string name="music_notification_repeat_all">Kordab järjekorda</string>
+    <string name="music_notification_repeat_one">Kordab seda lugu</string>
 
     <string name="player_syncplay_group">Grupp</string>
     <string name="player_syncplay_waiting">Ootan gruppi…</string>

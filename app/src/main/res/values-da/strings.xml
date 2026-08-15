@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay-grupper</string>
     <string name="syncplay_groups_action_active">SyncPlay-grupper – du er i en gruppe</string>
+    <string name="music_refused_in_group">Forlad SyncPlay-gruppen for at afspille musik på denne enhed.</string>
+    <string name="music_track_unavailable">Kunne ikke afspille “%1$s” – nummeret blev sprunget over.</string>
+    <string name="music_queue_unavailable">Kunne ikke afspille nogen af de numre.</string>
+    <string name="music_playback_failed">Afspilning af “%1$s” mislykkedes.</string>
+    <string name="music_radio_failed">Kunne ikke starte radio fra “%1$s”.</string>
+    <string name="mini_player_play">Afspil</string>
+    <string name="mini_player_pause">Pause</string>
+    <string name="mini_player_next">Næste</string>
+    <string name="mini_player_open_now_playing">Åbn Afspilles nu</string>
 </resources>

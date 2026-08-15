@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmer</string>
     <string name="search_section_series">Serier</string>
     <string name="search_section_episodes">Avsnitt</string>
+    <string name="search_section_artists">Artister</string>
+    <string name="search_section_albums">Album</string>
+    <string name="search_section_songs">Låtar</string>
+    <string name="search_section_playlists">Spellistor</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d träff</item>
         <item quantity="other">%1$d träffar</item>

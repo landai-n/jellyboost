@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay-ryhmät</string>
     <string name="syncplay_groups_action_active">SyncPlay-ryhmät – olet ryhmässä</string>
+    <string name="music_refused_in_group">Poistu SyncPlay-ryhmästä toistaaksesi musiikkia tällä laitteella.</string>
+    <string name="music_track_unavailable">Kappaletta ”%1$s” ei voitu toistaa – se ohitettiin.</string>
+    <string name="music_queue_unavailable">Yhtäkään noista kappaleista ei voitu toistaa.</string>
+    <string name="music_playback_failed">Kappaleen ”%1$s” toisto epäonnistui.</string>
+    <string name="music_radio_failed">Radion aloitus kappaleesta ”%1$s” epäonnistui.</string>
+    <string name="mini_player_play">Toista</string>
+    <string name="mini_player_pause">Keskeytä</string>
+    <string name="mini_player_next">Seuraava</string>
+    <string name="mini_player_open_now_playing">Avaa nyt toistettava</string>
 </resources>

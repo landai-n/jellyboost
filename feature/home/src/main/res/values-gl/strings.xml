@@ -5,6 +5,7 @@
     <string name="home_section_my_media">O Meu Contido</string>
     <string name="home_section_continue_watching">Continuar Vendo</string>
     <string name="home_section_next_up">A Seguir</string>
+    <string name="home_section_continue_listening">Continuar Escoitando</string>
     <string name="home_section_latest">Últimos en %1$s</string>
     <string name="home_hero_resume">Retomar</string>
     <string name="home_hero_details">Detalles</string>

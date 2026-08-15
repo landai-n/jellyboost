@@ -6,6 +6,7 @@
     <string name="home_section_my_media">Менің медиам</string>
     <string name="home_section_continue_watching">Қарауды жалғастыру</string>
     <string name="home_section_next_up">Келесі</string>
+    <string name="home_section_continue_listening">Тыңдауды жалғастыру</string>
     <string name="home_section_latest">Соңғы %1$s</string>
     <string name="home_hero_resume">Жалғастыру</string>
     <string name="home_hero_details">Толығырақ</string>

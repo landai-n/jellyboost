@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay топтары</string>
     <string name="syncplay_groups_action_active">SyncPlay топтары — сіз топ ішіндесіз</string>
+    <string name="music_refused_in_group">Осы құрылғыда музыка ойнату үшін SyncPlay тобынан шығыңыз.</string>
+    <string name="music_track_unavailable">«%1$s» ойнатылмады — трек өткізіп жіберілді.</string>
+    <string name="music_queue_unavailable">Ол тректердің ешқайсысы ойнатылмады.</string>
+    <string name="music_playback_failed">«%1$s» ойнату сәтсіз аяқталды.</string>
+    <string name="music_radio_failed">«%1$s» негізінде радио іске қосылмады.</string>
+    <string name="mini_player_play">Ойнату</string>
+    <string name="mini_player_pause">Кідірту</string>
+    <string name="mini_player_next">Келесі</string>
+    <string name="mini_player_open_now_playing">Қазір ойнатылуда бетін ашу</string>
 </resources>

@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">Тухайн трек татсан файлд алга байна.</string>
     <string name="player_message_failed">Тоглуулалт амжилтгүй боллоо.</string>
     <string name="player_message_change_reverted">Энэ өөрчлөлтийг хэрэгжүүлж чадсангүй — өмнөх байдлаар үргэлжилж байна.</string>
+    <string name="music_notification_shuffle_on">Холихыг унтраах</string>
+    <string name="music_notification_shuffle_off">Холихыг асаах</string>
+    <string name="music_notification_repeat_off">Давталт унтраалттай</string>
+    <string name="music_notification_repeat_all">Дарааллыг давтаж байна</string>
+    <string name="music_notification_repeat_one">Энэ бичлэгийг давтаж байна</string>
 
     <string name="player_syncplay_group">Бүлэг</string>
     <string name="player_syncplay_waiting">Бүлгийг хүлээж байна…</string>

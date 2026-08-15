@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Цієї доріжки немає у завантаженому файлі.</string>
     <string name="player_message_failed">Не вдалося відтворити.</string>
     <string name="player_message_change_reverted">Не вдалося застосувати цю зміну — продовжуємо, як раніше.</string>
+    <string name="music_notification_shuffle_on">Вимкнути перемішування</string>
+    <string name="music_notification_shuffle_off">Увімкнути перемішування</string>
+    <string name="music_notification_repeat_off">Повтор вимкнено</string>
+    <string name="music_notification_repeat_all">Повтор черги</string>
+    <string name="music_notification_repeat_one">Повтор цього треку</string>
 
     <string name="player_syncplay_group">Група</string>
     <string name="player_syncplay_waiting">Очікування групи…</string>

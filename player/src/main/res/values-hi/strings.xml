@@ -55,6 +55,11 @@
     <string name="player_message_track_offline">वह ट्रैक डाउनलोड की गई फ़ाइल में नहीं है।</string>
     <string name="player_message_failed">प्लेबैक विफल हुआ।</string>
     <string name="player_message_change_reverted">वह बदलाव लागू नहीं हो सका — पहले की तरह जारी है।</string>
+    <string name="music_notification_shuffle_on">शफ़ल बंद करें</string>
+    <string name="music_notification_shuffle_off">शफ़ल चालू करें</string>
+    <string name="music_notification_repeat_off">दोहराना बंद</string>
+    <string name="music_notification_repeat_all">कतार दोहराई जा रही है</string>
+    <string name="music_notification_repeat_one">यह ट्रैक दोहराया जा रहा है</string>
 
     <string name="player_syncplay_group">समूह</string>
     <string name="player_syncplay_waiting">समूह की प्रतीक्षा की जा रही है…</string>

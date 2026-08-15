@@ -53,6 +53,11 @@
     <string name="player_message_track_offline">Essa faixa não está no arquivo baixado.</string>
     <string name="player_message_failed">Falha na reprodução.</string>
     <string name="player_message_change_reverted">Não foi possível aplicar essa alteração — continuando como antes.</string>
+    <string name="music_notification_shuffle_on">Desativar modo aleatório</string>
+    <string name="music_notification_shuffle_off">Ativar modo aleatório</string>
+    <string name="music_notification_repeat_off">Repetição desativada</string>
+    <string name="music_notification_repeat_all">Repetindo a fila</string>
+    <string name="music_notification_repeat_one">Repetindo esta faixa</string>
     <string name="player_syncplay_group">Grupo</string>
     <string name="player_syncplay_waiting">Aguardando o grupo…</string>
     <string name="player_syncplay_shuffle">Aleatorizar fila</string>

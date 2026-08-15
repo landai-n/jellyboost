@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay ގްރޫޕްތައް</string>
     <string name="syncplay_groups_action_active">SyncPlay ގްރޫޕްތައް — ތިޔަ ހުރީ ގްރޫޕެއްގައި</string>
+    <string name="music_refused_in_group">މި ޑިވައިސްގައި މިއުޒިކް ޖެހުމަށް SyncPlay ގްރޫޕުން ނުކުންނަވާ.</string>
+    <string name="music_track_unavailable">“%1$s” ނުޖެހުނު — ދޫކޮށްލެވިއްޖެ.</string>
+    <string name="music_queue_unavailable">އެ ޓްރެކްތަކުން އެއްވެސް އެއްޗެއް ނުޖެހުނު.</string>
+    <string name="music_playback_failed">“%1$s” ޕްލޭބެކް ފެއިލްވެއްޖެ.</string>
+    <string name="music_radio_failed">“%1$s” އިން ރޭޑިއޯ ފެށޭގޮތެއް ނުވި.</string>
+    <string name="mini_player_play">ޕްލޭ</string>
+    <string name="mini_player_pause">މެދުކަނޑާލާ</string>
+    <string name="mini_player_next">ދެން</string>
+    <string name="mini_player_open_now_playing">މިހާރު ޖަހަނީ ހުޅުވާ</string>
 </resources>

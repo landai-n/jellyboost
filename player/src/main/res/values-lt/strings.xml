@@ -61,6 +61,11 @@
     <string name="player_message_track_offline">Šio takelio nėra atsisiųstame faile.</string>
     <string name="player_message_failed">Leidimas nepavyko.</string>
     <string name="player_message_change_reverted">Pakeitimo pritaikyti nepavyko — tęsiama kaip anksčiau.</string>
+    <string name="music_notification_shuffle_on">Išjungti maišymą</string>
+    <string name="music_notification_shuffle_off">Įjungti maišymą</string>
+    <string name="music_notification_repeat_off">Kartojimas išjungtas</string>
+    <string name="music_notification_repeat_all">Kartojama eilė</string>
+    <string name="music_notification_repeat_one">Kartojamas šis kūrinys</string>
 
     <string name="player_syncplay_group">Grupė</string>
     <string name="player_syncplay_waiting">Laukiama grupės…</string>

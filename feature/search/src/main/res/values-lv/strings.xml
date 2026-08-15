@@ -6,6 +6,10 @@
     <string name="search_section_movies">Filmas</string>
     <string name="search_section_series">Seriāli</string>
     <string name="search_section_episodes">Sērijas</string>
+    <string name="search_section_artists">Izpildītāji</string>
+    <string name="search_section_albums">Albumi</string>
+    <string name="search_section_songs">Dziesmas</string>
+    <string name="search_section_playlists">Atskaņošanas saraksti</string>
     <plurals name="search_result_count">
         <item quantity="zero">%1$d rezultātu</item>
         <item quantity="one">%1$d rezultāts</item>

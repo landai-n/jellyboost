@@ -6,6 +6,10 @@
     <string name="search_section_movies">ಚಲನಚಿತ್ರಗಳು</string>
     <string name="search_section_series">ಶೋಗಳು</string>
     <string name="search_section_episodes">ಸಂಚಿಕೆಗಳು</string>
+    <string name="search_section_artists">ಕಲಾವಿದರು</string>
+    <string name="search_section_albums">ಆಲ್ಬಂಗಳು</string>
+    <string name="search_section_songs">ಹಾಡುಗಳು</string>
+    <string name="search_section_playlists">ಪ್ಲೇಪಟ್ಟಿಗಳು</string>
     <plurals name="search_result_count">
         <item quantity="one">%1$d ಫಲಿತಾಂಶ</item>
         <item quantity="other">%1$d ಫಲಿತಾಂಶಗಳು</item>

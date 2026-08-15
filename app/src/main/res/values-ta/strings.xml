@@ -19,4 +19,13 @@
 
     <string name="syncplay_groups_action">SyncPlay குழுக்கள்</string>
     <string name="syncplay_groups_action_active">SyncPlay குழுக்கள் — நீங்கள் ஒரு குழுவில் உள்ளீர்கள்</string>
+    <string name="music_refused_in_group">இந்தச் சாதனத்தில் இசையை இயக்க SyncPlay குழுவிலிருந்து வெளியேறவும்.</string>
+    <string name="music_track_unavailable">“%1$s” ஐ இயக்க முடியவில்லை — அது தவிர்க்கப்பட்டது.</string>
+    <string name="music_queue_unavailable">அந்தத் தடங்களில் எதையும் இயக்க முடியவில்லை.</string>
+    <string name="music_playback_failed">“%1$s” இன் பிளேபேக் தோல்வியடைந்தது.</string>
+    <string name="music_radio_failed">“%1$s” இலிருந்து ரேடியோவைத் தொடங்க முடியவில்லை.</string>
+    <string name="mini_player_play">இயக்கு</string>
+    <string name="mini_player_pause">இடைநிறுத்து</string>
+    <string name="mini_player_next">அடுத்தது</string>
+    <string name="mini_player_open_now_playing">இப்போது இயங்குவதைத் திற</string>
 </resources>

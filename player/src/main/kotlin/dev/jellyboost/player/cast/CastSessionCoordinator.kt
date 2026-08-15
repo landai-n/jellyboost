@@ -1,6 +1,7 @@
 package dev.jellyboost.player.cast
 
 import dev.jellyboost.core.common.di.MainDispatcher
+import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import dev.jellyboost.player.di.DetachedPlayerScope
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.report.PlaybackReporter
@@ -82,7 +83,10 @@ class CastSessionCoordinator
 
         private val sessionListener =
             object : CastSessionListener {
-                override fun onSessionStarted(deviceName: String?) = onCastStarted(deviceName)
+                override fun onSessionStarted(
+                    deviceName: String?,
+                    modelName: String?,
+                ) = onCastStarted(deviceName, modelName)
 
                 override fun onSessionEnded() = onCastEnded()
             }
@@ -146,14 +150,25 @@ class CastSessionCoordinator
          * receiver is happily playing — off a cast player that may still answer position zero
          * (audit CAST-05).
          */
-        private fun onCastStarted(deviceName: String?) {
+        private fun onCastStarted(
+            deviceName: String?,
+            modelName: String?,
+        ) {
             if (isCasting) {
                 Timber.d("Cast session already connected; ignoring a repeated start from %s", deviceName)
                 return
             }
-            Timber.i("Cast session started on %s", deviceName ?: "an unnamed receiver")
+            val receiver = CastReceiverClass.fromModelName(modelName)
+            // The model→class line is load-bearing diagnostics: a 4K receiver that logs as
+            // LEGACY_1080P here is a one-line allowlist fix in CastReceiverClass, not a bug hunt.
+            Timber.i(
+                "Cast session started on %s (model %s, classified %s)",
+                deviceName ?: "an unnamed receiver",
+                modelName ?: "unknown",
+                receiver,
+            )
             val handover = routing.snapshot()
-            status.setConnection(CastConnection.Connected(deviceName))
+            status.setConnection(CastConnection.Connected(deviceName, receiver))
             routing.setActive(PlaybackTarget.Cast)
             routing.stopInactive()
             host?.onCastStarted(deviceName, handover)

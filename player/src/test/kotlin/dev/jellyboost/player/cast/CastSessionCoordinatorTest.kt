@@ -1,6 +1,7 @@
 package dev.jellyboost.player.cast
 
 import dev.jellyboost.player.PlayerFixtures
+import dev.jellyboost.player.deviceprofile.CastReceiverClass
 import dev.jellyboost.player.model.PlaybackMediaSource
 import dev.jellyboost.player.model.PlaybackSnapshot
 import dev.jellyboost.player.report.PlaybackReporter
@@ -79,6 +80,23 @@ class CastSessionCoordinatorTest {
         coordinator.connection.value shouldBe CastConnection.Connected("Living Room TV")
         coordinator.isCasting shouldBe true
         routing.activeHandle.value shouldBe cast
+    }
+
+    @Test
+    fun `the receiver's model is classified once, at session start`() {
+        framework.onSessionStarted("Salon", "Chromecast Ultra")
+
+        coordinator.connection.value shouldBe
+            CastConnection.Connected("Salon", CastReceiverClass.ULTRA_4K)
+        // Which is what `PlaybackInfoResolver` reads at negotiation time.
+        status.receiver shouldBe CastReceiverClass.ULTRA_4K
+    }
+
+    @Test
+    fun `an unknown model lands on the conservative floor`() {
+        framework.onSessionStarted("Salon", "Some Future Receiver")
+
+        status.receiver shouldBe CastReceiverClass.LEGACY_1080P
     }
 
     @Test

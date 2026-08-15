@@ -591,6 +591,9 @@ internal class PlayerViewModel
                             itemId = itemId,
                             startPositionTicks = startPositionTicks,
                             castTarget = isCasting,
+                            // Same reasoning as the route's own open: nobody has picked a quality
+                            // for the item the group just moved to, so it is Auto's to measure.
+                            autoBitrate = true,
                         ),
                         playWhenReady = false,
                     )
@@ -800,6 +803,14 @@ internal class PlayerViewModel
          * Choosing a cap below the file's bitrate is what makes the server transcode, and is how
          * the milestone's forced-transcode verification is driven from the UI.
          *
+         * The no-op guard compares *picker entries*, not bitrates (DECISIONS.md, 2026-08-15). Since
+         * Auto resolves to a measured cap, comparing numbers would make a stream measured at 8 Mbps
+         * indistinguishable from a hand-picked Medium — swallowing the Medium tap, and letting a tap
+         * on Auto look like a change when it is not.
+         *
+         * [PlaybackQuality.AUTO] is sent with a `null` cap and `autoBitrate = true`: the resolver
+         * measures and fills the number in, so this never blocks the tap on a round trip.
+         *
          * A locally-played download has no bitrate to cap — there is no server in the loop — so the
          * control is hidden for it (`PlayerUiState.isLocalPlayback`) and the call is ignored if it
          * arrives anyway.
@@ -807,12 +818,15 @@ internal class PlayerViewModel
         internal fun selectQuality(quality: PlaybackQuality) {
             val active = session ?: return
             val current = active.source as? RemotePlaybackMediaSource ?: return
-            if (quality.maxStreamingBitrate == current.maxStreamingBitrate) return
+            if (quality == qualityOf(current)) return
             _uiState.update { it.copy(quality = quality) }
             reopenSession(
                 current
                     .asRequest(active.forcedRemote, isCasting)
-                    .copy(maxStreamingBitrate = quality.maxStreamingBitrate),
+                    .copy(
+                        maxStreamingBitrate = quality.maxStreamingBitrate,
+                        autoBitrate = quality == PlaybackQuality.AUTO,
+                    ),
             )
         }
 
@@ -1368,6 +1382,10 @@ internal class PlayerViewModel
                         current.asRequest(active.forcedRemote, isCasting).copy(
                             startPositionTicks = decision.positionTicks,
                             maxStreamingBitrate = decision.maxStreamingBitrate,
+                            // The ladder has picked a rung, and the chip must say so: leaving the
+                            // flag on would have the resolver overwrite the rung with a fresh
+                            // measurement — the very measurement that just failed to play.
+                            autoBitrate = false,
                         ),
                         PlayerMessage.RetryingAtLowerQuality,
                     )
@@ -1593,6 +1611,9 @@ private fun PlaybackMediaSource.asRequest(
         subtitleStreamIndex = selectedSubtitleIndex,
         forceRemote = forceRemote,
         castTarget = castTarget,
+        // Auto-ness survives a re-negotiation the same way the cap does: a track change on an Auto
+        // stream is still an Auto stream, and the resolver re-fills the cap for it.
+        autoBitrate = (this as? RemotePlaybackMediaSource)?.autoBitrate ?: false,
     )
 
 /**
@@ -1622,9 +1643,22 @@ private fun PlayerUiState.withSource(
         durationMs = source.runTimeTicks.ticksToMillis(),
         selectedAudioIndex = source.selectedAudioIndex,
         selectedSubtitleIndex = source.selectedSubtitleIndex,
-        quality = PlaybackQuality.forBitrate((source as? RemotePlaybackMediaSource)?.maxStreamingBitrate),
+        quality = qualityOf(source),
         userMessage = message ?: userMessage,
     ).withTracks(source, online)
+
+/**
+ * The picker entry that describes what is playing.
+ *
+ * Flag-driven rather than a reverse lookup of the cap (DECISIONS.md, 2026-08-15): Auto now resolves
+ * to a *measured* number, and a measurement that happens to land on 8 Mbps would otherwise light up
+ * "Medium" — a chip the user never chose, and one that makes their next Medium tap a no-op. A local
+ * source has no cap at all and reads as [PlaybackQuality.AUTO], exactly as it did before.
+ */
+private fun qualityOf(source: PlaybackMediaSource): PlaybackQuality {
+    val remote = source as? RemotePlaybackMediaSource ?: return PlaybackQuality.forBitrate(null)
+    return if (remote.autoBitrate) PlaybackQuality.AUTO else PlaybackQuality.forBitrate(remote.maxStreamingBitrate)
+}
 
 /**
  * The two picker lists, under the source that is playing and the connection there is.

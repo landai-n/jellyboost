@@ -56,6 +56,9 @@ internal class PlayerReopenRecoveryTest : PlayerViewModelFixture() {
                 .shouldBeNull()
             model.uiState.value.userMessage shouldBe PlayerMessage.ChangeReverted
             requests.last().maxStreamingBitrate shouldBe source.maxStreamingBitrate
+            // Auto-ness is part of "the terms that were playing" too: recovering an Auto session as
+            // a manual one, or the reverse, is the same lost setting as a dropped cap.
+            requests.last().autoBitrate shouldBe source.autoBitrate
             requests.last().startPositionTicks shouldBe 600_000_000L
         }
 

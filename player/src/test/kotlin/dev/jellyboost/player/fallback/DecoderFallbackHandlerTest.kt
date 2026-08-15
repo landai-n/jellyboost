@@ -101,6 +101,26 @@ class DecoderFallbackHandlerTest {
     }
 
     @Test
+    fun `a measured cap that is not a rung drops onto the next rung below it`() {
+        val decision =
+            handler.onPlayerError(
+                errorCode = PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+                source =
+                    PlayerFixtures.remoteSource(
+                        playMethod = PlayMethod.TRANSCODE,
+                        // What Auto's measurement produces: a number off the ladder entirely
+                        // (DECISIONS.md, 2026-08-15).
+                        maxStreamingBitrate = 5_000_000,
+                        autoBitrate = true,
+                    ),
+                positionTicks = 0L,
+            )
+
+        decision.shouldBeInstanceOf<FallbackDecision.LowerBitrate>()
+        decision.maxStreamingBitrate shouldBe 3_000_000
+    }
+
+    @Test
     fun `lowering the bitrate is attempted once, then abandoned`() {
         val source =
             PlayerFixtures.remoteSource(playMethod = PlayMethod.TRANSCODE, maxStreamingBitrate = 20_000_000)

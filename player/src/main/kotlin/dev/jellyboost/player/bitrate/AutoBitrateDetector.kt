@@ -29,6 +29,13 @@ import javax.inject.Singleton
  * chunk only costs the user their first frame. The whole thing sits inside a [MEASUREMENT_BUDGET_MS]
  * budget, because a measurement that outlives the user's patience is worse than no measurement.
  *
+ * The rate is **cumulative** — every byte fetched over every millisecond spent, including the chunk
+ * that ended the ramp — and not the last chunk's own rate (DECISIONS.md, 2026-08-15 amendment).
+ * A few megabytes are small enough to be answered largely out of TCP's congestion window and the
+ * server's buffers, so the last chunk on its own measures a burst: on the user's link a 3 MB chunk
+ * timed ~81 Mbps where a 30 MB pull sustained ~55. Counting the slow start and the earlier chunks
+ * against the total is what turns the burst back into something the link can hold for a film.
+ *
  * Single-flight and cached: the player asks on every open and on every re-negotiation, and the
  * answer does not change per item. A failed or cancelled measurement leaves the cache exactly as it
  * found it — a partial measurement is not evidence about the link, and remembering one would pin the
@@ -105,27 +112,32 @@ internal class AutoBitrateDetector(
             }
         }
 
-    /** Fetches the chunks in order and answers with the rate of the last one that completed. */
-    private suspend fun ramp(): Int? {
-        var rate: Int? = null
+    /** Fetches the chunks in order and answers with the rate of everything that was fetched. */
+    private suspend fun ramp(): Int {
+        var totalBytes = 0L
+        var totalElapsedMs = 0L
         for (size in CHUNK_SIZES) {
             val startedAt = now()
             val bytes = api.getBitrateTestBytes(size)
-            // At least a millisecond: a chunk that appears to arrive instantly is the clock's
-            // resolution talking, not an infinitely fast link, and dividing by zero would say so.
-            val elapsedMs = (now() - startedAt).coerceAtLeast(1L)
-            rate = capFor(byteCount = bytes.size, elapsedMs = elapsedMs)
+            val elapsedMs = now() - startedAt
+            // The chunk that ends the ramp still counts, in both totals: it is the most recent — and
+            // largest — evidence about the link, and dropping it would leave the answer to the very
+            // chunks that had least time to leave TCP's slow start.
+            totalBytes += bytes.size
+            totalElapsedMs += elapsedMs
             if (elapsedMs > SLOW_CHUNK_MS) break
         }
-        return rate
+        // At least a millisecond: a transfer that appears to arrive instantly is the clock's
+        // resolution talking, not an infinitely fast link, and dividing by zero would say so.
+        return capFor(byteCount = totalBytes, elapsedMs = totalElapsedMs.coerceAtLeast(1L))
     }
 
     /** The measured rate, with headroom taken off and clamped to something worth sending. */
     private fun capFor(
-        byteCount: Int,
+        byteCount: Long,
         elapsedMs: Long,
     ): Int {
-        val bitsPerSecond = byteCount.toLong() * BITS_PER_BYTE * MILLIS_PER_SECOND / elapsedMs
+        val bitsPerSecond = byteCount * BITS_PER_BYTE * MILLIS_PER_SECOND / elapsedMs
         return (bitsPerSecond * HEADROOM)
             .toLong()
             .coerceIn(MIN_CAP.toLong(), MAX_CAP.toLong())

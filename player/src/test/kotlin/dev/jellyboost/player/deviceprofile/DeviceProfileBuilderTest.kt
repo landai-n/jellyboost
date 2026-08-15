@@ -8,6 +8,8 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import org.jellyfin.sdk.model.api.DlnaProfileType
 import org.jellyfin.sdk.model.api.MediaStreamProtocol
+import org.jellyfin.sdk.model.api.ProfileConditionType
+import org.jellyfin.sdk.model.api.ProfileConditionValue
 import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
 import org.junit.jupiter.api.Test
 
@@ -97,6 +99,70 @@ class DeviceProfileBuilderTest {
 
         // An empty EQUALS_ANY condition would forbid every profile, i.e. forbid direct play.
         profile.codecProfiles.none { it.codec == "h264" } shouldBe true
+    }
+
+    @Test
+    fun `caps a codec at the largest frame the device's decoders accept`() {
+        // Without this the server hands a 4K file to a decoder that tops out at 1440p, and
+        // ExoPlayer falls back to software decode instead of refusing.
+        val profile =
+            builder(
+                DeviceCodecs(
+                    videoCodecs = setOf("h264"),
+                    audioCodecs = setOf("aac"),
+                    videoProfiles = mapOf("h264" to setOf("high", "main")),
+                    videoMaxSizes = mapOf("h264" to VideoMaxSize(width = 2560, height = 1440)),
+                ),
+            ).getDeviceProfile()
+
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == "mkv" }
+        codecProfile.shouldNotBeNull()
+        codecProfile.conditions.map { it.property } shouldBe
+            listOf(
+                ProfileConditionValue.VIDEO_PROFILE,
+                ProfileConditionValue.WIDTH,
+                ProfileConditionValue.HEIGHT,
+            )
+        val width = codecProfile.conditions.single { it.property == ProfileConditionValue.WIDTH }
+        width.condition shouldBe ProfileConditionType.LESS_THAN_EQUAL
+        width.value!! shouldBe "2560"
+        val height = codecProfile.conditions.single { it.property == ProfileConditionValue.HEIGHT }
+        height.condition shouldBe ProfileConditionType.LESS_THAN_EQUAL
+        height.value!! shouldBe "1440"
+    }
+
+    @Test
+    fun `caps a codec whose decoder profiles are unknown at its frame size alone`() {
+        val profile =
+            builder(
+                DeviceCodecs(
+                    videoCodecs = setOf("hevc"),
+                    audioCodecs = setOf("aac"),
+                    videoMaxSizes = mapOf("hevc" to VideoMaxSize(width = 2560, height = 1440)),
+                ),
+            ).getDeviceProfile()
+
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "hevc" && it.container == "mkv" }
+        codecProfile.shouldNotBeNull()
+        codecProfile.conditions.map { it.property } shouldBe
+            listOf(ProfileConditionValue.WIDTH, ProfileConditionValue.HEIGHT)
+        codecProfile.conditions.map { it.value } shouldBe listOf("2560", "1440")
+    }
+
+    @Test
+    fun `emits no size condition for a codec whose decoders do not report a size`() {
+        val profile =
+            builder(
+                DeviceCodecs(
+                    videoCodecs = setOf("h264"),
+                    audioCodecs = setOf("aac"),
+                    videoProfiles = mapOf("h264" to setOf("high")),
+                ),
+            ).getDeviceProfile()
+
+        val codecProfile = profile.codecProfiles.firstOrNull { it.codec == "h264" && it.container == "mkv" }
+        codecProfile.shouldNotBeNull()
+        codecProfile.conditions.map { it.property } shouldBe listOf(ProfileConditionValue.VIDEO_PROFILE)
     }
 
     @Test

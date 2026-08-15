@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,9 +55,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
@@ -129,6 +132,12 @@ internal fun PlayerControls(
 
         TransportRow(
             isPlaying = state.showsPlaying,
+            // Same honesty gates as the rebuffer spinner: a receiver's buffering is unknowable
+            // from here, and the group-waiting overlay already names that pause better.
+            isBuffering =
+                state.isBuffering &&
+                    !state.syncPlay.isWaitingForGroup &&
+                    !state.cast.isCasting,
             onPlayPause = actions.onPlayPause,
             onSeekBy = actions.onSeekBy,
             modifier = Modifier.align(Alignment.Center),
@@ -297,6 +306,7 @@ private fun playbackMethodTag(
 @Composable
 private fun TransportRow(
     isPlaying: Boolean,
+    isBuffering: Boolean,
     onPlayPause: () -> Unit,
     onSeekBy: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -311,7 +321,10 @@ private fun TransportRow(
             contentDescription = stringResource(R.string.player_rewind),
             onClick = { onSeekBy(-SKIP_BACK_MS) },
         )
-        PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause)
+        // While the stream is opening or rebuffering, a Play triangle is a lie twice over: nothing
+        // will happen for the seconds the server needs, and the tap it invites actually *cancels*
+        // the start the user is waiting for. The primary slot spends that time saying "working".
+        if (isBuffering) BufferingDisc() else PlayPauseButton(isPlaying = isPlaying, onClick = onPlayPause)
         SeekButton(
             icon = Icons.Filled.Forward30,
             contentDescription = stringResource(R.string.player_forward),
@@ -343,6 +356,34 @@ private fun SeekButton(
             imageVector = icon,
             contentDescription = contentDescription,
             modifier = Modifier.size(SEEK_ICON),
+        )
+    }
+}
+
+/**
+ * What the primary slot shows while buffering: the same white disc, a spinner where the glyph was.
+ *
+ * Keeping the disc keeps the visual anchor — the eye finds the same circle in the same place — while
+ * making it non-interactive for exactly the window in which a tap would do the opposite of what it
+ * promises.
+ */
+@Composable
+private fun BufferingDisc() {
+    val label = stringResource(R.string.player_buffering)
+    Box(
+        modifier =
+            Modifier
+                .size(PLAY_BUTTON)
+                .background(Color.White, CircleShape)
+                .semantics {
+                    contentDescription = label
+                    liveRegion = LiveRegionMode.Polite
+                },
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            color = PLAY_GLYPH,
+            modifier = Modifier.size(PLAY_ICON),
         )
     }
 }
@@ -1181,6 +1222,7 @@ private fun ControlsPreview() {
             TopBar(state = state, onBack = {}, modifier = Modifier.align(Alignment.TopStart))
             TransportRow(
                 isPlaying = true,
+                isBuffering = false,
                 onPlayPause = {},
                 onSeekBy = {},
                 modifier = Modifier.align(Alignment.Center),

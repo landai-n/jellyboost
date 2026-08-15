@@ -37,7 +37,16 @@ internal interface CastSessionMonitor {
 
 /** What [CastSessionMonitor] reports. */
 internal interface CastSessionListener {
-    fun onSessionStarted(deviceName: String?)
+    /**
+     * @param modelName the receiver's hardware model as `CastDevice` reports it — the input to
+     *   `CastReceiverClass.fromModelName`. Defaulted so the many fakes and tests that only care
+     *   about the session lifecycle keep reading "an unknown receiver", which classifies to the
+     *   conservative legacy profile.
+     */
+    fun onSessionStarted(
+        deviceName: String?,
+        modelName: String? = null,
+    )
 
     fun onSessionEnded()
 }
@@ -82,7 +91,7 @@ internal class GmsCastSessionMonitor
                 manager.addSessionManagerListener(sessionListener(listener), CastSession::class.java)
                 manager.currentCastSession
                     ?.takeIf { it.isConnected }
-                    ?.let { listener.onSessionStarted(it.deviceName()) }
+                    ?.let { listener.onSessionStarted(it.deviceName(), it.deviceModel()) }
             }
         }
 
@@ -98,12 +107,12 @@ internal class GmsCastSessionMonitor
                 override fun onSessionStarted(
                     session: CastSession,
                     sessionId: String,
-                ) = listener.onSessionStarted(session.deviceName())
+                ) = listener.onSessionStarted(session.deviceName(), session.deviceModel())
 
                 override fun onSessionResumed(
                     session: CastSession,
                     wasSuspended: Boolean,
-                ) = listener.onSessionStarted(session.deviceName())
+                ) = listener.onSessionStarted(session.deviceName(), session.deviceModel())
 
                 override fun onSessionEnded(
                     session: CastSession,
@@ -137,4 +146,7 @@ internal class GmsCastSessionMonitor
 
         /** Defensive for the same reason `CastAvailability` is: the accessors throw mid-transition. */
         private fun CastSession.deviceName(): String? = runCatching { castDevice?.friendlyName }.getOrNull()
+
+        /** Same defense; the hardware model behind the friendly name, for receiver classification. */
+        private fun CastSession.deviceModel(): String? = runCatching { castDevice?.modelName }.getOrNull()
     }

@@ -210,6 +210,22 @@ of the walk).
 storage, Quality control disappeared, server progress posts stopped), clickable
 download rows (`a60274d`).
 
+## M12 phase-2a — 4K/HEVC cast receivers by model name (2026-08-15 — landed, gate green; Chromecast walk owed)
+
+Cast receivers are now classified by `CastDevice.modelName` (`CastReceiverClass`:
+`ULTRA_4K` = Ultra / Chromecast with Google TV / Google TV Streamer / SHIELD,
+`HEVC_1080P` = Chromecast HD, everything unknown = `LEGACY_1080P`, today's profile
+byte-for-byte), and HEVC-capable classes **direct-play** HEVC Main/Main 10 in mp4 up
+to their class ceiling (4K level 5.1 / 1080p level 4.1), Dolby Vision excluded via a
+`VideoRangeType` condition. Direct play only: the transcode stays H.264+AAC HLS-ts and
+the measured stereo-AAC audio floor stays, in every class (CAF's TS demuxer is
+H.264-only; fMP4 measured broken on the reference Ultra). Model → class is logged at
+session start. `DECISIONS.md` 2026-08-15 (phase-2a); design in
+`docs/notes/chromecast-m12-plan.md`. **Chromecast walk owed (user-run):** model logs
+and classifies correctly on the real Ultra; a 4K HEVC Main 10 mp4 with stereo AAC
+direct-plays (dashboard DirectPlay, no ffmpeg); HDR10 renders; a DV file transcodes
+rather than black-screens; mkv/TrueHD 4K still transcodes to 1080p exactly as before.
+
 ## Auto quality — measured bitrate cap (2026-08-15 — landed, gate green; device walk owed)
 
 Auto in the quality picker no longer means "no cap": an Auto resolve now measures

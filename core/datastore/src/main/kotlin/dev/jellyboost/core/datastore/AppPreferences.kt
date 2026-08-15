@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
  *
  * Settings arrive per milestone; M6 adds the one the offline read path needs and M7 the one the
  * download queue needs. The storage-location key joined at M9 polish, when the picker that reads it
- * shipped. The one key still named in [PreferenceKeys] but absent here — max streaming bitrate —
- * joins with the milestone that consumes it.
+ * shipped. Max streaming bitrate joined last, when Auto quality gained a measurement to remember
+ * (DECISIONS.md, 2026-08-15) — every key named in [PreferenceKeys] is now consumed.
  */
 interface AppPreferences {
     /**
@@ -109,4 +109,18 @@ interface AppPreferences {
 
     /** Turns the leave-into-picture-in-picture behaviour on or off. */
     suspend fun setPipOnLeave(enabled: Boolean)
+
+    /**
+     * The last measured streaming ceiling in bits per second, or `null` while none was ever measured.
+     *
+     * Not a user setting and not surfaced in Settings: the player's bandwidth detector writes it
+     * after a successful throughput measurement, and reads it back on a fresh start as a **prior** —
+     * the value Auto quality uses before (or instead of) a measurement of its own
+     * (DECISIONS.md, 2026-08-15). `null` therefore means "nothing learned yet", which degrades to
+     * the uncapped behaviour Auto had before the detector existed.
+     */
+    val maxStreamingBitrate: Flow<Int?>
+
+    /** Records the measured streaming ceiling; `null` forgets it. */
+    suspend fun setMaxStreamingBitrate(bitrate: Int?)
 }

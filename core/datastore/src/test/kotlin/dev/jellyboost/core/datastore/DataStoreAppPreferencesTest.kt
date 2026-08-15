@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.cash.turbine.test
 import dev.jellyboost.core.common.model.DownloadQuality
@@ -262,6 +263,46 @@ class DataStoreAppPreferencesTest {
             store.edit { it[stringPreferencesKey(PreferenceKeys.DOWNLOAD_STORAGE_VOLUME)] = "  " }
 
             DataStoreAppPreferences(store).downloadStorageVolumeId.first() shouldBe null
+        }
+
+    // ---- max streaming bitrate --------------------------------------------------------------------
+
+    @Test
+    fun `no streaming ceiling is stored until one is measured`() =
+        runTest {
+            DataStoreAppPreferences(dataStore(this)).maxStreamingBitrate.first() shouldBe null
+        }
+
+    @Test
+    fun `a measured streaming ceiling survives a round trip through storage`() =
+        runTest {
+            val store = dataStore(this)
+
+            DataStoreAppPreferences(store).setMaxStreamingBitrate(12_000_000)
+
+            // A second instance over the same file: this is the prior a fresh app start reads.
+            DataStoreAppPreferences(store).maxStreamingBitrate.first() shouldBe 12_000_000
+        }
+
+    @Test
+    fun `clearing the streaming ceiling forgets it entirely`() =
+        runTest {
+            val store = dataStore(this)
+            DataStoreAppPreferences(store).setMaxStreamingBitrate(12_000_000)
+
+            DataStoreAppPreferences(store).setMaxStreamingBitrate(null)
+
+            DataStoreAppPreferences(store).maxStreamingBitrate.first() shouldBe null
+        }
+
+    @Test
+    fun `a non-positive stored streaming ceiling reads as never measured`() =
+        runTest {
+            val store = dataStore(this)
+            // Only a bad write can produce this, and no cap is a better answer than a zero one.
+            store.edit { it[intPreferencesKey(PreferenceKeys.MAX_STREAMING_BITRATE)] = 0 }
+
+            DataStoreAppPreferences(store).maxStreamingBitrate.first() shouldBe null
         }
 
     @Test

@@ -82,6 +82,14 @@ internal data class RemotePlaybackMediaSource(
     val liveStreamId: String?,
     /** Bitrate cap that produced this source, echoed back so a retry can lower it. */
     val maxStreamingBitrate: Int?,
+    /**
+     * `true` when [maxStreamingBitrate] was *measured* rather than chosen from the picker.
+     *
+     * The picker's chip is derived from this flag rather than by reverse-mapping the cap: a measured
+     * 8 Mbps is indistinguishable from a hand-picked "Medium" by its number alone, which would both
+     * mislabel Auto and swallow a genuine Medium tap (DECISIONS.md, 2026-08-15).
+     */
+    val autoBitrate: Boolean = false,
     override val runTimeTicks: Long,
     override val startPositionTicks: Long,
     override val audioTracks: List<PlaybackTrack> = emptyList(),
@@ -116,7 +124,8 @@ internal data class RemotePlaybackMediaSource(
             "playMethod=$playMethod, container=$container, protocol=$protocol, " +
             "path=${redacted(path)}, transcodingUrl=${redacted(transcodingUrl)}, " +
             "transcodingSubProtocol=$transcodingSubProtocol, liveStreamId=$liveStreamId, " +
-            "maxStreamingBitrate=$maxStreamingBitrate, runTimeTicks=$runTimeTicks, " +
+            "maxStreamingBitrate=$maxStreamingBitrate, autoBitrate=$autoBitrate, " +
+            "runTimeTicks=$runTimeTicks, " +
             "startPositionTicks=$startPositionTicks, audioTracks=$audioTracks, " +
             "subtitleTracks=$subtitleTracks, externalSubtitles=${externalSubtitles.size}, " +
             "selectedAudioIndex=$selectedAudioIndex, selectedSubtitleIndex=$selectedSubtitleIndex)"

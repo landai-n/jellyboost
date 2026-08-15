@@ -71,4 +71,14 @@ internal interface PlayerApi {
         itemId: UUID,
         types: Collection<MediaSegmentType>,
     ): List<MediaSegmentDto>
+
+    /**
+     * `GET /Playback/BitrateTest` — [size] bytes of throwaway data, for timing the link.
+     *
+     * The endpoint jellyfin-web's Auto quality measures with: the server streams zeroes, so what
+     * comes back is worth nothing except how long it took to arrive. `AutoBitrateDetector` is the
+     * only caller, and it keeps the sizes small enough that the returned array is never a memory
+     * problem (DECISIONS.md, 2026-08-15).
+     */
+    suspend fun getBitrateTestBytes(size: Int): ByteArray
 }

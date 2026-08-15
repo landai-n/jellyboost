@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.jellyboost.core.common.model.DownloadQuality
 import dev.jellyboost.core.common.model.SegmentSkipMode
@@ -117,6 +118,23 @@ class DataStoreAppPreferences
             dataStore.edit { it[PIP_ON_LEAVE] = enabled }
         }
 
+        // A non-positive stored value reads as "never measured": only a bad write can produce one,
+        // and sending a zero or negative cap to the server is worse than sending none at all.
+        override val maxStreamingBitrate: Flow<Int?> =
+            preference { it[MAX_STREAMING_BITRATE]?.takeIf { bitrate -> bitrate > 0 } }
+
+        override suspend fun setMaxStreamingBitrate(bitrate: Int?) {
+            dataStore.edit { store ->
+                // Removing rather than storing 0: "nothing learned yet" and "learned that the link
+                // carries nothing" must not look alike on the read side.
+                if (bitrate == null) {
+                    store.remove(MAX_STREAMING_BITRATE)
+                } else {
+                    store[MAX_STREAMING_BITRATE] = bitrate
+                }
+            }
+        }
+
         /**
          * The stored skip mode, degraded to the default rather than throwing.
          *
@@ -136,6 +154,7 @@ class DataStoreAppPreferences
             val SEGMENT_SKIP_INTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_INTRO)
             val SEGMENT_SKIP_OUTRO = stringPreferencesKey(PreferenceKeys.SEGMENT_SKIP_OUTRO)
             val PIP_ON_LEAVE = booleanPreferencesKey(PreferenceKeys.PIP_ON_LEAVE)
+            val MAX_STREAMING_BITRATE = intPreferencesKey(PreferenceKeys.MAX_STREAMING_BITRATE)
 
             /** Downloads are Wi-Fi-only until the user says otherwise. */
             const val DEFAULT_WIFI_ONLY = true

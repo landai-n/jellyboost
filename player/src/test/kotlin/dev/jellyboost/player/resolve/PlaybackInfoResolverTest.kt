@@ -256,6 +256,96 @@ class PlaybackInfoResolverTest {
             coVerify(exactly = 0) { autoBitrateDetector.currentCap() }
         }
 
+    // ---- Auto's cap is not allowed to be a transcode's target (2026-08-15 amendment) --------------
+
+    @Test
+    fun `an auto transcode above High's rung is re-negotiated at it`() =
+        runTest {
+            coEvery { autoBitrateDetector.currentCap() } returns ABOVE_CEILING_CAP
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            val result =
+                resolver.resolve(
+                    PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
+                )
+
+            // The cap doubles as the transcode's *target*, and a target at the link's own ceiling
+            // cannot be encoded and delivered in realtime (0.76× measured) — so the first answer is
+            // abandoned and the same item is negotiated again at High's rung. Nothing was encoded in
+            // the meantime: ffmpeg spawns on the first segment fetch, not on PlaybackInfo.
+            coVerify(exactly = 2) { api.getPlaybackInfo(any(), any()) }
+            requests.map { it.maxStreamingBitrate } shouldBe listOf(ABOVE_CEILING_CAP, CEILING)
+            requests.last().deviceProfile?.maxStreamingBitrate shouldBe CEILING
+            result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe CEILING
+            // Still Auto: the user did not tap "High", the measurement was merely overruled.
+            result.value.autoBitrate shouldBe true
+        }
+
+    @Test
+    fun `a direct play keeps the full measured cap however high it is`() =
+        runTest {
+            coEvery { autoBitrateDetector.currentCap() } returns ABOVE_CEILING_CAP
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(
+                    listOf(PlayerFixtures.mediaSourceInfo(supportsDirectPlay = true)),
+                )
+
+            val result =
+                resolver.resolve(
+                    PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
+                )
+
+            // Direct play is the one case a high cap pays for itself: the original bytes, no
+            // re-encode to keep up with.
+            coVerify(exactly = 1) { api.getPlaybackInfo(any(), any()) }
+            result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
+        }
+
+    @Test
+    fun `an auto transcode already under the ceiling is negotiated once`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            val result =
+                resolver.resolve(
+                    PlaybackResolveRequest(itemId = PlayerFixtures.ITEM_ID, autoBitrate = true),
+                )
+
+            // MEASURED_CAP is below High's rung, so there is nothing to walk back.
+            coVerify(exactly = 1) { api.getPlaybackInfo(any(), any()) }
+            result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe MEASURED_CAP
+        }
+
+    @Test
+    fun `a hand-picked cap above the ceiling is transcoded at exactly what was asked for`() =
+        runTest {
+            val requests = mutableListOf<PlaybackInfoDto>()
+            coEvery { api.getPlaybackInfo(any(), capture(requests)) } returns
+                PlayerFixtures.playbackInfoResponse(listOf(transcodeOnlySource()))
+
+            val result =
+                resolver.resolve(
+                    PlaybackResolveRequest(
+                        itemId = PlayerFixtures.ITEM_ID,
+                        maxStreamingBitrate = ABOVE_CEILING_CAP,
+                    ),
+                )
+
+            // The ceiling second-guesses a *measurement*, never a person.
+            coVerify(exactly = 1) { api.getPlaybackInfo(any(), any()) }
+            requests.single().maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
+            result.shouldBeInstanceOf<AppResult.Success<dev.jellyboost.player.model.RemotePlaybackMediaSource>>()
+            result.value.maxStreamingBitrate shouldBe ABOVE_CEILING_CAP
+        }
+
     @Test
     fun `forwards the direct play and direct stream vetoes that force a transcode`() =
         runTest {
@@ -486,8 +576,21 @@ class PlaybackInfoResolverTest {
         return result.value
     }
 
+    /** A source the server will only transcode — both cheaper methods refused. */
+    private fun transcodeOnlySource() =
+        PlayerFixtures.mediaSourceInfo(
+            transcodingUrl = "/videos/x/master.m3u8",
+            transcodingSubProtocol = MediaStreamProtocol.HLS,
+        )
+
     private companion object {
         /** Deliberately not one of `PlaybackQuality`'s rungs: a measurement lands where it lands. */
         const val MEASURED_CAP = 5_600_000
+
+        /** A measurement on a fast link — the shape of the one that stalled the first device walk. */
+        const val ABOVE_CEILING_CAP = 64_000_000
+
+        /** `PlaybackQuality.HIGH`'s rung, spelled out here so the test pins the number, not the enum. */
+        const val CEILING = 20_000_000
     }
 }

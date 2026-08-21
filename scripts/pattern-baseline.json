@@ -1,0 +1,48 @@
+{
+  "conflict-marker": {},
+  "dispatchers-literal": {
+    "app/src/main/kotlin/dev/jellyboost/app/MainActivity.kt": 1,
+    "core/network/src/main/kotlin/dev/jellyboost/core/network/di/NetworkModule.kt": 3,
+    "player/src/main/kotlin/dev/jellyboost/player/di/PlayerModule.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/music/di/MusicModule.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/session/PlaybackService.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/session/PlaybackSessionController.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/di/SyncPlayModule.kt": 1
+  },
+  "double-bang": {},
+  "globalscope": {},
+  "modifier-composed": {},
+  "runBlocking": {},
+  "runCatching": {
+    "app/src/main/kotlin/dev/jellyboost/app/MainActivity.kt": 2,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/engine/DownloadQueue.kt": 1,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/impl/DownloadDeleter.kt": 1,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/impl/DownloadRepositoryImpl.kt": 1,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/storage/DownloadStorage.kt": 2,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/storage/StorageVolumeProvider.kt": 6,
+    "data/downloads/src/main/kotlin/dev/jellyboost/data/downloads/work/DownloadScheduler.kt": 1,
+    "data/src/main/kotlin/dev/jellyboost/data/OfflineJellyfinRepository.kt": 1,
+    "data/src/main/kotlin/dev/jellyboost/data/userdata/UserDataRepositoryImpl.kt": 1,
+    "data/src/main/kotlin/dev/jellyboost/data/userdata/UserDataSyncScheduler.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/api/SdkStreamUrlFactory.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/cast/CastAvailability.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/cast/CastPlayerHandle.kt": 2,
+    "player/src/main/kotlin/dev/jellyboost/player/cast/CastSessionMonitor.kt": 2,
+    "player/src/main/kotlin/dev/jellyboost/player/music/MusicStreamResolver.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/session/ExoPlayerHandle.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/ControllerSyncPlaySession.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/presence/SyncPlayPresenceCoordinator.kt": 2,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/presence/SyncPlayPresenceService.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/socket/OkHttpSyncPlaySocket.kt": 4,
+    "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerGestureLayer.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/ui/PlayerScreen.kt": 1
+  },
+  "uppercase-no-locale": {
+    "core/ui/src/main/kotlin/dev/jellyboost/core/ui/component/FieldSemantics.kt": 1,
+    "feature/auth/src/main/kotlin/dev/jellyboost/feature/auth/LoginScreen.kt": 3,
+    "feature/auth/src/main/kotlin/dev/jellyboost/feature/auth/ServerSetupScreen.kt": 1,
+    "feature/detail/src/main/kotlin/dev/jellyboost/feature/detail/EpisodeRow.kt": 1,
+    "feature/home/src/main/kotlin/dev/jellyboost/feature/home/HomeHero.kt": 1,
+    "player/src/main/kotlin/dev/jellyboost/player/syncplay/ui/SyncPlayGroupsScreen.kt": 1
+  }
+}

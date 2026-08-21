@@ -16,6 +16,21 @@ declaring the task done.
    source "../env.sh" && ./gradlew ktlintCheck detekt testDebugUnitTest :app:lintDebug assembleDebug
    ```
 
+   Judge the result ONLY by the explicit `BUILD SUCCESSFUL` / `BUILD FAILED` line in the
+   command's own output — never by a wrapper's exit code or a task notification (both have
+   reported success for failed runs; don't pipe through `tail -N`, which can clip the verdict).
+
+   Then run the audit-derived guardrail scripts (each sub-second, all must pass):
+
+   ```bash
+   python3 scripts/check_docs.py && python3 scripts/check_identifiers.py && python3 scripts/check_patterns.py
+   ```
+
+   `check_patterns.py` is a ratchet: if it flags a file you changed, fix the code rather
+   than updating the baseline; a baseline update is allowed only as a deliberate, explained
+   act in the same commit. `check_identifiers.py` failing means a personal/infrastructure
+   identifier is in the tree — remove it, never work around the check.
+
 2. If any task fails:
    - Read the failure output carefully (ktlint formatting, detekt findings, test
      failures, lint errors, or compile errors).

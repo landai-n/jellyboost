@@ -12,6 +12,45 @@ scope, and milestones.
 3. Keep `STATUS.md` current: milestone, done/next, known issues. Update at every checkpoint.
 4. Never weaken or delete a test to make it pass — if a test is genuinely wrong, log via
    `/diverge` first.
+5. **Identifiers:** never write personal names, server hosts/IPs, or device identifiers
+   anywhere in the repo (code, docs, mocks, fixtures, commit messages). Use the established
+   placeholders: "test-server", "test tablet", "the OEM ROM", `192.168.1.10`, generic first
+   names for account fixtures. Two full history rewrites came from breaking this; the gate is
+   `scripts/check_identifiers.py` (denylist lives outside the repo, next to `env.sh`).
+6. `scripts/check_patterns.py` is a **ratchet** over audit-hazard patterns (plain
+   `runCatching`, hardcoded `Dispatchers.*`, `runBlocking`, `!!`, no-locale `.uppercase()`,
+   `composed {}`, …). If it flags your change, fix the code; updating
+   `scripts/pattern-baseline.json` is allowed only as a deliberate, explained act in the
+   same commit. Never work around it.
+
+## Audit-derived review checklist (hazards no tool catches — check before finishing any change)
+Distilled from the 2026-07…2026-08 audits; the recidivist classes:
+- **Fix the sibling too.** Most reintroduced bugs were one branch of a duplicated pattern
+  getting the fix while its twin didn't (compact vs wide layout, audio vs subtitle path,
+  local vs cast handle, one volume vs two). Before closing: grep for the pattern's siblings.
+- **Classify failures.** Any new catch/error path: is this failure transient (retry/backoff,
+  attempt counter) or permanent (clear state, honest copy)? Defaulting everything to
+  permanent-ERROR — or to silent-ignore — caused repeated data-loss findings. And rethrow
+  `CancellationException` first in every broad catch (`runCatchingUnlessCancelled`).
+- **DAO read-then-write = transaction.** Any read-modify-write across suspension points goes
+  through `TransactionRunner.inTransaction` or a SQL-guarded statement (the
+  `markDownloadingIfRunnable` pattern). Check-then-act on shared state needs an identity guard.
+- **State writes need a verified source.** Progress/position reporters must refuse a snapshot
+  whose source identity can't be confirmed (stale `detachedSource`, wrong `mediaId`, replayed
+  nav-arg) — verify identity before writing user-visible or server state.
+- **Don't park state where its lifetime is wrong.** `remember` inside an
+  `AnimatedVisibility`/conditionally-composed host dies with it; hoist to the owner whose
+  lifetime matches (the PlayerPanel lesson). Saveable if it must survive recreation.
+- **Every doc claim needs a test.** If a KDoc/comment/user-copy asserts a guarantee
+  ("always retried", "released on dispose", "restored after death"), pin it with a test in
+  the same change — several audit bugs were comments describing code that didn't exist.
+- **Hot-flow hygiene.** New `Flow` exposure: `distinctUntilChanged`+`flowOn` (repository),
+  `shareIn/stateIn` for callback flows collected more than once; never key expensive work
+  (file walks, blob parses, full-table scans) on a per-progress-tick emission.
+- **Compose params: pass what it draws.** Whole-UiState params defeat skipping under strong
+  skipping; pass scalars/narrow value types, remember callback bundles once.
+- **A gate that isn't wired is a wish.** Any new script/config/check must be referenced by
+  `/verify`, the pre-commit hook, or CI in the same commit that adds it.
 
 ## Build environment
 - Always `source "../env.sh"` first (sets JAVA_HOME=openjdk@21, ANDROID_HOME).

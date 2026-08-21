@@ -372,6 +372,22 @@ other seven; check the detail screen on the tablet in portrait *and* in a ~600dp
 groups screen and Settings headers still look right; and start a cast session, since the Play-services
 probe is now three thread hops where it was one.
 
+## Guardrails wave (2026-08-21) — the audits become gates
+
+Every mechanically-detectable recidivist class from the 2026-07…2026-08 audits is now
+enforced (DECISIONS 2026-08-21): `scripts/check_patterns.py` (ratcheted per-file baseline —
+runBlocking/GlobalScope/`!!`/`composed{}` pinned at zero; plain runCatching, Dispatchers
+literals, no-locale `.uppercase()` frozen at today's counts, shrink-only),
+`scripts/check_docs.py` (QUAL-1 signatures: duplicate DECISIONS headings, conflict markers,
+chronology splices), `scripts/check_identifiers.py` (denylist outside the repo; prints line
+numbers, never tokens). Wired into the pre-commit hook (all three, every commit including
+docs-only), CI (docs + patterns), and `/verify`. Review-only classes became the CLAUDE.md
+checklist. **First run of the identifier gate caught three live leaks** (M13-era docs had
+re-mentioned the scrubbed server/device names — cleaned, and the history re-scrub re-run
+since those commits were still unpushed). Open tooling gaps, named: contrast-ratio unit
+test over color tokens; Compose compiler metrics (PERF-11). **The force-push of the
+rewritten history to origin is STILL owed** (`git push --force origin main`).
+
 ## Audit 2026-08-08 — remediation COMPLETE (2026-08-09); identifier scrub + history rewrite
 
 All seven remediation tiers of the 2026-08-08 audit are landed and merged: player UX

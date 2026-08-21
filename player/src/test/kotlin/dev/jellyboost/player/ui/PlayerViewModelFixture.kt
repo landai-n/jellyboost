@@ -29,6 +29,7 @@ import dev.jellyboost.player.syncplay.SyncPlayLocalSession
 import dev.jellyboost.player.syncplay.SyncPlayMessage
 import dev.jellyboost.player.syncplay.SyncPlayState
 import dev.jellyboost.player.trickplay.TrickplayResolver
+import dev.jellyboost.player.upnext.UpNextResolver
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -60,6 +61,18 @@ internal abstract class PlayerViewModelFixture {
     protected val playerHandle = FakePlayerHandle()
     protected val trickplayResolver = mockk<TrickplayResolver>()
     protected val segmentLoader = mockk<MediaSegmentLoader>()
+
+    /**
+     * The up-next lookup, mocked rather than assembled over [repository].
+     *
+     * "Which episode follows this one" is pinned next door in `UpNextResolverTest` against the real
+     * repository doubles; what the ViewModel owes it is *when* it is asked and what it does with the
+     * answer, and a recording double states that without every player test having to stub a series
+     * listing. `null` by default, which is what makes every other test in this package an item with
+     * no successor — i.e. exactly the behaviour they were written against.
+     */
+    protected val upNextResolver = mockk<UpNextResolver>()
+
     protected val pipController = PipController()
 
     /**
@@ -160,6 +173,7 @@ internal abstract class PlayerViewModelFixture {
         every { reporter.startReporting(any(), any(), any()) } returns Job()
         coEvery { trickplayResolver.resolve(any(), any()) } returns null
         coEvery { segmentLoader.load(any()) } returns emptyList()
+        coEvery { upNextResolver.resolve(any()) } returns null
     }
 
     protected fun viewModel(savedStateHandle: SavedStateHandle = navArgs()) =
@@ -177,6 +191,7 @@ internal abstract class PlayerViewModelFixture {
             fallback = DecoderFallbackHandler(),
             trickplayResolver = trickplayResolver,
             segmentLoader = segmentLoader,
+            upNextResolver = upNextResolver,
             preferences = preferences,
             pipController = pipController,
             connectionState = connectionState,

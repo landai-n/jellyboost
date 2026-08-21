@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Пропускане на въведението</string>
     <string name="player_skip_outro">Пропускане на финалните надписи</string>
 
+    <string name="player_up_next_title">Следващо</string>
+    <string name="player_up_next_play">Пусни следващия епизод</string>
+    <string name="player_up_next_dismiss">Гледай финалните надписи</string>
+
     <string name="player_quality_auto">Автоматично</string>
     <string name="player_quality_high">Високо — 20 Mbps</string>
     <string name="player_quality_medium">Средно — 8 Mbps</string>

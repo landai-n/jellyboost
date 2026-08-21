@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Bevezető kihagyása</string>
     <string name="player_skip_outro">Végjelenet kihagyása</string>
 
+    <string name="player_up_next_title">Következő</string>
+    <string name="player_up_next_play">Következő epizód lejátszása</string>
+    <string name="player_up_next_dismiss">Stáblista megtekintése</string>
+
     <string name="player_quality_auto">Automatikus</string>
     <string name="player_quality_high">Magas – 20 Mbps</string>
     <string name="player_quality_medium">Közepes – 8 Mbps</string>

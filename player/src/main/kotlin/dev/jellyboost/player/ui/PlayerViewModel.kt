@@ -1798,7 +1798,10 @@ private data class ActiveSession(
     val forcedRemote: Boolean,
     val stopReported: Boolean,
     val segments: List<MediaSegment>,
-    val upNext: UpNextEpisode? = null,
+    // No default, deliberately: a default here would let a future construction site inherit the
+    // *previous* episode's successor by saying nothing, which is the one mistake the boxing exists
+    // to make impossible (see the `@property upNext` note above). `publish` states it explicitly.
+    val upNext: UpNextEpisode?,
 )
 
 /**

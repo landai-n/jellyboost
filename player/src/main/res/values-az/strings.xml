@@ -34,6 +34,10 @@
     <string name="player_done">Hazırdır</string>
     <string name="player_skip_intro">Girişi keç</string>
     <string name="player_skip_outro">Sonluğu keç</string>
+
+    <string name="player_up_next_title">Növbəti</string>
+    <string name="player_up_next_play">Növbəti epizodu oynat</string>
+    <string name="player_up_next_dismiss">Titrlərə bax</string>
     <string name="player_quality_auto">Avtomatik</string>
     <string name="player_quality_high">Yüksək — 20 Mbps</string>
     <string name="player_quality_medium">Orta — 8 Mbps</string>

@@ -43,6 +43,10 @@
     <string name="player_skip_intro">Прапусціць уступ</string>
     <string name="player_skip_outro">Прапусціць канцоўку</string>
 
+    <string name="player_up_next_title">Далей</string>
+    <string name="player_up_next_play">Прайграць наступны эпізод</string>
+    <string name="player_up_next_dismiss">Глядзець тытры</string>
+
     <string name="player_quality_auto">Аўтаматычна</string>
     <string name="player_quality_high">Высокая — 20 Mbps</string>
     <string name="player_quality_medium">Сярэдняя — 8 Mbps</string>

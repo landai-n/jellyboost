@@ -37,6 +37,10 @@
     <string name="player_skip_intro">Ohita intro</string>
     <string name="player_skip_outro">Ohita outro</string>
 
+    <string name="player_up_next_title">Seuraavaksi</string>
+    <string name="player_up_next_play">Toista seuraava jakso</string>
+    <string name="player_up_next_dismiss">Katso lopputekstit</string>
+
     <string name="player_quality_auto">Automaattinen</string>
     <string name="player_quality_high">Korkea — 20 Mbps</string>
     <string name="player_quality_medium">Keskitaso — 8 Mbps</string>

@@ -3401,3 +3401,46 @@ with the reason attached; removing it passes.
   the SyncPlay sheets is the cheap confirmation.
 
 <!-- END quality audit — gates wave (2026-08-07) -->
+
+<!-- BEGIN a11y guardrails (2026-08-21) -->
+
+## a11y guardrails wave (2026-08-21) — the colour settlement and the test scaffolding are now gated
+
+The 2026-08-05 accessibility audit's two open tooling gaps are closed. Both were named as
+residue by the gates-wave entry in DECISIONS.md; neither changes what the app draws.
+
+**A WCAG contrast test over the token table** — `:core:ui`,
+`theme/ContrastRatioTest.kt`, JUnit5, pure JVM, in `testDebugUnitTest` and therefore in
+`/verify`. 52 real token pairs, table-driven (one line adds a pair), computing WCAG 2.x
+relative luminance **with alpha compositing** — which is the whole point: every failure the
+audit found was a translucent token, and a translucent token has no ratio until it is
+composited onto the stack it lands on. Worst case is the audit's own (a white film frame /
+poster). The floors are the ones the remediation committed to: 4.5:1 normal text, 3:1
+component boundaries and the focus indicator. The formula is anchored to three
+externally-known values and reproduces all 30 ratios quoted in the token KDocs to ±0.02.
+Tokens private to `:player` / `:feature:downloads` / `:feature:detail` are mirrored as
+literals, and a second test reads those four files and fails if a literal drifts.
+
+**A scaffolding presence check** — `scripts/check_a11y_scaffolding.py` (stdlib Python,
+0.2 s), wired into CI, the pre-commit hook and `/verify` beside the other three guardrail
+scripts. Every module whose `src/main` declares `@Composable` needs an accessibility test in
+`src/androidTest` or a written allowlist entry. Today: **4 covered** (`:app`, `:core:ui`,
+`:player`, `:feature:detail`) and **7 allowlisted** (`:feature:` auth, home, library, music,
+search, downloads, settings), each with the reason it owes one and since when. Stale entries
+fail as loudly as missing tests.
+
+**Known issues / next**
+- **Two real contrast violations were found and deliberately left unfixed**, pinned in the
+  test as explicit `KnownViolation` entries with `TODO`s so the gate stays green and the debt
+  has an address: `DownloadsScreen.UsageBarTrackColor` at **1.45:1** (the fourth progress
+  track — its three siblings were raised 0.22 → 0.40 by the remediation and this one was
+  missed) and `PlayerControls.TAG_TEXT` at **3.44:1** for 10sp text (an unmeasured token, not
+  an accepted exception). Both fixes are one literal plus the KDoc sentence their siblings
+  carry; both belong to whoever next touches those files.
+- The seven allowlisted modules are debt, not permission — `:feature:downloads` (progress
+  semantics) and `:feature:auth` (live regions) are the two where a regression would be least
+  visible on screen.
+- No device work in this wave: both guardrails are device-less by construction, and the
+  instrumented suite (`connectedDebugAndroidTest`) is unchanged.
+
+<!-- END a11y guardrails (2026-08-21) -->
